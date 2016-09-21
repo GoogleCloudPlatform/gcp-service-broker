@@ -1,0 +1,23 @@
+# Contributing
+
+## Submitting an Issue
+We use the [GitHub issue tracker](https://github.com/GoogleCloudPlatform/gcp-service-broker/issues) to track bugs and features.
+Before submitting a bug report or feature request, check to make sure it hasn't already been submitted. You can indicate
+support for an existing issue by voting it up. When submitting a bug report, please include a
+[Gist](http://gist.github.com/) that includes a stack trace and any details that may be necessary to reproduce the bug.
+
+
+## Submitting a Pull Request
+You can add a feature or bug-fix via pull request.
+1. Fork the project
+1. Create a branch for your feature or fix from the `develop` branch. Replace `your-feature-name` with a description of your feature or fix:
+
+  ```
+  git checkout -b your-feature-name develop
+  ```
+
+1. Implement your feature or bug fix
+2. Commit and push your changes
+3. Submit a pull request to the `develop` branch of the [gcp-service-broker] repository. PRs to the master branch are not accepted.
+
+[gcp-service-broker]: https://github.com/GoogleCloudPlatform/gcp-service-broker/
