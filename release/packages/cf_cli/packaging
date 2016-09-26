@@ -1,0 +1,8 @@
+#! /bin/bash
+set -e
+
+mkdir -p ${BOSH_INSTALL_TARGET}/bin
+cd cf_cli
+tar zxvf cf-linux-amd64.tgz
+cp cf ${BOSH_INSTALL_TARGET}/bin/
+cp all_open.json ${BOSH_INSTALL_TARGET}

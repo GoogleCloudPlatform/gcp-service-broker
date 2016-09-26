@@ -1,0 +1,404 @@
+---
+name: gcp-service-broker
+label: Google Cloud Platform Service Broker
+description: A service broker for Google Cloud Platform services
+icon_image: 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
+product_version: '0.0.1'
+metadata_version: '1.5'
+minimum_version_for_upgrade: '0.0.1'
+rank: 1
+serial: true
+
+releases:
+- file: gcp-service-broker-0.0.1.tgz
+  name: gcp-service-broker
+  version: '0.0.1'
+
+stemcell_criteria:
+  os: ubuntu-trusty
+  requires_cpi: false
+  version: '3262'
+
+property_blueprints:
+#
+# Parameters for the entire product
+#
+- name: org
+  type: string
+  configurable: true
+  default: gcp-service-broker-org
+- name: org_quota
+  type: integer
+  configurable: true
+  constraints:
+    min: 512
+    max: 4096
+  default: 4096
+- name: space
+  type: string
+  configurable: true
+  default: gcp-service-broker-space
+- name: apply_open_security_group
+  type: boolean
+  configurable: true
+  default: True
+- name: allow_paid_service_plans
+  type: boolean
+  configurable: true
+  default: False
+#
+# Properties for on-demand service plans
+#
+- name: dynamic_service_plans
+  type: collection
+  configurable: true
+  property_blueprints:
+  - name: guid
+    type: uuid
+    optional: false
+    unique: true
+  - name: name
+    type: string
+    configurable: true
+  - name: display_name
+    type: string
+    configurable: True
+    decription: Display name
+  - name: description
+    type: string
+    configurable: True
+    decription: Plan description
+  - name: service
+    type: dropdown_select
+    configurable: False
+    decription: The service this plan is associated with
+    options:
+    - name: 4bc59b9a-8520-409f-85da-1c7552315863
+      label: CloudSQL
+  - name: tier
+    type: string
+    configurable: True
+    decription: Case-sensitive tier name (see https://cloud.google.com/sql/pricing for more information)
+  - name: pricing_plan
+    type: dropdown_select
+    configurable: True
+    decription: Select a pricing plan (only for 1st generation instances)
+    options:
+    - name: per_use
+      label: Per-Use
+    - name: package
+      label: Package
+  - name: max_disk_size
+    type: string
+    configurable: True
+    decription: Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default)
+#
+# Standard properties for package gcp_service_broker
+#
+- name: gcp_service_broker_enable_global_access_to_plans
+  type: boolean
+  configurable: true
+  default: True
+#
+# Custom properties from the tile.yml file
+#
+- name: root_service_account_json # Refer to this elsewhere as (( .properties.root_service_account_json ))
+  type: text
+  configurable: true
+  optional: false
+- name: db_host # Refer to this elsewhere as (( .properties.db_host ))
+  type: string
+  configurable: true
+  optional: false
+- name: db_username # Refer to this elsewhere as (( .properties.db_username ))
+  type: string
+  configurable: true
+  optional: false
+- name: db_password # Refer to this elsewhere as (( .properties.db_password ))
+  type: string
+  configurable: true
+  optional: false
+- name: db_port # Refer to this elsewhere as (( .properties.db_port ))
+  type: string
+  default: 3306
+  configurable: true
+  optional: false
+- name: ca_cert # Refer to this elsewhere as (( .properties.ca_cert ))
+  type: text
+  configurable: true
+  optional: True
+- name: client_cert # Refer to this elsewhere as (( .properties.client_cert ))
+  type: text
+  configurable: true
+  optional: True
+- name: client_key # Refer to this elsewhere as (( .properties.client_key ))
+  type: text
+  configurable: true
+  optional: True
+
+form_types:
+#
+# Custom form root_service_account from the tile.yml file
+#
+- name: root_service_account
+  label: Root Service Account
+  description: Please paste in the contents of the json keyfile (un-encoded) for your service account with owner credentials
+  property_inputs:
+  - reference: .properties.root_service_account_json
+    label: Root Service Account JSON
+    description: Root Service Account JSON
+#
+# Custom form database_properties from the tile.yml file
+#
+- name: database_properties
+  label: Database Properties
+  description: Connection details for the backing database for the service broker
+  property_inputs:
+  - reference: .properties.db_host
+    label: Database host
+    description: Database host
+  - reference: .properties.db_username
+    label: Database username
+    description: Database username
+  - reference: .properties.db_password
+    label: Database password
+    description: Database password
+  - reference: .properties.db_port
+    label: Database port (defaults to 3306)
+    description: Database port (defaults to 3306)
+  - reference: .properties.ca_cert
+    label: CA cert
+    description: CA cert
+  - reference: .properties.client_cert
+    label: Client cert
+    description: Client cert
+  - reference: .properties.client_key
+    label: Client key
+    description: Client key
+#
+# Dynamic service plan form
+#
+- name: dynamic_service_plans
+  label: Dynamic Service Plans
+  description: Operator-Defined Service Plans
+  property_inputs:
+  - reference: .properties.dynamic_service_plans
+    label: Dynamic Service Plans
+    property_inputs:
+    - reference: name
+      label: Plan Name
+      description: "Name of Plan"
+      slug: false
+    - reference: display_name
+      label: display_name
+      description: Display name
+      slug: false
+    - reference: description
+      label: description
+      description: Plan description
+      slug: false
+    - reference: service
+      label: service
+      description: The service this plan is associated with
+      slug: false
+    - reference: tier
+      label: tier
+      description: Case-sensitive tier name (see https://cloud.google.com/sql/pricing for more information)
+      slug: false
+    - reference: pricing_plan
+      label: pricing_plan
+      description: Select a pricing plan (only for 1st generation instances)
+      slug: false
+    - reference: max_disk_size
+      label: max_disk_size
+      description: Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default)
+      slug: false
+#
+# Service access form
+#
+- name: service_access
+  label: Service Access
+  description: Determine availability of services
+  property_inputs:
+  - reference: .properties.gcp_service_broker_enable_global_access_to_plans
+    label: Enable global access to plans of service gcp_service_broker
+    description: "Enable global access to plans in the marketplace"
+
+job_types:
+#
+# Default compilation job
+#
+- name: compilation
+  resource_label: compilation
+  resource_definitions:
+   - name: ram
+     type: integer
+     configurable: true
+     default: 4096
+   - name: ephemeral_disk
+     type: integer
+     configurable: true
+     default: 10240
+   - name: persistent_disk
+     type: integer
+     configurable: true
+     default: 0
+   - name: cpu
+     type: integer
+     configurable: true
+     default: 2
+  static_ip: 0
+  dynamic_ip: 1
+  max_in_flight: 1
+  single_az_only: true
+  instance_definitions:
+  - name: instances
+    type: integer
+    configurable: true
+    default: 1
+#
+# deploy-all job
+#
+- name: deploy-all
+  resource_label: deploy-all
+  errand: true
+  templates:
+  - name: deploy-all
+    release: gcp-service-broker
+  resource_definitions:
+  - name: ram
+    type: integer
+    configurable: false
+    default: 1024
+  - name: ephemeral_disk
+    type: integer
+    configurable: false
+    default: 4096
+  - name: persistent_disk
+    type: integer
+    configurable: false
+    default: 0
+  - name: cpu
+    type: integer
+    configurable: false
+    default: 1
+  static_ip: 0
+  dynamic_ip: 1
+  max_in_flight: 1
+  single_az_only: false
+  instance_definitions:
+  - name: instances
+    type: integer
+    configurable: false
+    default: 1
+  property_blueprints:
+  - name: vm_credentials
+    type: salted_credentials
+    default:
+      identity: vcap
+  - name: app_credentials
+    type: salted_credentials
+  manifest: |
+    domain: (( ..cf.cloud_controller.system_domain.value ))
+    app_domains:
+    - (( ..cf.cloud_controller.apps_domain.value ))
+    org: (( .properties.org.value ))
+    space: (( .properties.space.value ))
+    ssl:
+      skip_cert_verify: (( ..cf.ha_proxy.skip_cert_verify.value ))
+    cf:
+      admin_user: (( ..cf.uaa.system_services_credentials.identity ))
+      admin_password: (( ..cf.uaa.system_services_credentials.password ))
+    org_quota: (( .properties.org_quota.value ))
+    apply_open_security_group: (( .properties.apply_open_security_group.value ))
+    allow_paid_service_plans: (( .properties.allow_paid_service_plans.value ))
+    security:
+      user: (( .deploy-all.app_credentials.identity ))
+      password: (( .deploy-all.app_credentials.password ))
+    root_service_account_json: (( .properties.root_service_account_json.value ))
+    db_host: (( .properties.db_host.value ))
+    db_username: (( .properties.db_username.value ))
+    db_password: (( .properties.db_password.value ))
+    db_port: (( .properties.db_port.value ))
+    ca_cert: (( .properties.ca_cert.value ))
+    client_cert: (( .properties.client_cert.value ))
+    client_key: (( .properties.client_key.value ))
+    dynamic_service_plans: (( .properties.dynamic_service_plans.value ))
+    gcp_service_broker:
+      name: gcp_service_broker
+      user: (( .deploy-all.app_credentials.identity ))
+      password: (( .deploy-all.app_credentials.password ))
+      enable_global_access_to_plans: (( .properties.gcp_service_broker_enable_global_access_to_plans.value ))
+#
+# delete-all job
+#
+- name: delete-all
+  resource_label: delete-all
+  errand: true
+  templates:
+  - name: delete-all
+    release: gcp-service-broker
+  resource_definitions:
+  - name: ram
+    type: integer
+    configurable: false
+    default: 1024
+  - name: ephemeral_disk
+    type: integer
+    configurable: false
+    default: 4096
+  - name: persistent_disk
+    type: integer
+    configurable: false
+    default: 0
+  - name: cpu
+    type: integer
+    configurable: false
+    default: 1
+  static_ip: 0
+  dynamic_ip: 1
+  max_in_flight: 1
+  single_az_only: false
+  instance_definitions:
+  - name: instances
+    type: integer
+    configurable: false
+    default: 1
+  property_blueprints:
+  - name: vm_credentials
+    type: salted_credentials
+    default:
+      identity: vcap
+  - name: app_credentials
+    type: salted_credentials
+  manifest: |
+    domain: (( ..cf.cloud_controller.system_domain.value ))
+    app_domains:
+    - (( ..cf.cloud_controller.apps_domain.value ))
+    org: (( .properties.org.value ))
+    space: (( .properties.space.value ))
+    ssl:
+      skip_cert_verify: (( ..cf.ha_proxy.skip_cert_verify.value ))
+    cf:
+      admin_user: (( ..cf.uaa.system_services_credentials.identity ))
+      admin_password: (( ..cf.uaa.system_services_credentials.password ))
+
+post_deploy_errands:
+- name: deploy-all
+
+pre_delete_errands:
+- name: delete-all
+
+update:
+  canaries: 1
+  canary_watch_time: 10000-100000
+  max_in_flight: 1
+  update_watch_time: 10000-100000
+
+requires_product_versions:
+- name: cf
+  version: '~> 1.5'
+
+provides_product_versions:
+- name: gcp-service-broker
+  version: '0.0.1'
