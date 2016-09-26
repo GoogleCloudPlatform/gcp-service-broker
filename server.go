@@ -41,8 +41,8 @@ func main() {
 		logger.Fatal("Error initializing service broker: %s", err)
 	}
 
-	username := os.Getenv("SB_USERNAME")
-	password := os.Getenv("SB_PASSWORD")
+	username := os.Getenv("SECURITY_USER_NAME")
+	password := os.Getenv("SECURITY_USER_PASSWORD")
 
 	credentials := brokerapi.BrokerCredentials{
 		Username: username,

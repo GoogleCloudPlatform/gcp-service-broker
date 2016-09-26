@@ -28,7 +28,6 @@ import (
 	"gcp-service-broker/brokerapi/brokers/models"
 )
 
-// TODO(cbriant): update from fork
 const provisionLogKey = "provision"
 const deprovisionLogKey = "deprovision"
 const bindLogKey = "bind"
