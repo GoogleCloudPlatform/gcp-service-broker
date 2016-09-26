@@ -20,15 +20,15 @@ package pubsub
 import (
 	googlepubsub "cloud.google.com/go/pubsub"
 	"encoding/json"
+	"gcp-service-broker/brokerapi/brokers/models"
 	"golang.org/x/net/context"
 	"net/http"
-	"gcp-service-broker/brokerapi/brokers/models"
 
 	"code.cloudfoundry.org/lager"
 	"fmt"
-	"google.golang.org/api/option"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/db_service"
+	"google.golang.org/api/option"
 	"strconv"
 	"time"
 )

@@ -20,7 +20,6 @@ package db_service
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"os"
@@ -58,36 +57,22 @@ func SetupDb(logger lager.Logger) *gorm.DB {
 }
 
 func generateTlsStringFromEnv() (string, error) {
-	caCert64 := os.Getenv("CA_CERT_B64")
-	clientCert64 := os.Getenv("CLIENT_CERT_B64")
-	clientKey64 := os.Getenv("CLIENT_KEY_B64")
+	caCert := os.Getenv("CA_CERT")
+	clientCertStr := os.Getenv("CLIENT_CERT")
+	clientKeyStr := os.Getenv("CLIENT_KEY")
 	tlsStr := "&tls=custom"
 
 	// make sure ssl is set up for this connection
-	if caCert64 != "" && clientCert64 != "" && clientKey64 != "" {
-		caCert, err := base64.StdEncoding.DecodeString(caCert64)
-		if err != nil {
-			return "", fmt.Errorf("Error decoding ca cert: %s", err)
-		}
-
-		clientCertStr, err := base64.StdEncoding.DecodeString(clientCert64)
-		if err != nil {
-			return "", fmt.Errorf("Error decoding client cert: %s", err)
-		}
-
-		clientKeyStr, err := base64.StdEncoding.DecodeString(clientKey64)
-		if err != nil {
-			return "", fmt.Errorf("Error decoding client key: %s", err)
-		}
+	if caCert != "" && clientCertStr != "" && clientKeyStr != "" {
 
 		rootCertPool := x509.NewCertPool()
 
-		if ok := rootCertPool.AppendCertsFromPEM(caCert); !ok {
+		if ok := rootCertPool.AppendCertsFromPEM([]byte(caCert)); !ok {
 			return "", fmt.Errorf("Error appending cert: %s", errors.New(""))
 		}
 		clientCert := make([]tls.Certificate, 0, 1)
 
-		certs, err := tls.X509KeyPair(clientCertStr, clientKeyStr)
+		certs, err := tls.X509KeyPair([]byte(clientCertStr), []byte(clientKeyStr))
 		if err != nil {
 			return "", fmt.Errorf("Error parsing cert pair: %s", err)
 		}

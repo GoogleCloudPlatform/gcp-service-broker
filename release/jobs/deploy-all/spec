@@ -1,0 +1,64 @@
+---
+name: deploy-all
+templates:
+  deploy-all.sh.erb: bin/run
+packages:
+- cf_cli
+- gcp_service_broker
+properties:
+  domain:
+    description: 'CloudFoundry system domain'
+  app_domains:
+    description: 'CloudFoundry application domains'
+  org:
+    description: 'Org for the Application'
+    default: ''
+  space:
+    description: 'Space for the Application'
+    default: ''
+  ssl.skip_cert_verify:
+    description: 'Whether to verify SSL certs when making web requests'
+  cf.admin_user:
+    description: 'Username of the CF admin user'
+  cf.admin_password:
+    description: 'Password of the CF admin user'
+  org_quota:
+    description: 'Org Memory Quota for the Application'
+    default: 1024
+  apply_open_security_group:
+    description: 'Open security group for the app to access outside'
+    default: false
+  allow_paid_service_plans:
+    description: 'Allow use of paid service plans'
+    default: false
+  security.user:
+    description: 'Basic auth user'
+  security.password:
+    description: 'Basic auth password'
+  root_service_account_json:
+    description: root_service_account_json
+  db_host:
+    description: db_host
+  db_username:
+    description: db_username
+  db_password:
+    description: db_password
+  db_port:
+    description: db_port
+  ca_cert:
+    description: ca_cert
+  client_cert:
+    description: client_cert
+  client_key:
+    description: client_key
+  dynamic_service_plans:
+    description: 'Dynamic service plans'
+  gcp_service_broker.name:
+    description: 'Name of package'
+  gcp_service_broker.user:
+     description: 'Basic auth username'
+  gcp_service_broker.password:
+     description: 'Basic auth password'
+  gcp_service_broker.enable_global_access_to_plans:
+    description: 'Access to all service plans'
+    default: false

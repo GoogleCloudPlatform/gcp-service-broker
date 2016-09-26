@@ -21,11 +21,11 @@ import (
 	"code.cloudfoundry.org/lager"
 	"encoding/json"
 	"fmt"
-	googlebigquery "google.golang.org/api/bigquery/v2"
-	"net/http"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/db_service"
+	googlebigquery "google.golang.org/api/bigquery/v2"
+	"net/http"
 )
 
 type BigQueryBroker struct {

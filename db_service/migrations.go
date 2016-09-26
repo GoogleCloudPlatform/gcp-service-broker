@@ -19,8 +19,8 @@ package db_service
 
 import (
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"github.com/jinzhu/gorm"
 )
 
 // runs schema migrations on the provided service broker database to get it up to date

@@ -24,11 +24,11 @@ import (
 	"code.cloudfoundry.org/lager"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/net/context"
-	"google.golang.org/api/option"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/db_service"
+	"golang.org/x/net/context"
+	"google.golang.org/api/option"
 )
 
 type StorageBroker struct {

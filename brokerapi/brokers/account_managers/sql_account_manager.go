@@ -21,10 +21,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
-	"net/http"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/db_service"
+	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
+	"net/http"
 	"time"
 )
 
@@ -33,8 +33,8 @@ type SqlAccountManager struct {
 	ProjectId string
 }
 
+// inserts a new user into the database and creates new ssl certs
 func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
-	// TODO(cbriant): handle grants?
 	var err error
 	username, usernameOk := details.Parameters["username"].(string)
 	password, passwordOk := details.Parameters["password"].(string)
@@ -96,6 +96,7 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 
 }
 
+// deletes the user from the database and invalidates the associated ssl certs
 func (sam *SqlAccountManager) DeleteAccountFromGoogle(binding models.ServiceBindingCredentials) error {
 	var err error
 
@@ -138,6 +139,8 @@ func (sam *SqlAccountManager) DeleteAccountFromGoogle(binding models.ServiceBind
 	return nil
 }
 
+// polls the cloud sql operations service once per second until the given operation is done
+// TODO(cbriant): ensure this stays under api call quota
 func (sam *SqlAccountManager) pollOperationUntilDone(op *googlecloudsql.Operation, projectId string) error {
 	sqlService, err := googlecloudsql.New(sam.GCPClient)
 	if err != nil {

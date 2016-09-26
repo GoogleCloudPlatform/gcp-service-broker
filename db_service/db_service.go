@@ -19,14 +19,16 @@ package db_service
 
 import (
 	"code.cloudfoundry.org/lager"
-	"github.com/jinzhu/gorm"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"github.com/jinzhu/gorm"
+	"github.com/leonelquinteros/gorand"
 	"sync"
 )
 
 var DbConnection *gorm.DB
 var once sync.Once
 
+// Instantiates the db connection and runs migrations
 func New(logger lager.Logger) *gorm.DB {
 	once.Do(func() {
 		DbConnection = SetupDb(logger)
@@ -35,18 +37,21 @@ func New(logger lager.Logger) *gorm.DB {
 	return DbConnection
 }
 
+// gets the totaly number of service instances that are currently provisioned
 func GetServiceInstanceTotal() (int, error) {
 	var provisionedInstancesCount int
 	err := DbConnection.Model(&models.ServiceInstanceDetails{}).Count(&provisionedInstancesCount).Error
 	return provisionedInstancesCount, err
 }
 
+// gets the count of service instances by instance id (i.e. 0 or 1)
 func GetServiceInstanceCount(instanceID string) (int, error) {
 	var count int
 	err := DbConnection.Model(&models.ServiceInstanceDetails{}).Where("id = ?", instanceID).Count(&count).Error
 	return count, err
 }
 
+// soft deletes an instance from the database by instance id
 func SoftDeleteInstanceDetails(instanceID string) error {
 	// TODO(cbriant): how do I know if this is a connection error or a does not exist error
 	instance := models.ServiceInstanceDetails{}
@@ -54,4 +59,52 @@ func SoftDeleteInstanceDetails(instanceID string) error {
 		return models.ErrInstanceDoesNotExist
 	}
 	return DbConnection.Delete(&instance).Error
+}
+
+// Searches the db by planName and serviceId (since plan names must be disctinct within services)
+// If an entry exists, returns its id. If not, constructs a new UUID and returns it.
+func GetOrCreatePlanId(planName string, serviceId string) (string, error) {
+	var count int
+	var existingPlan models.PlanDetails
+	var id string
+	var err error
+
+	if err = DbConnection.Model(&models.PlanDetails{}).Where("name = ? and service_id = ?", planName, serviceId).Count(&count).Error; err != nil {
+		return "", err
+	}
+	if count > 0 {
+		if err = DbConnection.Where("name = ? and service_id = ?", planName, serviceId).First(&existingPlan).Error; err != nil {
+			return "", err
+		}
+
+		id = existingPlan.ID
+	} else {
+
+		id, err = gorand.UUID()
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return id, nil
+}
+
+// Searches the db by planName and serviceId (since plan names must be disctinct within services)
+// If the plan is found, returns the count (should be 1, always) and the plan object. If not, returns 0 and an empty plan object
+func CountAndGetPlan(planName string, serviceId string) (int, models.PlanDetails, error) {
+	var count int
+	var existingPlan models.PlanDetails
+	var err error
+
+	if err = DbConnection.Model(&models.PlanDetails{}).Where("name = ? and service_id = ?", planName, serviceId).Count(&count).Error; err != nil {
+		return 0, models.PlanDetails{}, err
+	}
+
+	if count > 0 {
+		if err = DbConnection.Where("name = ? and service_id = ?", planName, serviceId).First(&existingPlan).Error; err != nil {
+			return 0, models.PlanDetails{}, err
+		}
+	}
+
+	return count, existingPlan, nil
 }

@@ -19,9 +19,9 @@ package api_service
 
 import (
 	"code.cloudfoundry.org/lager"
-	"net/http"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"net/http"
 )
 
 type ApiServiceBroker struct {

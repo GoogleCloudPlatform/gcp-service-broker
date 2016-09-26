@@ -23,12 +23,11 @@ import (
 	"strconv"
 
 	"code.cloudfoundry.org/lager"
-	"github.com/gorilla/mux"
 	"gcp-service-broker/auth"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"github.com/gorilla/mux"
 )
 
-// TODO(cbriant): update from fork
 const provisionLogKey = "provision"
 const deprovisionLogKey = "deprovision"
 const bindLogKey = "bind"

@@ -1,0 +1,6 @@
+---
+blobstore:
+  provider: local
+  options:
+    blobstore_path: /tmp/gcp-service-broker-blobs
+final_name: gcp-service-broker

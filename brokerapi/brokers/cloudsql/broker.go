@@ -22,10 +22,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
-	"net/http"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/db_service"
+	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -62,8 +62,8 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 	_, databaseNameOk := params["database_name"]
 
 	if !instanceNameOk || !databaseNameOk {
-		return models.ServiceInstanceDetails{}, errors.New(`Missing one or more required parameters (required parameters are instance_name
-		and database_name`)
+		return models.ServiceInstanceDetails{}, errors.New(`Missing one or more required parameters
+		(required parameters are instance_name and database_name`)
 	}
 	// done validating parameters
 
@@ -306,7 +306,8 @@ func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string
 	instance.Location = clouddb.Region
 
 	if err = db_service.DbConnection.Save(&instance).Error; err != nil {
-		return fmt.Errorf("Error saving instance details to database: %s", err)
+		return fmt.Errorf(`Error saving instance details to database: %s. WARNING: this instance cannot be deprovisioned through cf.
+		Please contact your operator for cleanup`, err)
 	}
 
 	return nil
@@ -314,7 +315,6 @@ func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string
 
 // creates a new username, password, and set of ssl certs for the given instance
 // may be slow to return because CloudSQL operations are async. Timeout may need to be raised to 90 or 120 seconds
-// TODO(cbriant): check for consistency in returning "error" vs ""
 func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details models.BindDetails) (models.ServiceBindingCredentials, error) {
 
 	cloudDb := models.ServiceInstanceDetails{}
@@ -402,7 +402,9 @@ func (b *CloudSQLBroker) PollOperation(instance models.ServiceInstanceDetails, o
 		instance.OtherDetails = string(otherDetails)
 
 		if err = db_service.DbConnection.Save(&instance).Error; err != nil {
-			return false, fmt.Errorf("Error saving operation error to database: %s", err)
+			return false, fmt.Errorf(`Error saving operation error to database: %s.
+			WARNING: during provisioning, this error results in a service that cannot be deprovisioned through cf.
+			 During deprovisioning, this service will remain visible to cf. Contact your operator for cleanup`, err)
 		}
 	}
 
@@ -496,7 +498,8 @@ func (b *CloudSQLBroker) Deprovision(instanceId string, details models.Deprovisi
 	}
 	cloudDb.OtherDetails = string(otherDetails)
 	if err = db_service.DbConnection.Save(&cloudDb).Error; err != nil {
-		return fmt.Errorf("Error saving operation details to database: %s", err)
+		return fmt.Errorf(`Error saving operation details to database: %s. WARNING: this service instance will remain visible to cf.
+		Contact your operator for cleanup`, err)
 	}
 
 	return nil
