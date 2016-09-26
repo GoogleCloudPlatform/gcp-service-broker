@@ -25,20 +25,20 @@ import (
 	"net/http"
 	"os"
 
+	"code.cloudfoundry.org/lager"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"code.cloudfoundry.org/lager"
 	"google.golang.org/api/googleapi"
 
 	"gcp-service-broker/brokerapi/brokers/account_managers"
+	"gcp-service-broker/brokerapi/brokers/api_service"
 	"gcp-service-broker/brokerapi/brokers/bigquery"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
+	"gcp-service-broker/brokerapi/brokers/cloudsql"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/brokerapi/brokers/pubsub"
 	"gcp-service-broker/brokerapi/brokers/storage"
 	"gcp-service-broker/db_service"
-	"gcp-service-broker/brokerapi/brokers/api_service"
-	"gcp-service-broker/brokerapi/brokers/cloudsql"
 )
 
 const cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
@@ -437,14 +437,14 @@ func InitCredentialsFromEnv() (models.GCPCredentials, error) {
 }
 
 type DynamicPlan struct {
-	Guid string `json:"guid"`
-	Name string `json:"name"`
+	Guid        string `json:"guid"`
+	Name        string `json:"name"`
 	Description string `json:"description"`
-	Tier string `json:"tier"`
+	Tier        string `json:"tier"`
 	PricingPlan string `json:"pricing_plan"`
 	MaxDiskSize string `json:"max_disk_size"`
 	DisplayName string `json:"display_name"`
-	ServiceId string `json:"service"`
+	ServiceId   string `json:"service"`
 }
 
 // pulls SERVICES, PLANS, and PRECONFIGURED_PLANS environment variables to construct catalog and save plans to db
@@ -475,7 +475,7 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 			Description: p["description"].(string),
 			Metadata: &models.ServicePlanMetadata{
 				DisplayName: p["display_name"].(string),
-				Bullets: []string{p["description"].(string), "For pricing information see https://cloud.google.com/pricing/#details"},
+				Bullets:     []string{p["description"].(string), "For pricing information see https://cloud.google.com/pricing/#details"},
 			},
 			ID: id,
 		}
@@ -507,7 +507,7 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 
 	}
 
-		// set up dynamic (read: cloudsql) plans
+	// set up dynamic (read: cloudsql) plans
 	var dynamicPlans map[string]DynamicPlan
 	dynamicPlanJson := os.Getenv("PLANS")
 
@@ -524,9 +524,9 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 		}
 
 		features := map[string]string{
-			"tier": planDetails.Tier,
+			"tier":          planDetails.Tier,
 			"max_disk_size": planDetails.MaxDiskSize,
-			"pricing_plan": planDetails.PricingPlan,
+			"pricing_plan":  planDetails.PricingPlan,
 		}
 
 		featuresStr, err := json.Marshal(&features)
@@ -553,7 +553,7 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 			Description: planDetails.Description,
 			Metadata: &models.ServicePlanMetadata{
 				DisplayName: planDetails.DisplayName,
-				Bullets: []string{planDetails.Description, "For pricing information see https://cloud.google.com/pricing/#details"},
+				Bullets:     []string{planDetails.Description, "For pricing information see https://cloud.google.com/pricing/#details"},
 			},
 			ID: planDetails.Guid,
 		}
@@ -580,7 +580,6 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 
 		serviceList = append(serviceList, s)
 	}
-
 
 	return serviceList, nil
 }

@@ -19,10 +19,10 @@ package db_service
 
 import (
 	"code.cloudfoundry.org/lager"
-	"github.com/jinzhu/gorm"
 	"gcp-service-broker/brokerapi/brokers/models"
-	"sync"
+	"github.com/jinzhu/gorm"
 	"github.com/leonelquinteros/gorand"
+	"sync"
 )
 
 var DbConnection *gorm.DB

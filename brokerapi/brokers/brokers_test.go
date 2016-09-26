@@ -4,15 +4,15 @@ import (
 	. "gcp-service-broker/brokerapi/brokers"
 
 	"code.cloudfoundry.org/lager"
+	"gcp-service-broker/brokerapi/brokers"
+	"gcp-service-broker/brokerapi/brokers/models"
+	"gcp-service-broker/brokerapi/brokers/models/modelsfakes"
+	"gcp-service-broker/db_service"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"net/http"
 	"os"
-	"gcp-service-broker/brokerapi/brokers"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"gcp-service-broker/brokerapi/brokers/models/modelsfakes"
-	"gcp-service-broker/db_service"
 )
 
 var _ = Describe("Brokers", func() {
@@ -199,11 +199,11 @@ var _ = Describe("Brokers", func() {
 
 		for k, _ := range gcpBroker.ServiceBrokerMap {
 			async := true
-			if k == serviceNameToId[brokers.CloudsqlName]{
+			if k == serviceNameToId[brokers.CloudsqlName] {
 				async = true
 			}
 			gcpBroker.ServiceBrokerMap[k] = &modelsfakes.FakeServiceBrokerHelper{
-				AsyncStub: func() bool {return async},
+				AsyncStub: func() bool { return async },
 			}
 		}
 
@@ -240,7 +240,7 @@ var _ = Describe("Brokers", func() {
 
 		It("should have 3 storage plans available", func() {
 			serviceList := gcpBroker.Services()
-			for _, s := range serviceList{
+			for _, s := range serviceList {
 				if s.ID == serviceNameToId[StorageName] {
 					Expect(len(s.Plans)).To(Equal(3))
 				}
@@ -257,7 +257,7 @@ var _ = Describe("Brokers", func() {
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(gcpBroker.ServiceBrokerMap[bqId].(*modelsfakes.FakeServiceBrokerHelper).ProvisionCallCount()).To(Equal(1))
 			})
-			
+
 		})
 
 		Context("when too many services are provisioned", func() {
@@ -272,8 +272,8 @@ var _ = Describe("Brokers", func() {
 		Context("when an unrecognized service is provisioned", func() {
 			It("should return an error", func() {
 				_, err = gcpBroker.Provision("something", models.ProvisionDetails{
-					ServiceID:"nope",
-					PlanID:"nope",
+					ServiceID: "nope",
+					PlanID:    "nope",
 				}, true)
 				Expect(err).To(HaveOccurred())
 			})
@@ -282,8 +282,8 @@ var _ = Describe("Brokers", func() {
 		Context("when an unrecognized plan is provisioned", func() {
 			It("should return an error", func() {
 				_, err = gcpBroker.Provision("something", models.ProvisionDetails{
-					ServiceID:serviceNameToId[BigqueryName],
-					PlanID:"nope",
+					ServiceID: serviceNameToId[BigqueryName],
+					PlanID:    "nope",
 				}, true)
 				Expect(err).To(HaveOccurred())
 			})
@@ -303,7 +303,6 @@ var _ = Describe("Brokers", func() {
 				Expect(err).To(HaveOccurred())
 			})
 		})
-
 
 	})
 

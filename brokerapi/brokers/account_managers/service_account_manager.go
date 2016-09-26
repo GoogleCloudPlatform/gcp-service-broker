@@ -21,10 +21,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gcp-service-broker/brokerapi/brokers/models"
 	cloudres "google.golang.org/api/cloudresourcemanager/v1"
 	iam "google.golang.org/api/iam/v1"
 	"net/http"
-	"gcp-service-broker/brokerapi/brokers/models"
 )
 
 const roleResourcePrefix = "roles/"

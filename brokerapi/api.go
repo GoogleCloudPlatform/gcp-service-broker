@@ -23,9 +23,9 @@ import (
 	"strconv"
 
 	"code.cloudfoundry.org/lager"
-	"github.com/gorilla/mux"
 	"gcp-service-broker/auth"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"github.com/gorilla/mux"
 )
 
 const provisionLogKey = "provision"
