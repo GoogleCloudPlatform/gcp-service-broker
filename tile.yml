@@ -14,7 +14,7 @@ packages:
 - name: gcp-service-broker
   type: app-broker
   manifest:
-    memory: 16M
+    memory: 1G
     path: /tmp/gcp-service-broker.zip
     env:
       SERVICES: '[

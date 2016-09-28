@@ -19,7 +19,7 @@ applications:
     metadata_version: "1.0"
     label: 'GCP Service Broker'
     description: Easily configure and grant access to GCP products
-    memory: 16M
+    memory: 1G
     env:
       GO15VENDOREXPERIMENT: 1
       SERVICES: '[
