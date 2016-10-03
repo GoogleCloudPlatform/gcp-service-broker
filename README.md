@@ -10,10 +10,15 @@ Requires go 1.6 and the associated buildpack
 
 ### GCP prereqs
 
-1. create a new project
+1. go to console.cloud.google.com and sign up, walking through the setup wizard
+1. next to the Google Cloud Platform logo in the upper left-hand corner, click the dropdown and select "Create Project"
+1. give your project a name and click "Create"
+1. when the project is created (a notification will show in the upper right), refresh the page.
 1. in the left nav, go to API Manager
+1. click "Library"
 1. search "google cloud resource manager api", click the option with no other modifiers, and enable.
 1. search "Google Identity and Access Management (IAM) API", click the option with no other modifiers, and enable.
+1. if you wish to use CloudSQL, search "sqladmin", click the only option, and enable.
 1. in the left nav, go to IAM and Admin
 1. click Service Accounts
 1. click create service account and set the role to Owner
@@ -23,10 +28,10 @@ Requires go 1.6 and the associated buildpack
 ### Db prereqs
 
 1. create new MySQL instance
-1. create "servicebroker" database
-1. create a user for the service broker
-1. grant the service broker user privileges on the servicebroker database
-1. (optional) create ssl certs for the database
+1. run `CREATE DATABASE servicebroker;`
+1. run `CREATE USER '<username>'@'%' IDENTIFIED BY '<password>';`
+1. run `GRANT ALL PRIVILEGES ON servicebroker.* TO '<username>'@'%' WITH GRANT OPTION;`
+1. (optional) create ssl certs for the database and save them somewhere secure
 
 ### required env vars - if deploying as an app, add these to missing-properties.yml
 
