@@ -166,7 +166,7 @@ forms:
     type: string
     label: Database username
   - name: db_password
-    type: string
+    type: secret
     label: Database password
   - name: db_port
     type: string
