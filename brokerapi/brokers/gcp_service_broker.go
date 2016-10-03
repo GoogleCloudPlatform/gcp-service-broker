@@ -578,7 +578,9 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 
 		s.Plans = servicePlans[s.ID]
 
-		serviceList = append(serviceList, s)
+		if len(s.Plans) > 0 {
+			serviceList = append(serviceList, s)
+		}
 	}
 
 	return serviceList, nil
