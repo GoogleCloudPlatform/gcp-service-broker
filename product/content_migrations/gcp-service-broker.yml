@@ -1,10 +1,15 @@
 ---
 product: gcp-service-broker
 installation_version: '1.5'
-to_version: 0.0.2
+to_version: 1.0.0
 migrations:
 - from_version: 0.0.1
   rules:
   - type: update
     selector: product_version
-    to: 0.0.2
+    to: 1.0.0
+- from_version: 0.0.2
+  rules:
+  - type: update
+    selector: product_version
+    to: 1.0.0

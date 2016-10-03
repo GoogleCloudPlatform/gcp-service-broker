@@ -10,10 +10,15 @@ Requires go 1.6 and the associated buildpack
 
 ### GCP prereqs
 
-1. create a new project
+1. go to console.cloud.google.com and sign up, walking through the setup wizard
+1. next to the Google Cloud Platform logo in the upper left-hand corner, click the dropdown and select "Create Project"
+1. give your project a name and click "Create"
+1. when the project is created (a notification will show in the upper right), refresh the page.
 1. in the left nav, go to API Manager
+1. click "Library"
 1. search "google cloud resource manager api", click the option with no other modifiers, and enable.
 1. search "Google Identity and Access Management (IAM) API", click the option with no other modifiers, and enable.
+1. if you wish to use CloudSQL, search "sqladmin", click the only option, and enable.
 1. in the left nav, go to IAM and Admin
 1. click Service Accounts
 1. click create service account and set the role to Owner
@@ -23,10 +28,10 @@ Requires go 1.6 and the associated buildpack
 ### Db prereqs
 
 1. create new MySQL instance
-1. create "servicebroker" database
-1. create a user for the service broker
-1. grant the service broker user privileges on the servicebroker database
-1. (optional) create ssl certs for the database
+1. run `CREATE DATABASE servicebroker;`
+1. run `CREATE USER '<username>'@'%' IDENTIFIED BY '<password>';`
+1. run `GRANT ALL PRIVILEGES ON servicebroker.* TO '<username>'@'%' WITH GRANT OPTION;`
+1. (optional) create ssl certs for the database and save them somewhere secure
 
 ### required env vars - if deploying as an app, add these to missing-properties.yml
 
@@ -43,17 +48,36 @@ Requires go 1.6 and the associated buildpack
 * CA_CERT
 * CLIENT_CERT 
 * CLIENT_KEY 
+* CLOUDSQL_CUSTOM_PLANS (A JSON array of objects with fields guid, name, description, tier, 
+pricing_plan, max_disk_size, display_name, and service (CloudSQL's service id_)
 
 
 ## Usage
 
-### (If using as an app) Update the manifest with ENV vars
+### As an App
+
+#### Update the manifest with ENV vars
 1. replace any blank variables that are in manifest.yml with your own ENV vars
 
-### Push the service broker to CF and enable services
+#### Push the service broker to CF and enable services
 1. cf push gcp-service-broker
 1. cf create-service-broker <service broker name> <username> <password> <service broker url>
 1. cf enable-service-access pubsub
+
+### As a Tile
+
+#### Import the product into Ops Manager
+1. Click "Import a Product" and upload the .pivotal file from the product directory
+
+#### Add the product to your Dashboard
+1. Click the plus icon next to the uploaded product
+
+#### Configure the Service Broker
+1. Click on the tile and fill in any required fields (tabs will be orange if updates are needed)
+1. Once the tile is green and updates are applied, review the service/plan access and
+update if necessary using cf disable-service-access. By default, all services and plans
+are enabled except CloudSQL (unless plans have been saved for it). If you wish to change this,
+you'll need to use the cf cli's service-access commands.
 
 ### (Optional) Increase the default provision/bind timeout
 It is advisable, if you want to use CloudSQL, to increase the default timeout for provision and

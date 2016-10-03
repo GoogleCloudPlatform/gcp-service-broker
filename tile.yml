@@ -166,7 +166,7 @@ forms:
     type: string
     label: Database username
   - name: db_password
-    type: string
+    type: secret
     label: Database password
   - name: db_port
     type: string
@@ -186,44 +186,48 @@ forms:
     optional: true
 
 
-dynamic_service_plans:
-- name: display_name
-  label: Display Name
-  type: string
-  description: "Display name"
-  configurable: true
-- name: description
-  label: Plan description
-  type: string
-  description: "Plan description"
-  configurable: true
-- name: service
-  label: Service
-  type: dropdown_select
-  description: "The service this plan is associated with"
-  configurable: false
-  options:
-    - name: '4bc59b9a-8520-409f-85da-1c7552315863'
-      label: 'CloudSQL'
-- name: tier
-  label: Tier
-  type: string
-  description: "Case-sensitive tier name (see https://cloud.google.com/sql/pricing for more information)"
-  configurable: true
-- name: pricing_plan
-  label: Pricing Plan
-  type: dropdown_select
-  configurable: true
-  default: per_use
-  description: "Select a pricing plan (only for 1st generation instances)"
-  options:
-    - name: per_use
-      label: 'Per-Use'
-    - name: package
-      label: "Package"
-- name: max_disk_size
-  label: Max Disk Size
-  type: string
-  default: '10'
-  description: "Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default)"
-  configurable: true
+service_plan_forms:
+- name: cloudsql_custom_plans
+  description: Generate custom plans for CloudSQL
+  label: CloudSQL Custom Plans
+  optional: true
+  properties:
+    - name: display_name
+      label: Display Name
+      type: string
+      description: "Display name"
+      configurable: true
+    - name: description
+      label: Plan description
+      type: string
+      description: "Plan description"
+      configurable: true
+    - name: service
+      label: Service
+      type: dropdown_select
+      description: "The service this plan is associated with"
+      options:
+        - name: '4bc59b9a-8520-409f-85da-1c7552315863'
+          label: 'CloudSQL'
+    - name: tier
+      label: Tier
+      type: string
+      description: "Case-sensitive tier name (see https://cloud.google.com/sql/pricing for more information)"
+      configurable: true
+    - name: pricing_plan
+      label: Pricing Plan
+      type: dropdown_select
+      configurable: true
+      default: PER_USE
+      description: "Select a pricing plan (only for 1st generation instances)"
+      options:
+        - name: PER_USE
+          label: 'Per-Use'
+        - name: PACKAGE
+          label: "Package"
+    - name: max_disk_size
+      label: Max Disk Size
+      type: string
+      default: '10'
+      description: "Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default)"
+      configurable: true
