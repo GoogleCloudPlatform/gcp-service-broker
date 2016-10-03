@@ -1,5 +1,5 @@
 # Change Log
-All releases of the BOSH CPI for Google Cloud Platform will be documented in
+All releases of the GCP Service Broker will be documented in
 this file. This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [1.0.0] - 2016-10-03
