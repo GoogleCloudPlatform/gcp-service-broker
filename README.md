@@ -49,13 +49,30 @@ pricing_plan, max_disk_size, display_name, and service (CloudSQL's service id_)
 
 ## Usage
 
-### (If using as an app) Update the manifest with ENV vars
+### As an App
+
+#### Update the manifest with ENV vars
 1. replace any blank variables that are in manifest.yml with your own ENV vars
 
-### Push the service broker to CF and enable services
+#### Push the service broker to CF and enable services
 1. cf push gcp-service-broker
 1. cf create-service-broker <service broker name> <username> <password> <service broker url>
 1. cf enable-service-access pubsub
+
+### As a Tile
+
+#### Import the product into Ops Manager
+1. Click "Import a Product" and upload the .pivotal file from the product directory
+
+#### Add the product to your Dashboard
+1. Click the plus icon next to the uploaded product
+
+#### Configure the Service Broker
+1. Click on the tile and fill in any required fields (tabs will be orange if updates are needed)
+1. Once the tile is green and updates are applied, review the service/plan access and
+update if necessary using cf disable-service-access. By default, all services and plans
+are enabled except CloudSQL (unless plans have been saved for it). If you wish to change this,
+you'll need to use the cf cli's service-access commands.
 
 ### (Optional) Increase the default provision/bind timeout
 It is advisable, if you want to use CloudSQL, to increase the default timeout for provision and
