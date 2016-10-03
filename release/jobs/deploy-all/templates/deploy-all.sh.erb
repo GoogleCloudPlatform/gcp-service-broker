@@ -23,38 +23,38 @@ function equals_ignore_case() {
 
 function import_opsmgr_variables() {
 	export SCHEME=https
-	export ADMIN_USER=<%= properties.cf.admin_user %>
-	export ADMIN_PASSWORD=<%= properties.cf.admin_password %>
-	export DOMAIN=<%= properties.domain %>
-	export APP_DOMAIN=<%= properties.app_domains[0] %>
-	export CF_ORG=<%= properties.org %>
-	export CF_ORG_QUOTA=<%= properties.org_quota %>
-	export CF_SPACE=<%= properties.space %>
+	export ADMIN_USER=<%= Shellwords.escape properties.cf.admin_user %>
+	export ADMIN_PASSWORD=<%= Shellwords.escape properties.cf.admin_password %>
+	export DOMAIN=<%= Shellwords.escape properties.domain %>
+	export APP_DOMAIN=<%= Shellwords.escape properties.app_domains[0] %>
+	export CF_ORG=<%= Shellwords.escape properties.org %>
+	export CF_ORG_QUOTA=<%= Shellwords.escape properties.org_quota %>
+	export CF_SPACE=<%= Shellwords.escape properties.space %>
 	export CF_TARGET=$SCHEME://api.${DOMAIN}
-	export CF_SKIP_SSL=<%= properties.ssl.skip_cert_verify %>
-	export SECURITY_USER_NAME=<%= properties.security.user %>
-	export SECURITY_USER_PASSWORD=<%= properties.security.password %>
-	export APPLY_OPEN_SECURITY_GROUP=<%= properties.apply_open_security_group %>
-	export ALLOW_PAID_SERVICE_PLANS=<%= properties.allow_paid_service_plans %>
+	export CF_SKIP_SSL=<%= Shellwords.escape properties.ssl.skip_cert_verify %>
+	export SECURITY_USER_NAME=<%= Shellwords.escape properties.security.user %>
+	export SECURITY_USER_PASSWORD=<%= Shellwords.escape properties.security.password %>
+	export APPLY_OPEN_SECURITY_GROUP=<%= Shellwords.escape properties.apply_open_security_group %>
+	export ALLOW_PAID_SERVICE_PLANS=<%= Shellwords.escape Shellwords.escape properties.allow_paid_service_plans %>
 	<%
-	  plans = { }
-	  if properties.dynamic_service_plans
-
-	      p("dynamic_service_plans").each do |plan|
-	        plan_name = plan['name']
-	        plans[plan_name] = plan
-	      end
-	  end
+		plans = { }
+		if properties.cloudsql_custom_plans
+			p("cloudsql_custom_plans").each do |plan|
+				plan_name = plan['name']
+				plans[plan_name] = plan
+			end
+		end
 	%>
-	export DYNAMIC_PLANS='<%= JSON.dump(plans) %>'
-	export ROOT_SERVICE_ACCOUNT_JSON='<%= properties.root_service_account_json %>'
-	export DB_HOST='<%= properties.db_host %>'
-	export DB_USERNAME='<%= properties.db_username %>'
-	export DB_PASSWORD='<%= properties.db_password %>'
-	export DB_PORT='<%= properties.db_port %>'
-	export CA_CERT='<%= properties.ca_cert %>'
-	export CLIENT_CERT='<%= properties.client_cert %>'
-	export CLIENT_KEY='<%= properties.client_key %>'
+	export CLOUDSQL_CUSTOM_PLANS=<%= Shellwords.escape JSON.dump(plans) %>
+
+	export ROOT_SERVICE_ACCOUNT_JSON=<%= Shellwords.escape properties.root_service_account_json  %>
+	export DB_HOST=<%= Shellwords.escape properties.db_host  %>
+	export DB_USERNAME=<%= Shellwords.escape properties.db_username  %>
+	export DB_PASSWORD=<%= Shellwords.escape properties.db_password  %>
+	export DB_PORT=<%= Shellwords.escape properties.db_port  %>
+	export CA_CERT=<%= Shellwords.escape properties.ca_cert  %>
+	export CLIENT_CERT=<%= Shellwords.escape properties.client_cert  %>
+	export CLIENT_KEY=<%= Shellwords.escape properties.client_key  %>
 }
 
 function prepare_cf_cli {
@@ -110,12 +110,12 @@ function setup_target_space() {
 }
 
 function add_target_org_to_admin() {
-    
+
     SYSTEM_ORG_GUID=`$CF org system --guid`
     NEW_ORG_GUID=`$CF org $CF_ORG --guid`
-    
+
     ADMIN_GUID=`$CF curl /v2/organizations/$SYSTEM_ORG_GUID/users | grep -A 2 "username\": \"admin" | awk '{print $2}' | grep organizations | awk -F '/' '{print $4 }' `
-	
+
 	$CF curl /v2/users/$ADMIN_GUID/organizations/$NEW_ORG_GUID -X PUT >/dev/null
 	$CF curl /v2/users/$ADMIN_GUID/managed_organizations/$NEW_ORG_GUID -X PUT >/dev/null
 }
@@ -152,7 +152,9 @@ function add_env_vars() {
 	cf set-env $1 SECURITY_USER_PASSWORD "$SECURITY_USER_PASSWORD"
 
 	# Dynamic plans (if defined)
-	cf set-env $1 PLANS "$DYNAMIC_PLANS"
+
+    # Custom Service Plans
+    cf set-env $1 CLOUDSQL_CUSTOM_PLANS "$CLOUDSQL_CUSTOM_PLANS"
 
 	# Custom variables from tile.yml
 	cf set-env $1 ROOT_SERVICE_ACCOUNT_JSON "$ROOT_SERVICE_ACCOUNT_JSON"
@@ -316,23 +318,23 @@ apply_open_security_group "$APPLY_OPEN_SECURITY_GROUP"
 #
 
 export PKG_NAME=gcp_service_broker
-export APP_NAME=gcp-service-broker-0.0.2
+export APP_NAME=gcp-service-broker-1.0.0
 export APP_HOST=gcp-service-broker
 export DOCKER_IMAGE=""
 export NEEDS_CF_CREDS="True"
 export HEALTH_CHECK=""
 deploy_app "$PKG_NAME" "$APP_NAME" "$APP_HOST" "$DOCKER_IMAGE" "$NEEDS_CF_CREDS" "$HEALTH_CHECK"
-export SVC_NAME="<%= properties.gcp_service_broker.persistence_store_type %>"
+export SVC_NAME=<%= Shellwords.escape properties.gcp_service_broker.persistence_store_type %>
 export SVC_PLAN=""
 provision_auto_service "$PKG_NAME" "$APP_NAME" "$SVC_NAME" "$SVC_PLAN"
 start_app gcp-service-broker "$APP_NAME"
 
 export BROKER_NAME=gcp-service-broker
-export BROKER_USER=<%= properties.gcp_service_broker.user %>
-export BROKER_PASS=<%= properties.gcp_service_broker.password %>
+export BROKER_USER=<%= Shellwords.escape properties.gcp_service_broker.user %>
+export BROKER_PASS=<%= Shellwords.escape properties.gcp_service_broker.password %>
 export BROKER_SERVICES=""
 export BROKER_URL=$SCHEME://${APP_HOST}.${APP_DOMAIN}
-export GLOBAL_ACCESS=<%= properties.gcp_service_broker.enable_global_access_to_plans %>
+export GLOBAL_ACCESS=<%= Shellwords.escape properties.gcp_service_broker.enable_global_access_to_plans %>
 register_broker "$BROKER_NAME" "$BROKER_USER" "$BROKER_PASS" "$BROKER_URL" "$GLOBAL_ACCESS" "$BROKER_SERVICES"
 
 

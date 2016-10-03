@@ -51,8 +51,8 @@ properties:
     description: client_cert
   client_key:
     description: client_key
-  dynamic_service_plans:
-    description: 'Dynamic service plans'
+  cloudsql_custom_plans: 
+    description: cloudsql_custom_plans
   gcp_service_broker.name:
     description: 'Name of package'
   gcp_service_broker.user:

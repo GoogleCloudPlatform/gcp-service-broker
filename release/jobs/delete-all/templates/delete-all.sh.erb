@@ -23,14 +23,14 @@ function equals_ignore_case() {
 
 function import_opsmgr_variables() {
 	export SCHEME=https
-	export ADMIN_USER=<%= properties.cf.admin_user %>
-	export ADMIN_PASSWORD=<%= properties.cf.admin_password %>
-	export DOMAIN=<%= properties.domain %>
-	export APP_DOMAIN=<%= properties.app_domains[0] %>
-	export CF_ORG=<%= properties.org %>
-	export CF_SPACE=<%= properties.space %>
+	export ADMIN_USER=<%= Shellwords.escape properties.cf.admin_user %>
+	export ADMIN_PASSWORD=<%= Shellwords.escape properties.cf.admin_password %>
+	export DOMAIN=<%= Shellwords.escape properties.domain %>
+	export APP_DOMAIN=<%= Shellwords.escape properties.app_domains[0] %>
+	export CF_ORG=<%= Shellwords.escape properties.org %>
+	export CF_SPACE=<%= Shellwords.escape properties.space %>
 	export CF_TARGET=$SCHEME://api.${DOMAIN}
-	export CF_SKIP_SSL=<%= properties.ssl.skip_cert_verify %>
+	export CF_SKIP_SSL=<%= Shellwords.escape properties.ssl.skip_cert_verify %>
 }
 
 function prepare_cf_cli {
