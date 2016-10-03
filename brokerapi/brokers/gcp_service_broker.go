@@ -507,13 +507,13 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 
 	}
 
-	// set up dynamic (read: cloudsql) plans
+	// set up cloudsql custom plans
 	var dynamicPlans map[string]DynamicPlan
-	dynamicPlanJson := os.Getenv("PLANS")
+	dynamicPlanJson := os.Getenv("CLOUDSQL_CUSTOM_PLANS")
 
 	err = json.Unmarshal([]byte(dynamicPlanJson), &dynamicPlans)
 	if err != nil {
-		return []models.Service{}, fmt.Errorf("Error unmarshalling dynamic plan json %s", err)
+		return []models.Service{}, fmt.Errorf("Error unmarshalling custom plan json %s", err)
 	}
 
 	// save cloudsql plans to database and construct mapping

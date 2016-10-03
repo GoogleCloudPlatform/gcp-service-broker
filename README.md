@@ -43,6 +43,8 @@ Requires go 1.6 and the associated buildpack
 * CA_CERT
 * CLIENT_CERT 
 * CLIENT_KEY 
+* CLOUDSQL_CUSTOM_PLANS (A JSON array of objects with fields guid, name, description, tier, 
+pricing_plan, max_disk_size, display_name, and service (CloudSQL's service id_)
 
 
 ## Usage
