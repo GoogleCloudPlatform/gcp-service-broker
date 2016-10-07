@@ -7,9 +7,6 @@ org_quota: 4096
 
 apply_open_security_group: true
 
-stemcell_criteria:
-  version: '3262'
-
 packages:
 - name: gcp-service-broker
   type: app-broker

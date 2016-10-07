@@ -1,0 +1,30 @@
+---
+packages:
+- name: cf_cli
+  version: ac0add6259d19deeaa4fe0f5dc05ab285982f1a8
+  fingerprint: ac0add6259d19deeaa4fe0f5dc05ab285982f1a8
+  sha1: 36fd1fdbdb92be9cb189e342a0f54e1847e3c5a5
+  dependencies: []
+- name: common
+  version: d83e9d13dc21a50d19a829232582496637f02eca
+  fingerprint: d83e9d13dc21a50d19a829232582496637f02eca
+  sha1: ebf26097e7ac54084b49eb846301801001c557f6
+  dependencies: []
+- name: gcp_service_broker
+  version: b9c6fbddf05fc7b792ef5e7a28b01fb0b9ae97b3
+  fingerprint: b9c6fbddf05fc7b792ef5e7a28b01fb0b9ae97b3
+  sha1: e4bd626493d4cb5f8ba0904815d2f0345b1e8cb7
+  dependencies: []
+jobs:
+- name: delete-all
+  version: a3957c47d511564b483da99b62ccaef432a6ca0b
+  fingerprint: a3957c47d511564b483da99b62ccaef432a6ca0b
+  sha1: 7fe62abc7a2622559fd947f073bf4878f35f900f
+- name: deploy-all
+  version: 41ea4db7a57c97a12996b5528c7470bf625a7658
+  fingerprint: 41ea4db7a57c97a12996b5528c7470bf625a7658
+  sha1: 71f0d293f75d54526d345f9fd70923fe415d0e8f
+commit_hash: 61ce222d
+uncommitted_changes: true
+name: gcp-service-broker
+version: 1.0.1
