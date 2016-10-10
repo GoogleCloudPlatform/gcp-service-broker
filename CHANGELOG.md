@@ -10,3 +10,17 @@ to generate CloudSQL plans. Fixed bug where at least one CloudSQL plan was requi
 and changed DB password type in tile config from string to secret. Note that due to
 a migration issue in Ops Manager, you'll need to delete and re-install the broker 
 if you are using it as a tile.
+
+## [1.0.1] - 2016-10-07
+
+### Fixed
+- Removed specified stemcell version from tile.yml so that most recent stemcell is 
+used by default.
+
+## [2.0.0] - 2016-10-10
+
+### Fixed
+- fixed CloudSQL docs link in README
+- updated credentials type returned by bind call to be a map[string]string instead
+of a string.
+
