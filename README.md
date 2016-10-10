@@ -112,7 +112,7 @@ Service calls take the following custom parameters, all as strings, (required wh
         * name (required)
     * Bind
         * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles), e.g. pubsub.admin
-* [CloudSQL](https://cloud.google.com/pubsub/docs/)
+* [CloudSQL](https://cloud.google.com/sql/docs/)
     * Provison
         * instance_name (required)
         * database_name (required)
