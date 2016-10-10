@@ -324,12 +324,14 @@ func (gcpBroker *GCPServiceBroker) Bind(instanceID string, bindingID string, det
 			err)
 	}
 
-	if err != nil {
+	var creds map[string]string
+
+	if err := json.Unmarshal([]byte(newCreds.OtherDetails), &creds); err != nil {
 		return models.Binding{}, err
 	}
 
 	return models.Binding{
-		Credentials:     newCreds.OtherDetails,
+		Credentials:     creds,
 		SyslogDrainURL:  "",
 		RouteServiceURL: "",
 	}, nil
