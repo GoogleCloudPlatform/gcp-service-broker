@@ -212,7 +212,7 @@ var _ = Describe("Brokers", func() {
 		}
 
 		for k, _ := range gcpBroker.ServiceBrokerMap {
-			async := true
+			async := false
 			if k == serviceNameToId[brokers.CloudsqlName] {
 				async = true
 			}
@@ -420,6 +420,35 @@ var _ = Describe("Brokers", func() {
 		})
 	})
 
+	Describe("lastOperation", func() {
+		Context("when last operation is called on a service that doesn't exist", func() {
+			It("should throw an error", func() {
+				_, err = gcpBroker.LastOperation("somethingnonexistant")
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("when last operation is called on a service that is provisioned synchronously", func() {
+			It("should throw an error", func() {
+				_, err = gcpBroker.Provision(instanceId, bqProvisionDetails, true)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = gcpBroker.LastOperation(instanceId)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("when last operation is called on an asynchronous service", func() {
+			It("should call PollInstance", func() {
+				_, err = gcpBroker.Provision(instanceId, cloudSqlProvisionDetails, true)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = gcpBroker.LastOperation(instanceId)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[CloudsqlName]].(*modelsfakes.FakeServiceBrokerHelper).PollInstanceCallCount()).To(Equal(1))
+			})
+		})
+
+	})
+
 	AfterEach(func() {
 		os.Remove(brokers.AppCredsFileName)
 		os.Remove("test.db")
@@ -481,12 +510,12 @@ var _ = Describe("AccountManagers", func() {
 			})
 		})
 
-		//Context("when bind is called on a cloudsql broker on a missing service instance", func() {
-		//	It("it should throw an error", func() {
-		//		_, err = iamStyleBroker.Bind("foo", "bar", models.BindDetails{})
-		//		Expect(err).To(HaveOccurred())
-		//	})
-		//})
+		Context("when bind is called on a cloudsql broker on a missing service instance", func() {
+			It("it should throw an error", func() {
+				_, err = cloudsqlBroker.Bind("foo", "bar", models.BindDetails{})
+				Expect(err).To(HaveOccurred())
+			})
+		})
 	})
 
 	Describe("unbind", func() {
