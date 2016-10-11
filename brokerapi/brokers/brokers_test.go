@@ -221,6 +221,9 @@ var _ = Describe("Brokers", func() {
 				ProvisionStub: func(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
 					return models.ServiceInstanceDetails{ID: instanceId}, nil
 				},
+				BindStub: func(instanceID, bindingID string, details models.BindDetails) (models.ServiceBindingCredentials, error) {
+					return models.ServiceBindingCredentials{OtherDetails: "{\"foo\": \"bar\"}"}, nil
+				},
 			}
 		}
 
@@ -318,7 +321,8 @@ var _ = Describe("Brokers", func() {
 
 		Context("when duplicate services are provisioned", func() {
 			It("should return an error", func() {
-				_, _ = gcpBroker.Provision("something", bqProvisionDetails, true)
+				_, err = gcpBroker.Provision("something", bqProvisionDetails, true)
+				Expect(err).NotTo(HaveOccurred())
 				_, err := gcpBroker.Provision("something", bqProvisionDetails, true)
 				Expect(err).To(HaveOccurred())
 			})
@@ -333,15 +337,16 @@ var _ = Describe("Brokers", func() {
 
 	})
 
-	// TODO(cbriant): wrap all the positive things in expect no errors
 	Describe("deprovision", func() {
 		Context("when the bigquery service id is provided", func() {
 			It("should call bigquery deprovisioning", func() {
 				bqId := serviceNameToId[brokers.BigqueryName]
-				gcpBroker.Provision("something", bqProvisionDetails, true)
-				gcpBroker.Deprovision("something", models.DeprovisionDetails{
+				_, err := gcpBroker.Provision("something", bqProvisionDetails, true)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = gcpBroker.Deprovision("something", models.DeprovisionDetails{
 					ServiceID: bqId,
 				}, true)
+				Expect(err).NotTo(HaveOccurred())
 				Expect(gcpBroker.ServiceBrokerMap[bqId].(*modelsfakes.FakeServiceBrokerHelper).DeprovisionCallCount()).To(Equal(1))
 			})
 		})
@@ -369,7 +374,9 @@ var _ = Describe("Brokers", func() {
 		Context("when bind is called on storage", func() {
 			It("it should call storage bind", func() {
 				_, err = gcpBroker.Provision("storagething", bqProvisionDetails, true)
-				_, _ = gcpBroker.Bind(instanceId, "newbinding", storageBindDetails)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = gcpBroker.Bind(instanceId, "newbinding", storageBindDetails)
+				Expect(err).NotTo(HaveOccurred())
 				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[StorageName]].(*modelsfakes.FakeServiceBrokerHelper).BindCallCount()).To(Equal(1))
 			})
 		})
@@ -377,7 +384,9 @@ var _ = Describe("Brokers", func() {
 		Context("when bind is called more than once on the same id", func() {
 			It("it should throw an error", func() {
 				_, err = gcpBroker.Provision("storagething", bqProvisionDetails, true)
-				_, _ = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				Expect(err).NotTo(HaveOccurred())
 				_, err = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
 				Expect(err).To(HaveOccurred())
 			})
@@ -388,8 +397,11 @@ var _ = Describe("Brokers", func() {
 		Context("when unbind is called on storage", func() {
 			It("it should call storage unbind", func() {
 				_, err = gcpBroker.Provision("storagething", bqProvisionDetails, true)
-				_, _ = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				Expect(err).NotTo(HaveOccurred())
 				err = gcpBroker.Unbind(instanceId, bindingId, storageUnbindDetails)
+				Expect(err).NotTo(HaveOccurred())
 				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[StorageName]].(*modelsfakes.FakeServiceBrokerHelper).UnbindCallCount()).To(Equal(1))
 			})
 		})
@@ -397,8 +409,11 @@ var _ = Describe("Brokers", func() {
 		Context("when unbind is called more than once on the same id", func() {
 			It("it should throw an error", func() {
 				_, err = gcpBroker.Provision("storagething", bqProvisionDetails, true)
-				_, _ = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				Expect(err).NotTo(HaveOccurred())
 				err = gcpBroker.Unbind(instanceId, bindingId, storageUnbindDetails)
+				Expect(err).NotTo(HaveOccurred())
 				err = gcpBroker.Unbind(instanceId, bindingId, storageUnbindDetails)
 				Expect(err).To(HaveOccurred())
 			})
