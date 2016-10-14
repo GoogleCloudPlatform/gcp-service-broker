@@ -3,7 +3,6 @@ package brokers_test
 import (
 	. "gcp-service-broker/brokerapi/brokers"
 
-	"code.cloudfoundry.org/lager"
 	"gcp-service-broker/brokerapi/brokers"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/cloudsql"
@@ -11,11 +10,13 @@ import (
 	"gcp-service-broker/brokerapi/brokers/models/modelsfakes"
 	"gcp-service-broker/brokerapi/brokers/pubsub"
 	"gcp-service-broker/db_service"
+	"net/http"
+	"os"
+
+	"code.cloudfoundry.org/lager"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"net/http"
-	"os"
 )
 
 var _ = Describe("Brokers", func() {
@@ -514,6 +515,31 @@ var _ = Describe("AccountManagers", func() {
 			It("it should throw an error", func() {
 				_, err = cloudsqlBroker.Bind("foo", "bar", models.BindDetails{})
 				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("when bind is called on a cloudsql broker with no username/password after provision", func() {
+			It("should return a generated username and password", func() {
+				db_service.DbConnection.Create(&models.ServiceInstanceDetails{ID: "foo"})
+
+				_, err := cloudsqlBroker.Bind("foo", "bar", models.BindDetails{
+					Parameters: map[string]interface{}{
+						"foo": "bar",
+					},
+				})
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(accountManager.CreateAccountInGoogleCallCount()).To(Equal(1))
+				_, _, details, _ := accountManager.CreateAccountInGoogleArgsForCall(0)
+				Expect(details.Parameters).NotTo(BeEmpty())
+
+				username, usernameOk := details.Parameters["username"].(string)
+				password, passwordOk := details.Parameters["password"].(string)
+
+				Expect(usernameOk).To(BeTrue())
+				Expect(passwordOk).To(BeTrue())
+				Expect(username).NotTo(BeEmpty())
+				Expect(password).NotTo(BeEmpty())
 			})
 		})
 	})

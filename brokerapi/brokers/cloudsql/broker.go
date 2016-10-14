@@ -18,17 +18,18 @@
 package cloudsql
 
 import (
-	"code.cloudfoundry.org/lager"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/db_service"
-	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"code.cloudfoundry.org/lager"
+	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 )
 
 type CloudSQLBroker struct {
@@ -320,6 +321,22 @@ func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details models.BindD
 	cloudDb := models.ServiceInstanceDetails{}
 	if err := db_service.DbConnection.Where("ID = ?", instanceID).First(&cloudDb).Error; err != nil {
 		return models.ServiceBindingCredentials{}, models.ErrInstanceDoesNotExist
+	}
+
+	// generate a new username and password if not provided
+	if v, ok := details.Parameters["username"].(string); !ok || v == "" {
+		username, err := GenerateUsername(instanceID, bindingID)
+		if err != nil {
+			return models.ServiceBindingCredentials{}, err
+		}
+		details.Parameters["username"] = username
+	}
+	if v, ok := details.Parameters["password"].(string); !ok || v == "" {
+		password, err := GeneratePassword()
+		if err != nil {
+			return models.ServiceBindingCredentials{}, err
+		}
+		details.Parameters["password"] = password
 	}
 
 	credBytes, err := b.AccountManager.CreateAccountInGoogle(instanceID, bindingID, details, cloudDb)

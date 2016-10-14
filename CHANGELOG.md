@@ -24,3 +24,6 @@ used by default.
 - updated credentials type returned by bind call to be a map[string]string instead
 of a string.
 
+## Unreleased
+
+- CloudSQL will generate a username/password on bind if one is not provided.
