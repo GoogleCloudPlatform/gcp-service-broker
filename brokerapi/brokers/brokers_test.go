@@ -212,7 +212,7 @@ var _ = Describe("Brokers", func() {
 		}
 
 		for k, _ := range gcpBroker.ServiceBrokerMap {
-			async := true
+			async := false
 			if k == serviceNameToId[brokers.CloudsqlName] {
 				async = true
 			}
@@ -220,6 +220,9 @@ var _ = Describe("Brokers", func() {
 				AsyncStub: func() bool { return async },
 				ProvisionStub: func(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
 					return models.ServiceInstanceDetails{ID: instanceId}, nil
+				},
+				BindStub: func(instanceID, bindingID string, details models.BindDetails) (models.ServiceBindingCredentials, error) {
+					return models.ServiceBindingCredentials{OtherDetails: "{\"foo\": \"bar\"}"}, nil
 				},
 			}
 		}
@@ -318,7 +321,8 @@ var _ = Describe("Brokers", func() {
 
 		Context("when duplicate services are provisioned", func() {
 			It("should return an error", func() {
-				_, _ = gcpBroker.Provision("something", bqProvisionDetails, true)
+				_, err = gcpBroker.Provision("something", bqProvisionDetails, true)
+				Expect(err).NotTo(HaveOccurred())
 				_, err := gcpBroker.Provision("something", bqProvisionDetails, true)
 				Expect(err).To(HaveOccurred())
 			})
@@ -333,15 +337,16 @@ var _ = Describe("Brokers", func() {
 
 	})
 
-	// TODO(cbriant): wrap all the positive things in expect no errors
 	Describe("deprovision", func() {
 		Context("when the bigquery service id is provided", func() {
 			It("should call bigquery deprovisioning", func() {
 				bqId := serviceNameToId[brokers.BigqueryName]
-				gcpBroker.Provision("something", bqProvisionDetails, true)
-				gcpBroker.Deprovision("something", models.DeprovisionDetails{
+				_, err := gcpBroker.Provision("something", bqProvisionDetails, true)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = gcpBroker.Deprovision("something", models.DeprovisionDetails{
 					ServiceID: bqId,
 				}, true)
+				Expect(err).NotTo(HaveOccurred())
 				Expect(gcpBroker.ServiceBrokerMap[bqId].(*modelsfakes.FakeServiceBrokerHelper).DeprovisionCallCount()).To(Equal(1))
 			})
 		})
@@ -369,7 +374,9 @@ var _ = Describe("Brokers", func() {
 		Context("when bind is called on storage", func() {
 			It("it should call storage bind", func() {
 				_, err = gcpBroker.Provision("storagething", bqProvisionDetails, true)
-				_, _ = gcpBroker.Bind(instanceId, "newbinding", storageBindDetails)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = gcpBroker.Bind(instanceId, "newbinding", storageBindDetails)
+				Expect(err).NotTo(HaveOccurred())
 				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[StorageName]].(*modelsfakes.FakeServiceBrokerHelper).BindCallCount()).To(Equal(1))
 			})
 		})
@@ -377,7 +384,9 @@ var _ = Describe("Brokers", func() {
 		Context("when bind is called more than once on the same id", func() {
 			It("it should throw an error", func() {
 				_, err = gcpBroker.Provision("storagething", bqProvisionDetails, true)
-				_, _ = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				Expect(err).NotTo(HaveOccurred())
 				_, err = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
 				Expect(err).To(HaveOccurred())
 			})
@@ -388,8 +397,11 @@ var _ = Describe("Brokers", func() {
 		Context("when unbind is called on storage", func() {
 			It("it should call storage unbind", func() {
 				_, err = gcpBroker.Provision("storagething", bqProvisionDetails, true)
-				_, _ = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				Expect(err).NotTo(HaveOccurred())
 				err = gcpBroker.Unbind(instanceId, bindingId, storageUnbindDetails)
+				Expect(err).NotTo(HaveOccurred())
 				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[StorageName]].(*modelsfakes.FakeServiceBrokerHelper).UnbindCallCount()).To(Equal(1))
 			})
 		})
@@ -397,12 +409,44 @@ var _ = Describe("Brokers", func() {
 		Context("when unbind is called more than once on the same id", func() {
 			It("it should throw an error", func() {
 				_, err = gcpBroker.Provision("storagething", bqProvisionDetails, true)
-				_, _ = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				Expect(err).NotTo(HaveOccurred())
 				err = gcpBroker.Unbind(instanceId, bindingId, storageUnbindDetails)
+				Expect(err).NotTo(HaveOccurred())
 				err = gcpBroker.Unbind(instanceId, bindingId, storageUnbindDetails)
 				Expect(err).To(HaveOccurred())
 			})
 		})
+	})
+
+	Describe("lastOperation", func() {
+		Context("when last operation is called on a service that doesn't exist", func() {
+			It("should throw an error", func() {
+				_, err = gcpBroker.LastOperation("somethingnonexistant")
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("when last operation is called on a service that is provisioned synchronously", func() {
+			It("should throw an error", func() {
+				_, err = gcpBroker.Provision(instanceId, bqProvisionDetails, true)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = gcpBroker.LastOperation(instanceId)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		Context("when last operation is called on an asynchronous service", func() {
+			It("should call PollInstance", func() {
+				_, err = gcpBroker.Provision(instanceId, cloudSqlProvisionDetails, true)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = gcpBroker.LastOperation(instanceId)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[CloudsqlName]].(*modelsfakes.FakeServiceBrokerHelper).PollInstanceCallCount()).To(Equal(1))
+			})
+		})
+
 	})
 
 	AfterEach(func() {
@@ -466,12 +510,12 @@ var _ = Describe("AccountManagers", func() {
 			})
 		})
 
-		//Context("when bind is called on a cloudsql broker on a missing service instance", func() {
-		//	It("it should throw an error", func() {
-		//		_, err = iamStyleBroker.Bind("foo", "bar", models.BindDetails{})
-		//		Expect(err).To(HaveOccurred())
-		//	})
-		//})
+		Context("when bind is called on a cloudsql broker on a missing service instance", func() {
+			It("it should throw an error", func() {
+				_, err = cloudsqlBroker.Bind("foo", "bar", models.BindDetails{})
+				Expect(err).To(HaveOccurred())
+			})
+		})
 	})
 
 	Describe("unbind", func() {
