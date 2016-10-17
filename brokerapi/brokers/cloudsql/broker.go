@@ -314,6 +314,30 @@ func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string
 	return nil
 }
 
+// generate a new username and password if not provided
+func ensureCredentials(instanceID, bindingID string, details *models.BindDetails) error {
+	if details.Parameters == nil {
+		details.Parameters = map[string]interface{}{}
+	}
+
+	if v, ok := details.Parameters["username"].(string); !ok || v == "" {
+		username, err := GenerateUsername(instanceID, bindingID)
+		if err != nil {
+			return err
+		}
+		details.Parameters["username"] = username
+	}
+	if v, ok := details.Parameters["password"].(string); !ok || v == "" {
+		password, err := GeneratePassword()
+		if err != nil {
+			return err
+		}
+		details.Parameters["password"] = password
+	}
+
+	return nil
+}
+
 // creates a new username, password, and set of ssl certs for the given instance
 // may be slow to return because CloudSQL operations are async. Timeout may need to be raised to 90 or 120 seconds
 func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details models.BindDetails) (models.ServiceBindingCredentials, error) {
@@ -323,20 +347,8 @@ func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details models.BindD
 		return models.ServiceBindingCredentials{}, models.ErrInstanceDoesNotExist
 	}
 
-	// generate a new username and password if not provided
-	if v, ok := details.Parameters["username"].(string); !ok || v == "" {
-		username, err := GenerateUsername(instanceID, bindingID)
-		if err != nil {
-			return models.ServiceBindingCredentials{}, err
-		}
-		details.Parameters["username"] = username
-	}
-	if v, ok := details.Parameters["password"].(string); !ok || v == "" {
-		password, err := GeneratePassword()
-		if err != nil {
-			return models.ServiceBindingCredentials{}, err
-		}
-		details.Parameters["password"] = password
+	if err := ensureCredentials(instanceID, bindingID, &details); err != nil {
+		return models.ServiceBindingCredentials{}, err
 	}
 
 	credBytes, err := b.AccountManager.CreateAccountInGoogle(instanceID, bindingID, details, cloudDb)

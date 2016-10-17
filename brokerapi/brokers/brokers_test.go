@@ -522,11 +522,7 @@ var _ = Describe("AccountManagers", func() {
 			It("should return a generated username and password", func() {
 				db_service.DbConnection.Create(&models.ServiceInstanceDetails{ID: "foo"})
 
-				_, err := cloudsqlBroker.Bind("foo", "bar", models.BindDetails{
-					Parameters: map[string]interface{}{
-						"foo": "bar",
-					},
-				})
+				_, err := cloudsqlBroker.Bind("foo", "bar", models.BindDetails{})
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateAccountInGoogleCallCount()).To(Equal(1))
