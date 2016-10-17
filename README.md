@@ -36,11 +36,14 @@ Requires go 1.6 and the associated buildpack
 ### required env vars - if deploying as an app, add these to missing-properties.yml
 
 * ROOT_SERVICE_ACCOUNT_JSON (the string version of the credentials file created for the Owner level Service Account)
-* SB_USERNAME (a username to sign all service broker requests with - the same one used in cf create-service-broker)
-* SB_PASSWORD (a password to sign all service broker requests with - the same one used in cf create-service-broker)
+* SECURITY_USER_NAME (a username to sign all service broker requests with - the same one used in cf create-service-broker)
+* SECURITY_USER_PASSWORD (a password to sign all service broker requests with - the same one used in cf create-service-broker)
 * DB_HOST (the host for the database to back the service broker)
 * DB_USERNAME (the database username for the service broker to use)
 * DB_PASSWORD (the database password for the service broker to use)
+* CLOUDSQL_CUSTOM_PLANS (A map of plan names to string maps with fields guid, name, description, tier, 
+pricing_plan, max_disk_size, display_name, and service (Cloud SQL's service id)) - set to `{}` to skip
+adding plans for Cloud SQL and disable the service
 
 ### optional env vars - if deploying as an app, optionally add these to missing-properties.yml
 
@@ -48,8 +51,6 @@ Requires go 1.6 and the associated buildpack
 * CA_CERT
 * CLIENT_CERT 
 * CLIENT_KEY 
-* CLOUDSQL_CUSTOM_PLANS (A JSON array of objects with fields guid, name, description, tier, 
-pricing_plan, max_disk_size, display_name, and service (CloudSQL's service id_)
 
 
 ## Usage
@@ -62,7 +63,7 @@ pricing_plan, max_disk_size, display_name, and service (CloudSQL's service id_)
 #### Push the service broker to CF and enable services
 1. cf push gcp-service-broker
 1. cf create-service-broker <service broker name> <username> <password> <service broker url>
-1. cf enable-service-access pubsub
+1. (for all applicable services, e.g.) cf enable-service-access google-pubsub
 
 ### As a Tile
 
