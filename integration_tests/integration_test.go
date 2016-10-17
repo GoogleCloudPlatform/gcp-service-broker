@@ -11,6 +11,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	googlebigquery "google.golang.org/api/bigquery/v2"
+	"google.golang.org/api/iam/v1"
 	"net/http"
 	"os"
 )
@@ -22,9 +23,10 @@ var _ = Describe("LiveIntegrationTests", func() {
 		logger                   lager.Logger
 		serviceNameToId          map[string]string = make(map[string]string)
 		someBigQueryPlanId       string
+		someStoragePlanId        string
 		cloudSqlProvisionDetails models.ProvisionDetails
-		storageBindDetails       models.BindDetails
-		storageUnbindDetails     models.UnbindDetails
+		bigqueryBindDetails      models.BindDetails
+		bigqueryUnbindDetails    models.UnbindDetails
 		instanceId               string
 		bindingId                string
 	)
@@ -176,13 +178,11 @@ var _ = Describe("LiveIntegrationTests", func() {
 		bindingId = "newbinding"
 
 		gcpBroker, err = brokers.New(logger)
-		println("inited the broker!")
 		if err != nil {
 			logger.Error("error", err)
 		}
 
 		var someCloudSQLPlanId string
-		var someStoragePlanId string
 		for _, service := range *gcpBroker.Catalog {
 			serviceNameToId[service.Name] = service.ID
 			if service.Name == BigqueryName {
@@ -201,14 +201,17 @@ var _ = Describe("LiveIntegrationTests", func() {
 			PlanID:    someCloudSQLPlanId,
 		}
 
-		storageBindDetails = models.BindDetails{
-			ServiceID: serviceNameToId[brokers.StorageName],
-			PlanID:    someStoragePlanId,
+		bigqueryBindDetails = models.BindDetails{
+			ServiceID: serviceNameToId[brokers.BigqueryName],
+			PlanID:    someBigQueryPlanId,
+			Parameters: map[string]interface{}{
+				"role": "editor",
+			},
 		}
 
-		storageUnbindDetails = models.UnbindDetails{
-			ServiceID: serviceNameToId[brokers.StorageName],
-			PlanID:    someStoragePlanId,
+		bigqueryUnbindDetails = models.UnbindDetails{
+			ServiceID: serviceNameToId[brokers.BigqueryName],
+			PlanID:    someBigQueryPlanId,
 		}
 
 	})
@@ -289,54 +292,54 @@ var _ = Describe("LiveIntegrationTests", func() {
 				_, err = service.Datasets.Get(gcpBroker.RootGCPCredentials.ProjectId, datasetName).Do()
 				Expect(err).To(HaveOccurred())
 
+				instance := models.ServiceInstanceDetails{}
+				if err := db_service.DbConnection.Unscoped().Where("ID = ?", instanceId).First(&instance).Error; err != nil {
+					panic("error checking for service instance details: " + err.Error())
+				}
+				Expect(instance.DeletedAt).NotTo(Equal(nil))
+
 			})
 
 		})
 
-		//Context("when too many services are provisioned", func() {
-		//	It("should return an error", func() {
-		//		gcpBroker.InstanceLimit = 0
-		//		_, err := gcpBroker.Provision("something", bqProvisionDetails, true)
-		//		Expect(err).To(HaveOccurred())
-		//		Expect(err).To(Equal(models.ErrInstanceLimitMet))
-		//	})
-		//})
-		//
-		//Context("when an unrecognized service is provisioned", func() {
-		//	It("should return an error", func() {
-		//		_, err = gcpBroker.Provision("something", models.ProvisionDetails{
-		//			ServiceID: "nope",
-		//			PlanID:    "nope",
-		//		}, true)
-		//		Expect(err).To(HaveOccurred())
-		//	})
-		//})
-		//
-		//Context("when an unrecognized plan is provisioned", func() {
-		//	It("should return an error", func() {
-		//		_, err = gcpBroker.Provision("something", models.ProvisionDetails{
-		//			ServiceID: serviceNameToId[BigqueryName],
-		//			PlanID:    "nope",
-		//		}, true)
-		//		Expect(err).To(HaveOccurred())
-		//	})
-		//})
-		//
-		//Context("when duplicate services are provisioned", func() {
-		//	It("should return an error", func() {
-		//		_, err = gcpBroker.Provision("something", bqProvisionDetails, true)
-		//		Expect(err).NotTo(HaveOccurred())
-		//		_, err := gcpBroker.Provision("something", bqProvisionDetails, true)
-		//		Expect(err).To(HaveOccurred())
-		//	})
-		//})
-		//
-		//Context("when async provisioning isn't allowed but the service requested requires it", func() {
-		//	It("should return an error", func() {
-		//		_, err := gcpBroker.Provision("something", cloudSqlProvisionDetails, false)
-		//		Expect(err).To(HaveOccurred())
-		//	})
-		//})
+		Context("bigquery bind and unbind", func() {
+
+			It("should make a bigquery dataset on provision and delete it on deprovision, and maintain db records", func() {
+				_, err := gcpBroker.Provision(instanceId, bqProvisionDetails, true)
+				Expect(err).ToNot(HaveOccurred())
+
+				creds, err := gcpBroker.Bind(instanceId, bindingId, bigqueryBindDetails)
+				Expect(err).ToNot(HaveOccurred())
+
+				var count int
+				db_service.DbConnection.Model(&models.ServiceBindingCredentials{}).Where("binding_id = ?", bindingId).Count(&count)
+				Expect(count).To(Equal(1))
+
+				iamService, err := iam.New(gcpBroker.GCPClient)
+				Expect(err).ToNot(HaveOccurred())
+				saService := iam.NewProjectsServiceAccountsService(iamService)
+				resourceName := "projects/" + gcpBroker.RootGCPCredentials.ProjectId + "/serviceAccounts/" + creds.Credentials.(map[string]string)["UniqueId"]
+				_, err = saService.Get(resourceName).Do()
+				Expect(err).ToNot(HaveOccurred())
+
+				err = gcpBroker.Unbind(instanceId, bindingId, bigqueryUnbindDetails)
+				Expect(err).ToNot(HaveOccurred())
+
+				_, err = saService.Get(resourceName).Do()
+				Expect(err).To(HaveOccurred())
+
+				binding := models.ServiceBindingCredentials{}
+				if err := db_service.DbConnection.Unscoped().Where("binding_id = ?", bindingId).First(&binding).Error; err != nil {
+					panic("error checking for binding details: " + err.Error())
+				}
+				Expect(binding.DeletedAt).NotTo(Equal(nil))
+
+				_, err = gcpBroker.Deprovision(instanceId, bqDeprovisionDetails, true)
+				Expect(err).ToNot(HaveOccurred())
+
+			})
+
+		})
 
 	})
 
