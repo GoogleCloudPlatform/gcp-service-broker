@@ -45,7 +45,7 @@ func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindi
 		return models.ServiceBindingCredentials{}, errors.New("Error getting role as string from request")
 	}
 
-	var someName = saPrefix + bindingID
+	someName := ServiceAccountName(bindingID)
 	var resourceName = projectResourcePrefix + sam.ProjectId
 	var err error
 
@@ -56,11 +56,10 @@ func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindi
 	saService := iam.NewProjectsServiceAccountsService(iamService)
 
 	// create and save account
-	// XXX names are truncated to 20 characters because of a bug
 	newSARequest := iam.CreateServiceAccountRequest{
-		AccountId: someName[:20],
+		AccountId: someName,
 		ServiceAccount: &iam.ServiceAccount{
-			DisplayName: someName[:20],
+			DisplayName: someName,
 		},
 	}
 
@@ -157,6 +156,12 @@ func (sam *ServiceAccountManager) DeleteAccountFromGoogle(binding models.Service
 		return fmt.Errorf("error deleting service account: %s", err)
 	}
 	return nil
+}
+
+// XXX names are truncated to 20 characters because of a bug in the IAM service
+func ServiceAccountName(bindingId string) string {
+	name := saPrefix + bindingId
+	return name[:20]
 }
 
 type ServiceAccountInfo struct {
