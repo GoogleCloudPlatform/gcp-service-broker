@@ -16,7 +16,7 @@ func GenerateUsername(instanceID, bindingID string) (string, error) {
 		return "", fmt.Errorf("empty instanceID and bindingID")
 	}
 
-	username := instanceID + bindingID
+	username := bindingID + instanceID
 	if len(username) > maxUsernameLength {
 		username = username[:maxUsernameLength]
 	}
