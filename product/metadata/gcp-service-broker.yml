@@ -124,12 +124,10 @@ property_blueprints:
 - configurable: true
   label: Database username
   name: db_username
-  optional: true
   type: string
 - configurable: true
   label: Database password
   name: db_password
-  optional: true
   type: secret
 - configurable: true
   default: '3306'
