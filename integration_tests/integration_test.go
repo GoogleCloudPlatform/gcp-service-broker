@@ -2,6 +2,7 @@ package integration_tests
 
 import (
 	"context"
+	"encoding/json"
 	. "gcp-service-broker/brokerapi/brokers"
 
 	"gcp-service-broker/brokerapi/brokers"
@@ -21,6 +22,55 @@ import (
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 )
+
+type provisionParams struct {
+	serviceId          string
+	planId             string
+	rawProvisionParams json.RawMessage
+	instanceId         string
+	serviceExistsFn    func(bool) bool
+	cleanupFn          func()
+}
+
+func testProvision(gcpBroker *GCPAsyncServiceBroker, params *provisionParams) {
+	provisionDetails := models.ProvisionDetails{
+		ServiceID:     params.serviceId,
+		PlanID:        params.planId,
+		RawParameters: params.rawProvisionParams,
+	}
+
+	deprovisionDetails := models.DeprovisionDetails{
+		ServiceID: params.serviceId,
+		PlanID:    params.planId,
+	}
+
+	// If the bucket already exists (eg, failed previous test), clean it up before the run
+	if params.serviceExistsFn(false) {
+		params.cleanupFn()
+	}
+
+	// Provision succeeds
+	_, err := gcpBroker.Provision(params.instanceId, provisionDetails, true)
+	Expect(err).ToNot(HaveOccurred())
+
+	// Provision is registered in the database
+	var count int
+	db_service.DbConnection.Model(&models.ServiceInstanceDetails{}).Where("id = ?", params.instanceId).Count(&count)
+	Expect(count).To(Equal(1))
+
+	Expect(params.serviceExistsFn(true)).To(BeTrue())
+
+	// Deporvision succeeds
+	_, err = gcpBroker.Deprovision(params.instanceId, deprovisionDetails, true)
+	Expect(err).ToNot(HaveOccurred())
+	instance := models.ServiceInstanceDetails{}
+	if err := db_service.DbConnection.Unscoped().Where("ID = ?", params.instanceId).First(&instance).Error; err != nil {
+		panic("error checking for service instance details: " + err.Error())
+	}
+	Expect(instance.DeletedAt).NotTo(Equal(nil))
+
+	Expect(params.serviceExistsFn(false)).To(BeFalse())
+}
 
 const timeout = 60
 
@@ -466,60 +516,29 @@ var _ = Describe("LiveIntegrationTests", func() {
 	//})
 
 	Describe("cloud storage", func() {
-		var (
-			csProvisionDetails   models.ProvisionDetails
-			csDeprovisionDetails models.DeprovisionDetails
-			service              *googlestorage.Client
-			bucketName           string
-		)
+		It("can provision/deprovision", func() {
+			service, err := googlestorage.NewClient(context.Background(), option.WithUserAgent(models.CustomUserAgent))
+			Expect(err).NotTo(HaveOccurred())
 
-		BeforeEach(func() {
-			bucketName = "integration_test_bucket"
+			bucketName := "integration_test_bucket"
+			params := &provisionParams{
+				serviceId:          serviceNameToId[brokers.StorageName],
+				planId:             someStoragePlanId,
+				rawProvisionParams: []byte("{\"name\": \"" + bucketName + "\"}"),
+				instanceId:         bucketName,
+				serviceExistsFn: func(bool) bool {
+					bucket := service.Bucket(bucketName)
+					_, err = bucket.List(context.Background(), nil)
 
-			csProvisionDetails = models.ProvisionDetails{
-				ServiceID:     serviceNameToId[brokers.StorageName],
-				PlanID:        someStoragePlanId,
-				RawParameters: []byte("{\"name\": \"integration_test_bucket\"}"),
+					return err == nil
+				},
+				cleanupFn: func() {
+					bucket := service.Bucket(bucketName)
+					bucket.Delete(context.Background())
+				},
 			}
 
-			csDeprovisionDetails = models.DeprovisionDetails{
-				ServiceID: serviceNameToId[brokers.StorageName],
-				PlanID:    someStoragePlanId,
-			}
-
-			service, err = googlestorage.NewClient(context.Background(), option.WithUserAgent(models.CustomUserAgent))
-			if err != nil {
-				panic("error creating admin client for testing")
-			}
-		})
-
-		Context("provision and deprovision", func() {
-			It("should make a bucket on provision and delete it on deprovision, and maintain db records", func() {
-				_, err := gcpBroker.Provision(instanceId, csProvisionDetails, true)
-				Expect(err).ToNot(HaveOccurred())
-				bucket := service.Bucket(bucketName)
-
-				_, err = bucket.List(context.Background(), nil)
-				Expect(err).ToNot(HaveOccurred())
-
-				var count int
-				db_service.DbConnection.Model(&models.ServiceInstanceDetails{}).Where("id = ?", instanceId).Count(&count)
-				Expect(count).To(Equal(1))
-
-				_, err = gcpBroker.Deprovision(instanceId, csDeprovisionDetails, true)
-
-				_, err = bucket.List(context.Background(), nil)
-				Expect(err).To(HaveOccurred())
-
-				instance := models.ServiceInstanceDetails{}
-
-				if err = db_service.DbConnection.Unscoped().Where("ID = ?", instanceId).First(&instance).Error; err != nil {
-					panic("error checking for service instance details: " + err.Error())
-				}
-				Expect(instance.DeletedAt).NotTo(Equal(nil))
-
-			}, timeout)
-
+			testProvision(gcpBroker, params)
 		})
 	})
 
