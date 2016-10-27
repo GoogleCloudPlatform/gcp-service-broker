@@ -23,6 +23,8 @@ import (
 	"google.golang.org/api/option"
 )
 
+const timeout = 60
+
 type genericService struct {
 	serviceId          string
 	planId             string
@@ -35,6 +37,10 @@ type genericService struct {
 }
 
 func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService) {
+	// If the service already exists (eg, failed previous test), clean it up before the run
+	if params.serviceExistsFn(false) {
+		params.cleanupFn()
+	}
 	//
 	// Provision
 	//
@@ -44,12 +50,6 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 		RawParameters: params.rawProvisionParams,
 	}
 
-	// If the service already exists (eg, failed previous test), clean it up before the run
-	if params.serviceExistsFn(false) {
-		params.cleanupFn()
-	}
-
-	// Provision succeeds
 	_, err := gcpBroker.Provision(params.instanceId, provisionDetails, true)
 	Expect(err).ToNot(HaveOccurred())
 
@@ -103,8 +103,6 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 	//
 	// Deprovision
 	//
-
-	// Deporvision succeeds
 	deprovisionDetails := models.DeprovisionDetails{
 		ServiceID: params.serviceId,
 		PlanID:    params.planId,
@@ -119,8 +117,6 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 
 	Expect(params.serviceExistsFn(false)).To(BeFalse())
 }
-
-const timeout = 60
 
 var _ = Describe("LiveIntegrationTests", func() {
 	var (
@@ -341,7 +337,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 				},
 			}
 			testGenericService(gcpBroker, params)
-		})
+		}, timeout)
 	})
 
 	//Describe("deprovision", func() {
@@ -457,7 +453,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 	//})
 
 	Describe("cloud storage", func() {
-		It("can provision/deprovision", func() {
+		It("can provision/bind/unbind/deprovision", func() {
 			service, err := googlestorage.NewClient(context.Background(), option.WithUserAgent(models.CustomUserAgent))
 			Expect(err).NotTo(HaveOccurred())
 
@@ -484,11 +480,11 @@ var _ = Describe("LiveIntegrationTests", func() {
 			}
 
 			testGenericService(gcpBroker, params)
-		})
+		}, timeout)
 	})
 
 	Describe("pub sub", func() {
-		It("can provision/deprovision", func() {
+		It("can provision/bind/unbind/deprovision", func() {
 			service, err := googlepubsub.NewClient(context.Background(), gcpBroker.RootGCPCredentials.ProjectId, option.WithUserAgent(models.CustomUserAgent))
 			Expect(err).NotTo(HaveOccurred())
 
@@ -516,7 +512,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 			}
 
 			testGenericService(gcpBroker, params)
-		})
+		}, timeout)
 	})
 
 	AfterEach(func() {
