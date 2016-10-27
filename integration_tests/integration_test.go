@@ -516,11 +516,6 @@ var _ = Describe("LiveIntegrationTests", func() {
 			}, timeout)
 
 		})
-		Context("bind and unbind", func() {
-			It("should test", func() {
-				//	Expect(false).To(BeTrue())
-			}, timeout)
-		})
 	})
 
 	AfterEach(func() {
