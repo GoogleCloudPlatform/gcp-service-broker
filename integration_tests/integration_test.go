@@ -3,17 +3,18 @@ package integration_tests
 import (
 	. "gcp-service-broker/brokerapi/brokers"
 
-	"code.cloudfoundry.org/lager"
 	"gcp-service-broker/brokerapi/brokers"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/db_service"
+	"net/http"
+	"os"
+
+	"code.cloudfoundry.org/lager"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	googlebigquery "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iam/v1"
-	"net/http"
-	"os"
 )
 
 var _ = Describe("LiveIntegrationTests", func() {
@@ -226,7 +227,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 		})
 
 		It("should have loaded credentials correctly and have a project id", func() {
-			Expect(gcpBroker.RootGCPCredentials.ProjectId).To(Equal("gcp-service-broker-testing"))
+			Expect(gcpBroker.RootGCPCredentials.ProjectId).To(Not(BeEmpty()))
 		})
 	})
 
