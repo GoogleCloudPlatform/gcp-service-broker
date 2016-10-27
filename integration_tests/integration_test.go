@@ -124,18 +124,11 @@ const timeout = 60
 
 var _ = Describe("LiveIntegrationTests", func() {
 	var (
-		gcpBroker                *GCPAsyncServiceBroker
-		err                      error
-		logger                   lager.Logger
-		serviceNameToId          map[string]string = make(map[string]string)
-		someBigQueryPlanId       string
-		someStoragePlanId        string
-		somePubsubPlanId         string
-		cloudSqlProvisionDetails models.ProvisionDetails
-		bigqueryBindDetails      models.BindDetails
-		bigqueryUnbindDetails    models.UnbindDetails
-		instanceId               string
-		bindingId                string
+		gcpBroker           *GCPAsyncServiceBroker
+		err                 error
+		logger              lager.Logger
+		serviceNameToId     map[string]string = make(map[string]string)
+		serviceNameToPlanId map[string]string = make(map[string]string)
 	)
 
 	BeforeEach(func() {
@@ -281,49 +274,15 @@ var _ = Describe("LiveIntegrationTests", func() {
 			}
 		}`)
 
-		instanceId = "newid"
-		bindingId = "newbinding"
-
 		gcpBroker, err = brokers.New(logger)
 		if err != nil {
 			logger.Error("error", err)
 		}
 
-		var someCloudSQLPlanId string
 		for _, service := range *gcpBroker.Catalog {
 			serviceNameToId[service.Name] = service.ID
-			if service.Name == BigqueryName {
-				someBigQueryPlanId = service.Plans[0].ID
-			}
-			if service.Name == CloudsqlName {
-				someCloudSQLPlanId = service.Plans[0].ID
-			}
-			if service.Name == StorageName {
-				someStoragePlanId = service.Plans[0].ID
-			}
-			if service.Name == PubsubName {
-				somePubsubPlanId = service.Plans[0].ID
-			}
+			serviceNameToPlanId[service.Name] = service.Plans[0].ID
 		}
-
-		cloudSqlProvisionDetails = models.ProvisionDetails{
-			ServiceID: serviceNameToId[brokers.CloudsqlName],
-			PlanID:    someCloudSQLPlanId,
-		}
-
-		bigqueryBindDetails = models.BindDetails{
-			ServiceID: serviceNameToId[brokers.BigqueryName],
-			PlanID:    someBigQueryPlanId,
-			Parameters: map[string]interface{}{
-				"role": "editor",
-			},
-		}
-
-		bigqueryUnbindDetails = models.UnbindDetails{
-			ServiceID: serviceNameToId[brokers.BigqueryName],
-			PlanID:    someBigQueryPlanId,
-		}
-
 	})
 
 	Describe("Broker init", func() {
@@ -364,7 +323,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 			datasetName := "integration_test_dataset"
 			params := &genericService{
 				serviceId:          serviceNameToId[brokers.BigqueryName],
-				planId:             someBigQueryPlanId,
+				planId:             serviceNameToPlanId[brokers.BigqueryName],
 				bindingId:          "integration_test_bind",
 				instanceId:         datasetName,
 				rawProvisionParams: []byte("{\"name\": \"" + datasetName + "\"}"),
@@ -505,7 +464,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 			bucketName := "integration_test_bucket"
 			params := &genericService{
 				serviceId:          serviceNameToId[brokers.StorageName],
-				planId:             someStoragePlanId,
+				planId:             serviceNameToPlanId[brokers.StorageName],
 				instanceId:         bucketName,
 				bindingId:          "integration_test_bucket_binding",
 				rawProvisionParams: []byte("{\"name\": \"" + bucketName + "\"}"),
@@ -538,7 +497,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 			params := &genericService{
 				serviceId:          serviceNameToId[brokers.PubsubName],
-				planId:             somePubsubPlanId,
+				planId:             serviceNameToPlanId[brokers.PubsubName],
 				instanceId:         topicName,
 				bindingId:          "integration_test_topic_bindingId",
 				rawProvisionParams: []byte("{\"topic_name\": \"" + topicName + "\"}"),
