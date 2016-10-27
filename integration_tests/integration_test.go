@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"os"
 
+	googlepubsub "cloud.google.com/go/pubsub"
+
 	googlestorage "cloud.google.com/go/storage"
 	"code.cloudfoundry.org/lager"
 	"github.com/jinzhu/gorm"
@@ -30,6 +32,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 		serviceNameToId          map[string]string = make(map[string]string)
 		someBigQueryPlanId       string
 		someStoragePlanId        string
+		somePubsubPlanId         string
 		cloudSqlProvisionDetails models.ProvisionDetails
 		bigqueryBindDetails      models.BindDetails
 		bigqueryUnbindDetails    models.UnbindDetails
@@ -199,6 +202,9 @@ var _ = Describe("LiveIntegrationTests", func() {
 			}
 			if service.Name == StorageName {
 				someStoragePlanId = service.Plans[0].ID
+			}
+			if service.Name == PubsubName {
+				somePubsubPlanId = service.Plans[0].ID
 			}
 		}
 
@@ -460,7 +466,6 @@ var _ = Describe("LiveIntegrationTests", func() {
 	//})
 
 	Describe("cloud storage", func() {
-
 		var (
 			csProvisionDetails   models.ProvisionDetails
 			csDeprovisionDetails models.DeprovisionDetails
@@ -518,6 +523,63 @@ var _ = Describe("LiveIntegrationTests", func() {
 		})
 	})
 
+	Describe("pub sub", func() {
+		var (
+			psProvisionDetails   models.ProvisionDetails
+			psDeprovisionDetails models.DeprovisionDetails
+			service              *googlepubsub.Client
+			topicName            string
+		)
+
+		BeforeEach(func() {
+			topicName = "integration_test_topic"
+
+			psProvisionDetails = models.ProvisionDetails{
+				ServiceID:     serviceNameToId[brokers.PubsubName],
+				PlanID:        somePubsubPlanId,
+				RawParameters: []byte("{\"topic_name\": \"integration_test_topic\"}"),
+			}
+
+			psDeprovisionDetails = models.DeprovisionDetails{
+				ServiceID: serviceNameToId[brokers.PubsubName],
+				PlanID:    somePubsubPlanId,
+			}
+
+			service, err = googlepubsub.NewClient(context.Background(), gcpBroker.RootGCPCredentials.ProjectId, option.WithUserAgent(models.CustomUserAgent))
+			if err != nil {
+				panic("error creating admin client for testing")
+			}
+		})
+
+		Context("provision and deprovision", func() {
+			It("should make a bucket on provision and delete it on deprovision, and maintain db records", func() {
+				_, err := gcpBroker.Provision(instanceId, psProvisionDetails, true)
+				Expect(err).ToNot(HaveOccurred())
+				topic := service.Topic(topicName)
+
+				exists, err := topic.Exists(context.Background())
+				Expect(exists).To(BeTrue())
+
+				var count int
+				db_service.DbConnection.Model(&models.ServiceInstanceDetails{}).Where("id = ?", instanceId).Count(&count)
+				Expect(count).To(Equal(1))
+
+				_, err = gcpBroker.Deprovision(instanceId, psDeprovisionDetails, true)
+
+				exists, err = topic.Exists(context.Background())
+				Expect(exists).To(BeFalse())
+
+				instance := models.ServiceInstanceDetails{}
+
+				if err = db_service.DbConnection.Unscoped().Where("ID = ?", instanceId).First(&instance).Error; err != nil {
+					panic("error checking for service instance details: " + err.Error())
+				}
+				Expect(instance.DeletedAt).NotTo(Equal(nil))
+
+			}, timeout)
+
+		})
+	})
 	AfterEach(func() {
 		os.Remove(brokers.AppCredsFileName)
 		os.Remove("test.db")
