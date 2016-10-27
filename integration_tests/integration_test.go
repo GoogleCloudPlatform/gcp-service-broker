@@ -1,6 +1,7 @@
 package integration_tests
 
 import (
+	"context"
 	. "gcp-service-broker/brokerapi/brokers"
 
 	"gcp-service-broker/brokerapi/brokers"
@@ -9,13 +10,17 @@ import (
 	"net/http"
 	"os"
 
+	googlestorage "cloud.google.com/go/storage"
 	"code.cloudfoundry.org/lager"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	googlebigquery "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iam/v1"
+	"google.golang.org/api/option"
 )
+
+const timeout = 60
 
 var _ = Describe("LiveIntegrationTests", func() {
 	var (
@@ -337,11 +342,9 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 				_, err = gcpBroker.Deprovision(instanceId, bqDeprovisionDetails, true)
 				Expect(err).ToNot(HaveOccurred())
-
-			})
+			}, timeout)
 
 		})
-
 	})
 
 	//Describe("deprovision", func() {
@@ -455,6 +458,70 @@ var _ = Describe("LiveIntegrationTests", func() {
 	//	})
 
 	//})
+
+	Describe("cloud storage", func() {
+
+		var (
+			csProvisionDetails   models.ProvisionDetails
+			csDeprovisionDetails models.DeprovisionDetails
+			service              *googlestorage.Client
+			bucketName           string
+		)
+
+		BeforeEach(func() {
+			bucketName = "integration_test_bucket"
+
+			csProvisionDetails = models.ProvisionDetails{
+				ServiceID:     serviceNameToId[brokers.StorageName],
+				PlanID:        someStoragePlanId,
+				RawParameters: []byte("{\"name\": \"integration_test_bucket\"}"),
+			}
+
+			csDeprovisionDetails = models.DeprovisionDetails{
+				ServiceID: serviceNameToId[brokers.StorageName],
+				PlanID:    someStoragePlanId,
+			}
+
+			service, err = googlestorage.NewClient(context.Background(), option.WithUserAgent(models.CustomUserAgent))
+			if err != nil {
+				panic("error creating admin client for testing")
+			}
+		})
+
+		Context("provision and deprovision", func() {
+			It("should make a bucket on provision and delete it on deprovision, and maintain db records", func() {
+				_, err := gcpBroker.Provision(instanceId, csProvisionDetails, true)
+				Expect(err).ToNot(HaveOccurred())
+				bucket := service.Bucket(bucketName)
+
+				_, err = bucket.List(context.Background(), nil)
+				Expect(err).ToNot(HaveOccurred())
+
+				var count int
+				db_service.DbConnection.Model(&models.ServiceInstanceDetails{}).Where("id = ?", instanceId).Count(&count)
+				Expect(count).To(Equal(1))
+
+				_, err = gcpBroker.Deprovision(instanceId, csDeprovisionDetails, true)
+
+				_, err = bucket.List(context.Background(), nil)
+				Expect(err).To(HaveOccurred())
+
+				instance := models.ServiceInstanceDetails{}
+
+				if err = db_service.DbConnection.Unscoped().Where("ID = ?", instanceId).First(&instance).Error; err != nil {
+					panic("error checking for service instance details: " + err.Error())
+				}
+				Expect(instance.DeletedAt).NotTo(Equal(nil))
+
+			}, timeout)
+
+		})
+		Context("bind and unbind", func() {
+			It("should test", func() {
+				//	Expect(false).To(BeTrue())
+			}, timeout)
+		})
+	})
 
 	AfterEach(func() {
 		os.Remove(brokers.AppCredsFileName)
