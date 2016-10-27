@@ -543,62 +543,33 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	Describe("pub sub", func() {
-		var (
-			psProvisionDetails   models.ProvisionDetails
-			psDeprovisionDetails models.DeprovisionDetails
-			service              *googlepubsub.Client
-			topicName            string
-		)
+		It("can provision/deprovision", func() {
+			service, err := googlepubsub.NewClient(context.Background(), gcpBroker.RootGCPCredentials.ProjectId, option.WithUserAgent(models.CustomUserAgent))
+			Expect(err).NotTo(HaveOccurred())
 
-		BeforeEach(func() {
-			topicName = "integration_test_topic"
+			topicName := "integration_test_topic"
+			topic := service.Topic(topicName)
 
-			psProvisionDetails = models.ProvisionDetails{
-				ServiceID:     serviceNameToId[brokers.PubsubName],
-				PlanID:        somePubsubPlanId,
-				RawParameters: []byte("{\"topic_name\": \"integration_test_topic\"}"),
+			params := &provisionParams{
+				serviceId:          serviceNameToId[brokers.PubsubName],
+				planId:             somePubsubPlanId,
+				rawProvisionParams: []byte("{\"topic_name\": \"" + topicName + "\"}"),
+				instanceId:         topicName,
+				serviceExistsFn: func(bool) bool {
+					exists, err := topic.Exists(context.Background())
+					Expect(err).NotTo(HaveOccurred())
+					return exists
+				},
+				cleanupFn: func() {
+					err := topic.Delete(context.Background())
+					Expect(err).NotTo(HaveOccurred())
+				},
 			}
 
-			psDeprovisionDetails = models.DeprovisionDetails{
-				ServiceID: serviceNameToId[brokers.PubsubName],
-				PlanID:    somePubsubPlanId,
-			}
-
-			service, err = googlepubsub.NewClient(context.Background(), gcpBroker.RootGCPCredentials.ProjectId, option.WithUserAgent(models.CustomUserAgent))
-			if err != nil {
-				panic("error creating admin client for testing")
-			}
-		})
-
-		Context("provision and deprovision", func() {
-			It("should make a bucket on provision and delete it on deprovision, and maintain db records", func() {
-				_, err := gcpBroker.Provision(instanceId, psProvisionDetails, true)
-				Expect(err).ToNot(HaveOccurred())
-				topic := service.Topic(topicName)
-
-				exists, err := topic.Exists(context.Background())
-				Expect(exists).To(BeTrue())
-
-				var count int
-				db_service.DbConnection.Model(&models.ServiceInstanceDetails{}).Where("id = ?", instanceId).Count(&count)
-				Expect(count).To(Equal(1))
-
-				_, err = gcpBroker.Deprovision(instanceId, psDeprovisionDetails, true)
-
-				exists, err = topic.Exists(context.Background())
-				Expect(exists).To(BeFalse())
-
-				instance := models.ServiceInstanceDetails{}
-
-				if err = db_service.DbConnection.Unscoped().Where("ID = ?", instanceId).First(&instance).Error; err != nil {
-					panic("error checking for service instance details: " + err.Error())
-				}
-				Expect(instance.DeletedAt).NotTo(Equal(nil))
-
-			}, timeout)
-
+			testProvision(gcpBroker, params)
 		})
 	})
+
 	AfterEach(func() {
 		os.Remove(brokers.AppCredsFileName)
 		os.Remove("test.db")
