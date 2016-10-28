@@ -1,9 +1,10 @@
 package brokers_test
 
 import (
-	. "gcp-service-broker/brokerapi/brokers"
-
+	"code.cloudfoundry.org/lager"
+	"encoding/json"
 	"gcp-service-broker/brokerapi/brokers"
+	. "gcp-service-broker/brokerapi/brokers"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/cloudsql"
 	"gcp-service-broker/brokerapi/brokers/models"
@@ -13,7 +14,6 @@ import (
 	"net/http"
 	"os"
 
-	"code.cloudfoundry.org/lager"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -177,7 +177,7 @@ var _ = Describe("Brokers", func() {
 
 		os.Setenv("CLOUDSQL_CUSTOM_PLANS", `{
 			"test_plan": {
-				"guid": "foo",
+				"guid": "test_plan",
 				"name": "bar",
 				"description": "testplan",
 				"tier": "4",
@@ -205,6 +205,7 @@ var _ = Describe("Brokers", func() {
 				someBigQueryPlanId = service.Plans[0].ID
 			}
 			if service.Name == CloudsqlName {
+
 				someCloudSQLPlanId = service.Plans[0].ID
 			}
 			if service.Name == StorageName {
@@ -274,6 +275,79 @@ var _ = Describe("Brokers", func() {
 			for _, s := range serviceList {
 				if s.ID == serviceNameToId[StorageName] {
 					Expect(len(s.Plans)).To(Equal(3))
+				}
+			}
+
+		})
+	})
+
+	Describe("updating broker catalog", func() {
+
+		It("should update cloudsql custom plans with different names on startup", func() {
+
+			os.Setenv("CLOUDSQL_CUSTOM_PLANS", `{
+				"newPlan": {
+					"name": "newPlan",
+					"description": "testplan",
+					"tier": "D8",
+					"pricing_plan": "athing",
+					"max_disk_size": "15",
+					"display_name": "FOOBAR",
+					"service": "4bc59b9a-8520-409f-85da-1c7552315863"
+				}
+			}`)
+
+			newBroker, err := brokers.New(logger)
+
+			serviceList := newBroker.Services()
+			for _, s := range serviceList {
+				if s.ID == serviceNameToId[CloudsqlName] {
+					Expect(s.Plans[0].Name).To(Equal("newPlan"))
+					Expect(len(s.Plans)).To(Equal(1))
+					plan := models.PlanDetails{}
+					if err := db_service.DbConnection.Where("service_id = ?", "4bc59b9a-8520-409f-85da-1c7552315863").First(&plan).Error; err != nil {
+						panic("The provided plan does not exist " + err.Error())
+					}
+					var planDetails map[string]string
+					if err = json.Unmarshal([]byte(plan.Features), &planDetails); err != nil {
+						panic("Error unmarshalling plan features: " + err.Error())
+					}
+					Expect(planDetails["tier"]).To(Equal("D8"))
+					Expect(planDetails["max_disk_size"]).To(Equal("15"))
+				}
+			}
+
+		})
+
+		It("should update cloudsql custom plans with the same name on startup", func() {
+
+			os.Setenv("CLOUDSQL_CUSTOM_PLANS", `{
+				"test_plan": {
+					"name": "test_plan",
+					"description": "testplan",
+					"tier": "D8",
+					"pricing_plan": "athing",
+					"max_disk_size": "15",
+					"display_name": "FOOBAR",
+					"service": "4bc59b9a-8520-409f-85da-1c7552315863"
+				}
+			}`)
+
+			newBroker, err := brokers.New(logger)
+
+			serviceList := newBroker.Services()
+			for _, s := range serviceList {
+				if s.ID == serviceNameToId[CloudsqlName] {
+					Expect(len(s.Plans)).To(Equal(1))
+					plan := models.PlanDetails{}
+					if err := db_service.DbConnection.Where("service_id = ?", "4bc59b9a-8520-409f-85da-1c7552315863").First(&plan).Error; err != nil {
+						panic("The provided plan does not exist " + err.Error())
+					}
+					var planDetails map[string]string
+					if err = json.Unmarshal([]byte(plan.Features), &planDetails); err != nil {
+						panic("Error unmarshalling plan features: " + err.Error())
+					}
+					Expect(planDetails["tier"]).To(Equal("D8"))
 				}
 			}
 

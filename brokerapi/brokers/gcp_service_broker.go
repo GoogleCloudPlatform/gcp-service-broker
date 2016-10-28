@@ -452,6 +452,7 @@ type DynamicPlan struct {
 // pulls SERVICES, PLANS, and PRECONFIGURED_PLANS environment variables to construct catalog and save plans to db
 func InitCatalogFromEnv() ([]models.Service, error) {
 	servicePlans := make(map[string][]models.ServicePlan)
+	var currentPlanIds []string
 
 	// get static plans
 	planJson := os.Getenv("PRECONFIGURED_PLANS")
@@ -471,6 +472,7 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 		if err != nil {
 			return []models.Service{}, err
 		}
+		currentPlanIds = append(currentPlanIds, id)
 
 		plan := models.ServicePlan{
 			Name:        planName,
@@ -487,12 +489,12 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 			return []models.Service{}, fmt.Errorf("error marshalling features: %s", err)
 		}
 
-		count, existingPlan, err := db_service.CountAndGetPlan(planName, serviceId)
+		exists, existingPlan, err := db_service.CheckAndGetPlan(planName, serviceId)
 		if err != nil {
 			return []models.Service{}, err
 		}
 
-		if count > 0 {
+		if exists {
 			existingPlan.Features = string(featureBytes)
 			db_service.DbConnection.Save(&existingPlan)
 		} else {
@@ -513,54 +515,70 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 	var dynamicPlans map[string]DynamicPlan
 	dynamicPlanJson := os.Getenv("CLOUDSQL_CUSTOM_PLANS")
 
-	err = json.Unmarshal([]byte(dynamicPlanJson), &dynamicPlans)
-	if err != nil {
-		return []models.Service{}, fmt.Errorf("Error unmarshalling custom plan json %s", err)
+	if dynamicPlanJson != "" {
+		err = json.Unmarshal([]byte(dynamicPlanJson), &dynamicPlans)
+		if err != nil {
+			return []models.Service{}, fmt.Errorf("Error unmarshalling custom plan json %s", err)
+		}
+
+		// save cloudsql plans to database and construct mapping
+		for planName, planDetails := range dynamicPlans {
+
+			exists, existingPlan, err := db_service.CheckAndGetPlan(planName, planDetails.ServiceId)
+
+			if err != nil {
+				return []models.Service{}, err
+			}
+
+			id, err := db_service.GetOrCreatePlanId(planName, planDetails.ServiceId)
+			if err != nil {
+				return []models.Service{}, err
+			}
+			currentPlanIds = append(currentPlanIds, id)
+
+			features := map[string]string{
+				"tier":          planDetails.Tier,
+				"max_disk_size": planDetails.MaxDiskSize,
+				"pricing_plan":  planDetails.PricingPlan,
+			}
+
+			featuresStr, err := json.Marshal(&features)
+			if err != nil {
+				return []models.Service{}, err
+			}
+
+			if exists {
+
+				existingPlan.Features = string(featuresStr)
+				db_service.DbConnection.Save(&existingPlan)
+			} else {
+				existingPlan = models.PlanDetails{
+					ServiceId: planDetails.ServiceId,
+					Name:      planDetails.Name,
+					Features:  string(featuresStr),
+					ID:        id,
+				}
+				db_service.DbConnection.Create(&existingPlan)
+			}
+
+			plan := models.ServicePlan{
+				Name:        planDetails.Name,
+				Description: planDetails.Description,
+				Metadata: &models.ServicePlanMetadata{
+					DisplayName: planDetails.DisplayName,
+					Bullets:     []string{planDetails.Description, "For pricing information see https://cloud.google.com/pricing/#details"},
+				},
+				ID: existingPlan.ID,
+			}
+
+			servicePlans[planDetails.ServiceId] = append(servicePlans[planDetails.ServiceId], plan)
+		}
+
 	}
 
-	// save cloudsql plans to database and construct mapping
-	for planName, planDetails := range dynamicPlans {
-		count, existingPlan, err := db_service.CountAndGetPlan(planName, planDetails.ServiceId)
-		if err != nil {
-			return []models.Service{}, err
-		}
-
-		features := map[string]string{
-			"tier":          planDetails.Tier,
-			"max_disk_size": planDetails.MaxDiskSize,
-			"pricing_plan":  planDetails.PricingPlan,
-		}
-
-		featuresStr, err := json.Marshal(&features)
-		if err != nil {
-			return []models.Service{}, err
-		}
-
-		if count > 0 {
-
-			existingPlan.Features = string(featuresStr)
-			db_service.DbConnection.Save(&existingPlan)
-		} else {
-			planDetails := models.PlanDetails{
-				ServiceId: planDetails.ServiceId,
-				Name:      planDetails.Name,
-				Features:  string(featuresStr),
-				ID:        planDetails.Guid,
-			}
-			db_service.DbConnection.Create(&planDetails)
-		}
-
-		plan := models.ServicePlan{
-			Name:        planDetails.Name,
-			Description: planDetails.Description,
-			Metadata: &models.ServicePlanMetadata{
-				DisplayName: planDetails.DisplayName,
-				Bullets:     []string{planDetails.Description, "For pricing information see https://cloud.google.com/pricing/#details"},
-			},
-			ID: planDetails.Guid,
-		}
-
-		servicePlans[planDetails.ServiceId] = append(servicePlans[planDetails.ServiceId], plan)
+	// soft delete unusued plans
+	if err := db_service.DbConnection.Not("id in (?)", currentPlanIds).Delete(models.PlanDetails{}).Error; err != nil {
+		return []models.Service{}, err
 	}
 
 	// set up services
@@ -586,4 +604,13 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 	}
 
 	return serviceList, nil
+}
+
+func valInStringSlice(slice []string, val string) bool {
+	for _, elem := range slice {
+		if val == elem {
+			return true
+		}
+	}
+	return false
 }

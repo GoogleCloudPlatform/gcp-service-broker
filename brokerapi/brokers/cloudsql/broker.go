@@ -70,7 +70,6 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 
 	// get plan parameters
 	var planDetails map[string]string
-	println(plan.Features)
 	if err = json.Unmarshal([]byte(plan.Features), &planDetails); err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling plan features: %s", err)
 	}

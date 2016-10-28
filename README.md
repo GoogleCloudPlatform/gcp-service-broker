@@ -41,9 +41,6 @@ Requires go 1.6 and the associated buildpack
 * DB_HOST (the host for the database to back the service broker)
 * DB_USERNAME (the database username for the service broker to use)
 * DB_PASSWORD (the database password for the service broker to use)
-* CLOUDSQL_CUSTOM_PLANS (A map of plan names to string maps with fields guid, name, description, tier, 
-pricing_plan, max_disk_size, display_name, and service (Cloud SQL's service id)) - set to `{}` to skip
-adding plans for Cloud SQL and disable the service
 
 ### optional env vars - if deploying as an app, optionally add these to missing-properties.yml
 
@@ -51,6 +48,21 @@ adding plans for Cloud SQL and disable the service
 * CA_CERT
 * CLIENT_CERT 
 * CLIENT_KEY 
+* CLOUDSQL_CUSTOM_PLANS (A map of plan names to string maps with fields guid, name, description, tier, 
+pricing_plan, max_disk_size, display_name, and service (Cloud SQL's service id)) - if unset, the service
+will be disabled. e.g.
+
+{
+    "test_plan": {
+        "name": "test_plan",
+        "description": "testplan",
+        "tier": "D8",
+        "pricing_plan": "PER_USE",
+        "max_disk_size": "15",
+        "display_name": "FOOBAR",
+        "service": "4bc59b9a-8520-409f-85da-1c7552315863"
+    }
+}
 
 
 ## Usage
