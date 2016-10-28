@@ -19,6 +19,7 @@ package db_service
 
 import (
 	"code.cloudfoundry.org/lager"
+	"fmt"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"github.com/jinzhu/gorm"
 	"github.com/leonelquinteros/gorand"
@@ -89,22 +90,26 @@ func GetOrCreatePlanId(planName string, serviceId string) (string, error) {
 	return id, nil
 }
 
-// Searches the db by planName and serviceId (since plan names must be disctinct within services)
+// Searches the db by planName and serviceId (since plan names must be distinct within services)
 // If the plan is found, returns the count (should be 1, always) and the plan object. If not, returns 0 and an empty plan object
-func CountAndGetPlan(planName string, serviceId string) (int, models.PlanDetails, error) {
+func CheckAndGetPlan(planName string, serviceId string) (bool, models.PlanDetails, error) {
 	var count int
 	var existingPlan models.PlanDetails
 	var err error
 
 	if err = DbConnection.Model(&models.PlanDetails{}).Where("name = ? and service_id = ?", planName, serviceId).Count(&count).Error; err != nil {
-		return 0, models.PlanDetails{}, err
+		return false, models.PlanDetails{}, err
 	}
 
 	if count > 0 {
 		if err = DbConnection.Where("name = ? and service_id = ?", planName, serviceId).First(&existingPlan).Error; err != nil {
-			return 0, models.PlanDetails{}, err
+			return false, models.PlanDetails{}, err
 		}
 	}
 
-	return count, existingPlan, nil
+	if count > 1 {
+		return true, models.PlanDetails{}, fmt.Errorf("bad database state: found more than 1 plan named %s with service id %s", planName, serviceId)
+	}
+
+	return count > 0, existingPlan, nil
 }

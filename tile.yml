@@ -162,9 +162,11 @@ forms:
   - name: db_username
     type: string
     label: Database username
+    optional: true
   - name: db_password
     type: secret
     label: Database password
+    optional: true
   - name: db_port
     type: string
     default: '3306'
