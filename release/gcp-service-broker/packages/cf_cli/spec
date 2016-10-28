@@ -1,0 +1,8 @@
+---
+name: cf_cli
+
+dependencies: []
+
+files:
+- cf_cli/all_open.json
+- cf_cli/cf-linux-amd64.tgz
