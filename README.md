@@ -153,5 +153,6 @@ Service calls take the following custom parameters, all as strings, (required wh
 
 ## Change Notes
 
+see https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/CHANGELOG.md
 
 # This is not an official Google product.

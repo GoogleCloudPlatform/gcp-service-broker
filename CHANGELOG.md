@@ -24,6 +24,11 @@ used by default.
 - updated credentials type returned by bind call to be a map[string]string instead
 of a string.
 
-## Unreleased
+## [2.0.1] - 2016-10-28
 
 - CloudSQL will generate a username/password on bind if one is not provided.
+
+### Fixed
+- CloudSQL custom plans are now optional
+- fixed username and password env var names in docs
+- fixed CloudSQL custom plan names and/or features not updating

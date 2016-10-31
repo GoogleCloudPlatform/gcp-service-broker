@@ -1,0 +1,8 @@
+---
+name: gcp_service_broker
+
+dependencies: []
+
+files:
+- gcp_service_broker/gcp-service-broker.zip
+- gcp_service_broker/manifest.yml

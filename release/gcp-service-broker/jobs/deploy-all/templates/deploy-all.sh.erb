@@ -1,0 +1,390 @@
+#!/bin/bash
+
+export PATH="/var/vcap/packages/cf_cli/bin:$PATH"
+export CF=`which cf`
+
+function cf() {
+	echo cf "$@"
+	output=$($CF "$@" 2>&1)
+	result="$?"
+	if [ "$result" -ne "0" ]; then
+		echo "$output"
+		exit $result
+	fi
+}
+
+function is_true() {
+	equals_ignore_case "$1" "true"
+}
+
+function equals_ignore_case() {
+	echo "$1" | grep -i "^$2\$" >/dev/null
+}
+
+function import_opsmgr_variables() {
+	export SCHEME=https
+	export ADMIN_USER=<%= Shellwords.escape properties.cf.admin_user %>
+	export ADMIN_PASSWORD=<%= Shellwords.escape properties.cf.admin_password %>
+	export DOMAIN=<%= Shellwords.escape properties.domain %>
+	export APP_DOMAIN=<%= Shellwords.escape properties.app_domains[0] %>
+	export CF_ORG=<%= Shellwords.escape properties.org %>
+	export CF_ORG_QUOTA=<%= Shellwords.escape properties.org_quota %>
+	export CF_SPACE=<%= Shellwords.escape properties.space %>
+	export CF_TARGET=$SCHEME://api.${DOMAIN}
+	export CF_SKIP_SSL=<%= Shellwords.escape properties.ssl.skip_cert_verify %>
+	export SECURITY_USER_NAME=<%= Shellwords.escape properties.security.user %>
+	export SECURITY_USER_PASSWORD=<%= Shellwords.escape properties.security.password %>
+	export APPLY_OPEN_SECURITY_GROUP=<%= Shellwords.escape properties.apply_open_security_group %>
+	export ALLOW_PAID_SERVICE_PLANS=<%= Shellwords.escape properties.allow_paid_service_plans %>
+
+	<%
+	plans = { }
+	p("cloudsql_custom_plans").each do |plan|
+		plan_name = plan['name']
+		plans[plan_name] = plan
+	end
+%>
+CLOUDSQL_CUSTOM_PLANS=<%= Shellwords.escape JSON.dump(plans) %>
+
+	export ROOT_SERVICE_ACCOUNT_JSON=<%= Shellwords.escape properties.root_service_account_json %>
+	export DB_HOST=<%= Shellwords.escape properties.db_host %>
+	export DB_USERNAME=<%= Shellwords.escape properties.db_username %>
+	export DB_PASSWORD=<%= Shellwords.escape properties.db_password %>
+	export DB_PORT=<%= Shellwords.escape properties.db_port %>
+	export CA_CERT=<%= Shellwords.escape properties.ca_cert %>
+	export CLIENT_CERT=<%= Shellwords.escape properties.client_cert %>
+	export CLIENT_KEY=<%= Shellwords.escape properties.client_key %>
+}
+
+function prepare_cf_cli {
+	export PATH="/var/vcap/packages/cf_cli/bin:$PATH"
+	export CF_HOME=`pwd`/home/cf
+	mkdir -p $CF_HOME
+}
+
+function authenticate() {
+	$CF --version
+	if is_true "$CF_SKIP_SSL"; then
+		cf api $CF_TARGET --skip-ssl-validation
+	else
+		cf api $CF_TARGET
+	fi
+	cf auth $ADMIN_USER $ADMIN_PASSWORD
+}
+
+function setup_target_org() {
+	if [ -z "$CF_ORG" ]; then
+		CF_ORG=gcp-service-broker-org
+	fi
+	if ! $CF org $CF_ORG >/dev/null; then
+		cf create-org $CF_ORG
+	fi
+	cf target -o $CF_ORG
+}
+
+function setup_org_quota() {
+	if [ -n "$CF_ORG_QUOTA" ]; then
+		export CF_QUOTA=${CF_ORG}-quota
+		if ! $CF quota $CF_QUOTA >/dev/null; then
+			cf create-quota $CF_QUOTA
+		fi
+		cf update-quota $CF_QUOTA -m ${CF_ORG_QUOTA}m -r 1000 -s 100
+		if is_true "$ALLOW_PAID_SERVICE_PLANS"; then
+			cf update-quota $CF_QUOTA --allow-paid-service-plans
+		else
+			cf update-quota $CF_QUOTA --disallow-paid-service-plans
+		fi
+		cf set-quota $CF_ORG $CF_QUOTA
+	fi
+}
+
+function setup_target_space() {
+	if [ -z "$CF_SPACE" ]; then
+		CF_SPACE=gcp-service-broker-space
+	fi
+	if ! $CF space $CF_SPACE >/dev/null; then
+		cf create-space $CF_SPACE
+	fi
+	cf target -s $CF_SPACE
+}
+
+function add_target_org_to_admin() {
+
+    SYSTEM_ORG_GUID=`$CF org system --guid`
+    NEW_ORG_GUID=`$CF org $CF_ORG --guid`
+
+    ADMIN_GUID=`$CF curl /v2/organizations/$SYSTEM_ORG_GUID/users | grep -A 2 "username\": \"admin" | awk '{print $2}' | grep organizations | awk -F '/' '{print $4 }' `
+
+	$CF curl /v2/users/$ADMIN_GUID/organizations/$NEW_ORG_GUID -X PUT >/dev/null
+	$CF curl /v2/users/$ADMIN_GUID/managed_organizations/$NEW_ORG_GUID -X PUT >/dev/null
+}
+
+function setup_package_path() {
+	if [ -z "$PACKAGE_PATH" ]; then
+		export PACKAGE_PATH=/var/vcap/packages
+	fi
+}
+
+function apply_open_security_group() {
+	if ! is_true "$1"; then
+		return
+	fi
+	if ! $CF security-group all_open >/dev/null; then
+		cf create-security-group all_open ${PACKAGE_PATH}/cf_cli/all_open.json
+	fi
+	cf bind-running-security-group all_open
+}
+
+function add_env_vars() {
+	cf set-env $1 UAA_HOST "$SCHEME://uaa.$DOMAIN"
+	cf set-env $1 CC_HOST "$CF_TARGET"
+	cf set-env $1 LOGIN_HOST "$SCHEME://login.$DOMAIN"
+	cf set-env $1 ROOT "\$HOME"
+	cf set-env $1 SCHEME "$SCHEME"
+	cf set-env $1 VERIFY_SSL "$CF_SKIP_SSL"
+
+	# Adding additional properties that most spring based apps or internal apps seem to be expecting
+	cf set-env $1 CF_ORG "$CF_ORG"
+	cf set-env $1 CF_SPACE "$CF_SPACE"
+	cf set-env $1 CF_TARGET "$CF_TARGET"
+	cf set-env $1 SECURITY_USER_NAME "$SECURITY_USER_NAME"
+	cf set-env $1 SECURITY_USER_PASSWORD "$SECURITY_USER_PASSWORD"
+
+	# Dynamic plans (if defined)
+
+	# Custom Service Plans
+	cf set-env $1 CLOUDSQL_CUSTOM_PLANS "$CLOUDSQL_CUSTOM_PLANS"
+
+	# Custom variables from tile.yml
+	cf set-env $1 ROOT_SERVICE_ACCOUNT_JSON "$ROOT_SERVICE_ACCOUNT_JSON"
+	cf set-env $1 DB_HOST "$DB_HOST"
+	cf set-env $1 DB_USERNAME "$DB_USERNAME"
+	cf set-env $1 DB_PASSWORD "$DB_PASSWORD"
+	cf set-env $1 DB_PORT "$DB_PORT"
+	cf set-env $1 CA_CERT "$CA_CERT"
+	cf set-env $1 CLIENT_CERT "$CLIENT_CERT"
+	cf set-env $1 CLIENT_KEY "$CLIENT_KEY"
+
+	# Addresses of bosh vms
+}
+
+function add_cf_credentials() {
+	cf set-env $1 CF_ADMIN_USER "$ADMIN_USER"
+	cf set-env $1 CF_ADMIN_USERNAME "$ADMIN_USER"
+	cf set-env $1 CF_ADMIN_PASSWORD "$ADMIN_PASSWORD"
+}
+
+function delete_older_versions() {
+	PKG_NAME="$1"
+	APP_NAME="$2"
+	$CF apps | grep "^$PKG_NAME" | grep -v "^$APP_NAME" | while read app rest; do
+		cf delete -f $app
+	done
+}
+
+function wait_till_running() {
+	for i in `seq 1  6`; do
+		CF_TRACE=true $CF app "$1" | grep RUNNING | grep "$1" >/dev/null
+		if [ "$?" -ne "0" ]; then
+			sleep 10
+			echo "cf app $1   # waiting for running state"
+		else
+			break
+		fi
+	done
+}
+
+function deploy_app() {
+	PKG_NAME="$1"
+	APP_NAME="$2"
+	APP_HOST="$3"
+	DOCKER_IMAGE="$4"
+	NEEDS_CF_CREDS="$5"
+	HEALTH_CHECK="$6"
+	cf push ${APP_NAME} -n ${APP_HOST} -d ${APP_DOMAIN} \
+		${DOCKER_IMAGE} -f $PACKAGE_PATH/${PKG_NAME}/manifest.yml \
+		--no-start
+	add_env_vars ${APP_NAME}
+	if is_true "$NEEDS_CF_CREDS"; then
+		add_cf_credentials ${APP_NAME}
+	fi
+	if [ -n "$HEALTH_CHECK" ]; then
+		cf set-health-check ${APP_NAME} "$HEALTH_CHECK"
+	fi
+}
+
+function start_app() {
+	PKG_NAME="$1"
+	APP_NAME="$2"
+	echo cf start ${APP_NAME}
+	$CF start ${APP_NAME}
+	result="$?"
+	if [ "$result" -ne "0" ]; then
+		echo cf logs ${APP_NAME} --recent
+		$CF logs ${APP_NAME} --recent
+		exit $result
+	fi
+	wait_till_running ${APP_NAME}
+	delete_older_versions ${PKG_NAME} ${APP_NAME}
+}
+
+function provision_auto_service() {
+	PKG_NAME="$1"
+	APP_NAME="$2"
+	SVC_NAME="$3"
+	SVC_PLAN="$4"
+	if [ -z "${SVC_NAME}" ]; then
+		return
+	fi
+	if equals_ignore_case "$SVC_NAME" "none"; then
+		return
+	fi
+	$CF services | grep ${PKG_NAME}-${SVC_NAME} >/dev/null
+	if [ "$?" -ne "0" ]; then
+		DEFAULT_PLAN=`$CF marketplace | grep "${SVC_NAME}" | awk '{ print $2 }' | sed 's/,//g'`
+		if [ -n "$DEFAULT_PLAN" ]; then
+			if [ -z "$SVC_PLAN" ]; then
+				SVC_PLAN="${DEFAULT_PLAN}"
+			fi
+			cf create-service ${SVC_NAME} ${SVC_PLAN} ${PKG_NAME}-${SVC_NAME}
+		else
+			echo "no service matching" ${SVC_NAME} "in marketplace"
+			exit 1
+		fi
+	elif [ -n "$SVC_PLAN" ]; then
+		cf update-service ${PKG_NAME}-${SVC_NAME} -p ${SVC_PLAN}
+	fi
+	cf bind-service ${APP_NAME} ${PKG_NAME}-${SVC_NAME}
+}
+
+function register_broker() {
+	BROKER_NAME="$1"
+	BROKER_USER="$2"
+	BROKER_PASS="$3"
+	BROKER_URL="$4"
+	GLOBAL_ACCESS="$5"
+	BROKER_SERVICES="$6"
+	$CF service-brokers | grep $BROKER_NAME >/dev/null
+	if [ "$?" -ne "0" ]; then
+		cf create-service-broker "$BROKER_NAME" "$BROKER_USER" "$BROKER_PASS" "$BROKER_URL"
+	else
+		cf update-service-broker "$BROKER_NAME" "$BROKER_USER" "$BROKER_PASS" "$BROKER_URL"
+	fi
+	if is_true "$GLOBAL_ACCESS"; then
+		publicize_services "$BROKER_NAME" "$BROKER_SERVICES"
+	fi
+}
+
+function publicize_services() {
+	BROKER_NAME="$1"
+	BROKER_SERVICES="$2"
+	services_url=`$CF curl /v2/services?q=label:$BROKER_NAME | grep service_plans_url | awk '{ print $2 }' | sed 's/[",]//g'`
+	if [ -n "$services_url" ]; then
+		services=`$CF curl $services_url | grep "\"url\"" | awk '{ print $2 }' | sed 's/[",]//g'`
+		for service in $services; do
+			cf curl $service -X PUT -d '{"public": true}'
+		done
+	elif [ -n "$BROKER_SERVICES" ] && [ "$BROKER_SERVICES" != "INTERNAL_SERVICE_NAME" ]; then
+		# Rely on the internal plan names if we cannot get it from the /v2/services on the broker
+		for service_name in `echo "$BROKER_SERVICES" | sed -e 's/,/ /g;s/;/ /g'`
+		do
+			cf enable-service-access $service_name
+		done
+	else
+		services=`$CF service-access | awk "/broker: ${BROKER_NAME}/{flag=1;next}/broker: /{flag=0}flag" | egrep -v "access *orgs" | grep "."  | awk '{print $1}' | uniq `
+		for service_name in $services; do
+			cf enable-service-access $service_name
+		done
+	fi
+}
+
+function push_buildpack() {
+	BUILDPACK_NAME="$1"
+	BUILDPACK_ORDER="$2"
+	BUILDPACK_FILE="$3"
+	BUILDPACK_VERSIONED=`echo "${BUILDPACK_FILE}" | sed 's/\.zip$/-v2.0.1.zip/'`
+	cp "${BUILDPACK_FILE}" "${BUILDPACK_VERSIONED}"
+	$CF buildpacks | grep ${BUILDPACK_NAME} >/dev/null
+	if [ "$?" -eq "0" ]; then
+		cf update-buildpack $BUILDPACK_NAME -p $BUILDPACK_VERSIONED --enable
+	else
+		cf create-buildpack $BUILDPACK_NAME $BUILDPACK_VERSIONED $BUILDPACK_ORDER --enable
+	fi
+}
+
+
+# Function for version comparison based on a code fragment from Stack Overflow
+# http://stackoverflow.com/questions/4023830/how-compare-two-strings-in-dot-separated-version-format-in-bash
+# By Dennis Williamson (http://stackoverflow.com/users/26428/dennis-williamson)
+#
+function is_newer() {
+	arg1=`echo "$1" | sed 's/\([0-9]+(\.[0-9]+)*\)/\1/'`
+	arg2=`echo "$2" | sed 's/\([0-9]+(\.[0-9]+)*\)/\1/'`
+    if [[ "$arg1" == "$arg2" ]]
+    then
+        return 0
+    fi
+    local IFS=.
+    local i ver1=($arg1) ver2=($arg2)
+    # fill empty fields in ver1 with zeros
+    for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
+    do
+        ver1[i]=0
+    done
+    for ((i=0; i<${#ver1[@]}; i++))
+    do
+        if [[ -z ${ver2[i]} ]]
+        then
+            # fill empty fields in ver2 with zeros
+            ver2[i]=0
+        fi
+        if ((10#${ver1[i]} > 10#${ver2[i]}))
+        then
+            return 0
+        fi
+        if ((10#${ver1[i]} < 10#${ver2[i]}))
+        then
+            return 1
+        fi
+    done
+    return 0
+}
+
+import_opsmgr_variables
+prepare_cf_cli
+authenticate
+setup_target_org
+setup_org_quota
+setup_target_space
+add_target_org_to_admin
+setup_package_path
+apply_open_security_group "$APPLY_OPEN_SECURITY_GROUP"
+
+# Deploy package gcp_service_broker
+#
+
+
+
+export PKG_NAME=gcp_service_broker
+export APP_NAME=gcp-service-broker-2.0.1
+export APP_HOST=gcp-service-broker
+export DOCKER_IMAGE=""
+export NEEDS_CF_CREDS="True"
+export HEALTH_CHECK=""
+deploy_app "$PKG_NAME" "$APP_NAME" "$APP_HOST" "$DOCKER_IMAGE" "$NEEDS_CF_CREDS" "$HEALTH_CHECK"
+export SVC_NAME=<%= Shellwords.escape properties.gcp_service_broker.persistence_store_type %>
+export SVC_PLAN=""
+provision_auto_service "$PKG_NAME" "$APP_NAME" "$SVC_NAME" "$SVC_PLAN"
+start_app gcp-service-broker "$APP_NAME"
+
+export BROKER_NAME=gcp-service-broker
+export BROKER_USER=<%= Shellwords.escape properties.gcp_service_broker.user %>
+export BROKER_PASS=<%= Shellwords.escape properties.gcp_service_broker.password %>
+export BROKER_SERVICES=""
+export BROKER_URL=$SCHEME://${APP_HOST}.${APP_DOMAIN}
+export GLOBAL_ACCESS=<%= Shellwords.escape properties.gcp_service_broker.enable_global_access_to_plans %>
+register_broker "$BROKER_NAME" "$BROKER_USER" "$BROKER_PASS" "$BROKER_URL" "$GLOBAL_ACCESS" "$BROKER_SERVICES"
+
+
+
+
