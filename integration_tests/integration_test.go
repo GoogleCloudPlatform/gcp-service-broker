@@ -324,7 +324,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 				instanceId:         datasetName,
 				rawProvisionParams: []byte("{\"name\": \"" + datasetName + "\"}"),
 				rawBindingParams: map[string]interface{}{
-					"role": "editor",
+					"role": "bigquery.admin",
 				},
 				serviceExistsFn: func(bool) bool {
 					_, err = service.Datasets.Get(gcpBroker.RootGCPCredentials.ProjectId, datasetName).Do()
@@ -465,11 +465,11 @@ var _ = Describe("LiveIntegrationTests", func() {
 				bindingId:          "integration_test_bucket_binding",
 				rawProvisionParams: []byte("{\"name\": \"" + bucketName + "\"}"),
 				rawBindingParams: map[string]interface{}{
-					"role": "editor",
+					"role": "storage.admin",
 				},
 				serviceExistsFn: func(bool) bool {
 					bucket := service.Bucket(bucketName)
-					_, err = bucket.List(context.Background(), nil)
+					_, err = bucket.Attrs(context.Background())
 
 					return err == nil
 				},
@@ -498,7 +498,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 				bindingId:          "integration_test_topic_bindingId",
 				rawProvisionParams: []byte("{\"topic_name\": \"" + topicName + "\"}"),
 				rawBindingParams: map[string]interface{}{
-					"role": "editor",
+					"role": "pubsub.admin",
 				},
 				serviceExistsFn: func(bool) bool {
 					exists, err := topic.Exists(context.Background())
