@@ -1,0 +1,32 @@
+SCHEME=https
+ADMIN_USER=<%= Shellwords.escape properties.cf.admin_user %>
+ADMIN_PASSWORD=<%= Shellwords.escape properties.cf.admin_password %>
+DOMAIN=<%= Shellwords.escape properties.domain %>
+APP_DOMAIN=<%= Shellwords.escape properties.app_domains[0] %>
+CF_ORG=<%= Shellwords.escape properties.org %>
+CF_ORG_QUOTA=<%= Shellwords.escape properties.org_quota %>
+CF_SPACE=<%= Shellwords.escape properties.space %>
+CF_TARGET=$SCHEME://api.${DOMAIN}
+CF_SKIP_SSL=<%= Shellwords.escape properties.ssl.skip_cert_verify %>
+SECURITY_USER_NAME=<%= Shellwords.escape properties.security.user %>
+SECURITY_USER_PASSWORD=<%= Shellwords.escape properties.security.password %>
+APPLY_OPEN_SECURITY_GROUP=<%= Shellwords.escape properties.apply_open_security_group %>
+ALLOW_PAID_SERVICE_PLANS=<%= Shellwords.escape properties.allow_paid_service_plans %>
+
+<%
+	plans = { }
+	p("cloudsql_custom_plans").each do |plan|
+		plan_name = plan['name']
+		plans[plan_name] = plan
+	end
+%>
+CLOUDSQL_CUSTOM_PLANS=<%= Shellwords.escape JSON.dump(plans) %>
+
+ROOT_SERVICE_ACCOUNT_JSON=<%= Shellwords.escape properties.root_service_account_json %>
+DB_HOST=<%= Shellwords.escape properties.db_host %>
+DB_USERNAME=<%= Shellwords.escape properties.db_username %>
+DB_PASSWORD=<%= Shellwords.escape properties.db_password %>
+DB_PORT=<%= Shellwords.escape properties.db_port %>
+CA_CERT=<%= Shellwords.escape properties.ca_cert %>
+CLIENT_CERT=<%= Shellwords.escape properties.client_cert %>
+CLIENT_KEY=<%= Shellwords.escape properties.client_key %>

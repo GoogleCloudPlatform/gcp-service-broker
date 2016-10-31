@@ -38,13 +38,13 @@ function import_opsmgr_variables() {
 	export ALLOW_PAID_SERVICE_PLANS=<%= Shellwords.escape properties.allow_paid_service_plans %>
 
 	<%
-		plans = { }
-		p("cloudsql_custom_plans").each do |plan|
-			plan_name = plan['name']
-			plans[plan_name] = plan
-		end
-	%>
-	export CLOUDSQL_CUSTOM_PLANS=<%= Shellwords.escape JSON.dump(plans) %>
+	plans = { }
+	p("cloudsql_custom_plans").each do |plan|
+		plan_name = plan['name']
+		plans[plan_name] = plan
+	end
+%>
+CLOUDSQL_CUSTOM_PLANS=<%= Shellwords.escape JSON.dump(plans) %>
 
 	export ROOT_SERVICE_ACCOUNT_JSON=<%= Shellwords.escape properties.root_service_account_json %>
 	export DB_HOST=<%= Shellwords.escape properties.db_host %>
@@ -152,8 +152,8 @@ function add_env_vars() {
 
 	# Dynamic plans (if defined)
 
-    # Custom Service Plans
-    cf set-env $1 CLOUDSQL_CUSTOM_PLANS "$CLOUDSQL_CUSTOM_PLANS"
+	# Custom Service Plans
+	cf set-env $1 CLOUDSQL_CUSTOM_PLANS "$CLOUDSQL_CUSTOM_PLANS"
 
 	# Custom variables from tile.yml
 	cf set-env $1 ROOT_SERVICE_ACCOUNT_JSON "$ROOT_SERVICE_ACCOUNT_JSON"

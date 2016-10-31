@@ -57,6 +57,7 @@ property_blueprints:
     unique: true
   - name: name
     type: string
+    unique: true
     configurable: true
   - configurable: true
     description: Display name
@@ -402,6 +403,26 @@ job_types:
     cf:
       admin_user: (( ..cf.uaa.system_services_credentials.identity ))
       admin_password: (( ..cf.uaa.system_services_credentials.password ))
+    org_quota: (( .properties.org_quota.value ))
+    apply_open_security_group: (( .properties.apply_open_security_group.value ))
+    allow_paid_service_plans: (( .properties.allow_paid_service_plans.value ))
+    security:
+      user: (( .delete-all.app_credentials.identity ))
+      password: (( .delete-all.app_credentials.password ))
+    root_service_account_json: (( .properties.root_service_account_json.value ))
+    db_host: (( .properties.db_host.value ))
+    db_username: (( .properties.db_username.value ))
+    db_password: (( .properties.db_password.value ))
+    db_port: (( .properties.db_port.value ))
+    ca_cert: (( .properties.ca_cert.value ))
+    client_cert: (( .properties.client_cert.value ))
+    client_key: (( .properties.client_key.value ))
+    cloudsql_custom_plans: (( .properties.cloudsql_custom_plans.value ))
+    gcp_service_broker:
+      name: gcp_service_broker
+      user: (( .delete-all.app_credentials.identity ))
+      password: (( .delete-all.app_credentials.password ))
+      enable_global_access_to_plans: (( .properties.gcp_service_broker_enable_global_access_to_plans.value ))
 
 post_deploy_errands:
 - name: deploy-all

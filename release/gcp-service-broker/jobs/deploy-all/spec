@@ -2,6 +2,7 @@
 name: deploy-all
 templates:
   deploy-all.sh.erb: bin/run
+  opsmgr-env.sh.erb: bin/opsmgr-env.sh
 packages:
 - cf_cli
 - gcp_service_broker
