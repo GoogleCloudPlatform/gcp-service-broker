@@ -1,34 +1,130 @@
 package integration_tests
 
 import (
+	"encoding/json"
 	. "gcp-service-broker/brokerapi/brokers"
+	"golang.org/x/net/context"
 
-	"code.cloudfoundry.org/lager"
 	"gcp-service-broker/brokerapi/brokers"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/db_service"
+	"net/http"
+	"os"
+
+	googlepubsub "cloud.google.com/go/pubsub"
+
+	googlestorage "cloud.google.com/go/storage"
+	"code.cloudfoundry.org/lager"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	googlebigquery "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iam/v1"
-	"net/http"
-	"os"
+	"google.golang.org/api/option"
 )
+
+const timeout = 60
+
+type genericService struct {
+	serviceId          string
+	planId             string
+	bindingId          string
+	rawProvisionParams json.RawMessage
+	rawBindingParams   map[string]interface{}
+	instanceId         string
+	serviceExistsFn    func(bool) bool
+	cleanupFn          func()
+}
+
+func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService) {
+	// If the service already exists (eg, failed previous test), clean it up before the run
+	if params.serviceExistsFn(false) {
+		params.cleanupFn()
+	}
+	//
+	// Provision
+	//
+	provisionDetails := models.ProvisionDetails{
+		ServiceID:     params.serviceId,
+		PlanID:        params.planId,
+		RawParameters: params.rawProvisionParams,
+	}
+
+	_, err := gcpBroker.Provision(params.instanceId, provisionDetails, true)
+	Expect(err).ToNot(HaveOccurred())
+
+	// Provision is registered in the database
+	var count int
+	db_service.DbConnection.Model(&models.ServiceInstanceDetails{}).Where("id = ?", params.instanceId).Count(&count)
+	Expect(count).To(Equal(1))
+
+	Expect(params.serviceExistsFn(true)).To(BeTrue())
+
+	//
+	// Bind
+	//
+	bindDetails := models.BindDetails{
+		ServiceID:  params.serviceId,
+		PlanID:     params.planId,
+		Parameters: params.rawBindingParams,
+	}
+	creds, err := gcpBroker.Bind(params.instanceId, params.bindingId, bindDetails)
+	Expect(err).ToNot(HaveOccurred())
+
+	db_service.DbConnection.Model(&models.ServiceBindingCredentials{}).Where("binding_id = ?", params.bindingId).Count(&count)
+	Expect(count).To(Equal(1))
+
+	iamService, err := iam.New(gcpBroker.GCPClient)
+	Expect(err).ToNot(HaveOccurred())
+	saService := iam.NewProjectsServiceAccountsService(iamService)
+	resourceName := "projects/" + gcpBroker.RootGCPCredentials.ProjectId + "/serviceAccounts/" + creds.Credentials.(map[string]string)["UniqueId"]
+	_, err = saService.Get(resourceName).Do()
+	Expect(err).ToNot(HaveOccurred())
+
+	//
+	// Unbind
+	//
+	unbindDetails := models.UnbindDetails{
+		ServiceID: params.serviceId,
+		PlanID:    params.planId,
+	}
+	err = gcpBroker.Unbind(params.instanceId, params.bindingId, unbindDetails)
+	Expect(err).ToNot(HaveOccurred())
+
+	binding := models.ServiceBindingCredentials{}
+	if err := db_service.DbConnection.Unscoped().Where("binding_id = ?", params.bindingId).First(&binding).Error; err != nil {
+		panic("error checking for binding details: " + err.Error())
+	}
+	Expect(binding.DeletedAt).NotTo(Equal(nil))
+
+	_, err = saService.Get(resourceName).Do()
+	Expect(err).To(HaveOccurred())
+
+	//
+	// Deprovision
+	//
+	deprovisionDetails := models.DeprovisionDetails{
+		ServiceID: params.serviceId,
+		PlanID:    params.planId,
+	}
+	_, err = gcpBroker.Deprovision(params.instanceId, deprovisionDetails, true)
+	Expect(err).ToNot(HaveOccurred())
+	instance := models.ServiceInstanceDetails{}
+	if err := db_service.DbConnection.Unscoped().Where("ID = ?", params.instanceId).First(&instance).Error; err != nil {
+		panic("error checking for service instance details: " + err.Error())
+	}
+	Expect(instance.DeletedAt).NotTo(Equal(nil))
+
+	Expect(params.serviceExistsFn(false)).To(BeFalse())
+}
 
 var _ = Describe("LiveIntegrationTests", func() {
 	var (
-		gcpBroker                *GCPAsyncServiceBroker
-		err                      error
-		logger                   lager.Logger
-		serviceNameToId          map[string]string = make(map[string]string)
-		someBigQueryPlanId       string
-		someStoragePlanId        string
-		cloudSqlProvisionDetails models.ProvisionDetails
-		bigqueryBindDetails      models.BindDetails
-		bigqueryUnbindDetails    models.UnbindDetails
-		instanceId               string
-		bindingId                string
+		gcpBroker           *GCPAsyncServiceBroker
+		err                 error
+		logger              lager.Logger
+		serviceNameToId     map[string]string = make(map[string]string)
+		serviceNameToPlanId map[string]string = make(map[string]string)
 	)
 
 	BeforeEach(func() {
@@ -174,46 +270,15 @@ var _ = Describe("LiveIntegrationTests", func() {
 			}
 		}`)
 
-		instanceId = "newid"
-		bindingId = "newbinding"
-
 		gcpBroker, err = brokers.New(logger)
 		if err != nil {
 			logger.Error("error", err)
 		}
 
-		var someCloudSQLPlanId string
 		for _, service := range *gcpBroker.Catalog {
 			serviceNameToId[service.Name] = service.ID
-			if service.Name == BigqueryName {
-				someBigQueryPlanId = service.Plans[0].ID
-			}
-			if service.Name == CloudsqlName {
-				someCloudSQLPlanId = service.Plans[0].ID
-			}
-			if service.Name == StorageName {
-				someStoragePlanId = service.Plans[0].ID
-			}
+			serviceNameToPlanId[service.Name] = service.Plans[0].ID
 		}
-
-		cloudSqlProvisionDetails = models.ProvisionDetails{
-			ServiceID: serviceNameToId[brokers.CloudsqlName],
-			PlanID:    someCloudSQLPlanId,
-		}
-
-		bigqueryBindDetails = models.BindDetails{
-			ServiceID: serviceNameToId[brokers.BigqueryName],
-			PlanID:    someBigQueryPlanId,
-			Parameters: map[string]interface{}{
-				"role": "editor",
-			},
-		}
-
-		bigqueryUnbindDetails = models.UnbindDetails{
-			ServiceID: serviceNameToId[brokers.BigqueryName],
-			PlanID:    someBigQueryPlanId,
-		}
-
 	})
 
 	Describe("Broker init", func() {
@@ -226,7 +291,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 		})
 
 		It("should have loaded credentials correctly and have a project id", func() {
-			Expect(gcpBroker.RootGCPCredentials.ProjectId).To(Equal("gcp-service-broker-testing"))
+			Expect(gcpBroker.RootGCPCredentials.ProjectId).To(Not(BeEmpty()))
 		})
 	})
 
@@ -247,100 +312,32 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	Describe("bigquery", func() {
+		It("can provision/bind/unbind/deprovision", func() {
+			service, err := googlebigquery.New(gcpBroker.GCPClient)
+			Expect(err).NotTo(HaveOccurred())
 
-		var (
-			bqProvisionDetails   models.ProvisionDetails
-			bqDeprovisionDetails models.DeprovisionDetails
-			service              *googlebigquery.Service
-			datasetName          string
-		)
+			datasetName := "integration_test_dataset"
+			params := &genericService{
+				serviceId:          serviceNameToId[brokers.BigqueryName],
+				planId:             serviceNameToPlanId[brokers.BigqueryName],
+				bindingId:          "integration_test_bind",
+				instanceId:         datasetName,
+				rawProvisionParams: []byte("{\"name\": \"" + datasetName + "\"}"),
+				rawBindingParams: map[string]interface{}{
+					"role": "bigquery.admin",
+				},
+				serviceExistsFn: func(bool) bool {
+					_, err = service.Datasets.Get(gcpBroker.RootGCPCredentials.ProjectId, datasetName).Do()
 
-		BeforeEach(func() {
-			datasetName = "integration_test_dataset"
-
-			bqProvisionDetails = models.ProvisionDetails{
-				ServiceID:     serviceNameToId[brokers.BigqueryName],
-				PlanID:        someBigQueryPlanId,
-				RawParameters: []byte("{\"name\": \"integration_test_dataset\"}"),
+					return err == nil
+				},
+				cleanupFn: func() {
+					err := service.Datasets.Delete(gcpBroker.RootGCPCredentials.ProjectId, datasetName).Do()
+					Expect(err).NotTo(HaveOccurred())
+				},
 			}
-
-			bqDeprovisionDetails = models.DeprovisionDetails{
-				ServiceID: serviceNameToId[brokers.BigqueryName],
-				PlanID:    someBigQueryPlanId,
-			}
-
-			service, err = googlebigquery.New(gcpBroker.GCPClient)
-			if err != nil {
-				panic("error creating bigquery client for testing")
-			}
-		})
-
-		Context("bigquery provision and deprovision", func() {
-
-			It("should make a bigquery dataset on provision and delete it on deprovision, and maintain db records", func() {
-				_, err := gcpBroker.Provision(instanceId, bqProvisionDetails, true)
-				Expect(err).ToNot(HaveOccurred())
-				_, err = service.Datasets.Get(gcpBroker.RootGCPCredentials.ProjectId, datasetName).Do()
-				Expect(err).ToNot(HaveOccurred())
-
-				var count int
-				db_service.DbConnection.Model(&models.ServiceInstanceDetails{}).Where("id = ?", instanceId).Count(&count)
-				Expect(count).To(Equal(1))
-
-				_, err = gcpBroker.Deprovision(instanceId, bqDeprovisionDetails, true)
-				Expect(err).ToNot(HaveOccurred())
-				_, err = service.Datasets.Get(gcpBroker.RootGCPCredentials.ProjectId, datasetName).Do()
-				Expect(err).To(HaveOccurred())
-
-				instance := models.ServiceInstanceDetails{}
-				if err := db_service.DbConnection.Unscoped().Where("ID = ?", instanceId).First(&instance).Error; err != nil {
-					panic("error checking for service instance details: " + err.Error())
-				}
-				Expect(instance.DeletedAt).NotTo(Equal(nil))
-
-			})
-
-		})
-
-		Context("bigquery bind and unbind", func() {
-
-			It("should make a bigquery dataset on provision and delete it on deprovision, and maintain db records", func() {
-				_, err := gcpBroker.Provision(instanceId, bqProvisionDetails, true)
-				Expect(err).ToNot(HaveOccurred())
-
-				creds, err := gcpBroker.Bind(instanceId, bindingId, bigqueryBindDetails)
-				Expect(err).ToNot(HaveOccurred())
-
-				var count int
-				db_service.DbConnection.Model(&models.ServiceBindingCredentials{}).Where("binding_id = ?", bindingId).Count(&count)
-				Expect(count).To(Equal(1))
-
-				iamService, err := iam.New(gcpBroker.GCPClient)
-				Expect(err).ToNot(HaveOccurred())
-				saService := iam.NewProjectsServiceAccountsService(iamService)
-				resourceName := "projects/" + gcpBroker.RootGCPCredentials.ProjectId + "/serviceAccounts/" + creds.Credentials.(map[string]string)["UniqueId"]
-				_, err = saService.Get(resourceName).Do()
-				Expect(err).ToNot(HaveOccurred())
-
-				err = gcpBroker.Unbind(instanceId, bindingId, bigqueryUnbindDetails)
-				Expect(err).ToNot(HaveOccurred())
-
-				_, err = saService.Get(resourceName).Do()
-				Expect(err).To(HaveOccurred())
-
-				binding := models.ServiceBindingCredentials{}
-				if err := db_service.DbConnection.Unscoped().Where("binding_id = ?", bindingId).First(&binding).Error; err != nil {
-					panic("error checking for binding details: " + err.Error())
-				}
-				Expect(binding.DeletedAt).NotTo(Equal(nil))
-
-				_, err = gcpBroker.Deprovision(instanceId, bqDeprovisionDetails, true)
-				Expect(err).ToNot(HaveOccurred())
-
-			})
-
-		})
-
+			testGenericService(gcpBroker, params)
+		}, timeout)
 	})
 
 	//Describe("deprovision", func() {
@@ -454,6 +451,69 @@ var _ = Describe("LiveIntegrationTests", func() {
 	//	})
 
 	//})
+
+	Describe("cloud storage", func() {
+		It("can provision/bind/unbind/deprovision", func() {
+			service, err := googlestorage.NewClient(context.Background(), option.WithUserAgent(models.CustomUserAgent))
+			Expect(err).NotTo(HaveOccurred())
+
+			bucketName := "integration_test_bucket"
+			params := &genericService{
+				serviceId:          serviceNameToId[brokers.StorageName],
+				planId:             serviceNameToPlanId[brokers.StorageName],
+				instanceId:         bucketName,
+				bindingId:          "integration_test_bucket_binding",
+				rawProvisionParams: []byte("{\"name\": \"" + bucketName + "\"}"),
+				rawBindingParams: map[string]interface{}{
+					"role": "storage.admin",
+				},
+				serviceExistsFn: func(bool) bool {
+					bucket := service.Bucket(bucketName)
+					_, err = bucket.Attrs(context.Background())
+
+					return err == nil
+				},
+				cleanupFn: func() {
+					bucket := service.Bucket(bucketName)
+					bucket.Delete(context.Background())
+				},
+			}
+
+			testGenericService(gcpBroker, params)
+		}, timeout)
+	})
+
+	Describe("pub sub", func() {
+		It("can provision/bind/unbind/deprovision", func() {
+			service, err := googlepubsub.NewClient(context.Background(), gcpBroker.RootGCPCredentials.ProjectId, option.WithUserAgent(models.CustomUserAgent))
+			Expect(err).NotTo(HaveOccurred())
+
+			topicName := "integration_test_topic"
+			topic := service.Topic(topicName)
+
+			params := &genericService{
+				serviceId:          serviceNameToId[brokers.PubsubName],
+				planId:             serviceNameToPlanId[brokers.PubsubName],
+				instanceId:         topicName,
+				bindingId:          "integration_test_topic_bindingId",
+				rawProvisionParams: []byte("{\"topic_name\": \"" + topicName + "\"}"),
+				rawBindingParams: map[string]interface{}{
+					"role": "pubsub.admin",
+				},
+				serviceExistsFn: func(bool) bool {
+					exists, err := topic.Exists(context.Background())
+					Expect(err).NotTo(HaveOccurred())
+					return exists
+				},
+				cleanupFn: func() {
+					err := topic.Delete(context.Background())
+					Expect(err).NotTo(HaveOccurred())
+				},
+			}
+
+			testGenericService(gcpBroker, params)
+		}, timeout)
+	})
 
 	AfterEach(func() {
 		os.Remove(brokers.AppCredsFileName)

@@ -39,6 +39,8 @@ type CloudSQLBroker struct {
 	AccountManager models.AccountManager
 }
 
+const SecondGenPricingPlan string = "PER_USE"
+
 // Creates a new CloudSQL instance identified by the name provided in details.RawParameters.instance_name
 //
 // required custom parameters: instance_name, database_name
@@ -187,14 +189,14 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 					AuthorizedNetworks: []*googlecloudsql.AclEntry{&openAcl},
 					Ipv4Enabled:        true,
 				},
-				Tier:           plan.Name,
+				Tier:           planDetails["tier"],
 				DataDiskSizeGb: int64(diskSize),
 				LocationPreference: &googlecloudsql.LocationPreference{
 					Zone: params["zone"],
 				},
 				DataDiskType:      params["disk_type"],
 				MaintenanceWindow: mw,
-				PricingPlan:       params["pricing_plan"],
+				PricingPlan:       SecondGenPricingPlan,
 				BackupConfiguration: &googlecloudsql.BackupConfiguration{
 					Enabled:          backupsEnabled,
 					StartTime:        backupStartTime,

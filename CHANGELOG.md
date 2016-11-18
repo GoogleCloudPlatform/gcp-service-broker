@@ -32,3 +32,8 @@ of a string.
 - CloudSQL custom plans are now optional
 - fixed username and password env var names in docs
 - fixed CloudSQL custom plan names and/or features not updating
+
+## [2.0.2] - 2016-11-16
+
+### Fixed
+- fixed bug where CloudSQL was returning 400s for all 2nd gen instance provision requests
