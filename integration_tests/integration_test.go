@@ -1,9 +1,9 @@
 package integration_tests
 
 import (
-	"context"
 	"encoding/json"
 	. "gcp-service-broker/brokerapi/brokers"
+	"golang.org/x/net/context"
 
 	"gcp-service-broker/brokerapi/brokers"
 	"gcp-service-broker/brokerapi/brokers/models"
