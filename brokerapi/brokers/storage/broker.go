@@ -40,6 +40,10 @@ type StorageBroker struct {
 	broker_base.BrokerBase
 }
 
+type InstanceInformation struct {
+	BucketName string
+}
+
 // creates a new bucket with the name given in provision details and optional location
 // (defaults to "US", for acceptable location values see: https://cloud.google.com/storage/docs/bucket-locations)
 func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {

@@ -40,6 +40,14 @@ type CloudSQLBroker struct {
 	AccountManager models.AccountManager
 }
 
+type InstanceDetails struct {
+	InstanceName string `json:"instance_name"`
+	DatabaseName string `json:"database_name"`
+	Uri          string `json:"uri"`
+
+	LastMasterOperationId string `json:"last_master_operation_id"`
+}
+
 const SecondGenPricingPlan string = "PER_USE"
 
 // Creates a new CloudSQL instance

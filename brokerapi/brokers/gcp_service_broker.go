@@ -330,6 +330,20 @@ func (gcpBroker *GCPServiceBroker) Bind(instanceID string, bindingID string, det
 		return models.Binding{}, err
 	}
 
+	// copy provision.otherDeatils to creds.
+	var instanceRecord models.ServiceInstanceDetails
+	if err = db_service.DbConnection.Find(&instanceRecord).Where("service_instance_id = ? and binding_id = ?", instanceID, bindingID).Error; err != nil {
+		return models.Binding{}, fmt.Errorf("Error retrieving service instance details: %s", err)
+	}
+	var instanceDetails map[string]string
+	if err := json.Unmarshal([]byte(instanceRecord.OtherDetails), &instanceDetails); err != nil {
+		return models.Binding{}, err
+	}
+
+	for key, val := range instanceDetails {
+		creds[key] = val
+	}
+
 	return models.Binding{
 		Credentials:     creds,
 		SyslogDrainURL:  "",

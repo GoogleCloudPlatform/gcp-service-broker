@@ -74,3 +74,19 @@ type Migration struct {
 
 	MigrationId int
 }
+
+type CloudOperation struct {
+	gorm.Model
+
+	Name          string
+	Status        string
+	OperationType string
+	ErrorMessage  string
+	InsertTime    time.Time
+	StartTime     time.Time
+	TargetId      string
+	TargetLink    string
+
+	ServiceId         string
+	ServiceInstanceId string
+}

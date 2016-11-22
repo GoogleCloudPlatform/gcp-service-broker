@@ -18,24 +18,36 @@ import (
 
 	googlestorage "cloud.google.com/go/storage"
 	"code.cloudfoundry.org/lager"
+	"encoding/json"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	googlebigquery "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
+	"strconv"
+	"time"
 )
 
 const timeout = 60
 
 type genericService struct {
-	serviceId        string
-	planId           string
-	bindingId        string
-	rawBindingParams map[string]interface{}
-	instanceId       string
-	serviceExistsFn  func(bool) bool
-	cleanupFn        func()
+	serviceId              string
+	planId                 string
+	bindingId              string
+	rawBindingParams       map[string]interface{}
+	instanceId             string
+	serviceExistsFn        func(bool) bool
+	cleanupFn              func()
+	serviceMetadataSavedFn func(string) bool
+}
+
+func getAndUnmarshalInstanceDetails(instanceId string) map[string]string {
+	var instanceRecord models.ServiceInstanceDetails
+	db_service.DbConnection.Find(&instanceRecord).Where("id = ?", instanceId)
+	var instanceDetails map[string]string
+	json.Unmarshal([]byte(instanceRecord.OtherDetails), &instanceDetails)
+	return instanceDetails
 }
 
 func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService) {
@@ -60,6 +72,7 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 	Expect(count).To(Equal(1))
 
 	Expect(params.serviceExistsFn(true)).To(BeTrue())
+	Expect(params.serviceMetadataSavedFn(params.instanceId)).To(BeTrue())
 
 	//
 	// Bind
@@ -353,6 +366,10 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 					return err == nil
 				},
+				serviceMetadataSavedFn: func(instanceId string) bool {
+					instanceDetails := getAndUnmarshalInstanceDetails(instanceId)
+					return instanceDetails["name"] != ""
+				},
 				cleanupFn: func() {
 					err := service.Datasets.Delete(gcpBroker.RootGCPCredentials.ProjectId, instance_name).Do()
 					Expect(err).NotTo(HaveOccurred())
@@ -493,6 +510,10 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 					return err == nil
 				},
+				serviceMetadataSavedFn: func(instanceId string) bool {
+					instanceDetails := getAndUnmarshalInstanceDetails(instanceId)
+					return instanceDetails["name"] != ""
+				},
 				cleanupFn: func() {
 					bucket := service.Bucket(instance_name)
 					bucket.Delete(context.Background())
@@ -521,6 +542,11 @@ var _ = Describe("LiveIntegrationTests", func() {
 				serviceExistsFn: func(bool) bool {
 					exists, err := topic.Exists(context.Background())
 					return exists && err == nil
+				},
+				serviceMetadataSavedFn: func(instanceId string) bool {
+					instanceDetails := getAndUnmarshalInstanceDetails(instanceId)
+					fmt.Printf("%v", instanceDetails)
+					return instanceDetails["topic_name"] != ""
 				},
 				cleanupFn: func() {
 					err := topic.Delete(context.Background())
