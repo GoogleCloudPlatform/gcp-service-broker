@@ -336,14 +336,14 @@ func (b *CloudSQLBroker) ensureGeneratedFields(instanceID, bindingID string, det
 	}
 
 	if v, ok := details.Parameters["username"].(string); !ok || v == "" {
-		username, err := GenerateUsername(instanceID, bindingID)
+		username, err := b.NameGenerator.GenerateUsername(instanceID, bindingID)
 		if err != nil {
 			return err
 		}
 		details.Parameters["username"] = username
 	}
 	if v, ok := details.Parameters["password"].(string); !ok || v == "" {
-		password, err := GeneratePassword()
+		password, err := b.NameGenerator.GeneratePassword()
 		if err != nil {
 			return err
 		}

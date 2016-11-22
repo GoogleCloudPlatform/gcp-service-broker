@@ -40,5 +40,34 @@ var _ = Describe("NameGenerator", func() {
 			testUniqueness(func() string { return generator.InstanceName() })
 			testUniqueness(func() string { return generator.DatabaseName() })
 		})
+		Describe("credentials generation", func() {
+			It("does not generate a username for empty instanceID/bindingID", func() {
+				_, err := generator.GenerateUsername("", "")
+				Expect(err).To(HaveOccurred())
+			})
+			It("generates a username", func() {
+				u, err := generator.GenerateUsername("foo", "bar")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(len(u)).To(BeNumerically(">", 1))
+			})
+			It("truncates very long instanceID/bindingIDs", func() {
+				longStr := "foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo"
+				u, err := generator.GenerateUsername(longStr, longStr)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(len(u)).To(BeNumerically("<", len(longStr)))
+			})
+			It("generates a password", func() {
+				p, err := generator.GeneratePassword()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(len(p)).To(BeNumerically(">", 1))
+			})
+			It("generates unique passwords", func() {
+				testUniqueness(func() string {
+					val, err := generator.GeneratePassword()
+					Expect(err).ToNot(HaveOccurred())
+					return val
+				})
+			})
+		})
 	})
 })
