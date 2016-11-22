@@ -40,4 +40,4 @@ of a string.
 
 ## Unreleased
 
-- Remove need for service name for PubSub (topic_name), BigQuery (name), and Cloud Storage (name)
+- Remove need for service name for PubSub (topic_name), BigQuery (name), Cloud Storage (name), and Cloud SQL (instance_name)

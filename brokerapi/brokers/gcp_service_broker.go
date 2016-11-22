@@ -159,6 +159,7 @@ func New(Logger lager.Logger, nameGenerators *name_generator.Generators) (*GCPAs
 			ProjectId:      self.RootGCPCredentials.ProjectId,
 			Logger:         self.Logger,
 			AccountManager: sqlManager,
+			NameGenerator:  nameGenerators.Sql,
 		},
 	}
 	// replace the mapping from name to a mapping from id

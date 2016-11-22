@@ -22,6 +22,7 @@ type Generators struct {
 func New() *Generators {
 	return &Generators{
 		Basic: &BasicNameGenerator{},
+		Sql:   &SqlNameGenerator{},
 	}
 }
 

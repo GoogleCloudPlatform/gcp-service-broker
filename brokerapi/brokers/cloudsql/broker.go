@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
 	"net/http"
 	"strconv"
@@ -37,6 +38,7 @@ type CloudSQLBroker struct {
 	ProjectId      string
 	Logger         lager.Logger
 	AccountManager models.AccountManager
+	NameGenerator  name_generator.SqlInstance
 }
 
 const SecondGenPricingPlan string = "PER_USE"
@@ -266,15 +268,20 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 // executing this "synchronously" even though technically db creation returns an op - but it's just a db call, so
 // it should be quick and not actually async.
 func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string]string) error {
-
 	var err error
+
+	serviceInstanceDetails := models.ServiceInstanceDetails{}
+	if err = db_service.DbConnection.Where("ID = ?", instanceId).First(&serviceInstanceDetails).Error; err != nil {
+		return models.ErrInstanceDoesNotExist
+	}
+
 	sqlService, err := googlecloudsql.New(b.Client)
 	if err != nil {
 		return fmt.Errorf("Error creating new CloudSQL Client: %s", err)
 	}
 
 	dbService := googlecloudsql.NewInstancesService(sqlService)
-	clouddb, err := dbService.Get(b.ProjectId, params["instance_name"]).Do()
+	clouddb, err := dbService.Get(b.ProjectId, serviceInstanceDetails.Name).Do()
 	if err != nil {
 		return fmt.Errorf("Error getting instance from api: %s", err)
 	}
@@ -299,15 +306,10 @@ func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string
 	}
 
 	// update db information
+	serviceInstanceDetails.Url = clouddb.SelfLink
+	serviceInstanceDetails.Location = clouddb.Region
 
-	instance := models.ServiceInstanceDetails{}
-	if err = db_service.DbConnection.Where("ID = ?", instanceId).First(&instance).Error; err != nil {
-		return models.ErrInstanceDoesNotExist
-	}
-	instance.Url = clouddb.SelfLink
-	instance.Location = clouddb.Region
-
-	if err = db_service.DbConnection.Save(&instance).Error; err != nil {
+	if err = db_service.DbConnection.Save(&serviceInstanceDetails).Error; err != nil {
 		return fmt.Errorf(`Error saving instance details to database: %s. WARNING: this instance cannot be deprovisioned through cf.
 		Please contact your operator for cleanup`, err)
 	}
@@ -315,8 +317,8 @@ func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string
 	return nil
 }
 
-// generate a new username and password if not provided
-func ensureCredentials(instanceID, bindingID string, details *models.BindDetails) error {
+// generate a new username, password, and instance_name if not provided
+func (b *CloudSQLBroker) ensureGeneratedFields(instanceID, bindingID string, details *models.BindDetails) error {
 	if details.Parameters == nil {
 		details.Parameters = map[string]interface{}{}
 	}
@@ -336,6 +338,10 @@ func ensureCredentials(instanceID, bindingID string, details *models.BindDetails
 		details.Parameters["password"] = password
 	}
 
+	if v, ok := details.Parameters["instance_name"].(string); !ok || v == "" {
+		details.Parameters["instance_name"] = b.NameGenerator.InstanceName()
+	}
+
 	return nil
 }
 
@@ -348,7 +354,7 @@ func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details models.BindD
 		return models.ServiceBindingCredentials{}, models.ErrInstanceDoesNotExist
 	}
 
-	if err := ensureCredentials(instanceID, bindingID, &details); err != nil {
+	if err := b.ensureGeneratedFields(instanceID, bindingID, &details); err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}
 

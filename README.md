@@ -127,7 +127,7 @@ Service calls take the following custom parameters, all as strings, (required wh
         * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles), e.g. pubsub.admin
 * [CloudSQL](https://cloud.google.com/sql/docs/)
     * Provison
-        * instance_name (required)
+        * instance_name (optional)
         * database_name (required)
         * version (defaults to 5.6)
         * disk_size in GB (only for 2nd gen, defaults to 10)
