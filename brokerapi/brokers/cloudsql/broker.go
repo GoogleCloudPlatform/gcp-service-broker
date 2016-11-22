@@ -43,15 +43,27 @@ type CloudSQLBroker struct {
 
 const SecondGenPricingPlan string = "PER_USE"
 
-// Creates a new CloudSQL instance identified by the name provided in details.RawParameters.instance_name
+// Creates a new CloudSQL instance
 //
-// required custom parameters: instance_name, database_name
-// optional custom parameters: version (defaults to 5.6), disk_size in GB (only for 2nd gen, defaults to 10),
-// region (defaults to us-central), zone (for 2nd gen), disk_type (for 2nd gen, defaults to ssd),
-// failover_replica_name (only for 2nd gen, if specified creates a failover replica, defaults to ""),
-// maintenance_window_day (for 2nd gen only, defaults to 1 (Sunday)), maintenance_window_hour (for 2nd gen only, defaults to 0),
-// backups_enabled (defaults to true), backup_start_time (defaults to 06:00), binlog (defaults to false for 1st gen, true for 2nd gen),
-// activation_policy (defaults to on demand), replication_type (defaults to synchronous), auto_resize (2nd gen only, defaults to false)
+// required custom parameters:
+//   - database_name
+// optional custom parameters:
+//   - instance_name (generated and returned in ServiceInstanceDetails.Name if not provided)
+//   - version (defaults to 5.6)
+//   - disk_size in GB (only for 2nd gen, defaults to 10)
+//   - region (defaults to us-central)
+//   - zone (for 2nd gen)
+//   - disk_type (for 2nd gen, defaults to ssd)
+//   - failover_replica_name (only for 2nd gen, if specified creates a failover replica, defaults to "")
+//   - maintenance_window_day (for 2nd gen only)
+//   - defaults to 1 (Sunday))
+//   - maintenance_window_hour (for 2nd gen only, defaults to 0)
+//   - backups_enabled (defaults to true)
+//   - backup_start_time (defaults to 06:00)
+//   - binlog (defaults to false for 1st gen, true for 2nd gen)
+//   - activation_policy (defaults to on demand)
+//   - replication_type (defaults to synchronous)
+//   - auto_resize (2nd gen only, defaults to false)
 //
 // for more information, see: https://cloud.google.com/sql/docs/admin-api/v1beta4/instances/insert
 func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
