@@ -21,6 +21,7 @@ import (
 	googlepubsub "cloud.google.com/go/pubsub"
 	"encoding/json"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"golang.org/x/net/context"
 	"net/http"
 
@@ -34,9 +35,10 @@ import (
 )
 
 type PubSubBroker struct {
-	Client    *http.Client
-	ProjectId string
-	Logger    lager.Logger
+	Client        *http.Client
+	ProjectId     string
+	Logger        lager.Logger
+	NameGenerator name_generator.BasicInstance
 
 	broker_base.BrokerBase
 }
@@ -50,6 +52,11 @@ func (b *PubSubBroker) Provision(instanceId string, details models.ProvisionDeta
 	var params map[string]string
 	if err := json.Unmarshal(details.RawParameters, &params); err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling provision details: %s", err)
+	}
+
+	// Ensure there is a name for this topic
+	if _, ok := params["topic_name"]; !ok {
+		params["topic_name"] = b.NameGenerator.InstanceName()
 	}
 
 	ctx := context.Background()

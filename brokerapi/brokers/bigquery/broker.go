@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
 	googlebigquery "google.golang.org/api/bigquery/v2"
 	"net/http"
@@ -33,6 +34,7 @@ type BigQueryBroker struct {
 	ProjectId      string
 	Logger         lager.Logger
 	AccountManager models.AccountManager
+	NameGenerator  name_generator.BasicInstance
 
 	broker_base.BrokerBase
 }
@@ -45,6 +47,11 @@ func (b *BigQueryBroker) Provision(instanceId string, details models.ProvisionDe
 	var params map[string]string
 	if err = json.Unmarshal(details.RawParameters, &params); err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling parameters: %s", err)
+	}
+
+	// Ensure there is a name for this instance
+	if _, ok := params["name"]; !ok {
+		params["name"] = b.NameGenerator.InstanceName()
 	}
 
 	service, err := googlebigquery.New(b.Client)

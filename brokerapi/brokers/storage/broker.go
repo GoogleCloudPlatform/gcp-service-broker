@@ -26,15 +26,17 @@ import (
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
 )
 
 type StorageBroker struct {
-	Client    *http.Client
-	ProjectId string
-	Logger    lager.Logger
+	Client        *http.Client
+	ProjectId     string
+	Logger        lager.Logger
+	NameGenerator name_generator.BasicInstance
 
 	broker_base.BrokerBase
 }
@@ -54,6 +56,11 @@ func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDet
 	var params map[string]string
 	if err = json.Unmarshal(details.RawParameters, &params); err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling parameters: %s", err)
+	}
+
+	// Ensure there is a name for this instance
+	if _, ok := params["name"]; !ok {
+		params["name"] = b.NameGenerator.InstanceName()
 	}
 
 	// make a new bucket

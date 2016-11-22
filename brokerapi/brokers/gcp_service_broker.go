@@ -36,6 +36,7 @@ import (
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/cloudsql"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/brokerapi/brokers/pubsub"
 	"gcp-service-broker/brokerapi/brokers/storage"
 	"gcp-service-broker/db_service"
@@ -68,7 +69,7 @@ type GCPAsyncServiceBroker struct {
 }
 
 // returns a new service broker and nil if no errors occur else nil and the error
-func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
+func New(Logger lager.Logger, nameGenerators *name_generator.Generators) (*GCPAsyncServiceBroker, error) {
 	var err error
 
 	self := GCPAsyncServiceBroker{}
@@ -125,6 +126,7 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 			BrokerBase: broker_base.BrokerBase{
 				AccountManager: saManager,
 			},
+			NameGenerator: nameGenerators.Basic,
 		},
 		PubsubName: &pubsub.PubSubBroker{
 			Client:    self.GCPClient,
@@ -133,6 +135,7 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 			BrokerBase: broker_base.BrokerBase{
 				AccountManager: saManager,
 			},
+			NameGenerator: nameGenerators.Basic,
 		},
 		BigqueryName: &bigquery.BigQueryBroker{
 			Client:    self.GCPClient,
@@ -141,6 +144,7 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 			BrokerBase: broker_base.BrokerBase{
 				AccountManager: saManager,
 			},
+			NameGenerator: nameGenerators.Basic,
 		},
 		MlName: &api_service.ApiServiceBroker{
 			Client:    self.GCPClient,

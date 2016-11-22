@@ -9,6 +9,7 @@ import (
 	"gcp-service-broker/brokerapi/brokers/cloudsql"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/brokerapi/brokers/models/modelsfakes"
+	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/brokerapi/brokers/pubsub"
 	"gcp-service-broker/db_service"
 	"net/http"
@@ -191,7 +192,7 @@ var _ = Describe("Brokers", func() {
 		instanceId = "newid"
 		bindingId = "newbinding"
 
-		gcpBroker, err = brokers.New(logger)
+		gcpBroker, err = brokers.New(logger, name_generator.New())
 		if err != nil {
 			logger.Error("error", err)
 		}
@@ -297,7 +298,7 @@ var _ = Describe("Brokers", func() {
 				}
 			}`)
 
-			newBroker, err := brokers.New(logger)
+			newBroker, err := brokers.New(logger, name_generator.New())
 
 			serviceList := newBroker.Services()
 			for _, s := range serviceList {
@@ -333,7 +334,7 @@ var _ = Describe("Brokers", func() {
 				}
 			}`)
 
-			newBroker, err := brokers.New(logger)
+			newBroker, err := brokers.New(logger, name_generator.New())
 
 			serviceList := newBroker.Services()
 			for _, s := range serviceList {
