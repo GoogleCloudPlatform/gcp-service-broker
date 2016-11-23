@@ -45,9 +45,8 @@ const SecondGenPricingPlan string = "PER_USE"
 
 // Creates a new CloudSQL instance
 //
-// required custom parameters:
-//   - database_name
 // optional custom parameters:
+//   - database_name (generated and returned in ServiceInstanceDetails.OtherDetails.DatabaseName)
 //   - instance_name (generated and returned in ServiceInstanceDetails.Name if not provided)
 //   - version (defaults to 5.6)
 //   - disk_size in GB (only for 2nd gen, defaults to 10)
@@ -67,7 +66,6 @@ const SecondGenPricingPlan string = "PER_USE"
 //
 // for more information, see: https://cloud.google.com/sql/docs/admin-api/v1beta4/instances/insert
 func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
-
 	// validate parameters
 	var params map[string]string
 	var err error
@@ -75,14 +73,16 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling parameters: %s", err)
 	}
 
-	instanceName, instanceNameOk := params["instance_name"]
-	_, databaseNameOk := params["database_name"]
-
-	if !instanceNameOk || !databaseNameOk {
-		return models.ServiceInstanceDetails{}, errors.New(`Missing one or more required parameters
-		(required parameters are instance_name and database_name`)
+	if v, ok := params["instance_name"]; !ok || v == "" {
+		params["instance_name"] = b.NameGenerator.InstanceName()
 	}
-	// done validating parameters
+
+	if v, ok := params["database_name"]; !ok || v == "" {
+		params["database_name"] = b.NameGenerator.DatabaseName()
+	}
+
+	instanceName := params["instance_name"]
+	databaseName := params["database_name"]
 
 	// get plan parameters
 	var planDetails map[string]string
@@ -259,6 +259,7 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 		StartTime:     op.StartTime,
 		Status:        op.Status,
 		TargetId:      op.TargetId,
+		DatabaseName:  databaseName,
 	}
 
 	otherDetails, err := json.Marshal(currentState)
@@ -299,9 +300,13 @@ func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string
 	}
 
 	//create actual database entry
+	var cloudSqlOperation CloudSqlOperation
+	if err := json.Unmarshal([]byte(serviceInstanceDetails.OtherDetails), &cloudSqlOperation); err != nil {
+		return fmt.Errorf("Error unmarshalling operation status details: %s", err)
+	}
 
 	d := googlecloudsql.Database{
-		Name: params["database_name"],
+		Name: cloudSqlOperation.DatabaseName,
 	}
 
 	op, err := sqlService.Databases.Insert(b.ProjectId, clouddb.Name, &d).Do()
@@ -329,8 +334,8 @@ func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string
 	return nil
 }
 
-// generate a new username, password, and instance_name if not provided
-func (b *CloudSQLBroker) ensureGeneratedFields(instanceID, bindingID string, details *models.BindDetails) error {
+// generate a new username, password if not provided
+func (b *CloudSQLBroker) ensureUsernamePassword(instanceID, bindingID string, details *models.BindDetails) error {
 	if details.Parameters == nil {
 		details.Parameters = map[string]interface{}{}
 	}
@@ -350,10 +355,6 @@ func (b *CloudSQLBroker) ensureGeneratedFields(instanceID, bindingID string, det
 		details.Parameters["password"] = password
 	}
 
-	if v, ok := details.Parameters["instance_name"].(string); !ok || v == "" {
-		details.Parameters["instance_name"] = b.NameGenerator.InstanceName()
-	}
-
 	return nil
 }
 
@@ -366,7 +367,7 @@ func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details models.BindD
 		return models.ServiceBindingCredentials{}, models.ErrInstanceDoesNotExist
 	}
 
-	if err := b.ensureGeneratedFields(instanceID, bindingID, &details); err != nil {
+	if err := b.ensureUsernamePassword(instanceID, bindingID, &details); err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}
 
@@ -566,4 +567,5 @@ type CloudSqlOperation struct {
 	StartTime     string
 	Status        string
 	TargetId      string
+	DatabaseName  string
 }

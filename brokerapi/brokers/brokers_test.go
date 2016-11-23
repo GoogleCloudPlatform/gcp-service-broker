@@ -594,8 +594,8 @@ var _ = Describe("AccountManagers", func() {
 			})
 		})
 
-		Context("when bind is called on a cloudsql broker with no username/password/instance_name after provision", func() {
-			It("should return a generated username, password, and instance_name", func() {
+		Context("when bind is called on a cloudsql broker with no username/password after provision", func() {
+			It("should return a generated username and password", func() {
 				db_service.DbConnection.Create(&models.ServiceInstanceDetails{ID: "foo"})
 
 				_, err := cloudsqlBroker.Bind("foo", "bar", models.BindDetails{})
@@ -607,14 +607,11 @@ var _ = Describe("AccountManagers", func() {
 
 				username, usernameOk := details.Parameters["username"].(string)
 				password, passwordOk := details.Parameters["password"].(string)
-				instance_name, instance_nameOk := details.Parameters["instance_name"].(string)
 
 				Expect(usernameOk).To(BeTrue())
 				Expect(passwordOk).To(BeTrue())
-				Expect(instance_nameOk).To(BeTrue())
 				Expect(username).NotTo(BeEmpty())
 				Expect(password).NotTo(BeEmpty())
-				Expect(instance_name).NotTo(BeEmpty())
 			})
 		})
 	})
