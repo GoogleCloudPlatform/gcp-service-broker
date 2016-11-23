@@ -466,10 +466,14 @@ func (b *CloudSQLBroker) PollOperation(instance models.ServiceInstanceDetails, o
 		if err = db_service.DbConnection.Where("service_instance_id = ?", instance.ID).First(&pr).Error; err != nil {
 			return false, models.ErrInstanceDoesNotExist
 		}
-		pd := map[string]string{}
-		if err = json.Unmarshal([]byte(pr.RequestDetails), &pd); err != nil {
+
+		var pd map[string]string
+		if len(pr.RequestDetails) == 0 {
+			pd = map[string]string{}
+		} else if err = json.Unmarshal([]byte(pr.RequestDetails), &pd); err != nil {
 			return false, fmt.Errorf("Error unmarshalling request details: %s", err)
 		}
+
 		// XXX: return error exactly as is from google api
 		err = b.FinishProvisioning(instance.ID, pd)
 		if err != nil {
