@@ -326,8 +326,14 @@ func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string
 	}
 
 	// update db information
+	otherDetails, err := json.Marshal(cloudSqlOperation)
+	if err != nil {
+		return err
+	}
+
 	serviceInstanceDetails.Url = clouddb.SelfLink
 	serviceInstanceDetails.Location = clouddb.Region
+	serviceInstanceDetails.OtherDetails = string(otherDetails)
 
 	if err = db_service.DbConnection.Save(&serviceInstanceDetails).Error; err != nil {
 		return fmt.Errorf(`Error saving instance details to database: %s. WARNING: this instance cannot be deprovisioned through cf.
