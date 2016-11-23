@@ -39,9 +39,17 @@ type SqlNameGenerator struct {
 	BasicNameGenerator
 }
 
-func (bng *BasicNameGenerator) InstanceName() string {
+func (bng *BasicNameGenerator) newNameWithSeperator(sep string) string {
 	bng.count += 1
-	return fmt.Sprintf("pcf_sb_%d_%d", bng.count, time.Now().UnixNano())
+	return fmt.Sprintf("pcf%ssb%s%d%s%d", sep, sep, bng.count, sep, time.Now().UnixNano())
+}
+
+func (bng *BasicNameGenerator) InstanceName() string {
+	return bng.newNameWithSeperator("_")
+}
+
+func (bng *SqlNameGenerator) InstanceName() string {
+	return bng.newNameWithSeperator("-")
 }
 
 func (sng *SqlNameGenerator) DatabaseName() string {
