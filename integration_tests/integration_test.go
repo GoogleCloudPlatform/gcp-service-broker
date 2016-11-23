@@ -45,9 +45,8 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 	// Provision
 	//
 	provisionDetails := models.ProvisionDetails{
-		ServiceID:     params.serviceId,
-		PlanID:        params.planId,
-		RawParameters: []byte("{}"),
+		ServiceID: params.serviceId,
+		PlanID:    params.planId,
 	}
 
 	_, err := gcpBroker.Provision(params.instanceId, provisionDetails, true)

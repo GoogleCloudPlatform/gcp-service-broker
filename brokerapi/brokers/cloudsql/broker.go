@@ -69,7 +69,10 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 	// validate parameters
 	var params map[string]string
 	var err error
-	if err = json.Unmarshal(details.RawParameters, &params); err != nil {
+
+	if len(details.RawParameters) == 0 {
+		params = map[string]string{}
+	} else if err = json.Unmarshal(details.RawParameters, &params); err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling parameters: %s", err)
 	}
 

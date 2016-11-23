@@ -42,10 +42,12 @@ type BigQueryBroker struct {
 // Creates a new BigQuery dataset identified by the name provided in details.RawParameters.name and optional location
 // (possible values are "US" or "EU", defaults to "US")
 func (b *BigQueryBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
-
 	var err error
 	var params map[string]string
-	if err = json.Unmarshal(details.RawParameters, &params); err != nil {
+
+	if len(details.RawParameters) == 0 {
+		params = map[string]string{}
+	} else if err = json.Unmarshal(details.RawParameters, &params); err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling parameters: %s", err)
 	}
 
