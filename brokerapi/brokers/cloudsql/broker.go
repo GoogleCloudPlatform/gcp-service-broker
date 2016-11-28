@@ -80,12 +80,7 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 		params["instance_name"] = b.NameGenerator.InstanceName()
 	}
 
-	if v, ok := params["database_name"]; !ok || v == "" {
-		params["database_name"] = b.NameGenerator.DatabaseName()
-	}
-
 	instanceName := params["instance_name"]
-	databaseName := params["database_name"]
 
 	// get plan parameters
 	var planDetails map[string]string
@@ -262,7 +257,6 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 		StartTime:     op.StartTime,
 		Status:        op.Status,
 		TargetId:      op.TargetId,
-		DatabaseName:  databaseName,
 	}
 
 	otherDetails, err := json.Marshal(currentState)
@@ -307,6 +301,11 @@ func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string
 	if err := json.Unmarshal([]byte(serviceInstanceDetails.OtherDetails), &cloudSqlOperation); err != nil {
 		return fmt.Errorf("Error unmarshalling operation status details: %s", err)
 	}
+
+	if v, ok := params["database_name"]; !ok || v == "" {
+		params["database_name"] = b.NameGenerator.DatabaseName()
+	}
+	cloudSqlOperation.DatabaseName = params["database_name"]
 
 	d := googlecloudsql.Database{
 		Name: cloudSqlOperation.DatabaseName,
