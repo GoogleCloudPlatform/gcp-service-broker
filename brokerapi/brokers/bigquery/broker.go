@@ -39,7 +39,7 @@ type BigQueryBroker struct {
 }
 
 type InstanceInformation struct {
-	DatasetId string
+	DatasetId string `json:"dataset_id"`
 }
 
 // Creates a new BigQuery dataset identified by the name provided in details.RawParameters.name and optional location
@@ -81,7 +81,11 @@ func (b *BigQueryBroker) Provision(instanceId string, details models.ProvisionDe
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error inserting new dataset: %s", err)
 	}
 
-	otherDetails, err := json.Marshal(map[string]string{})
+	ii := InstanceInformation{
+		DatasetId: params["name"],
+	}
+
+	otherDetails, err := json.Marshal(ii)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling other details: %s", err)
 	}
