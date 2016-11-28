@@ -9,6 +9,7 @@ import (
 	"gcp-service-broker/brokerapi/brokers/cloudsql"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/brokerapi/brokers/models/modelsfakes"
+	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/brokerapi/brokers/pubsub"
 	"gcp-service-broker/db_service"
 	"net/http"
@@ -44,6 +45,7 @@ var _ = Describe("Brokers", func() {
 		testDb.CreateTable(models.ProvisionRequestDetails{})
 
 		db_service.DbConnection = testDb
+		name_generator.New()
 
 		os.Setenv("ROOT_SERVICE_ACCOUNT_JSON", `{
 			"type": "service_account",
@@ -551,6 +553,7 @@ var _ = Describe("AccountManagers", func() {
 		testDb.CreateTable(models.ProvisionRequestDetails{})
 
 		db_service.DbConnection = testDb
+		name_generator.New()
 
 		accountManager = modelsfakes.FakeAccountManager{}
 

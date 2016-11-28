@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
 	"net/http"
 	"strconv"
@@ -41,34 +42,44 @@ type CloudSQLBroker struct {
 
 const SecondGenPricingPlan string = "PER_USE"
 
-// Creates a new CloudSQL instance identified by the name provided in details.RawParameters.instance_name
+// Creates a new CloudSQL instance
 //
-// required custom parameters: instance_name, database_name
-// optional custom parameters: version (defaults to 5.6), disk_size in GB (only for 2nd gen, defaults to 10),
-// region (defaults to us-central), zone (for 2nd gen), disk_type (for 2nd gen, defaults to ssd),
-// failover_replica_name (only for 2nd gen, if specified creates a failover replica, defaults to ""),
-// maintenance_window_day (for 2nd gen only, defaults to 1 (Sunday)), maintenance_window_hour (for 2nd gen only, defaults to 0),
-// backups_enabled (defaults to true), backup_start_time (defaults to 06:00), binlog (defaults to false for 1st gen, true for 2nd gen),
-// activation_policy (defaults to on demand), replication_type (defaults to synchronous), auto_resize (2nd gen only, defaults to false)
+// optional custom parameters:
+//   - database_name (generated and returned in ServiceInstanceDetails.OtherDetails.DatabaseName)
+//   - instance_name (generated and returned in ServiceInstanceDetails.Name if not provided)
+//   - version (defaults to 5.6)
+//   - disk_size in GB (only for 2nd gen, defaults to 10)
+//   - region (defaults to us-central)
+//   - zone (for 2nd gen)
+//   - disk_type (for 2nd gen, defaults to ssd)
+//   - failover_replica_name (only for 2nd gen, if specified creates a failover replica, defaults to "")
+//   - maintenance_window_day (for 2nd gen only)
+//   - defaults to 1 (Sunday))
+//   - maintenance_window_hour (for 2nd gen only, defaults to 0)
+//   - backups_enabled (defaults to true)
+//   - backup_start_time (defaults to 06:00)
+//   - binlog (defaults to false for 1st gen, true for 2nd gen)
+//   - activation_policy (defaults to on demand)
+//   - replication_type (defaults to synchronous)
+//   - auto_resize (2nd gen only, defaults to false)
 //
 // for more information, see: https://cloud.google.com/sql/docs/admin-api/v1beta4/instances/insert
 func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
-
 	// validate parameters
 	var params map[string]string
 	var err error
-	if err = json.Unmarshal(details.RawParameters, &params); err != nil {
+
+	if len(details.RawParameters) == 0 {
+		params = map[string]string{}
+	} else if err = json.Unmarshal(details.RawParameters, &params); err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling parameters: %s", err)
 	}
 
-	instanceName, instanceNameOk := params["instance_name"]
-	_, databaseNameOk := params["database_name"]
-
-	if !instanceNameOk || !databaseNameOk {
-		return models.ServiceInstanceDetails{}, errors.New(`Missing one or more required parameters
-		(required parameters are instance_name and database_name`)
+	if v, ok := params["instance_name"]; !ok || v == "" {
+		params["instance_name"] = name_generator.Sql.InstanceName()
 	}
-	// done validating parameters
+
+	instanceName := params["instance_name"]
 
 	// get plan parameters
 	var planDetails map[string]string
@@ -266,23 +277,37 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 // executing this "synchronously" even though technically db creation returns an op - but it's just a db call, so
 // it should be quick and not actually async.
 func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string]string) error {
-
 	var err error
+
+	serviceInstanceDetails := models.ServiceInstanceDetails{}
+	if err = db_service.DbConnection.Where("ID = ?", instanceId).First(&serviceInstanceDetails).Error; err != nil {
+		return models.ErrInstanceDoesNotExist
+	}
+
 	sqlService, err := googlecloudsql.New(b.Client)
 	if err != nil {
 		return fmt.Errorf("Error creating new CloudSQL Client: %s", err)
 	}
 
 	dbService := googlecloudsql.NewInstancesService(sqlService)
-	clouddb, err := dbService.Get(b.ProjectId, params["instance_name"]).Do()
+	clouddb, err := dbService.Get(b.ProjectId, serviceInstanceDetails.Name).Do()
 	if err != nil {
 		return fmt.Errorf("Error getting instance from api: %s", err)
 	}
 
 	//create actual database entry
+	var cloudSqlOperation CloudSqlOperation
+	if err := json.Unmarshal([]byte(serviceInstanceDetails.OtherDetails), &cloudSqlOperation); err != nil {
+		return fmt.Errorf("Error unmarshalling operation status details: %s", err)
+	}
+
+	if v, ok := params["database_name"]; !ok || v == "" {
+		params["database_name"] = name_generator.Sql.DatabaseName()
+	}
+	cloudSqlOperation.DatabaseName = params["database_name"]
 
 	d := googlecloudsql.Database{
-		Name: params["database_name"],
+		Name: cloudSqlOperation.DatabaseName,
 	}
 
 	op, err := sqlService.Databases.Insert(b.ProjectId, clouddb.Name, &d).Do()
@@ -299,15 +324,16 @@ func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string
 	}
 
 	// update db information
-
-	instance := models.ServiceInstanceDetails{}
-	if err = db_service.DbConnection.Where("ID = ?", instanceId).First(&instance).Error; err != nil {
-		return models.ErrInstanceDoesNotExist
+	otherDetails, err := json.Marshal(cloudSqlOperation)
+	if err != nil {
+		return err
 	}
-	instance.Url = clouddb.SelfLink
-	instance.Location = clouddb.Region
 
-	if err = db_service.DbConnection.Save(&instance).Error; err != nil {
+	serviceInstanceDetails.Url = clouddb.SelfLink
+	serviceInstanceDetails.Location = clouddb.Region
+	serviceInstanceDetails.OtherDetails = string(otherDetails)
+
+	if err = db_service.DbConnection.Save(&serviceInstanceDetails).Error; err != nil {
 		return fmt.Errorf(`Error saving instance details to database: %s. WARNING: this instance cannot be deprovisioned through cf.
 		Please contact your operator for cleanup`, err)
 	}
@@ -315,21 +341,21 @@ func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string
 	return nil
 }
 
-// generate a new username and password if not provided
-func ensureCredentials(instanceID, bindingID string, details *models.BindDetails) error {
+// generate a new username, password if not provided
+func (b *CloudSQLBroker) ensureUsernamePassword(instanceID, bindingID string, details *models.BindDetails) error {
 	if details.Parameters == nil {
 		details.Parameters = map[string]interface{}{}
 	}
 
 	if v, ok := details.Parameters["username"].(string); !ok || v == "" {
-		username, err := GenerateUsername(instanceID, bindingID)
+		username, err := name_generator.Sql.GenerateUsername(instanceID, bindingID)
 		if err != nil {
 			return err
 		}
 		details.Parameters["username"] = username
 	}
 	if v, ok := details.Parameters["password"].(string); !ok || v == "" {
-		password, err := GeneratePassword()
+		password, err := name_generator.Sql.GeneratePassword()
 		if err != nil {
 			return err
 		}
@@ -348,7 +374,7 @@ func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details models.BindD
 		return models.ServiceBindingCredentials{}, models.ErrInstanceDoesNotExist
 	}
 
-	if err := ensureCredentials(instanceID, bindingID, &details); err != nil {
+	if err := b.ensureUsernamePassword(instanceID, bindingID, &details); err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}
 
@@ -444,10 +470,14 @@ func (b *CloudSQLBroker) PollOperation(instance models.ServiceInstanceDetails, o
 		if err = db_service.DbConnection.Where("service_instance_id = ?", instance.ID).First(&pr).Error; err != nil {
 			return false, models.ErrInstanceDoesNotExist
 		}
-		pd := map[string]string{}
-		if err = json.Unmarshal([]byte(pr.RequestDetails), &pd); err != nil {
+
+		var pd map[string]string
+		if len(pr.RequestDetails) == 0 {
+			pd = map[string]string{}
+		} else if err = json.Unmarshal([]byte(pr.RequestDetails), &pd); err != nil {
 			return false, fmt.Errorf("Error unmarshalling request details: %s", err)
 		}
+
 		// XXX: return error exactly as is from google api
 		err = b.FinishProvisioning(instance.ID, pd)
 		if err != nil {
@@ -548,4 +578,5 @@ type CloudSqlOperation struct {
 	StartTime     string
 	Status        string
 	TargetId      string
+	DatabaseName  string
 }

@@ -24,6 +24,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"gcp-service-broker/brokerapi"
 	"gcp-service-broker/brokerapi/brokers"
+	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
 )
 
@@ -34,6 +35,7 @@ func main() {
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
 
 	db_service.New(logger)
+	name_generator.New()
 
 	// init broker
 	serviceBroker, err := brokers.New(logger)

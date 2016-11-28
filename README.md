@@ -107,7 +107,7 @@ Service calls take the following custom parameters, all as strings, (required wh
 
 * [PubSub](https://cloud.google.com/pubsub/docs/)
     * Provison
-        * topic_name (required)
+        * topic_name (optional)
         * subscription_name
         * is_push (defaults to false, to set use "true")
         * endpoint (for when is_push == "true", defaults to nil)
@@ -116,19 +116,19 @@ Service calls take the following custom parameters, all as strings, (required wh
         * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles)
 * [Cloud Storage](https://cloud.google.com/storage/docs/)
     * Provison
-        * name (required)
+        * name (optional)
         * location (for options, see https://cloud.google.com/storage/docs/bucket-locations. Defaults to us)
     * Bind
         * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles)
 * [BigQuery](https://cloud.google.com/bigquery/docs/)
     * Provison
-        * name (required)
+        * name (optional)
     * Bind
         * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles), e.g. pubsub.admin
 * [CloudSQL](https://cloud.google.com/sql/docs/)
     * Provison
-        * instance_name (required)
-        * database_name (required)
+        * instance_name (defaults to a generated value)
+        * database_name (defaults to a generated value)
         * version (defaults to 5.6)
         * disk_size in GB (only for 2nd gen, defaults to 10)
         * region (defaults to us-central)

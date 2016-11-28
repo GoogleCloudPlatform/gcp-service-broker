@@ -37,3 +37,7 @@ of a string.
 
 ### Fixed
 - fixed bug where CloudSQL was returning 400s for all 2nd gen instance provision requests
+
+## Unreleased
+
+- Remove need for service name for PubSub (topic_name), BigQuery (name), Cloud Storage (name), and Cloud SQL (instance_name)
