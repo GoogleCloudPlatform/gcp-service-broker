@@ -6,6 +6,13 @@ import (
 
 	"crypto/rand"
 	"encoding/base64"
+	"sync"
+)
+
+var (
+	Basic BasicInstance
+	Sql   SqlInstance
+	once  sync.Once
 )
 
 type SqlInstance interface {
@@ -19,16 +26,12 @@ type BasicInstance interface {
 	InstanceName() string
 }
 
-type Generators struct {
-	Sql   SqlInstance
-	Basic BasicInstance
-}
-
-func New() *Generators {
-	return &Generators{
-		Basic: &BasicNameGenerator{},
-		Sql:   &SqlNameGenerator{},
-	}
+func New() (BasicInstance, SqlInstance) {
+	once.Do(func() {
+		Basic = &BasicNameGenerator{}
+		Sql = &SqlNameGenerator{}
+	})
+	return Basic, Sql
 }
 
 type BasicNameGenerator struct {

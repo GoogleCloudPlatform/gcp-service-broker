@@ -33,10 +33,9 @@ import (
 )
 
 type StorageBroker struct {
-	Client        *http.Client
-	ProjectId     string
-	Logger        lager.Logger
-	NameGenerator name_generator.BasicInstance
+	Client    *http.Client
+	ProjectId string
+	Logger    lager.Logger
 
 	broker_base.BrokerBase
 }
@@ -61,7 +60,7 @@ func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDet
 
 	// Ensure there is a name for this instance
 	if _, ok := params["name"]; !ok {
-		params["name"] = b.NameGenerator.InstanceName()
+		params["name"] = name_generator.Basic.InstanceName()
 	}
 
 	// make a new bucket

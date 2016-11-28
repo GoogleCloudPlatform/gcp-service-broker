@@ -38,7 +38,6 @@ type CloudSQLBroker struct {
 	ProjectId      string
 	Logger         lager.Logger
 	AccountManager models.AccountManager
-	NameGenerator  name_generator.SqlInstance
 }
 
 const SecondGenPricingPlan string = "PER_USE"
@@ -77,7 +76,7 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 	}
 
 	if v, ok := params["instance_name"]; !ok || v == "" {
-		params["instance_name"] = b.NameGenerator.InstanceName()
+		params["instance_name"] = name_generator.Sql.InstanceName()
 	}
 
 	instanceName := params["instance_name"]
@@ -303,7 +302,7 @@ func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string
 	}
 
 	if v, ok := params["database_name"]; !ok || v == "" {
-		params["database_name"] = b.NameGenerator.DatabaseName()
+		params["database_name"] = name_generator.Sql.DatabaseName()
 	}
 	cloudSqlOperation.DatabaseName = params["database_name"]
 
@@ -349,14 +348,14 @@ func (b *CloudSQLBroker) ensureUsernamePassword(instanceID, bindingID string, de
 	}
 
 	if v, ok := details.Parameters["username"].(string); !ok || v == "" {
-		username, err := b.NameGenerator.GenerateUsername(instanceID, bindingID)
+		username, err := name_generator.Sql.GenerateUsername(instanceID, bindingID)
 		if err != nil {
 			return err
 		}
 		details.Parameters["username"] = username
 	}
 	if v, ok := details.Parameters["password"].(string); !ok || v == "" {
-		password, err := b.NameGenerator.GeneratePassword()
+		password, err := name_generator.Sql.GeneratePassword()
 		if err != nil {
 			return err
 		}

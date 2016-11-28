@@ -124,8 +124,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 		logger              lager.Logger
 		serviceNameToId     map[string]string = make(map[string]string)
 		serviceNameToPlanId map[string]string = make(map[string]string)
-		nameGenerator       fakes.StaticNameGenerator
-		instance_name       string = "pcf_sb_2_1479851465224535828"
+		instance_name       string            = "pcf_sb_2_1479851465224535828"
 	)
 
 	BeforeEach(func() {
@@ -271,11 +270,9 @@ var _ = Describe("LiveIntegrationTests", func() {
 			}
 		}`)
 
-		nameGenerator = fakes.StaticNameGenerator{Val: instance_name}
+		name_generator.Basic = &fakes.StaticNameGenerator{Val: instance_name}
 
-		gcpBroker, err = brokers.New(logger, &name_generator.Generators{
-			Basic: &nameGenerator,
-		})
+		gcpBroker, err = brokers.New(logger)
 		if err != nil {
 			logger.Error("error", err)
 		}

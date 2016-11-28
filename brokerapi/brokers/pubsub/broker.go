@@ -35,10 +35,9 @@ import (
 )
 
 type PubSubBroker struct {
-	Client        *http.Client
-	ProjectId     string
-	Logger        lager.Logger
-	NameGenerator name_generator.BasicInstance
+	Client    *http.Client
+	ProjectId string
+	Logger    lager.Logger
 
 	broker_base.BrokerBase
 }
@@ -58,7 +57,7 @@ func (b *PubSubBroker) Provision(instanceId string, details models.ProvisionDeta
 
 	// Ensure there is a name for this topic
 	if _, ok := params["topic_name"]; !ok {
-		params["topic_name"] = b.NameGenerator.InstanceName()
+		params["topic_name"] = name_generator.Basic.InstanceName()
 	}
 
 	ctx := context.Background()

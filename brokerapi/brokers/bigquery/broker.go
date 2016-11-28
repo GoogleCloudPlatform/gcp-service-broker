@@ -34,7 +34,6 @@ type BigQueryBroker struct {
 	ProjectId      string
 	Logger         lager.Logger
 	AccountManager models.AccountManager
-	NameGenerator  name_generator.BasicInstance
 
 	broker_base.BrokerBase
 }
@@ -53,7 +52,7 @@ func (b *BigQueryBroker) Provision(instanceId string, details models.ProvisionDe
 
 	// Ensure there is a name for this instance
 	if _, ok := params["name"]; !ok {
-		params["name"] = b.NameGenerator.InstanceName()
+		params["name"] = name_generator.Basic.InstanceName()
 	}
 
 	service, err := googlebigquery.New(b.Client)

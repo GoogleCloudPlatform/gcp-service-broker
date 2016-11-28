@@ -35,9 +35,10 @@ func main() {
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
 
 	db_service.New(logger)
+	name_generator.New()
 
 	// init broker
-	serviceBroker, err := brokers.New(logger, name_generator.New())
+	serviceBroker, err := brokers.New(logger)
 	if err != nil {
 		logger.Fatal("Error initializing service broker: %s", err)
 	}

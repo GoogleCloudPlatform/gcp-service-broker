@@ -45,6 +45,7 @@ var _ = Describe("Brokers", func() {
 		testDb.CreateTable(models.ProvisionRequestDetails{})
 
 		db_service.DbConnection = testDb
+		name_generator.New()
 
 		os.Setenv("ROOT_SERVICE_ACCOUNT_JSON", `{
 			"type": "service_account",
@@ -192,7 +193,7 @@ var _ = Describe("Brokers", func() {
 		instanceId = "newid"
 		bindingId = "newbinding"
 
-		gcpBroker, err = brokers.New(logger, name_generator.New())
+		gcpBroker, err = brokers.New(logger)
 		if err != nil {
 			logger.Error("error", err)
 		}
@@ -298,7 +299,7 @@ var _ = Describe("Brokers", func() {
 				}
 			}`)
 
-			newBroker, err := brokers.New(logger, name_generator.New())
+			newBroker, err := brokers.New(logger)
 
 			serviceList := newBroker.Services()
 			for _, s := range serviceList {
@@ -334,7 +335,7 @@ var _ = Describe("Brokers", func() {
 				}
 			}`)
 
-			newBroker, err := brokers.New(logger, name_generator.New())
+			newBroker, err := brokers.New(logger)
 
 			serviceList := newBroker.Services()
 			for _, s := range serviceList {
@@ -552,6 +553,7 @@ var _ = Describe("AccountManagers", func() {
 		testDb.CreateTable(models.ProvisionRequestDetails{})
 
 		db_service.DbConnection = testDb
+		name_generator.New()
 
 		accountManager = modelsfakes.FakeAccountManager{}
 
@@ -565,7 +567,6 @@ var _ = Describe("AccountManagers", func() {
 		cloudsqlBroker = &cloudsql.CloudSQLBroker{
 			Logger:         logger,
 			AccountManager: &accountManager,
-			NameGenerator:  &name_generator.SqlNameGenerator{},
 		}
 	})
 
