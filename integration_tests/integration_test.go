@@ -4,11 +4,13 @@ import (
 	. "gcp-service-broker/brokerapi/brokers"
 	"golang.org/x/net/context"
 
+	"fmt"
 	"gcp-service-broker/brokerapi/brokers"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
 	"gcp-service-broker/fakes"
+	"hash/crc32"
 	"net/http"
 	"os"
 
@@ -117,6 +119,20 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 	Expect(params.serviceExistsFn(false)).To(BeFalse())
 }
 
+// Instance Name is used to name every instance created in GCP (eg, a storage bucket)
+// The name should be consistent between runs to ensure there's bounds to the resources it creates
+// and to have some insurance that they are properly destroyed.
+//
+// Why:
+// - If we allow it to generate a random instance name every time the test will
+//   not fail if the resource existed before hand.
+// - If we always use a static one, globally named resources (eg, a storage bucket)
+//   would fail to create when two different projects run these tests.
+func generateInstanceName(projectId string) string {
+	hashed := crc32.ChecksumIEEE([]byte(projectId))
+	return fmt.Sprintf("pcf_sb_1_%d", hashed)
+}
+
 var _ = Describe("LiveIntegrationTests", func() {
 	var (
 		gcpBroker           *GCPAsyncServiceBroker
@@ -124,7 +140,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 		logger              lager.Logger
 		serviceNameToId     map[string]string = make(map[string]string)
 		serviceNameToPlanId map[string]string = make(map[string]string)
-		instance_name       string            = "pcf_sb_2_1479851465224535828"
+		instance_name       string
 	)
 
 	BeforeEach(func() {
@@ -270,6 +286,12 @@ var _ = Describe("LiveIntegrationTests", func() {
 			}
 		}`)
 
+		var creds models.GCPCredentials
+		creds, err = brokers.InitCredentialsFromEnv()
+		if err != nil {
+			logger.Error("error", err)
+		}
+		instance_name = generateInstanceName(creds.ProjectId)
 		name_generator.Basic = &fakes.StaticNameGenerator{Val: instance_name}
 
 		gcpBroker, err = brokers.New(logger)
