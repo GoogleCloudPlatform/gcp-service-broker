@@ -1,17 +1,17 @@
 ---
 cf_cli/all_open.json:
-  object_id: eae86697-9f4e-4d9c-a46c-f40835702da4
+  object_id: 87030040-7c55-4674-a056-5bf6736b2fe1
   sha: 5915785ed61178f2a4988de73517c1ef986146de
   size: 80
 cf_cli/cf-linux-amd64.tgz:
-  object_id: 305a0ea8-7e73-40f5-8f08-ddd727c326ed
+  object_id: 309ec4d8-b509-4466-a3d2-2bf439d42a80
   sha: 72f398b59bc041826a7658e318794a84bd428729
   size: 6497363
 gcp_service_broker/gcp-service-broker.zip:
-  object_id: 185623af-e422-4f80-ae65-eba139961a4a
-  sha: fc9cc93714ca3a244781bdf18d5c8e725b80ac75
-  size: 12984063
+  object_id: eaab5900-92a4-41ef-a7be-a6651dd83a9b
+  sha: fdf1636806b7d5809c44159a0ff75a9a8f71435e
+  size: 13393329
 gcp_service_broker/manifest.yml:
-  object_id: 725d2272-6c3e-4df5-81ff-da5b6231fc2a
+  object_id: 64644ad3-8efb-499e-86f4-2c0064e6ca47
   sha: 7d5b06d8717ca475517168d56c3bc6300b70446c
   size: 4337

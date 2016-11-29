@@ -38,6 +38,9 @@ of a string.
 ### Fixed
 - fixed bug where CloudSQL was returning 400s for all 2nd gen instance provision requests
 
-## Unreleased
+## [2.0.3] - 2016-11-29
 
-- Remove need for service name for PubSub (topic_name), BigQuery (name), Cloud Storage (name), and Cloud SQL (instance_name)
+- Remove need for service name for PubSub (topic_name), BigQuery (name), Cloud Storage (name), 
+and Cloud SQL (instance_name and database_name). Unfortunately, the generated names are not yet
+surfaced in the binding credentials.
+- Integration tests now use generated service names
