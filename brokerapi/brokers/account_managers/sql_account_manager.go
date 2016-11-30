@@ -44,12 +44,6 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 		return models.ServiceBindingCredentials{}, errors.New("Error binding, missing parameters. Required parameters are username and password")
 	}
 
-	// Retrieve the CloudSqlOperation because it contains the DatabaseName
-	var cloudSqlOperation cloudsql.CloudSqlOperation
-	if err := json.Unmarshal([]byte(instance.OtherDetails), &cloudSqlOperation); err != nil {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("Error unmarshalling operation status details: %s", err)
-	}
-
 	// create username, pw with grants
 	sqlService, err := googlecloudsql.New(sam.GCPClient)
 	if err != nil {
@@ -87,7 +81,6 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 		CaCert:          newCert.ServerCaCert.Cert,
 		ClientCert:      newCert.ClientCert.CertInfo.Cert,
 		ClientKey:       newCert.ClientCert.CertPrivateKey,
-		DatabaseName:    cloudSqlOperation.DatabaseName,
 	}
 
 	credBytes, err := json.Marshal(&creds)
@@ -173,13 +166,12 @@ func (sam *SqlAccountManager) pollOperationUntilDone(op *googlecloudsql.Operatio
 
 type SqlAccountInfo struct {
 	// the bits to return
-	Username     string
-	Password     string
-	CaCert       string
-	ClientCert   string
-	ClientKey    string
-	DatabaseName string
+	Username   string `json:"username"`
+	Password   string `json:"password"`
+	CaCert     string `json:"ca_cert"`
+	ClientCert string `json:"client_cert"`
+	ClientKey  string `json:"client_key"`
 
 	// the bits to save
-	Sha1Fingerprint string
+	Sha1Fingerprint string `json:"sha1_fingerprint"`
 }

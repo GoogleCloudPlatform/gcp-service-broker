@@ -223,7 +223,7 @@ var _ = Describe("Brokers", func() {
 			gcpBroker.ServiceBrokerMap[k] = &modelsfakes.FakeServiceBrokerHelper{
 				AsyncStub: func() bool { return async },
 				ProvisionStub: func(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
-					return models.ServiceInstanceDetails{ID: instanceId}, nil
+					return models.ServiceInstanceDetails{ID: instanceId, OtherDetails: "{\"mynameis\": \"instancename\"}"}, nil
 				},
 				BindStub: func(instanceID, bindingID string, details models.BindDetails) (models.ServiceBindingCredentials, error) {
 					return models.ServiceBindingCredentials{OtherDetails: "{\"foo\": \"bar\"}"}, nil
@@ -455,6 +455,14 @@ var _ = Describe("Brokers", func() {
 				_, err = gcpBroker.Bind(instanceId, "newbinding", storageBindDetails)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[StorageName]].(*modelsfakes.FakeServiceBrokerHelper).BindCallCount()).To(Equal(1))
+			})
+
+			It("it should call storage bind", func() {
+				_, err = gcpBroker.Provision("storagething", bqProvisionDetails, true)
+				Expect(err).NotTo(HaveOccurred())
+				bindCreds, err := gcpBroker.Bind(instanceId, "newbinding", storageBindDetails)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(bindCreds.Credentials.(map[string]string)["mynameis"]).To(Equal("instancename"))
 			})
 		})
 

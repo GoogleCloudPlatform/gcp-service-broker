@@ -26,7 +26,7 @@ import (
 // runs schema migrations on the provided service broker database to get it up to date
 func RunMigrations(db *gorm.DB) error {
 
-	migrations := make([]func() error, 1)
+	migrations := make([]func() error, 2)
 
 	// initial migration - creates tables
 	migrations[0] = func() error {
@@ -98,6 +98,30 @@ func RunMigrations(db *gorm.DB) error {
 		return nil
 	}
 
+	// adds CloudOperation table
+	migrations[1] = func() error {
+		if err := db.Exec(`CREATE TABLE cloud_operations (
+			  id int(10) unsigned NOT NULL AUTO_INCREMENT,
+			  created_at timestamp NULL DEFAULT NULL,
+			  updated_at timestamp NULL DEFAULT NULL,
+			  deleted_at timestamp NULL DEFAULT NULL,
+			  name varchar(255) DEFAULT NULL,
+			  status varchar(255) DEFAULT NULL,
+			  operation_type varchar(255) DEFAULT NULL,
+			  error_message text,
+			  insert_time varchar(255) DEFAULT NULL,
+			  start_time varchar(255) DEFAULT NULL,
+			  target_id varchar(255) DEFAULT NULL,
+			  target_link varchar(255) DEFAULT NULL,
+			  service_id varchar(255) DEFAULT NULL,
+			  service_instance_id varchar(255) DEFAULT NULL,
+			  PRIMARY KEY (id)
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8`).Error; err != nil {
+			return err
+		}
+		return nil
+	}
+
 	var lastMigrationNumber = -1
 
 	// if we've run any migrations before, we should have a migrations table, so find the last one we ran
@@ -115,6 +139,7 @@ func RunMigrations(db *gorm.DB) error {
 		err := migrations[i]()
 		if err != nil {
 			tx.Rollback()
+
 			return err
 		} else {
 			newMigration := models.Migration{

@@ -25,8 +25,6 @@ import (
 	googlebigquery "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
-	"strconv"
-	"time"
 )
 
 const timeout = 60

@@ -82,8 +82,8 @@ type CloudOperation struct {
 	Status        string
 	OperationType string
 	ErrorMessage  string
-	InsertTime    time.Time
-	StartTime     time.Time
+	InsertTime    string
+	StartTime     string
 	TargetId      string
 	TargetLink    string
 

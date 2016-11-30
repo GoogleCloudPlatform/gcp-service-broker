@@ -166,10 +166,10 @@ func ServiceAccountName(bindingId string) string {
 
 type ServiceAccountInfo struct {
 	// the bits to save
-	Name     string
-	Email    string
-	UniqueId string
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	UniqueId string `json:"unique_id"`
 
 	// the bit to return
-	PrivateKeyData string
+	PrivateKeyData string `json:"private_key_data"`
 }
