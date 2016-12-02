@@ -18,9 +18,13 @@
 package db_service
 
 import (
+	"encoding/json"
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"gcp-service-broker/utils"
 	"github.com/jinzhu/gorm"
+	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
+	"os"
 )
 
 // runs schema migrations on the provided service broker database to get it up to date
@@ -119,6 +123,88 @@ func RunMigrations(db *gorm.DB) error {
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8`).Error; err != nil {
 			return err
 		}
+
+		// copy provision request details into service instance details
+
+		serviceAccount := make(map[string]string)
+		if err := json.Unmarshal([]byte(os.Getenv("ROOT_SERVICE_ACCOUNT_JSON")), &serviceAccount); err != nil {
+			return err
+		}
+
+		client, err := utils.GetAuthedClient()
+		if err != nil {
+			return fmt.Errorf("Error getting authorized http client: %s", err)
+		}
+
+		idToNameMap, err := utils.MapServiceIdToName()
+		if err != nil {
+			return err
+		}
+
+		var prs []models.ProvisionRequestDetails
+		if err := DbConnection.Find(&prs).Error; err != nil {
+			return err
+		}
+
+		println(fmt.Sprintf("ALL PRS %v", prs))
+
+		for _, pr := range prs {
+			var si models.ServiceInstanceDetails
+			if err := DbConnection.Where("id = ?", pr.ServiceInstanceId).First(&si).Error; err != nil {
+				return err
+			}
+			od := make(map[string]string)
+			if err := json.Unmarshal([]byte(pr.RequestDetails), &od); err != nil {
+				return err
+			}
+			newOd := make(map[string]string)
+
+			// cloudsql
+			switch serviceName := idToNameMap[si.ServiceId]; serviceName {
+			case models.CloudsqlName:
+				newOd["instance_name"] = od["instance_name"]
+				newOd["database_name"] = od["database_name"]
+
+				sqlService, err := googlecloudsql.New(client)
+				if err != nil {
+					return fmt.Errorf("Error creating new CloudSQL Client: %s", err)
+				}
+				dbService := googlecloudsql.NewInstancesService(sqlService)
+				clouddb, err := dbService.Get(serviceAccount["project_id"], od["instance_name"]).Do()
+				if err != nil {
+					return fmt.Errorf("Error getting instance from api: %s", err)
+				}
+				newOd["host"] = clouddb.IpAddresses[0].IpAddress
+
+			// bigquery
+			case models.BigqueryName:
+				newOd["dataset_id"] = od["name"]
+			// ml apis
+			case models.MlName:
+				// n/a
+			// storage
+			case models.StorageName:
+				newOd["bucket_name"] = od["name"]
+
+			// pubsub
+			case models.PubsubName:
+				newOd["topic_name"] = od["topic_name"]
+				newOd["subscription_name"] = od["subscription_name"]
+			default:
+				println(fmt.Sprintf("%v", idToNameMap))
+				return fmt.Errorf("unrecognized service: %s", si.ServiceId)
+			}
+
+			odBytes, err := json.Marshal(&newOd)
+			if err != nil {
+				return err
+			}
+			si.OtherDetails = string(odBytes)
+			if err := DbConnection.Save(&si).Error; err != nil {
+				return err
+			}
+		}
+
 		return nil
 	}
 
