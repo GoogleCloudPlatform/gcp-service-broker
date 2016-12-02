@@ -165,12 +165,12 @@ func (sam *SqlAccountManager) pollOperationUntilDone(op *googlecloudsql.Operatio
 
 type SqlAccountInfo struct {
 	// the bits to return
-	Username   string `json:"username"`
-	Password   string `json:"password"`
-	CaCert     string `json:"ca_cert"`
-	ClientCert string `json:"client_cert"`
-	ClientKey  string `json:"client_key"`
+	Username   string
+	Password   string
+	CaCert     string
+	ClientCert string
+	ClientKey  string
 
 	// the bits to save
-	Sha1Fingerprint string `json:"sha1_fingerprint"`
+	Sha1Fingerprint string
 }
