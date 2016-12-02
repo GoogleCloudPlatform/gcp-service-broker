@@ -43,7 +43,7 @@ type CloudSQLBroker struct {
 type InstanceInformation struct {
 	InstanceName string `json:"instance_name"`
 	DatabaseName string `json:"database_name"`
-	Host         string `json:"uri"`
+	Host         string `json:"host"`
 
 	LastMasterOperationId string `json:"last_master_operation_id"`
 }
@@ -262,6 +262,7 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling instance information: %s", err)
 	}
+	b.Logger.Debug(fmt.Sprintf("UPDATING OTHER DETAILS FROM %v to %s", "nothing", string(otherDetails)))
 	i := models.ServiceInstanceDetails{
 		Name:         params["instance_name"],
 		Url:          "",
@@ -334,12 +335,17 @@ func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string
 
 	// update instance information
 	var ii InstanceInformation
+	if err := json.Unmarshal([]byte(instance.OtherDetails), &ii); err != nil {
+		return fmt.Errorf("Error unmarshalling instance information.")
+	}
+
 	ii.Host = clouddb.IpAddresses[0].IpAddress
 	ii.DatabaseName = params["database_name"]
 	otherDetails, err := json.Marshal(ii)
 	if err != nil {
 		return fmt.Errorf("Error marshalling instance information: %s.", err)
 	}
+	b.Logger.Debug(fmt.Sprintf("UPDATING OTHER DETAILS FROM %v to %s", instance.OtherDetails, string(otherDetails)))
 	instance.OtherDetails = string(otherDetails)
 
 	if err = db_service.DbConnection.Save(&instance).Error; err != nil {
@@ -591,6 +597,7 @@ func updateOperationId(instance models.ServiceInstanceDetails, operationId strin
 		return fmt.Errorf("Error marshalling instance information: %s.", err)
 	}
 	instance.OtherDetails = string(otherDetails)
+
 	if err = db_service.DbConnection.Save(&instance).Error; err != nil {
 		return fmt.Errorf(`Error saving instance details to database: %s. WARNING: this instance cannot be deprovisioned through cf.
 		Please contact your operator for cleanup`, err)
