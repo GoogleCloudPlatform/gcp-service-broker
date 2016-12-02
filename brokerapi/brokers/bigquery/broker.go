@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
 	googlebigquery "google.golang.org/api/bigquery/v2"
 	"net/http"
@@ -37,14 +38,25 @@ type BigQueryBroker struct {
 	broker_base.BrokerBase
 }
 
+type InstanceInformation struct {
+	DatasetId string `json:"dataset_id"`
+}
+
 // Creates a new BigQuery dataset identified by the name provided in details.RawParameters.name and optional location
 // (possible values are "US" or "EU", defaults to "US")
 func (b *BigQueryBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
-
 	var err error
 	var params map[string]string
-	if err = json.Unmarshal(details.RawParameters, &params); err != nil {
+
+	if len(details.RawParameters) == 0 {
+		params = map[string]string{}
+	} else if err = json.Unmarshal(details.RawParameters, &params); err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling parameters: %s", err)
+	}
+
+	// Ensure there is a name for this instance
+	if _, ok := params["name"]; !ok {
+		params["name"] = name_generator.Basic.InstanceName()
 	}
 
 	service, err := googlebigquery.New(b.Client)
@@ -69,7 +81,11 @@ func (b *BigQueryBroker) Provision(instanceId string, details models.ProvisionDe
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error inserting new dataset: %s", err)
 	}
 
-	otherDetails, err := json.Marshal(map[string]string{})
+	ii := InstanceInformation{
+		DatasetId: params["name"],
+	}
+
+	otherDetails, err := json.Marshal(ii)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling other details: %s", err)
 	}

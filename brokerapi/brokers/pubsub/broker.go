@@ -21,6 +21,7 @@ import (
 	googlepubsub "cloud.google.com/go/pubsub"
 	"encoding/json"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"golang.org/x/net/context"
 	"net/http"
 
@@ -41,6 +42,11 @@ type PubSubBroker struct {
 	broker_base.BrokerBase
 }
 
+type InstanceInformation struct {
+	TopicName        string `json:"topic_name"`
+	SubscriptionName string `json:"subscription_name"`
+}
+
 // Creates a new PubSub topic with the name given in details.topic_name
 // if subscription_name is supplied, will also create a subscription for this topic with optional config parameters
 // is_push (defaults to "false"; i.e. pull), endpoint (defaults to nil), ack_deadline (seconds, defaults to 10, 600 max)
@@ -48,8 +54,15 @@ func (b *PubSubBroker) Provision(instanceId string, details models.ProvisionDeta
 
 	var err error
 	var params map[string]string
-	if err := json.Unmarshal(details.RawParameters, &params); err != nil {
+	if len(details.RawParameters) == 0 {
+		params = map[string]string{}
+	} else if err := json.Unmarshal(details.RawParameters, &params); err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling provision details: %s", err)
+	}
+
+	// Ensure there is a name for this topic
+	if _, ok := params["topic_name"]; !ok {
+		params["topic_name"] = name_generator.Basic.InstanceName()
 	}
 
 	ctx := context.Background()
@@ -71,8 +84,9 @@ func (b *PubSubBroker) Provision(instanceId string, details models.ProvisionDeta
 		Location:     "",
 		OtherDetails: "{}",
 	}
-
-	extraDetails := make(map[string]string)
+	ii := InstanceInformation{
+		TopicName: params["topic_name"],
+	}
 
 	if sub_name, ok := params["subscription_name"]; ok {
 		var pushConfig *googlepubsub.PushConfig
@@ -98,10 +112,10 @@ func (b *PubSubBroker) Provision(instanceId string, details models.ProvisionDeta
 			return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating subscription: %s", err)
 		}
 
-		extraDetails["subscription_name"] = params["subscription_name"]
+		ii.SubscriptionName = params["subscription_name"]
 	}
 
-	otherDetails, err := json.Marshal(extraDetails)
+	otherDetails, err := json.Marshal(ii)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling json: %s", err)
 	}
@@ -135,7 +149,7 @@ func (b *PubSubBroker) Deprovision(instanceID string, details models.Deprovision
 		return fmt.Errorf("Error unmarshalling service instance other details: %s", err)
 	}
 
-	if subscriptionName, ok := otherD["subscription_name"]; ok {
+	if subscriptionName := otherD["subscription_name"]; subscriptionName != "" {
 		err = service.Subscription(subscriptionName).Delete(ctx)
 		if err != nil {
 			return fmt.Errorf("Error deleting subscription: %s", err)

@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
@@ -39,10 +40,13 @@ type StorageBroker struct {
 	broker_base.BrokerBase
 }
 
+type InstanceInformation struct {
+	BucketName string `json:"bucket_name"`
+}
+
 // creates a new bucket with the name given in provision details and optional location
 // (defaults to "US", for acceptable location values see: https://cloud.google.com/storage/docs/bucket-locations)
 func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
-
 	var err error
 
 	var planDetails map[string]string
@@ -52,8 +56,15 @@ func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDet
 	storageClass := planDetails["storage_class"]
 
 	var params map[string]string
-	if err = json.Unmarshal(details.RawParameters, &params); err != nil {
+	if len(details.RawParameters) == 0 {
+		params = map[string]string{}
+	} else if err = json.Unmarshal(details.RawParameters, &params); err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling parameters: %s", err)
+	}
+
+	// Ensure there is a name for this instance
+	if _, ok := params["name"]; !ok {
+		params["name"] = name_generator.Basic.InstanceName()
 	}
 
 	// make a new bucket
@@ -84,9 +95,11 @@ func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDet
 
 	}
 
-	otherDetails, err := json.Marshal(map[string]string{
-		"StorageClass": attrs.StorageClass,
-	})
+	ii := InstanceInformation{
+		BucketName: params["name"],
+	}
+
+	otherDetails, err := json.Marshal(ii)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling json: %s", err)
 	}

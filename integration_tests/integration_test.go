@@ -1,13 +1,16 @@
 package integration_tests
 
 import (
-	"encoding/json"
 	. "gcp-service-broker/brokerapi/brokers"
 	"golang.org/x/net/context"
 
+	"fmt"
 	"gcp-service-broker/brokerapi/brokers"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
+	"gcp-service-broker/fakes"
+	"hash/crc32"
 	"net/http"
 	"os"
 
@@ -15,6 +18,7 @@ import (
 
 	googlestorage "cloud.google.com/go/storage"
 	"code.cloudfoundry.org/lager"
+	"encoding/json"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -26,14 +30,22 @@ import (
 const timeout = 60
 
 type genericService struct {
-	serviceId          string
-	planId             string
-	bindingId          string
-	rawProvisionParams json.RawMessage
-	rawBindingParams   map[string]interface{}
-	instanceId         string
-	serviceExistsFn    func(bool) bool
-	cleanupFn          func()
+	serviceId              string
+	planId                 string
+	bindingId              string
+	rawBindingParams       map[string]interface{}
+	instanceId             string
+	serviceExistsFn        func(bool) bool
+	cleanupFn              func()
+	serviceMetadataSavedFn func(string) bool
+}
+
+func getAndUnmarshalInstanceDetails(instanceId string) map[string]string {
+	var instanceRecord models.ServiceInstanceDetails
+	db_service.DbConnection.Find(&instanceRecord).Where("id = ?", instanceId)
+	var instanceDetails map[string]string
+	json.Unmarshal([]byte(instanceRecord.OtherDetails), &instanceDetails)
+	return instanceDetails
 }
 
 func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService) {
@@ -45,9 +57,8 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 	// Provision
 	//
 	provisionDetails := models.ProvisionDetails{
-		ServiceID:     params.serviceId,
-		PlanID:        params.planId,
-		RawParameters: params.rawProvisionParams,
+		ServiceID: params.serviceId,
+		PlanID:    params.planId,
 	}
 
 	_, err := gcpBroker.Provision(params.instanceId, provisionDetails, true)
@@ -59,6 +70,7 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 	Expect(count).To(Equal(1))
 
 	Expect(params.serviceExistsFn(true)).To(BeTrue())
+	Expect(params.serviceMetadataSavedFn(params.instanceId)).To(BeTrue())
 
 	//
 	// Bind
@@ -118,6 +130,20 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 	Expect(params.serviceExistsFn(false)).To(BeFalse())
 }
 
+// Instance Name is used to name every instance created in GCP (eg, a storage bucket)
+// The name should be consistent between runs to ensure there's bounds to the resources it creates
+// and to have some insurance that they are properly destroyed.
+//
+// Why:
+// - If we allow it to generate a random instance name every time the test will
+//   not fail if the resource existed before hand.
+// - If we always use a static one, globally named resources (eg, a storage bucket)
+//   would fail to create when two different projects run these tests.
+func generateInstanceName(projectId string) string {
+	hashed := crc32.ChecksumIEEE([]byte(projectId))
+	return fmt.Sprintf("pcf_sb_1_%d", hashed)
+}
+
 var _ = Describe("LiveIntegrationTests", func() {
 	var (
 		gcpBroker           *GCPAsyncServiceBroker
@@ -125,6 +151,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 		logger              lager.Logger
 		serviceNameToId     map[string]string = make(map[string]string)
 		serviceNameToPlanId map[string]string = make(map[string]string)
+		instance_name       string
 	)
 
 	BeforeEach(func() {
@@ -270,6 +297,14 @@ var _ = Describe("LiveIntegrationTests", func() {
 			}
 		}`)
 
+		var creds models.GCPCredentials
+		creds, err = brokers.GetCredentialsFromEnv()
+		if err != nil {
+			logger.Error("error", err)
+		}
+		instance_name = generateInstanceName(creds.ProjectId)
+		name_generator.Basic = &fakes.StaticNameGenerator{Val: instance_name}
+
 		gcpBroker, err = brokers.New(logger)
 		if err != nil {
 			logger.Error("error", err)
@@ -303,7 +338,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 		It("should have 3 storage plans available", func() {
 			serviceList := gcpBroker.Services()
 			for _, s := range serviceList {
-				if s.ID == serviceNameToId[StorageName] {
+				if s.ID == serviceNameToId[models.StorageName] {
 					Expect(len(s.Plans)).To(Equal(3))
 				}
 			}
@@ -316,23 +351,25 @@ var _ = Describe("LiveIntegrationTests", func() {
 			service, err := googlebigquery.New(gcpBroker.GCPClient)
 			Expect(err).NotTo(HaveOccurred())
 
-			datasetName := "integration_test_dataset"
 			params := &genericService{
-				serviceId:          serviceNameToId[brokers.BigqueryName],
-				planId:             serviceNameToPlanId[brokers.BigqueryName],
-				bindingId:          "integration_test_bind",
-				instanceId:         datasetName,
-				rawProvisionParams: []byte("{\"name\": \"" + datasetName + "\"}"),
+				serviceId:  serviceNameToId[models.BigqueryName],
+				planId:     serviceNameToPlanId[models.BigqueryName],
+				bindingId:  "integration_test_bind",
+				instanceId: "integration_test_dataset",
 				rawBindingParams: map[string]interface{}{
 					"role": "bigquery.admin",
 				},
-				serviceExistsFn: func(bool) bool {
-					_, err = service.Datasets.Get(gcpBroker.RootGCPCredentials.ProjectId, datasetName).Do()
+				serviceExistsFn: func(expected bool) bool {
+					_, err = service.Datasets.Get(gcpBroker.RootGCPCredentials.ProjectId, instance_name).Do()
 
 					return err == nil
 				},
+				serviceMetadataSavedFn: func(instanceId string) bool {
+					instanceDetails := getAndUnmarshalInstanceDetails(instanceId)
+					return instanceDetails["dataset_id"] != ""
+				},
 				cleanupFn: func() {
-					err := service.Datasets.Delete(gcpBroker.RootGCPCredentials.ProjectId, datasetName).Do()
+					err := service.Datasets.Delete(gcpBroker.RootGCPCredentials.ProjectId, instance_name).Do()
 					Expect(err).NotTo(HaveOccurred())
 				},
 			}
@@ -457,24 +494,26 @@ var _ = Describe("LiveIntegrationTests", func() {
 			service, err := googlestorage.NewClient(context.Background(), option.WithUserAgent(models.CustomUserAgent))
 			Expect(err).NotTo(HaveOccurred())
 
-			bucketName := "integration_test_bucket"
 			params := &genericService{
-				serviceId:          serviceNameToId[brokers.StorageName],
-				planId:             serviceNameToPlanId[brokers.StorageName],
-				instanceId:         bucketName,
-				bindingId:          "integration_test_bucket_binding",
-				rawProvisionParams: []byte("{\"name\": \"" + bucketName + "\"}"),
+				serviceId:  serviceNameToId[models.StorageName],
+				planId:     serviceNameToPlanId[models.StorageName],
+				instanceId: "integration_test_bucket",
+				bindingId:  "integration_test_bucket_binding",
 				rawBindingParams: map[string]interface{}{
 					"role": "storage.admin",
 				},
 				serviceExistsFn: func(bool) bool {
-					bucket := service.Bucket(bucketName)
+					bucket := service.Bucket(instance_name)
 					_, err = bucket.Attrs(context.Background())
 
 					return err == nil
 				},
+				serviceMetadataSavedFn: func(instanceId string) bool {
+					instanceDetails := getAndUnmarshalInstanceDetails(instanceId)
+					return instanceDetails["bucket_name"] != ""
+				},
 				cleanupFn: func() {
-					bucket := service.Bucket(bucketName)
+					bucket := service.Bucket(instance_name)
 					bucket.Delete(context.Background())
 				},
 			}
@@ -488,22 +527,23 @@ var _ = Describe("LiveIntegrationTests", func() {
 			service, err := googlepubsub.NewClient(context.Background(), gcpBroker.RootGCPCredentials.ProjectId, option.WithUserAgent(models.CustomUserAgent))
 			Expect(err).NotTo(HaveOccurred())
 
-			topicName := "integration_test_topic"
-			topic := service.Topic(topicName)
+			topic := service.Topic(instance_name)
 
 			params := &genericService{
-				serviceId:          serviceNameToId[brokers.PubsubName],
-				planId:             serviceNameToPlanId[brokers.PubsubName],
-				instanceId:         topicName,
-				bindingId:          "integration_test_topic_bindingId",
-				rawProvisionParams: []byte("{\"topic_name\": \"" + topicName + "\"}"),
+				serviceId:  serviceNameToId[models.PubsubName],
+				planId:     serviceNameToPlanId[models.PubsubName],
+				instanceId: "integration_test_topic",
+				bindingId:  "integration_test_topic_bindingId",
 				rawBindingParams: map[string]interface{}{
 					"role": "pubsub.admin",
 				},
 				serviceExistsFn: func(bool) bool {
 					exists, err := topic.Exists(context.Background())
-					Expect(err).NotTo(HaveOccurred())
-					return exists
+					return exists && err == nil
+				},
+				serviceMetadataSavedFn: func(instanceId string) bool {
+					instanceDetails := getAndUnmarshalInstanceDetails(instanceId)
+					return instanceDetails["topic_name"] != ""
 				},
 				cleanupFn: func() {
 					err := topic.Delete(context.Background())
@@ -516,7 +556,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	AfterEach(func() {
-		os.Remove(brokers.AppCredsFileName)
+		os.Remove(models.AppCredsFileName)
 		os.Remove("test.db")
 	})
 })
