@@ -26,8 +26,6 @@ import (
 	"os"
 
 	"code.cloudfoundry.org/lager"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 	"google.golang.org/api/googleapi"
 
 	"gcp-service-broker/brokerapi/brokers/account_managers"
@@ -39,17 +37,8 @@ import (
 	"gcp-service-broker/brokerapi/brokers/pubsub"
 	"gcp-service-broker/brokerapi/brokers/storage"
 	"gcp-service-broker/db_service"
+	"gcp-service-broker/utils"
 )
-
-const cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
-const StorageName = "google-storage"
-const BigqueryName = "google-bigquery"
-const CloudsqlName = "google-cloudsql"
-const PubsubName = "google-pubsub"
-const MlName = "google-ml-apis"
-const appCredsEnvVar = "GOOGLE_APPLICATION_CREDENTIALS"
-const AppCredsFileName = "application-default-credentials.json"
-const rootSaEnvVar = "ROOT_SERVICE_ACCOUNT_JSON"
 
 type GCPServiceBroker struct {
 	RootGCPCredentials *models.GCPCredentials
@@ -80,23 +69,22 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 	self.InstanceLimit = math.MaxInt32
 
 	// save credentials to broker object
-	rootCreds, err := InitCredentialsFromEnv()
+	rootCreds, err := GetCredentialsFromEnv()
 	if err != nil {
 		return nil, fmt.Errorf("Error initializing GCP credentials: %s", err)
 	}
 	self.RootGCPCredentials = &rootCreds
 
-	// set up GCP client with root gcp credentials
-	data, err := json.Marshal(self.RootGCPCredentials)
-	if err != nil {
-		return nil, fmt.Errorf("Error marshalling gcp root credentials: %s", err)
+	if err := utils.SetGCPCredsFromEnv(); err != nil {
+		return nil, fmt.Errorf("Error writing GCP credentials: %s", err)
 	}
 
-	conf, err := google.JWTConfigFromJSON(data, cloudPlatformScope)
+	// set up GCP client with root gcp credentials
+	client, err := utils.GetAuthedClient()
 	if err != nil {
-		return nil, fmt.Errorf("Error initializing default client from credentials: %s", err)
+		return nil, fmt.Errorf("Error getting authorized http client: %s", err)
 	}
-	self.GCPClient = conf.Client(oauth2.NoContext)
+	self.GCPClient = client
 
 	// save catalog to broker object
 
@@ -118,7 +106,7 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 
 	// map service specific brokers to general broker
 	self.ServiceBrokerMap = map[string]models.ServiceBrokerHelper{
-		StorageName: &storage.StorageBroker{
+		models.StorageName: &storage.StorageBroker{
 			Client:    self.GCPClient,
 			ProjectId: self.RootGCPCredentials.ProjectId,
 			Logger:    self.Logger,
@@ -126,7 +114,7 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 				AccountManager: saManager,
 			},
 		},
-		PubsubName: &pubsub.PubSubBroker{
+		models.PubsubName: &pubsub.PubSubBroker{
 			Client:    self.GCPClient,
 			ProjectId: self.RootGCPCredentials.ProjectId,
 			Logger:    self.Logger,
@@ -134,7 +122,7 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 				AccountManager: saManager,
 			},
 		},
-		BigqueryName: &bigquery.BigQueryBroker{
+		models.BigqueryName: &bigquery.BigQueryBroker{
 			Client:    self.GCPClient,
 			ProjectId: self.RootGCPCredentials.ProjectId,
 			Logger:    self.Logger,
@@ -142,7 +130,7 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 				AccountManager: saManager,
 			},
 		},
-		MlName: &api_service.ApiServiceBroker{
+		models.MlName: &api_service.ApiServiceBroker{
 			Client:    self.GCPClient,
 			ProjectId: self.RootGCPCredentials.ProjectId,
 			Logger:    self.Logger,
@@ -150,7 +138,7 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 				AccountManager: saManager,
 			},
 		},
-		CloudsqlName: &cloudsql.CloudSQLBroker{
+		models.CloudsqlName: &cloudsql.CloudSQLBroker{
 			Client:         self.GCPClient,
 			ProjectId:      self.RootGCPCredentials.ProjectId,
 			Logger:         self.Logger,
@@ -330,6 +318,21 @@ func (gcpBroker *GCPServiceBroker) Bind(instanceID string, bindingID string, det
 		return models.Binding{}, err
 	}
 
+	// copy provision.otherDetails to creds.
+	var instanceRecord models.ServiceInstanceDetails
+	if err = db_service.DbConnection.Where("id = ?", instanceID).First(&instanceRecord).Error; err != nil {
+		return models.Binding{}, fmt.Errorf("Error retrieving service instance details: %s", err)
+	}
+
+	var instanceDetails map[string]string
+	if err := json.Unmarshal([]byte(instanceRecord.OtherDetails), &instanceDetails); err != nil {
+		return models.Binding{}, err
+	}
+
+	for key, val := range instanceDetails {
+		creds[key] = val
+	}
+
 	return models.Binding{
 		Credentials:     creds,
 		SyslogDrainURL:  "",
@@ -408,32 +411,14 @@ func (gcpBroker *GCPServiceBroker) Update(instanceID string, details models.Upda
 // reads the service account json string from the environment variable ROOT_SERVICE_ACCOUNT_JSON, writes it to a file,
 // and then exports the file location to the environment variable GOOGLE_APPLICATION_CREDENTIALS, making it visible to
 // all google cloud apis
-func InitCredentialsFromEnv() (models.GCPCredentials, error) {
+func GetCredentialsFromEnv() (models.GCPCredentials, error) {
 	var err error
 	g := models.GCPCredentials{}
 
-	rootCreds := os.Getenv(rootSaEnvVar)
+	rootCreds := os.Getenv(models.RootSaEnvVar)
 	if err = json.Unmarshal([]byte(rootCreds), &g); err != nil {
 		return models.GCPCredentials{}, fmt.Errorf("Error unmarshalling service account json: %s", err)
 	}
-	fo, err := os.Create(AppCredsFileName)
-	if err != nil {
-		return models.GCPCredentials{}, fmt.Errorf("Error creating file: %s", err)
-	}
-	_, err = fo.Write([]byte(rootCreds))
-	if err != nil {
-		return models.GCPCredentials{}, fmt.Errorf("Error writing to file: %s", err)
-	}
-	if err = fo.Close(); err != nil {
-		return models.GCPCredentials{}, fmt.Errorf("Error closing file: %s", err)
-	}
-
-	cwd, err := os.Getwd()
-	if err != nil {
-		return models.GCPCredentials{}, fmt.Errorf("Error getting cwd: %s", err)
-	}
-
-	os.Setenv(appCredsEnvVar, cwd+"/"+AppCredsFileName)
 
 	return g, nil
 }

@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gcp-service-broker/brokerapi/brokers/cloudsql"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/db_service"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
@@ -44,12 +43,6 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 		return models.ServiceBindingCredentials{}, errors.New("Error binding, missing parameters. Required parameters are username and password")
 	}
 
-	// Retrieve the CloudSqlOperation because it contains the DatabaseName
-	var cloudSqlOperation cloudsql.CloudSqlOperation
-	if err := json.Unmarshal([]byte(instance.OtherDetails), &cloudSqlOperation); err != nil {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("Error unmarshalling operation status details: %s", err)
-	}
-
 	// create username, pw with grants
 	sqlService, err := googlecloudsql.New(sam.GCPClient)
 	if err != nil {
@@ -68,7 +61,7 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 	// poll for the user creation operation to be completed
 	err = sam.pollOperationUntilDone(op, sam.ProjectId)
 	if err != nil {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("Error encountered while polling until operation complete: %s", err)
+		return models.ServiceBindingCredentials{}, fmt.Errorf("Error encountered while polling until operation id %s completes: %s", op.Name, err)
 	}
 
 	// create ssl certs
@@ -87,7 +80,6 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 		CaCert:          newCert.ServerCaCert.Cert,
 		ClientCert:      newCert.ClientCert.CertInfo.Cert,
 		ClientKey:       newCert.ClientCert.CertPrivateKey,
-		DatabaseName:    cloudSqlOperation.DatabaseName,
 	}
 
 	credBytes, err := json.Marshal(&creds)
@@ -128,7 +120,7 @@ func (sam *SqlAccountManager) DeleteAccountFromGoogle(binding models.ServiceBind
 
 	err = sam.pollOperationUntilDone(op, sam.ProjectId)
 	if err != nil {
-		return fmt.Errorf("Error encountered while polling until operation complete: %s", err)
+		return fmt.Errorf("Error encountered while polling until operation id %s completes: %s", op.Name, err)
 	}
 
 	// delete our user
@@ -139,7 +131,7 @@ func (sam *SqlAccountManager) DeleteAccountFromGoogle(binding models.ServiceBind
 
 	err = sam.pollOperationUntilDone(op, sam.ProjectId)
 	if err != nil {
-		return fmt.Errorf("Error encountered while polling until operation complete: %s", err)
+		return fmt.Errorf("Error encountered while polling until operation id %s completes: %s", op.Name, err)
 	}
 
 	return nil
@@ -173,12 +165,11 @@ func (sam *SqlAccountManager) pollOperationUntilDone(op *googlecloudsql.Operatio
 
 type SqlAccountInfo struct {
 	// the bits to return
-	Username     string
-	Password     string
-	CaCert       string
-	ClientCert   string
-	ClientKey    string
-	DatabaseName string
+	Username   string
+	Password   string
+	CaCert     string
+	ClientCert string
+	ClientKey  string
 
 	// the bits to save
 	Sha1Fingerprint string

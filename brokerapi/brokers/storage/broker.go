@@ -40,6 +40,10 @@ type StorageBroker struct {
 	broker_base.BrokerBase
 }
 
+type InstanceInformation struct {
+	BucketName string `json:"bucket_name"`
+}
+
 // creates a new bucket with the name given in provision details and optional location
 // (defaults to "US", for acceptable location values see: https://cloud.google.com/storage/docs/bucket-locations)
 func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
@@ -91,9 +95,11 @@ func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDet
 
 	}
 
-	otherDetails, err := json.Marshal(map[string]string{
-		"StorageClass": attrs.StorageClass,
-	})
+	ii := InstanceInformation{
+		BucketName: params["name"],
+	}
+
+	otherDetails, err := json.Marshal(ii)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling json: %s", err)
 	}
