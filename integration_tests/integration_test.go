@@ -298,7 +298,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 		}`)
 
 		var creds models.GCPCredentials
-		creds, err = brokers.InitCredentialsFromEnv()
+		creds, err = brokers.GetCredentialsFromEnv()
 		if err != nil {
 			logger.Error("error", err)
 		}
@@ -338,7 +338,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 		It("should have 3 storage plans available", func() {
 			serviceList := gcpBroker.Services()
 			for _, s := range serviceList {
-				if s.ID == serviceNameToId[StorageName] {
+				if s.ID == serviceNameToId[models.StorageName] {
 					Expect(len(s.Plans)).To(Equal(3))
 				}
 			}
@@ -352,8 +352,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			params := &genericService{
-				serviceId:  serviceNameToId[brokers.BigqueryName],
-				planId:     serviceNameToPlanId[brokers.BigqueryName],
+				serviceId:  serviceNameToId[models.BigqueryName],
+				planId:     serviceNameToPlanId[models.BigqueryName],
 				bindingId:  "integration_test_bind",
 				instanceId: "integration_test_dataset",
 				rawBindingParams: map[string]interface{}{
@@ -495,8 +495,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			params := &genericService{
-				serviceId:  serviceNameToId[brokers.StorageName],
-				planId:     serviceNameToPlanId[brokers.StorageName],
+				serviceId:  serviceNameToId[models.StorageName],
+				planId:     serviceNameToPlanId[models.StorageName],
 				instanceId: "integration_test_bucket",
 				bindingId:  "integration_test_bucket_binding",
 				rawBindingParams: map[string]interface{}{
@@ -530,8 +530,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 			topic := service.Topic(instance_name)
 
 			params := &genericService{
-				serviceId:  serviceNameToId[brokers.PubsubName],
-				planId:     serviceNameToPlanId[brokers.PubsubName],
+				serviceId:  serviceNameToId[models.PubsubName],
+				planId:     serviceNameToPlanId[models.PubsubName],
 				instanceId: "integration_test_topic",
 				bindingId:  "integration_test_topic_bindingId",
 				rawBindingParams: map[string]interface{}{
@@ -556,7 +556,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	AfterEach(func() {
-		os.Remove(brokers.AppCredsFileName)
+		os.Remove(models.AppCredsFileName)
 		os.Remove("test.db")
 	})
 })
