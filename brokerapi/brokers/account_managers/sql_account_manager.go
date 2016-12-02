@@ -61,7 +61,7 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 	// poll for the user creation operation to be completed
 	err = sam.pollOperationUntilDone(op, sam.ProjectId)
 	if err != nil {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("Error encountered while polling until operation complete: %s", err)
+		return models.ServiceBindingCredentials{}, fmt.Errorf("Error encountered while polling until operation id %s completes: %s", op.Name, err)
 	}
 
 	// create ssl certs
@@ -120,7 +120,7 @@ func (sam *SqlAccountManager) DeleteAccountFromGoogle(binding models.ServiceBind
 
 	err = sam.pollOperationUntilDone(op, sam.ProjectId)
 	if err != nil {
-		return fmt.Errorf("Error encountered while polling until operation complete: %s", err)
+		return fmt.Errorf("Error encountered while polling until operation id %s completes: %s", op.Name, err)
 	}
 
 	// delete our user
@@ -131,7 +131,7 @@ func (sam *SqlAccountManager) DeleteAccountFromGoogle(binding models.ServiceBind
 
 	err = sam.pollOperationUntilDone(op, sam.ProjectId)
 	if err != nil {
-		return fmt.Errorf("Error encountered while polling until operation complete: %s", err)
+		return fmt.Errorf("Error encountered while polling until operation id %s completes: %s", op.Name, err)
 	}
 
 	return nil
