@@ -156,4 +156,18 @@ bind-service calls require a role except for Cloud SQL
 
 see https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/CHANGELOG.md
 
+## Support
+
+For functional issues with the service broker or feature requests, please file a github issue here:
+
+https://github.com/GoogleCloudPlatform/gcp-service-broker/issues 
+
+They will be prioritized and updated here: 
+
+https://github.com/GoogleCloudPlatform/gcp-service-broker/projects/1
+
+For discussions and updates, please subscribe to this group:
+
+https://groups.google.com/forum/#!forum/gcp-service-broker 
+
 # This is not an official Google product.
