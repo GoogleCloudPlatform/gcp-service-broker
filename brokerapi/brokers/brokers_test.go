@@ -456,14 +456,6 @@ var _ = Describe("Brokers", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*modelsfakes.FakeServiceBrokerHelper).BindCallCount()).To(Equal(1))
 			})
-
-			It("it should call storage bind", func() {
-				_, err = gcpBroker.Provision(instanceId, bqProvisionDetails, true)
-				Expect(err).NotTo(HaveOccurred())
-				bindCreds, err := gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(bindCreds.Credentials.(map[string]string)["mynameis"]).To(Equal("instancename"))
-			})
 		})
 
 		Context("when bind is called more than once on the same id", func() {
@@ -476,6 +468,17 @@ var _ = Describe("Brokers", func() {
 				Expect(err).To(HaveOccurred())
 			})
 		})
+
+		Context("when bind is called", func() {
+			It("it should update credentials with instance information", func() {
+				_, err = gcpBroker.Provision(instanceId, bqProvisionDetails, true)
+				Expect(err).NotTo(HaveOccurred())
+				_, err := gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*modelsfakes.FakeServiceBrokerHelper).MergeCredentialsAndInstanceInfoCallCount()).To(Equal(1))
+			})
+		})
+
 	})
 
 	Describe("unbind", func() {
@@ -580,7 +583,7 @@ var _ = Describe("AccountManagers", func() {
 
 	Describe("bind", func() {
 		Context("when bind is called on an iam-style broker", func() {
-			It("it should call the account manager create account in google method", func() {
+			It("should call the account manager create account in google method", func() {
 				_, err = iamStyleBroker.Bind("foo", "bar", models.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateAccountInGoogleCallCount()).To(Equal(1))
@@ -588,7 +591,7 @@ var _ = Describe("AccountManagers", func() {
 		})
 
 		Context("when bind is called on a cloudsql broker after provision", func() {
-			It("it should call the account manager create account in google method", func() {
+			It("should call the account manager create account in google method", func() {
 				db_service.DbConnection.Save(&models.ServiceInstanceDetails{ID: "foo"})
 				_, err = iamStyleBroker.Bind("foo", "bar", models.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
@@ -597,7 +600,7 @@ var _ = Describe("AccountManagers", func() {
 		})
 
 		Context("when bind is called on a cloudsql broker on a missing service instance", func() {
-			It("it should throw an error", func() {
+			It("should throw an error", func() {
 				_, err = cloudsqlBroker.Bind("foo", "bar", models.BindDetails{})
 				Expect(err).To(HaveOccurred())
 			})
@@ -621,6 +624,13 @@ var _ = Describe("AccountManagers", func() {
 				Expect(passwordOk).To(BeTrue())
 				Expect(username).NotTo(BeEmpty())
 				Expect(password).NotTo(BeEmpty())
+			})
+		})
+
+		Context("when MergeCredentialsAndInstanceInfo is called on a broker", func() {
+			It("should call MergeCredentialsAndInstanceInfo on the account manager", func() {
+				_ = iamStyleBroker.MergeCredentialsAndInstanceInfo(make(map[string]string), make(map[string]string))
+				Expect(accountManager.MergeCredentialsAndInstanceInfoCallCount()).To(Equal(1))
 			})
 		})
 	})
