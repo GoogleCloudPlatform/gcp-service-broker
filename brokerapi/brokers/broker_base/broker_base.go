@@ -37,6 +37,10 @@ func (b *BrokerBase) Bind(instanceID, bindingID string, details models.BindDetai
 	return newBinding, nil
 }
 
+func (b *BrokerBase) MergeCredentialsAndInstanceInfo(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
+	return b.AccountManager.MergeCredentialsAndInstanceInfo(bindDetails, instanceDetails)
+}
+
 func (b *BrokerBase) Unbind(creds models.ServiceBindingCredentials) error {
 
 	err := b.AccountManager.DeleteAccountFromGoogle(creds)

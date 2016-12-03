@@ -158,6 +158,13 @@ func (sam *ServiceAccountManager) DeleteAccountFromGoogle(binding models.Service
 	return nil
 }
 
+func (b *ServiceAccountManager) MergeCredentialsAndInstanceInfo(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
+	for key, val := range instanceDetails {
+		bindDetails[key] = val
+	}
+	return bindDetails
+}
+
 // XXX names are truncated to 20 characters because of a bug in the IAM service
 func ServiceAccountName(bindingId string) string {
 	name := saPrefix + bindingId

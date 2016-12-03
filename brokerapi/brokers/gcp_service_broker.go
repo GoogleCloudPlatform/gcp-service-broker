@@ -329,12 +329,10 @@ func (gcpBroker *GCPServiceBroker) Bind(instanceID string, bindingID string, det
 		return models.Binding{}, err
 	}
 
-	for key, val := range instanceDetails {
-		creds[key] = val
-	}
+	updatedCreds := gcpBroker.ServiceBrokerMap[serviceId].MergeCredentialsAndInstanceInfo(creds, instanceDetails)
 
 	return models.Binding{
-		Credentials:     creds,
+		Credentials:     updatedCreds,
 		SyslogDrainURL:  "",
 		RouteServiceURL: "",
 	}, nil

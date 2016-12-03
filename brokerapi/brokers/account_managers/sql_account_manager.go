@@ -163,6 +163,15 @@ func (sam *SqlAccountManager) pollOperationUntilDone(op *googlecloudsql.Operatio
 	return nil
 }
 
+func (b *SqlAccountManager) MergeCredentialsAndInstanceInfo(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
+	for key, val := range instanceDetails {
+		bindDetails[key] = val
+	}
+	bindDetails["uri"] = fmt.Sprintf("mysql://%s:%s@%s/%s?ssl_mode=required",
+		bindDetails["Username"], bindDetails["Password"], bindDetails["host"], bindDetails["database_name"])
+	return bindDetails
+}
+
 type SqlAccountInfo struct {
 	// the bits to return
 	Username   string
