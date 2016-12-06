@@ -329,7 +329,7 @@ func (gcpBroker *GCPServiceBroker) Bind(instanceID string, bindingID string, det
 		return models.Binding{}, err
 	}
 
-	updatedCreds := gcpBroker.ServiceBrokerMap[serviceId].MergeCredentialsAndInstanceInfo(creds, instanceDetails)
+	updatedCreds := gcpBroker.ServiceBrokerMap[serviceId].BuildInstanceCredentials(creds, instanceDetails)
 
 	return models.Binding{
 		Credentials:     updatedCreds,

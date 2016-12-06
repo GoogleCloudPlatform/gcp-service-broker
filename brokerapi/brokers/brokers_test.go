@@ -475,7 +475,7 @@ var _ = Describe("Brokers", func() {
 				Expect(err).NotTo(HaveOccurred())
 				_, err := gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*modelsfakes.FakeServiceBrokerHelper).MergeCredentialsAndInstanceInfoCallCount()).To(Equal(1))
+				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*modelsfakes.FakeServiceBrokerHelper).BuildInstanceCredentialsCallCount()).To(Equal(1))
 			})
 		})
 
@@ -629,8 +629,8 @@ var _ = Describe("AccountManagers", func() {
 
 		Context("when MergeCredentialsAndInstanceInfo is called on a broker", func() {
 			It("should call MergeCredentialsAndInstanceInfo on the account manager", func() {
-				_ = iamStyleBroker.MergeCredentialsAndInstanceInfo(make(map[string]string), make(map[string]string))
-				Expect(accountManager.MergeCredentialsAndInstanceInfoCallCount()).To(Equal(1))
+				_ = iamStyleBroker.BuildInstanceCredentials(make(map[string]string), make(map[string]string))
+				Expect(accountManager.BuildInstanceCredentialsCallCount()).To(Equal(1))
 			})
 		})
 	})

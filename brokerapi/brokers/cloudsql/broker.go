@@ -401,8 +401,8 @@ func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details models.BindD
 	return credBytes, nil
 }
 
-func (b *CloudSQLBroker) MergeCredentialsAndInstanceInfo(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
-	return b.AccountManager.MergeCredentialsAndInstanceInfo(bindDetails, instanceDetails)
+func (b *CloudSQLBroker) BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
+	return b.AccountManager.BuildInstanceCredentials(bindDetails, instanceDetails)
 }
 
 // Deletes the user and invalidates the ssl certs associated with this binding

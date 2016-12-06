@@ -72,3 +72,14 @@ func GetAuthedClient() (*http.Client, error) {
 	}
 	return conf.Client(oauth2.NoContext), nil
 }
+
+func MergeStringMaps(map1 map[string]string, map2 map[string]string) map[string]string {
+	combined := make(map[string]string)
+	for key, val := range map1 {
+		combined[key] = val
+	}
+	for key, val := range map2 {
+		combined[key] = val
+	}
+	return combined
+}

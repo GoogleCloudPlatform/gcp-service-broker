@@ -29,13 +29,13 @@ type FakeServiceBrokerHelper struct {
 		result1 models.ServiceBindingCredentials
 		result2 error
 	}
-	MergeCredentialsAndInstanceInfoStub        func(bindDetails map[string]string, instanceDetails map[string]string) map[string]string
-	mergeCredentialsAndInstanceInfoMutex       sync.RWMutex
-	mergeCredentialsAndInstanceInfoArgsForCall []struct {
+	BuildInstanceCredentialsStub        func(bindDetails map[string]string, instanceDetails map[string]string) map[string]string
+	buildInstanceCredentialsMutex       sync.RWMutex
+	buildInstanceCredentialsArgsForCall []struct {
 		bindDetails     map[string]string
 		instanceDetails map[string]string
 	}
-	mergeCredentialsAndInstanceInfoReturns struct {
+	buildInstanceCredentialsReturns struct {
 		result1 map[string]string
 	}
 	UnbindStub        func(details models.ServiceBindingCredentials) error
@@ -146,36 +146,36 @@ func (fake *FakeServiceBrokerHelper) BindReturns(result1 models.ServiceBindingCr
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) MergeCredentialsAndInstanceInfo(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
-	fake.mergeCredentialsAndInstanceInfoMutex.Lock()
-	fake.mergeCredentialsAndInstanceInfoArgsForCall = append(fake.mergeCredentialsAndInstanceInfoArgsForCall, struct {
+func (fake *FakeServiceBrokerHelper) BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
+	fake.buildInstanceCredentialsMutex.Lock()
+	fake.buildInstanceCredentialsArgsForCall = append(fake.buildInstanceCredentialsArgsForCall, struct {
 		bindDetails     map[string]string
 		instanceDetails map[string]string
 	}{bindDetails, instanceDetails})
-	fake.recordInvocation("MergeCredentialsAndInstanceInfo", []interface{}{bindDetails, instanceDetails})
-	fake.mergeCredentialsAndInstanceInfoMutex.Unlock()
-	if fake.MergeCredentialsAndInstanceInfoStub != nil {
-		return fake.MergeCredentialsAndInstanceInfoStub(bindDetails, instanceDetails)
+	fake.recordInvocation("BuildInstanceCredentials", []interface{}{bindDetails, instanceDetails})
+	fake.buildInstanceCredentialsMutex.Unlock()
+	if fake.BuildInstanceCredentialsStub != nil {
+		return fake.BuildInstanceCredentialsStub(bindDetails, instanceDetails)
 	} else {
-		return fake.mergeCredentialsAndInstanceInfoReturns.result1
+		return fake.buildInstanceCredentialsReturns.result1
 	}
 }
 
-func (fake *FakeServiceBrokerHelper) MergeCredentialsAndInstanceInfoCallCount() int {
-	fake.mergeCredentialsAndInstanceInfoMutex.RLock()
-	defer fake.mergeCredentialsAndInstanceInfoMutex.RUnlock()
-	return len(fake.mergeCredentialsAndInstanceInfoArgsForCall)
+func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsCallCount() int {
+	fake.buildInstanceCredentialsMutex.RLock()
+	defer fake.buildInstanceCredentialsMutex.RUnlock()
+	return len(fake.buildInstanceCredentialsArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) MergeCredentialsAndInstanceInfoArgsForCall(i int) (map[string]string, map[string]string) {
-	fake.mergeCredentialsAndInstanceInfoMutex.RLock()
-	defer fake.mergeCredentialsAndInstanceInfoMutex.RUnlock()
-	return fake.mergeCredentialsAndInstanceInfoArgsForCall[i].bindDetails, fake.mergeCredentialsAndInstanceInfoArgsForCall[i].instanceDetails
+func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsArgsForCall(i int) (map[string]string, map[string]string) {
+	fake.buildInstanceCredentialsMutex.RLock()
+	defer fake.buildInstanceCredentialsMutex.RUnlock()
+	return fake.buildInstanceCredentialsArgsForCall[i].bindDetails, fake.buildInstanceCredentialsArgsForCall[i].instanceDetails
 }
 
-func (fake *FakeServiceBrokerHelper) MergeCredentialsAndInstanceInfoReturns(result1 map[string]string) {
-	fake.MergeCredentialsAndInstanceInfoStub = nil
-	fake.mergeCredentialsAndInstanceInfoReturns = struct {
+func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsReturns(result1 map[string]string) {
+	fake.BuildInstanceCredentialsStub = nil
+	fake.buildInstanceCredentialsReturns = struct {
 		result1 map[string]string
 	}{result1}
 }
@@ -313,8 +313,8 @@ func (fake *FakeServiceBrokerHelper) Invocations() map[string][][]interface{} {
 	defer fake.provisionMutex.RUnlock()
 	fake.bindMutex.RLock()
 	defer fake.bindMutex.RUnlock()
-	fake.mergeCredentialsAndInstanceInfoMutex.RLock()
-	defer fake.mergeCredentialsAndInstanceInfoMutex.RUnlock()
+	fake.buildInstanceCredentialsMutex.RLock()
+	defer fake.buildInstanceCredentialsMutex.RUnlock()
 	fake.unbindMutex.RLock()
 	defer fake.unbindMutex.RUnlock()
 	fake.deprovisionMutex.RLock()

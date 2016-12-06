@@ -27,13 +27,13 @@ type FakeAccountManager struct {
 	deleteAccountFromGoogleReturns struct {
 		result1 error
 	}
-	MergeCredentialsAndInstanceInfoStub        func(bindDetails map[string]string, instanceDetails map[string]string) map[string]string
-	mergeCredentialsAndInstanceInfoMutex       sync.RWMutex
-	mergeCredentialsAndInstanceInfoArgsForCall []struct {
+	BuildInstanceCredentialsStub        func(bindDetails map[string]string, instanceDetails map[string]string) map[string]string
+	buildInstanceCredentialsMutex       sync.RWMutex
+	buildInstanceCredentialsArgsForCall []struct {
 		bindDetails     map[string]string
 		instanceDetails map[string]string
 	}
-	mergeCredentialsAndInstanceInfoReturns struct {
+	buildInstanceCredentialsReturns struct {
 		result1 map[string]string
 	}
 	invocations      map[string][][]interface{}
@@ -110,36 +110,36 @@ func (fake *FakeAccountManager) DeleteAccountFromGoogleReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeAccountManager) MergeCredentialsAndInstanceInfo(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
-	fake.mergeCredentialsAndInstanceInfoMutex.Lock()
-	fake.mergeCredentialsAndInstanceInfoArgsForCall = append(fake.mergeCredentialsAndInstanceInfoArgsForCall, struct {
+func (fake *FakeAccountManager) BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
+	fake.buildInstanceCredentialsMutex.Lock()
+	fake.buildInstanceCredentialsArgsForCall = append(fake.buildInstanceCredentialsArgsForCall, struct {
 		bindDetails     map[string]string
 		instanceDetails map[string]string
 	}{bindDetails, instanceDetails})
-	fake.recordInvocation("MergeCredentialsAndInstanceInfo", []interface{}{bindDetails, instanceDetails})
-	fake.mergeCredentialsAndInstanceInfoMutex.Unlock()
-	if fake.MergeCredentialsAndInstanceInfoStub != nil {
-		return fake.MergeCredentialsAndInstanceInfoStub(bindDetails, instanceDetails)
+	fake.recordInvocation("BuildInstanceCredentials", []interface{}{bindDetails, instanceDetails})
+	fake.buildInstanceCredentialsMutex.Unlock()
+	if fake.BuildInstanceCredentialsStub != nil {
+		return fake.BuildInstanceCredentialsStub(bindDetails, instanceDetails)
 	} else {
-		return fake.mergeCredentialsAndInstanceInfoReturns.result1
+		return fake.buildInstanceCredentialsReturns.result1
 	}
 }
 
-func (fake *FakeAccountManager) MergeCredentialsAndInstanceInfoCallCount() int {
-	fake.mergeCredentialsAndInstanceInfoMutex.RLock()
-	defer fake.mergeCredentialsAndInstanceInfoMutex.RUnlock()
-	return len(fake.mergeCredentialsAndInstanceInfoArgsForCall)
+func (fake *FakeAccountManager) BuildInstanceCredentialsCallCount() int {
+	fake.buildInstanceCredentialsMutex.RLock()
+	defer fake.buildInstanceCredentialsMutex.RUnlock()
+	return len(fake.buildInstanceCredentialsArgsForCall)
 }
 
-func (fake *FakeAccountManager) MergeCredentialsAndInstanceInfoArgsForCall(i int) (map[string]string, map[string]string) {
-	fake.mergeCredentialsAndInstanceInfoMutex.RLock()
-	defer fake.mergeCredentialsAndInstanceInfoMutex.RUnlock()
-	return fake.mergeCredentialsAndInstanceInfoArgsForCall[i].bindDetails, fake.mergeCredentialsAndInstanceInfoArgsForCall[i].instanceDetails
+func (fake *FakeAccountManager) BuildInstanceCredentialsArgsForCall(i int) (map[string]string, map[string]string) {
+	fake.buildInstanceCredentialsMutex.RLock()
+	defer fake.buildInstanceCredentialsMutex.RUnlock()
+	return fake.buildInstanceCredentialsArgsForCall[i].bindDetails, fake.buildInstanceCredentialsArgsForCall[i].instanceDetails
 }
 
-func (fake *FakeAccountManager) MergeCredentialsAndInstanceInfoReturns(result1 map[string]string) {
-	fake.MergeCredentialsAndInstanceInfoStub = nil
-	fake.mergeCredentialsAndInstanceInfoReturns = struct {
+func (fake *FakeAccountManager) BuildInstanceCredentialsReturns(result1 map[string]string) {
+	fake.BuildInstanceCredentialsStub = nil
+	fake.buildInstanceCredentialsReturns = struct {
 		result1 map[string]string
 	}{result1}
 }
@@ -151,8 +151,8 @@ func (fake *FakeAccountManager) Invocations() map[string][][]interface{} {
 	defer fake.createAccountInGoogleMutex.RUnlock()
 	fake.deleteAccountFromGoogleMutex.RLock()
 	defer fake.deleteAccountFromGoogleMutex.RUnlock()
-	fake.mergeCredentialsAndInstanceInfoMutex.RLock()
-	defer fake.mergeCredentialsAndInstanceInfoMutex.RUnlock()
+	fake.buildInstanceCredentialsMutex.RLock()
+	defer fake.buildInstanceCredentialsMutex.RUnlock()
 	return fake.invocations
 }
 
