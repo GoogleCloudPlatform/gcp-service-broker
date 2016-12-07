@@ -168,7 +168,7 @@ func (sam *SqlAccountManager) pollOperationUntilDone(op *googlecloudsql.Operatio
 func (b *SqlAccountManager) BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
 	combinedCreds := utils.MergeStringMaps(bindDetails, instanceDetails)
 	combinedCreds["uri"] = fmt.Sprintf("mysql://%s:%s@%s/%s?ssl_mode=required",
-		url.QueryEscape(bindDetails["Username"]), url.QueryEscape(bindDetails["Password"]), bindDetails["host"], bindDetails["database_name"])
+		url.QueryEscape(combinedCreds["Username"]), url.QueryEscape(combinedCreds["Password"]), combinedCreds["host"], combinedCreds["database_name"])
 	return combinedCreds
 }
 
