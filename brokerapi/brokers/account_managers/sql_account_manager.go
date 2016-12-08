@@ -23,8 +23,10 @@ import (
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/db_service"
+	"gcp-service-broker/utils"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -161,6 +163,13 @@ func (sam *SqlAccountManager) pollOperationUntilDone(op *googlecloudsql.Operatio
 		time.Sleep(time.Second)
 	}
 	return nil
+}
+
+func (b *SqlAccountManager) BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
+	combinedCreds := utils.MergeStringMaps(bindDetails, instanceDetails)
+	combinedCreds["uri"] = fmt.Sprintf("mysql://%s:%s@%s/%s?ssl_mode=required",
+		url.QueryEscape(combinedCreds["Username"]), url.QueryEscape(combinedCreds["Password"]), combinedCreds["host"], combinedCreds["database_name"])
+	return combinedCreds
 }
 
 type SqlAccountInfo struct {
