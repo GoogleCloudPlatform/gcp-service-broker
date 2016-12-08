@@ -29,6 +29,15 @@ type FakeServiceBrokerHelper struct {
 		result1 models.ServiceBindingCredentials
 		result2 error
 	}
+	BuildInstanceCredentialsStub        func(bindDetails map[string]string, instanceDetails map[string]string) map[string]string
+	buildInstanceCredentialsMutex       sync.RWMutex
+	buildInstanceCredentialsArgsForCall []struct {
+		bindDetails     map[string]string
+		instanceDetails map[string]string
+	}
+	buildInstanceCredentialsReturns struct {
+		result1 map[string]string
+	}
 	UnbindStub        func(details models.ServiceBindingCredentials) error
 	unbindMutex       sync.RWMutex
 	unbindArgsForCall []struct {
@@ -135,6 +144,40 @@ func (fake *FakeServiceBrokerHelper) BindReturns(result1 models.ServiceBindingCr
 		result1 models.ServiceBindingCredentials
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeServiceBrokerHelper) BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
+	fake.buildInstanceCredentialsMutex.Lock()
+	fake.buildInstanceCredentialsArgsForCall = append(fake.buildInstanceCredentialsArgsForCall, struct {
+		bindDetails     map[string]string
+		instanceDetails map[string]string
+	}{bindDetails, instanceDetails})
+	fake.recordInvocation("BuildInstanceCredentials", []interface{}{bindDetails, instanceDetails})
+	fake.buildInstanceCredentialsMutex.Unlock()
+	if fake.BuildInstanceCredentialsStub != nil {
+		return fake.BuildInstanceCredentialsStub(bindDetails, instanceDetails)
+	} else {
+		return fake.buildInstanceCredentialsReturns.result1
+	}
+}
+
+func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsCallCount() int {
+	fake.buildInstanceCredentialsMutex.RLock()
+	defer fake.buildInstanceCredentialsMutex.RUnlock()
+	return len(fake.buildInstanceCredentialsArgsForCall)
+}
+
+func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsArgsForCall(i int) (map[string]string, map[string]string) {
+	fake.buildInstanceCredentialsMutex.RLock()
+	defer fake.buildInstanceCredentialsMutex.RUnlock()
+	return fake.buildInstanceCredentialsArgsForCall[i].bindDetails, fake.buildInstanceCredentialsArgsForCall[i].instanceDetails
+}
+
+func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsReturns(result1 map[string]string) {
+	fake.BuildInstanceCredentialsStub = nil
+	fake.buildInstanceCredentialsReturns = struct {
+		result1 map[string]string
+	}{result1}
 }
 
 func (fake *FakeServiceBrokerHelper) Unbind(details models.ServiceBindingCredentials) error {
@@ -270,6 +313,8 @@ func (fake *FakeServiceBrokerHelper) Invocations() map[string][][]interface{} {
 	defer fake.provisionMutex.RUnlock()
 	fake.bindMutex.RLock()
 	defer fake.bindMutex.RUnlock()
+	fake.buildInstanceCredentialsMutex.RLock()
+	defer fake.buildInstanceCredentialsMutex.RUnlock()
 	fake.unbindMutex.RLock()
 	defer fake.unbindMutex.RUnlock()
 	fake.deprovisionMutex.RLock()
