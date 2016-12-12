@@ -43,3 +43,7 @@ of a string.
 - Remove need for service name for PubSub (topic_name), BigQuery (name), Cloud Storage (name), and Cloud SQL (instance_name)
 - Instance details are now surfaced in bind requests for Pubsub (topic_name and subscription_name),
 Cloud Storage (bucket_name), BigQuery (dataset_id), and Cloud SQL (instance_name, database_name, and host)
+
+## [2.1.1] - 2016-12-02
+
+- added new uri parameter to Cloud SQL bind credentials
