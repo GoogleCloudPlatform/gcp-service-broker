@@ -1,31 +1,38 @@
-# Pivotal Cloud Foundry Service Broker for Google Cloud Platform
+# Cloud Foundry Service Broker for Google Cloud Platform
 
-Depends on
-[lager](https://github.com/pivotal-golang/lager) and
-[gorilla/mux](https://github.com/gorilla/mux).
+Depends on [lager](https://github.com/pivotal-golang/lager) and [gorilla/mux](https://github.com/gorilla/mux).
 
 Requires go 1.6 and the associated buildpack
 
 ## Prerequisites
 
-### GCP prereqs
+### Set up a GCP Project
 
 1. go to console.cloud.google.com and sign up, walking through the setup wizard
 1. next to the Google Cloud Platform logo in the upper left-hand corner, click the dropdown and select "Create Project"
 1. give your project a name and click "Create"
 1. when the project is created (a notification will show in the upper right), refresh the page.
-1. in the left nav, go to API Manager
-1. click "Library"
-1. search "google cloud resource manager api", click the option with no other modifiers, and enable.
-1. search "Google Identity and Access Management (IAM) API", click the option with no other modifiers, and enable.
-1. if you wish to use CloudSQL, search "sqladmin", click the only option, and enable.
-1. in the left nav, go to IAM and Admin
-1. click Service Accounts
-1. click create service account and set the role to Owner
-1. check furnish new private key (leave json key type)
-1. click create, save the downloaded file to a safe and accessible place.
 
-### Db prereqs
+### Enable APIS
+
+1. Navigate to **API Manager > Library**.
+1. Enable the <a href="https://console.cloud.google.com/apis/api/cloudresourcemanager.googleapis.com/overview">Google Cloud Resource Manager API</a>
+1. Enable the <a href="https://console.cloud.google.com/apis/api/iam.googleapis.com/overview">Google Identity and Access Management (IAM) API</a>
+1. If you want to enable Cloud SQL as a service, enable the <a href="https://console.cloud.google.com/apis/api/sqladmin/overview">Cloud SQL API</a>
+1. If you want to enable BigQuery as a service, enable the <a href="https://console.cloud.google.com/apis/api/bigquery/overview">BigQuery API</a>
+1. If you want to enable Cloud Storage as a service, enable the <a href="https://console.cloud.google.com/apis/api/storage_component/overview">Cloud Storage API</a>
+1. If you want to enable Pub/Sub as a service, enable the <a href="https://console.cloud.google.com/apis/api/pubsub/overview">Cloud Pub/Sub API</a>
+
+### Create a root service account
+
+1. From the GCP console, navigate to **IAM & Admin > Service accounts** and click **Create Service Account**.
+1. Enter a **Service account name**.
+1. Select the checkbox to **Furnish a new Private Key**, and then click **Create**. 
+1. Save the automatically downloaded key file to a secure location.
+1. Navigate to **IAM & Admin > IAM** and locate your service account.
+1. From the dropdown on the right, choose **Project > Owner** and click **Save**.
+
+### Set up a backing database
 
 1. create new MySQL instance
 1. run `CREATE DATABASE servicebroker;`
@@ -33,7 +40,7 @@ Requires go 1.6 and the associated buildpack
 1. run `GRANT ALL PRIVILEGES ON servicebroker.* TO '<username>'@'%' WITH GRANT OPTION;`
 1. (optional) create ssl certs for the database and save them somewhere secure
 
-### required env vars - if deploying as an app, add these to missing-properties.yml
+### Set required env vars - if deploying as an app, add these to missing-properties.yml
 
 * ROOT_SERVICE_ACCOUNT_JSON (the string version of the credentials file created for the Owner level Service Account)
 * SECURITY_USER_NAME (a username to sign all service broker requests with - the same one used in cf create-service-broker)
@@ -52,6 +59,7 @@ Requires go 1.6 and the associated buildpack
 pricing_plan, max_disk_size, display_name, and service (Cloud SQL's service id)) - if unset, the service
 will be disabled. e.g.
 
+<pre>
 {
     "test_plan": {
         "name": "test_plan",
@@ -63,6 +71,7 @@ will be disabled. e.g.
         "service": "4bc59b9a-8520-409f-85da-1c7552315863"
     }
 }
+</pre>
 
 
 ## Usage
@@ -103,33 +112,67 @@ broker_client_timeout_seconds = 90
 e.g. cf create-service pubsub default foobar
 e.g. cf bind-service myapp foobar -c '{"role": "pubsub.admin"}'
 
-create-service calls take the following optional custom parameters, all as strings, (required where marked):
+create-service calls take the following optional custom parameters, all as strings:
 bind-service calls require a role except for Cloud SQL
 
 * [PubSub](https://cloud.google.com/pubsub/docs/)
     * Provison
-        * topic_name
+        * topic_name (defaults to a generated value)
         * subscription_name
         * is_push (defaults to false, to set use "true")
         * endpoint (for when is_push == "true", defaults to nil)
         * ack_deadline (in seconds, defaults to 10, max 600)
     * Bind
         * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles)
+        
+        **Example Binding credentials**
+        <pre>"credentials": {
+             "Email": "redacted",
+             "Name": "redacted",
+             "PrivateKeyData": "redacted",
+             "UniqueId": "redacted",
+             "topic_name": "foobar",
+             "subscription_name": "empty_if_not_set",
+        }
+        </pre>
+        
 * [Cloud Storage](https://cloud.google.com/storage/docs/)
     * Provison
-        * name 
+        * name (defaults to a generated value)
         * location (for options, see https://cloud.google.com/storage/docs/bucket-locations. Defaults to us)
     * Bind
         * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles)
+        
+        **Example Binding credentials**
+        <pre>"credentials": {
+             "Email": "redacted",
+             "Name": "redacted",
+             "PrivateKeyData": "redacted",
+             "UniqueId": "redacted",
+             "bucket_name": "foobar",
+        }
+        </pre>
+        
 * [BigQuery](https://cloud.google.com/bigquery/docs/)
     * Provison
-        * name 
+        * name (defaults to a generated value) 
     * Bind
         * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles), e.g. pubsub.admin
+        
+        **Example Binding credentials**
+        <pre>"credentials": {
+             "Email": "redacted",
+             "Name": "redacted",
+             "PrivateKeyData": "redacted",
+             "UniqueId": "redacted",
+             "dataset_id": "foobar",
+        }
+        </pre>
+        
 * [CloudSQL](https://cloud.google.com/sql/docs/)
     * Provison
-        * instance_name 
-        * database_name 
+        * instance_name (defaults to a generated value) 
+        * database_name (defaults to a generated value) 
         * version (defaults to 5.6)
         * disk_size in GB (only for 2nd gen, defaults to 10)
         * region (defaults to us-central)
@@ -147,9 +190,35 @@ bind-service calls require a role except for Cloud SQL
     * Bind
         * username (defaults to a generated value)
         * password (defaults to a generated value)
+        
+        **Example Binding credentials**
+        <pre>"credentials": {
+             "CaCert": "-----BEGIN CERTIFICATE-----\nredacted\n-----END CERTIFICATE-----",
+             "ClientCert": "-----BEGIN CERTIFICATE-----\nredacted\n-----END CERTIFICATE-----",
+             "ClientKey": "-----BEGIN RSA PRIVATE KEY-----\redacted\n-----END RSA PRIVATE KEY-----",
+             "Password": "unencoded-redacted",
+             "Sha1Fingerprint": "redacted",
+             "Username": "redacted",
+             "database_name": "redacted",
+             "host": "255.255.255.255",
+             "instance_name": "redacted",
+             "last_master_operation_id": "some-guid",
+             "uri": "mysql://username:encodedpassword@host/databasename?ssl_mode=required"
+        }
+        </pre>
+        
 * [ML APIs](https://cloud.google.com/ml/)
     * Bind
         * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles)
+        
+        **Example Binding credentials**
+        <pre>"credentials": {
+             "Email": "redacted",
+             "Name": "redacted",
+             "PrivateKeyData": "redacted",
+             "UniqueId": "redacted",
+        }
+        </pre>
 
 
 ## Change Notes

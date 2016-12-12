@@ -187,7 +187,7 @@ forms:
 
 service_plan_forms:
 - name: cloudsql_custom_plans
-  description: Generate custom plans for CloudSQL
+  description: Generate custom plans for CloudSQL (required to enable the service for developers)
   label: CloudSQL Custom Plans
   optional: true
   properties:
@@ -209,9 +209,9 @@ service_plan_forms:
         - name: '4bc59b9a-8520-409f-85da-1c7552315863'
           label: 'CloudSQL'
     - name: tier
-      label: Tier
+      label: Tier/Machine Type
       type: string
-      description: "Case-sensitive tier name (see https://cloud.google.com/sql/pricing for more information)"
+      description: "Case-sensitive tier/machine type name (see https://cloud.google.com/sql/pricing for more information)"
       configurable: true
     - name: pricing_plan
       label: Pricing Plan
