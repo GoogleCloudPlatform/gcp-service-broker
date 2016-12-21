@@ -28,6 +28,14 @@ func createTestDatabase() {
 	}
 	defer db.Close()
 
+	res, err := db.Query("SHOW DATABASES LIKE 'servicebroker'")
+	if err != nil {
+		panic(err)
+	}
+	if res.Next() {
+		dropTestDatabase()
+	}
+
 	_,err = db.Exec("CREATE DATABASE servicebroker")
 	if err != nil {
 		panic(err)

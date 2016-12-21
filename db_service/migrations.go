@@ -146,8 +146,6 @@ func RunMigrations(db *gorm.DB) error {
 			return err
 		}
 
-		println(fmt.Sprintf("ALL PRS %v", prs))
-
 		for _, pr := range prs {
 			var si models.ServiceInstanceDetails
 			if err := DbConnection.Where("id = ?", pr.ServiceInstanceId).First(&si).Error; err != nil {
@@ -213,7 +211,7 @@ func RunMigrations(db *gorm.DB) error {
 	// if we've run any migrations before, we should have a migrations table, so find the last one we ran
 	if db.HasTable("migrations") {
 		var storedMigrations []models.Migration
-		if err := db.Order("id desc").Find(&storedMigrations).Error; err != nil {
+		if err := db.Order("migration_id desc").Find(&storedMigrations).Error; err != nil {
 			return fmt.Errorf("Error getting last migration id even though migration table exists: %s", err)
 		}
 		lastMigrationNumber = storedMigrations[0].MigrationId
