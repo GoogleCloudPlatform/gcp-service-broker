@@ -1,50 +1,55 @@
 ---
 product: gcp-service-broker
 installation_version: '1.5'
-to_version: 2.1.1
+to_version: 2.1.2
 migrations:
 - from_version: 0.0.1
   rules:
   - type: update
     selector: product_version
-    to: 2.1.1
+    to: 2.1.2
 - from_version: 0.0.2
   rules:
   - type: update
     selector: product_version
-    to: 2.1.1
+    to: 2.1.2
 - from_version: 1.0.0
   rules:
   - type: update
     selector: product_version
-    to: 2.1.1
+    to: 2.1.2
 - from_version: 1.0.1
   rules:
   - type: update
     selector: product_version
-    to: 2.1.1
+    to: 2.1.2
 - from_version: 2.0.0
   rules:
   - type: update
     selector: product_version
-    to: 2.1.1
+    to: 2.1.2
 - from_version: 2.0.1
   rules:
   - type: update
     selector: product_version
-    to: 2.1.1
+    to: 2.1.2
 - from_version: 2.0.1
   rules:
   - type: update
     selector: product_version
-    to: 2.1.1
+    to: 2.1.2
 - from_version: 2.0.2
   rules:
   - type: update
     selector: product_version
-    to: 2.1.1
+    to: 2.1.2
 - from_version: 2.1.0
   rules:
   - type: update
     selector: product_version
-    to: 2.1.1
+    to: 2.1.2
+- from_version: 2.1.1
+  rules:
+  - type: update
+    selector: product_version
+    to: 2.1.2
