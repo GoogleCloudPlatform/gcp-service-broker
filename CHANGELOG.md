@@ -47,3 +47,8 @@ Cloud Storage (bucket_name), BigQuery (dataset_id), and Cloud SQL (instance_name
 ## [2.1.1] - 2016-12-02
 
 - added new uri parameter to Cloud SQL bind credentials
+
+## [2.1.2] - 2016-12-21
+
+- fixes a bug where anything that triggered an install repeat after installing version 2.1.0 or 2.1.1 would cause the
+installation to fail.
