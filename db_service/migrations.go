@@ -212,11 +212,11 @@ func RunMigrations(db *gorm.DB) error {
 
 	// if we've run any migrations before, we should have a migrations table, so find the last one we ran
 	if db.HasTable("migrations") {
-		lastMigration := models.Migration{}
-		if err := db.Order("created_at desc").First(&lastMigration).Error; err != nil {
+		var storedMigrations []models.Migration
+		if err := db.Order("id desc").Find(&storedMigrations).Error; err != nil {
 			return fmt.Errorf("Error getting last migration id even though migration table exists: %s", err)
 		}
-		lastMigrationNumber = lastMigration.MigrationId
+		lastMigrationNumber = storedMigrations[0].MigrationId
 	}
 
 	// starting from the last migration we ran + 1, run migrations until we are current
