@@ -19,5 +19,6 @@ You can add a feature or bug-fix via pull request.
 1. Implement your feature or bug fix
 2. Commit and push your changes
 3. Submit a pull request to the `develop` branch of the [gcp-service-broker] repository. PRs to the master branch are not accepted.
+4. After the pull request is accepted to the master branch a new tile version will be built.
 
 [gcp-service-broker]: https://github.com/GoogleCloudPlatform/gcp-service-broker/
