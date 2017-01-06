@@ -313,7 +313,6 @@ func (gcpBroker *GCPServiceBroker) Bind(instanceID string, bindingID string, det
 	}
 
 	var creds map[string]string
-
 	if err := json.Unmarshal([]byte(newCreds.OtherDetails), &creds); err != nil {
 		return models.Binding{}, err
 	}
@@ -325,8 +324,11 @@ func (gcpBroker *GCPServiceBroker) Bind(instanceID string, bindingID string, det
 	}
 
 	var instanceDetails map[string]string
-	if err := json.Unmarshal([]byte(instanceRecord.OtherDetails), &instanceDetails); err != nil {
-		return models.Binding{}, err
+	// if the instance has access details saved
+	if instanceRecord.OtherDetails != "" {
+		if err := json.Unmarshal([]byte(instanceRecord.OtherDetails), &instanceDetails); err != nil {
+			return models.Binding{}, err
+		}
 	}
 
 	updatedCreds := gcpBroker.ServiceBrokerMap[serviceId].BuildInstanceCredentials(creds, instanceDetails)
