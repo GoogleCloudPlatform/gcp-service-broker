@@ -52,3 +52,8 @@ Cloud Storage (bucket_name), BigQuery (dataset_id), and Cloud SQL (instance_name
 
 - fixes a bug where anything that triggered an install repeat after installing version 2.1.0 or 2.1.1 would cause the
 installation to fail.
+
+## [2.1.3] - 2017-01-05
+
+- fixes a bug where bind calls to ml-api service instances were failing because these service instances don't save
+any extra access details
