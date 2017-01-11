@@ -26,6 +26,7 @@ import (
 	"gcp-service-broker/brokerapi/brokers"
 	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
+	"gcp-service-broker/brokerapi/brokers/models"
 )
 
 func main() {
@@ -33,6 +34,8 @@ func main() {
 
 	logger := lager.NewLogger("my-service-broker")
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
+
+	models.ProductionizeUserAgent()
 
 	db_service.New(logger)
 	name_generator.New()
