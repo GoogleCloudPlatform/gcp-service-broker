@@ -1,5 +1,8 @@
+[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![GoDoc](https://godoc.org/github.com/leonelquinteros/gorand?status.svg)](https://godoc.org/github.com/leonelquinteros/gorand)
 [![Build Status](https://travis-ci.org/leonelquinteros/gorand.svg?branch=master)](https://travis-ci.org/leonelquinteros/gorand)
+[![Go Report Card](https://goreportcard.com/badge/github.com/leonelquinteros/gorand)](https://goreportcard.com/report/github.com/leonelquinteros/gorand)
+[![codecov](https://codecov.io/gh/leonelquinteros/gorand/branch/master/graph/badge.svg)](https://codecov.io/gh/leonelquinteros/gorand)
 
 
 # Gorand

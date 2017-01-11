@@ -15,12 +15,12 @@
 package storage
 
 import (
-	"errors"
 	"net/http"
 	"time"
 
 	"golang.org/x/net/context"
 	"google.golang.org/api/googleapi"
+	"google.golang.org/api/iterator"
 	raw "google.golang.org/api/storage/v1"
 )
 
@@ -35,28 +35,27 @@ func (b *BucketHandle) Create(ctx context.Context, projectID string, attrs *Buck
 	}
 	bkt.Name = b.name
 	req := b.c.raw.Buckets.Insert(projectID, bkt)
-	_, err := req.Context(ctx).Do()
-	return err
+	return runWithRetry(ctx, func() error { _, err := req.Context(ctx).Do(); return err })
 }
 
 // Delete deletes the Bucket.
 func (b *BucketHandle) Delete(ctx context.Context) error {
 	req := b.c.raw.Buckets.Delete(b.name)
-	return req.Context(ctx).Do()
+	return runWithRetry(ctx, func() error { return req.Context(ctx).Do() })
 }
 
 // ACL returns an ACLHandle, which provides access to the bucket's access control list.
 // This controls who can list, create or overwrite the objects in a bucket.
 // This call does not perform any network operations.
-func (c *BucketHandle) ACL() *ACLHandle {
-	return c.acl
+func (b *BucketHandle) ACL() *ACLHandle {
+	return &b.acl
 }
 
 // DefaultObjectACL returns an ACLHandle, which provides access to the bucket's default object ACLs.
 // These ACLs are applied to newly created objects in this bucket that do not have a defined ACL.
 // This call does not perform any network operations.
-func (c *BucketHandle) DefaultObjectACL() *ACLHandle {
-	return c.defaultObjectACL
+func (b *BucketHandle) DefaultObjectACL() *ACLHandle {
+	return &b.defaultObjectACL
 }
 
 // Object returns an ObjectHandle, which provides operations on the named object.
@@ -70,17 +69,23 @@ func (b *BucketHandle) Object(name string) *ObjectHandle {
 		c:      b.c,
 		bucket: b.name,
 		object: name,
-		acl: &ACLHandle{
+		acl: ACLHandle{
 			c:      b.c,
 			bucket: b.name,
 			object: name,
 		},
+		gen: -1,
 	}
 }
 
 // Attrs returns the metadata for the bucket.
 func (b *BucketHandle) Attrs(ctx context.Context) (*BucketAttrs, error) {
-	resp, err := b.c.raw.Buckets.Get(b.name).Projection("full").Context(ctx).Do()
+	var resp *raw.Bucket
+	var err error
+	err = runWithRetry(ctx, func() error {
+		resp, err = b.c.raw.Buckets.Get(b.name).Projection("full").Context(ctx).Do()
+		return err
+	})
 	if e, ok := err.(*googleapi.Error); ok && e.Code == http.StatusNotFound {
 		return nil, ErrBucketNotExist
 	}
@@ -110,12 +115,19 @@ type BucketAttrs struct {
 
 	// StorageClass is the storage class of the bucket. This defines
 	// how objects in the bucket are stored and determines the SLA
-	// and the cost of storage. Typical values are "STANDARD" and
-	// "DURABLE_REDUCED_AVAILABILITY". Defaults to "STANDARD".
+	// and the cost of storage. Typical values are "MULTI_REGIONAL",
+	// "REGIONAL", "NEARLINE", "COLDLINE", "STANDARD" and
+	// "DURABLE_REDUCED_AVAILABILITY". Defaults to "STANDARD", which
+	// is equivalent to "MULTI_REGIONAL" or "REGIONAL" depending on
+	// the bucket's location settings.
 	StorageClass string
 
 	// Created is the creation time of the bucket.
 	Created time.Time
+
+	// VersioningEnabled reports whether this bucket has versioning enabled.
+	// This field is read-only.
+	VersioningEnabled bool
 }
 
 func newBucket(b *raw.Bucket) *BucketAttrs {
@@ -123,11 +135,12 @@ func newBucket(b *raw.Bucket) *BucketAttrs {
 		return nil
 	}
 	bucket := &BucketAttrs{
-		Name:           b.Name,
-		Location:       b.Location,
-		MetaGeneration: b.Metageneration,
-		StorageClass:   b.StorageClass,
-		Created:        convertTime(b.TimeCreated),
+		Name:              b.Name,
+		Location:          b.Location,
+		MetaGeneration:    b.Metageneration,
+		StorageClass:      b.StorageClass,
+		Created:           convertTime(b.TimeCreated),
+		VersioningEnabled: b.Versioning != nil && b.Versioning.Enabled,
 	}
 	acl := make([]ACLRule, len(b.Acl))
 	for i, rule := range b.Acl {
@@ -170,181 +183,149 @@ func (b *BucketAttrs) toRawBucket() *raw.Bucket {
 	}
 }
 
-// ObjectList represents a list of objects returned from a bucket List call.
-type ObjectList struct {
-	// Results represent a list of object results.
-	Results []*ObjectAttrs
-
-	// Next is the continuation query to retrieve more
-	// results with the same filtering criteria. If there
-	// are no more results to retrieve, it is nil.
-	Next *Query
-
-	// Prefixes represents prefixes of objects
-	// matching-but-not-listed up to and including
-	// the requested delimiter.
-	Prefixes []string
-}
-
-// List lists objects from the bucket. You can specify a query
-// to filter the results. If q is nil, no filtering is applied.
-//
-// Deprecated. Use BucketHandle.Objects instead.
-func (b *BucketHandle) List(ctx context.Context, q *Query) (*ObjectList, error) {
-	it := b.Objects(ctx, q)
-	attrs, pres, err := it.NextPage()
-	if err != nil && err != Done {
-		return nil, err
-	}
-	objects := &ObjectList{
-		Results:  attrs,
-		Prefixes: pres,
-	}
-	if it.NextPageToken() != "" {
-		objects.Next = &it.query
-	}
-	return objects, nil
-}
-
+// Objects returns an iterator over the objects in the bucket that match the Query q.
+// If q is nil, no filtering is done.
 func (b *BucketHandle) Objects(ctx context.Context, q *Query) *ObjectIterator {
 	it := &ObjectIterator{
 		ctx:    ctx,
 		bucket: b,
 	}
+	it.pageInfo, it.nextFunc = iterator.NewPageInfo(
+		it.fetch,
+		func() int { return len(it.items) },
+		func() interface{} { b := it.items; it.items = nil; return b })
 	if q != nil {
 		it.query = *q
 	}
 	return it
 }
 
+// An ObjectIterator is an iterator over ObjectAttrs.
 type ObjectIterator struct {
 	ctx      context.Context
 	bucket   *BucketHandle
 	query    Query
-	pageSize int
-	objs     []*ObjectAttrs
-	prefixes []string
-	err      error
+	pageInfo *iterator.PageInfo
+	nextFunc func() error
+	items    []*ObjectAttrs
 }
 
-// Next returns the next result. Its second return value is Done if there are
-// no more results. Once Next returns Done, all subsequent calls will return
-// Done.
+// PageInfo supports pagination. See the google.golang.org/api/iterator package for details.
+func (it *ObjectIterator) PageInfo() *iterator.PageInfo { return it.pageInfo }
+
+// Next returns the next result. Its second return value is iterator.Done if
+// there are no more results. Once Next returns iterator.Done, all subsequent
+// calls will return iterator.Done.
 //
-// Internally, Next retrieves results in bulk. You can call SetPageSize as a
-// performance hint to affect how many results are retrieved in a single RPC.
-//
-// SetPageToken should not be called when using Next.
-//
-// Next and NextPage should not be used with the same iterator.
-//
-// If Query.Delimiter is non-empty, Next returns an error. Use NextPage when using delimiters.
+// If Query.Delimiter is non-empty, some of the ObjectAttrs returned by Next will
+// have a non-empty Prefix field, and a zero value for all other fields. These
+// represent prefixes.
 func (it *ObjectIterator) Next() (*ObjectAttrs, error) {
-	if it.query.Delimiter != "" {
-		return nil, errors.New("cannot use ObjectIterator.Next with a delimiter")
+	if err := it.nextFunc(); err != nil {
+		return nil, err
 	}
-	for len(it.objs) == 0 { // "for", not "if", to handle empty pages
-		if it.err != nil {
-			return nil, it.err
-		}
-		it.nextPage()
-		if it.err != nil {
-			it.objs = nil
-			return nil, it.err
-		}
-		if it.query.Cursor == "" {
-			it.err = Done
-		}
-	}
-	o := it.objs[0]
-	it.objs = it.objs[1:]
-	return o, nil
+	item := it.items[0]
+	it.items = it.items[1:]
+	return item, nil
 }
 
-const DefaultPageSize = 1000
-
-// NextPage returns the next page of results, both objects (as *ObjectAttrs)
-// and prefixes. Prefixes will be nil if query.Delimiter is empty.
-//
-// NextPage will return exactly the number of results (the total of objects and
-// prefixes) specified by the last call to SetPageSize, unless there are not
-// enough results available. If no page size was specified, it uses
-// DefaultPageSize.
-//
-// NextPage may return a second return value of Done along with the last page
-// of results.
-//
-// After NextPage returns Done, all subsequent calls to NextPage will return
-// (nil, Done).
-//
-// Next and NextPage should not be used with the same iterator.
-func (it *ObjectIterator) NextPage() (objs []*ObjectAttrs, prefixes []string, err error) {
-	defer it.SetPageSize(it.pageSize) // restore value at entry
-	if it.pageSize <= 0 {
-		it.pageSize = DefaultPageSize
-	}
-	for len(objs)+len(prefixes) < int(it.pageSize) {
-		it.pageSize -= len(objs) + len(prefixes)
-		it.nextPage()
-		if it.err != nil {
-			return nil, nil, it.err
-		}
-		objs = append(objs, it.objs...)
-		prefixes = append(prefixes, it.prefixes...)
-		if it.query.Cursor == "" {
-			it.err = Done
-			return objs, prefixes, it.err
-		}
-	}
-	return objs, prefixes, it.err
-}
-
-// nextPage gets the next page of results by making a single call to the underlying method.
-// It sets it.objs, it.prefixes, it.query.Cursor, and it.err. It never sets it.err to Done.
-func (it *ObjectIterator) nextPage() {
-	if it.err != nil {
-		return
-	}
+func (it *ObjectIterator) fetch(pageSize int, pageToken string) (string, error) {
 	req := it.bucket.c.raw.Objects.List(it.bucket.name)
 	req.Projection("full")
 	req.Delimiter(it.query.Delimiter)
 	req.Prefix(it.query.Prefix)
 	req.Versions(it.query.Versions)
-	req.PageToken(it.query.Cursor)
-	if it.pageSize > 0 {
-		req.MaxResults(int64(it.pageSize))
+	req.PageToken(pageToken)
+	if pageSize > 0 {
+		req.MaxResults(int64(pageSize))
 	}
-	resp, err := req.Context(it.ctx).Do()
+	var resp *raw.Objects
+	var err error
+	err = runWithRetry(it.ctx, func() error {
+		resp, err = req.Context(it.ctx).Do()
+		return err
+	})
 	if err != nil {
-		it.err = err
-		return
+		if e, ok := err.(*googleapi.Error); ok && e.Code == http.StatusNotFound {
+			err = ErrBucketNotExist
+		}
+		return "", err
 	}
-	it.query.Cursor = resp.NextPageToken
-	it.objs = nil
 	for _, item := range resp.Items {
-		it.objs = append(it.objs, newObject(item))
+		it.items = append(it.items, newObject(item))
 	}
-	it.prefixes = resp.Prefixes
+	for _, prefix := range resp.Prefixes {
+		it.items = append(it.items, &ObjectAttrs{Prefix: prefix})
+	}
+	return resp.NextPageToken, nil
 }
 
-// SetPageSize sets the page size for all subsequent calls to NextPage.
-// NextPage will return exactly this many items if they are present.
-func (it *ObjectIterator) SetPageSize(pageSize int) {
-	it.pageSize = pageSize
-}
-
-// SetPageToken sets the page token for the next call to NextPage, to resume
-// the iteration from a previous point.
-func (it *ObjectIterator) SetPageToken(t string) {
-	it.query.Cursor = t
-}
-
-// NextPageToken returns a page token that can be used with SetPageToken to
-// resume iteration from the next page. It returns the empty string if there
-// are no more pages. For an example, see SetPageToken.
-func (it *ObjectIterator) NextPageToken() string {
-	return it.query.Cursor
-}
-
-// TODO(jba): Add storage.buckets.list.
 // TODO(jbd): Add storage.buckets.update.
+
+// Buckets returns an iterator over the buckets in the project. You may
+// optionally set the iterator's Prefix field to restrict the list to buckets
+// whose names begin with the prefix. By default, all buckets in the project
+// are returned.
+func (c *Client) Buckets(ctx context.Context, projectID string) *BucketIterator {
+	it := &BucketIterator{
+		ctx:       ctx,
+		client:    c,
+		projectID: projectID,
+	}
+	it.pageInfo, it.nextFunc = iterator.NewPageInfo(
+		it.fetch,
+		func() int { return len(it.buckets) },
+		func() interface{} { b := it.buckets; it.buckets = nil; return b })
+	return it
+}
+
+// A BucketIterator is an iterator over BucketAttrs.
+type BucketIterator struct {
+	// Prefix restricts the iterator to buckets whose names begin with it.
+	Prefix string
+
+	ctx       context.Context
+	client    *Client
+	projectID string
+	buckets   []*BucketAttrs
+	pageInfo  *iterator.PageInfo
+	nextFunc  func() error
+}
+
+// Next returns the next result. Its second return value is iterator.Done if
+// there are no more results. Once Next returns iterator.Done, all subsequent
+// calls will return iterator.Done.
+func (it *BucketIterator) Next() (*BucketAttrs, error) {
+	if err := it.nextFunc(); err != nil {
+		return nil, err
+	}
+	b := it.buckets[0]
+	it.buckets = it.buckets[1:]
+	return b, nil
+}
+
+// PageInfo supports pagination. See the google.golang.org/api/iterator package for details.
+func (it *BucketIterator) PageInfo() *iterator.PageInfo { return it.pageInfo }
+
+func (it *BucketIterator) fetch(pageSize int, pageToken string) (string, error) {
+	req := it.client.raw.Buckets.List(it.projectID)
+	req.Projection("full")
+	req.Prefix(it.Prefix)
+	req.PageToken(pageToken)
+	if pageSize > 0 {
+		req.MaxResults(int64(pageSize))
+	}
+	var resp *raw.Buckets
+	var err error
+	err = runWithRetry(it.ctx, func() error {
+		resp, err = req.Context(it.ctx).Do()
+		return err
+	})
+	if err != nil {
+		return "", err
+	}
+	for _, item := range resp.Items {
+		it.buckets = append(it.buckets, newBucket(item))
+	}
+	return resp.NextPageToken, nil
+}

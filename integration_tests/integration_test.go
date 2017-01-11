@@ -326,7 +326,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 		})
 
 		It("should have loaded credentials correctly and have a project id", func() {
-			Expect(gcpBroker.RootGCPCredentials.ProjectId).To(Not(BeEmpty()))
+			Expect(gcpBroker.RootGCPCredentials.ProjectId).ToNot(BeEmpty())
 		})
 	})
 

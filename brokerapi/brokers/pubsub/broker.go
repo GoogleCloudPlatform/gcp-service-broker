@@ -67,13 +67,13 @@ func (b *PubSubBroker) Provision(instanceId string, details models.ProvisionDeta
 
 	ctx := context.Background()
 	co := option.WithUserAgent(models.CustomUserAgent)
-	service, err := googlepubsub.NewClient(ctx, b.ProjectId, co)
+	pubsubClient, err := googlepubsub.NewClient(ctx, b.ProjectId, co)
 
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new pubsub client: %s", err)
 	}
 
-	t, err := service.NewTopic(ctx, params["topic_name"])
+	t, err := pubsubClient.CreateTopic(ctx, params["topic_name"])
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new pubsub topic: %s", err)
 	}
@@ -107,7 +107,7 @@ func (b *PubSubBroker) Provision(instanceId string, details models.ProvisionDeta
 			}
 		}
 
-		_, err = service.NewSubscription(ctx, sub_name, t, time.Duration(ackDeadline)*time.Second, pushConfig)
+		_, err = pubsubClient.CreateSubscription(ctx, sub_name, t, time.Duration(ackDeadline)*time.Second, pushConfig)
 		if err != nil {
 			return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating subscription: %s", err)
 		}

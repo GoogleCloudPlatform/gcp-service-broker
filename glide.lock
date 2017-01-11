@@ -1,0 +1,149 @@
+hash: cd75af9d92eb6743b103395d74b204f55e10eeb75a054cd56bd07fb6aa032cfe
+updated: 2017-01-10T11:29:33.077887872-08:00
+imports:
+- name: cloud.google.com/go
+  version: c116c7972ec94f148459a304d07a67ecbc770d4b
+  subpackages:
+  - compute/metadata
+  - iam
+  - internal
+  - internal/optional
+  - pubsub
+  - pubsub/apiv1
+  - storage
+- name: code.cloudfoundry.org/lager
+  version: 6cfe365fb6bb84343f0034b4a53cd250d173b61f
+- name: github.com/go-sql-driver/mysql
+  version: a0583e0143b1624142adab07e0e97fe106d99561
+- name: github.com/golang/protobuf
+  version: 8ee79997227bf9b34611aee7946ae64735e6fd93
+  subpackages:
+  - proto
+  - protoc-gen-go/descriptor
+  - ptypes
+  - ptypes/any
+  - ptypes/duration
+  - ptypes/empty
+  - ptypes/timestamp
+- name: github.com/googleapis/gax-go
+  version: da06d194a00e19ce00d9011a13931c3f6f6887c7
+- name: github.com/gorilla/context
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+- name: github.com/gorilla/mux
+  version: 0eeaf8392f5b04950925b8a69fe70f110fa7cbfc
+- name: github.com/jinzhu/gorm
+  version: 5174cc5c242a728b435ea2be8a2f7f998e15429b
+  subpackages:
+  - dialects/sqlite
+- name: github.com/jinzhu/inflection
+  version: 1c35d901db3da928c72a72d8458480cc9ade058f
+- name: github.com/leonelquinteros/gorand
+  version: aac5da62f38c2d2b492bee83183ca80dd209b875
+- name: github.com/mattn/go-sqlite3
+  version: eff6379ba09b2fca7aa8216f2132d4c170ed9d46
+- name: golang.org/x/net
+  version: 60c41d1de8da134c05b7b40154a9a82bf5b7edb9
+  subpackages:
+  - context
+  - context/ctxhttp
+  - http2
+  - http2/hpack
+  - idna
+  - internal/timeseries
+  - lex/httplex
+  - trace
+- name: golang.org/x/oauth2
+  version: 314dd2c0bf3ebd592ec0d20847d27e79d0dbe8dd
+  subpackages:
+  - google
+  - internal
+  - jws
+  - jwt
+- name: golang.org/x/text
+  version: 44f4f658a783b0cee41fe0a23b8fc91d9c120558
+  subpackages:
+  - secure/bidirule
+  - transform
+  - unicode/bidi
+  - unicode/norm
+- name: google.golang.org/api
+  version: 609d28165a413a578ef1be52080750d189970d36
+  subpackages:
+  - bigquery/v2
+  - cloudresourcemanager/v1
+  - gensupport
+  - googleapi
+  - googleapi/internal/uritemplates
+  - googleapi/transport
+  - iam/v1
+  - internal
+  - iterator
+  - option
+  - sqladmin/v1beta4
+  - storage/v1
+  - transport
+- name: google.golang.org/appengine
+  version: 8758a385849434ba5eac8aeedcf5192c5a0f5f10
+  subpackages:
+  - internal
+  - internal/app_identity
+  - internal/base
+  - internal/datastore
+  - internal/log
+  - internal/modules
+  - internal/remote_api
+  - internal/socket
+  - internal/urlfetch
+  - socket
+  - urlfetch
+- name: google.golang.org/genproto
+  version: b3e7c2fb04031add52c4817f53f43757ccbf9c18
+  subpackages:
+  - googleapis/api/annotations
+  - googleapis/iam/v1
+  - googleapis/pubsub/v1
+- name: google.golang.org/grpc
+  version: cb653e4b6150b81ba5157618b57c6f910a6a99f7
+  subpackages:
+  - codes
+  - credentials
+  - credentials/oauth
+  - grpclog
+  - internal
+  - metadata
+  - naming
+  - peer
+  - stats
+  - tap
+  - transport
+testImports:
+- name: github.com/onsi/ginkgo
+  version: 462326b1628e124b23f42e87a8f2750e3c4e2d24
+  subpackages:
+  - config
+  - internal/codelocation
+  - internal/containernode
+  - internal/failer
+  - internal/leafnodes
+  - internal/remote
+  - internal/spec
+  - internal/specrunner
+  - internal/suite
+  - internal/testingtproxy
+  - internal/writer
+  - reporters
+  - reporters/stenographer
+  - types
+- name: github.com/onsi/gomega
+  version: a78ae492d53aad5a7a232d0d0462c14c400e3ee7
+  subpackages:
+  - format
+  - internal/assertion
+  - internal/asyncassertion
+  - internal/testingtsupport
+  - matchers
+  - matchers/support/goraph/bipartitegraph
+  - matchers/support/goraph/edge
+  - matchers/support/goraph/node
+  - matchers/support/goraph/util
+  - types
