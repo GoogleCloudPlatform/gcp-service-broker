@@ -50,10 +50,18 @@ Cloud Storage (bucket_name), BigQuery (dataset_id), and Cloud SQL (instance_name
 
 ## [2.1.2] - 2016-12-21
 
+### Fixed
 - fixes a bug where anything that triggered an install repeat after installing version 2.1.0 or 2.1.1 would cause the
 installation to fail.
 
 ## [2.1.3] - 2017-01-05
 
+### Fixed
 - fixes a bug where bind calls to ml-api service instances were failing because these service instances don't save
 any extra access details
+
+## [3.0.0] - 2017-01-12
+
+- Updated pubsub library so that User Agent string gets propagated correctly
+- Updated dependency management system
+- Changed org to system (Broker will need to be uninstalled and reinstalled for this change to take effect)

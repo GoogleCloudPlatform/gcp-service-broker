@@ -28,7 +28,6 @@ function import_opsmgr_variables() {
 	export DOMAIN=<%= Shellwords.escape properties.domain %>
 	export APP_DOMAIN=<%= Shellwords.escape properties.app_domains[0] %>
 	export CF_ORG=<%= Shellwords.escape properties.org %>
-	export CF_ORG_QUOTA=<%= Shellwords.escape properties.org_quota %>
 	export CF_SPACE=<%= Shellwords.escape properties.space %>
 	export CF_TARGET=$SCHEME://api.${DOMAIN}
 	export CF_SKIP_SSL=<%= Shellwords.escape properties.ssl.skip_cert_verify %>
@@ -38,13 +37,13 @@ function import_opsmgr_variables() {
 	export ALLOW_PAID_SERVICE_PLANS=<%= Shellwords.escape properties.allow_paid_service_plans %>
 
 	<%
-	plans = { }
-	p("cloudsql_custom_plans").each do |plan|
-		plan_name = plan['name']
-		plans[plan_name] = plan
-	end
-%>
-CLOUDSQL_CUSTOM_PLANS=<%= Shellwords.escape JSON.dump(plans) %>
+    	plans = { }
+    	p("cloudsql_custom_plans").each do |plan|
+    		plan_name = plan['name']
+    		plans[plan_name] = plan
+    	end
+    %>
+    export CLOUDSQL_CUSTOM_PLANS=<%= Shellwords.escape JSON.dump(plans) %>
 
 	export ROOT_SERVICE_ACCOUNT_JSON=<%= Shellwords.escape properties.root_service_account_json %>
 	export DB_HOST=<%= Shellwords.escape properties.db_host %>
@@ -78,24 +77,9 @@ function setup_target_org() {
 	fi
 	if ! $CF org $CF_ORG >/dev/null; then
 		cf create-org $CF_ORG
+		ignore_failure=`$CF set-quota $CF_ORG runaway`
 	fi
 	cf target -o $CF_ORG
-}
-
-function setup_org_quota() {
-	if [ -n "$CF_ORG_QUOTA" ]; then
-		export CF_QUOTA=${CF_ORG}-quota
-		if ! $CF quota $CF_QUOTA >/dev/null; then
-			cf create-quota $CF_QUOTA
-		fi
-		cf update-quota $CF_QUOTA -m ${CF_ORG_QUOTA}m -r 1000 -s 100
-		if is_true "$ALLOW_PAID_SERVICE_PLANS"; then
-			cf update-quota $CF_QUOTA --allow-paid-service-plans
-		else
-			cf update-quota $CF_QUOTA --disallow-paid-service-plans
-		fi
-		cf set-quota $CF_ORG $CF_QUOTA
-	fi
 }
 
 function setup_target_space() {
@@ -147,10 +131,9 @@ function add_env_vars() {
 	cf set-env $1 CF_ORG "$CF_ORG"
 	cf set-env $1 CF_SPACE "$CF_SPACE"
 	cf set-env $1 CF_TARGET "$CF_TARGET"
+	cf set-env $1 CF_SKIP_SSL "$CF_SKIP_SSL"
 	cf set-env $1 SECURITY_USER_NAME "$SECURITY_USER_NAME"
 	cf set-env $1 SECURITY_USER_PASSWORD "$SECURITY_USER_PASSWORD"
-
-	# Dynamic plans (if defined)
 
 	# Custom Service Plans
 	cf set-env $1 CLOUDSQL_CUSTOM_PLANS "$CLOUDSQL_CUSTOM_PLANS"
@@ -302,7 +285,7 @@ function push_buildpack() {
 	BUILDPACK_NAME="$1"
 	BUILDPACK_ORDER="$2"
 	BUILDPACK_FILE="$3"
-	BUILDPACK_VERSIONED=`echo "${BUILDPACK_FILE}" | sed 's/\.zip$/-v2.1.3.zip/'`
+	BUILDPACK_VERSIONED=`echo "${BUILDPACK_FILE}" | sed 's/\.zip$/-v3.0.0.zip/'`
 	cp "${BUILDPACK_FILE}" "${BUILDPACK_VERSIONED}"
 	$CF buildpacks | grep ${BUILDPACK_NAME} >/dev/null
 	if [ "$?" -eq "0" ]; then
@@ -354,7 +337,6 @@ import_opsmgr_variables
 prepare_cf_cli
 authenticate
 setup_target_org
-setup_org_quota
 setup_target_space
 add_target_org_to_admin
 setup_package_path
@@ -366,15 +348,12 @@ apply_open_security_group "$APPLY_OPEN_SECURITY_GROUP"
 
 
 export PKG_NAME=gcp_service_broker
-export APP_NAME=gcp-service-broker-2.1.3
+export APP_NAME=gcp-service-broker-3.0.0
 export APP_HOST=gcp-service-broker
 export DOCKER_IMAGE=""
 export NEEDS_CF_CREDS="True"
 export HEALTH_CHECK=""
 deploy_app "$PKG_NAME" "$APP_NAME" "$APP_HOST" "$DOCKER_IMAGE" "$NEEDS_CF_CREDS" "$HEALTH_CHECK"
-export SVC_NAME=<%= Shellwords.escape properties.gcp_service_broker.persistence_store_type %>
-export SVC_PLAN=""
-provision_auto_service "$PKG_NAME" "$APP_NAME" "$SVC_NAME" "$SVC_PLAN"
 start_app gcp-service-broker "$APP_NAME"
 
 export BROKER_NAME=gcp-service-broker

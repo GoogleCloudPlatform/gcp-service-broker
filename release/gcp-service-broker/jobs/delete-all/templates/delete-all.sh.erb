@@ -74,7 +74,6 @@ function delete_empty_org() {
 	output=`$CF spaces | tail -1`
 	if [ "$output" == "No spaces found" ]; then
 		cf delete-org -f $CF_ORG
-		cf delete-quota -f ${CF_ORG}-quota
 	fi
 }
 

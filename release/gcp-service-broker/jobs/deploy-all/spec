@@ -2,7 +2,7 @@
 name: deploy-all
 templates:
   deploy-all.sh.erb: bin/run
-  opsmgr-env.sh.erb: bin/opsmgr-env.sh
+  opsmgr.env.erb: bin/opsmgr.env
 packages:
 - cf_cli
 - gcp_service_broker
@@ -23,9 +23,6 @@ properties:
     description: 'Username of the CF admin user'
   cf.admin_password:
     description: 'Password of the CF admin user'
-  org_quota:
-    description: 'Org Memory Quota for the Application'
-    default: 1024
   apply_open_security_group:
     description: 'Open security group for the app to access outside'
     default: false
