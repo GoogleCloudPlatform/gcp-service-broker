@@ -121,6 +121,7 @@ func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindi
 		Email:          newSA.Email,
 		UniqueId:       newSA.UniqueId,
 		PrivateKeyData: newSAKey.PrivateKeyData,
+		ProjectId: sam.ProjectId,
 	}
 
 	saBytes, err := json.Marshal(&newSAInfo)
@@ -174,6 +175,7 @@ type ServiceAccountInfo struct {
 	Name     string
 	Email    string
 	UniqueId string
+	ProjectId string
 
 	// the bit to return
 	PrivateKeyData string
