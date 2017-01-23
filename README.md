@@ -4,6 +4,10 @@ Depends on [lager](https://github.com/pivotal-golang/lager) and [gorilla/mux](ht
 
 Requires go 1.6 and the associated buildpack
 
+## Examples
+
+See the [examples](https://github.com/GoogleCloudPlatform/gcp-service-broker/tree/master/examples/) folder.
+
 ## Prerequisites
 
 ### Set up a GCP Project
