@@ -65,3 +65,8 @@ any extra access details
 - Updated pubsub library so that User Agent string gets propagated correctly
 - Updated dependency management system
 - Changed org to system (Broker will need to be uninstalled and reinstalled for this change to take effect)
+
+## [3.0.1] - 2017-01-23
+
+- Updated default user agent string so that bogus data will not be collected during testing
+- Updated service account bindings to include ProjectId
