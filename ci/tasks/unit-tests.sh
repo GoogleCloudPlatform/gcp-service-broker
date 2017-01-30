@@ -2,8 +2,7 @@
 
 set -e
 
-export GOPATH=${PWD}/gcp-service-broker-src/vendor
-export PATH=${GOPATH}/bin:$PATH
+export GOPATH=${PWD}
 
-cd ${PWD}/gcp-service-broker-src/brokerapi/brokers
+cd ${PWD}/src/gcp-service-broker-src/brokerapi/brokers
 go test
