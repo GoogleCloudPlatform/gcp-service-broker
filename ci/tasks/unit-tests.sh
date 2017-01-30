@@ -4,5 +4,5 @@ set -e
 
 export GOPATH=${PWD}
 
-cd ${PWD}/src/gcp-service-broker-src/brokerapi/brokers
+cd ${GOPATH}/src/gcp-service-broker-src/brokerapi/brokers
 go test

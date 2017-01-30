@@ -9,4 +9,4 @@ inputs:
   - name: gcp-service-broker-src
     path: src/gcp-service-broker-src
 run:
-  path: gcp-service-broker-src/ci/tasks/unit-tests.sh
+  path: src/gcp-service-broker-src/ci/tasks/unit-tests.sh
