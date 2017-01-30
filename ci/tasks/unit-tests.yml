@@ -1,0 +1,11 @@
+---
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: boshcpi/gce-cpi-release
+    tag: v2
+inputs:
+  - name: gcp-service-broker-src
+run:
+  path: gcp-service-broker-src/ci/tasks/unit-tests.sh

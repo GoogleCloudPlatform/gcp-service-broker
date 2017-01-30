@@ -1,0 +1,21 @@
+---
+jobs:
+  - name: test-unit
+    plan:
+      - aggregate:
+        - {trigger: true, get: gcp-service-broker-src, resource: gcp-service-broker-src-in}
+
+      - task: unit-tests
+        file: gcp-service-broker-src/ci/tasks/unit-tests.yml
+
+
+
+resources:
+  - name: gcp-service-broker-src-in
+    type: git
+    source:
+      uri: https://github.com/GoogleCloudPlatform/gcp-service-broker.git
+      branch: concourse
+      ignore_paths:
+        - product/
+        - release/
