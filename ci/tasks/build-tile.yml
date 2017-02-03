@@ -1,0 +1,14 @@
+---
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: cfplatformeng/tile-generator
+inputs:
+  - name: gcp-service-broker-src
+    path: src/gcp-service-broker
+outputs:
+  - name: candidate
+
+run:
+  path: src/gcp-service-broker/ci/tasks/build-tile.sh
