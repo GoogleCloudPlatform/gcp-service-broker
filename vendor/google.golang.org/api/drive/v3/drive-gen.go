@@ -336,7 +336,9 @@ func (s *Change) MarshalJSON() ([]byte, error) {
 
 // ChangeList: A list of changes for a user.
 type ChangeList struct {
-	// Changes: The page of changes.
+	// Changes: The list of changes. If nextPageToken is populated, then
+	// this list may be incomplete and an additional page of results should
+	// be fetched.
 	Changes []*Change `json:"changes,omitempty"`
 
 	// Kind: Identifies what kind of resource this is. Value: the fixed
@@ -349,7 +351,9 @@ type ChangeList struct {
 	NewStartPageToken string `json:"newStartPageToken,omitempty"`
 
 	// NextPageToken: The page token for the next page of changes. This will
-	// be absent if the end of the current changes list has been reached.
+	// be absent if the end of the changes list has been reached. If the
+	// token is rejected for any reason, it should be discarded, and
+	// pagination should be restarted from the first page of results.
 	NextPageToken string `json:"nextPageToken,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
@@ -557,7 +561,9 @@ func (s *CommentQuotedFileContent) MarshalJSON() ([]byte, error) {
 
 // CommentList: A list of comments on a file.
 type CommentList struct {
-	// Comments: The page of comments.
+	// Comments: The list of comments. If nextPageToken is populated, then
+	// this list may be incomplete and an additional page of results should
+	// be fetched.
 	Comments []*Comment `json:"comments,omitempty"`
 
 	// Kind: Identifies what kind of resource this is. Value: the fixed
@@ -565,7 +571,9 @@ type CommentList struct {
 	Kind string `json:"kind,omitempty"`
 
 	// NextPageToken: The page token for the next page of comments. This
-	// will be absent if the end of the comments list has been reached.
+	// will be absent if the end of the comments list has been reached. If
+	// the token is rejected for any reason, it should be discarded, and
+	// pagination should be restarted from the first page of results.
 	NextPageToken string `json:"nextPageToken,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
@@ -638,6 +646,9 @@ type File struct {
 	// This is automatically updated when the name field changes, however it
 	// is not cleared if the new name does not contain a valid extension.
 	FullFileExtension string `json:"fullFileExtension,omitempty"`
+
+	// HasThumbnail: Whether this file has a thumbnail.
+	HasThumbnail bool `json:"hasThumbnail,omitempty"`
 
 	// HeadRevisionId: The ID of the file's head revision. This is currently
 	// only available for files with binary content in Drive.
@@ -749,8 +760,13 @@ type File struct {
 	Starred bool `json:"starred,omitempty"`
 
 	// ThumbnailLink: A short-lived link to the file's thumbnail, if
-	// available. Typically lasts on the order of hours.
+	// available. Typically lasts on the order of hours. Only populated when
+	// the requesting app can access the file's content.
 	ThumbnailLink string `json:"thumbnailLink,omitempty"`
+
+	// ThumbnailVersion: The thumbnail version for use in thumbnail cache
+	// invalidation.
+	ThumbnailVersion int64 `json:"thumbnailVersion,omitempty,string"`
 
 	// Trashed: Whether the file has been trashed, either explicitly or from
 	// a trashed parent folder. Only the owner may trash a file, and other
@@ -1020,6 +1036,28 @@ func (s *FileImageMediaMetadata) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+func (s *FileImageMediaMetadata) UnmarshalJSON(data []byte) error {
+	type noMethod FileImageMediaMetadata
+	var s1 struct {
+		Aperture         gensupport.JSONFloat64 `json:"aperture"`
+		ExposureBias     gensupport.JSONFloat64 `json:"exposureBias"`
+		ExposureTime     gensupport.JSONFloat64 `json:"exposureTime"`
+		FocalLength      gensupport.JSONFloat64 `json:"focalLength"`
+		MaxApertureValue gensupport.JSONFloat64 `json:"maxApertureValue"`
+		*noMethod
+	}
+	s1.noMethod = (*noMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.Aperture = float64(s1.Aperture)
+	s.ExposureBias = float64(s1.ExposureBias)
+	s.ExposureTime = float64(s1.ExposureTime)
+	s.FocalLength = float64(s1.FocalLength)
+	s.MaxApertureValue = float64(s1.MaxApertureValue)
+	return nil
+}
+
 // FileImageMediaMetadataLocation: Geographic location information
 // stored in the image.
 type FileImageMediaMetadataLocation struct {
@@ -1053,6 +1091,24 @@ func (s *FileImageMediaMetadataLocation) MarshalJSON() ([]byte, error) {
 	type noMethod FileImageMediaMetadataLocation
 	raw := noMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+func (s *FileImageMediaMetadataLocation) UnmarshalJSON(data []byte) error {
+	type noMethod FileImageMediaMetadataLocation
+	var s1 struct {
+		Altitude  gensupport.JSONFloat64 `json:"altitude"`
+		Latitude  gensupport.JSONFloat64 `json:"latitude"`
+		Longitude gensupport.JSONFloat64 `json:"longitude"`
+		*noMethod
+	}
+	s1.noMethod = (*noMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.Altitude = float64(s1.Altitude)
+	s.Latitude = float64(s1.Latitude)
+	s.Longitude = float64(s1.Longitude)
+	return nil
 }
 
 // FileVideoMediaMetadata: Additional metadata about video media. This
@@ -1093,7 +1149,9 @@ func (s *FileVideoMediaMetadata) MarshalJSON() ([]byte, error) {
 
 // FileList: A list of files.
 type FileList struct {
-	// Files: The page of files.
+	// Files: The list of files. If nextPageToken is populated, then this
+	// list may be incomplete and an additional page of results should be
+	// fetched.
 	Files []*File `json:"files,omitempty"`
 
 	// Kind: Identifies what kind of resource this is. Value: the fixed
@@ -1101,7 +1159,9 @@ type FileList struct {
 	Kind string `json:"kind,omitempty"`
 
 	// NextPageToken: The page token for the next page of files. This will
-	// be absent if the end of the files list has been reached.
+	// be absent if the end of the files list has been reached. If the token
+	// is rejected for any reason, it should be discarded, and pagination
+	// should be restarted from the first page of results.
 	NextPageToken string `json:"nextPageToken,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
@@ -1253,7 +1313,7 @@ type PermissionList struct {
 	// string "drive#permissionList".
 	Kind string `json:"kind,omitempty"`
 
-	// Permissions: The full list of permissions.
+	// Permissions: The list of permissions.
 	Permissions []*Permission `json:"permissions,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
@@ -1355,10 +1415,14 @@ type ReplyList struct {
 	Kind string `json:"kind,omitempty"`
 
 	// NextPageToken: The page token for the next page of replies. This will
-	// be absent if the end of the replies list has been reached.
+	// be absent if the end of the replies list has been reached. If the
+	// token is rejected for any reason, it should be discarded, and
+	// pagination should be restarted from the first page of results.
 	NextPageToken string `json:"nextPageToken,omitempty"`
 
-	// Replies: The page of replies.
+	// Replies: The list of replies. If nextPageToken is populated, then
+	// this list may be incomplete and an additional page of results should
+	// be fetched.
 	Replies []*Reply `json:"replies,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
@@ -1472,10 +1536,14 @@ type RevisionList struct {
 	Kind string `json:"kind,omitempty"`
 
 	// NextPageToken: The page token for the next page of revisions. This
-	// will be absent if the end of the revisions list has been reached.
+	// will be absent if the end of the revisions list has been reached. If
+	// the token is rejected for any reason, it should be discarded, and
+	// pagination should be restarted from the first page of results.
 	NextPageToken string `json:"nextPageToken,omitempty"`
 
-	// Revisions: The full list of revisions.
+	// Revisions: The list of revisions. If nextPageToken is populated, then
+	// this list may be incomplete and an additional page of results should
+	// be fetched.
 	Revisions []*Revision `json:"revisions,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
