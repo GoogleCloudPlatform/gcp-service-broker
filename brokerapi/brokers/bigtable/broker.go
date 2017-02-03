@@ -1,0 +1,127 @@
+// Copyright the Service Broker Project Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+////////////////////////////////////////////////////////////////////////////////
+//
+
+package bigtable
+
+import (
+	googlebigtable "cloud.google.com/go/bigtable"
+	"code.cloudfoundry.org/lager"
+	"encoding/json"
+	"fmt"
+	"gcp-service-broker/brokerapi/brokers/broker_base"
+	"gcp-service-broker/brokerapi/brokers/models"
+	"gcp-service-broker/brokerapi/brokers/name_generator"
+	"gcp-service-broker/db_service"
+	"golang.org/x/net/context"
+	"google.golang.org/api/option"
+	"net/http"
+)
+
+type BigTableBroker struct {
+	Client         *http.Client
+	ProjectId      string
+	Logger         lager.Logger
+	AccountManager models.AccountManager
+
+	broker_base.BrokerBase
+}
+
+type InstanceInformation struct {
+	InstanceId string
+}
+
+// Creates a new Bigtable Instance identified by the name provided in details.RawParameters.name and
+// optional cluster_id (a default will be supplied), display_name, zone, num_nodes (defaults to 3),
+// storage_type ("HDD" or "SSD", defaults to "SSD")
+func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+	var err error
+	var params map[string]string
+
+	if len(details.RawParameters) == 0 {
+		params = map[string]string{}
+	} else if err = json.Unmarshal(details.RawParameters, &params); err != nil {
+		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling parameters: %s", err)
+	}
+
+	// Ensure there is a name for this instance
+	if _, ok := params["name"]; !ok {
+		params["name"] = name_generator.Basic.InstanceName()
+	}
+
+	ctx := context.Background()
+	co := option.WithUserAgent(models.CustomUserAgent)
+	service, err := googlebigtable.NewInstanceAdminClient(ctx, b.ProjectId, co)
+	if err != nil {
+		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating bigtable client: %s", err)
+	}
+
+	clusterId := params["name"] + "-cluster"
+	userClusterId, clusterIdOk := params["cluster_id"]
+	if clusterIdOk {
+		clusterId = userClusterId
+	}
+	// TODO: configure the rest of the defaults. test.
+	// like seriously, add integration tests.
+	ic := googlebigtable.InstanceConf{
+		InstanceId: params["name"],
+		ClusterId:  clusterId,
+	}
+	err = service.CreateInstance(ctx, &ic)
+	if err != nil {
+		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new instance: %s", err)
+	}
+
+	ii := InstanceInformation{
+		InstanceId: params["name"],
+	}
+
+	otherDetails, err := json.Marshal(ii)
+	if err != nil {
+		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling other details: %s", err)
+	}
+
+	i := models.ServiceInstanceDetails{
+		Name:         params["name"],
+		Url:          "",
+		Location:     "",
+		OtherDetails: string(otherDetails),
+	}
+
+	return i, nil
+}
+
+// deletes the instance associated with the given instanceID string
+// note that all tables in the dataset must be deleted prior to deprovisioning TODO: still true?
+func (b *BigTableBroker) Deprovision(instanceID string, details models.DeprovisionDetails) error {
+	var err error
+	ctx := context.Background()
+	service, err := googlebigtable.NewInstanceAdminClient(ctx, b.ProjectId)
+	if err != nil {
+		return fmt.Errorf("Error creating BigQuery client: %s", err)
+	}
+
+	instance := models.ServiceInstanceDetails{}
+	if err = db_service.DbConnection.Where("ID = ?", instanceID).First(&instance).Error; err != nil {
+		return models.ErrInstanceDoesNotExist
+	}
+
+	if err = service.DeleteInstance(ctx, instance.Name); err != nil {
+		return fmt.Errorf("Error deleting dataset: %s", err)
+	}
+
+	return nil
+}
