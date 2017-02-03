@@ -1,5 +1,5 @@
 hash: cd75af9d92eb6743b103395d74b204f55e10eeb75a054cd56bd07fb6aa032cfe
-updated: 2017-01-10T11:29:33.077887872-08:00
+updated: 2017-02-02T16:29:29.180347439-08:00
 imports:
 - name: cloud.google.com/go
   version: c116c7972ec94f148459a304d07a67ecbc770d4b
@@ -40,9 +40,9 @@ imports:
 - name: github.com/leonelquinteros/gorand
   version: aac5da62f38c2d2b492bee83183ca80dd209b875
 - name: github.com/mattn/go-sqlite3
-  version: eff6379ba09b2fca7aa8216f2132d4c170ed9d46
+  version: ce9149a3c941c30de51a01dbc5bc414ddaa52927
 - name: golang.org/x/net
-  version: 60c41d1de8da134c05b7b40154a9a82bf5b7edb9
+  version: 007e530097ad7f954752df63046b4036f98ba6a6
   subpackages:
   - context
   - context/ctxhttp
@@ -59,15 +59,8 @@ imports:
   - internal
   - jws
   - jwt
-- name: golang.org/x/text
-  version: 44f4f658a783b0cee41fe0a23b8fc91d9c120558
-  subpackages:
-  - secure/bidirule
-  - transform
-  - unicode/bidi
-  - unicode/norm
 - name: google.golang.org/api
-  version: 609d28165a413a578ef1be52080750d189970d36
+  version: c55f685368bb1cdfed2c20283e2878a83b929730
   subpackages:
   - bigquery/v2
   - cloudresourcemanager/v1
@@ -83,7 +76,7 @@ imports:
   - storage/v1
   - transport
 - name: google.golang.org/appengine
-  version: 8758a385849434ba5eac8aeedcf5192c5a0f5f10
+  version: a2c54d2174c17540446e0ced57d9d459af61bc1c
   subpackages:
   - internal
   - internal/app_identity
@@ -103,7 +96,7 @@ imports:
   - googleapis/iam/v1
   - googleapis/pubsub/v1
 - name: google.golang.org/grpc
-  version: cb653e4b6150b81ba5157618b57c6f910a6a99f7
+  version: 21f8ed309495401e6fd79b3a9fd549582aed1b4c
   subpackages:
   - codes
   - credentials
