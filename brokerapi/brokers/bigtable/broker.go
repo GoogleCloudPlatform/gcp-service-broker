@@ -29,6 +29,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
 	"net/http"
+	"strconv"
 )
 
 type BigTableBroker struct {
@@ -41,12 +42,16 @@ type BigTableBroker struct {
 }
 
 type InstanceInformation struct {
-	InstanceId string
+	InstanceId string `json:"instance_id"`
+}
+
+var StorageTypes = map[string]googlebigtable.StorageType{
+	"SSD": googlebigtable.SSD,
+	"HDD": googlebigtable.HDD,
 }
 
 // Creates a new Bigtable Instance identified by the name provided in details.RawParameters.name and
-// optional cluster_id (a default will be supplied), display_name, zone, num_nodes (defaults to 3),
-// storage_type ("HDD" or "SSD", defaults to "SSD")
+// optional cluster_id (a default will be supplied), display_name, and zone (defaults to us-east1-b)
 func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
 	var err error
 	var params map[string]string
@@ -59,7 +64,13 @@ func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDe
 
 	// Ensure there is a name for this instance
 	if _, ok := params["name"]; !ok {
-		params["name"] = name_generator.Basic.InstanceName()
+		params["name"] = name_generator.Basic.InstanceNameWithSeparator("-")
+	}
+
+	// get plan parameters
+	var planDetails map[string]string
+	if err = json.Unmarshal([]byte(plan.Features), &planDetails); err != nil {
+		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling plan features: %s", err)
 	}
 
 	ctx := context.Background()
@@ -70,16 +81,34 @@ func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDe
 	}
 
 	clusterId := params["name"] + "-cluster"
-	userClusterId, clusterIdOk := params["cluster_id"]
-	if clusterIdOk {
+	if userClusterId, clusterIdOk := params["cluster_id"]; clusterIdOk {
 		clusterId = userClusterId
 	}
-	// TODO: configure the rest of the defaults. test.
-	// like seriously, add integration tests.
-	ic := googlebigtable.InstanceConf{
-		InstanceId: params["name"],
-		ClusterId:  clusterId,
+
+	numNodes, err := strconv.Atoi(planDetails["num_nodes"])
+	if err != nil {
+		return models.ServiceInstanceDetails{}, fmt.Errorf("Error converting num_nodes to int: %s", err)
 	}
+
+	zone := "us-east1-b"
+	if userZone, userZoneOk := params["zone"]; userZoneOk {
+		zone = userZone
+	}
+
+	displayName := params["name"]
+	if userDisplayName, userDisplayNameOk := params["display_name"]; userDisplayNameOk {
+		displayName = userDisplayName
+	}
+
+	ic := googlebigtable.InstanceConf{
+		InstanceId:  params["name"],
+		ClusterId:   clusterId,
+		NumNodes:    int32(numNodes),
+		StorageType: StorageTypes[planDetails["storage_type"]],
+		Zone:        zone,
+		DisplayName: displayName,
+	}
+
 	err = service.CreateInstance(ctx, &ic)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new instance: %s", err)
