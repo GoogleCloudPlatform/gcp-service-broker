@@ -155,13 +155,14 @@ var (
 // good usage statistics for it, so if you feel the need to fork this repo, please leave this string in place!
 var CustomUserAgent = "cf-gcp-service-broker-test 1.0.0"
 
-func ProductionizeUserAgent(){
+func ProductionizeUserAgent() {
 	CustomUserAgent = "cf-gcp-service-broker 1.0.0"
 }
 
 const CloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
 const StorageName = "google-storage"
 const BigqueryName = "google-bigquery"
+const BigtableName = "google-bigtable"
 const CloudsqlName = "google-cloudsql"
 const PubsubName = "google-pubsub"
 const MlName = "google-ml-apis"
