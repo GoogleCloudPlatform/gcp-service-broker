@@ -26,6 +26,7 @@ See the [examples](https://github.com/GoogleCloudPlatform/gcp-service-broker/tre
 1. If you want to enable BigQuery as a service, enable the <a href="https://console.cloud.google.com/apis/api/bigquery/overview">BigQuery API</a>
 1. If you want to enable Cloud Storage as a service, enable the <a href="https://console.cloud.google.com/apis/api/storage_component/overview">Cloud Storage API</a>
 1. If you want to enable Pub/Sub as a service, enable the <a href="https://console.cloud.google.com/apis/api/pubsub/overview">Cloud Pub/Sub API</a>
+1. If you want to enable Bigtable as a service, enable the <a href="https://console.cloud.google.com/apis/api/bigtableadmin/overview">Bigtable Admin API</a>
 
 ### Create a root service account
 
@@ -221,6 +222,27 @@ bind-service calls require a role except for Cloud SQL
              "Name": "redacted",
              "PrivateKeyData": "redacted",
              "UniqueId": "redacted",
+        }
+        </pre>
+
+* [Bigtable](https://cloud.google.com/bigtable/docs/)
+    * Provison
+        * name (defaults to a generated value)
+        * cluster_id (defaults to a generated value)
+        * display_name (defaults to a generated value)
+        * storage_type (one of "SSD" or "HDD", defaults to "SSD")
+        * zone (defaults to us-east1-b)
+        * num_nodes (defaults to 3)
+    * Bind
+        * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles), e.g. editor
+
+        **Example Binding credentials**
+        <pre>"credentials": {
+             "Email": "redacted",
+             "Name": "redacted",
+             "PrivateKeyData": "redacted",
+             "UniqueId": "redacted",
+             "instance_id": "foobar",
         }
         </pre>
 

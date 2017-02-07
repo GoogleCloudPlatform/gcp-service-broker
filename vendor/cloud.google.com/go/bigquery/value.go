@@ -54,11 +54,33 @@ func (vm *valueMap) Load(v []Value, s Schema) error {
 	if *vm == nil {
 		*vm = map[string]Value{}
 	}
-	// TODO(jba): treat nested records as nested maps.
-	for i, f := range s {
-		(*vm)[f.Name] = v[i]
-	}
+	loadMap(*vm, v, s)
 	return nil
+}
+
+func loadMap(m map[string]Value, vals []Value, s Schema) {
+	for i, f := range s {
+		val := vals[i]
+		var v interface{}
+		switch {
+		case f.Schema == nil:
+			v = val
+		case !f.Repeated:
+			m2 := map[string]Value{}
+			loadMap(m2, val.([]Value), f.Schema)
+			v = m2
+		default: // repeated and nested
+			sval := val.([]Value)
+			vs := make([]Value, len(sval))
+			for j, e := range sval {
+				m2 := map[string]Value{}
+				loadMap(m2, e.([]Value), f.Schema)
+				vs[j] = m2
+			}
+			v = vs
+		}
+		m[f.Name] = v
+	}
 }
 
 type structLoader struct {
@@ -69,8 +91,9 @@ type structLoader struct {
 	vstructp reflect.Value // pointer to current struct value; changed by set
 }
 
-// A setFunc is a function that sets a struct field to a value.
-type setFunc func(field reflect.Value, val interface{}) error
+// A setFunc is a function that sets a struct field or slice/array
+// element to a value.
+type setFunc func(v reflect.Value, val interface{}) error
 
 // A structLoaderOp instructs the loader to set a struct field to a row value.
 type structLoaderOp struct {
@@ -78,7 +101,6 @@ type structLoaderOp struct {
 	valueIndex int
 	setFunc    setFunc
 	repeated   bool
-	nested     []structLoaderOp // for nested schemas
 }
 
 func setAny(v reflect.Value, x interface{}) error {
@@ -163,9 +185,17 @@ func compileToOps(structType reflect.Type, schema Schema) ([]structLoaderOp, err
 			fieldIndex: structField.Index,
 			valueIndex: i,
 		}
+		t := structField.Type
+		if schemaField.Repeated {
+			if t.Kind() != reflect.Slice && t.Kind() != reflect.Array {
+				return nil, fmt.Errorf("bigquery: repeated schema field %s requires slice or array, but struct field %s has type %s",
+					schemaField.Name, structField.Name, t)
+			}
+			t = t.Elem()
+			op.repeated = true
+		}
 		if schemaField.Type == RecordFieldType {
 			// Field can be a struct or a pointer to a struct.
-			t := structField.Type
 			if t.Kind() == reflect.Ptr {
 				t = t.Elem()
 			}
@@ -177,18 +207,10 @@ func compileToOps(structType reflect.Type, schema Schema) ([]structLoaderOp, err
 			if err != nil {
 				return nil, err
 			}
-			op.nested = nested
-		} else {
-			t := structField.Type
-			if schemaField.Repeated {
-				// TODO(jba): handle pointers to slices and arrays
-				if t.Kind() != reflect.Slice && t.Kind() != reflect.Array {
-					return nil, fmt.Errorf("bigquery: repeated schema field %s requires slice or array, but struct field %s has type %s",
-						schemaField.Name, structField.Name, t)
-				}
-				t = t.Elem()
-				op.repeated = true
+			op.setFunc = func(v reflect.Value, val interface{}) error {
+				return setNested(nested, v, val.([]Value))
 			}
+		} else {
 			op.setFunc = determineSetFunc(t, schemaField.Type)
 			if op.setFunc == nil {
 				return nil, fmt.Errorf("bigquery: schema field %s of type %s is not assignable to struct field %s of type %s",
@@ -203,6 +225,8 @@ func compileToOps(structType reflect.Type, schema Schema) ([]structLoaderOp, err
 // determineSetFunc chooses the best function for setting a field of type ftype
 // to a value whose schema field type is sftype. It returns nil if stype
 // is not assignable to ftype.
+// determineSetFunc considers only basic types. See compileToOps for
+// handling of repetition and nesting.
 func determineSetFunc(ftype reflect.Type, stype FieldType) setFunc {
 	switch stype {
 	case StringFieldType:
@@ -266,32 +290,29 @@ func (sl *structLoader) Load(values []Value, _ Schema) error {
 func runOps(ops []structLoaderOp, vstruct reflect.Value, values []Value) error {
 	for _, op := range ops {
 		field := vstruct.FieldByIndex(op.fieldIndex)
-		switch {
-		case op.nested != nil:
-			// Support both structs and pointers to structs.
-			vsub := field
-			if field.Kind() == reflect.Ptr {
-				if field.IsNil() {
-					field.Set(reflect.New(field.Type().Elem()))
-				}
-				vsub = vsub.Elem()
-			}
-			if err := runOps(op.nested, vsub, values[op.valueIndex].([]Value)); err != nil {
-				return err
-			}
-
-		case op.repeated:
-			if err := setRepeated(field, values[op.valueIndex].([]Value), op.setFunc); err != nil {
-				return err
-			}
-
-		default:
-			if err := op.setFunc(field, values[op.valueIndex]); err != nil {
-				return err
-			}
+		var err error
+		if op.repeated {
+			err = setRepeated(field, values[op.valueIndex].([]Value), op.setFunc)
+		} else {
+			err = op.setFunc(field, values[op.valueIndex])
+		}
+		if err != nil {
+			return err
 		}
 	}
 	return nil
+}
+
+func setNested(ops []structLoaderOp, v reflect.Value, vals []Value) error {
+	// v is either a struct or a pointer to a struct.
+	if v.Kind() == reflect.Ptr {
+		// If the pointer is nil, set it to a zero struct value.
+		if v.IsNil() {
+			v.Set(reflect.New(v.Type().Elem()))
+		}
+		v = v.Elem()
+	}
+	return runOps(ops, v, vals)
 }
 
 func setRepeated(field reflect.Value, vslice []Value, setElem setFunc) error {
@@ -317,6 +338,8 @@ func setRepeated(field reflect.Value, vslice []Value, setElem setFunc) error {
 				field.Index(i).Set(z)
 			}
 		}
+	default:
+		return fmt.Errorf("bigquery: impossible field type %s", field.Type())
 	}
 	for i, val := range vslice {
 		if i < flen { // avoid writing past the end of a short array
@@ -361,19 +384,37 @@ func valuesToMap(vs []Value, schema Schema) (map[string]Value, error) {
 
 	m := make(map[string]Value)
 	for i, fieldSchema := range schema {
-		if fieldSchema.Type == RecordFieldType {
-			nested, ok := vs[i].([]Value)
-			if !ok {
-				return nil, errors.New("Nested record is not a []Value")
-			}
-			value, err := valuesToMap(nested, fieldSchema.Schema)
+		if fieldSchema.Type != RecordFieldType {
+			m[fieldSchema.Name] = vs[i]
+			continue
+		}
+		// Nested record, possibly repeated.
+		vals, ok := vs[i].([]Value)
+		if !ok {
+			return nil, errors.New("nested record is not a []Value")
+		}
+		if !fieldSchema.Repeated {
+			value, err := valuesToMap(vals, fieldSchema.Schema)
 			if err != nil {
 				return nil, err
 			}
 			m[fieldSchema.Name] = value
-		} else {
-			m[fieldSchema.Name] = vs[i]
+			continue
 		}
+		// A repeated nested field is converted into a slice of maps.
+		var maps []Value
+		for _, v := range vals {
+			sv, ok := v.([]Value)
+			if !ok {
+				return nil, errors.New("nested record in slice is not a []Value")
+			}
+			value, err := valuesToMap(sv, fieldSchema.Schema)
+			if err != nil {
+				return nil, err
+			}
+			maps = append(maps, value)
+		}
+		m[fieldSchema.Name] = maps
 	}
 	return m, nil
 }
@@ -412,6 +453,7 @@ func structToMap(vstruct reflect.Value, schema Schema) (map[string]Value, error)
 	if !vstruct.IsValid() {
 		return nil, nil
 	}
+	m := map[string]Value{}
 	if vstruct.Kind() != reflect.Struct {
 		return nil, fmt.Errorf("bigquery: type is %s, need struct or struct pointer", vstruct.Type())
 	}
@@ -419,7 +461,6 @@ func structToMap(vstruct reflect.Value, schema Schema) (map[string]Value, error)
 	if err != nil {
 		return nil, err
 	}
-	m := map[string]Value{}
 	for _, schemaField := range schema {
 		// Look for an exported struct field with the same name as the schema
 		// field, ignoring case.
@@ -427,20 +468,55 @@ func structToMap(vstruct reflect.Value, schema Schema) (map[string]Value, error)
 		if structField == nil {
 			continue
 		}
-		vfield := vstruct.FieldByIndex(structField.Index)
-		if schemaField.Type != RecordFieldType {
-			m[schemaField.Name] = vfield.Interface()
-		} else {
-			m2, err := structToMap(vfield, schemaField.Schema)
-			if err != nil {
-				return nil, err
-			}
-			if m2 != nil {
-				m[schemaField.Name] = m2
-			}
+		val, err := structFieldToUploadValue(vstruct.FieldByIndex(structField.Index), schemaField)
+		if err != nil {
+			return nil, err
+		}
+		// Add the value to the map, unless it is nil.
+		if val != nil {
+			m[schemaField.Name] = val
 		}
 	}
 	return m, nil
+}
+
+// structFieldToUploadValue converts a struct field to a value suitable for ValueSaver.Save, using
+// the schemaField as a guide.
+// structFieldToUploadValue is careful to return a true nil interface{} when needed, so its
+// caller can easily identify a nil value.
+func structFieldToUploadValue(vfield reflect.Value, schemaField *FieldSchema) (interface{}, error) {
+	// A non-nested field, repeated or not, can be represented by its Go value.
+	if schemaField.Type != RecordFieldType {
+		return vfield.Interface(), nil
+	}
+	// A non-repeated nested field is converted into a map[string]Value.
+	if !schemaField.Repeated {
+		m, err := structToMap(vfield, schemaField.Schema)
+		if err != nil {
+			return nil, err
+		}
+		if m == nil {
+			return nil, nil
+		}
+		return m, nil
+	}
+	// A repeated nested field is converted into a slice of maps.
+	if vfield.Kind() != reflect.Slice && vfield.Kind() != reflect.Array {
+		return nil, fmt.Errorf("bigquery: repeated schema field %s requires slice or array, but value has type %s",
+			schemaField.Name, vfield.Type())
+	}
+	if vfield.Len() == 0 {
+		return nil, nil
+	}
+	var vals []Value
+	for i := 0; i < vfield.Len(); i++ {
+		m, err := structToMap(vfield.Index(i), schemaField.Schema)
+		if err != nil {
+			return nil, err
+		}
+		vals = append(vals, m)
+	}
+	return vals, nil
 }
 
 // convertRows converts a series of TableRows into a series of Value slices.

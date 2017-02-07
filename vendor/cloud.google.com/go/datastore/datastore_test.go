@@ -367,16 +367,16 @@ type MutuallyRecursive1 struct {
 	R []MutuallyRecursive0
 }
 
-type NestedEntity struct {
+type EntityWithKey struct {
 	I int
 	S string
 	K *Key `datastore:"__key__"`
 }
 
-type NestedEntity2 NestedEntity
+type EntityWithKey2 EntityWithKey
 
-type WithNestedEntity struct {
-	N NestedEntity
+type WithNestedEntityWithKey struct {
+	N EntityWithKey
 }
 
 type WithNonKeyField struct {
@@ -386,6 +386,23 @@ type WithNonKeyField struct {
 
 type NestedWithNonKeyField struct {
 	N WithNonKeyField
+}
+
+type Basic struct {
+	A string
+}
+
+type PtrToStructField struct {
+	B *Basic
+	C *Basic `datastore:"c,noindex"`
+	*Basic
+	D []*Basic
+}
+
+var two int = 2
+
+type PtrToInt struct {
+	I *int
 }
 
 type Doubler struct {
@@ -1460,15 +1477,15 @@ var testCases = []testCase{
 	},
 	{
 		"nested entity with key",
-		&WithNestedEntity{
-			N: NestedEntity{
+		&WithNestedEntityWithKey{
+			N: EntityWithKey{
 				I: 12,
 				S: "abcd",
 				K: testKey0,
 			},
 		},
-		&WithNestedEntity{
-			N: NestedEntity{
+		&WithNestedEntityWithKey{
+			N: EntityWithKey{
 				I: 12,
 				S: "abcd",
 				K: testKey0,
@@ -1478,15 +1495,30 @@ var testCases = []testCase{
 		"",
 	},
 	{
-		"entity with key at top level (ignore key)",
-		&NestedEntity2{
+		"entity with key at top level",
+		&EntityWithKey{
 			I: 12,
 			S: "abc",
 			K: testKey0,
 		},
-		&NestedEntity2{
+		&EntityWithKey{
 			I: 12,
 			S: "abc",
+			K: testKey0,
+		},
+		"",
+		"",
+	},
+	{
+		"entity with key at top level (key is populated on load)",
+		&EntityWithKey{
+			I: 12,
+			S: "abc",
+		},
+		&EntityWithKey{
+			I: 12,
+			S: "abc",
+			K: testKey0,
 		},
 		"",
 		"",
@@ -1509,9 +1541,122 @@ var testCases = []testCase{
 		"",
 	},
 	{
+		"save struct with ptr to struct fields",
+		&PtrToStructField{
+			&Basic{
+				A: "b",
+			},
+			&Basic{
+				A: "c",
+			},
+			&Basic{
+				A: "anon",
+			},
+			[]*Basic{
+				&Basic{
+					A: "slice0",
+				},
+				&Basic{
+					A: "slice1",
+				},
+			},
+		},
+		&PropertyList{
+			Property{Name: "A", Value: "anon", NoIndex: false},
+			Property{Name: "B", Value: &Entity{
+				Properties: []Property{
+					Property{Name: "A", Value: "b", NoIndex: false},
+				},
+			}},
+			Property{Name: "D", Value: []interface{}{
+				&Entity{
+					Properties: []Property{
+						Property{Name: "A", Value: "slice0", NoIndex: false},
+					},
+				},
+				&Entity{
+					Properties: []Property{
+						Property{Name: "A", Value: "slice1", NoIndex: false},
+					},
+				},
+			}, NoIndex: false},
+			Property{Name: "c", Value: &Entity{
+				Properties: []Property{
+					Property{Name: "A", Value: "c", NoIndex: true},
+				},
+			}, NoIndex: true},
+		},
+		"",
+		"",
+	},
+	{
+		"save and load struct with ptr to struct fields",
+		&PtrToStructField{
+			&Basic{
+				A: "b",
+			},
+			&Basic{
+				A: "c",
+			},
+			&Basic{
+				A: "anon",
+			},
+			[]*Basic{
+				&Basic{
+					A: "slice0",
+				},
+				&Basic{
+					A: "slice1",
+				},
+			},
+		},
+		&PtrToStructField{
+			&Basic{
+				A: "b",
+			},
+			&Basic{
+				A: "c",
+			},
+			&Basic{
+				A: "anon",
+			},
+			[]*Basic{
+				&Basic{
+					A: "slice0",
+				},
+				&Basic{
+					A: "slice1",
+				},
+			},
+		},
+		"",
+		"",
+	},
+	{
+		"save struct with pointer to int field",
+		&PtrToInt{
+			I: &two,
+		},
+		&PtrToInt{},
+		"unsupported struct field",
+		"",
+	},
+	{
+		"struct with nil ptr to struct fields",
+		&PtrToStructField{
+			nil,
+			nil,
+			nil,
+			nil,
+		},
+		new(PropertyList),
+		"",
+		"",
+	},
+	{
 		"nested load entity with key",
-		&WithNestedEntity{
-			N: NestedEntity{
+		&WithNestedEntityWithKey{
+			N: EntityWithKey{
 				I: 12,
 				S: "abcd",
 				K: testKey0,
@@ -1542,8 +1687,8 @@ var testCases = []testCase{
 			}, NoIndex: false},
 		},
 
-		&WithNestedEntity{
-			N: NestedEntity{
+		&WithNestedEntityWithKey{
+			N: EntityWithKey{
 				I: 12,
 				S: "abcd",
 				K: testKey0,
@@ -2194,6 +2339,185 @@ func TestPutInvalidEntity(t *testing.T) {
 
 		return errors.New("bang!") // Return error: we don't actually want to commit.
 	})
+}
+
+func TestDeferred(t *testing.T) {
+	type Ent struct {
+		A int
+		B string
+	}
+
+	keys := []*Key{
+		NameKey("testKind", "first", nil),
+		NameKey("testKind", "second", nil),
+	}
+
+	entity1 := &pb.Entity{
+		Key: keyToProto(keys[0]),
+		Properties: map[string]*pb.Value{
+			"A": {ValueType: &pb.Value_IntegerValue{1}},
+			"B": {ValueType: &pb.Value_StringValue{"one"}},
+		},
+	}
+	entity2 := &pb.Entity{
+		Key: keyToProto(keys[1]),
+		Properties: map[string]*pb.Value{
+			"A": {ValueType: &pb.Value_IntegerValue{2}},
+			"B": {ValueType: &pb.Value_StringValue{"two"}},
+		},
+	}
+
+	// count keeps track of the number of times fakeClient.lookup has been
+	// called.
+	var count int
+	// Fake client that will return Deferred keys in resp on the first call.
+	fakeClient := &fakeDatastoreClient{
+		lookup: func(*pb.LookupRequest) (*pb.LookupResponse, error) {
+			count++
+			// On the first call, we return deferred keys.
+			if count == 1 {
+				return &pb.LookupResponse{
+					Found: []*pb.EntityResult{
+						{
+							Entity:  entity1,
+							Version: 1,
+						},
+					},
+					Deferred: []*pb.Key{
+						keyToProto(keys[1]),
+					},
+				}, nil
+			}
+
+			// On the second call, we do not return any more deferred keys.
+			return &pb.LookupResponse{
+				Found: []*pb.EntityResult{
+					{
+						Entity:  entity2,
+						Version: 1,
+					},
+				},
+			}, nil
+		},
+	}
+	client := &Client{
+		client: fakeClient,
+	}
+
+	ctx := context.Background()
+
+	dst := make([]Ent, len(keys))
+	err := client.GetMulti(ctx, keys, dst)
+	if err != nil {
+		t.Fatalf("client.Get: %v", err)
+	}
+
+	if count != 2 {
+		t.Fatalf("expected client.lookup to be called 2 times. Got %d", count)
+	}
+
+	if len(dst) != 2 {
+		t.Fatalf("expected 2 entities returned, got %d", len(dst))
+	}
+
+	for _, e := range dst {
+		if e.A == 1 {
+			if e.B != "one" {
+				t.Fatalf("unexpected entity %#v", e)
+			}
+		} else if e.A == 2 {
+			if e.B != "two" {
+				t.Fatalf("unexpected entity %#v", e)
+			}
+		} else {
+			t.Fatalf("unexpected entity %#v", e)
+		}
+	}
+
+}
+
+func TestDeferredMissing(t *testing.T) {
+	type Ent struct {
+		A int
+		B string
+	}
+
+	keys := []*Key{
+		NameKey("testKind", "first", nil),
+		NameKey("testKind", "second", nil),
+	}
+
+	entity1 := &pb.Entity{
+		Key: keyToProto(keys[0]),
+	}
+	entity2 := &pb.Entity{
+		Key: keyToProto(keys[1]),
+	}
+
+	var count int
+	fakeClient := &fakeDatastoreClient{
+		lookup: func(*pb.LookupRequest) (*pb.LookupResponse, error) {
+			count++
+
+			if count == 1 {
+				return &pb.LookupResponse{
+					Missing: []*pb.EntityResult{
+						{
+							Entity:  entity1,
+							Version: 1,
+						},
+					},
+					Deferred: []*pb.Key{
+						keyToProto(keys[1]),
+					},
+				}, nil
+			}
+
+			return &pb.LookupResponse{
+				Missing: []*pb.EntityResult{
+					{
+						Entity:  entity2,
+						Version: 1,
+					},
+				},
+			}, nil
+		},
+	}
+	client := &Client{
+		client: fakeClient,
+	}
+
+	ctx := context.Background()
+
+	dst := make([]Ent, len(keys))
+	err := client.GetMulti(ctx, keys, dst)
+	errs, ok := err.(MultiError)
+	if !ok {
+		t.Fatalf("expected error returns to be MultiError; got %v", err)
+	}
+	if len(errs) != 2 {
+		t.Fatalf("expected 2 errors returns, got %d", len(errs))
+	}
+	if errs[0] != ErrNoSuchEntity {
+		t.Fatalf("expected error to be ErrNoSuchEntity; got %v", errs[0])
+	}
+	if errs[1] != ErrNoSuchEntity {
+		t.Fatalf("expected error to be ErrNoSuchEntity; got %v", errs[1])
+	}
+
+	if count != 2 {
+		t.Fatalf("expected client.lookup to be called 2 times. Got %d", count)
+	}
+
+	if len(dst) != 2 {
+		t.Fatalf("expected 2 entities returned, got %d", len(dst))
+	}
+
+	for _, e := range dst {
+		if e.A != 0 || e.B != "" {
+			t.Fatalf("unexpected entity %#v", e)
+		}
+	}
 }
 
 type fakeDatastoreClient struct {

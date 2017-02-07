@@ -20,7 +20,28 @@ backwards-incompatible changes.
 
 **NOTE:** Github repo is a mirror of [https://code.googlesource.com/gocloud](https://code.googlesource.com/gocloud).
 
+  * [News](#news)
+  * [Supported APIs](#supported-apis)
+  * [Go Versions Supported](#go-versions-supported)
+  * [Authorization](#authorization)
+  * [Cloud Datastore](#cloud-datastore-)
+  * [Cloud Storage](#cloud-storage-)
+  * [Cloud Pub/Sub](#cloud-pub-sub-)
+  * [Cloud BigQuery](#cloud-bigquery-)
+  * [Stackdriver Logging](#stackdriver-logging-)
+
+
 ## News
+
+_December 12, 2016_
+
+Beta release of BigQuery, DataStore, Logging and Storage. See the
+[blog post](https://cloudplatform.googleblog.com/2016/12/announcing-new-google-cloud-client.html).
+
+Also, BigQuery now supports structs. Read a row directly into a struct with
+`RowIterator.Next`, and upload a row directly from a struct with `Uploader.Put`.
+You can also use field tags. See the [package documentation][cloud-bigquery-ref]
+for details.
 
 _December 5, 2016_
 
@@ -149,7 +170,7 @@ Google API                     | Status       | Package
 [Logging][cloud-logging]       | beta         | [`cloud.google.com/go/logging`][cloud-logging-ref]
 [Pub/Sub][cloud-pubsub]        | alpha | [`cloud.google.com/go/pubsub`][cloud-pubsub-ref]
 [Vision][cloud-vision]         | alpha | [`cloud.google.com/go/vision`][cloud-vision-ref]
-[Language][cloud-language]     | alpha | [`cloud.google.com/go/language/apiv1beta1`][cloud-language-ref]
+[Language][cloud-language]     | alpha | [`cloud.google.com/go/language/apiv1`][cloud-language-ref]
 [Speech][cloud-speech]         | alpha | [`cloud.google.com/go/speech/apiv1beta`][cloud-speech-ref]
 
 
@@ -183,6 +204,10 @@ currently supported by looking at the lines following `go:` in
 By default, each API will use [Google Application Default Credentials][default-creds]
 for authorization credentials used in calling the API endpoints. This will allow your
 application to run in many environments without requiring explicit configuration.
+
+```go
+client, err := storage.NewClient(ctx)
+```
 
 To authorize using a
 [JSON key file](https://cloud.google.com/iam/docs/managing-service-account-keys),
@@ -293,6 +318,8 @@ if err != nil {
 }
 ```
 
+Then use the client to publish and subscribe:
+
 ```go
 // Publish "hello world" on topic1.
 topic := client.Topic("topic1")
@@ -358,7 +385,7 @@ if err != nil {
 }
 // Iterate through the results.
 for {
-    var values bigquery.ValueList
+    var values []bigquery.Value
     err := it.Next(&values)
     if err == iterator.Done {
         break
@@ -444,7 +471,7 @@ for more information.
 [cloud-vision-ref]: https://godoc.org/cloud.google.com/go/vision
 
 [cloud-language]: https://cloud.google.com/natural-language
-[cloud-language-ref]: https://godoc.org/cloud.google.com/go/language/apiv1beta1
+[cloud-language-ref]: https://godoc.org/cloud.google.com/go/language/apiv1
 
 [cloud-speech]: https://cloud.google.com/speech
 [cloud-speech-ref]: https://godoc.org/cloud.google.com/go/speech/apiv1beta1

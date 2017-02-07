@@ -1,10 +1,10 @@
 package matchers_test
 
 import (
-	"time"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/matchers"
+	"time"
 )
 
 type kungFuActor interface {

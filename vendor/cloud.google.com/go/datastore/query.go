@@ -94,13 +94,14 @@ type Query struct {
 	order      []order
 	projection []string
 
-	distinct bool
-	keysOnly bool
-	eventual bool
-	limit    int32
-	offset   int32
-	start    []byte
-	end      []byte
+	distinct   bool
+	distinctOn []string
+	keysOnly   bool
+	eventual   bool
+	limit      int32
+	offset     int32
+	start      []byte
+	end        []byte
 
 	namespace string
 
@@ -262,10 +263,20 @@ func (q *Query) Project(fieldNames ...string) *Query {
 
 // Distinct returns a derivative query that yields de-duplicated entities with
 // respect to the set of projected fields. It is only used for projection
-// queries.
+// queries. Distinct cannot be used with DistinctOn.
 func (q *Query) Distinct() *Query {
 	q = q.clone()
 	q.distinct = true
+	return q
+}
+
+// DistinctOn returns a derivative query that yields de-duplicated entities with
+// respect to the set of the specified fields. It is only used for projection
+// queries. The field list should be a subset of the projected field list.
+// DistinctOn cannot be used with Distinct.
+func (q *Query) DistinctOn(fieldNames ...string) *Query {
+	q = q.clone()
+	q.distinctOn = fieldNames
 	return q
 }
 
@@ -324,6 +335,9 @@ func (q *Query) toProto(req *pb.RunQueryRequest) error {
 	if len(q.projection) != 0 && q.keysOnly {
 		return errors.New("datastore: query cannot both project and be keys-only")
 	}
+	if len(q.distinctOn) != 0 && q.distinct {
+		return errors.New("datastore: query cannot be both distinct and distinct-on")
+	}
 	dst := &pb.Query{}
 	if q.kind != "" {
 		dst.Kind = []*pb.KindExpression{{Name: q.kind}}
@@ -331,6 +345,10 @@ func (q *Query) toProto(req *pb.RunQueryRequest) error {
 	if q.projection != nil {
 		for _, propertyName := range q.projection {
 			dst.Projection = append(dst.Projection, &pb.Projection{Property: &pb.PropertyReference{Name: propertyName}})
+		}
+
+		for _, propertyName := range q.distinctOn {
+			dst.DistinctOn = append(dst.DistinctOn, &pb.PropertyReference{Name: propertyName})
 		}
 
 		if q.distinct {
@@ -362,23 +380,23 @@ func (q *Query) toProto(req *pb.RunQueryRequest) error {
 			Value:    v,
 		}
 		filters = append(filters, &pb.Filter{
-			FilterType: &pb.Filter_PropertyFilter{xf},
+			FilterType: &pb.Filter_PropertyFilter{PropertyFilter: xf},
 		})
 	}
 
 	if q.ancestor != nil {
 		filters = append(filters, &pb.Filter{
-			FilterType: &pb.Filter_PropertyFilter{&pb.PropertyFilter{
-				Property: &pb.PropertyReference{Name: "__key__"},
+			FilterType: &pb.Filter_PropertyFilter{PropertyFilter: &pb.PropertyFilter{
+				Property: &pb.PropertyReference{Name: keyFieldName},
 				Op:       pb.PropertyFilter_HAS_ANCESTOR,
-				Value:    &pb.Value{ValueType: &pb.Value_KeyValue{keyToProto(q.ancestor)}},
+				Value:    &pb.Value{ValueType: &pb.Value_KeyValue{KeyValue: keyToProto(q.ancestor)}},
 			}}})
 	}
 
 	if len(filters) == 1 {
 		dst.Filter = filters[0]
 	} else if len(filters) > 1 {
-		dst.Filter = &pb.Filter{FilterType: &pb.Filter_CompositeFilter{&pb.CompositeFilter{
+		dst.Filter = &pb.Filter{FilterType: &pb.Filter_CompositeFilter{CompositeFilter: &pb.CompositeFilter{
 			Op:      pb.CompositeFilter_AND,
 			Filters: filters,
 		}}}
@@ -395,7 +413,7 @@ func (q *Query) toProto(req *pb.RunQueryRequest) error {
 		dst.Order = append(dst.Order, xo)
 	}
 	if q.limit >= 0 {
-		dst.Limit = &wrapperspb.Int32Value{q.limit}
+		dst.Limit = &wrapperspb.Int32Value{Value: q.limit}
 	}
 	dst.Offset = q.offset
 	dst.StartCursor = q.start
@@ -409,15 +427,15 @@ func (q *Query) toProto(req *pb.RunQueryRequest) error {
 			return errors.New("datastore: cannot use EventualConsistency query in a transaction")
 		}
 		req.ReadOptions = &pb.ReadOptions{
-			ConsistencyType: &pb.ReadOptions_Transaction{t.id},
+			ConsistencyType: &pb.ReadOptions_Transaction{Transaction: t.id},
 		}
 	}
 
 	if q.eventual {
-		req.ReadOptions = &pb.ReadOptions{&pb.ReadOptions_ReadConsistency_{pb.ReadOptions_EVENTUAL}}
+		req.ReadOptions = &pb.ReadOptions{ConsistencyType: &pb.ReadOptions_ReadConsistency_{ReadConsistency: pb.ReadOptions_EVENTUAL}}
 	}
 
-	req.QueryType = &pb.RunQueryRequest_Query{dst}
+	req.QueryType = &pb.RunQueryRequest_Query{Query: dst}
 	return nil
 }
 
@@ -653,7 +671,7 @@ func (t *Iterator) nextBatch() error {
 	q.StartCursor = t.pageCursor
 	q.Offset = t.offset
 	if t.limit >= 0 {
-		q.Limit = &wrapperspb.Int32Value{t.limit}
+		q.Limit = &wrapperspb.Int32Value{Value: t.limit}
 	} else {
 		q.Limit = nil
 	}

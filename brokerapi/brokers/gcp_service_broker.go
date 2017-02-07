@@ -31,6 +31,7 @@ import (
 	"gcp-service-broker/brokerapi/brokers/account_managers"
 	"gcp-service-broker/brokerapi/brokers/api_service"
 	"gcp-service-broker/brokerapi/brokers/bigquery"
+	"gcp-service-broker/brokerapi/brokers/bigtable"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/cloudsql"
 	"gcp-service-broker/brokerapi/brokers/models"
@@ -144,6 +145,14 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 			Logger:         self.Logger,
 			AccountManager: sqlManager,
 		},
+		models.BigtableName: &bigtable.BigTableBroker{
+			Client:    self.GCPClient,
+			ProjectId: self.RootGCPCredentials.ProjectId,
+			Logger:    self.Logger,
+			BrokerBase: broker_base.BrokerBase{
+				AccountManager: saManager,
+			},
+		},
 	}
 	// replace the mapping from name to a mapping from id
 	for _, service := range *self.Catalog {
@@ -170,6 +179,7 @@ func (gcpBroker *GCPServiceBroker) Services() []models.Service {
 // BigQuery: a new dataset
 // Storage: a new bucket
 // PubSub: a new topic
+// Bigtable: a new instance
 func (gcpBroker *GCPAsyncServiceBroker) Provision(instanceID string, details models.ProvisionDetails, asyncAllowed bool) (models.ProvisionedServiceSpec, error) {
 	var err error
 
@@ -423,13 +433,23 @@ func GetCredentialsFromEnv() (models.GCPCredentials, error) {
 	return g, nil
 }
 
-type DynamicPlan struct {
+type CloudSQLDynamicPlan struct {
 	Guid        string `json:"guid"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Tier        string `json:"tier"`
 	PricingPlan string `json:"pricing_plan"`
 	MaxDiskSize string `json:"max_disk_size"`
+	DisplayName string `json:"display_name"`
+	ServiceId   string `json:"service"`
+}
+
+type BigtableDynamicPlan struct {
+	Guid        string `json:"guid"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	NumNodes    string `json:"num_nodes"`
+	StorageType string `json:"storage_type"`
 	DisplayName string `json:"display_name"`
 	ServiceId   string `json:"service"`
 }
@@ -497,7 +517,7 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 	}
 
 	// set up cloudsql custom plans
-	var dynamicPlans map[string]DynamicPlan
+	var dynamicPlans map[string]CloudSQLDynamicPlan
 	dynamicPlanJson := os.Getenv("CLOUDSQL_CUSTOM_PLANS")
 
 	if dynamicPlanJson != "" {
@@ -552,6 +572,70 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 				Metadata: &models.ServicePlanMetadata{
 					DisplayName: planDetails.DisplayName,
 					Bullets:     []string{planDetails.Description, "For pricing information see https://cloud.google.com/pricing/#details"},
+				},
+				ID: existingPlan.ID,
+			}
+
+			servicePlans[planDetails.ServiceId] = append(servicePlans[planDetails.ServiceId], plan)
+		}
+
+	}
+
+	// set up bigtable custom plans
+	var btDynamicPlans map[string]BigtableDynamicPlan
+	btDynamicPlanJson := os.Getenv("BIGTABLE_CUSTOM_PLANS")
+
+	if btDynamicPlanJson != "" {
+		err = json.Unmarshal([]byte(btDynamicPlanJson), &btDynamicPlans)
+		if err != nil {
+			return []models.Service{}, fmt.Errorf("Error unmarshalling bigtable custom plan json %s", err)
+		}
+
+		// save bigtable plans to database and construct mapping
+		for planName, planDetails := range btDynamicPlans {
+
+			exists, existingPlan, err := db_service.CheckAndGetPlan(planName, planDetails.ServiceId)
+
+			if err != nil {
+				return []models.Service{}, err
+			}
+
+			id, err := db_service.GetOrCreatePlanId(planName, planDetails.ServiceId)
+			if err != nil {
+				return []models.Service{}, err
+			}
+			currentPlanIds = append(currentPlanIds, id)
+
+			features := map[string]string{
+				"num_nodes":    planDetails.NumNodes,
+				"storage_type": planDetails.StorageType,
+			}
+
+			featuresStr, err := json.Marshal(&features)
+			if err != nil {
+				return []models.Service{}, err
+			}
+
+			if exists {
+
+				existingPlan.Features = string(featuresStr)
+				db_service.DbConnection.Save(&existingPlan)
+			} else {
+				existingPlan = models.PlanDetails{
+					ServiceId: planDetails.ServiceId,
+					Name:      planDetails.Name,
+					Features:  string(featuresStr),
+					ID:        id,
+				}
+				db_service.DbConnection.Create(&existingPlan)
+			}
+
+			plan := models.ServicePlan{
+				Name:        planDetails.Name,
+				Description: planDetails.Description,
+				Metadata: &models.ServicePlanMetadata{
+					DisplayName: planDetails.DisplayName,
+					Bullets:     []string{planDetails.Description, "For pricing information see https://cloud.google.com/bigtable/pricing"},
 				},
 				ID: existingPlan.ID,
 			}

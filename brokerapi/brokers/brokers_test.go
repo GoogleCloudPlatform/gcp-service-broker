@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 
+	"fmt"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -131,6 +132,21 @@ var _ = Describe("Brokers", func() {
 			    "supportUrl": "https://cloud.google.com/support/"
 			  },
 			  "tags": ["gcp", "ml"]
+			},
+			{
+			 "id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe",
+			 "description": "A high performance NoSQL database service for large analytical and operational workloads",
+			 "name": "google-bigtable",
+			 "bindable": true,
+			 "plan_updateable": false,
+			 "metadata": {
+			   "displayName": "Google Bigtable",
+			   "longDescription": "A high performance NoSQL database service for large analytical and operational workloads",
+			   "documentationUrl": "https://cloud.google.com/bigtable/",
+			   "supportUrl": "https://cloud.google.com/support/",
+			   "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigtable.svg"
+			 },
+			 "tags": ["gcp", "bigtable"]
 			}
 		      ]`)
 		os.Setenv("PRECONFIGURED_PLANS", `[
@@ -187,6 +203,18 @@ var _ = Describe("Brokers", func() {
 				"max_disk_size": "20",
 				"display_name": "FOOBAR",
 				"service": "4bc59b9a-8520-409f-85da-1c7552315863"
+			}
+		}`)
+
+		os.Setenv("BIGTABLE_CUSTOM_PLANS", `{
+			"test_bigtable_plan": {
+				"guid": "foo2",
+				"name": "bar2",
+				"description": "test-bigtable-plan",
+				"storage_type": "SSD",
+				"num_nodes": "3",
+				"display_name": "FOOBAR2",
+				"service": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
 			}
 		}`)
 
@@ -254,8 +282,8 @@ var _ = Describe("Brokers", func() {
 	})
 
 	Describe("Broker init", func() {
-		It("should have 5 services in sevices map", func() {
-			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(5))
+		It("should have 6 services in sevices map", func() {
+			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(6))
 		})
 
 		It("should have a default client", func() {
@@ -268,8 +296,8 @@ var _ = Describe("Brokers", func() {
 	})
 
 	Describe("getting broker catalog", func() {
-		It("should have 5 services available", func() {
-			Expect(len(gcpBroker.Services())).To(Equal(5))
+		It("should have 6 services available", func() {
+			Expect(len(gcpBroker.Services())).To(Equal(6))
 		})
 
 		It("should have 3 storage plans available", func() {
@@ -277,6 +305,26 @@ var _ = Describe("Brokers", func() {
 			for _, s := range serviceList {
 				if s.ID == serviceNameToId[models.StorageName] {
 					Expect(len(s.Plans)).To(Equal(3))
+				}
+			}
+
+		})
+
+		It("should have 1 cloudsql plan available", func() {
+			serviceList := gcpBroker.Services()
+			for _, s := range serviceList {
+				if s.ID == serviceNameToId[models.CloudsqlName] {
+					Expect(len(s.Plans)).To(Equal(1))
+				}
+			}
+
+		})
+
+		It("should have 1 bigtable plan available", func() {
+			serviceList := gcpBroker.Services()
+			for _, s := range serviceList {
+				if s.ID == serviceNameToId[models.BigtableName] {
+					Expect(len(s.Plans)).To(Equal(1))
 				}
 			}
 

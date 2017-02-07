@@ -1,13 +1,18 @@
-hash: cd75af9d92eb6743b103395d74b204f55e10eeb75a054cd56bd07fb6aa032cfe
-updated: 2017-02-02T16:29:29.180347439-08:00
+hash: 47433d0284bcdacaddfafc7e0861c6372d61907e5c25bcd3616e3ed29aa22222
+updated: 2017-02-03T11:20:55.413887464-08:00
 imports:
 - name: cloud.google.com/go
-  version: c116c7972ec94f148459a304d07a67ecbc770d4b
+  version: 3258e6905e9694db9bcd41910c65ecc30ae6dbbe
   subpackages:
+  - bigquery
+  - bigtable
+  - bigtable/internal/gax
+  - bigtable/internal/option
   - compute/metadata
   - iam
   - internal
   - internal/optional
+  - longrunning
   - pubsub
   - pubsub/apiv1
   - storage
@@ -25,6 +30,7 @@ imports:
   - ptypes/duration
   - ptypes/empty
   - ptypes/timestamp
+  - ptypes/wrappers
 - name: github.com/googleapis/gax-go
   version: da06d194a00e19ce00d9011a13931c3f6f6887c7
 - name: github.com/gorilla/context
@@ -74,6 +80,7 @@ imports:
   - option
   - sqladmin/v1beta4
   - storage/v1
+  - support/bundler
   - transport
 - name: google.golang.org/appengine
   version: a2c54d2174c17540446e0ced57d9d459af61bc1c
@@ -93,8 +100,12 @@ imports:
   version: b3e7c2fb04031add52c4817f53f43757ccbf9c18
   subpackages:
   - googleapis/api/annotations
+  - googleapis/bigtable/admin/v2
+  - googleapis/bigtable/v2
   - googleapis/iam/v1
+  - googleapis/longrunning
   - googleapis/pubsub/v1
+  - googleapis/rpc/status
 - name: google.golang.org/grpc
   version: 21f8ed309495401e6fd79b3a9fd549582aed1b4c
   subpackages:
