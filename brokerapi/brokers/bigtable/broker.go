@@ -134,7 +134,6 @@ func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDe
 }
 
 // deletes the instance associated with the given instanceID string
-// note that all tables in the dataset must be deleted prior to deprovisioning TODO: still true?
 func (b *BigTableBroker) Deprovision(instanceID string, details models.DeprovisionDetails) error {
 	var err error
 	ctx := context.Background()

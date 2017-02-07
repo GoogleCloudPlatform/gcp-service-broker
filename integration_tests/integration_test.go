@@ -143,10 +143,9 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 func generateInstanceName(projectId string, sep string) string {
 	hashed := crc32.ChecksumIEEE([]byte(projectId))
 	if sep != "" {
-		return fmt.Sprintf("pcf%ssb%s1%s%d", sep, sep, sep, hashed)
-	} else {
-		return fmt.Sprintf("pcf_sb_1_%d", hashed)
+		sep = "_"
 	}
+	return fmt.Sprintf("pcf%ssb%s1%s%d", sep, sep, sep, hashed)
 }
 
 var _ = Describe("LiveIntegrationTests", func() {

@@ -179,6 +179,7 @@ func (gcpBroker *GCPServiceBroker) Services() []models.Service {
 // BigQuery: a new dataset
 // Storage: a new bucket
 // PubSub: a new topic
+// Bigtable: a new instance
 func (gcpBroker *GCPAsyncServiceBroker) Provision(instanceID string, details models.ProvisionDetails, asyncAllowed bool) (models.ProvisionedServiceSpec, error) {
 	var err error
 
@@ -590,7 +591,7 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 			return []models.Service{}, fmt.Errorf("Error unmarshalling bigtable custom plan json %s", err)
 		}
 
-		// save cloudsql plans to database and construct mapping
+		// save bigtable plans to database and construct mapping
 		for planName, planDetails := range btDynamicPlans {
 
 			exists, existingPlan, err := db_service.CheckAndGetPlan(planName, planDetails.ServiceId)
