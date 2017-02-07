@@ -80,7 +80,7 @@ func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDe
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating bigtable client: %s", err)
 	}
 
-	clusterId := params["name"] + "-cluster"
+	clusterId := params["name"][:20] + "-cluster"
 	if userClusterId, clusterIdOk := params["cluster_id"]; clusterIdOk {
 		clusterId = userClusterId
 	}
