@@ -42,29 +42,29 @@ See the [examples](https://github.com/GoogleCloudPlatform/gcp-service-broker/tre
 1. create new MySQL instance
 1. run `CREATE DATABASE servicebroker;`
 1. run `CREATE USER '<username>'@'%' IDENTIFIED BY '<password>';`
-1. run `GRANT ALL PRIVILEGES ON servicebroker.* TO '<username>'@'%' WITH GRANT OPTION;`
+1. run `GRANT ALL PRIVILEGES ON servicebroker.* `TO` '<username>'@'%' WITH GRANT OPTION;`
 1. (optional) create ssl certs for the database and save them somewhere secure
 
 ### Set required env vars - if deploying as an app, add these to missing-properties.yml
 
-* ROOT_SERVICE_ACCOUNT_JSON (the string version of the credentials file created for the Owner level Service Account)
-* SECURITY_USER_NAME (a username to sign all service broker requests with - the same one used in cf create-service-broker)
-* SECURITY_USER_PASSWORD (a password to sign all service broker requests with - the same one used in cf create-service-broker)
-* DB_HOST (the host for the database to back the service broker)
-* DB_USERNAME (the database username for the service broker to use)
-* DB_PASSWORD (the database password for the service broker to use)
+* `ROOT_SERVICE_ACCOUNT_JSON` (the string version of the credentials file created for the Owner level Service Account)
+* `SECURITY_USER_NAME` (a username to sign all service broker requests with - the same one used in cf create-service-broker)
+* `SECURITY_USER_PASSWORD` (a password to sign all service broker requests with - the same one used in cf create-service-broker)
+* `DB_HOST` (the host for the database to back the service broker)
+* `DB_USERNAME` (the database username for the service broker to use)
+* `DB_PASSWORD` (the database password for the service broker to use)
 
 ### optional env vars - if deploying as an app, optionally add these to missing-properties.yml
 
-* DB_PORT (defaults to 3306)
-* CA_CERT
-* CLIENT_CERT
-* CLIENT_KEY
-* CLOUDSQL_CUSTOM_PLANS (A map of plan names to string maps with fields guid, name, description, tier,
-pricing_plan, max_disk_size, display_name, and service (Cloud SQL's service id)) - if unset, the service
-will be disabled. e.g.
+* `DB_PORT` (defaults to 3306)
+* `CA_CERT`
+* `CLIENT_CERT`
+* `CLIENT_KEY`
+* `CLOUDSQL_CUSTOM_PLANS` (A map of plan names to string maps with fields `guid`, `name`, `description`, `tier`,
+`pricing_plan`, `max_disk_size`, `display_name`, and `service` (Cloud SQL's service id)) - if unset, the service
+will be disabled. e.g.,
 
-<pre>
+```json
 {
     "test_plan": {
         "name": "test_plan",
@@ -76,7 +76,7 @@ will be disabled. e.g.
         "service": "4bc59b9a-8520-409f-85da-1c7552315863"
     }
 }
-</pre>
+```
 
 
 ## Usage
@@ -110,7 +110,7 @@ you'll need to use the cf cli's service-access commands.
 It is advisable, if you want to use CloudSQL, to increase the default timeout for provision and
 bind operations to 90 seconds. CloudFoundry does not, at this point in time, support asynchronous
 binding, and CloudSQL bind operations may exceed 60 seconds. To change this setting, set
-broker_client_timeout_seconds = 90
+`broker_client_timeout_seconds` = 90
 
 ### Use!
 
@@ -122,16 +122,18 @@ bind-service calls require a role except for Cloud SQL
 
 * [PubSub](https://cloud.google.com/pubsub/docs/)
     * Provision
-        * topic_name (defaults to a generated value)
-        * subscription_name
-        * is_push (defaults to false, to set use "true")
-        * endpoint (for when is_push == "true", defaults to nil)
-        * ack_deadline (in seconds, defaults to 10, max 600)
+        * `topic_name` (defaults to a generated value)
+        * `subscription_name`
+        * `is_push` (defaults to false, to set use "true")
+        * `endpoint` (for when is_push == "true", defaults to nil)
+        * `ack_deadline` (in seconds, defaults to 10, max 600)
     * Bind
-        * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles)
+        * `role`without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles)
 
         **Example Binding credentials**
-        <pre>"credentials": {
+
+        ```json
+        "credentials": {
              "Email": "redacted",
              "Name": "redacted",
              "PrivateKeyData": "redacted",
@@ -139,65 +141,71 @@ bind-service calls require a role except for Cloud SQL
              "topic_name": "foobar",
              "subscription_name": "empty_if_not_set",
         }
-        </pre>
+        ```
 
 * [Cloud Storage](https://cloud.google.com/storage/docs/)
     * Provision
-        * name (defaults to a generated value)
-        * location (for options, see https://cloud.google.com/storage/docs/bucket-locations. Defaults to us)
+        * `name` (defaults to a generated value)
+        * `location` (for options, see https://cloud.google.com/storage/docs/bucket-locations. Defaults to us)
     * Bind
-        * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles)
+        * `role`without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles)
 
         **Example Binding credentials**
-        <pre>"credentials": {
+
+        ```json
+        "credentials": {
              "Email": "redacted",
              "Name": "redacted",
              "PrivateKeyData": "redacted",
              "UniqueId": "redacted",
              "bucket_name": "foobar",
         }
-        </pre>
+        ```
 
 * [BigQuery](https://cloud.google.com/bigquery/docs/)
     * Provision
-        * name (defaults to a generated value)
+        * `name` (defaults to a generated value)
     * Bind
-        * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles), e.g. pubsub.admin
+        * `role`without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles), e.g. pubsub.admin
 
         **Example Binding credentials**
-        <pre>"credentials": {
+
+        ```json
+        "credentials": {
              "Email": "redacted",
              "Name": "redacted",
              "PrivateKeyData": "redacted",
              "UniqueId": "redacted",
              "dataset_id": "foobar",
         }
-        </pre>
+        ```
 
 * [CloudSQL](https://cloud.google.com/sql/docs/)
     * Provision
-        * instance_name (defaults to a generated value)
-        * database_name (defaults to a generated value)
-        * version (defaults to 5.6)
-        * disk_size in GB (only for 2nd gen, defaults to 10)
-        * region (defaults to us-central)
-        * zone (for 2nd gen)
-        * disk_type (for 2nd gen, defaults to ssd)
-        * failover_replica_name (only for 2nd gen, if specified creates a failover replica, defaults to "")
-        * maintenance_window_day (for 2nd gen only, defaults to 1 (Sunday))
-        * maintenance_window_hour (for 2nd gen only, defaults to 0)
-        * backups_enabled (defaults to true, set to "false" to disable)
-        * backup_start_time (defaults to 06:00)
-        * binlog (defaults to false for 1st gen, true for 2nd gen, set to "true" to use)
-        * activation_policy (defaults to on demand)
-        * replication_type (defaults to synchronous)
-        * auto_resize (2nd gen only, defaults to false, set to "true" to use)
+        * `instance_name` (defaults to a generated value)
+        * `database_name` (defaults to a generated value)
+        * `version` (defaults to 5.6)
+        * `disk_size`in GB (only for 2nd gen, defaults to 10)
+        * `region` (defaults to us-central)
+        * `zone` (for 2nd gen)
+        * `disk_type` (for 2nd gen, defaults to ssd)
+        * `failover_replica_name` (only for 2nd gen, if specified creates a failover replica, defaults to "")
+        * `maintenance_window_day` (for 2nd gen only, defaults to 1 (Sunday))
+        * `maintenance_window_hour` (for 2nd gen only, defaults to 0)
+        * `backups_enabled` (defaults to true, set to "false" to disable)
+        * `backup_start_time` (defaults to 06:00)
+        * `binlog` (defaults to false for 1st gen, true for 2nd gen, set to "true" to use)
+        * `activation_policy` (defaults to on demand)
+        * `replication_type` (defaults to synchronous)
+        * `auto_resize` (2nd gen only, defaults to false, set to "true" to use)
     * Bind
-        * username (defaults to a generated value)
-        * password (defaults to a generated value)
+        * `username` (defaults to a generated value)
+        * `password` (defaults to a generated value)
 
         **Example Binding credentials**
-        <pre>"credentials": {
+
+        ```json
+        "credentials": {
              "CaCert": "-----BEGIN CERTIFICATE-----\nredacted\n-----END CERTIFICATE-----",
              "ClientCert": "-----BEGIN CERTIFICATE-----\nredacted\n-----END CERTIFICATE-----",
              "ClientKey": "-----BEGIN RSA PRIVATE KEY-----\redacted\n-----END RSA PRIVATE KEY-----",
@@ -210,42 +218,45 @@ bind-service calls require a role except for Cloud SQL
              "last_master_operation_id": "some-guid",
              "uri": "mysql://username:encodedpassword@host/databasename?ssl_mode=required"
         }
-        </pre>
+        ```
 
 * [ML APIs](https://cloud.google.com/ml/)
     * Bind
-        * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles)
+        * `role` without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles)
 
         **Example Binding credentials**
-        <pre>"credentials": {
+
+        ```json
+        "credentials": {
              "Email": "redacted",
              "Name": "redacted",
              "PrivateKeyData": "redacted",
              "UniqueId": "redacted",
         }
-        </pre>
+        ```
 
 * [Bigtable](https://cloud.google.com/bigtable/docs/)
     * Provison
-        * name (defaults to a generated value)
-        * cluster_id (defaults to a generated value)
-        * display_name (defaults to a generated value)
-        * storage_type (one of "SSD" or "HDD", defaults to "SSD")
-        * zone (defaults to us-east1-b)
-        * num_nodes (defaults to 3)
+        * `name` (defaults to a generated value)
+        * `cluster_id` (defaults to a generated value)
+        * `display_name` (defaults to a generated value)
+        * `storage_type` (one of "SSD" or "HDD", defaults to "SSD")
+        * `zone` (defaults to us-east1-b)
+        * `num_nodes` (defaults to 3)
     * Bind
-        * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles), e.g. editor
+        * `role` without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles), e.g. editor
 
         **Example Binding credentials**
-        <pre>"credentials": {
+
+        ```json
+        "credentials": {
              "Email": "redacted",
              "Name": "redacted",
              "PrivateKeyData": "redacted",
              "UniqueId": "redacted",
              "instance_id": "foobar",
         }
-        </pre>
-
+        ```
 
 ## Change Notes
 
