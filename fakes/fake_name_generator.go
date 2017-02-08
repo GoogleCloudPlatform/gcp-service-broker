@@ -8,6 +8,10 @@ func (sg *StaticNameGenerator) InstanceName() string {
 	return sg.Val
 }
 
+func (sg *StaticNameGenerator) InstanceNameWithSeparator(sep string) string {
+	return sg.Val
+}
+
 func (sg *StaticNameGenerator) DatabaseName() string {
 	return sg.Val
 }

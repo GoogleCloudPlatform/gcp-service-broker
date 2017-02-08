@@ -24,6 +24,7 @@ type SqlInstance interface {
 
 type BasicInstance interface {
 	InstanceName() string
+	InstanceNameWithSeparator(sep string) string
 }
 
 func New() (BasicInstance, SqlInstance) {
@@ -49,6 +50,10 @@ func (bng *BasicNameGenerator) newNameWithSeperator(sep string) string {
 
 func (bng *BasicNameGenerator) InstanceName() string {
 	return bng.newNameWithSeperator("_")
+}
+
+func (bng *BasicNameGenerator) InstanceNameWithSeparator(sep string) string {
+	return bng.newNameWithSeperator(sep)
 }
 
 func (bng *SqlNameGenerator) InstanceName() string {

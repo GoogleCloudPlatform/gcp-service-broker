@@ -613,3 +613,29 @@ func updateOperationId(instance models.ServiceInstanceDetails, operationId strin
 func (b *CloudSQLBroker) Async() bool {
 	return true
 }
+
+type CloudSQLDynamicPlan struct {
+	Guid        string `json:"guid"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Tier        string `json:"tier"`
+	PricingPlan string `json:"pricing_plan"`
+	MaxDiskSize string `json:"max_disk_size"`
+	DisplayName string `json:"display_name"`
+	ServiceId   string `json:"service"`
+}
+
+func MapPlan(details interface{}) map[string]string {
+	planDetails, ok := details.(CloudSQLDynamicPlan)
+
+	if !ok {
+		panic("couldn't convert interface to cloudsqldynamicplan type")
+	}
+
+	features := map[string]string{
+		"tier":          planDetails.Tier,
+		"max_disk_size": planDetails.MaxDiskSize,
+		"pricing_plan":  planDetails.PricingPlan,
+	}
+	return features
+}
