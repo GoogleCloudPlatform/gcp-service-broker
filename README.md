@@ -32,7 +32,7 @@ See the [examples](https://github.com/GoogleCloudPlatform/gcp-service-broker/tre
 
 1. From the GCP console, navigate to **IAM & Admin > Service accounts** and click **Create Service Account**.
 1. Enter a **Service account name**.
-1. Select the checkbox to **Furnish a new Private Key**, and then click **Create**. 
+1. Select the checkbox to **Furnish a new Private Key**, and then click **Create**.
 1. Save the automatically downloaded key file to a secure location.
 1. Navigate to **IAM & Admin > IAM** and locate your service account.
 1. From the dropdown on the right, choose **Project > Owner** and click **Save**.
@@ -58,9 +58,9 @@ See the [examples](https://github.com/GoogleCloudPlatform/gcp-service-broker/tre
 
 * DB_PORT (defaults to 3306)
 * CA_CERT
-* CLIENT_CERT 
-* CLIENT_KEY 
-* CLOUDSQL_CUSTOM_PLANS (A map of plan names to string maps with fields guid, name, description, tier, 
+* CLIENT_CERT
+* CLIENT_KEY
+* CLOUDSQL_CUSTOM_PLANS (A map of plan names to string maps with fields guid, name, description, tier,
 pricing_plan, max_disk_size, display_name, and service (Cloud SQL's service id)) - if unset, the service
 will be disabled. e.g.
 
@@ -129,7 +129,7 @@ bind-service calls require a role except for Cloud SQL
         * ack_deadline (in seconds, defaults to 10, max 600)
     * Bind
         * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles)
-        
+
         **Example Binding credentials**
         <pre>"credentials": {
              "Email": "redacted",
@@ -140,14 +140,14 @@ bind-service calls require a role except for Cloud SQL
              "subscription_name": "empty_if_not_set",
         }
         </pre>
-        
+
 * [Cloud Storage](https://cloud.google.com/storage/docs/)
     * Provision
         * name (defaults to a generated value)
         * location (for options, see https://cloud.google.com/storage/docs/bucket-locations. Defaults to us)
     * Bind
         * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles)
-        
+
         **Example Binding credentials**
         <pre>"credentials": {
              "Email": "redacted",
@@ -157,13 +157,13 @@ bind-service calls require a role except for Cloud SQL
              "bucket_name": "foobar",
         }
         </pre>
-        
+
 * [BigQuery](https://cloud.google.com/bigquery/docs/)
     * Provision
-        * name (defaults to a generated value) 
+        * name (defaults to a generated value)
     * Bind
         * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles), e.g. pubsub.admin
-        
+
         **Example Binding credentials**
         <pre>"credentials": {
              "Email": "redacted",
@@ -173,15 +173,15 @@ bind-service calls require a role except for Cloud SQL
              "dataset_id": "foobar",
         }
         </pre>
-        
+
 * [CloudSQL](https://cloud.google.com/sql/docs/)
     * Provision
-        * instance_name (defaults to a generated value) 
-        * database_name (defaults to a generated value) 
+        * instance_name (defaults to a generated value)
+        * database_name (defaults to a generated value)
         * version (defaults to 5.6)
         * disk_size in GB (only for 2nd gen, defaults to 10)
         * region (defaults to us-central)
-        * zone (for 2nd gen) 
+        * zone (for 2nd gen)
         * disk_type (for 2nd gen, defaults to ssd)
         * failover_replica_name (only for 2nd gen, if specified creates a failover replica, defaults to "")
         * maintenance_window_day (for 2nd gen only, defaults to 1 (Sunday))
@@ -195,7 +195,7 @@ bind-service calls require a role except for Cloud SQL
     * Bind
         * username (defaults to a generated value)
         * password (defaults to a generated value)
-        
+
         **Example Binding credentials**
         <pre>"credentials": {
              "CaCert": "-----BEGIN CERTIFICATE-----\nredacted\n-----END CERTIFICATE-----",
@@ -211,11 +211,11 @@ bind-service calls require a role except for Cloud SQL
              "uri": "mysql://username:encodedpassword@host/databasename?ssl_mode=required"
         }
         </pre>
-        
+
 * [ML APIs](https://cloud.google.com/ml/)
     * Bind
         * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles)
-        
+
         **Example Binding credentials**
         <pre>"credentials": {
              "Email": "redacted",
@@ -255,14 +255,14 @@ see https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/CHANGE
 
 For functional issues with the service broker or feature requests, please file a github issue here:
 
-https://github.com/GoogleCloudPlatform/gcp-service-broker/issues 
+https://github.com/GoogleCloudPlatform/gcp-service-broker/issues
 
-They will be prioritized and updated here: 
+They will be prioritized and updated here:
 
 https://github.com/GoogleCloudPlatform/gcp-service-broker/projects/1
 
 For discussions and updates, please subscribe to this group:
 
-https://groups.google.com/forum/#!forum/gcp-service-broker 
+https://groups.google.com/forum/#!forum/gcp-service-broker
 
 # This is not an official Google product.
