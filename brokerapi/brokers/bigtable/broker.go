@@ -168,7 +168,7 @@ func MapPlan(details interface{}) map[string]string {
 	planDetails, ok := details.(BigtableDynamicPlan)
 
 	if !ok {
-		panic("couldn't convert interface to cloudsqldynamicplan type")
+		panic("couldn't convert interface to bigtabledynamicplan type")
 	}
 
 	features := map[string]string{
