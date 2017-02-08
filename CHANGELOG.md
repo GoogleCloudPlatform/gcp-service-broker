@@ -70,3 +70,8 @@ any extra access details
 
 - Updated default user agent string so that bogus data will not be collected during testing
 - Updated service account bindings to include ProjectId
+
+## [3.1.0] - 2017-02-07
+
+- Updated vendored packages so that custom UserAgent string gets propagated for storage provision calls
+- Added Bigtable as a service
