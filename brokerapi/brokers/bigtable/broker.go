@@ -153,3 +153,27 @@ func (b *BigTableBroker) Deprovision(instanceID string, details models.Deprovisi
 
 	return nil
 }
+
+type BigtableDynamicPlan struct {
+	Guid        string `json:"guid"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	NumNodes    string `json:"num_nodes"`
+	StorageType string `json:"storage_type"`
+	DisplayName string `json:"display_name"`
+	ServiceId   string `json:"service"`
+}
+
+func MapPlan(details interface{}) map[string]string {
+	planDetails, ok := details.(BigtableDynamicPlan)
+
+	if !ok {
+		panic("couldn't convert interface to cloudsqldynamicplan type")
+	}
+
+	features := map[string]string{
+		"num_nodes":    planDetails.NumNodes,
+		"storage_type": planDetails.StorageType,
+	}
+	return features
+}
