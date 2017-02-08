@@ -2,7 +2,7 @@
 
 Depends on [lager](https://github.com/pivotal-golang/lager) and [gorilla/mux](https://github.com/gorilla/mux).
 
-Requires go 1.6 and the associated buildpack
+Requires Go 1.6 and the associated buildpack.
 
 ## Examples
 
@@ -12,7 +12,7 @@ See the [examples](https://github.com/GoogleCloudPlatform/gcp-service-broker/tre
 
 ### Set up a GCP Project
 
-1. go to console.cloud.google.com and sign up, walking through the setup wizard
+1. go to [Google Cloud Console](https://console.cloud.google.com) and sign up, walking through the setup wizard
 1. next to the Google Cloud Platform logo in the upper left-hand corner, click the dropdown and select "Create Project"
 1. give your project a name and click "Create"
 1. when the project is created (a notification will show in the upper right), refresh the page.
@@ -42,8 +42,8 @@ See the [examples](https://github.com/GoogleCloudPlatform/gcp-service-broker/tre
 1. create new MySQL instance
 1. run `CREATE DATABASE servicebroker;`
 1. run `CREATE USER '<username>'@'%' IDENTIFIED BY '<password>';`
-1. run `GRANT ALL PRIVILEGES ON servicebroker.* `TO` '<username>'@'%' WITH GRANT OPTION;`
-1. (optional) create ssl certs for the database and save them somewhere secure
+1. run `GRANT ALL PRIVILEGES ON servicebroker.* TO '<username>'@'%' WITH GRANT OPTION;`
+1. (optional) create SSL certs for the database and save them somewhere secure
 
 ### Set required env vars - if deploying as an app, add these to missing-properties.yml
 
@@ -84,12 +84,12 @@ will be disabled. e.g.,
 ### As an App
 
 #### Update the manifest with ENV vars
-1. replace any blank variables that are in manifest.yml with your own ENV vars
+1. replace any blank variables that are in `manifest.yml` with your own ENV vars
 
 #### Push the service broker to CF and enable services
-1. cf push gcp-service-broker
-1. cf create-service-broker <service broker name> <username> <password> <service broker url>
-1. (for all applicable services, e.g.) cf enable-service-access google-pubsub
+1. `cf push gcp-service-broker`
+1. `cf create-service-broker <service broker name> <username> <password> <service broker url>`
+1. (for all applicable services, e.g.) `cf enable-service-access google-pubsub`
 
 ### As a Tile
 
@@ -114,11 +114,15 @@ binding, and CloudSQL bind operations may exceed 60 seconds. To change this sett
 
 ### Use!
 
-e.g. cf create-service pubsub default foobar
-e.g. cf bind-service myapp foobar -c '{"role": "pubsub.admin"}'
+For example:
 
-create-service calls take the following optional custom parameters, all as strings:
-bind-service calls require a role except for Cloud SQL
+* `cf create-service pubsub default foobar`
+* `cf bind-service myapp foobar -c '{"role": "pubsub.admin"}'`
+
+Notes:
+
+* `create-service` calls take the following optional custom parameters, all as strings.
+* `bind-service` calls require a role, except for Cloud SQL.
 
 * [PubSub](https://cloud.google.com/pubsub/docs/)
     * Provision
