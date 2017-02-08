@@ -121,7 +121,7 @@ create-service calls take the following optional custom parameters, all as strin
 bind-service calls require a role except for Cloud SQL
 
 * [PubSub](https://cloud.google.com/pubsub/docs/)
-    * Provison
+    * Provision
         * topic_name (defaults to a generated value)
         * subscription_name
         * is_push (defaults to false, to set use "true")
@@ -142,7 +142,7 @@ bind-service calls require a role except for Cloud SQL
         </pre>
         
 * [Cloud Storage](https://cloud.google.com/storage/docs/)
-    * Provison
+    * Provision
         * name (defaults to a generated value)
         * location (for options, see https://cloud.google.com/storage/docs/bucket-locations. Defaults to us)
     * Bind
@@ -159,7 +159,7 @@ bind-service calls require a role except for Cloud SQL
         </pre>
         
 * [BigQuery](https://cloud.google.com/bigquery/docs/)
-    * Provison
+    * Provision
         * name (defaults to a generated value) 
     * Bind
         * role without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles), e.g. pubsub.admin
@@ -175,7 +175,7 @@ bind-service calls require a role except for Cloud SQL
         </pre>
         
 * [CloudSQL](https://cloud.google.com/sql/docs/)
-    * Provison
+    * Provision
         * instance_name (defaults to a generated value) 
         * database_name (defaults to a generated value) 
         * version (defaults to 5.6)
