@@ -495,7 +495,7 @@ func getStaticPlans() (map[string][]models.ServicePlan, error) {
 	return servicePlans, nil
 }
 
-func getDynamicPlans(envVarName string, translatePlanFunc func(details interface{}) map[string]string) ([]models.ServicePlan, string, error) {
+func getDynamicPlans(envVarName string, translatePlanFunc func(details map[string]string) map[string]string) ([]models.ServicePlan, string, error) {
 	var err error
 	var serviceId string
 

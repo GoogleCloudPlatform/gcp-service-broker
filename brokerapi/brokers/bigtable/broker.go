@@ -164,16 +164,11 @@ type BigtableDynamicPlan struct {
 	ServiceId   string `json:"service"`
 }
 
-func MapPlan(details interface{}) map[string]string {
-	planDetails, ok := details.(BigtableDynamicPlan)
-
-	if !ok {
-		panic("couldn't convert interface to bigtabledynamicplan type")
-	}
+func MapPlan(details map[string]string) map[string]string {
 
 	features := map[string]string{
-		"num_nodes":    planDetails.NumNodes,
-		"storage_type": planDetails.StorageType,
+		"num_nodes":    details["num_nodes"],
+		"storage_type": details["storage_type"],
 	}
 	return features
 }

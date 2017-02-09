@@ -625,17 +625,12 @@ type CloudSQLDynamicPlan struct {
 	ServiceId   string `json:"service"`
 }
 
-func MapPlan(details interface{}) map[string]string {
-	planDetails, ok := details.(CloudSQLDynamicPlan)
-
-	if !ok {
-		panic("couldn't convert interface to cloudsqldynamicplan type")
-	}
+func MapPlan(details map[string]string) map[string]string {
 
 	features := map[string]string{
-		"tier":          planDetails.Tier,
-		"max_disk_size": planDetails.MaxDiskSize,
-		"pricing_plan":  planDetails.PricingPlan,
+		"tier":          details["tier"],
+		"max_disk_size": details["max_disk_size"],
+		"pricing_plan":  details["pricing_plan"],
 	}
 	return features
 }
