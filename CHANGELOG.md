@@ -75,3 +75,7 @@ any extra access details
 
 - Updated vendored packages so that custom UserAgent string gets propagated for storage provision calls
 - Added Bigtable as a service
+
+## [3.1.1] - 2017-02-09
+
+- fixed a bug in reading in custom plans
