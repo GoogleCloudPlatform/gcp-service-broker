@@ -79,3 +79,7 @@ any extra access details
 ## [3.1.1] - 2017-02-09
 
 - fixed a bug in reading in custom plans
+
+## [3.1.2] - 2017-02-12
+
+- fixed a bug where supplying a custom name for Bigtable would cause an error

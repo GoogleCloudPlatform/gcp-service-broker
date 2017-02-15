@@ -190,7 +190,7 @@ forms:
     label: Database port (defaults to 3306)
   - name: ca_cert
     type: text
-    label: CA cert
+    label: Server CA cert
     optional: true
   - name: client_cert
     type: text
