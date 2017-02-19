@@ -2,7 +2,10 @@
 
 set -e
 
-export GOPATH=${PWD}
+export GOPATH="${PWD}"
 
-cd ${GOPATH}/src/gcp-service-broker/brokerapi/brokers
-go test
+go get github.com/onsi/ginkgo/ginkgo
+
+cd "${GOPATH}/src/gcp-service-broker"
+
+ginkgo -r -race -skipPackage=integration,db_service .

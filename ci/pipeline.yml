@@ -1,22 +1,6 @@
 ---
-jobs:
-  - name: test-unit
-    plan:
-      - aggregate:
-        - {trigger: true, get: gcp-service-broker-src, resource: gcp-service-broker-src-in}
-      - task: unit-tests
-        file: gcp-service-broker-src/ci/tasks/unit-tests.yml
-  - name: build-tile
-    plan:
-      - aggregate:
-        - {trigger: true, get: gcp-service-broker-src, resource: gcp-service-broker-src-in}
-      - task: unit-tests
-        file: gcp-service-broker-src/ci/tasks/unit-tests.yml
-
-
-
 resources:
-  - name: gcp-service-broker-src-in
+  - name: gcp-service-broker
     type: git
     source:
       uri: https://github.com/GoogleCloudPlatform/gcp-service-broker.git
@@ -24,3 +8,17 @@ resources:
       ignore_paths:
         - product/
         - release/
+
+jobs:
+  - name: test-unit
+    plan:
+      - get: gcp-service-broker
+        trigger: true
+      - task: unit-tests
+        file: gcp-service-broker/ci/tasks/unit-tests.yml
+  - name: build-tile
+    plan:
+      - get: gcp-service-broker
+        trigger: true
+      - task: build-tile
+        file: gcp-service-broker/ci/tasks/build-tile.yml

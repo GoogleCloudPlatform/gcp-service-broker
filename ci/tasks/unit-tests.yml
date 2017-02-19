@@ -4,9 +4,10 @@ image_resource:
   type: docker-image
   source:
     repository: boshcpi/gce-cpi-release
-    tag: v2
+
 inputs:
-  - name: gcp-service-broker-src
-    path: src/gcp-service-broker
+- name: gcp-service-broker
+  path: src/gcp-service-broker
+
 run:
   path: src/gcp-service-broker/ci/tasks/unit-tests.sh
