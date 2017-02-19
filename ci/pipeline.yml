@@ -6,8 +6,7 @@ resources:
       uri: https://github.com/GoogleCloudPlatform/gcp-service-broker.git
       branch: concourse
       ignore_paths:
-        - product/
-        - release/
+        - ci/**
 
 jobs:
   - name: test-unit
