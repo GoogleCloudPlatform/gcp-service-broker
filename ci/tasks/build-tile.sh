@@ -7,4 +7,4 @@ zip /tmp/gcp-service-broker.zip -r . -x *.git* product/\* release/\*
 
 tile build
 
-mv src/gcp-service-broker/product/*.pivotal candidate/
+mv product/*.pivotal candidate/
