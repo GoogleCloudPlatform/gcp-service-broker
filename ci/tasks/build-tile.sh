@@ -2,9 +2,12 @@
 
 set -e
 
-cd src/gcp-service-broker
-zip /tmp/gcp-service-broker.zip -r . -x *.git* product/\* release/\*
+export service_broker_dir=src/gcp-service-broker
 
-tile build
+pushd "$service_broker_dir"
+    zip /tmp/gcp-service-broker.zip -r . -x *.git* product/\* release/\*
 
-mv product/*.pivotal candidate/
+    tile build
+popd
+
+mv "$service_broker_dir/product/*.pivotal" candidate/
