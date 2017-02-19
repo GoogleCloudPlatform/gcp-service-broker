@@ -20,5 +20,6 @@ jobs:
     plan:
       - get: gcp-service-broker
         trigger: true
+        passed: [test-unit]
       - task: build-tile
         file: gcp-service-broker/ci/tasks/build-tile.yml
