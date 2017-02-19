@@ -10,4 +10,4 @@ pushd "$service_broker_dir"
     tile build
 popd
 
-mv "$service_broker_dir/product/*.pivotal" candidate/
+mv "$service_broker_dir/product/"*.pivotal candidate/
