@@ -91,6 +91,21 @@ packages:
             "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/machine-learning.svg"
           },
           "tags": ["gcp", "ml"]
+        },
+        {
+         "id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe",
+         "description": "A high performance NoSQL database service for large analytical and operational workloads",
+         "name": "google-bigtable",
+         "bindable": true,
+         "plan_updateable": false,
+         "metadata": {
+           "displayName": "Google Bigtable",
+           "longDescription": "A high performance NoSQL database service for large analytical and operational workloads",
+           "documentationUrl": "https://cloud.google.com/bigtable/",
+           "supportUrl": "https://cloud.google.com/support/",
+           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigtable.svg"
+         },
+         "tags": ["gcp", "bigtable"]
         }
       ]'
       PRECONFIGURED_PLANS: '[
@@ -175,7 +190,7 @@ forms:
     label: Database port (defaults to 3306)
   - name: ca_cert
     type: text
-    label: CA cert
+    label: Server CA cert
     optional: true
   - name: client_cert
     type: text
@@ -232,3 +247,37 @@ service_plan_forms:
       default: '10'
       description: "Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default)"
       configurable: true
+- name: bigtable_custom_plans
+  description: Generate custom plans for Bigtable (required to enable the service for developers)
+  label: Bigtable Custom Plans
+  optional: true
+  properties:
+    - name: display_name
+      label: Display Name
+      type: string
+      description: "Display name"
+      configurable: true
+    - name: description
+      label: Plan description
+      type: string
+      description: "Plan description"
+      configurable: true
+    - name: service
+      label: Service
+      type: dropdown_select
+      description: "The service this plan is associated with"
+      options:
+        - name: 'b8e19880-ac58-42ef-b033-f7cd9c94d1fe'
+          label: 'Bigtable'
+    - name: storage_type
+      label: Storage Type
+      type: string
+      description: "Either HDD or SSD (see https://cloud.google.com/bigtable/pricing for more information)"
+      configurable: true
+      default: 'SSD'
+    - name: num_nodes
+      label: Number of Nodes
+      type: string
+      description: "Between 3 and 30 (see https://cloud.google.com/bigtable/pricing for more information)"
+      configurable: true
+      default: '3'

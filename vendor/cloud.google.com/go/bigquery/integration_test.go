@@ -42,6 +42,7 @@ var (
 		{Name: "name", Type: StringFieldType},
 		{Name: "num", Type: IntegerFieldType},
 	}
+	fiveMinutesFromNow time.Time
 )
 
 func TestMain(m *testing.M) {
@@ -98,6 +99,24 @@ func TestIntegration_Create(t *testing.T) {
 	}
 }
 
+func TestIntegration_CreateView(t *testing.T) {
+	if client == nil {
+		t.Skip("Integration tests skipped")
+	}
+	ctx := context.Background()
+	table := newTable(t, schema)
+	defer table.Delete(ctx)
+
+	// Test that standard SQL views work.
+	view := dataset.Table("t_view_standardsql")
+	query := ViewQuery(fmt.Sprintf("SELECT APPROX_COUNT_DISTINCT(name) FROM `%s.%s.%s`", dataset.ProjectID, dataset.DatasetID, table.TableID))
+	err := view.Create(context.Background(), UseStandardSQL(), query)
+	if err != nil {
+		t.Fatalf("table.create: Did not expect an error, got: %v", err)
+	}
+	view.Delete(ctx)
+}
+
 func TestIntegration_TableMetadata(t *testing.T) {
 	if client == nil {
 		t.Skip("Integration tests skipped")
@@ -116,6 +135,41 @@ func TestIntegration_TableMetadata(t *testing.T) {
 	}
 	if got, want := md.Type, RegularTable; got != want {
 		t.Errorf("metadata.Type: got %v, want %v", got, want)
+	}
+	if got, want := md.ExpirationTime, fiveMinutesFromNow; !got.Equal(want) {
+		t.Errorf("metadata.Type: got %v, want %v", got, want)
+	}
+
+	// Check that timePartitioning is nil by default
+	if md.TimePartitioning != nil {
+		t.Errorf("metadata.TimePartitioning: got %v, want %v", md.TimePartitioning, nil)
+	}
+
+	// Create tables that have time partitioning
+	partitionCases := []struct {
+		timePartitioning   TimePartitioning
+		expectedExpiration time.Duration
+	}{
+		{TimePartitioning{}, time.Duration(0)},
+		{TimePartitioning{time.Second}, time.Second},
+	}
+	for i, c := range partitionCases {
+		table := dataset.Table(fmt.Sprintf("t_metadata_partition_%v", i))
+		err = table.Create(context.Background(), schema, c.timePartitioning, TableExpiration(time.Now().Add(5*time.Minute)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer table.Delete(ctx)
+		md, err = table.Metadata(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		got := md.TimePartitioning
+		want := &TimePartitioning{c.expectedExpiration}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("metadata.TimePartitioning: got %v, want %v", got, want)
+		}
 	}
 }
 
@@ -194,11 +248,6 @@ func TestIntegration_Tables(t *testing.T) {
 	if !found {
 		t.Errorf("Tables: got %v\nshould see %v in the list", pretty.Value(tables), pretty.Value(table))
 	}
-}
-
-type score struct {
-	Name string
-	Num  int
 }
 
 func TestIntegration_UploadAndRead(t *testing.T) {
@@ -299,36 +348,40 @@ func TestIntegration_UploadAndRead(t *testing.T) {
 	}
 }
 
+type TestStruct struct {
+	Name string
+	Nums []int
+	Sub  Sub
+	Subs []*Sub
+}
+
+type Sub struct{ B bool }
+
 func TestIntegration_UploadAndReadStructs(t *testing.T) {
 	if client == nil {
 		t.Skip("Integration tests skipped")
+	}
+	schema, err := InferSchema(TestStruct{})
+	if err != nil {
+		t.Fatal(err)
 	}
 	ctx := context.Background()
 	table := newTable(t, schema)
 	defer table.Delete(ctx)
 
+	// Populate the table.
 	upl := table.Uploader()
-	// Populate the table using StructSavers explicitly.
-	scores := []score{
-		{Name: "a", Num: 12},
-		{Name: "b", Num: 18},
-		{Name: "c", Num: 3},
+	structs := []*TestStruct{
+		{Name: "a", Nums: []int{1, 2}, Sub: Sub{B: true}, Subs: []*Sub{{false}, {true}}},
+		{Name: "b", Nums: []int{1}, Subs: []*Sub{{false}, nil, {true}}},
+		nil,
+		{Name: "c", Sub: Sub{B: true}},
 	}
 	var savers []*StructSaver
-	for _, s := range scores {
+	for _, s := range structs {
 		savers = append(savers, &StructSaver{Schema: schema, Struct: s})
 	}
 	if err := upl.Put(ctx, savers); err != nil {
-		t.Fatal(err)
-	}
-
-	// Continue uploading to the table using structs and struct pointers.
-
-	scores2 := []interface{}{
-		score{Name: "d", Num: 12},
-		&score{Name: "e", Num: 18},
-	}
-	if err := upl.Put(ctx, scores2); err != nil {
 		t.Fatal(err)
 	}
 
@@ -338,13 +391,11 @@ func TestIntegration_UploadAndReadStructs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Read what we wrote.
-	want := []score{scores[0], scores[1], scores[2],
-		scores2[0].(score), *scores2[1].(*score)}
+	// Test iteration with structs.
 	it := table.Read(ctx)
-	var got []score
+	var got []*TestStruct
 	for {
-		var g score
+		var g TestStruct
 		err := it.Next(&g)
 		if err == iterator.Done {
 			break
@@ -352,15 +403,27 @@ func TestIntegration_UploadAndReadStructs(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		got = append(got, g)
+		got = append(got, &g)
 	}
 	sort.Sort(byName(got))
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("got %+v, want %+v", got, want)
+
+	// BigQuery elides nils, both at top level and in nested structs.
+	// This may be surprising, but the client library is faithfully
+	// rendering these nils into JSON, so we should not change it.
+	// structs[1].Subs[1] and structs[2] are nil.
+	want := []*TestStruct{structs[0], structs[1], structs[3]}
+	want[1].Subs = []*Sub{want[1].Subs[0], want[1].Subs[2]}
+
+	for i, g := range got {
+		if i >= len(want) {
+			t.Errorf("%d: got %v, past end of want", i, pretty.Value(g))
+		} else if w := want[i]; !reflect.DeepEqual(g, w) {
+			t.Errorf("%d: got %v, want %v", i, pretty.Value(g), pretty.Value(w))
+		}
 	}
 }
 
-type byName []score
+type byName []*TestStruct
 
 func (b byName) Len() int           { return len(b) }
 func (b byName) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
@@ -577,9 +640,10 @@ func TestIntegration_TimeTypes(t *testing.T) {
 
 // Creates a new, temporary table with a unique name and the given schema.
 func newTable(t *testing.T, s Schema) *Table {
+	fiveMinutesFromNow = time.Now().Add(5 * time.Minute).Round(time.Second)
 	name := fmt.Sprintf("t%d", time.Now().UnixNano())
 	table := dataset.Table(name)
-	err := table.Create(context.Background(), s, TableExpiration(time.Now().Add(5*time.Minute)))
+	err := table.Create(context.Background(), s, TableExpiration(fiveMinutesFromNow))
 	if err != nil {
 		t.Fatal(err)
 	}

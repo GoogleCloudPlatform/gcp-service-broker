@@ -153,15 +153,16 @@ var (
 // This custom user agent string is added to provision calls so that Google can track the aggregated use of this tool
 // We can better advocate for devoting resources to supporting cloud foundry and this service broker if we can show
 // good usage statistics for it, so if you feel the need to fork this repo, please leave this string in place!
-var CustomUserAgent = "cf-gcp-service-broker-test 1.0.0"
+var CustomUserAgent = "cf-gcp-service-broker-test 3.1.2"
 
-func ProductionizeUserAgent(){
-	CustomUserAgent = "cf-gcp-service-broker 1.0.0"
+func ProductionizeUserAgent() {
+	CustomUserAgent = "cf-gcp-service-broker 3.1.2"
 }
 
 const CloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
 const StorageName = "google-storage"
 const BigqueryName = "google-bigquery"
+const BigtableName = "google-bigtable"
 const CloudsqlName = "google-cloudsql"
 const PubsubName = "google-pubsub"
 const MlName = "google-ml-apis"

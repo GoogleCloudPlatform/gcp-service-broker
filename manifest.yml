@@ -15,7 +15,7 @@
 ---
 applications:
   - name: gcp-service-broker
-    product_version: "0.1.0"
+    product_version: "3.1.2"
     metadata_version: "1.0"
     label: 'GCP Service Broker'
     description: Easily configure and grant access to GCP products

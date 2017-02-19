@@ -44,6 +44,14 @@ function import_opsmgr_variables() {
     	end
     %>
     export CLOUDSQL_CUSTOM_PLANS=<%= Shellwords.escape JSON.dump(plans) %>
+	<%
+    	plans = { }
+    	p("bigtable_custom_plans").each do |plan|
+    		plan_name = plan['name']
+    		plans[plan_name] = plan
+    	end
+    %>
+    export BIGTABLE_CUSTOM_PLANS=<%= Shellwords.escape JSON.dump(plans) %>
 
 	export ROOT_SERVICE_ACCOUNT_JSON=<%= Shellwords.escape properties.root_service_account_json %>
 	export DB_HOST=<%= Shellwords.escape properties.db_host %>
@@ -137,6 +145,7 @@ function add_env_vars() {
 
 	# Custom Service Plans
 	cf set-env $1 CLOUDSQL_CUSTOM_PLANS "$CLOUDSQL_CUSTOM_PLANS"
+	cf set-env $1 BIGTABLE_CUSTOM_PLANS "$BIGTABLE_CUSTOM_PLANS"
 
 	# Custom variables from tile.yml
 	cf set-env $1 ROOT_SERVICE_ACCOUNT_JSON "$ROOT_SERVICE_ACCOUNT_JSON"
@@ -285,7 +294,7 @@ function push_buildpack() {
 	BUILDPACK_NAME="$1"
 	BUILDPACK_ORDER="$2"
 	BUILDPACK_FILE="$3"
-	BUILDPACK_VERSIONED=`echo "${BUILDPACK_FILE}" | sed 's/\.zip$/-v3.0.1.zip/'`
+	BUILDPACK_VERSIONED=`echo "${BUILDPACK_FILE}" | sed 's/\.zip$/-v3.1.2.zip/'`
 	cp "${BUILDPACK_FILE}" "${BUILDPACK_VERSIONED}"
 	$CF buildpacks | grep ${BUILDPACK_NAME} >/dev/null
 	if [ "$?" -eq "0" ]; then
@@ -348,7 +357,7 @@ apply_open_security_group "$APPLY_OPEN_SECURITY_GROUP"
 
 
 export PKG_NAME=gcp_service_broker
-export APP_NAME=gcp-service-broker-3.0.1
+export APP_NAME=gcp-service-broker-3.1.2
 export APP_HOST=gcp-service-broker
 export DOCKER_IMAGE=""
 export NEEDS_CF_CREDS="True"

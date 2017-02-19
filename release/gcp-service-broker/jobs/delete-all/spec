@@ -51,6 +51,8 @@ properties:
     description: client_key
   cloudsql_custom_plans: 
     description: cloudsql_custom_plans
+  bigtable_custom_plans: 
+    description: bigtable_custom_plans
   gcp_service_broker.name:
     description: 'Name of package'
   gcp_service_broker.user:

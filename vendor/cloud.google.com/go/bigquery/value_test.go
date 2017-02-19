@@ -376,6 +376,37 @@ func TestValuesSaverConvertsToMap(t *testing.T) {
 				},
 			},
 		},
+		{ // repeated nested field
+			vs: ValuesSaver{
+				Schema: Schema{
+					{
+						Name: "records",
+						Type: RecordFieldType,
+						Schema: Schema{
+							{Name: "x", Type: IntegerFieldType},
+							{Name: "y", Type: IntegerFieldType},
+						},
+						Repeated: true,
+					},
+				},
+				InsertID: "iid",
+				Row: []Value{ // a row is a []Value
+					[]Value{ // repeated field's value is a []Value
+						[]Value{1, 2}, // first record of the repeated field
+						[]Value{3, 4}, // second record
+					},
+				},
+			},
+			want: &insertionRow{
+				InsertID: "iid",
+				Row: map[string]Value{
+					"records": []Value{
+						map[string]Value{"x": 1, "y": 2},
+						map[string]Value{"x": 3, "y": 4},
+					},
+				},
+			},
+		},
 	}
 	for _, tc := range testCases {
 		data, insertID, err := tc.vs.Save()
@@ -384,7 +415,7 @@ func TestValuesSaverConvertsToMap(t *testing.T) {
 		}
 		got := &insertionRow{insertID, data}
 		if !reflect.DeepEqual(got, tc.want) {
-			t.Errorf("saving ValuesSaver: got:\n%v\nwant:\n%v", got, tc.want)
+			t.Errorf("saving ValuesSaver:\ngot:\n%+v\nwant:\n%+v", got, tc.want)
 		}
 	}
 }
@@ -396,18 +427,22 @@ func TestStructSaver(t *testing.T) {
 		{Name: "nested", Type: RecordFieldType, Schema: Schema{
 			{Name: "b", Type: BooleanFieldType},
 		}},
+		{Name: "rnested", Type: RecordFieldType, Repeated: true, Schema: Schema{
+			{Name: "b", Type: BooleanFieldType},
+		}},
 	}
 
 	type (
 		N struct{ B bool }
 		T struct {
-			S      string
-			R      []int
-			Nested *N
+			S       string
+			R       []int
+			Nested  *N
+			Rnested []*N
 		}
 	)
 
-	check := func(in interface{}, want map[string]Value) {
+	check := func(msg string, in interface{}, want map[string]Value) {
 		ss := StructSaver{
 			Schema:   schema,
 			InsertID: "iid",
@@ -415,35 +450,49 @@ func TestStructSaver(t *testing.T) {
 		}
 		got, gotIID, err := ss.Save()
 		if err != nil {
-			t.Fatalf("%#v: %v", in, err)
+			t.Fatalf("%s: %v", msg, err)
 		}
 		if wantIID := "iid"; gotIID != wantIID {
-			t.Errorf("%#v: InsertID: got %q, want %q", in, gotIID, wantIID)
+			t.Errorf("%s: InsertID: got %q, want %q", msg, gotIID, wantIID)
 		}
 		if !reflect.DeepEqual(got, want) {
-			t.Errorf("%#v:\ngot\n%+v\nwant\n%+v", in, got, want)
+			t.Errorf("%s:\ngot\n%#v\nwant\n%#v", msg, got, want)
 		}
 	}
 
-	in := T{S: "x", R: []int{1, 2}, Nested: &N{B: true}}
-	want := map[string]Value{
-		"s":      in.S,
-		"r":      in.R,
-		"nested": map[string]Value{"b": in.Nested.B},
+	in := T{
+		S:       "x",
+		R:       []int{1, 2},
+		Nested:  &N{B: true},
+		Rnested: []*N{{true}, {false}},
 	}
-	check(in, want)
-	check(&in, want)
-	check(T{}, map[string]Value{
+	want := map[string]Value{
+		"s":       "x",
+		"r":       []int{1, 2},
+		"nested":  map[string]Value{"b": true},
+		"rnested": []Value{map[string]Value{"b": true}, map[string]Value{"b": false}},
+	}
+	check("all values", in, want)
+	check("all values, ptr", &in, want)
+	check("empty struct", T{}, map[string]Value{
 		"s": "",
 		"r": []int(nil),
 	})
 
+	// Missing and extra fields ignored.
 	type T2 struct {
 		S string
-		// missing R
+		// missing R, Nested, RNested
 		Extra int
 	}
-	check(T2{S: "x"}, map[string]Value{"s": "x"})
+	check("missing and extra", T2{S: "x"}, map[string]Value{"s": "x"})
+
+	check("nils in slice", T{Rnested: []*N{{true}, nil, {false}}},
+		map[string]Value{
+			"s":       "",
+			"r":       []int(nil),
+			"rnested": []Value{map[string]Value{"b": true}, map[string]Value(nil), map[string]Value{"b": false}},
+		})
 }
 
 func TestConvertRows(t *testing.T) {
@@ -509,14 +558,24 @@ func TestValueList(t *testing.T) {
 }
 
 func TestValueMap(t *testing.T) {
+	ns := Schema{
+		{Name: "x", Type: IntegerFieldType},
+		{Name: "y", Type: IntegerFieldType},
+	}
 	schema := Schema{
 		{Name: "s", Type: StringFieldType},
 		{Name: "i", Type: IntegerFieldType},
 		{Name: "f", Type: FloatFieldType},
 		{Name: "b", Type: BooleanFieldType},
+		{Name: "n", Type: RecordFieldType, Schema: ns},
+		{Name: "rn", Type: RecordFieldType, Schema: ns, Repeated: true},
+	}
+	in := []Value{"x", 7, 3.14, true,
+		[]Value{1, 2},
+		[]Value{[]Value{3, 4}, []Value{5, 6}},
 	}
 	var vm valueMap
-	if err := vm.Load([]Value{"x", 7, 3.14, true}, schema); err != nil {
+	if err := vm.Load(in, schema); err != nil {
 		t.Fatal(err)
 	}
 	want := map[string]Value{
@@ -524,10 +583,16 @@ func TestValueMap(t *testing.T) {
 		"i": 7,
 		"f": 3.14,
 		"b": true,
+		"n": map[string]Value{"x": 1, "y": 2},
+		"rn": []Value{
+			map[string]Value{"x": 3, "y": 4},
+			map[string]Value{"x": 5, "y": 6},
+		},
 	}
 	if !reflect.DeepEqual(vm, valueMap(want)) {
-		t.Errorf("got %+v, want %+v", vm, want)
+		t.Errorf("got\n%+v\nwant\n%+v", vm, want)
 	}
+
 }
 
 var (
@@ -642,6 +707,7 @@ type repStruct struct {
 	Nums      []int
 	ShortNums [2]int // to test truncation
 	LongNums  [5]int // to test padding with zeroes
+	Nested    []*nested
 }
 
 var (
@@ -649,10 +715,18 @@ var (
 		{Name: "nums", Type: IntegerFieldType, Repeated: true},
 		{Name: "shortNums", Type: IntegerFieldType, Repeated: true},
 		{Name: "longNums", Type: IntegerFieldType, Repeated: true},
+		{Name: "nested", Type: RecordFieldType, Repeated: true, Schema: Schema{
+			{Name: "nestS", Type: StringFieldType},
+			{Name: "nestI", Type: IntegerFieldType},
+		}},
 	}
-
 	v123      = []Value{int64(1), int64(2), int64(3)}
-	repValues = []Value{v123, v123, v123}
+	repValues = []Value{v123, v123, v123,
+		[]Value{
+			[]Value{"x", int64(1)},
+			[]Value{"y", int64(2)},
+		},
+	}
 )
 
 func TestStructLoaderRepeated(t *testing.T) {
@@ -664,6 +738,7 @@ func TestStructLoaderRepeated(t *testing.T) {
 		Nums:      []int{1, 2, 3},
 		ShortNums: [...]int{1, 2}, // extra values discarded
 		LongNums:  [...]int{1, 2, 3, 0, 0},
+		Nested:    []*nested{{"x", 1}, {"y", 2}},
 	}
 	if !reflect.DeepEqual(r1, want) {
 		t.Errorf("got %+v, want %+v", pretty.Value(r1), pretty.Value(want))

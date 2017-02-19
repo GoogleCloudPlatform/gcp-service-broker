@@ -16,6 +16,7 @@ import (
 
 	googlepubsub "cloud.google.com/go/pubsub"
 
+	googlebigtable "cloud.google.com/go/bigtable"
 	googlestorage "cloud.google.com/go/storage"
 	"code.cloudfoundry.org/lager"
 	"encoding/json"
@@ -114,7 +115,7 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 
 	//
 	// Deprovision
-	//
+
 	deprovisionDetails := models.DeprovisionDetails{
 		ServiceID: params.serviceId,
 		PlanID:    params.planId,
@@ -139,9 +140,12 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 //   not fail if the resource existed before hand.
 // - If we always use a static one, globally named resources (eg, a storage bucket)
 //   would fail to create when two different projects run these tests.
-func generateInstanceName(projectId string) string {
+func generateInstanceName(projectId string, sep string) string {
 	hashed := crc32.ChecksumIEEE([]byte(projectId))
-	return fmt.Sprintf("pcf_sb_1_%d", hashed)
+	if sep != "" {
+		sep = "_"
+	}
+	return fmt.Sprintf("pcf%ssb%s1%s%d", sep, sep, sep, hashed)
 }
 
 var _ = Describe("LiveIntegrationTests", func() {
@@ -178,8 +182,9 @@ var _ = Describe("LiveIntegrationTests", func() {
 			  "metadata": {
 			    "displayName": "Google Cloud Storage",
 			    "longDescription": "A Powerful, Simple and Cost Effective Object Storage Service",
-			    "documentationUrl": "https://cloud.google.com/storage/docs/overview",
-			    "supportUrl": "https://cloud.google.com/support/"
+			    "documentationUrl": "https://cloud.google.com/storage/docs/",
+			    "supportUrl": "https://cloud.google.com/support/",
+			    "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/storage.svg"
 			  },
 			  "tags": ["gcp", "storage"]
 			},
@@ -193,7 +198,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 			    "displayName": "Google PubSub",
 			    "longDescription": "A global service for real-time and reliable messaging and streaming data",
 			    "documentationUrl": "https://cloud.google.com/pubsub/docs/",
-			    "supportUrl": "https://cloud.google.com/support/"
+			    "supportUrl": "https://cloud.google.com/support/",
+			    "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/pubsub.svg"
 			  },
 			  "tags": ["gcp", "pubsub"]
 			},
@@ -207,7 +213,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 			    "displayName": "Google BigQuery",
 			    "longDescription": "A fast, economical and fully managed data warehouse for large-scale data analytics",
 			    "documentationUrl": "https://cloud.google.com/bigquery/docs/",
-			    "supportUrl": "https://cloud.google.com/support/"
+			    "supportUrl": "https://cloud.google.com/support/",
+			    "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigquery.svg"
 			  },
 			  "tags": ["gcp", "bigquery"]
 			},
@@ -221,7 +228,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 			    "displayName": "Google CloudSQL",
 			    "longDescription": "Google Cloud SQL is a fully-managed MySQL database service",
 			    "documentationUrl": "https://cloud.google.com/sql/docs/",
-			    "supportUrl": "https://cloud.google.com/support/"
+			    "supportUrl": "https://cloud.google.com/support/",
+			    "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
 			  },
 			  "tags": ["gcp", "cloudsql"]
 			},
@@ -235,9 +243,25 @@ var _ = Describe("LiveIntegrationTests", func() {
 			    "displayName": "Google Machine Learning APIs",
 			    "longDescription": "Machine Learning Apis including Vision, Translate, Speech, and Natural Language",
 			    "documentationUrl": "https://cloud.google.com/ml/",
-			    "supportUrl": "https://cloud.google.com/support/"
+			    "supportUrl": "https://cloud.google.com/support/",
+			    "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/machine-learning.svg"
 			  },
 			  "tags": ["gcp", "ml"]
+			},
+			{
+			 "id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe",
+			 "description": "A high performance NoSQL database service for large analytical and operational workloads",
+			 "name": "google-bigtable",
+			 "bindable": true,
+			 "plan_updateable": false,
+			 "metadata": {
+			   "displayName": "Google Bigtable",
+			   "longDescription": "A high performance NoSQL database service for large analytical and operational workloads",
+			   "documentationUrl": "https://cloud.google.com/bigtable/",
+			   "supportUrl": "https://cloud.google.com/support/",
+			   "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigtable.svg"
+			 },
+			 "tags": ["gcp", "bigtable"]
 			}
 		      ]`)
 		os.Setenv("PRECONFIGURED_PLANS", `[
@@ -285,10 +309,10 @@ var _ = Describe("LiveIntegrationTests", func() {
 		      ]`)
 
 		os.Setenv("CLOUDSQL_CUSTOM_PLANS", `{
-			"test_plan": {
+			"test_cloudsql_plan": {
 				"guid": "foo",
 				"name": "bar",
-				"description": "testplan",
+				"description": "test-cloudsql-plan",
 				"tier": "D4",
 				"pricing_plan": "PER_USE",
 				"max_disk_size": "20",
@@ -297,12 +321,24 @@ var _ = Describe("LiveIntegrationTests", func() {
 			}
 		}`)
 
+		os.Setenv("BIGTABLE_CUSTOM_PLANS", `{
+			"test_bigtable_plan": {
+				"guid": "foo2",
+				"name": "bar2",
+				"description": "test-bigtable-plan",
+				"storage_type": "SSD",
+				"num_nodes": "3",
+				"display_name": "FOOBAR2",
+				"service": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
+			}
+		}`)
+
 		var creds models.GCPCredentials
 		creds, err = brokers.GetCredentialsFromEnv()
 		if err != nil {
 			logger.Error("error", err)
 		}
-		instance_name = generateInstanceName(creds.ProjectId)
+		instance_name = generateInstanceName(creds.ProjectId, "")
 		name_generator.Basic = &fakes.StaticNameGenerator{Val: instance_name}
 
 		gcpBroker, err = brokers.New(logger)
@@ -317,8 +353,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	Describe("Broker init", func() {
-		It("should have 5 services in sevices map", func() {
-			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(5))
+		It("should have 6 services in sevices map", func() {
+			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(6))
 		})
 
 		It("should have a default client", func() {
@@ -331,8 +367,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	Describe("getting broker catalog", func() {
-		It("should have 5 services available", func() {
-			Expect(len(gcpBroker.Services())).To(Equal(5))
+		It("should have 6 services available", func() {
+			Expect(len(gcpBroker.Services())).To(Equal(6))
 		})
 
 		It("should have 3 storage plans available", func() {
@@ -377,117 +413,48 @@ var _ = Describe("LiveIntegrationTests", func() {
 		}, timeout)
 	})
 
-	//Describe("deprovision", func() {
-	//	Context("when the bigquery service id is provided", func() {
-	//		It("should call bigquery deprovisioning", func() {
-	//			bqId := serviceNameToId[brokers.BigqueryName]
-	//			_, err := gcpBroker.Provision("something", bqProvisionDetails, true)
-	//			Expect(err).NotTo(HaveOccurred())
-	//			_, err = gcpBroker.Deprovision("something", models.DeprovisionDetails{
-	//				ServiceID: bqId,
-	//			}, true)
-	//			Expect(err).NotTo(HaveOccurred())
-	//			Expect(gcpBroker.ServiceBrokerMap[bqId].(*modelsfakes.FakeServiceBrokerHelper).DeprovisionCallCount()).To(Equal(1))
-	//		})
-	//	})
-	//
-	//	Context("when the service doesn't exist", func() {
-	//		It("should return an error", func() {
-	//			_, err := gcpBroker.Deprovision("something", models.DeprovisionDetails{
-	//				ServiceID: serviceNameToId[brokers.BigqueryName],
-	//			}, true)
-	//			Expect(err).To(HaveOccurred())
-	//		})
-	//	})
-	//
-	//	Context("when async provisioning isn't allowed but the service requested requires it", func() {
-	//		It("should return an error", func() {
-	//			_, err := gcpBroker.Deprovision("something", models.DeprovisionDetails{
-	//				ServiceID: serviceNameToId[brokers.CloudsqlName],
-	//			}, false)
-	//			Expect(err).To(HaveOccurred())
-	//		})
-	//	})
-	//})
+	Describe("bigtable", func() {
+		var bigtableInstanceName string
+		BeforeEach(func() {
+			bigtableInstanceName = generateInstanceName(gcpBroker.RootGCPCredentials.ProjectId, "-")
+			name_generator.Basic = &fakes.StaticNameGenerator{Val: bigtableInstanceName}
+		})
 
-	//Describe("bind", func() {
-	//	Context("when bind is called on storage", func() {
-	//		It("it should call storage bind", func() {
-	//			_, err = gcpBroker.Provision("storagething", bqProvisionDetails, true)
-	//			Expect(err).NotTo(HaveOccurred())
-	//			_, err = gcpBroker.Bind(instanceId, "newbinding", storageBindDetails)
-	//			Expect(err).NotTo(HaveOccurred())
-	//			Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[StorageName]].(*modelsfakes.FakeServiceBrokerHelper).BindCallCount()).To(Equal(1))
-	//		})
-	//	})
-	//
-	//	Context("when bind is called more than once on the same id", func() {
-	//		It("it should throw an error", func() {
-	//			_, err = gcpBroker.Provision("storagething", bqProvisionDetails, true)
-	//			Expect(err).NotTo(HaveOccurred())
-	//			_, err = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
-	//			Expect(err).NotTo(HaveOccurred())
-	//			_, err = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
-	//			Expect(err).To(HaveOccurred())
-	//		})
-	//	})
-	//})
-	//
-	//Describe("unbind", func() {
-	//	Context("when unbind is called on storage", func() {
-	//		It("it should call storage unbind", func() {
-	//			_, err = gcpBroker.Provision("storagething", bqProvisionDetails, true)
-	//			Expect(err).NotTo(HaveOccurred())
-	//			_, err = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
-	//			Expect(err).NotTo(HaveOccurred())
-	//			err = gcpBroker.Unbind(instanceId, bindingId, storageUnbindDetails)
-	//			Expect(err).NotTo(HaveOccurred())
-	//			Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[StorageName]].(*modelsfakes.FakeServiceBrokerHelper).UnbindCallCount()).To(Equal(1))
-	//		})
-	//	})
-	//
-	//	Context("when unbind is called more than once on the same id", func() {
-	//		It("it should throw an error", func() {
-	//			_, err = gcpBroker.Provision("storagething", bqProvisionDetails, true)
-	//			Expect(err).NotTo(HaveOccurred())
-	//			_, err = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
-	//			Expect(err).NotTo(HaveOccurred())
-	//			err = gcpBroker.Unbind(instanceId, bindingId, storageUnbindDetails)
-	//			Expect(err).NotTo(HaveOccurred())
-	//			err = gcpBroker.Unbind(instanceId, bindingId, storageUnbindDetails)
-	//			Expect(err).To(HaveOccurred())
-	//		})
-	//	})
-	//})
-	//
-	//Describe("lastOperation", func() {
-	//	Context("when last operation is called on a service that doesn't exist", func() {
-	//		It("should throw an error", func() {
-	//			_, err = gcpBroker.LastOperation("somethingnonexistant")
-	//			Expect(err).To(HaveOccurred())
-	//		})
-	//	})
-	//
-	//	Context("when last operation is called on a service that is provisioned synchronously", func() {
-	//		It("should throw an error", func() {
-	//			_, err = gcpBroker.Provision(instanceId, bqProvisionDetails, true)
-	//			Expect(err).NotTo(HaveOccurred())
-	//			_, err = gcpBroker.LastOperation(instanceId)
-	//			Expect(err).To(HaveOccurred())
-	//		})
-	//	})
-	//
-	//	Context("when last operation is called on an asynchronous service", func() {
-	//		It("should call PollInstance", func() {
-	//			_, err = gcpBroker.Provision(instanceId, cloudSqlProvisionDetails, true)
-	//			Expect(err).NotTo(HaveOccurred())
-	//			_, err = gcpBroker.LastOperation(instanceId)
-	//			Expect(err).NotTo(HaveOccurred())
-	//			Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[CloudsqlName]].(*modelsfakes.FakeServiceBrokerHelper).PollInstanceCallCount()).To(Equal(1))
-	//		})
-	//	})
+		AfterEach(func() {
+			name_generator.Basic = &fakes.StaticNameGenerator{Val: instance_name}
+		})
 
-	//})
+		It("can provision/bind/unbind/deprovision", func() {
+
+			ctx := context.Background()
+			service, err := googlebigtable.NewInstanceAdminClient(ctx, gcpBroker.RootGCPCredentials.ProjectId)
+			Expect(err).NotTo(HaveOccurred())
+
+			params := &genericService{
+				serviceId:  serviceNameToId[models.BigtableName],
+				planId:     serviceNameToPlanId[models.BigtableName],
+				bindingId:  "integration_test_bind",
+				instanceId: "integration_test_instance",
+				rawBindingParams: map[string]interface{}{
+					"role": "editor",
+				},
+				serviceExistsFn: func(expected bool) bool {
+					instances, err := service.Instances(ctx)
+
+					return err == nil && len(instances) == 1 && instances[0].Name == bigtableInstanceName
+				},
+				serviceMetadataSavedFn: func(instanceId string) bool {
+					instanceDetails := getAndUnmarshalInstanceDetails(instanceId)
+					return instanceDetails["instance_id"] != ""
+				},
+				cleanupFn: func() {
+					err := service.DeleteInstance(ctx, bigtableInstanceName)
+					Expect(err).NotTo(HaveOccurred())
+				},
+			}
+			testGenericService(gcpBroker, params)
+		}, timeout)
+	})
 
 	Describe("cloud storage", func() {
 		It("can provision/bind/unbind/deprovision", func() {
