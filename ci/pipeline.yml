@@ -19,18 +19,20 @@ resources:
 jobs:
   - name: test-unit
     plan:
-      - get: gcp-service-broker
-        trigger: true
-      - get: gcp-service-broker-ci
+      - aggregate:
+        - get: gcp-service-broker
+          trigger: true
+        - get: gcp-service-broker-ci
       - task: unit-tests
         file: gcp-service-broker-ci/ci/tasks/unit-tests.yml
 
   - name: integration
     plan:
-      - get: gcp-service-broker
-        trigger: true
-        passed: [test-unit]
-      - get: gcp-service-broker-ci
+      - aggregate:
+        - get: gcp-service-broker
+          trigger: true
+          passed: [test-unit]
+        - get: gcp-service-broker-ci
       - task: integration-tests
         file: gcp-service-broker-ci/ci/tasks/integration-tests.yml
         params:
@@ -38,9 +40,10 @@ jobs:
 
   - name: build-tile
     plan:
-      - get: gcp-service-broker
-        trigger: true
-        passed: [integration]
-      - get: gcp-service-broker-ci
+      - aggregate:
+        - get: gcp-service-broker
+          trigger: true
+          passed: [integration]
+        - get: gcp-service-broker-ci
       - task: build-tile
         file: gcp-service-broker-ci/ci/tasks/build-tile.yml
