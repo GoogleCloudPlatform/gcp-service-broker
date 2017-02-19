@@ -6,11 +6,12 @@ image_resource:
     repository: cfplatformeng/tile-generator
 
 inputs:
-  - name: gcp-service-broker
-    path: src/gcp-service-broker
+- name: gcp-service-broker-ci
+- name: gcp-service-broker
+  path: src/gcp-service-broker
 
 outputs:
-  - name: candidate
+- name: candidate
 
 run:
-  path: src/gcp-service-broker/ci/tasks/build-tile.sh
+  path: gcp-service-broker-ci/ci/tasks/build-tile.sh

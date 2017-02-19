@@ -6,8 +6,9 @@ image_resource:
     repository: golang
 
 inputs:
+- name: gcp-service-broker-ci
 - name: gcp-service-broker
   path: src/gcp-service-broker
 
 run:
-  path: src/gcp-service-broker/ci/tasks/unit-tests.sh
+  path: gcp-service-broker-ci/ci/tasks/unit-tests.sh
