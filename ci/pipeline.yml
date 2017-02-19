@@ -15,10 +15,19 @@ jobs:
         trigger: true
       - task: unit-tests
         file: gcp-service-broker/ci/tasks/unit-tests.yml
-  - name: build-tile
+  - name: integration
     plan:
       - get: gcp-service-broker
         trigger: true
         passed: [test-unit]
+      - task: integration-tests
+        file: gcp-service-broker/ci/tasks/integration-tests.yml
+        params:
+          ROOT_SERVICE_ACCOUNT_JSON: {{service_account_key}}
+  - name: build-tile
+    plan:
+      - get: gcp-service-broker
+        trigger: true
+        passed: [integration]
       - task: build-tile
         file: gcp-service-broker/ci/tasks/build-tile.yml

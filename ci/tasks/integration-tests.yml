@@ -1,0 +1,16 @@
+---
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: golang
+
+inputs:
+- name: gcp-service-broker
+  path: src/gcp-service-broker
+
+params:
+  ROOT_SERVICE_ACCOUNT_JSON:
+
+run:
+  path: src/gcp-service-broker/ci/tasks/integration-tests.sh
