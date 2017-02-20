@@ -9,6 +9,7 @@ inputs:
 - name: gcp-service-broker-ci
 - name: gcp-service-broker
   path: src/gcp-service-broker
+- name: version
 
 outputs:
 - name: candidate
