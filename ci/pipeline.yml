@@ -61,6 +61,7 @@ jobs:
           ROOT_SERVICE_ACCOUNT_JSON: {{service_account_key}}
           TEST_DB_USERNAME: {{TEST_DB_USERNAME}}
           TEST_DB_PASSWORD: {{TEST_DB_PASSWORD}}
+          TEST_DB_HOST: {{TEST_DB_HOST}}
 
   - name: build-tile
     plan:

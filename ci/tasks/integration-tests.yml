@@ -14,6 +14,7 @@ params:
   ROOT_SERVICE_ACCOUNT_JSON:
   TEST_DB_USERNAME:
   TEST_DB_PASSWORD:
+  TEST_DB_HOST:
 
 run:
   path: gcp-service-broker-ci/ci/tasks/integration-tests.sh
