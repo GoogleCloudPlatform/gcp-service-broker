@@ -9,4 +9,4 @@ go get github.com/onsi/ginkgo/ginkgo
 
 cd "${GOPATH}/src/gcp-service-broker"
 
-ginkgo -race integration_tests,db_service
+ginkgo -race integration_tests db_service
