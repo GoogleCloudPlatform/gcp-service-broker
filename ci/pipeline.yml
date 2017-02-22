@@ -1,0 +1,119 @@
+---
+resource_types:
+  - name: gcs-resource
+    type: docker-image
+    source:
+      repository: frodenas/gcs-resource
+
+resources:
+  - name: gcp-service-broker
+    type: git
+    source:
+      uri: https://github.com/GoogleCloudPlatform/gcp-service-broker.git
+      branch: master
+      ignore_paths:
+        - ci/*
+
+  - name: gcp-service-broker-ci
+    type: git
+    source:
+      uri: https://github.com/GoogleCloudPlatform/gcp-service-broker.git
+      branch: concourse
+      paths:
+        - ci/*
+
+  - name: release
+    type: gcs-resource
+    source:
+      bucket: gcp-service-broker-tiles
+      json_key: {{STORAGE_BUCKET_KEY}}
+      regexp: gcp-service-broker-(.*).pivotal
+
+  - name: version
+    type: semver
+    source:
+      bucket: gcp-service-broker-semver
+      key: semver
+      endpoint: storage.googleapis.com
+      access_key_id: {{storage_key_id}}
+      secret_access_key: {{storage_secret_key}}
+      initial_version: 3.1.3
+
+jobs:
+  - name: test-unit
+    plan:
+      - aggregate:
+        - get: gcp-service-broker
+          trigger: true
+        - get: gcp-service-broker-ci
+      - task: unit-tests
+        file: gcp-service-broker-ci/ci/tasks/unit-tests.yml
+
+  - name: integration
+    plan:
+      - aggregate:
+        - get: gcp-service-broker
+          trigger: true
+        - get: gcp-service-broker-ci
+      - task: integration-tests
+        file: gcp-service-broker-ci/ci/tasks/integration-tests.yml
+        params:
+          ROOT_SERVICE_ACCOUNT_JSON: {{service_account_key}}
+          TEST_DB_USERNAME: {{TEST_DB_USERNAME}}
+          TEST_DB_PASSWORD: {{TEST_DB_PASSWORD}}
+          TEST_DB_HOST: {{TEST_DB_HOST}}
+
+  - name: build-tile
+    plan:
+      - aggregate:
+        - get: version
+          params: {bump: final}
+        - get: gcp-service-broker
+          trigger: true
+          passed: [test-unit, integration]
+        - get: gcp-service-broker-ci
+      - task: build-tile
+        file: gcp-service-broker-ci/ci/tasks/build-tile.yml
+      - put: release
+        params:
+          file: candidate/gcp-service-broker-*.pivotal
+      - put: version
+        params: {file: version/version}
+
+  - name: auto-patch
+    public: true
+    serial_groups: [version]
+    plan:
+    - get: version
+      passed: [build-tile]
+      params: {bump: patch, pre: rc}
+      trigger: true
+    - put: version
+      params: {file: version/version}
+
+  - name: major
+    public: true
+    serial_groups: [version]
+    plan:
+    - get: version
+      params: {bump: major, pre: rc}
+    - put: version
+      params: {file: version/version}
+
+  - name: minor
+    public: true
+    serial_groups: [version]
+    plan:
+    - get: version
+      params: {bump: minor, pre: rc}
+    - put: version
+      params: {file: version/version}
+
+  - name: patch
+    public: true
+    serial_groups: [version]
+    plan:
+    - get: version
+      params: {bump: patch, pre: rc}
+    - put: version
+      params: {file: version/version}

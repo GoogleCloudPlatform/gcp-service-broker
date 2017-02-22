@@ -16,8 +16,9 @@ func getLocalTestConnectionStr(dbName string) string {
 
 	username := os.Getenv("TEST_DB_USERNAME")
 	password := os.Getenv("TEST_DB_PASSWORD")
+	host := os.Getenv("TEST_DB_HOST")
 
-	return fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s?parseTime=true", username, password, dbName)
+	return fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?parseTime=true", username, password, host, dbName)
 }
 
 func createTestDatabase() {
