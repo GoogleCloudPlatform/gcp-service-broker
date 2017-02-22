@@ -39,6 +39,7 @@ import (
 	"gcp-service-broker/brokerapi/brokers/storage"
 	"gcp-service-broker/db_service"
 	"gcp-service-broker/utils"
+	"gcp-service-broker/brokerapi/brokers/spanner"
 )
 
 type GCPServiceBroker struct {
@@ -146,6 +147,14 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 			AccountManager: sqlManager,
 		},
 		models.BigtableName: &bigtable.BigTableBroker{
+			Client:    self.GCPClient,
+			ProjectId: self.RootGCPCredentials.ProjectId,
+			Logger:    self.Logger,
+			BrokerBase: broker_base.BrokerBase{
+				AccountManager: saManager,
+			},
+		},
+		models.SpannerName: &spanner.SpannerBroker{
 			Client:    self.GCPClient,
 			ProjectId: self.RootGCPCredentials.ProjectId,
 			Logger:    self.Logger,
@@ -588,6 +597,13 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 		return []models.Service{}, err
 	}
 	servicePlans[bigtableServiceId] = append(servicePlans[bigtableServiceId], bigtablePlans...)
+
+	// set up bigtable custom plans
+	spannerPlans, spannerServiceId, err := getDynamicPlans("SPANNER_CUSTOM_PLANS", spanner.MapPlan)
+	if err != nil {
+		return []models.Service{}, err
+	}
+	servicePlans[spannerServiceId] = append(servicePlans[spannerServiceId], spannerPlans...)
 
 	// get the ids of all plans in the current catalog
 	var currentPlanIds []string
