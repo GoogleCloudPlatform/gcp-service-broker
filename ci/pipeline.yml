@@ -29,6 +29,13 @@ resources:
       json_key: {{STORAGE_BUCKET_KEY}}
       regexp: gcp-service-broker-(.*).pivotal
 
+  - name: release-rc
+    type: gcs-resource
+    source:
+      bucket: gcp-service-broker-tiles
+      json_key: {{STORAGE_BUCKET_KEY}}
+      regexp: gcp-service-broker-(.*).pivotal
+
   - name: version
     type: semver
     source:
@@ -77,13 +84,14 @@ jobs:
     plan:
       - aggregate:
         - get: version
+          params: {bump: patch, pre: rc}
         - get: gcp-service-broker
           trigger: true
           passed: [test-unit, integration]
         - get: gcp-service-broker-ci
       - task: build-tile
         file: gcp-service-broker-ci/ci/tasks/build-tile.yml
-      - put: release
+      - put: release-rc
         params:
           file: candidate/gcp-service-broker-*.pivotal
       - put: version
@@ -105,40 +113,33 @@ jobs:
           file: candidate/gcp-service-broker-*.pivotal
 
 
-  - name: auto-patch
-    public: true
-    serial_groups: [version]
-    plan:
-    - get: version
-      passed: [build-test-tile]
-      params: {bump: patch, pre: rc}
-      trigger: true
-    - put: version
-      params: {file: version/version}
 
   - name: major
     public: true
-    serial_groups: [version]
+    serial_groups: [release-version]
     plan:
     - get: release-version
       params: {bump: major, pre: rc}
+    - get: gcp-service-broker
     - put: release-version
       params: {file: release-version/version}
 
   - name: minor
     public: true
-    serial_groups: [version]
+    serial_groups: [release-version]
     plan:
     - get: release-version
       params: {bump: minor, pre: rc}
+    - get: gcp-service-broker
     - put: release-version
       params: {file: release-version/version}
 
   - name: patch
     public: true
-    serial_groups: [version]
+    serial_groups: [release-version]
     plan:
     - get: release-version
       params: {bump: patch, pre: rc}
+    - get: gcp-service-broker
     - put: release-version
       params: {file: release-version/version}

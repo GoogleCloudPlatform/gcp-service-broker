@@ -15,4 +15,4 @@ outputs:
 - name: candidate
 
 run:
-  path: gcp-service-broker-ci/ci/tasks/build-tile.sh
+  path: gcp-service-broker-ci/ci/tasks/ship-tile.sh
