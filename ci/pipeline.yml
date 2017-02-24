@@ -10,7 +10,7 @@ resources:
     type: git
     source:
       uri: https://github.com/GoogleCloudPlatform/gcp-service-broker.git
-      branch: master
+      branch: concourse
       ignore_paths:
         - ci/*
 
@@ -18,11 +18,18 @@ resources:
     type: git
     source:
       uri: https://github.com/GoogleCloudPlatform/gcp-service-broker.git
-      branch: concourse
+      branch: master
       paths:
         - ci/*
 
   - name: release
+    type: gcs-resource
+    source:
+      bucket: gcp-service-broker-tiles
+      json_key: {{STORAGE_BUCKET_KEY}}
+      regexp: gcp-service-broker-(.*).pivotal
+
+  - name: release-rc
     type: gcs-resource
     source:
       bucket: gcp-service-broker-tiles
@@ -34,6 +41,16 @@ resources:
     source:
       bucket: gcp-service-broker-semver
       key: semver
+      endpoint: storage.googleapis.com
+      access_key_id: {{storage_key_id}}
+      secret_access_key: {{storage_secret_key}}
+      initial_version: 3.1.3
+
+  - name: release-version
+    type: semver
+    source:
+      bucket: gcp-service-broker-semver
+      key: release-semver
       endpoint: storage.googleapis.com
       access_key_id: {{storage_key_id}}
       secret_access_key: {{storage_secret_key}}
@@ -63,57 +80,66 @@ jobs:
           TEST_DB_PASSWORD: {{TEST_DB_PASSWORD}}
           TEST_DB_HOST: {{TEST_DB_HOST}}
 
-  - name: build-tile
+  - name: build-test-tile
     plan:
       - aggregate:
         - get: version
-          params: {bump: final}
+          params: {bump: patch, pre: rc}
         - get: gcp-service-broker
           trigger: true
           passed: [test-unit, integration]
         - get: gcp-service-broker-ci
       - task: build-tile
         file: gcp-service-broker-ci/ci/tasks/build-tile.yml
-      - put: release
+      - put: release-rc
         params:
           file: candidate/gcp-service-broker-*.pivotal
       - put: version
         params: {file: version/version}
 
-  - name: auto-patch
-    public: true
-    serial_groups: [version]
+  - name: ship-tile
     plan:
-    - get: version
-      passed: [build-tile]
-      params: {bump: patch, pre: rc}
-      trigger: true
-    - put: version
-      params: {file: version/version}
+      - aggregate:
+        - get: release-version
+          params: {bump: final}
+          trigger: true
+        - get: gcp-service-broker
+          passed: [build-test-tile]
+        - get: gcp-service-broker-ci
+      - task: ship-tile
+        file: gcp-service-broker-ci/ci/tasks/ship-tile.yml
+      - put: release
+        params:
+          file: candidate/gcp-service-broker-*.pivotal
+
+
 
   - name: major
     public: true
-    serial_groups: [version]
+    serial_groups: [release-version]
     plan:
-    - get: version
+    - get: release-version
       params: {bump: major, pre: rc}
-    - put: version
-      params: {file: version/version}
+    - get: gcp-service-broker
+    - put: release-version
+      params: {file: release-version/version}
 
   - name: minor
     public: true
-    serial_groups: [version]
+    serial_groups: [release-version]
     plan:
-    - get: version
+    - get: release-version
       params: {bump: minor, pre: rc}
-    - put: version
-      params: {file: version/version}
+    - get: gcp-service-broker
+    - put: release-version
+      params: {file: release-version/version}
 
   - name: patch
     public: true
-    serial_groups: [version]
+    serial_groups: [release-version]
     plan:
-    - get: version
+    - get: release-version
       params: {bump: patch, pre: rc}
-    - put: version
-      params: {file: version/version}
+    - get: gcp-service-broker
+    - put: release-version
+      params: {file: release-version/version}
