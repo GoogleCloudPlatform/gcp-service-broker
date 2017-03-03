@@ -10,7 +10,7 @@ resources:
     type: git
     source:
       uri: https://github.com/GoogleCloudPlatform/gcp-service-broker.git
-      branch: concourse
+      branch: master
       ignore_paths:
         - ci/*
 
