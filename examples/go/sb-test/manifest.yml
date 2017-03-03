@@ -1,0 +1,12 @@
+---
+applications:
+  - name: sb-test
+    product_version: "1.0.0-alpha"
+    metadata_version: "1.0"
+    label: 'A small app to test the Google Cloud Platform Service Broker'
+    description: A small app to test the Google Cloud Platform Service Broker
+    env:
+      GO15VENDOREXPERIMENT: 1
+      GOPACKAGENAME: main
+
+
