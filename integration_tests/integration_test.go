@@ -142,7 +142,7 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 //   would fail to create when two different projects run these tests.
 func generateInstanceName(projectId string, sep string) string {
 	hashed := crc32.ChecksumIEEE([]byte(projectId))
-	if sep != "" {
+	if sep == "" {
 		sep = "_"
 	}
 	return fmt.Sprintf("pcf%ssb%s1%s%d", sep, sep, sep, hashed)

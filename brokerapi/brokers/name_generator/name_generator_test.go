@@ -22,7 +22,7 @@ var _ = Describe("NameGenerator", func() {
 			generator BasicNameGenerator
 		)
 		It("Generates a name", func() {
-			Expect(generator.InstanceName()).To(Not(BeEmpty()))
+			Expect(generator.InstanceName()).ToNot(BeEmpty())
 		})
 		It("Generates unique names", func() {
 			testUniqueness(func() string { return generator.InstanceName() })
@@ -33,8 +33,8 @@ var _ = Describe("NameGenerator", func() {
 			generator SqlNameGenerator
 		)
 		It("Generates a name", func() {
-			Expect(generator.InstanceName()).To(Not(BeEmpty()))
-			Expect(generator.DatabaseName()).To(Not(BeEmpty()))
+			Expect(generator.InstanceName()).ToNot(BeEmpty())
+			Expect(generator.DatabaseName()).ToNot(BeEmpty())
 		})
 		It("Generates unique names", func() {
 			testUniqueness(func() string { return generator.InstanceName() })
