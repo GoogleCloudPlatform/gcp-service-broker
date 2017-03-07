@@ -1,8 +1,8 @@
-hash: 47433d0284bcdacaddfafc7e0861c6372d61907e5c25bcd3616e3ed29aa22222
-updated: 2017-02-03T11:20:55.413887464-08:00
+hash: 65bc06e5fe15156aa97a1826d7fc56f6fa1391b72ae0e5bc9a5687191ab00ddc
+updated: 2017-03-03T15:47:24.224813167-08:00
 imports:
 - name: cloud.google.com/go
-  version: 3258e6905e9694db9bcd41910c65ecc30ae6dbbe
+  version: 78582c9da1f74d3e1e999e675923bd17d55e0639
   subpackages:
   - bigquery
   - bigtable
@@ -12,16 +12,19 @@ imports:
   - iam
   - internal
   - internal/optional
+  - internal/version
   - longrunning
   - pubsub
   - pubsub/apiv1
+  - spanner/...
+  - spanner/admin/instance/apiv1
   - storage
 - name: code.cloudfoundry.org/lager
-  version: 6cfe365fb6bb84343f0034b4a53cd250d173b61f
+  version: de8e9c6c6e474e5e3668aea1a9817bdb4ceeceb0
 - name: github.com/go-sql-driver/mysql
   version: a0583e0143b1624142adab07e0e97fe106d99561
 - name: github.com/golang/protobuf
-  version: 8ee79997227bf9b34611aee7946ae64735e6fd93
+  version: 69b215d01a5606c843240eab4937eab3acee6530
   subpackages:
   - proto
   - protoc-gen-go/descriptor
@@ -46,9 +49,11 @@ imports:
 - name: github.com/leonelquinteros/gorand
   version: aac5da62f38c2d2b492bee83183ca80dd209b875
 - name: github.com/mattn/go-sqlite3
-  version: ce9149a3c941c30de51a01dbc5bc414ddaa52927
+  version: acf4ae44299454c98d3a39ea15d444b5a6708710
+- name: github.com/pivotal-golang/lager
+  version: de8e9c6c6e474e5e3668aea1a9817bdb4ceeceb0
 - name: golang.org/x/net
-  version: 007e530097ad7f954752df63046b4036f98ba6a6
+  version: d379faa25cbdc04d653984913a2ceb43b0bc46d7
   subpackages:
   - context
   - context/ctxhttp
@@ -59,14 +64,14 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/oauth2
-  version: 314dd2c0bf3ebd592ec0d20847d27e79d0dbe8dd
+  version: efb10a30610e617dbb17fc243f4cc61a8cfa2903
   subpackages:
   - google
   - internal
   - jws
   - jwt
 - name: google.golang.org/api
-  version: c55f685368bb1cdfed2c20283e2878a83b929730
+  version: f786854525c2e5b0b49c2a301b0ff076d2ae20df
   subpackages:
   - bigquery/v2
   - cloudresourcemanager/v1
@@ -83,7 +88,7 @@ imports:
   - support/bundler
   - transport
 - name: google.golang.org/appengine
-  version: a2c54d2174c17540446e0ced57d9d459af61bc1c
+  version: 5403c08c6e8fb3b2dc1209d2d833d8e8ac8240de
   subpackages:
   - internal
   - internal/app_identity
@@ -97,17 +102,26 @@ imports:
   - socket
   - urlfetch
 - name: google.golang.org/genproto
-  version: b3e7c2fb04031add52c4817f53f43757ccbf9c18
+  version: 1e95789587db7d93ebbaa5eb65da17d3dbf8ab64
   subpackages:
   - googleapis/api/annotations
+  - googleapis/api/label
+  - googleapis/api/metric
+  - googleapis/api/monitoredres
+  - googleapis/api/serviceconfig
   - googleapis/bigtable/admin/v2
   - googleapis/bigtable/v2
   - googleapis/iam/v1
   - googleapis/longrunning
   - googleapis/pubsub/v1
   - googleapis/rpc/status
+  - googleapis/spanner/admin/instance/v1
+  - protobuf/api
+  - protobuf/field_mask
+  - protobuf/ptype
+  - protobuf/source_context
 - name: google.golang.org/grpc
-  version: 21f8ed309495401e6fd79b3a9fd549582aed1b4c
+  version: 1dab93372523195731c738b0f0cb4e452228e959
   subpackages:
   - codes
   - credentials

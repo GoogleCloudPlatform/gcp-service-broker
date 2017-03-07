@@ -56,8 +56,8 @@ func (bng *BasicNameGenerator) InstanceNameWithSeparator(sep string) string {
 	return bng.newNameWithSeperator(sep)
 }
 
-func (bng *SqlNameGenerator) InstanceName() string {
-	return bng.newNameWithSeperator("-")
+func (sng *SqlNameGenerator) InstanceName() string {
+	return sng.newNameWithSeperator("-")
 }
 
 func (sng *SqlNameGenerator) DatabaseName() string {
