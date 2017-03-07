@@ -15,10 +15,10 @@ import (
 	"net/http"
 	"os"
 
+	"gcp-service-broker/fakes"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"gcp-service-broker/fakes"
 )
 
 var _ = Describe("Brokers", func() {

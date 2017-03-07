@@ -36,10 +36,10 @@ import (
 	"gcp-service-broker/brokerapi/brokers/cloudsql"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/brokerapi/brokers/pubsub"
+	"gcp-service-broker/brokerapi/brokers/spanner"
 	"gcp-service-broker/brokerapi/brokers/storage"
 	"gcp-service-broker/db_service"
 	"gcp-service-broker/utils"
-	"gcp-service-broker/brokerapi/brokers/spanner"
 )
 
 type GCPServiceBroker struct {

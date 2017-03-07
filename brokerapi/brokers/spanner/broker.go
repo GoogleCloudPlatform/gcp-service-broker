@@ -71,7 +71,6 @@ func (s *SpannerBroker) Provision(instanceId string, details models.ProvisionDet
 
 	// create instance
 
-
 	// save off instance information
 	ii := InstanceInformation{
 		InstanceId: params["name"],
@@ -112,8 +111,6 @@ func (s *SpannerBroker) Deprovision(instanceID string, details models.Deprovisio
 	return nil
 }
 
-
-
 // Indicates that Spanner uses asynchronous provisioning
 func (s *SpannerBroker) Async() bool {
 	return true
@@ -131,7 +128,7 @@ type SpannerDynamicPlan struct {
 func MapPlan(details map[string]string) map[string]string {
 
 	features := map[string]string{
-		"num_nodes":    details["num_nodes"],
+		"num_nodes": details["num_nodes"],
 	}
 	return features
 }
