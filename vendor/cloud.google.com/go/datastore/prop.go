@@ -223,8 +223,14 @@ func validateChildType(t reflect.Type, fieldName string, flatten, prevSlice bool
 	return nil
 }
 
+// isLeafType determines whether or not a type is a 'leaf type'
+// and should not be recursed into, but considered one field.
+func isLeafType(t reflect.Type) bool {
+	return t == typeOfTime || t == typeOfGeoPoint
+}
+
 // structCache collects the structs whose fields have already been calculated.
-var structCache = fields.NewCache(parseTag, validateType)
+var structCache = fields.NewCache(parseTag, validateType, isLeafType)
 
 // structPLS adapts a struct to be a PropertyLoadSaver.
 type structPLS struct {
@@ -249,6 +255,11 @@ func newStructPLS(p interface{}) (*structPLS, error) {
 
 // LoadStruct loads the properties from p to dst.
 // dst must be a struct pointer.
+//
+// The values of dst's unmatched struct fields are not modified,
+// and matching slice-typed fields are not reset before appending to
+// them. In particular, it is recommended to pass a pointer to a zero
+// valued struct on each LoadStruct call.
 func LoadStruct(dst interface{}, p []Property) error {
 	x, err := newStructPLS(dst)
 	if err != nil {

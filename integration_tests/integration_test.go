@@ -308,30 +308,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 			}
 		      ]`)
 
-		os.Setenv("CLOUDSQL_CUSTOM_PLANS", `{
-			"test_cloudsql_plan": {
-				"guid": "foo",
-				"name": "bar",
-				"description": "test-cloudsql-plan",
-				"tier": "D4",
-				"pricing_plan": "PER_USE",
-				"max_disk_size": "20",
-				"display_name": "FOOBAR",
-				"service": "4bc59b9a-8520-409f-85da-1c7552315863"
-			}
-		}`)
-
-		os.Setenv("BIGTABLE_CUSTOM_PLANS", `{
-			"test_bigtable_plan": {
-				"guid": "foo2",
-				"name": "bar2",
-				"description": "test-bigtable-plan",
-				"storage_type": "SSD",
-				"num_nodes": "3",
-				"display_name": "FOOBAR2",
-				"service": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
-			}
-		}`)
+		os.Setenv("CLOUDSQL_CUSTOM_PLANS", fakes.TestCloudSQLPlan)
+		os.Setenv("BIGTABLE_CUSTOM_PLANS", fakes.TestBigtablePlan)
 
 		var creds models.GCPCredentials
 		creds, err = brokers.GetCredentialsFromEnv()

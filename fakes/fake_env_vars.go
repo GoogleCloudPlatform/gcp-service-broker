@@ -77,3 +77,71 @@ const Services string = `[
 			"tags": ["gcp", "ml"]
 			}
 		]`
+
+const PreconfiguredPlans = `[
+			{
+			  "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
+			  "name": "standard",
+			  "display_name": "Standard",
+			  "description": "Standard storage class",
+			  "features": {"storage_class": "STANDARD"}
+			},
+			{
+			  "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
+			  "name": "nearline",
+			  "display_name": "Nearline",
+			  "description": "Nearline storage class",
+			  "features": {"storage_class": "NEARLINE"}
+			},
+			{
+			  "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
+			  "name": "reduced_availability",
+			  "display_name": "Durable Reduced Availability",
+			  "description": "Durable Reduced Availability storage class",
+			  "features": {"storage_class": "DURABLE_REDUCED_AVAILABILITY"}
+			},
+			{
+			  "service_id": "628629e3-79f5-4255-b981-d14c6c7856be",
+			  "name": "default",
+			  "display_name": "Default",
+			  "description": "PubSub Default plan",
+			  "features": ""
+			},
+			{ "service_id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
+			  "name": "default",
+			  "display_name": "Default",
+			  "description": "BigQuery default plan",
+			  "features": ""
+			},
+			{
+			  "service_id": "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4",
+			  "name": "default",
+			  "display_name": "Default",
+			  "description": "Machine Learning api default plan",
+			  "features": ""
+			}
+		      ]`
+
+const TestCloudSQLPlan = `{
+			"test_cloudsql_plan": {
+				"guid": "test_cloudsql_plan",
+				"name": "test_cloudsql_plan",
+				"description": "test-cloudsql-plan",
+				"tier": "D4",
+				"pricing_plan": "PER_USE",
+				"max_disk_size": "20",
+				"display_name": "test_cloudsql_plan",
+				"service": "4bc59b9a-8520-409f-85da-1c7552315863"
+			}
+		}`
+const TestBigtablePlan = `{
+			"test_bigtable_plan": {
+				"guid": "test_bigtable_plan",
+				"name": "test_bigtable_plan",
+				"description": "test-bigtable-plan",
+				"storage_type": "SSD",
+				"num_nodes": "3",
+				"display_name": "test_bigtable_plan",
+				"service": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
+			}
+		}`

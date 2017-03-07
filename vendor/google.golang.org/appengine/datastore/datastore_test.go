@@ -71,6 +71,8 @@ var (
 	testGeoPt0   = appengine.GeoPoint{Lat: 1.2, Lng: 3.4}
 	testGeoPt1   = appengine.GeoPoint{Lat: 5, Lng: 10}
 	testBadGeoPt = appengine.GeoPoint{Lat: 1000, Lng: 34}
+
+	now = time.Unix(1e9, 0).UTC()
 )
 
 type B0 struct {
@@ -132,6 +134,37 @@ type K0 struct {
 
 type K1 struct {
 	K []*Key
+}
+
+type S struct {
+	St string
+}
+
+type NoOmit struct {
+	A string
+	B int  `datastore:"Bb"`
+	C bool `datastore:",noindex"`
+}
+
+type OmitAll struct {
+	A string `datastore:",omitempty"`
+	B int    `datastore:"Bb,omitempty"`
+	C bool   `datastore:",omitempty,noindex"`
+	F []int  `datastore:",omitempty"`
+}
+
+type Omit struct {
+	A string `datastore:",omitempty"`
+	B int    `datastore:"Bb,omitempty"`
+	C bool   `datastore:",omitempty,noindex"`
+	F []int  `datastore:",omitempty"`
+	S `datastore:",omitempty"`
+}
+
+type NoOmits struct {
+	No []NoOmit `datastore:",omitempty"`
+	S  `datastore:",omitempty"`
+	Ss S `datastore:",omitempty"`
 }
 
 type N0 struct {
@@ -320,6 +353,14 @@ func (d *Doubler) Load(props []Property) error {
 	return LoadStruct(d, props)
 }
 
+type EmbeddedTime struct {
+	time.Time
+}
+
+type SpecialTime struct {
+	MyTime EmbeddedTime
+}
+
 func (d *Doubler) Save() ([]Property, error) {
 	// Save the default Property slice to an in-memory buffer (a PropertyList).
 	props, err := SaveStruct(d)
@@ -482,6 +523,77 @@ var testCases = []testCase{
 		"geopoint slice",
 		&G1{G: []appengine.GeoPoint{testGeoPt0, testGeoPt1}},
 		&G1{G: []appengine.GeoPoint{testGeoPt0, testGeoPt1}},
+		"",
+		"",
+	},
+	{
+		"omit empty, all",
+		&OmitAll{},
+		new(PropertyList),
+		"",
+		"",
+	},
+	{
+		"omit empty",
+		&Omit{},
+		&PropertyList{
+			Property{Name: "St", Value: "", NoIndex: false, Multiple: false},
+		},
+		"",
+		"",
+	},
+	{
+		"omit empty, fields populated",
+		&Omit{
+			A: "a",
+			B: 10,
+			C: true,
+			F: []int{11},
+		},
+		&PropertyList{
+			Property{Name: "A", Value: "a", NoIndex: false, Multiple: false},
+			Property{Name: "Bb", Value: int64(10), NoIndex: false, Multiple: false},
+			Property{Name: "C", Value: true, NoIndex: true, Multiple: false},
+			Property{Name: "F", Value: int64(11), NoIndex: false, Multiple: true},
+			Property{Name: "St", Value: "", NoIndex: false, Multiple: false},
+		},
+		"",
+		"",
+	},
+	{
+		"omit empty, fields populated",
+		&Omit{
+			A: "a",
+			B: 10,
+			C: true,
+			F: []int{11},
+			S: S{St: "string"},
+		},
+		&PropertyList{
+			Property{Name: "A", Value: "a", NoIndex: false, Multiple: false},
+			Property{Name: "Bb", Value: int64(10), NoIndex: false, Multiple: false},
+			Property{Name: "C", Value: true, NoIndex: true, Multiple: false},
+			Property{Name: "F", Value: int64(11), NoIndex: false, Multiple: true},
+			Property{Name: "St", Value: "string", NoIndex: false, Multiple: false},
+		},
+		"",
+		"",
+	},
+	{
+		"omit empty does not propagate",
+		&NoOmits{
+			No: []NoOmit{
+				NoOmit{},
+			},
+			S:  S{},
+			Ss: S{},
+		},
+		&PropertyList{
+			Property{Name: "No.A", Value: "", NoIndex: false, Multiple: true},
+			Property{Name: "No.Bb", Value: int64(0), NoIndex: false, Multiple: true},
+			Property{Name: "No.C", Value: false, NoIndex: true, Multiple: true},
+			Property{Name: "Ss.St", Value: "", NoIndex: false, Multiple: false},
+			Property{Name: "St", Value: "", NoIndex: false, Multiple: false}},
 		"",
 		"",
 	},
@@ -1308,6 +1420,22 @@ var testCases = []testCase{
 			B: json.RawMessage("rawr"),
 		},
 		&B2{B: myBlob("rawr")},
+		"",
+		"",
+	},
+	{
+		"embedded time field",
+		&SpecialTime{MyTime: EmbeddedTime{now}},
+		&SpecialTime{MyTime: EmbeddedTime{now}},
+		"",
+		"",
+	},
+	{
+		"embedded time load",
+		&PropertyList{
+			Property{Name: "MyTime.", Value: now, NoIndex: false, Multiple: false},
+		},
+		&SpecialTime{MyTime: EmbeddedTime{now}},
 		"",
 		"",
 	},

@@ -274,7 +274,7 @@ func TestIntegration_UploadAndRead(t *testing.T) {
 		})
 	}
 	if err := upl.Put(ctx, saverRows); err != nil {
-		t.Fatal(err)
+		t.Fatal(putError(err))
 	}
 
 	// Wait until the data has been uploaded. This can take a few seconds, according
@@ -355,7 +355,13 @@ type TestStruct struct {
 	Subs []*Sub
 }
 
-type Sub struct{ B bool }
+type Sub struct {
+	B       bool
+	SubSub  SubSub
+	SubSubs []*SubSub
+}
+
+type SubSub struct{ Count int }
 
 func TestIntegration_UploadAndReadStructs(t *testing.T) {
 	if client == nil {
@@ -365,24 +371,29 @@ func TestIntegration_UploadAndReadStructs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	ctx := context.Background()
 	table := newTable(t, schema)
 	defer table.Delete(ctx)
 
 	// Populate the table.
 	upl := table.Uploader()
-	structs := []*TestStruct{
-		{Name: "a", Nums: []int{1, 2}, Sub: Sub{B: true}, Subs: []*Sub{{false}, {true}}},
-		{Name: "b", Nums: []int{1}, Subs: []*Sub{{false}, nil, {true}}},
-		nil,
+	want := []*TestStruct{
+		{Name: "a", Nums: []int{1, 2}, Sub: Sub{B: true}, Subs: []*Sub{{B: false}, {B: true}}},
+		{Name: "b", Nums: []int{1}, Subs: []*Sub{{B: false}, {B: false}, {B: true}}},
 		{Name: "c", Sub: Sub{B: true}},
+		{
+			Name: "d",
+			Sub:  Sub{SubSub: SubSub{12}, SubSubs: []*SubSub{{1}, {2}, {3}}},
+			Subs: []*Sub{{B: false, SubSub: SubSub{4}}, {B: true, SubSubs: []*SubSub{{5}, {6}}}},
+		},
 	}
 	var savers []*StructSaver
-	for _, s := range structs {
+	for _, s := range want {
 		savers = append(savers, &StructSaver{Schema: schema, Struct: s})
 	}
 	if err := upl.Put(ctx, savers); err != nil {
-		t.Fatal(err)
+		t.Fatal(putError(err))
 	}
 
 	// Wait until the data has been uploaded. This can take a few seconds, according
@@ -407,13 +418,7 @@ func TestIntegration_UploadAndReadStructs(t *testing.T) {
 	}
 	sort.Sort(byName(got))
 
-	// BigQuery elides nils, both at top level and in nested structs.
-	// This may be surprising, but the client library is faithfully
-	// rendering these nils into JSON, so we should not change it.
-	// structs[1].Subs[1] and structs[2] are nil.
-	want := []*TestStruct{structs[0], structs[1], structs[3]}
-	want[1].Subs = []*Sub{want[1].Subs[0], want[1].Subs[2]}
-
+	// BigQuery does not elide nils. It reports an error for nil fields.
 	for i, g := range got {
 		if i >= len(want) {
 			t.Errorf("%d: got %v, past end of want", i, pretty.Value(g))
@@ -601,20 +606,22 @@ func TestIntegration_TimeTypes(t *testing.T) {
 		{Name: "d", Type: DateFieldType},
 		{Name: "t", Type: TimeFieldType},
 		{Name: "dt", Type: DateTimeFieldType},
+		{Name: "ts", Type: TimestampFieldType},
 	}
 	table := newTable(t, dtSchema)
 	defer table.Delete(ctx)
 
 	d := civil.Date{2016, 3, 20}
 	tm := civil.Time{12, 30, 0, 0}
+	ts := time.Date(2016, 3, 20, 15, 04, 05, 0, time.UTC)
 	wantRows := [][]Value{
-		[]Value{d, tm, civil.DateTime{d, tm}},
+		[]Value{d, tm, civil.DateTime{d, tm}, ts},
 	}
 	upl := table.Uploader()
 	if err := upl.Put(ctx, []*ValuesSaver{
 		{Schema: dtSchema, Row: wantRows[0]},
 	}); err != nil {
-		t.Fatal(err)
+		t.Fatal(putError(err))
 	}
 	if err := waitForRow(ctx, table); err != nil {
 		t.Fatal(err)
@@ -622,9 +629,9 @@ func TestIntegration_TimeTypes(t *testing.T) {
 
 	// SQL wants DATETIMEs with a space between date and time, but the service
 	// returns them in RFC3339 form, with a "T" between.
-	query := fmt.Sprintf("INSERT bigquery_integration_test.%s (d, t, dt) "+
-		"VALUES ('%s', '%s', '%s %s')",
-		table.TableID, d, tm, d, tm)
+	query := fmt.Sprintf("INSERT bigquery_integration_test.%s (d, t, dt, ts) "+
+		"VALUES ('%s', '%s', '%s %s', '%s')",
+		table.TableID, d, tm, d, tm, ts.Format("2006-01-02 15:04:05"))
 	q := client.Query(query)
 	q.UseStandardSQL = true // necessary for DML
 	job, err := q.Run(ctx)
@@ -732,4 +739,16 @@ func waitForRow(ctx context.Context, table *Table) error {
 		}
 		time.Sleep(1 * time.Second)
 	}
+}
+
+func putError(err error) string {
+	pme, ok := err.(PutMultiError)
+	if !ok {
+		return err.Error()
+	}
+	var msgs []string
+	for _, err := range pme {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "\n")
 }

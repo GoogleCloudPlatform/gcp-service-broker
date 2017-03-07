@@ -43,9 +43,9 @@ Use NewImageFromReader to obtain an image from any io.Reader, such as an open fi
 	img, err := vision.NewImageFromReader(f)
 	if err != nil { ... }
 
-Use NewImageFromGCS to refer to an image in Google Cloud Storage:
+Use NewImageFromURI to refer to an image in Google Cloud Storage:
 
-	img := vision.NewImageFromGCS("gs://my-bucket/my-image.png")
+	img := vision.NewImageFromURI("gs://my-bucket/my-image.png")
 
 Annotating Images
 
@@ -92,5 +92,10 @@ provides easy access to the positions of facial features:
 	fmt.Println(faces[0].Face.Eyes.Left.Pupil)
 
 This package is experimental and subject to API changes.
+
+Authentication
+
+See examples of authorization and authentication at
+https://godoc.org/cloud.google.com/go#pkg-examples.
 */
 package vision // import "cloud.google.com/go/vision"
