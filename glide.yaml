@@ -29,6 +29,8 @@ import:
   - bigtable
   - bigquery
   - storage
+  - spanner/admin/instance/apiv1
+  - spanner/...
 testImport:
 - package: github.com/onsi/ginkgo
   version: ~1.2.0

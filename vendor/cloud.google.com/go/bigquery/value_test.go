@@ -73,6 +73,9 @@ func TestConvertTime(t *testing.T) {
 	if !got[0].(time.Time).Equal(thyme) {
 		t.Errorf("converting basic values: got:\n%v\nwant:\n%v", got, thyme)
 	}
+	if got[0].(time.Time).Location() != time.UTC {
+		t.Errorf("expected time zone UTC: got:\n%v", got)
+	}
 }
 
 func TestConvertNullValues(t *testing.T) {
@@ -474,10 +477,7 @@ func TestStructSaver(t *testing.T) {
 	}
 	check("all values", in, want)
 	check("all values, ptr", &in, want)
-	check("empty struct", T{}, map[string]Value{
-		"s": "",
-		"r": []int(nil),
-	})
+	check("empty struct", T{}, map[string]Value{"s": ""})
 
 	// Missing and extra fields ignored.
 	type T2 struct {
@@ -490,7 +490,6 @@ func TestStructSaver(t *testing.T) {
 	check("nils in slice", T{Rnested: []*N{{true}, nil, {false}}},
 		map[string]Value{
 			"s":       "",
-			"r":       []int(nil),
 			"rnested": []Value{map[string]Value{"b": true}, map[string]Value(nil), map[string]Value{"b": false}},
 		})
 }

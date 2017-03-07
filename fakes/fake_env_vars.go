@@ -151,3 +151,27 @@ const PreconfiguredPlans = `[
 			  "features": ""
 			}
 		      ]`
+
+const TestCloudSQLPlan = `{
+			"test_cloudsql_plan": {
+				"guid": "test_cloudsql_plan",
+				"name": "test_cloudsql_plan",
+				"description": "test-cloudsql-plan",
+				"tier": "D4",
+				"pricing_plan": "PER_USE",
+				"max_disk_size": "20",
+				"display_name": "test_cloudsql_plan",
+				"service": "4bc59b9a-8520-409f-85da-1c7552315863"
+			}
+		}`
+const TestBigtablePlan = `{
+			"test_bigtable_plan": {
+				"guid": "test_bigtable_plan",
+				"name": "test_bigtable_plan",
+				"description": "test-bigtable-plan",
+				"storage_type": "SSD",
+				"num_nodes": "3",
+				"display_name": "test_bigtable_plan",
+				"service": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
+			}
+		}`
