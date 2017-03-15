@@ -13,6 +13,12 @@
  */
 package com.google.cloud.servicebroker.awwvision;
 
+import com.google.api.client.http.InputStreamContent;
+import com.google.api.services.storage.Storage;
+import com.google.api.services.storage.model.ObjectAccessControl;
+import com.google.api.services.storage.model.Objects;
+import com.google.api.services.storage.model.StorageObject;
+
 import java.io.IOException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
@@ -21,29 +27,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Controller;
-
-import com.google.api.client.http.InputStreamContent;
-import com.google.api.services.storage.Storage;
-import com.google.api.services.storage.model.ObjectAccessControl;
-import com.google.api.services.storage.model.Objects;
-import com.google.api.services.storage.model.StorageObject;
-
 /**
  * Helper methods for interacting with the Cloud Storage API.
  * 
  * Uses the Cloud Storage Bucket configured in the application properties.
  */
-@Controller
+
 public class StorageAPI {
 
-  @Autowired
-  private Storage storageService;
+  private final Storage storageService;
+  private final String bucketName;
 
-  @Value("${gcp-storage-bucket}")
-  private String bucketName;
+  public StorageAPI(Storage storageService, String bucketName) {
+    this.storageService = storageService;
+    this.bucketName = bucketName;
+  }
 
   /**
    * Uploads a JPEG image to Cloud Storage.

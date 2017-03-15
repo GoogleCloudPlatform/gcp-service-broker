@@ -23,7 +23,7 @@ Awwvision: Spring Boot edition has two endpoints:
 
 1. From the main project directory, build an executable jar and push it to Cloud Foundry. This step will initially fail due to lack of credentials.
     ```
-    mvn package -DskipTests && cf push -p target/awwvision-spring-0.0.1-SNAPSHOT.jar awwvision
+    mvn package -DskipTests && cf push -p target/awwvision-spring-0.0.1-SNAPSHOT.jar awwvision --no-start 
     ```
 
 1. Create a Storage Bucket:
