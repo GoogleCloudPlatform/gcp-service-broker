@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-mvn -DskipTests=true clean install 
+mvn -DskipTests=true clean install
 
 service_name=awwvision-storage
 app_name=awwvision
