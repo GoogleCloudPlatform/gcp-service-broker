@@ -29,6 +29,8 @@ Awwvision: Spring Boot edition has two endpoints:
 1. Create a Storage Bucket:
     ```
 	cf create-service google-storage standard awwvision-storage -c '{"name": "awwvision-bucket"}'
+	
+	cf create-service google-bigtable standard mybigtable -c '{"name": "jalsdfjadf">
     ```
 
     Make sure the name of the bucket matches the name specified as `gcp-storage-bucket` in [application.properties](./src/main/resources/application.properties). You can also have the service broker generate the bucket name for you by omitting the `-c` and everything after it, and modifying the code to pull the bucket name from the `VCAP_SERVICES` environment variable (see [VisionConfig.java](./src/main/java/com/google/cloud/servicebroker/awwvision/VisionConfig.java) for how this is done to parse the credentials.)
