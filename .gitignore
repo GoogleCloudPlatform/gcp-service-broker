@@ -5,3 +5,5 @@
 *.DS_Store
 gcp-service-broker
 *.swp
+scripts/upload
+.gitignore~
