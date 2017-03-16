@@ -20,6 +20,8 @@ function app_domain(){
 
 sb_an=gcp-service-broker
 mysql_db=${sb_an}-db
+db_service_name=cleardb
+db_service_plan=spark
 
 # reset
 
@@ -29,20 +31,22 @@ cf ds -f $mysql_db
 echo "deleted app and service if they exist."
 
 # deploy
-
-cf cs p-mysql 100mb $mysql_db
-cf bs $sb_an $mysql_db
 cf push --random-route --no-start
+
+
+cf cs $db_service_name $db_service_plan $mysql_db
+cf bs $sb_an $mysql_db
 
 cf env $sb_an > json
 
 json=$(cat json |sed -e '1,/System-Provided:/d' | sed -e '/^}/q')
 
-dbHostname=$( echo $json | jq -r .VCAP_SERVICES.\"p-mysql\"[0].credentials.hostname )
-dbName=$( echo $json | jq -r .VCAP_SERVICES.\"p-mysql\"[0].credentials.name )
-dbPw=$( echo $json | jq -r .VCAP_SERVICES.\"p-mysql\"[0].credentials.password )
-dbPort=$( echo $json | jq -r .VCAP_SERVICES.\"p-mysql\"[0].credentials.port )
-dbUser=$( echo $json | jq -r .VCAP_SERVICES.\"p-mysql\"[0].credentials.username )
+
+dbHostname=$( echo $json | jq -r .VCAP_SERVICES.\"${db_service_name}\"[0].credentials.hostname )
+dbName=$( echo $json | jq -r .VCAP_SERVICES.\"${db_service_name}\"[0].credentials.name )
+dbPw=$( echo $json | jq -r .VCAP_SERVICES.\"${db_service_name}\"[0].credentials.password )
+dbPort=$( echo $json | jq -r .VCAP_SERVICES.\"${db_service_name}\"[0].credentials.port )
+dbUser=$( echo $json | jq -r .VCAP_SERVICES.\"${db_service_name}\"[0].credentials.username )
 
 rm json
 
@@ -56,16 +60,13 @@ cf set-env $sb_an SECURITY_USER_PASSWORD admin
 
 
 echo "about to set JSON"
-json_str=`cat $json_file | tr "\n" " "`
-echo $json_str
-cf set-env $sb_an ROOT_SERVICE_ACCOUNT_JSON '${json_str}'
+cf set-env $sb_an ROOT_SERVICE_ACCOUNT_JSON "$(< $json_file)"
 
 route=`app_domain $sb_an`
 echo $route
 
 
 cf restart $sb_an
-#
-# sb_name=gcp-service-broker
-# cf delete-service-broker $sb_name -f
-# cf create-service-broker $sb_name admin admin http://host.pcfdev.io:8010 --space-scoped
+
+cf delete-service-broker $sb_an -f
+cf create-service-broker $sb_an admin admin `app_domain $sb_an` --space-scoped
