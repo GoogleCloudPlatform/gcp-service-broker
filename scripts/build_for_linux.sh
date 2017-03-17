@@ -1,6 +1,10 @@
 #!/bin/bash
 echo $0
 
+script_dir=`dirname $0`
+pushd $script_dir/../../.. > /dev/null
+export GOPATH=`pwd`
+popd > /dev/null
 
 cd `dirname $0`/..
 rd=`pwd`

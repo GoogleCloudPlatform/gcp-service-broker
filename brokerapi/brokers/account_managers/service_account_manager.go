@@ -26,6 +26,7 @@ import (
 	cloudres "google.golang.org/api/cloudresourcemanager/v1"
 	iam "google.golang.org/api/iam/v1"
 	"net/http"
+	"strconv"
 )
 
 const roleResourcePrefix = "roles/"
@@ -91,6 +92,11 @@ func (sam *ServiceAccountManager) CreateAccountInGoogleWithPrivateKeyType(instan
 		return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating new cloud resource management service: %s", err)
 	}
 
+	project, err := cloudresService.Projects.Get(sam.ProjectId).Do()
+	if err != nil {
+		return models.ServiceBindingCredentials{}, fmt.Errorf("Error fetching the Project metadata: %s", err)
+	}
+
 	currPolicy, err := cloudresService.Projects.GetIamPolicy(sam.ProjectId, &cloudres.GetIamPolicyRequest{}).Do()
 	if err != nil {
 		return models.ServiceBindingCredentials{}, fmt.Errorf("Error getting current project iam policy: %s", err)
@@ -137,6 +143,7 @@ func (sam *ServiceAccountManager) CreateAccountInGoogleWithPrivateKeyType(instan
 		UniqueId:       newSA.UniqueId,
 		PrivateKeyData: newSAKey.PrivateKeyData,
 		ProjectId: sam.ProjectId,
+		ProjectNumber: strconv.FormatInt(project.ProjectNumber, 10),
 	}
 
 	saBytes, err := json.Marshal(&newSAInfo)
@@ -191,6 +198,7 @@ type ServiceAccountInfo struct {
 	Email    string
 	UniqueId string
 	ProjectId string
+	ProjectNumber string
 
 	// the bit to return
 	PrivateKeyData string
