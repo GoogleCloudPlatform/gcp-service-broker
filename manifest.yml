@@ -113,6 +113,22 @@ applications:
           },
           "tags": ["gcp", "trace"]
         }
+        {
+          "id": "b9e4312e-b42c-4680-bda5-39411832e",
+          "description": "Stackdriver Debugger",
+          "name": "google-stackdriver-debugger",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+            "displayName": "Google Stackdriver Debugger",
+            "longDescription": "Google Stackdriver Debugger provides powerful production diagnostics tools",
+            "documentationUrl": "https://cloud.google.com/debugger/docs/",
+            "supportUrl": "https://cloud.google.com/support/",
+            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg"
+          },
+          "tags": ["gcp", "debugger"]
+        }
+
       ]'
       PRECONFIGURED_PLANS: '[
         {
@@ -160,7 +176,14 @@ applications:
           "service_id": "b9e4332e-b42b-4680-bda5-39419832e",
           "name": "default",
           "display_name": "Default",
-          "description": "Stackdriver trace API default plan",
+          "description": "Stackdriver Trace API default plan",
           "features": ""
-        }
+        },
+        {
+          "service_id": "b9e4312e-b42c-4680-bda5-39411832e",
+          "name": "default",
+          "display_name": "Default",
+          "description": "Stackdriver Debugger API default plan",
+          "features": ""
+         }
       ]'
