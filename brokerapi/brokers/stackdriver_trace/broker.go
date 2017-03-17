@@ -49,6 +49,6 @@ func (b *StackdriverTraceBroker) Bind(instanceID, bindingID string, details mode
 		b.Logger.Info("the parameters are nil!")
 		details.Parameters = make(map[string]interface{})
 	}
-	details.Parameters["role"] = "editor"
+	details.Parameters["role"] = "cloudtrace.agent"
 	return b.BrokerBase.Bind(instanceID, bindingID, details)
 }
