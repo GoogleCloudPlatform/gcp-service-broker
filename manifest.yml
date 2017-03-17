@@ -112,7 +112,7 @@ applications:
             "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg"
           },
           "tags": ["gcp", "trace"]
-        }
+        },
         {
           "id": "b9e4312e-b42c-4680-bda5-39411832e",
           "description": "Stackdriver Debugger",
