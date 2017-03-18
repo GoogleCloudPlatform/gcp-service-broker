@@ -175,3 +175,13 @@ const TestBigtablePlan = `{
 				"service": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
 			}
 		}`
+const TestSpannerPlan = `{
+			"test_spanner_plan": {
+				"guid": "test_spanner_plan",
+				"name": "test_spanner_plan",
+				"description": "test-spanner-plan",
+				"num_nodes": "3",
+				"display_name": "test_spanner_plan",
+				"service": "51b3e27e-d323-49ce-8c5f-1211e6409e82"
+			}
+		}`

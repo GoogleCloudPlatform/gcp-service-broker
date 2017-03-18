@@ -18,6 +18,7 @@
 package integration_tests
 
 import (
+	googlespanner "cloud.google.com/go/spanner/admin/instance/apiv1"
 	"code.cloudfoundry.org/lager"
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers"
@@ -29,7 +30,10 @@ import (
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"golang.org/x/net/context"
+	"google.golang.org/api/iam/v1"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
+	instancepb "google.golang.org/genproto/googleapis/spanner/admin/instance/v1"
 	"os"
 	"time"
 )
@@ -86,6 +90,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 
 		os.Setenv("CLOUDSQL_CUSTOM_PLANS", fakes.TestCloudSQLPlan)
 		os.Setenv("BIGTABLE_CUSTOM_PLANS", fakes.TestBigtablePlan)
+		os.Setenv("SPANNER_CUSTOM_PLANS", fakes.TestSpannerPlan)
 
 		var creds models.GCPCredentials
 		creds, err = brokers.GetCredentialsFromEnv()
@@ -93,6 +98,8 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			logger.Error("error", err)
 		}
 		instance_name = generateInstanceName(creds.ProjectId, "-")
+
+		// cloudsql instance names need to be random because the recycle time is so long it's untenable to be consistent
 		cloudsqlInstanceName = fmt.Sprintf("pcf-sb-test-%d", time.Now().UnixNano())
 		name_generator.Basic = &fakes.StaticNameGenerator{Val: instance_name}
 		name_generator.Sql = &fakes.StaticSQLNameGenerator{
@@ -122,9 +129,78 @@ var _ = Describe("AsyncIntegrationTests", func() {
 		})
 
 		It("can provision/bind/unbind/deprovision", func() {
+			// create the instance
 			provisionDetails := models.ProvisionDetails{
 				ServiceID: serviceNameToId[models.CloudsqlName],
 				PlanID:    serviceNameToPlanId[models.CloudsqlName],
+			}
+			_, err = gcpBroker.Provision("integration_test_instance", provisionDetails, true)
+			Expect(err).NotTo(HaveOccurred())
+			pollForMaxFiveMins(gcpBroker, "integration_test_instance")
+
+			// make sure it's in the database
+			var count int
+			db_service.DbConnection.Model(&models.ServiceInstanceDetails{}).Where("id = ?", "integration_test_instance").Count(&count)
+			Expect(count).To(Equal(1))
+
+			// make sure we can get it from google
+			clouddb, err := dbService.Get(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName).Do()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(clouddb.Name).To(Equal(cloudsqlInstanceName))
+
+			// bind the instance
+			bindDetails := models.BindDetails{
+				ServiceID: serviceNameToId[models.CloudsqlName],
+				PlanID:    serviceNameToPlanId[models.CloudsqlName],
+			}
+			creds, err := gcpBroker.Bind("integration_test_instance", "binding_id", bindDetails)
+			Expect(err).NotTo(HaveOccurred())
+			credsMap := creds.Credentials.(map[string]string)
+
+			// make sure we have a username and google has ssl certs
+			Expect(credsMap["Username"]).ToNot(Equal(""))
+			_, err = sslService.Get(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName, credsMap["Sha1Fingerprint"]).Do()
+			Expect(err).NotTo(HaveOccurred())
+
+			// unbind the instance
+			unBindDetails := models.UnbindDetails{
+				ServiceID: serviceNameToId[models.CloudsqlName],
+				PlanID:    serviceNameToPlanId[models.CloudsqlName],
+			}
+			err = gcpBroker.Unbind("integration_test_instance", "binding_id", unBindDetails)
+			Expect(err).NotTo(HaveOccurred())
+
+			// make sure google no longer has certs
+			certsList, err := sslService.List(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName).Do()
+			Expect(len(certsList.Items)).To(Equal(0))
+
+			// deprovision the instance
+			deprovisionDetails := models.DeprovisionDetails{
+				ServiceID: serviceNameToId[models.CloudsqlName],
+				PlanID:    serviceNameToPlanId[models.CloudsqlName],
+			}
+			_, err = gcpBroker.Deprovision("integration_test_instance", deprovisionDetails, true)
+			Expect(err).NotTo(HaveOccurred())
+			pollForMaxFiveMins(gcpBroker, "integration_test_instance")
+
+			// make sure the instance is deleted from google
+			_, err = dbService.Get(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName).Do()
+			Expect(err).To(HaveOccurred())
+		})
+
+	})
+
+	Describe("Spanner", func() {
+
+		var client *googlespanner.InstanceAdminClient
+		BeforeEach(func() {
+			client, err = googlespanner.NewInstanceAdminClient(context.Background())
+		})
+
+		It("can provision/bind/unbind/deprovision", func() {
+			provisionDetails := models.ProvisionDetails{
+				ServiceID: serviceNameToId[models.SpannerName],
+				PlanID:    serviceNameToPlanId[models.SpannerName],
 			}
 			_, err = gcpBroker.Provision("integration_test_instance", provisionDetails, true)
 			Expect(err).NotTo(HaveOccurred())
@@ -134,39 +210,51 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			db_service.DbConnection.Model(&models.ServiceInstanceDetails{}).Where("id = ?", "integration_test_instance").Count(&count)
 			Expect(count).To(Equal(1))
 
-			clouddb, err := dbService.Get(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName).Do()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(clouddb.Name).To(Equal(cloudsqlInstanceName))
+			_, err := client.GetInstance(context.Background(), &instancepb.GetInstanceRequest{
+				Name: "projects/" + gcpBroker.RootGCPCredentials.ProjectId + "/instances/" + instance_name,
+			})
+			Expect(err).ToNot(HaveOccurred())
 
 			bindDetails := models.BindDetails{
-				ServiceID: serviceNameToId[models.CloudsqlName],
-				PlanID:    serviceNameToPlanId[models.CloudsqlName],
+				ServiceID: serviceNameToId[models.SpannerName],
+				PlanID:    serviceNameToPlanId[models.SpannerName],
+				Parameters: map[string]interface{}{
+					"role": "spanner.admin",
+				},
 			}
-			creds, err := gcpBroker.Bind("integration_test_instance", "binding_id", bindDetails)
+			creds, err := gcpBroker.Bind("integration_test_instance", "bind-id", bindDetails)
 			Expect(err).NotTo(HaveOccurred())
 			credsMap := creds.Credentials.(map[string]string)
+			Expect(credsMap["credentials"]).ToNot(Equal(nil))
 
-			Expect(credsMap["Username"]).ToNot(Equal(""))
-			_, err = sslService.Get(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName, credsMap["Sha1Fingerprint"]).Do()
-			Expect(err).NotTo(HaveOccurred())
+			iamService, err := iam.New(gcpBroker.GCPClient)
+			Expect(err).ToNot(HaveOccurred())
+			saService := iam.NewProjectsServiceAccountsService(iamService)
+			bindResourceName := "projects/" + gcpBroker.RootGCPCredentials.ProjectId + "/serviceAccounts/" + creds.Credentials.(map[string]string)["UniqueId"]
+			_, err = saService.Get(bindResourceName).Do()
+			Expect(err).ToNot(HaveOccurred())
 
 			unBindDetails := models.UnbindDetails{
-				ServiceID: serviceNameToId[models.CloudsqlName],
-				PlanID:    serviceNameToPlanId[models.CloudsqlName],
+				ServiceID: serviceNameToId[models.SpannerName],
+				PlanID:    serviceNameToPlanId[models.SpannerName],
 			}
-			err = gcpBroker.Unbind("integration_test_instance", "binding_id", unBindDetails)
+			err = gcpBroker.Unbind("integration_test_instance", "bind-id", unBindDetails)
 			Expect(err).NotTo(HaveOccurred())
-			certsList, err := sslService.List(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName).Do()
-			Expect(len(certsList.Items)).To(Equal(0))
+
+			_, err = saService.Get(bindResourceName).Do()
+			Expect(err).To(HaveOccurred())
 
 			deprovisionDetails := models.DeprovisionDetails{
-				ServiceID: serviceNameToId[models.CloudsqlName],
-				PlanID:    serviceNameToPlanId[models.CloudsqlName],
+				ServiceID: serviceNameToId[models.SpannerName],
+				PlanID:    serviceNameToPlanId[models.SpannerName],
 			}
 			_, err = gcpBroker.Deprovision("integration_test_instance", deprovisionDetails, true)
 			Expect(err).NotTo(HaveOccurred())
 			pollForMaxFiveMins(gcpBroker, "integration_test_instance")
-			_, err = dbService.Get(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName).Do()
+
+			_, err = client.GetInstance(context.Background(), &instancepb.GetInstanceRequest{
+				Name: "projects/" + gcpBroker.RootGCPCredentials.ProjectId + "/instances/" + instance_name,
+			})
 			Expect(err).To(HaveOccurred())
 		})
 

@@ -65,41 +65,9 @@ var _ = Describe("Brokers", func() {
 		os.Setenv("SERVICES", fakes.Services)
 		os.Setenv("PRECONFIGURED_PLANS", fakes.PreconfiguredPlans)
 
-		os.Setenv("CLOUDSQL_CUSTOM_PLANS", `{
-			"test_plan": {
-				"guid": "test_plan",
-				"name": "bar",
-				"description": "testplan",
-				"tier": "4",
-				"pricing_plan": "athing",
-				"max_disk_size": "20",
-				"display_name": "FOOBAR",
-				"service": "4bc59b9a-8520-409f-85da-1c7552315863"
-			}
-		}`)
-
-		os.Setenv("BIGTABLE_CUSTOM_PLANS", `{
-			"test_bigtable_plan": {
-				"guid": "foo2",
-				"name": "bar2",
-				"description": "test-bigtable-plan",
-				"storage_type": "SSD",
-				"num_nodes": "3",
-				"display_name": "FOOBAR2",
-				"service": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
-			}
-		}`)
-
-		os.Setenv("SPANNER_CUSTOM_PLANS", `{
-			"test_spanner_plan": {
-				"guid": "foo3",
-				"name": "bar3",
-				"description": "test-spanner-plan",
-				"num_nodes": "3",
-				"display_name": "FOOBAR3",
-				"service": ""
-			}
-		}`)
+		os.Setenv("CLOUDSQL_CUSTOM_PLANS", fakes.TestCloudSQLPlan)
+		os.Setenv("BIGTABLE_CUSTOM_PLANS", fakes.TestBigtablePlan)
+		os.Setenv("SPANNER_CUSTOM_PLANS", fakes.TestSpannerPlan)
 
 		instanceId = "newid"
 		bindingId = "newbinding"
@@ -165,8 +133,8 @@ var _ = Describe("Brokers", func() {
 	})
 
 	Describe("Broker init", func() {
-		It("should have 6 services in sevices map", func() {
-			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(6))
+		It("should have 7 services in sevices map", func() {
+			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(7))
 		})
 
 		It("should have a default client", func() {
@@ -179,8 +147,8 @@ var _ = Describe("Brokers", func() {
 	})
 
 	Describe("getting broker catalog", func() {
-		It("should have 6 services available", func() {
-			Expect(len(gcpBroker.Services())).To(Equal(6))
+		It("should have 7 services available", func() {
+			Expect(len(gcpBroker.Services())).To(Equal(7))
 		})
 
 		It("should have 3 storage plans available", func() {

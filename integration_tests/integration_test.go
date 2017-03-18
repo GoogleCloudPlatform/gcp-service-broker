@@ -177,6 +177,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 		os.Setenv("CLOUDSQL_CUSTOM_PLANS", fakes.TestCloudSQLPlan)
 		os.Setenv("BIGTABLE_CUSTOM_PLANS", fakes.TestBigtablePlan)
+		os.Setenv("SPANNER_CUSTOM_PLANS", fakes.TestSpannerPlan)
 
 		var creds models.GCPCredentials
 		creds, err = brokers.GetCredentialsFromEnv()
@@ -198,8 +199,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	Describe("Broker init", func() {
-		It("should have 6 services in sevices map", func() {
-			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(6))
+		It("should have 7 services in sevices map", func() {
+			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(7))
 		})
 
 		It("should have a default client", func() {
@@ -212,8 +213,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	Describe("getting broker catalog", func() {
-		It("should have 6 services available", func() {
-			Expect(len(gcpBroker.Services())).To(Equal(6))
+		It("should have 7 services available", func() {
+			Expect(len(gcpBroker.Services())).To(Equal(7))
 		})
 
 		It("should have 3 storage plans available", func() {
