@@ -12,15 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// TODO(jba): test crop hints, text annotation, web annotation
-// TODO(jba): expose DOCUMENT_TEXT annotation
-
 package vision
 
 import (
 	"image/color"
 	"math"
 
+	"cloud.google.com/go/internal/version"
 	vkit "cloud.google.com/go/vision/apiv1"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
@@ -42,7 +40,7 @@ func NewClient(ctx context.Context, opts ...option.ClientOption) (*Client, error
 	if err != nil {
 		return nil, err
 	}
-	c.SetGoogleClientInfo("vision", "0.1.0")
+	c.SetGoogleClientInfo("gccl", version.Repo)
 	return &Client{client: c}, nil
 }
 
@@ -51,7 +49,7 @@ func (c *Client) Close() error {
 	return c.client.Close()
 }
 
-// Annotate annotates multiple images, each with a potentially differeent set
+// Annotate annotates multiple images, each with a potentially different set
 // of features.
 func (c *Client) Annotate(ctx context.Context, requests ...*AnnotateRequest) ([]*Annotations, error) {
 	var reqs []*pb.AnnotateImageRequest
@@ -88,6 +86,9 @@ type AnnotateRequest struct {
 	// MaxTexts is the maximum number of separate pieces of text to detect in the
 	// image. Specifying a number greater than zero enables text detection.
 	MaxTexts int
+	// DocumentText specifies whether a dense text document OCR should be run
+	// on the image. When true, takes precedence over MaxTexts.
+	DocumentText bool
 	// SafeSearch specifies whether a safe-search detection should be run on the image.
 	SafeSearch bool
 	// ImageProps specifies whether image properties should be obtained for the image.
@@ -124,6 +125,9 @@ func (ar *AnnotateRequest) toProto() *pb.AnnotateImageRequest {
 	}
 	if ar.MaxTexts > 0 {
 		add(pb.Feature_TEXT_DETECTION, ar.MaxTexts)
+	}
+	if ar.DocumentText {
+		add(pb.Feature_DOCUMENT_TEXT_DETECTION, 0)
 	}
 	if ar.SafeSearch {
 		add(pb.Feature_SAFE_SEARCH_DETECTION, 0)
@@ -170,10 +174,7 @@ func (c *Client) annotateOne(ctx context.Context, req *AnnotateRequest) (*Annota
 	anns := annsSlice[0]
 	// When there is only one image and one feature, the Annotations.Error field is
 	// unambiguously about that one detection, so we "promote" it to the error return value.
-	if anns.Error != nil {
-		return nil, anns.Error
-	}
-	return anns, nil
+	return anns, anns.Error
 }
 
 // TODO(jba): add examples for all single-feature functions (below).
@@ -228,6 +229,15 @@ func (c *Client) DetectTexts(ctx context.Context, img *Image, maxResults int) ([
 	return anns.Texts, nil
 }
 
+// DetectDocumentText performs full text (OCR) detection on the image.
+func (c *Client) DetectDocumentText(ctx context.Context, img *Image) (*TextAnnotation, error) {
+	anns, err := c.annotateOne(ctx, &AnnotateRequest{Image: img, DocumentText: true})
+	if err != nil {
+		return nil, err
+	}
+	return anns.FullText, nil
+}
+
 // DetectSafeSearch performs safe-search detection on the image.
 func (c *Client) DetectSafeSearch(ctx context.Context, img *Image) (*SafeSearchAnnotation, error) {
 	anns, err := c.annotateOne(ctx, &AnnotateRequest{Image: img, SafeSearch: true})
@@ -257,6 +267,12 @@ func (c *Client) DetectWeb(ctx context.Context, img *Image) (*WebDetection, erro
 
 // CropHints computes crop hints for the image.
 func (c *Client) CropHints(ctx context.Context, img *Image, params *CropHintsParams) ([]*CropHint, error) {
+	// A nil AnnotateRequest.CropHints means do not perform CropHints. But
+	// here the user is explicitly asking for CropHints, so treat nil as
+	// an empty CropHintsParams.
+	if params == nil {
+		params = &CropHintsParams{}
+	}
 	anns, err := c.annotateOne(ctx, &AnnotateRequest{Image: img, CropHints: params})
 	if err != nil {
 		return nil, err

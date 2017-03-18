@@ -199,14 +199,9 @@ func TestObjects(t *testing.T) {
 
 	// Test Writer.
 	for _, obj := range objects {
-		wc := bkt.Object(obj).NewWriter(ctx)
-		wc.ContentType = defaultType
 		c := randomContents()
-		if _, err := wc.Write(c); err != nil {
+		if err := writeObject(ctx, bkt.Object(obj), defaultType, c); err != nil {
 			t.Errorf("Write for %v failed with %v", obj, err)
-		}
-		if err := wc.Close(); err != nil {
-			t.Errorf("Close for %v failed with %v", obj, err)
 		}
 		contents[obj] = c
 	}
@@ -386,21 +381,9 @@ func TestObjects(t *testing.T) {
 			copyObj.Bucket, copyObj.Name, bucket, copyName)
 	}
 
-	// Check for error setting attributes but not ContentType.
-	const (
-		contentType     = "text/html"
-		contentEncoding = "identity"
-	)
-	copier := bkt.Object(copyName).CopierFrom(bkt.Object(objName))
-	copier.ContentEncoding = contentEncoding
-	_, err = copier.Run(ctx)
-	if err == nil {
-		t.Error("copy without ContentType: got nil, want error")
-	}
-
 	// Copying with attributes.
-	copier = bkt.Object(copyName).CopierFrom(bkt.Object(objName))
-	copier.ContentType = contentType
+	const contentEncoding = "identity"
+	copier := bkt.Object(copyName).CopierFrom(bkt.Object(objName))
 	copier.ContentEncoding = contentEncoding
 	copyObj, err = copier.Run(ctx)
 	if err != nil {
@@ -409,9 +392,6 @@ func TestObjects(t *testing.T) {
 		if !namesEqual(copyObj, bucket, copyName) {
 			t.Errorf("Copy object bucket, name: got %q.%q, want %q.%q",
 				copyObj.Bucket, copyObj.Name, bucket, copyName)
-		}
-		if copyObj.ContentType != contentType {
-			t.Errorf("Copy ContentType: got %q, want %q", copyObj.ContentType, contentType)
 		}
 		if copyObj.ContentEncoding != contentEncoding {
 			t.Errorf("Copy ContentEncoding: got %q, want %q", copyObj.ContentEncoding, contentEncoding)
@@ -661,13 +641,9 @@ func TestACL(t *testing.T) {
 	}
 	aclObjects := []string{"acl1", "acl2"}
 	for _, obj := range aclObjects {
-		wc := bkt.Object(obj).NewWriter(ctx)
 		c := randomContents()
-		if _, err := wc.Write(c); err != nil {
+		if err := writeObject(ctx, bkt.Object(obj), "", c); err != nil {
 			t.Errorf("Write for %v failed with %v", obj, err)
-		}
-		if err := wc.Close(); err != nil {
-			t.Errorf("Close for %v failed with %v", obj, err)
 		}
 	}
 	name := aclObjects[0]
@@ -728,13 +704,8 @@ func TestValidObjectNames(t *testing.T) {
 		strings.Repeat("a", 1024),
 	}
 	for _, name := range validNames {
-		w := bkt.Object(name).NewWriter(ctx)
-		if _, err := w.Write([]byte("data")); err != nil {
+		if err := writeObject(ctx, bkt.Object(name), "", []byte("data")); err != nil {
 			t.Errorf("Object %q write failed: %v. Want success", name, err)
-			continue
-		}
-		if err := w.Close(); err != nil {
-			t.Errorf("Object %q close failed: %v. Want success", name, err)
 			continue
 		}
 		defer bkt.Object(name).Delete(ctx)
@@ -747,12 +718,8 @@ func TestValidObjectNames(t *testing.T) {
 		"bad\xffunicode",
 	}
 	for _, name := range invalidNames {
-		w := bkt.Object(name).NewWriter(ctx)
 		// Invalid object names will either cause failure during Write or Close.
-		if _, err := w.Write([]byte("data")); err != nil {
-			continue
-		}
-		if err := w.Close(); err != nil {
+		if err := writeObject(ctx, bkt.Object(name), "", []byte("data")); err != nil {
 			continue
 		}
 		defer bkt.Object(name).Delete(ctx)
@@ -789,14 +756,9 @@ func TestWriterContentType(t *testing.T) {
 			wantType: "image/jpeg",
 		},
 	}
-	for _, tt := range testCases {
-		w := obj.NewWriter(ctx)
-		w.ContentType = tt.setType
-		if _, err := w.Write([]byte(tt.content)); err != nil {
-			t.Errorf("w.Write: %v", err)
-		}
-		if err := w.Close(); err != nil {
-			t.Errorf("w.Close: %v", err)
+	for i, tt := range testCases {
+		if err := writeObject(ctx, obj, tt.setType, []byte(tt.content)); err != nil {
+			t.Errorf("writing #%d: %v", i, err)
 		}
 		attrs, err := obj.Attrs(ctx)
 		if err != nil {
@@ -1004,6 +966,100 @@ func TestIntegration_NonexistentBucket(t *testing.T) {
 	}
 }
 
+func TestIntegration_PerObjectStorageClass(t *testing.T) {
+	const (
+		defaultStorageClass = "STANDARD"
+		newStorageClass     = "MULTI_REGIONAL"
+	)
+	ctx := context.Background()
+	client, bucket := testConfig(ctx, t)
+	defer client.Close()
+
+	bkt := client.Bucket(bucket)
+
+	// The bucket should have the default storage class.
+	battrs, err := bkt.Attrs(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if battrs.StorageClass != defaultStorageClass {
+		t.Fatalf("bucket storage class: got %q, want %q",
+			battrs.StorageClass, defaultStorageClass)
+	}
+	// Write an object; it should start with the bucket's storage class.
+	obj := bkt.Object("posc")
+	if err := writeObject(ctx, obj, "", []byte("foo")); err != nil {
+		t.Fatal(err)
+	}
+	oattrs, err := obj.Attrs(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if oattrs.StorageClass != defaultStorageClass {
+		t.Fatalf("object storage class: got %q, want %q",
+			oattrs.StorageClass, defaultStorageClass)
+	}
+	// Now use Copy to change the storage class.
+	copier := obj.CopierFrom(obj)
+	copier.StorageClass = newStorageClass
+	oattrs2, err := copier.Run(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if oattrs2.StorageClass != newStorageClass {
+		t.Fatalf("new object storage class: got %q, want %q",
+			oattrs2.StorageClass, newStorageClass)
+	}
+
+	// We can also write a new object using a non-default storage class.
+	obj2 := bkt.Object("posc2")
+	w := obj2.NewWriter(ctx)
+	w.StorageClass = newStorageClass
+	if _, err := w.Write([]byte("xxx")); err != nil {
+		t.Fatal(err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if w.Attrs().StorageClass != newStorageClass {
+		t.Fatalf("new object storage class: got %q, want %q",
+			w.Attrs().StorageClass, newStorageClass)
+	}
+}
+
+func TestIntegration_BucketInCopyAttrs(t *testing.T) {
+	// Confirm that if bucket is included in the object attributes of a rewrite
+	// call, but object name and content-type aren't, then we get an error. See
+	// the comment in Copier.Run.
+	ctx := context.Background()
+	client, bucket := testConfig(ctx, t)
+	defer client.Close()
+
+	bkt := client.Bucket(bucket)
+	obj := bkt.Object("bucketInCopyAttrs")
+	if err := writeObject(ctx, obj, "", []byte("foo")); err != nil {
+		t.Fatal(err)
+	}
+	copier := obj.CopierFrom(obj)
+	rawObject := copier.ObjectAttrs.toRawObject(bucket)
+	_, err := copier.callRewrite(ctx, obj, rawObject)
+	if err == nil {
+		t.Errorf("got nil, want error")
+	}
+}
+
+func writeObject(ctx context.Context, obj *ObjectHandle, contentType string, contents []byte) error {
+	w := obj.NewWriter(ctx)
+	w.ContentType = contentType
+	if contents != nil {
+		if _, err := w.Write(contents); err != nil {
+			_ = w.Close()
+			return err
+		}
+	}
+	return w.Close()
+}
+
 func readObject(ctx context.Context, obj *ObjectHandle) ([]byte, error) {
 	r, err := obj.NewReader(ctx)
 	if err != nil {
@@ -1045,7 +1101,7 @@ func cleanup() error {
 			return err
 		}
 		if time.Since(bktAttrs.Created) > expireAge {
-			log.Printf("deleting bucket %q, which more than %s old", bktAttrs.Name, expireAge)
+			log.Printf("deleting bucket %q, which is more than %s old", bktAttrs.Name, expireAge)
 			if err := killBucket(ctx, client, bktAttrs.Name); err != nil {
 				return err
 			}

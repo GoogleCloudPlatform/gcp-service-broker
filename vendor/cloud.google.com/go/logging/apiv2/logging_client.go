@@ -17,7 +17,6 @@
 package logging
 
 import (
-	"fmt"
 	"math"
 	"time"
 
@@ -66,6 +65,17 @@ func defaultCallOptions() *CallOptions {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
 					codes.DeadlineExceeded,
+					codes.Unavailable,
+				}, gax.Backoff{
+					Initial:    100 * time.Millisecond,
+					Max:        1000 * time.Millisecond,
+					Multiplier: 1.2,
+				})
+			}),
+		},
+		{"default", "non_idempotent"}: {
+			gax.WithRetry(func() gax.Retryer {
+				return gax.OnCodes([]codes.Code{
 					codes.Unavailable,
 				}, gax.Backoff{
 					Initial:    100 * time.Millisecond,
@@ -125,7 +135,7 @@ func NewClient(ctx context.Context, opts ...option.ClientOption) (*Client, error
 
 		client: loggingpb.NewLoggingServiceV2Client(conn),
 	}
-	c.SetGoogleClientInfo("gapic", version.Repo)
+	c.SetGoogleClientInfo()
 	return c, nil
 }
 
@@ -143,8 +153,10 @@ func (c *Client) Close() error {
 // SetGoogleClientInfo sets the name and version of the application in
 // the `x-goog-api-client` header passed on each request. Intended for
 // use by Google-written clients.
-func (c *Client) SetGoogleClientInfo(clientName, clientVersion string) {
-	c.xGoogHeader = fmt.Sprintf("gl-go/%s %s/%s gax/%s grpc/", version.Go(), clientName, clientVersion, gax.Version)
+func (c *Client) SetGoogleClientInfo(keyval ...string) {
+	kv := append([]string{"gl-go", version.Go()}, keyval...)
+	kv = append(kv, "gapic", version.Repo, "gax", gax.Version, "grpc", "")
+	c.xGoogHeader = gax.XGoogHeader(kv...)
 }
 
 // LoggingProjectPath returns the path for the project resource.
@@ -172,6 +184,8 @@ func LoggingLogPath(project, log string) string {
 
 // DeleteLog deletes all the log entries in a log.
 // The log reappears if it receives new entries.
+// Log entries written shortly before the delete operation might not be
+// deleted.
 func (c *Client) DeleteLog(ctx context.Context, req *loggingpb.DeleteLogRequest) error {
 	ctx = insertXGoog(ctx, c.xGoogHeader)
 	err := gax.Invoke(ctx, func(ctx context.Context) error {
@@ -182,8 +196,7 @@ func (c *Client) DeleteLog(ctx context.Context, req *loggingpb.DeleteLogRequest)
 	return err
 }
 
-// WriteLogEntries writes log entries to Stackdriver Logging.  All log entries are
-// written by this method.
+// WriteLogEntries writes log entries to Stackdriver Logging.
 func (c *Client) WriteLogEntries(ctx context.Context, req *loggingpb.WriteLogEntriesRequest) (*loggingpb.WriteLogEntriesResponse, error) {
 	ctx = insertXGoog(ctx, c.xGoogHeader)
 	var resp *loggingpb.WriteLogEntriesResponse
@@ -269,7 +282,7 @@ func (c *Client) ListMonitoredResourceDescriptors(ctx context.Context, req *logg
 	return it
 }
 
-// ListLogs lists the logs in projects or organizations.
+// ListLogs lists the logs in projects, organizations, folders, or billing accounts.
 // Only logs that have entries are listed.
 func (c *Client) ListLogs(ctx context.Context, req *loggingpb.ListLogsRequest) *StringIterator {
 	ctx = insertXGoog(ctx, c.xGoogHeader)

@@ -185,6 +185,15 @@ const (
 	labelSamplingWeight = `trace.cloud.google.com/sampling_weight`
 )
 
+const (
+	// ScopeTraceAppend grants permissions to write trace data for a project.
+	ScopeTraceAppend = "https://www.googleapis.com/auth/trace.append"
+
+	// ScopeCloudPlatform grants permissions to view and manage your data
+	// across Google Cloud Platform services.
+	ScopeCloudPlatform = "https://www.googleapis.com/auth/cloud-platform"
+)
+
 type contextKey struct{}
 
 type stackLabelValue struct {
@@ -230,13 +239,16 @@ func requestHook(ctx context.Context, req *http.Request) func(resp *http.Respons
 	}
 }
 
-// EnableGRPCTracingDialOption enables tracing of requests that are sent over a
-// gRPC connection.
+// EnableGRPCTracingDialOption traces all outgoing requests from a gRPC client.
+// The calling context should already have a *trace.Span; a child span will be
+// created for the outgoing gRPC call. If the calling context doesn't have a span,
+// the call will not be traced.
+//
 // The functionality in gRPC that this relies on is currently experimental.
 var EnableGRPCTracingDialOption grpc.DialOption = grpc.WithUnaryInterceptor(grpc.UnaryClientInterceptor(grpcUnaryInterceptor))
 
-// EnableGRPCTracing enables tracing of requests for clients that use gRPC
-// connections.
+// EnableGRPCTracing automatically traces all gRPC calls from cloud.google.com/go clients.
+//
 // The functionality in gRPC that this relies on is currently experimental.
 var EnableGRPCTracing option.ClientOption = option.WithGRPCDialOption(EnableGRPCTracingDialOption)
 

@@ -570,6 +570,9 @@ func (te *test) clientConn() *grpc.ClientConn {
 	if te.streamClientInt != nil {
 		opts = append(opts, grpc.WithStreamInterceptor(te.streamClientInt))
 	}
+	if te.maxMsgSize > 0 {
+		opts = append(opts, grpc.WithMaxMsgSize(te.maxMsgSize))
+	}
 	switch te.e.security {
 	case "tls":
 		creds, err := credentials.NewClientTLSFromFile(tlsDir+"ca.pem", "x.test.youtube.com")
@@ -1427,22 +1430,34 @@ func testExceedMsgLimit(t *testing.T, e env) {
 	tc := testpb.NewTestServiceClient(te.clientConn())
 
 	argSize := int32(te.maxMsgSize + 1)
-	const respSize = 1
+	const smallSize = 1
 
 	payload, err := newPayload(testpb.PayloadType_COMPRESSABLE, argSize)
 	if err != nil {
 		t.Fatal(err)
 	}
+	smallPayload, err := newPayload(testpb.PayloadType_COMPRESSABLE, smallSize)
+	if err != nil {
+		t.Fatal(err)
+	}
 
+	// test on server side for unary RPC
 	req := &testpb.SimpleRequest{
 		ResponseType: testpb.PayloadType_COMPRESSABLE.Enum(),
-		ResponseSize: proto.Int32(respSize),
+		ResponseSize: proto.Int32(smallSize),
 		Payload:      payload,
 	}
 	if _, err := tc.UnaryCall(context.Background(), req); err == nil || grpc.Code(err) != codes.Internal {
 		t.Fatalf("TestService/UnaryCall(_, _) = _, %v, want _, error code: %s", err, codes.Internal)
 	}
+	// test on client side for unary RPC
+	req.ResponseSize = proto.Int32(int32(te.maxMsgSize) + 1)
+	req.Payload = smallPayload
+	if _, err := tc.UnaryCall(context.Background(), req); err == nil || grpc.Code(err) != codes.Internal {
+		t.Fatalf("TestService/UnaryCall(_, _) = _, %v, want _, error code: %s", err, codes.Internal)
+	}
 
+	// test on server side for streaming RPC
 	stream, err := tc.FullDuplexCall(te.ctx)
 	if err != nil {
 		t.Fatalf("%v.FullDuplexCall(_) = _, %v, want <nil>", tc, err)
@@ -1469,6 +1484,21 @@ func testExceedMsgLimit(t *testing.T, e env) {
 	if _, err := stream.Recv(); err == nil || grpc.Code(err) != codes.Internal {
 		t.Fatalf("%v.Recv() = _, %v, want _, error code: %s", stream, err, codes.Internal)
 	}
+
+	// test on client side for streaming RPC
+	stream, err = tc.FullDuplexCall(te.ctx)
+	if err != nil {
+		t.Fatalf("%v.FullDuplexCall(_) = _, %v, want <nil>", tc, err)
+	}
+	respParam[0].Size = proto.Int32(int32(te.maxMsgSize) + 1)
+	sreq.Payload = smallPayload
+	if err := stream.Send(sreq); err != nil {
+		t.Fatalf("%v.Send(%v) = %v, want <nil>", stream, sreq, err)
+	}
+	if _, err := stream.Recv(); err == nil || grpc.Code(err) != codes.Internal {
+		t.Fatalf("%v.Recv() = _, %v, want _, error code: %s", stream, err, codes.Internal)
+	}
+
 }
 
 func TestPeerClientSide(t *testing.T) {
@@ -2414,85 +2444,6 @@ func testFailedServerStreaming(t *testing.T, e env) {
 	wantErr := grpc.Errorf(codes.DataLoss, "got extra metadata")
 	if _, err := stream.Recv(); !equalErrors(err, wantErr) {
 		t.Fatalf("%v.Recv() = _, %v, want _, %v", stream, err, wantErr)
-	}
-}
-
-// checkTimeoutErrorServer is a gRPC server checks context timeout error in FullDuplexCall().
-// It is only used in TestStreamingRPCTimeoutServerError.
-type checkTimeoutErrorServer struct {
-	t    *testing.T
-	done chan struct{}
-	testpb.TestServiceServer
-}
-
-func (s *checkTimeoutErrorServer) FullDuplexCall(stream testpb.TestService_FullDuplexCallServer) error {
-	defer close(s.done)
-	for {
-		_, err := stream.Recv()
-		if err != nil {
-			if grpc.Code(err) != codes.DeadlineExceeded {
-				s.t.Errorf("stream.Recv() = _, %v, want error code %s", err, codes.DeadlineExceeded)
-			}
-			return err
-		}
-		if err := stream.Send(&testpb.StreamingOutputCallResponse{
-			Payload: &testpb.Payload{
-				Body: []byte{'0'},
-			},
-		}); err != nil {
-			if grpc.Code(err) != codes.DeadlineExceeded {
-				s.t.Errorf("stream.Send(_) = %v, want error code %s", err, codes.DeadlineExceeded)
-			}
-			return err
-		}
-	}
-}
-
-func TestStreamingRPCTimeoutServerError(t *testing.T) {
-	defer leakCheck(t)()
-	for _, e := range listTestEnv() {
-		testStreamingRPCTimeoutServerError(t, e)
-	}
-}
-
-// testStreamingRPCTimeoutServerError tests the server side behavior.
-// When context timeout happens on client side, server should get deadline exceeded error.
-func testStreamingRPCTimeoutServerError(t *testing.T, e env) {
-	te := newTest(t, e)
-	serverDone := make(chan struct{})
-	te.startServer(&checkTimeoutErrorServer{t: t, done: serverDone})
-	defer te.tearDown()
-
-	cc := te.clientConn()
-	tc := testpb.NewTestServiceClient(cc)
-
-	req := &testpb.StreamingOutputCallRequest{}
-	for duration := 50 * time.Millisecond; ; duration *= 2 {
-		ctx, _ := context.WithTimeout(context.Background(), duration)
-		stream, err := tc.FullDuplexCall(ctx, grpc.FailFast(false))
-		if grpc.Code(err) == codes.DeadlineExceeded {
-			// Redo test with double timeout.
-			continue
-		}
-		if err != nil {
-			t.Errorf("%v.FullDuplexCall(_) = _, %v, want <nil>", tc, err)
-			return
-		}
-		for {
-			err := stream.Send(req)
-			if err != nil {
-				break
-			}
-			_, err = stream.Recv()
-			if err != nil {
-				break
-			}
-		}
-
-		// Wait for context timeout on server before closing connection
-		// to make sure the server will get timeout error.
-		<-serverDone
-		break
 	}
 }
 

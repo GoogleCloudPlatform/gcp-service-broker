@@ -31,7 +31,7 @@ import (
 )
 
 var (
-	tm    = time.Now().UTC()
+	tm    = time.Date(2016, 11, 15, 0, 0, 0, 0, time.UTC)
 	dt, _ = civil.ParseDate("2016-11-15")
 	// row contains a column for each unique Cloud Spanner type.
 	row = Row{
@@ -230,7 +230,6 @@ func TestColumnValues(t *testing.T) {
 			[]NullRow(nil),
 		},
 	} {
-		t.Logf("Testing Column(%v): %v", i, row.fields[i])
 		for j, want := range wants {
 			// Prepare Value vector to test Row.Columns.
 			if j == 0 {

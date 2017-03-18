@@ -52,23 +52,19 @@ var (
 	dbName string
 )
 
-// skipTest returns true if testProjectID is empty.
-func skipTest(t *testing.T) bool {
-	if testProjectID == "" {
-		t.Logf("skipping because not all environment variables are provided: GCLOUD_TESTS_GOLANG_PROJECT_ID=%q", testProjectID)
-		return true
-	}
-	return false
-}
-
 // prepare initializes Cloud Spanner testing DB and clients.
 func prepare(ctx context.Context, t *testing.T) error {
-	var err error
+	if testing.Short() {
+		t.Skip("Integration tests skipped in short mode")
+	}
+	if testProjectID == "" {
+		t.Skip("Integration tests skipped: GCLOUD_TESTS_GOLANG_PROJECT_ID is missing")
+	}
 	ts := testutil.TokenSource(ctx, AdminScope, Scope)
 	if ts == nil {
-		t.Logf("cannot get service account credential from environment variable %v, skiping test", "GCLOUD_TESTS_GOLANG_KEY")
-		t.SkipNow()
+		t.Skip("Integration test skipped: cannot get service account credential from environment variable %v", "GCLOUD_TESTS_GOLANG_KEY")
 	}
+	var err error
 	// Create Admin client and Data client.
 	// TODO: Remove the EndPoint option once this is the default.
 	admin, err = database.NewDatabaseAdminClient(ctx, option.WithTokenSource(ts), option.WithEndpoint("spanner.googleapis.com:443"))
@@ -124,7 +120,6 @@ func prepare(ctx context.Context, t *testing.T) error {
 		t.Errorf("cannot create testing DB %v: %v", db, err)
 		return err
 	}
-	t.Logf("created database: %v", db)
 	client, err = NewClientWithConfig(ctx, db, ClientConfig{
 		SessionPoolConfig: SessionPoolConfig{
 			WriteSessions: 0.2,
@@ -143,7 +138,6 @@ func tearDown(ctx context.Context, t *testing.T) {
 		if err := admin.DropDatabase(ctx, &adminpb.DropDatabaseRequest{db}); err != nil {
 			t.Logf("failed to drop testing database: %v, might need a manual removal", db)
 		}
-		t.Logf("dropped database: %v", db)
 		admin.Close()
 	}
 	if client != nil {
@@ -158,10 +152,6 @@ func tearDown(ctx context.Context, t *testing.T) {
 func TestSingleUse(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	if skipTest(t) {
-		// Skip inegration test if not all flags are provided.
-		t.SkipNow()
-	}
 	// Set up testing environment.
 	if err := prepare(ctx, t); err != nil {
 		// If prepare() fails, tear down whatever that's already up.
@@ -189,7 +179,6 @@ func TestSingleUse(t *testing.T) {
 		if writes[i].ts, err = client.Apply(ctx, []*Mutation{m}, ApplyAtLeastOnce()); err != nil {
 			t.Fatal(err)
 		}
-		t.Logf("Timestamp of the %vth mutation: %v", i, writes[i].ts)
 	}
 
 	// For testing timestamp bound staleness.
@@ -365,10 +354,6 @@ func TestSingleUse(t *testing.T) {
 func TestReadOnlyTransaction(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	if skipTest(t) {
-		// Skip inegration test if not all flags are provided.
-		t.SkipNow()
-	}
 	// Set up testing environment.
 	if err := prepare(ctx, t); err != nil {
 		// If prepare() fails, tear down whatever that's already up.
@@ -396,7 +381,6 @@ func TestReadOnlyTransaction(t *testing.T) {
 		if writes[i].ts, err = client.Apply(ctx, []*Mutation{m}, ApplyAtLeastOnce()); err != nil {
 			t.Fatal(err)
 		}
-		t.Logf("Timestamp of the %vth mutation: %v", i, writes[i].ts)
 	}
 
 	// For testing timestamp bound staleness.
@@ -559,9 +543,6 @@ func TestReadWriteTransaction(t *testing.T) {
 	// Give a longer deadline because of transaction backoffs.
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
-	if skipTest(t) {
-		t.SkipNow()
-	}
 	if err := prepare(ctx, t); err != nil {
 		tearDown(ctx, t)
 		t.Fatalf("cannot set up testing environment: %v", err)
@@ -600,7 +581,6 @@ func TestReadWriteTransaction(t *testing.T) {
 		go func(iter int) {
 			defer wg.Done()
 			_, err := client.ReadWriteTransaction(ctx, func(tx *ReadWriteTransaction) error {
-				t.Logf("executing %v-th transfer", iter)
 				// Query Foo's balance and Bar's balance.
 				bf, e := readBalance(tx.Query(ctx,
 					Statement{"SELECT Balance FROM Accounts WHERE AccountId = @id", map[string]interface{}{"id": int64(1)}}))
@@ -611,9 +591,7 @@ func TestReadWriteTransaction(t *testing.T) {
 				if e != nil {
 					return e
 				}
-				t.Logf("\t %d: Foo's balance: %v, Bar's balance: %v", iter, bf, bb)
 				if bf <= 0 {
-					t.Logf("Foo's balance is already 0.")
 					return nil
 				}
 				bf--
@@ -658,9 +636,6 @@ func TestReadWriteTransaction(t *testing.T) {
 func TestDbRemovalRecovery(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	if skipTest(t) {
-		t.SkipNow()
-	}
 	if err := prepare(ctx, t); err != nil {
 		tearDown(ctx, t)
 		t.Fatalf("cannot set up testing environment: %v", err)
@@ -671,7 +646,6 @@ func TestDbRemovalRecovery(t *testing.T) {
 	if err := admin.DropDatabase(ctx, &adminpb.DropDatabaseRequest{db}); err != nil {
 		t.Fatalf("failed to drop testing database %v: %v", db, err)
 	}
-	t.Logf("dropped database: %v", db)
 
 	// Now, send the query.
 	iter := client.Single().Query(ctx, Statement{SQL: "SELECT SingerId FROM Singers"})
@@ -680,7 +654,6 @@ func TestDbRemovalRecovery(t *testing.T) {
 	if err == nil {
 		t.Errorf("client sends query to removed database successfully, want it to fail")
 	}
-	t.Logf("observed the expected failure to send query to database %v: %v", db, err)
 
 	// Recreate database and table.
 	op, err := admin.CreateDatabase(ctx, &adminpb.CreateDatabaseRequest{
@@ -706,16 +679,12 @@ func TestDbRemovalRecovery(t *testing.T) {
 	if err != nil && err != iterator.Done {
 		t.Fatalf("failed to send query to database %v: %v", db, err)
 	}
-	t.Logf("client session has recovered from database recreation")
 }
 
 // Test encoding/decoding non-struct Cloud Spanner types.
 func TestBasicTypes(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	if skipTest(t) {
-		t.SkipNow()
-	}
 	if err := prepare(ctx, t); err != nil {
 		tearDown(ctx, t)
 		t.Fatalf("cannot set up testing environment: %v", err)
@@ -866,9 +835,6 @@ func TestBasicTypes(t *testing.T) {
 func TestStructTypes(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	if skipTest(t) {
-		t.SkipNow()
-	}
 	if err := prepare(ctx, t); err != nil {
 		tearDown(ctx, t)
 		t.Fatalf("cannot set up testing environment: %v", err)

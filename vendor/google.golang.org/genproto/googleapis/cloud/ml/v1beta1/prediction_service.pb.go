@@ -8,7 +8,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "google.golang.org/genproto/googleapis/api/annotations"
-import google_api2 "google.golang.org/genproto/googleapis/api/httpbody"
+import google_api3 "google.golang.org/genproto/googleapis/api/httpbody"
 
 import (
 	context "golang.org/x/net/context"
@@ -35,7 +35,7 @@ var _ = math.Inf
 // model's input definition. Instances can include named inputs or can contain
 // only unlabeled values.
 //
-// Most data does not include named inputs. Some instances will be simple
+// Not all data includes named inputs. Some instances will be simple
 // JSON values (boolean, number, or string). However, instances are often lists
 // of simple values, or complex nested lists. Here are some examples of request
 // bodies:
@@ -50,7 +50,13 @@ var _ = math.Inf
 // </pre>
 // Sentences encoded as lists of words (vectors of strings):
 // <pre>
-// {"instances": [["the","quick","brown"], ["la","bruja","le"]]}
+// {
+//   "instances": [
+//     ["the","quick","brown"],
+//     ["la","bruja","le"],
+//     ...
+//   ]
+// }
 // </pre>
 // Floating point scalar values:
 // <pre>
@@ -58,22 +64,53 @@ var _ = math.Inf
 // </pre>
 // Vectors of integers:
 // <pre>
-// {"instances": [[0, 1, 2], [3, 4, 5],...]}
+// {
+//   "instances": [
+//     [0, 1, 2],
+//     [3, 4, 5],
+//     ...
+//   ]
+// }
 // </pre>
 // Tensors (in this case, two-dimensional tensors):
 // <pre>
-// {"instances": [[[0, 1, 2], [3, 4, 5]], ...]}
+// {
+//   "instances": [
+//     [
+//       [0, 1, 2],
+//       [3, 4, 5]
+//     ],
+//     ...
+//   ]
+// }
 // </pre>
-// Images represented as a three-dimensional list. In this encoding scheme the
-// first two dimensions represent the rows and columns of the image, and the
-// third contains the R, G, and B values for each pixel.
+// Images can be represented different ways. In this encoding scheme the first
+// two dimensions represent the rows and columns of the image, and the third
+// contains lists (vectors) of the R, G, and B values for each pixel.
 // <pre>
-// {"instances": [[[[138, 30, 66], [130, 20, 56], ...]]]]}
+// {
+//   "instances": [
+//     [
+//       [
+//         [138, 30, 66],
+//         [130, 20, 56],
+//         ...
+//       ],
+//       [
+//         [126, 38, 61],
+//         [122, 24, 57],
+//         ...
+//       ],
+//       ...
+//     ],
+//     ...
+//   ]
+// }
 // </pre>
-// Data must be encoded as UTF-8. If your data uses another character encoding,
-// you must base64 encode the data and mark it as binary. To mark a JSON string
-// as binary, replace it with an object with a single attribute named `b`:
-// <pre>{"b": "..."} </pre>
+// JSON strings must be encoded as UTF-8. To send binary data, you must
+// base64-encode the data and mark it as binary. To mark a JSON string
+// as binary, replace it with a JSON object with a single attribute named `b64`:
+// <pre>{"b64": "..."} </pre>
 // For example:
 //
 // Two Serialized tf.Examples (fake data, for illustrative purposes only):
@@ -89,8 +126,20 @@ var _ = math.Inf
 //
 // JSON input data to be preprocessed:
 // <pre>
-// {"instances": [{"a": 1.0,  "b": true,  "c": "x"},
-//                {"a": -2.0, "b": false, "c": "y"}]}
+// {
+//   "instances": [
+//     {
+//       "a": 1.0,
+//       "b": true,
+//       "c": "x"
+//     },
+//     {
+//       "a": -2.0,
+//       "b": false,
+//       "c": "y"
+//     }
+//   ]
+// }
 // </pre>
 // Some models have an underlying TensorFlow graph that accepts multiple input
 // tensors. In this case, you should use the names of JSON name/value pairs to
@@ -99,14 +148,59 @@ var _ = math.Inf
 // For a graph with input tensor aliases "tag" (string) and "image"
 // (base64-encoded string):
 // <pre>
-// {"instances": [{"tag": "beach", "image": {"b64": "ASa8asdf"}},
-//                {"tag": "car", "image": {"b64": "JLK7ljk3"}}]}
+// {
+//   "instances": [
+//     {
+//       "tag": "beach",
+//       "image": {"b64": "ASa8asdf"}
+//     },
+//     {
+//       "tag": "car",
+//       "image": {"b64": "JLK7ljk3"}
+//     }
+//   ]
+// }
 // </pre>
 // For a graph with input tensor aliases "tag" (string) and "image"
 // (3-dimensional array of 8-bit ints):
 // <pre>
-// {"instances": [{"tag": "beach", "image": [[[263, 1, 10], [262, 2, 11], ...]]},
-//                {"tag": "car", "image": [[[10, 11, 24], [23, 10, 15], ...]]}]}
+// {
+//   "instances": [
+//     {
+//       "tag": "beach",
+//       "image": [
+//         [
+//           [138, 30, 66],
+//           [130, 20, 56],
+//           ...
+//         ],
+//         [
+//           [126, 38, 61],
+//           [122, 24, 57],
+//           ...
+//         ],
+//         ...
+//       ]
+//     },
+//     {
+//       "tag": "car",
+//       "image": [
+//         [
+//           [255, 0, 102],
+//           [255, 0, 97],
+//           ...
+//         ],
+//         [
+//           [254, 1, 101],
+//           [254, 2, 93],
+//           ...
+//         ],
+//         ...
+//       ]
+//     },
+//     ...
+//   ]
+// }
 // </pre>
 // If the call is successful, the response body will contain one prediction
 // entry per instance in the request body. If prediction fails for any
@@ -119,7 +213,7 @@ type PredictRequest struct {
 	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
 	//
 	// Required. The prediction request body.
-	HttpBody *google_api2.HttpBody `protobuf:"bytes,2,opt,name=http_body,json=httpBody" json:"http_body,omitempty"`
+	HttpBody *google_api3.HttpBody `protobuf:"bytes,2,opt,name=http_body,json=httpBody" json:"http_body,omitempty"`
 }
 
 func (m *PredictRequest) Reset()                    { *m = PredictRequest{} }
@@ -134,7 +228,7 @@ func (m *PredictRequest) GetName() string {
 	return ""
 }
 
-func (m *PredictRequest) GetHttpBody() *google_api2.HttpBody {
+func (m *PredictRequest) GetHttpBody() *google_api3.HttpBody {
 	if m != nil {
 		return m.HttpBody
 	}
@@ -158,52 +252,8 @@ const _ = grpc.SupportPackageIsVersion4
 type OnlinePredictionServiceClient interface {
 	// Performs prediction on the data in the request.
 	//
-	// Responses are very similar to requests. There are two top-level fields,
-	// each of which are JSON lists:
-	//
-	// <dl>
-	//   <dt>predictions</dt>
-	//   <dd>The list of predictions, one per instance in the request.</dd>
-	//   <dt>error</dt>
-	//   <dd>An error message returned instead of a prediction list if any
-	//       instance produced an error.</dd>
-	// </dl>
-	//
-	// If the call is successful, the response body will contain one prediction
-	// entry per instance in the request body. If prediction fails for any
-	// instance, the response body will contain no predictions and will contian
-	// a single error entry instead.
-	//
-	// Even though there is one prediction per instance, the format of a
-	// prediction is not directly related to the format of an instance.
-	// Predictions take whatever format is specified in the outputs collection
-	// defined in the model. The collection of predictions is returned in a JSON
-	// list. Each member of the list can be a simple value, a list, or a JSON
-	// object of any complexity. If your model has more than one output tensor,
-	// each prediction will be a JSON object containing a name/value pair for each
-	// output. The names identify the output aliases in the graph.
-	//
-	// The following examples show some possible responses:
-	//
-	// A simple set of predictions for three input instances, where each
-	// prediction is an integer value:
-	// <pre>
-	// {"predictions": [5, 4, 3]}
-	// </pre>
-	// A more complex set of predictions, each containing two named values that
-	// correspond to output tensors, named **label** and **scores** respectively.
-	// The value of **label** is the predicted category ("car" or "beach") and
-	// **scores** contains a list of probabilities for that instance across the
-	// possible categories.
-	// <pre>
-	// {"predictions": [{"label": "beach", "scores": [0.1, 0.9]},
-	//                  {"label": "car", "scores": [0.75, 0.25]}]}
-	// </pre>
-	// A response when there is an error processing an input instance:
-	// <pre>
-	// {"error": "Divide by zero"}
-	// </pre>
-	Predict(ctx context.Context, in *PredictRequest, opts ...grpc.CallOption) (*google_api2.HttpBody, error)
+	// **** REMOVE FROM GENERATED DOCUMENTATION
+	Predict(ctx context.Context, in *PredictRequest, opts ...grpc.CallOption) (*google_api3.HttpBody, error)
 }
 
 type onlinePredictionServiceClient struct {
@@ -214,8 +264,8 @@ func NewOnlinePredictionServiceClient(cc *grpc.ClientConn) OnlinePredictionServi
 	return &onlinePredictionServiceClient{cc}
 }
 
-func (c *onlinePredictionServiceClient) Predict(ctx context.Context, in *PredictRequest, opts ...grpc.CallOption) (*google_api2.HttpBody, error) {
-	out := new(google_api2.HttpBody)
+func (c *onlinePredictionServiceClient) Predict(ctx context.Context, in *PredictRequest, opts ...grpc.CallOption) (*google_api3.HttpBody, error) {
+	out := new(google_api3.HttpBody)
 	err := grpc.Invoke(ctx, "/google.cloud.ml.v1beta1.OnlinePredictionService/Predict", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -228,52 +278,8 @@ func (c *onlinePredictionServiceClient) Predict(ctx context.Context, in *Predict
 type OnlinePredictionServiceServer interface {
 	// Performs prediction on the data in the request.
 	//
-	// Responses are very similar to requests. There are two top-level fields,
-	// each of which are JSON lists:
-	//
-	// <dl>
-	//   <dt>predictions</dt>
-	//   <dd>The list of predictions, one per instance in the request.</dd>
-	//   <dt>error</dt>
-	//   <dd>An error message returned instead of a prediction list if any
-	//       instance produced an error.</dd>
-	// </dl>
-	//
-	// If the call is successful, the response body will contain one prediction
-	// entry per instance in the request body. If prediction fails for any
-	// instance, the response body will contain no predictions and will contian
-	// a single error entry instead.
-	//
-	// Even though there is one prediction per instance, the format of a
-	// prediction is not directly related to the format of an instance.
-	// Predictions take whatever format is specified in the outputs collection
-	// defined in the model. The collection of predictions is returned in a JSON
-	// list. Each member of the list can be a simple value, a list, or a JSON
-	// object of any complexity. If your model has more than one output tensor,
-	// each prediction will be a JSON object containing a name/value pair for each
-	// output. The names identify the output aliases in the graph.
-	//
-	// The following examples show some possible responses:
-	//
-	// A simple set of predictions for three input instances, where each
-	// prediction is an integer value:
-	// <pre>
-	// {"predictions": [5, 4, 3]}
-	// </pre>
-	// A more complex set of predictions, each containing two named values that
-	// correspond to output tensors, named **label** and **scores** respectively.
-	// The value of **label** is the predicted category ("car" or "beach") and
-	// **scores** contains a list of probabilities for that instance across the
-	// possible categories.
-	// <pre>
-	// {"predictions": [{"label": "beach", "scores": [0.1, 0.9]},
-	//                  {"label": "car", "scores": [0.75, 0.25]}]}
-	// </pre>
-	// A response when there is an error processing an input instance:
-	// <pre>
-	// {"error": "Divide by zero"}
-	// </pre>
-	Predict(context.Context, *PredictRequest) (*google_api2.HttpBody, error)
+	// **** REMOVE FROM GENERATED DOCUMENTATION
+	Predict(context.Context, *PredictRequest) (*google_api3.HttpBody, error)
 }
 
 func RegisterOnlinePredictionServiceServer(s *grpc.Server, srv OnlinePredictionServiceServer) {
