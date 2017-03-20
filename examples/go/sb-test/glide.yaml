@@ -1,0 +1,26 @@
+package: gcp-service-broker/examples/go/sb-test
+import:
+- package: cloud.google.com/go
+  subpackages:
+  - bigtable
+  - pubsub
+  - spanner/admin/instance/apiv1
+- package: github.com/go-sql-driver/mysql
+- package: github.com/gorilla/mux
+- package: github.com/jinzhu/gorm
+- package: github.com/pivotal-golang/lager
+- package: golang.org/x/net
+  subpackages:
+  - context
+- package: golang.org/x/oauth2
+  subpackages:
+  - google
+  - jwt
+- package: google.golang.org/api
+  subpackages:
+  - bigquery/v2
+  - option
+  - storage/v1
+- package: google.golang.org/genproto
+  subpackages:
+  - googleapis/spanner/admin/instance/v1

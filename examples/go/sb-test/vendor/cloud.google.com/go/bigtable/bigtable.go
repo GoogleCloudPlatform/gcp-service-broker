@@ -73,7 +73,7 @@ func (c *Client) Close() error {
 }
 
 var (
-	idempotentRetryCodes  = []codes.Code{codes.DeadlineExceeded, codes.Unavailable, codes.Aborted,codes.Internal}
+	idempotentRetryCodes  = []codes.Code{codes.DeadlineExceeded, codes.Unavailable, codes.Aborted, codes.Internal}
 	isIdempotentRetryCode = make(map[codes.Code]bool)
 	retryOptions          = []gax.CallOption{
 		gax.WithDelayTimeoutSettings(100*time.Millisecond, 2000*time.Millisecond, 1.2),
@@ -664,7 +664,7 @@ func (ts Timestamp) TruncateToMilliseconds() Timestamp {
 	if ts == ServerTime {
 		return ts
 	}
-	return ts - ts % 1000
+	return ts - ts%1000
 }
 
 // ApplyReadModifyWrite applies a ReadModifyWrite to a specific row.

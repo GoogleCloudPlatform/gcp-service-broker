@@ -71,7 +71,7 @@ type StructField struct {
 }
 
 func (structField *StructField) clone() *StructField {
-	clone := &StructField{
+	return &StructField{
 		DBName:          structField.DBName,
 		Name:            structField.Name,
 		Names:           structField.Names,
@@ -81,17 +81,11 @@ func (structField *StructField) clone() *StructField {
 		IsScanner:       structField.IsScanner,
 		HasDefaultValue: structField.HasDefaultValue,
 		Tag:             structField.Tag,
-		TagSettings:     map[string]string{},
+		TagSettings:     structField.TagSettings,
 		Struct:          structField.Struct,
 		IsForeignKey:    structField.IsForeignKey,
 		Relationship:    structField.Relationship,
 	}
-
-	for key, value := range structField.TagSettings {
-		clone.TagSettings[key] = value
-	}
-
-	return clone
 }
 
 // Relationship described the relationship between models
@@ -163,7 +157,7 @@ func (scope *Scope) GetModelStruct() *ModelStruct {
 			}
 
 			// is ignored field
-			if _, ok := field.TagSettings["-"]; ok {
+			if fieldStruct.Tag.Get("sql") == "-" {
 				field.IsIgnored = true
 			} else {
 				if _, ok := field.TagSettings["PRIMARY_KEY"]; ok {
@@ -172,10 +166,6 @@ func (scope *Scope) GetModelStruct() *ModelStruct {
 				}
 
 				if _, ok := field.TagSettings["DEFAULT"]; ok {
-					field.HasDefaultValue = true
-				}
-
-				if _, ok := field.TagSettings["AUTO_INCREMENT"]; ok {
 					field.HasDefaultValue = true
 				}
 
