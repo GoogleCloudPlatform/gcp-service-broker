@@ -296,3 +296,31 @@ service_plan_forms:
       description: "Between 3 and 30 (see https://cloud.google.com/bigtable/pricing for more information)"
       configurable: true
       default: '3'
+- name: spanner_custom_plans
+  description: Generate custom plans for Spanner (required to enable the service for developers)
+  label: Spanner Custom Plans
+  optional: true
+  properties:
+    - name: display_name
+      label: Display Name
+      type: string
+      description: "Display name"
+      configurable: true
+    - name: description
+      label: Plan description
+      type: string
+      description: "Plan description"
+      configurable: true
+    - name: service
+      label: Service
+      type: dropdown_select
+      description: "The service this plan is associated with"
+      options:
+        - name: '51b3e27e-d323-49ce-8c5f-1211e6409e82'
+          label: 'Spanner'
+    - name: num_nodes
+      label: Number of Nodes
+      type: string
+      description: "Between 3 and 30 (see https://cloud.google.com/bigtable/pricing for more information)"
+      configurable: true
+      default: '3'
