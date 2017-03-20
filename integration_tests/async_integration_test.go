@@ -204,13 +204,14 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			}
 			_, err = gcpBroker.Provision("integration_test_instance", provisionDetails, true)
 			Expect(err).NotTo(HaveOccurred())
-			pollForMaxFiveMins(gcpBroker, "integration_test_instance")
+			err = pollForMaxFiveMins(gcpBroker, "integration_test_instance")
+			Expect(err).NotTo(HaveOccurred())
 
 			var count int
 			db_service.DbConnection.Model(&models.ServiceInstanceDetails{}).Where("id = ?", "integration_test_instance").Count(&count)
 			Expect(count).To(Equal(1))
 
-			_, err := client.GetInstance(context.Background(), &instancepb.GetInstanceRequest{
+			_, err = client.GetInstance(context.Background(), &instancepb.GetInstanceRequest{
 				Name: "projects/" + gcpBroker.RootGCPCredentials.ProjectId + "/instances/" + instance_name,
 			})
 			Expect(err).ToNot(HaveOccurred())

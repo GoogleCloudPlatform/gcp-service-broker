@@ -155,7 +155,7 @@ func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 		return false, fmt.Errorf("Error creating client: %s", err)
 	}
 
-	spannerOp := client.CreateInstanceOperation(instance.Name)
+	spannerOp := client.CreateInstanceOperation(op.Name)
 
 	spannerInstance, err := spannerOp.Poll(context.Background())
 	done := spannerOp.Done()
@@ -181,7 +181,6 @@ func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 
 		return false, nil
 	} else if spannerInstance != nil && err == nil && done {
-
 		op.Status = spannerInstance.State.String()
 
 		if err = db_service.DbConnection.Save(&op).Error; err != nil {
@@ -215,7 +214,7 @@ func createCloudOperation(op *googlespanner.CreateInstanceOperation, instanceId 
 	}
 
 	currentState := models.CloudOperation{
-		Name:              metadata.Instance.Name,
+		Name:              op.Name(),
 		ErrorMessage:      errorStr,
 		InsertTime:        startTime,
 		OperationType:     "SPANNER_OPERATION",
