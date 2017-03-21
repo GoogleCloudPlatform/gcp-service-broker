@@ -77,6 +77,37 @@ will be disabled. e.g.,
     }
 }
 ```
+* `BIGTABLE_CUSTOM_PLANS` (A map of plan names to string maps with fields `guid`, `name`, `description`,
+`storage_type`, `num_nodes`, `display_name`, and `service` (Bigtable's service id)) - if unset, the service
+will be disabled. e.g.,
+
+```json
+{
+    "bt_plan": {
+        "name": "bt_plan",
+        "description": "Bigtable basic plan",
+        "storage_type": "HDD",
+        "num_nodes": "5",
+        "display_name": "Bigtable Plan",
+        "service": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
+    }
+}
+```
+* `SPANNER_CUSTOM_PLANS` (A map of plan names to string maps with fields `guid`, `name`, `description`,
+`num_nodes` `display_name`, and `service` (Spanner's service id)) - if unset, the service
+will be disabled. e.g.,
+
+```json
+{
+    "spannerplan": {
+        "name": "spannerplan",
+        "description": "Basic Spanner plan",
+        "num_nodes": "15",
+        "display_name": "Spanner Plan",
+        "service": "51b3e27e-d323-49ce-8c5f-1211e6409e82"
+    }
+}
+```
 
 
 ## Usage
@@ -103,7 +134,7 @@ will be disabled. e.g.,
 1. Click on the tile and fill in any required fields (tabs will be orange if updates are needed)
 1. Once the tile is green and updates are applied, review the service/plan access and
 update if necessary using cf disable-service-access. By default, all services and plans
-are enabled except CloudSQL (unless plans have been saved for it). If you wish to change this,
+are enabled except CloudSQL, Bigtable, and Spanner (unless plans have been saved for them). If you wish to change this,
 you'll need to use the cf cli's service-access commands.
 
 ### (Optional) Increase the default provision/bind timeout
@@ -249,6 +280,26 @@ Notes:
         * `num_nodes` (defaults to 3)
     * Bind
         * `role` without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles), e.g. editor
+
+        **Example Binding credentials**
+
+        ```json
+        "credentials": {
+             "Email": "redacted",
+             "Name": "redacted",
+             "PrivateKeyData": "redacted",
+             "UniqueId": "redacted",
+             "instance_id": "foobar",
+        }
+        ```
+
+* [Spanner](https://cloud.google.com/spanner/docs/) (BETA Google Service)
+    * Provison
+        * `name` (defaults to a generated value)
+        * `display_name` (defaults to a generated value)
+        * `location` (defaults to regional-us-central1)
+    * Bind
+        * `role` without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles), e.g. spanner.admin
 
         **Example Binding credentials**
 
