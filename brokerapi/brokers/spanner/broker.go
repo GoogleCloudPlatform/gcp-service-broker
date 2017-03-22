@@ -126,7 +126,6 @@ func (s *SpannerBroker) Provision(instanceId string, details models.ProvisionDet
 		OtherDetails: string(otherDetails),
 	}
 
-	//op := client.InstanceOperation(params["name"])
 	err = createCloudOperation(op, instanceId, details.ServiceID)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error saving operation to database: %s", err)
@@ -194,12 +193,8 @@ func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 }
 
 func createCloudOperation(op *googlespanner.CreateInstanceOperation, instanceId string, serviceId string) error {
-	var err error
-
-	_, err = op.Poll(context.Background())
-
 	errorStr := ""
-	if err != nil {
+	if _, err := op.Poll(context.Background()); err != nil {
 		errorStr = err.Error()
 	}
 

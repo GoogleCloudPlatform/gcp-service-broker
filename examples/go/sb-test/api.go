@@ -327,7 +327,6 @@ func pullFromPubSub(w http.ResponseWriter, req *http.Request) {
 	pubsubService, _ := pubsub.NewClient(context.Background(), projectId, option.WithHTTPClient(conf.Client(context.Background())))
 
 	cctx, cancel := context.WithCancel(context.Background())
-	//   err := sub.Receive(cctx, callback)
 
 	err := pubsubService.Subscription("projects/"+projectId+"/subscriptions/"+subscriptionName).Receive(cctx, func(fctx context.Context, m *pubsub.Message) {
 		strMessage, _ := base64.StdEncoding.DecodeString(string(m.Data))

@@ -598,7 +598,7 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 	}
 	servicePlans[bigtableServiceId] = append(servicePlans[bigtableServiceId], bigtablePlans...)
 
-	// set up bigtable custom plans
+	// set up spanner custom plans
 	spannerPlans, spannerServiceId, err := getDynamicPlans("SPANNER_CUSTOM_PLANS", spanner.MapPlan)
 	if err != nil {
 		return []models.Service{}, err
