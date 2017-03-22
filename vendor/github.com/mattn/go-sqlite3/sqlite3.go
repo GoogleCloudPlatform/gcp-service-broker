@@ -383,14 +383,14 @@ func (c *SQLiteConn) RegisterFunc(name string, impl interface{}, pure bool) erro
 	if pure {
 		opts |= C.SQLITE_DETERMINISTIC
 	}
-	rv := sqlite3_create_function(c.db, cname, C.int(numArgs), C.int(opts), newHandle(c, &fi), C.callbackTrampoline, nil, nil)
+	rv := sqlite3CreateFunction(c.db, cname, C.int(numArgs), C.int(opts), newHandle(c, &fi), C.callbackTrampoline, nil, nil)
 	if rv != C.SQLITE_OK {
 		return c.lastError()
 	}
 	return nil
 }
 
-func sqlite3_create_function(db *C.sqlite3, zFunctionName *C.char, nArg C.int, eTextRep C.int, pApp uintptr, xFunc unsafe.Pointer, xStep unsafe.Pointer, xFinal unsafe.Pointer) C.int {
+func sqlite3CreateFunction(db *C.sqlite3, zFunctionName *C.char, nArg C.int, eTextRep C.int, pApp uintptr, xFunc unsafe.Pointer, xStep unsafe.Pointer, xFinal unsafe.Pointer) C.int {
 	return C._sqlite3_create_function(db, zFunctionName, nArg, eTextRep, C.uintptr_t(pApp), (*[0]byte)(unsafe.Pointer(xFunc)), (*[0]byte)(unsafe.Pointer(xStep)), (*[0]byte)(unsafe.Pointer(xFinal)))
 }
 
@@ -431,7 +431,7 @@ func (c *SQLiteConn) exec(ctx context.Context, query string, args []namedValue) 
 			na := s.NumInput()
 			if len(args) < na {
 				s.Close()
-				return nil, fmt.Errorf("Not enough args to execute query. Expected %d, got %d.", na, len(args))
+				return nil, fmt.Errorf("not enough args to execute query: want %d got %d", na, len(args))
 			}
 			for i := 0; i < na; i++ {
 				args[i].Ordinal -= start
@@ -481,7 +481,7 @@ func (c *SQLiteConn) query(ctx context.Context, query string, args []namedValue)
 		s.(*SQLiteStmt).cls = true
 		na := s.NumInput()
 		if len(args) < na {
-			return nil, fmt.Errorf("Not enough args to execute query. Expected %d, got %d.", na, len(args))
+			return nil, fmt.Errorf("not enough args to execute query: want %d got %d", na, len(args))
 		}
 		for i := 0; i < na; i++ {
 			args[i].Ordinal -= start
@@ -627,11 +627,11 @@ func (d *SQLiteDriver) Open(dsn string) (driver.Conn, error) {
 
 // Close the connection.
 func (c *SQLiteConn) Close() error {
-	deleteHandles(c)
 	rv := C.sqlite3_close_v2(c.db)
 	if rv != C.SQLITE_OK {
 		return c.lastError()
 	}
+	deleteHandles(c)
 	c.db = nil
 	runtime.SetFinalizer(c, nil)
 	return nil
