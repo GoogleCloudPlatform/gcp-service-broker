@@ -1932,7 +1932,7 @@ func TestRoundTrip(t *testing.T) {
 		} else {
 			got = reflect.New(reflect.TypeOf(tc.want).Elem()).Interface()
 		}
-		err = loadEntity(got, p)
+		err = loadEntityProto(got, p)
 		if s := checkErr(tc.getErr, err); s != "" {
 			t.Errorf("%s: load: %s", tc.desc, s)
 			continue
@@ -1986,6 +1986,19 @@ func (pls aValuePLS) Save() ([]Property, error) {
 	return []Property{{Name: "Count", Value: 8}}, nil
 }
 
+type aValuePtrPLS struct {
+	Count int
+}
+
+func (pls *aValuePtrPLS) Load([]Property) error {
+	pls.Count = 11
+	return nil
+}
+
+func (pls *aValuePtrPLS) Save() ([]Property, error) {
+	return []Property{{Name: "Count", Value: 12}}, nil
+}
+
 type aNotPLS struct {
 	Count int
 }
@@ -2004,6 +2017,7 @@ func (s *plsString) Save() ([]Property, error) {
 type aSubPLS struct {
 	Foo string
 	Bar *aPtrPLS
+	Baz aValuePtrPLS
 }
 
 type aSubNotPLS struct {
@@ -2028,8 +2042,8 @@ func TestLoadSaveNestedStructPLS(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			desc: "substruct (ptr) does implement PLS",
-			src:  &aSubPLS{Foo: "foo", Bar: &aPtrPLS{Count: 2}},
+			desc: "substructs do implement PLS",
+			src:  &aSubPLS{Foo: "foo", Bar: &aPtrPLS{Count: 2}, Baz: aValuePtrPLS{Count: 15}},
 			wantSave: &pb.Entity{
 				Key: keyToProto(testKey0),
 				Properties: map[string]*pb.Value{
@@ -2041,10 +2055,17 @@ func TestLoadSaveNestedStructPLS(t *testing.T) {
 							},
 						},
 					}},
+					"Baz": {ValueType: &pb.Value_EntityValue{
+						&pb.Entity{
+							Properties: map[string]*pb.Value{
+								"Count": {ValueType: &pb.Value_IntegerValue{12}},
+							},
+						},
+					}},
 				},
 			},
 			// PLS impl for 'S' not used, not entity.
-			wantLoad: &aSubPLS{Foo: "foo", Bar: &aPtrPLS{Count: 1}},
+			wantLoad: &aSubPLS{Foo: "foo", Bar: &aPtrPLS{Count: 1}, Baz: aValuePtrPLS{Count: 11}},
 		},
 		{
 			desc: "substruct (ptr) does implement PLS, nil valued substruct",
@@ -2053,9 +2074,16 @@ func TestLoadSaveNestedStructPLS(t *testing.T) {
 				Key: keyToProto(testKey0),
 				Properties: map[string]*pb.Value{
 					"Foo": {ValueType: &pb.Value_StringValue{"foo"}},
+					"Baz": {ValueType: &pb.Value_EntityValue{
+						&pb.Entity{
+							Properties: map[string]*pb.Value{
+								"Count": {ValueType: &pb.Value_IntegerValue{12}},
+							},
+						},
+					}},
 				},
 			},
-			wantLoad: &aSubPLS{Foo: "foo"},
+			wantLoad: &aSubPLS{Foo: "foo", Baz: aValuePtrPLS{Count: 11}},
 		},
 		{
 			desc: "substruct (ptr) does not implement PLS",
@@ -2106,12 +2134,12 @@ func TestLoadSaveNestedStructPLS(t *testing.T) {
 		}
 
 		if !reflect.DeepEqual(e, tc.wantSave) {
-			t.Errorf("%s: save: got: %#v,	want: %#v", tc.desc, e, tc.wantSave)
+			t.Errorf("%s: save: \ngot:  %#v\nwant: %#v", tc.desc, e, tc.wantSave)
 			continue
 		}
 
 		gota := reflect.New(reflect.TypeOf(tc.wantLoad).Elem()).Interface()
-		err = loadEntity(gota, e)
+		err = loadEntityProto(gota, e)
 		switch tc.loadErr {
 		case "":
 			if err != nil {
@@ -2124,13 +2152,13 @@ func TestLoadSaveNestedStructPLS(t *testing.T) {
 				continue
 			}
 			if !strings.Contains(err.Error(), tc.loadErr) {
-				t.Errorf("%s: load: want err '%s', got '%s'", tc.desc, err.Error(), tc.loadErr)
+				t.Errorf("%s: load: \ngot err  '%s'\nwant err '%s'", tc.desc, err.Error(), tc.loadErr)
 			}
 			continue
 		}
 
 		if !reflect.DeepEqual(tc.wantLoad, gota) {
-			t.Errorf("%s: load:	got: %#v,	want: %#v", tc.desc, gota, tc.wantLoad)
+			t.Errorf("%s: load:	\ngot:  %#v\nwant: %#v", tc.desc, gota, tc.wantLoad)
 			continue
 		}
 	}
@@ -2641,6 +2669,81 @@ func TestDeferred(t *testing.T) {
 		}
 	}
 
+}
+
+type KeyLoaderEnt struct {
+	A int
+	K *Key
+}
+
+func (e *KeyLoaderEnt) Load(p []Property) error {
+	e.A = 2
+	return nil
+}
+
+func (e *KeyLoaderEnt) LoadKey(k *Key) error {
+	e.K = k
+	return nil
+}
+
+func (e *KeyLoaderEnt) Save() ([]Property, error) {
+	return []Property{{Name: "A", Value: int64(3)}}, nil
+}
+
+func TestKeyLoaderEndToEnd(t *testing.T) {
+	keys := []*Key{
+		NameKey("testKind", "first", nil),
+		NameKey("testKind", "second", nil),
+	}
+
+	entity1 := &pb.Entity{
+		Key: keyToProto(keys[0]),
+		Properties: map[string]*pb.Value{
+			"A": {ValueType: &pb.Value_IntegerValue{1}},
+			"B": {ValueType: &pb.Value_StringValue{"one"}},
+		},
+	}
+	entity2 := &pb.Entity{
+		Key: keyToProto(keys[1]),
+		Properties: map[string]*pb.Value{
+			"A": {ValueType: &pb.Value_IntegerValue{2}},
+			"B": {ValueType: &pb.Value_StringValue{"two"}},
+		},
+	}
+
+	fakeClient := &fakeDatastoreClient{
+		lookup: func(*pb.LookupRequest) (*pb.LookupResponse, error) {
+			return &pb.LookupResponse{
+				Found: []*pb.EntityResult{
+					{
+						Entity:  entity1,
+						Version: 1,
+					},
+					{
+						Entity:  entity2,
+						Version: 1,
+					},
+				},
+			}, nil
+		},
+	}
+	client := &Client{
+		client: fakeClient,
+	}
+
+	ctx := context.Background()
+
+	dst := make([]*KeyLoaderEnt, len(keys))
+	err := client.GetMulti(ctx, keys, dst)
+	if err != nil {
+		t.Fatalf("client.Get: %v", err)
+	}
+
+	for i := range dst {
+		if !reflect.DeepEqual(dst[i].K, keys[i]) {
+			t.Fatalf("unexpected entity %d to have key %#v, got %#v", i, keys[i], dst[i].K)
+		}
+	}
 }
 
 func TestDeferredMissing(t *testing.T) {

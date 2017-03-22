@@ -30,14 +30,12 @@ func (sqlite3) DataTypeOf(field *StructField) string {
 			sqlType = "bool"
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uintptr:
 			if field.IsPrimaryKey {
-				field.TagSettings["AUTO_INCREMENT"] = "AUTO_INCREMENT"
 				sqlType = "integer primary key autoincrement"
 			} else {
 				sqlType = "integer"
 			}
 		case reflect.Int64, reflect.Uint64:
 			if field.IsPrimaryKey {
-				field.TagSettings["AUTO_INCREMENT"] = "AUTO_INCREMENT"
 				sqlType = "integer primary key autoincrement"
 			} else {
 				sqlType = "bigint"
@@ -89,7 +87,7 @@ func (s sqlite3) HasColumn(tableName string, columnName string) bool {
 	return count > 0
 }
 
-func (s sqlite3) CurrentDatabase() (name string) {
+func (s sqlite3) currentDatabase() (name string) {
 	var (
 		ifaces   = make([]interface{}, 3)
 		pointers = make([]*string, 3)

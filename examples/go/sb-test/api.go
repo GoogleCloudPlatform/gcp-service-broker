@@ -9,6 +9,7 @@ import (
 
 	googlebigtable "cloud.google.com/go/bigtable"
 	"cloud.google.com/go/pubsub"
+	googlespanner "cloud.google.com/go/spanner/admin/instance/apiv1"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -22,6 +23,7 @@ import (
 	googlebigquery "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/option"
 	storage "google.golang.org/api/storage/v1"
+	instancepb "google.golang.org/genproto/googleapis/spanner/admin/instance/v1"
 )
 
 var projectId string
@@ -33,7 +35,7 @@ func AttachRoutes(router *mux.Router) {
 	router.HandleFunc("/test-bigquery", testBigquery).Methods("GET")
 	router.HandleFunc("/test-bigtable", testBigtable).Methods("GET")
 	router.HandleFunc("/test-cloudsql", testCloudSQL).Methods("GET")
-	//router.HandleFunc("/test-spanner", testSpanner).Methods("GET")
+	router.HandleFunc("/test-spanner", testSpanner).Methods("GET")
 }
 
 func NewAppRouter() http.Handler {
@@ -284,7 +286,29 @@ func testCloudSQL(w http.ResponseWriter, req *http.Request) {
 }
 
 func testSpanner(w http.ResponseWriter, req *http.Request) {
+	conf := getConfig("google-spanner")
+	if conf == nil {
+		respond(w, http.StatusOK, "No credentials found")
+		return
+	}
+	filename := writeSAJsonToFile("google-spanner")
+	client, err := googlespanner.NewInstanceAdminClient(context.Background(), option.WithServiceAccountFile(filename))
+	if err != nil {
+		println(err.Error())
+		respond(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	listIter := client.ListInstances(context.Background(), &instancepb.ListInstancesRequest{
+		Parent: "projects/" + projectId,
+	})
+	first, err := listIter.Next()
+	if err != nil {
+		println(err.Error())
+		respond(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
+	respond(w, http.StatusOK, first)
 }
 
 // reads from the given subscription name
@@ -302,15 +326,19 @@ func pullFromPubSub(w http.ResponseWriter, req *http.Request) {
 	}
 	pubsubService, _ := pubsub.NewClient(context.Background(), projectId, option.WithHTTPClient(conf.Client(context.Background())))
 
-	it, err := pubsubService.Subscription("projects/" + projectId + "/subscriptions/" + subscriptionName).Pull(context.Background())
+	cctx, cancel := context.WithCancel(context.Background())
+
+	err := pubsubService.Subscription("projects/"+projectId+"/subscriptions/"+subscriptionName).Receive(cctx, func(fctx context.Context, m *pubsub.Message) {
+		strMessage, _ := base64.StdEncoding.DecodeString(string(m.Data))
+		cancel()
+		respond(w, http.StatusOK, string(strMessage))
+
+	})
 	if err != nil {
 		println(err.Error())
+		respond(w, http.StatusOK, err.Error())
 	}
 
-	message, _ := it.Next()
-	strMessage, _ := base64.StdEncoding.DecodeString(string(message.Data))
-
-	respond(w, http.StatusOK, string(strMessage))
 }
 
 func respond(w http.ResponseWriter, status int, response interface{}) {

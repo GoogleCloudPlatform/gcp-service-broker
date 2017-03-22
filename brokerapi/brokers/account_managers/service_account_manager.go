@@ -121,7 +121,7 @@ func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindi
 		Email:          newSA.Email,
 		UniqueId:       newSA.UniqueId,
 		PrivateKeyData: newSAKey.PrivateKeyData,
-		ProjectId: sam.ProjectId,
+		ProjectId:      sam.ProjectId,
 	}
 
 	saBytes, err := json.Marshal(&newSAInfo)
@@ -167,14 +167,18 @@ func (b *ServiceAccountManager) BuildInstanceCredentials(bindDetails map[string]
 // XXX names are truncated to 20 characters because of a bug in the IAM service
 func ServiceAccountName(bindingId string) string {
 	name := saPrefix + bindingId
-	return name[:20]
+	if len(name) > 20 {
+		return name[:20]
+	} else {
+		return name
+	}
 }
 
 type ServiceAccountInfo struct {
 	// the bits to save
-	Name     string
-	Email    string
-	UniqueId string
+	Name      string
+	Email     string
+	UniqueId  string
 	ProjectId string
 
 	// the bit to return
