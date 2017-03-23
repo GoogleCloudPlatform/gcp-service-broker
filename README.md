@@ -2,7 +2,7 @@
 
 Depends on [lager](https://github.com/pivotal-golang/lager) and [gorilla/mux](https://github.com/gorilla/mux).
 
-Requires Go 1.6 and the associated buildpack.
+Requires Go 1.7 and the associated buildpack.
 
 ## Examples
 
