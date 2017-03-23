@@ -3,3 +3,5 @@
 *.coverprofile
 *.DS_Store
 gcp-service-broker
+product/
+release/
