@@ -1,5 +1,4 @@
-open_source_disclosures_GCP_Service_Broker-3.1.2.txt
-
+open_source_disclosures_GCP_Service_Broker-3.2.0.txt
 
 
 =============== TABLE OF CONTENTS =============================
@@ -13,84 +12,86 @@ of the license associated with each component.
 
 SECTION 1: Apache License 2.0
 
-   >>> cloud.google.com/go/bigquery-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
-   >>> cloud.google.com/go/bigtable-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
-   >>> cloud.google.com/go/civil-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
-   >>> cloud.google.com/go/compute-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
-   >>> cloud.google.com/go/errorreporting-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
-   >>> cloud.google.com/go/iam-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
-   >>> cloud.google.com/go/internal-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
-   >>> cloud.google.com/go/logging-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
-   >>> cloud.google.com/go/longrunning-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
-   >>> cloud.google.com/go/pubsub-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
-   >>> cloud.google.com/go/storage-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
-   >>> cloud.google.com/go/translate-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
-   >>> cloud.google.com/go/vision-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
-   >>> code.cloudfoundry.org/lager/lagerflags-6cfe365fb6bb84343f0034b4a53cd250d173b61f
-   >>> google.golang.org/appengine/datastore-a2c54d2174c17540446e0ced57d9d459af61bc1c
-   >>> google.golang.org/appengine/file-a2c54d2174c17540446e0ced57d9d459af61bc1c
-   >>> google.golang.org/appengine/internal-a2c54d2174c17540446e0ced57d9d459af61bc1c
-   >>> google.golang.org/appengine/log-a2c54d2174c17540446e0ced57d9d459af61bc1c
-   >>> google.golang.org/appengine/taskqueue-a2c54d2174c17540446e0ced57d9d459af61bc1c
-   >>> google.golang.org/appengine/user-a2c54d2174c17540446e0ced57d9d459af61bc1c
-   >>> google.golang.org/genproto/googleapis-b3e7c2fb04031add52c4817f53f43757ccbf9c18
+   >>> cloud.google.com/go/bigquery-dbe4740b523eecbc19b2050f0691772c312aa07b
+   >>> cloud.google.com/go/bigtable-dbe4740b523eecbc19b2050f0691772c312aa07b
+   >>> cloud.google.com/go/civil-dbe4740b523eecbc19b2050f0691772c312aa07b
+   >>> cloud.google.com/go/compute-dbe4740b523eecbc19b2050f0691772c312aa07b
+   >>> cloud.google.com/go/errorreporting-dbe4740b523eecbc19b2050f0691772c312aa07b
+   >>> cloud.google.com/go/iam-dbe4740b523eecbc19b2050f0691772c312aa07b
+   >>> cloud.google.com/go/internal-dbe4740b523eecbc19b2050f0691772c312aa07b
+   >>> cloud.google.com/go/logging-dbe4740b523eecbc19b2050f0691772c312aa07b
+   >>> cloud.google.com/go/longrunning-dbe4740b523eecbc19b2050f0691772c312aa07b
+   >>> cloud.google.com/go/pubsub-dbe4740b523eecbc19b2050f0691772c312aa07b
+   >>> cloud.google.com/go/storage-dbe4740b523eecbc19b2050f0691772c312aa07b
+   >>> cloud.google.com/go/spanner-dbe4740b523eecbc19b2050f0691772c312aa07b
+   >>> cloud.google.com/go/translate-dbe4740b523eecbc19b2050f0691772c312aa07b
+   >>> cloud.google.com/go/vision-dbe4740b523eecbc19b2050f0691772c312aa07b
+   >>> code.cloudfoundry.org/lager/lagerflags-de8e9c6c6e474e5e3668aea1a9817bdb4ceeceb0
+   >>> google.golang.org/appengine/datastore-b79c28f0197795b4050bfcd7c4c2209136c594b1
+   >>> google.golang.org/appengine/file-b79c28f0197795b4050bfcd7c4c2209136c594b1
+   >>> google.golang.org/appengine/internal-b79c28f0197795b4050bfcd7c4c2209136c594b1
+   >>> google.golang.org/appengine/log-b79c28f0197795b4050bfcd7c4c2209136c594b1
+   >>> google.golang.org/appengine/taskqueue-b79c28f0197795b4050bfcd7c4c2209136c594b1
+   >>> google.golang.org/appengine/user-b79c28f0197795b4050bfcd7c4c2209136c594b1
+   >>> google.golang.org/genproto/googleapis-de9f5e90fe9b278809363f08c2072d2f2a429de7
+   >>> github.com/pivotal-golang/lager-de8e9c6c6e474e5e3668aea1a9817bdb4ceeceb0
 
 
 
 SECTION 2: BSD 3-clause "New" or "Revised" License
 
-   >>> github.com/golang/protobuf-8ee79997227bf9b34611aee7946ae64735e6fd93
-   >>> github.com/googleapis/gax-go-da06d194a00e19ce00d9011a13931c3f6f6887c7
+   >>> github.com/golang/protobuf-c9c7427a2a70d2eb3bafa0ab2dc163e45f143317
+   >>> github.com/googleapis/gax-go-8c5154c0fe5bf18cf649634d4c6df50897a32751
    >>> github.com/gorilla/context-08b5f424b9271eedf6f9f0ce86cb9396ed337a42
    >>> github.com/gorilla/mux-0eeaf8392f5b04950925b8a69fe70f110fa7cbfc
-   >>> golang.org/x/net-007e530097ad7f954752df63046b4036f98ba6a6
-   >>> golang.org/x/oauth2-314dd2c0bf3ebd592ec0d20847d27e79d0dbe8dd
-   >>> google.golang.org/api/bigquery-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/books-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/calendar-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/clouddebugger-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/cloudresourcemanager-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/cloudtrace-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/compute-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/container-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/drive-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/fitness-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/gensupport-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/gmail-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/google-api-go-generator-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/googleapi-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/iam-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/internal-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/iterator-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/mapsengine-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/mirror-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/option-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/prediction-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/pubsub-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/sqladmin-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/storage-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/support-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/tasks-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/transport-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/urlshortener-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/api/youtube-c55f685368bb1cdfed2c20283e2878a83b929730
-   >>> google.golang.org/grpc/benchmark-21f8ed309495401e6fd79b3a9fd549582aed1b4c
-   >>> google.golang.org/grpc/codes-21f8ed309495401e6fd79b3a9fd549582aed1b4c
-   >>> google.golang.org/grpc/credentials-21f8ed309495401e6fd79b3a9fd549582aed1b4c
-   >>> google.golang.org/grpc/examples-21f8ed309495401e6fd79b3a9fd549582aed1b4c
-   >>> google.golang.org/grpc/grpclb-21f8ed309495401e6fd79b3a9fd549582aed1b4c
-   >>> google.golang.org/grpc/grpclog-21f8ed309495401e6fd79b3a9fd549582aed1b4c
-   >>> google.golang.org/grpc/health-21f8ed309495401e6fd79b3a9fd549582aed1b4c
-   >>> google.golang.org/grpc/internal-21f8ed309495401e6fd79b3a9fd549582aed1b4c
-   >>> google.golang.org/grpc/interop-21f8ed309495401e6fd79b3a9fd549582aed1b4c
-   >>> google.golang.org/grpc/metadata-21f8ed309495401e6fd79b3a9fd549582aed1b4c
-   >>> google.golang.org/grpc/naming-21f8ed309495401e6fd79b3a9fd549582aed1b4c
-   >>> google.golang.org/grpc/peer-21f8ed309495401e6fd79b3a9fd549582aed1b4c
-   >>> google.golang.org/grpc/reflection-21f8ed309495401e6fd79b3a9fd549582aed1b4c
-   >>> google.golang.org/grpc/stats-21f8ed309495401e6fd79b3a9fd549582aed1b4c
-   >>> google.golang.org/grpc/stress-21f8ed309495401e6fd79b3a9fd549582aed1b4c
-   >>> google.golang.org/grpc/tap-21f8ed309495401e6fd79b3a9fd549582aed1b4c
-   >>> google.golang.org/grpc/transport-21f8ed309495401e6fd79b3a9fd549582aed1b4c
+   >>> golang.org/x/net-a6577fac2d73be281a500b310739095313165611
+   >>> golang.org/x/oauth2-30fcca6531eb4bb278493c9fb299295b3b145934
+   >>> google.golang.org/api/bigquery-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/books-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/calendar-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/clouddebugger-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/cloudresourcemanager-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/cloudtrace-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/compute-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/container-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/drive-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/fitness-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/gensupport-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/gmail-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/google-api-go-generator-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/googleapi-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/iam-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/internal-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/iterator-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/mapsengine-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/mirror-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/option-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/prediction-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/pubsub-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/sqladmin-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/storage-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/support-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/tasks-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/transport-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/urlshortener-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/api/youtube-650535c7d6201e8304c92f38c922a9a3a36c6877
+   >>> google.golang.org/grpc/benchmark-cdee119ee21e61eef7093a41ba148fa83585e143
+   >>> google.golang.org/grpc/codes-cdee119ee21e61eef7093a41ba148fa83585e143
+   >>> google.golang.org/grpc/credentials-cdee119ee21e61eef7093a41ba148fa83585e143
+   >>> google.golang.org/grpc/examples-cdee119ee21e61eef7093a41ba148fa83585e143
+   >>> google.golang.org/grpc/grpclb-cdee119ee21e61eef7093a41ba148fa83585e143
+   >>> google.golang.org/grpc/grpclog-cdee119ee21e61eef7093a41ba148fa83585e143
+   >>> google.golang.org/grpc/health-cdee119ee21e61eef7093a41ba148fa83585e143
+   >>> google.golang.org/grpc/internal-cdee119ee21e61eef7093a41ba148fa83585e143
+   >>> google.golang.org/grpc/interop-cdee119ee21e61eef7093a41ba148fa83585e143
+   >>> google.golang.org/grpc/metadata-cdee119ee21e61eef7093a41ba148fa83585e143
+   >>> google.golang.org/grpc/naming-cdee119ee21e61eef7093a41ba148fa83585e143
+   >>> google.golang.org/grpc/peer-cdee119ee21e61eef7093a41ba148fa83585e143
+   >>> google.golang.org/grpc/reflection-cdee119ee21e61eef7093a41ba148fa83585e143
+   >>> google.golang.org/grpc/stats-cdee119ee21e61eef7093a41ba148fa83585e143
+   >>> google.golang.org/grpc/stress-cdee119ee21e61eef7093a41ba148fa83585e143
+   >>> google.golang.org/grpc/tap-cdee119ee21e61eef7093a41ba148fa83585e143
+   >>> google.golang.org/grpc/transport-cdee119ee21e61eef7093a41ba148fa83585e143
 
 
 
@@ -99,7 +100,7 @@ SECTION 3: MIT License
    >>> github.com/jinzhu/gorm-5174cc5c242a728b435ea2be8a2f7f998e15429b
    >>> github.com/jinzhu/inflection-1c35d901db3da928c72a72d8458480cc9ade058f
    >>> github.com/leonelquinteros/gorand-aac5da62f38c2d2b492bee83183ca80dd209b875
-   >>> github.com/mattn/go-sqlite3-ce9149a3c941c30de51a01dbc5bc414ddaa52927
+   >>> github.com/mattn/go-sqlite3-eac1dfa2a61ebccaa117538a5bb12044f6700cd0
    >>> github.com/onsi/ginkgo-462326b1628e124b23f42e87a8f2750e3c4e2d24
    >>> github.com/onsi/gomega-a78ae492d53aad5a7a232d0d0462c14c400e3ee7
 
@@ -130,7 +131,7 @@ APPENDIX: Standard License Files and Templates
 Apache License 2.0 is applicable to the following component(s).
 
 
->>> cloud.google.com/go/bigquery-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
+>>> cloud.google.com/go/bigquery-dbe4740b523eecbc19b2050f0691772c312aa07b
 
  Copyright 2015 Google Inc. All Rights Reserved.
 
@@ -146,7 +147,7 @@ Apache License 2.0 is applicable to the following component(s).
  See the License for the specific language governing permissions and
  limitations under the License.
 
->>> cloud.google.com/go/bigtable-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
+>>> cloud.google.com/go/bigtable-dbe4740b523eecbc19b2050f0691772c312aa07b
 
  Copyright 2015 Google Inc. All Rights Reserved.
 
@@ -162,7 +163,7 @@ Apache License 2.0 is applicable to the following component(s).
  See the License for the specific language governing permissions and
  limitations under the License.
 
->>> cloud.google.com/go/civil-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
+>>> cloud.google.com/go/civil-dbe4740b523eecbc19b2050f0691772c312aa07b
 
  Copyright 2016 Google Inc. All Rights Reserved.
 
@@ -178,7 +179,7 @@ Apache License 2.0 is applicable to the following component(s).
  See the License for the specific language governing permissions and
  limitations under the License.
 
->>> cloud.google.com/go/compute-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
+>>> cloud.google.com/go/compute-dbe4740b523eecbc19b2050f0691772c312aa07b
 
  Copyright 2014 Google Inc. All Rights Reserved.
 
@@ -194,7 +195,7 @@ Apache License 2.0 is applicable to the following component(s).
  See the License for the specific language governing permissions and
  limitations under the License.
 
->>> cloud.google.com/go/errorreporting-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
+>>> cloud.google.com/go/errorreporting-dbe4740b523eecbc19b2050f0691772c312aa07b
 
  Copyright 2016 Google Inc. All Rights Reserved.
 
@@ -210,7 +211,7 @@ Apache License 2.0 is applicable to the following component(s).
  See the License for the specific language governing permissions and
  limitations under the License.
 
->>> cloud.google.com/go/iam-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
+>>> cloud.google.com/go/iam-dbe4740b523eecbc19b2050f0691772c312aa07b
 
  Copyright 2016 Google Inc. All Rights Reserved.
 
@@ -226,7 +227,7 @@ Apache License 2.0 is applicable to the following component(s).
  See the License for the specific language governing permissions and
  limitations under the License.
 
->>> cloud.google.com/go/internal-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
+>>> cloud.google.com/go/internal-dbe4740b523eecbc19b2050f0691772c312aa07b
 
  Copyright 2014 Google Inc. All Rights Reserved.
 
@@ -242,7 +243,7 @@ Apache License 2.0 is applicable to the following component(s).
  See the License for the specific language governing permissions and
  limitations under the License.
 
->>> cloud.google.com/go/logging-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
+>>> cloud.google.com/go/logging-dbe4740b523eecbc19b2050f0691772c312aa07b
 
  Copyright 2016 Google Inc. All Rights Reserved.
 
@@ -258,7 +259,7 @@ Apache License 2.0 is applicable to the following component(s).
  See the License for the specific language governing permissions and
  limitations under the License.
 
->>> cloud.google.com/go/longrunning-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
+>>> cloud.google.com/go/longrunning-dbe4740b523eecbc19b2050f0691772c312aa07b
 
  Copyright 2016 Google Inc. All Rights Reserved.
 
@@ -274,7 +275,7 @@ Apache License 2.0 is applicable to the following component(s).
  See the License for the specific language governing permissions and
  limitations under the License.
 
->>> cloud.google.com/go/pubsub-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
+>>> cloud.google.com/go/pubsub-dbe4740b523eecbc19b2050f0691772c312aa07b
 
  Copyright 2016 Google Inc. All Rights Reserved.
 
@@ -290,7 +291,7 @@ Apache License 2.0 is applicable to the following component(s).
  See the License for the specific language governing permissions and
  limitations under the License.
 
->>> cloud.google.com/go/storage-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
+>>> cloud.google.com/go/storage-dbe4740b523eecbc19b2050f0691772c312aa07b
 
  Copyright 2014 Google Inc. All Rights Reserved.
 
@@ -306,7 +307,23 @@ Apache License 2.0 is applicable to the following component(s).
  See the License for the specific language governing permissions and
  limitations under the License.
 
->>> cloud.google.com/go/translate-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
+>>> cloud.google.com/go/spanner-dbe4740b523eecbc19b2050f0691772c312aa07b
+
+ Copyright 2017 Google Inc. All Rights Reserved.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+
+>>> cloud.google.com/go/translate-dbe4740b523eecbc19b2050f0691772c312aa07b
 
  Copyright 2016 Google Inc. All Rights Reserved.
 
@@ -322,7 +339,7 @@ Apache License 2.0 is applicable to the following component(s).
  See the License for the specific language governing permissions and
  limitations under the License.
 
->>> cloud.google.com/go/vision-3258e6905e9694db9bcd41910c65ecc30ae6dbbe
+>>> cloud.google.com/go/vision-dbe4740b523eecbc19b2050f0691772c312aa07b
 
  Copyright 2016 Google Inc. All Rights Reserved.
 
@@ -408,6 +425,30 @@ limitations under the License.
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
+
+ >>> github.com/pivotal-golang/lager-de8e9c6c6e474e5e3668aea1a9817bdb4ceeceb0
+
+ Copyright (c) 2015-Present CloudFoundry.org Foundation, Inc. All Rights Reserved.
+
+ This project contains software that is Copyright (c) 2014-2015 Pivotal Software, Inc.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+
+ This project may include a number of subcomponents with separate
+ copyright notices and license terms. Your use of these subcomponents
+ is subject to the terms and conditions of each subcomponent's license,
+ as noted in the LICENSE file.
+
 
 >>> google.golang.org/genproto/protobuf-b3e7c2fb04031add52c4817f53f43757ccbf9c18
 
@@ -651,7 +692,7 @@ infringement, or inducement of patent infringement, then any patent
 rights granted to you under this License for this implementation of Go
 shall terminate as of the date such litigation is filed.
 
->>> google.golang.org/api/bigquery-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/bigquery-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -681,7 +722,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/books-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/books-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -711,7 +752,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/calendar-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/calendar-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -741,7 +782,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/clouddebugger-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/clouddebugger-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -771,7 +812,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/cloudresourcemanager-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/cloudresourcemanager-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -801,7 +842,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/cloudtrace-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/cloudtrace-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -831,7 +872,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/compute-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/compute-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -861,7 +902,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/container-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/container-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -891,7 +932,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/drive-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/drive-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -921,7 +962,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/fitness-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/fitness-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -951,7 +992,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/gensupport-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/gensupport-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -981,7 +1022,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/gmail-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/gmail-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -1011,7 +1052,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/google-api-go-generator-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/google-api-go-generator-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -1041,7 +1082,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/googleapi-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/googleapi-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -1071,7 +1112,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/iam-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/iam-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -1101,7 +1142,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/internal-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/internal-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -1131,7 +1172,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/iterator-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/iterator-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -1161,7 +1202,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/mapsengine-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/mapsengine-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -1191,7 +1232,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/mirror-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/mirror-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -1221,7 +1262,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/option-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/option-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -1251,7 +1292,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/prediction-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/prediction-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -1281,7 +1322,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/pubsub-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/pubsub-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -1311,7 +1352,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/sqladmin-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/sqladmin-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -1341,7 +1382,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/storage-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/storage-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -1371,7 +1412,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/support-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/support-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -1401,7 +1442,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/tasks-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/tasks-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -1431,7 +1472,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/transport-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/transport-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -1461,7 +1502,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/urlshortener-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/urlshortener-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -1491,7 +1532,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/api/youtube-c55f685368bb1cdfed2c20283e2878a83b929730
+>>> google.golang.org/api/youtube-650535c7d6201e8304c92f38c922a9a3a36c6877
 
 Copyright (c) 2011 Google Inc. All rights reserved.
 
@@ -1521,7 +1562,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
->>> google.golang.org/grpc/benchmark-21f8ed309495401e6fd79b3a9fd549582aed1b4c
+>>> google.golang.org/grpc/benchmark-cdee119ee21e61eef7093a41ba148fa83585e143
 
 Copyright 2014, Google Inc.
 All rights reserved.
@@ -1575,7 +1616,7 @@ infringement, or inducement of patent infringement, then any patent
 rights granted to you under this License for this implementation of gRPC
 shall terminate as of the date such litigation is filed.
 
->>> google.golang.org/grpc/codes-21f8ed309495401e6fd79b3a9fd549582aed1b4c
+>>> google.golang.org/grpc/codes-cdee119ee21e61eef7093a41ba148fa83585e143
 
 Copyright 2014, Google Inc.
 All rights reserved.
@@ -1629,7 +1670,7 @@ infringement, or inducement of patent infringement, then any patent
 rights granted to you under this License for this implementation of gRPC
 shall terminate as of the date such litigation is filed.
 
->>> google.golang.org/grpc/credentials-21f8ed309495401e6fd79b3a9fd549582aed1b4c
+>>> google.golang.org/grpc/credentials-cdee119ee21e61eef7093a41ba148fa83585e143
 
 Copyright 2014, Google Inc.
 All rights reserved.
@@ -1683,7 +1724,7 @@ infringement, or inducement of patent infringement, then any patent
 rights granted to you under this License for this implementation of gRPC
 shall terminate as of the date such litigation is filed.
 
->>> google.golang.org/grpc/examples-21f8ed309495401e6fd79b3a9fd549582aed1b4c
+>>> google.golang.org/grpc/examples-cdee119ee21e61eef7093a41ba148fa83585e143
 
 Copyright 2014, Google Inc.
 All rights reserved.
@@ -1737,7 +1778,7 @@ infringement, or inducement of patent infringement, then any patent
 rights granted to you under this License for this implementation of gRPC
 shall terminate as of the date such litigation is filed.
 
->>> google.golang.org/grpc/grpclb-21f8ed309495401e6fd79b3a9fd549582aed1b4c
+>>> google.golang.org/grpc/grpclb-cdee119ee21e61eef7093a41ba148fa83585e143
 
 Copyright 2014, Google Inc.
 All rights reserved.
@@ -1791,7 +1832,7 @@ infringement, or inducement of patent infringement, then any patent
 rights granted to you under this License for this implementation of gRPC
 shall terminate as of the date such litigation is filed.
 
->>> google.golang.org/grpc/grpclog-21f8ed309495401e6fd79b3a9fd549582aed1b4c
+>>> google.golang.org/grpc/grpclog-cdee119ee21e61eef7093a41ba148fa83585e143
 
 Copyright 2014, Google Inc.
 All rights reserved.
@@ -1845,7 +1886,7 @@ infringement, or inducement of patent infringement, then any patent
 rights granted to you under this License for this implementation of gRPC
 shall terminate as of the date such litigation is filed.
 
->>> google.golang.org/grpc/health-21f8ed309495401e6fd79b3a9fd549582aed1b4c
+>>> google.golang.org/grpc/health-cdee119ee21e61eef7093a41ba148fa83585e143
 
 Copyright 2014, Google Inc.
 All rights reserved.
@@ -1899,7 +1940,7 @@ infringement, or inducement of patent infringement, then any patent
 rights granted to you under this License for this implementation of gRPC
 shall terminate as of the date such litigation is filed.
 
->>> google.golang.org/grpc/internal-21f8ed309495401e6fd79b3a9fd549582aed1b4c
+>>> google.golang.org/grpc/internal-cdee119ee21e61eef7093a41ba148fa83585e143
 
 Copyright 2014, Google Inc.
 All rights reserved.
@@ -1953,7 +1994,7 @@ infringement, or inducement of patent infringement, then any patent
 rights granted to you under this License for this implementation of gRPC
 shall terminate as of the date such litigation is filed.
 
->>> google.golang.org/grpc/interop-21f8ed309495401e6fd79b3a9fd549582aed1b4c
+>>> google.golang.org/grpc/interop-cdee119ee21e61eef7093a41ba148fa83585e143
 
 Copyright 2014, Google Inc.
 All rights reserved.
@@ -2007,7 +2048,7 @@ infringement, or inducement of patent infringement, then any patent
 rights granted to you under this License for this implementation of gRPC
 shall terminate as of the date such litigation is filed.
 
->>> google.golang.org/grpc/metadata-21f8ed309495401e6fd79b3a9fd549582aed1b4c
+>>> google.golang.org/grpc/metadata-cdee119ee21e61eef7093a41ba148fa83585e143
 
 Copyright 2014, Google Inc.
 All rights reserved.
@@ -2061,7 +2102,7 @@ infringement, or inducement of patent infringement, then any patent
 rights granted to you under this License for this implementation of gRPC
 shall terminate as of the date such litigation is filed.
 
->>> google.golang.org/grpc/naming-21f8ed309495401e6fd79b3a9fd549582aed1b4c
+>>> google.golang.org/grpc/naming-cdee119ee21e61eef7093a41ba148fa83585e143
 
 Copyright 2014, Google Inc.
 All rights reserved.
@@ -2115,7 +2156,7 @@ infringement, or inducement of patent infringement, then any patent
 rights granted to you under this License for this implementation of gRPC
 shall terminate as of the date such litigation is filed.
 
->>> google.golang.org/grpc/peer-21f8ed309495401e6fd79b3a9fd549582aed1b4c
+>>> google.golang.org/grpc/peer-cdee119ee21e61eef7093a41ba148fa83585e143
 
 Copyright 2014, Google Inc.
 All rights reserved.
@@ -2169,7 +2210,7 @@ infringement, or inducement of patent infringement, then any patent
 rights granted to you under this License for this implementation of gRPC
 shall terminate as of the date such litigation is filed.
 
->>> google.golang.org/grpc/reflection-21f8ed309495401e6fd79b3a9fd549582aed1b4c
+>>> google.golang.org/grpc/reflection-cdee119ee21e61eef7093a41ba148fa83585e143
 
 Copyright 2014, Google Inc.
 All rights reserved.
@@ -2223,7 +2264,7 @@ infringement, or inducement of patent infringement, then any patent
 rights granted to you under this License for this implementation of gRPC
 shall terminate as of the date such litigation is filed.
 
->>> google.golang.org/grpc/stats-21f8ed309495401e6fd79b3a9fd549582aed1b4c
+>>> google.golang.org/grpc/stats-cdee119ee21e61eef7093a41ba148fa83585e143
 
 Copyright 2014, Google Inc.
 All rights reserved.
@@ -2277,7 +2318,7 @@ infringement, or inducement of patent infringement, then any patent
 rights granted to you under this License for this implementation of gRPC
 shall terminate as of the date such litigation is filed.
 
->>> google.golang.org/grpc/stress-21f8ed309495401e6fd79b3a9fd549582aed1b4c
+>>> google.golang.org/grpc/stress-cdee119ee21e61eef7093a41ba148fa83585e143
 
 Copyright 2014, Google Inc.
 All rights reserved.
@@ -2331,7 +2372,7 @@ infringement, or inducement of patent infringement, then any patent
 rights granted to you under this License for this implementation of gRPC
 shall terminate as of the date such litigation is filed.
 
->>> google.golang.org/grpc/tap-21f8ed309495401e6fd79b3a9fd549582aed1b4c
+>>> google.golang.org/grpc/tap-cdee119ee21e61eef7093a41ba148fa83585e143
 
 Copyright 2014, Google Inc.
 All rights reserved.
@@ -2385,7 +2426,7 @@ infringement, or inducement of patent infringement, then any patent
 rights granted to you under this License for this implementation of gRPC
 shall terminate as of the date such litigation is filed.
 
->>> google.golang.org/grpc/transport-21f8ed309495401e6fd79b3a9fd549582aed1b4c
+>>> google.golang.org/grpc/transport-cdee119ee21e61eef7093a41ba148fa83585e143
 
 Copyright 2014, Google Inc.
 All rights reserved.
