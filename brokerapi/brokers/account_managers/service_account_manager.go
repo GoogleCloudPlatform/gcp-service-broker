@@ -45,13 +45,13 @@ type ServiceAccountManager struct {
 // creates a new service account for the given binding id with the role listed in details.Parameters["role"]
 // furnishes a p12 Key
 func (sam *ServiceAccountManager) CreateAccountInGoogleP12(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
-  return sam.CreateAccountInGoogleWithPrivateKeyType(instanceID, bindingID, details, instance, Pkcs12KeyType)
+	return sam.CreateAccountInGoogleWithPrivateKeyType(instanceID, bindingID, details, instance, Pkcs12KeyType)
 }
 
 // creates a new service account for the given binding id with the role listed in details.Parameters["role"]
 // furnishes a JSON key
 func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
-  return sam.CreateAccountInGoogleWithPrivateKeyType(instanceID, bindingID, details, instance, JsonKeyType)
+	return sam.CreateAccountInGoogleWithPrivateKeyType(instanceID, bindingID, details, instance, JsonKeyType)
 }
 
 // creates a new service account for the given binding id with the role listed in details.Parameters["role"]
@@ -132,7 +132,7 @@ func (sam *ServiceAccountManager) CreateAccountInGoogleWithPrivateKeyType(instan
 
 	// create and save key
 	saKeyService := iam.NewProjectsServiceAccountsKeysService(iamService)
-  newSAKey, err := saKeyService.Create(newSA.Name, &iam.CreateServiceAccountKeyRequest{PrivateKeyType: privateKeyType}).Do()
+	newSAKey, err := saKeyService.Create(newSA.Name, &iam.CreateServiceAccountKeyRequest{PrivateKeyType: privateKeyType}).Do()
 	if err != nil {
 		return models.ServiceBindingCredentials{}, fmt.Errorf("ERROR creating new service account key: %s", err)
 	}
@@ -143,7 +143,7 @@ func (sam *ServiceAccountManager) CreateAccountInGoogleWithPrivateKeyType(instan
 		UniqueId:       newSA.UniqueId,
 		PrivateKeyData: newSAKey.PrivateKeyData,
 		ProjectId:      sam.ProjectId,
-		ProjectNumber: strconv.FormatInt(project.ProjectNumber, 10),
+		ProjectNumber:  strconv.FormatInt(project.ProjectNumber, 10),
 	}
 
 	saBytes, err := json.Marshal(&newSAInfo)
@@ -198,10 +198,10 @@ func ServiceAccountName(bindingId string) string {
 
 type ServiceAccountInfo struct {
 	// the bits to save
-	Name      string
-	Email     string
-	UniqueId  string
-	ProjectId string
+	Name          string
+	Email         string
+	UniqueId      string
+	ProjectId     string
 	ProjectNumber string
 
 	// the bit to return

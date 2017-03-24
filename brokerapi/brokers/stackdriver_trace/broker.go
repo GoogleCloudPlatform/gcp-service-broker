@@ -18,10 +18,10 @@
 package stackdriver_trace
 
 import (
-	"net/http"
 	"code.cloudfoundry.org/lager"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"net/http"
 )
 
 type StackdriverTraceBroker struct {

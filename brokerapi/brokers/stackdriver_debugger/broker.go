@@ -18,18 +18,18 @@
 package stackdriver_debugger
 
 import (
-	"net/http"
 	"code.cloudfoundry.org/lager"
-  "gcp-service-broker/brokerapi/brokers/account_managers"
+	"gcp-service-broker/brokerapi/brokers/account_managers"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"net/http"
 )
 
 type StackdriverDebuggerBroker struct {
-	Client    *http.Client
-	ProjectId string
-	Logger    lager.Logger
-  ServiceAccountManager *account_managers.ServiceAccountManager
+	Client                *http.Client
+	ProjectId             string
+	Logger                lager.Logger
+	ServiceAccountManager *account_managers.ServiceAccountManager
 	broker_base.BrokerBase
 }
 
@@ -53,12 +53,12 @@ func (b *StackdriverDebuggerBroker) Bind(instanceID, bindingID string, details m
 	}
 	details.Parameters["role"] = "clouddebugger.agent"
 
-  // Create account
-  newBinding, err := b.ServiceAccountManager.CreateAccountInGoogleWithPrivateKeyType(instanceID, bindingID, details, models.ServiceInstanceDetails{}, account_managers.Pkcs12KeyType)
+	// Create account
+	newBinding, err := b.ServiceAccountManager.CreateAccountInGoogleWithPrivateKeyType(instanceID, bindingID, details, models.ServiceInstanceDetails{}, account_managers.Pkcs12KeyType)
 
-  if err != nil {
-    return models.ServiceBindingCredentials{}, err
-  }
+	if err != nil {
+		return models.ServiceBindingCredentials{}, err
+	}
 
-  return newBinding, nil
+	return newBinding, nil
 }
