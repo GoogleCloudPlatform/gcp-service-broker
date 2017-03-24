@@ -187,10 +187,10 @@ func (trf timestampRangeFilter) String() string {
 func (trf timestampRangeFilter) proto() *btpb.RowFilter {
 	return &btpb.RowFilter{
 		Filter: &btpb.RowFilter_TimestampRangeFilter{
-				&btpb.TimestampRange{
-					int64(trf.startTime.TruncateToMilliseconds()),
-					int64(trf.endTime.TruncateToMilliseconds()),
-				},
+			&btpb.TimestampRange{
+				int64(trf.startTime.TruncateToMilliseconds()),
+				int64(trf.endTime.TruncateToMilliseconds()),
+			},
 		}}
 }
 
@@ -228,8 +228,8 @@ func ValueRangeFilter(start, end []byte) Filter {
 }
 
 type valueRangeFilter struct {
-	start  []byte
-	end    []byte
+	start []byte
+	end   []byte
 }
 
 func (vrf valueRangeFilter) String() string {
@@ -260,8 +260,8 @@ func ConditionFilter(predicateFilter, trueFilter, falseFilter Filter) Filter {
 
 type conditionFilter struct {
 	predicateFilter Filter
-	trueFilter			Filter
-	falseFilter			Filter
+	trueFilter      Filter
+	falseFilter     Filter
 }
 
 func (cf conditionFilter) String() string {
@@ -282,7 +282,7 @@ func (cf conditionFilter) proto() *btpb.RowFilter {
 			cf.predicateFilter.proto(),
 			tf,
 			ff,
-	}}}
+		}}}
 }
 
 // TODO(dsymonds): More filters: sampling

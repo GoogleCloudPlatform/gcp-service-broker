@@ -83,3 +83,10 @@ any extra access details
 ## [3.1.2] - 2017-02-12
 
 - fixed a bug where supplying a custom name for Bigtable would cause an error
+
+## [3.2.0] - 2017-03-22
+
+- Added Spanner support
+- Added a Golang example application
+- Added Concourse CI pipeline
+- Added integration testing for async services

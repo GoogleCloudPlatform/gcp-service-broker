@@ -142,7 +142,7 @@ func (sam *ServiceAccountManager) CreateAccountInGoogleWithPrivateKeyType(instan
 		Email:          newSA.Email,
 		UniqueId:       newSA.UniqueId,
 		PrivateKeyData: newSAKey.PrivateKeyData,
-		ProjectId: sam.ProjectId,
+		ProjectId:      sam.ProjectId,
 		ProjectNumber: strconv.FormatInt(project.ProjectNumber, 10),
 	}
 
@@ -189,14 +189,18 @@ func (b *ServiceAccountManager) BuildInstanceCredentials(bindDetails map[string]
 // XXX names are truncated to 20 characters because of a bug in the IAM service
 func ServiceAccountName(bindingId string) string {
 	name := saPrefix + bindingId
-	return name[:20]
+	if len(name) > 20 {
+		return name[:20]
+	} else {
+		return name
+	}
 }
 
 type ServiceAccountInfo struct {
 	// the bits to save
-	Name     string
-	Email    string
-	UniqueId string
+	Name      string
+	Email     string
+	UniqueId  string
 	ProjectId string
 	ProjectNumber string
 

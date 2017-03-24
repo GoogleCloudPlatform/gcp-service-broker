@@ -40,3 +40,4 @@ This is not an official Google product.
 * `/test-cloudsql` - tests the connection to the first bound database
 * `/test-bigquery` - lists all the bigquery datasets in the project
 * `/test-bigtable` - lists all the bigtable instances in the project
+* `/test-spanner` - lists all the spanner instances in the project

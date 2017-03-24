@@ -4,19 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
 )
 
-// DefaultForeignKeyNamer contains the default foreign key name generator method
-type DefaultForeignKeyNamer struct {
-}
-
 type commonDialect struct {
 	db *sql.DB
-	DefaultForeignKeyNamer
 }
 
 func init() {
@@ -93,7 +86,7 @@ func (commonDialect) DataTypeOf(field *StructField) string {
 
 func (s commonDialect) HasIndex(tableName string, indexName string) bool {
 	var count int
-	s.db.QueryRow("SELECT count(*) FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema = ? AND table_name = ? AND index_name = ?", s.CurrentDatabase(), tableName, indexName).Scan(&count)
+	s.db.QueryRow("SELECT count(*) FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema = ? AND table_name = ? AND index_name = ?", s.currentDatabase(), tableName, indexName).Scan(&count)
 	return count > 0
 }
 
@@ -108,30 +101,28 @@ func (s commonDialect) HasForeignKey(tableName string, foreignKeyName string) bo
 
 func (s commonDialect) HasTable(tableName string) bool {
 	var count int
-	s.db.QueryRow("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = ? AND table_name = ?", s.CurrentDatabase(), tableName).Scan(&count)
+	s.db.QueryRow("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = ? AND table_name = ?", s.currentDatabase(), tableName).Scan(&count)
 	return count > 0
 }
 
 func (s commonDialect) HasColumn(tableName string, columnName string) bool {
 	var count int
-	s.db.QueryRow("SELECT count(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema = ? AND table_name = ? AND column_name = ?", s.CurrentDatabase(), tableName, columnName).Scan(&count)
+	s.db.QueryRow("SELECT count(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema = ? AND table_name = ? AND column_name = ?", s.currentDatabase(), tableName, columnName).Scan(&count)
 	return count > 0
 }
 
-func (s commonDialect) CurrentDatabase() (name string) {
+func (s commonDialect) currentDatabase() (name string) {
 	s.db.QueryRow("SELECT DATABASE()").Scan(&name)
 	return
 }
 
-func (commonDialect) LimitAndOffsetSQL(limit, offset interface{}) (sql string) {
-	if limit != nil {
-		if parsedLimit, err := strconv.ParseInt(fmt.Sprint(limit), 0, 0); err == nil && parsedLimit > 0 {
-			sql += fmt.Sprintf(" LIMIT %d", parsedLimit)
+func (commonDialect) LimitAndOffsetSQL(limit, offset int) (sql string) {
+	if limit > 0 || offset > 0 {
+		if limit >= 0 {
+			sql += fmt.Sprintf(" LIMIT %d", limit)
 		}
-	}
-	if offset != nil {
-		if parsedOffset, err := strconv.ParseInt(fmt.Sprint(offset), 0, 0); err == nil && parsedOffset > 0 {
-			sql += fmt.Sprintf(" OFFSET %d", parsedOffset)
+		if offset >= 0 {
+			sql += fmt.Sprintf(" OFFSET %d", offset)
 		}
 	}
 	return
@@ -143,10 +134,4 @@ func (commonDialect) SelectFromDummyTable() string {
 
 func (commonDialect) LastInsertIDReturningSuffix(tableName, columnName string) string {
 	return ""
-}
-
-func (DefaultForeignKeyNamer) BuildForeignKeyName(tableName, field, dest string) string {
-	keyName := fmt.Sprintf("%s_%s_%s_foreign", tableName, field, dest)
-	keyName = regexp.MustCompile("(_*[^a-zA-Z]+_*|_+)").ReplaceAllString(keyName, "_")
-	return keyName
 }

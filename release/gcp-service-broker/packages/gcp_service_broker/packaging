@@ -1,5 +1,0 @@
-# abort script on any command that exit with a non zero value
-set -e
-
-cp gcp_service_broker/gcp-service-broker.zip ${BOSH_INSTALL_TARGET}
-cp gcp_service_broker/manifest.yml ${BOSH_INSTALL_TARGET}

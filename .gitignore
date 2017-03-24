@@ -4,6 +4,8 @@
 *.coverprofile
 *.DS_Store
 gcp-service-broker
+<<<<<<< HEAD
 *.swp
 scripts/upload
-.gitignore~
+product/
+release/
