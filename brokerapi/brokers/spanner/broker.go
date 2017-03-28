@@ -235,7 +235,7 @@ func (s *SpannerBroker) Deprovision(instanceID string, details models.Deprovisio
 	}
 
 	// set up client
-	client, err := googlespanner.NewInstanceAdminClient(context.Background(), option.WithUserAgent(models.CustomUserAgent))
+	client, err := googlespanner.NewInstanceAdminClient(context.Background())
 	if err != nil {
 		return fmt.Errorf("Error creating client: %s", err)
 	}
