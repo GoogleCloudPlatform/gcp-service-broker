@@ -60,3 +60,9 @@ func (b *BrokerBase) PollInstance(instanceID string) (bool, error) {
 func (b *BrokerBase) Async() bool {
 	return false
 }
+
+// used during polling of async operations to determine if the workflow is a provision or deprovision flow based off the
+// type of the most recent operation
+func (b *BrokerBase) LastOperationWasDelete(instanceId string) (bool, error) {
+	panic("Can't check last operation on a synchronous service")
+}

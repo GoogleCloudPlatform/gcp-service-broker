@@ -183,6 +183,13 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			Expect(err).NotTo(HaveOccurred())
 			pollForMaxFiveMins(gcpBroker, "integration_test_instance")
 
+			// make sure the instance is deleted from the db
+			instance := models.ServiceInstanceDetails{}
+			if err := db_service.DbConnection.Unscoped().Where("ID = ?", "integration_test_instance").First(&instance).Error; err != nil {
+				panic("error checking for service instance details: " + err.Error())
+			}
+			Expect(instance.DeletedAt).NotTo(BeNil())
+
 			// make sure the instance is deleted from google
 			_, err = dbService.Get(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName).Do()
 			Expect(err).To(HaveOccurred())
@@ -251,7 +258,14 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			}
 			_, err = gcpBroker.Deprovision("integration_test_instance", deprovisionDetails, true)
 			Expect(err).NotTo(HaveOccurred())
-			pollForMaxFiveMins(gcpBroker, "integration_test_instance")
+			err = pollForMaxFiveMins(gcpBroker, "integration_test_instance")
+			Expect(err).NotTo(HaveOccurred())
+
+			instance := models.ServiceInstanceDetails{}
+			if err := db_service.DbConnection.Unscoped().Where("ID = ?", "integration_test_instance").First(&instance).Error; err != nil {
+				panic("error checking for service instance details: " + err.Error())
+			}
+			Expect(instance.DeletedAt).NotTo(Equal(nil))
 
 			_, err = client.GetInstance(context.Background(), &instancepb.GetInstanceRequest{
 				Name: "projects/" + gcpBroker.RootGCPCredentials.ProjectId + "/instances/" + instance_name,

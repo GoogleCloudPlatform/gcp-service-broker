@@ -404,10 +404,22 @@ func (gcpBroker *GCPServiceBroker) LastOperation(instanceID string) (models.Last
 					return models.LastOperation{State: models.InProgress, Description: ""}, err
 				}
 			}
+			// This is not a retryable error. Return fail
 			return models.LastOperation{State: models.Failed, Description: ""}, err
 		} else {
 
 			if done {
+				// no error and we're done! Delete from the SB database if this was a delete flow and return success
+				deleteFlow, err := gcpBroker.ServiceBrokerMap[instance.ServiceId].LastOperationWasDelete(instanceID)
+				if err != nil {
+					return models.LastOperation{State: models.Succeeded, Description: ""}, fmt.Errorf("Couldn't determine if provision or deprovision flow, this may leave orphaned resources, contact your operator for cleanup")
+				}
+				if deleteFlow {
+					err = db_service.SoftDeleteInstanceDetails(instanceID)
+					if err != nil {
+						return models.LastOperation{State: models.Succeeded, Description: ""}, fmt.Errorf("Error deleting instance details from database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup", err)
+					}
+				}
 				return models.LastOperation{State: models.Succeeded, Description: ""}, nil
 			} else {
 				return models.LastOperation{State: models.InProgress, Description: ""}, nil

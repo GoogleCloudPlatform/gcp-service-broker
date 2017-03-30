@@ -64,6 +64,15 @@ type FakeServiceBrokerHelper struct {
 		result1 bool
 		result2 error
 	}
+	LastOperationWasDeleteStub        func(instanceID string) (bool, error)
+	lastOperationWasDeleteMutex       sync.RWMutex
+	lastOperationWasDeleteArgsForCall []struct {
+		instanceID string
+	}
+	lastOperationWasDeleteReturns struct {
+		result1 bool
+		result2 error
+	}
 	AsyncStub        func() bool
 	asyncMutex       sync.RWMutex
 	asyncArgsForCall []struct{}
@@ -281,6 +290,40 @@ func (fake *FakeServiceBrokerHelper) PollInstanceReturns(result1 bool, result2 e
 	}{result1, result2}
 }
 
+func (fake *FakeServiceBrokerHelper) LastOperationWasDelete(instanceID string) (bool, error) {
+	fake.lastOperationWasDeleteMutex.Lock()
+	fake.lastOperationWasDeleteArgsForCall = append(fake.lastOperationWasDeleteArgsForCall, struct {
+		instanceID string
+	}{instanceID})
+	fake.recordInvocation("LastOperationWasDelete", []interface{}{instanceID})
+	fake.lastOperationWasDeleteMutex.Unlock()
+	if fake.LastOperationWasDeleteStub != nil {
+		return fake.LastOperationWasDeleteStub(instanceID)
+	} else {
+		return fake.lastOperationWasDeleteReturns.result1, fake.lastOperationWasDeleteReturns.result2
+	}
+}
+
+func (fake *FakeServiceBrokerHelper) LastOperationWasDeleteCallCount() int {
+	fake.lastOperationWasDeleteMutex.RLock()
+	defer fake.lastOperationWasDeleteMutex.RUnlock()
+	return len(fake.lastOperationWasDeleteArgsForCall)
+}
+
+func (fake *FakeServiceBrokerHelper) LastOperationWasDeleteArgsForCall(i int) string {
+	fake.lastOperationWasDeleteMutex.RLock()
+	defer fake.lastOperationWasDeleteMutex.RUnlock()
+	return fake.lastOperationWasDeleteArgsForCall[i].instanceID
+}
+
+func (fake *FakeServiceBrokerHelper) LastOperationWasDeleteReturns(result1 bool, result2 error) {
+	fake.LastOperationWasDeleteStub = nil
+	fake.lastOperationWasDeleteReturns = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeServiceBrokerHelper) Async() bool {
 	fake.asyncMutex.Lock()
 	fake.asyncArgsForCall = append(fake.asyncArgsForCall, struct{}{})
@@ -321,6 +364,8 @@ func (fake *FakeServiceBrokerHelper) Invocations() map[string][][]interface{} {
 	defer fake.deprovisionMutex.RUnlock()
 	fake.pollInstanceMutex.RLock()
 	defer fake.pollInstanceMutex.RUnlock()
+	fake.lastOperationWasDeleteMutex.RLock()
+	defer fake.lastOperationWasDeleteMutex.RUnlock()
 	fake.asyncMutex.RLock()
 	defer fake.asyncMutex.RUnlock()
 	return fake.invocations
