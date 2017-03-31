@@ -313,6 +313,14 @@ Notes:
         }
         ```
 
+* [Stackdriver Debugger](https://cloud.google.com/debugger/)
+    * Provison (none)
+    * Bind (none)
+
+* [Stackdriver Trace](https://cloud.google.com/trace/)
+    * Provison (none)
+    * Bind (none)
+
 ## Change Notes
 
 see https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/CHANGELOG.md
