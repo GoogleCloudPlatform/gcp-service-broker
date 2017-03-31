@@ -370,6 +370,34 @@ var _ = Describe("LiveIntegrationTests", func() {
 		}, timeout)
 	})
 
+	Describe("stadkdriver debugger", func() {
+		FIt("can provision/bind/unbind/deprovision", func() {
+			iamService, err := iam.New(gcpBroker.GCPClient)
+			Expect(err).NotTo(HaveOccurred())
+
+			_ = iam.NewProjectsServiceAccountsService(iamService)
+
+			params := &genericService{
+				serviceId:        serviceNameToId[models.StackdriverDebuggerName],
+				planId:           serviceNameToPlanId[models.StackdriverDebuggerName],
+				instanceId:       "integration_test_debugger_instance",
+				bindingId:        "debugr",
+				rawBindingParams: map[string]interface{}{},
+				serviceExistsFn: func(expected bool) bool {
+					return expected
+				},
+				serviceMetadataSavedFn: func(instanceId string) bool {
+					instanceDetails := getAndUnmarshalInstanceDetails(instanceId)
+					return len(instanceDetails) == 0
+				},
+				cleanupFn: func() {
+				},
+			}
+
+			testGenericService(gcpBroker, params)
+		}, timeout)
+	})
+
 	AfterEach(func() {
 		os.Remove(models.AppCredsFileName)
 		os.Remove("test.db")
