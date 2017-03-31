@@ -221,7 +221,7 @@ func (gcpBroker *GCPAsyncServiceBroker) Provision(instanceID string, details mod
 	serviceId := details.ServiceID
 
 	// verify async provisioning is allowed if it is required
-	gcpBroker.ShouldProvisionAsync = gcpBroker.ServiceBrokerMap[serviceId].Async()
+	gcpBroker.ShouldProvisionAsync = gcpBroker.ServiceBrokerMap[serviceId].ProvisionsAsync()
 	if gcpBroker.ShouldProvisionAsync && !asyncAllowed {
 		return models.ProvisionedServiceSpec{}, models.ErrAsyncRequired
 	}
@@ -260,7 +260,7 @@ func (gcpBroker *GCPAsyncServiceBroker) Provision(instanceID string, details mod
 // Deletes the given instance
 func (gcpBroker *GCPAsyncServiceBroker) Deprovision(instanceID string, details models.DeprovisionDetails, asyncAllowed bool) (models.IsAsync, error) {
 
-	gcpBroker.ShouldProvisionAsync = gcpBroker.ServiceBrokerMap[details.ServiceID].Async()
+	gcpBroker.ShouldProvisionAsync = gcpBroker.ServiceBrokerMap[details.ServiceID].DeprovisionsAsync()
 
 	// make sure that instance actually exists
 	count, err := db_service.GetServiceInstanceCount(instanceID)
@@ -396,7 +396,7 @@ func (gcpBroker *GCPServiceBroker) LastOperation(instanceID string) (models.Last
 		return models.LastOperation{}, models.ErrInstanceDoesNotExist
 	}
 
-	if gcpBroker.ServiceBrokerMap[instance.ServiceId].Async() {
+	if gcpBroker.ServiceBrokerMap[instance.ServiceId].ProvisionsAsync() || gcpBroker.ServiceBrokerMap[instance.ServiceId].DeprovisionsAsync() {
 		done, err := gcpBroker.ServiceBrokerMap[instance.ServiceId].PollInstance(instanceID)
 		if err != nil {
 			if gerr, ok := err.(*googleapi.Error); ok {

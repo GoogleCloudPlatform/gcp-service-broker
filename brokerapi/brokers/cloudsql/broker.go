@@ -615,7 +615,11 @@ func (b *CloudSQLBroker) LastOperationWasDelete(instanceId string) (bool, error)
 }
 
 // Indicates that CloudSQL uses asynchronous provisioning
-func (b *CloudSQLBroker) Async() bool {
+func (b *CloudSQLBroker) ProvisionsAsync() bool {
+	return true
+}
+
+func (b *CloudSQLBroker) DeprovisionsAsync() bool {
 	return true
 }
 

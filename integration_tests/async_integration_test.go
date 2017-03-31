@@ -214,6 +214,8 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			err = pollForMaxFiveMins(gcpBroker, "integration_test_instance")
 			Expect(err).NotTo(HaveOccurred())
 
+			println("provision")
+
 			var count int
 			db_service.DbConnection.Model(&models.ServiceInstanceDetails{}).Where("id = ?", "integration_test_instance").Count(&count)
 			Expect(count).To(Equal(1))
@@ -257,8 +259,6 @@ var _ = Describe("AsyncIntegrationTests", func() {
 				PlanID:    serviceNameToPlanId[models.SpannerName],
 			}
 			_, err = gcpBroker.Deprovision("integration_test_instance", deprovisionDetails, true)
-			Expect(err).NotTo(HaveOccurred())
-			err = pollForMaxFiveMins(gcpBroker, "integration_test_instance")
 			Expect(err).NotTo(HaveOccurred())
 
 			instance := models.ServiceInstanceDetails{}

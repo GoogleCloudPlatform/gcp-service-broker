@@ -31,7 +31,6 @@ import (
 	instancepb "google.golang.org/genproto/googleapis/spanner/admin/instance/v1"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 type SpannerBroker struct {
@@ -42,8 +41,6 @@ type SpannerBroker struct {
 
 	broker_base.BrokerBase
 }
-
-const deleteOperationName = "SPANNER_DELETE"
 
 type InstanceInformation struct {
 	InstanceId string `json:"instance_id"`
@@ -238,29 +235,6 @@ func createCloudOperation(op *googlespanner.CreateInstanceOperation, instanceId 
 	return nil
 }
 
-func createFakeDeleteOperation(instanceId string, serviceId string, errStr string) error {
-	statusStr := "DONE"
-	if errStr != "" {
-		statusStr = "ERROR"
-	}
-
-	fakeDeleteOp := models.CloudOperation{
-		Name:              "spanner-delete" + instanceId,
-		ErrorMessage:      errStr,
-		InsertTime:        time.Now().String(),
-		OperationType:     deleteOperationName,
-		StartTime:         time.Now().String(),
-		Status:            statusStr,
-		ServiceId:         serviceId,
-		ServiceInstanceId: instanceId,
-	}
-
-	if err := db_service.DbConnection.Create(&fakeDeleteOp).Error; err != nil {
-		return fmt.Errorf("Error saving operation details to database: %s. Services relying on async deprovisioning will not be able to complete deprovisioning", err)
-	}
-	return nil
-}
-
 // deletes the instance associated with the given instanceID string
 func (s *SpannerBroker) Deprovision(instanceID string, details models.DeprovisionDetails) error {
 	var err error
@@ -282,35 +256,22 @@ func (s *SpannerBroker) Deprovision(instanceID string, details models.Deprovisio
 	})
 
 	if err != nil {
-		deleteErr := createFakeDeleteOperation(instanceID, instance.ServiceId, err.Error())
-		if deleteErr != nil {
-			return fmt.Errorf("Error deleteing instance: %s. Then encountered error saving operation information: %s", err, deleteErr)
-		} else {
-			return fmt.Errorf("Error deleting instance: %s", err)
-		}
-	} else {
-		deleteErr := createFakeDeleteOperation(instanceID, instance.ServiceId, "")
-		if deleteErr != nil {
-			return fmt.Errorf("Error saving operation information: %s", deleteErr)
-		}
+		return fmt.Errorf("Error deleting instance: %s", err)
 	}
 
 	return nil
 }
 
-// used during polling of async operations to determine if the workflow is a provision or deprovision flow based off the
-// type of the most recent operation
-func (b *SpannerBroker) LastOperationWasDelete(instanceId string) (bool, error) {
-	op, err := db_service.GetLastOperation(instanceId)
-	if err != nil {
-		return false, err
-	}
-	return op.OperationType == deleteOperationName, nil
+/// Indicates that Spanner uses asynchronous provisioning
+func (s *SpannerBroker) ProvisionsAsync() bool {
+	return true
 }
 
-// Indicates that Spanner uses asynchronous provisioning
-func (s *SpannerBroker) Async() bool {
-	return true
+// used during polling of async operations to determine if the workflow is a provision or deprovision flow based off the
+// type of the most recent operation
+// since spanner deprovisions synchronously, the last operation will never have been delete
+func (s *SpannerBroker) LastOperationWasDelete(instanceId string) (bool, error) {
+	return false, nil
 }
 
 type SpannerDynamicPlan struct {

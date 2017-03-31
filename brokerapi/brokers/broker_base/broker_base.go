@@ -57,7 +57,11 @@ func (b *BrokerBase) PollInstance(instanceID string) (bool, error) {
 }
 
 // Indicates provisioning is done synchronously
-func (b *BrokerBase) Async() bool {
+func (b *BrokerBase) ProvisionsAsync() bool {
+	return false
+}
+
+func (b *BrokerBase) DeprovisionsAsync() bool {
 	return false
 }
 

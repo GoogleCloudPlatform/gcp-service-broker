@@ -30,7 +30,8 @@ type ServiceBrokerHelper interface {
 	Deprovision(instanceID string, details DeprovisionDetails) error
 	PollInstance(instanceID string) (bool, error)
 	LastOperationWasDelete(instanceID string) (bool, error)
-	Async() bool
+	ProvisionsAsync() bool
+	DeprovisionsAsync() bool
 }
 
 type ServiceBroker interface {
