@@ -34,15 +34,12 @@ const saResourcePrefix = "serviceAccount:"
 const saPrefix = "pcf-binding-"
 const projectResourcePrefix = "projects/"
 
-const jsonKeyType = "TYPE_GOOGLE_CREDENTIALS_FILE"
-
 type ServiceAccountManager struct {
 	ProjectId string
 	GCPClient *http.Client
 }
 
 // creates a new service account for the given binding id with the role listed in details.Parameters["role"]
-// furnishes a JSON key
 func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 	role, ok := details.Parameters["role"].(string)
 	if !ok {
@@ -114,7 +111,7 @@ func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindi
 
 	// create and save key
 	saKeyService := iam.NewProjectsServiceAccountsKeysService(iamService)
-	newSAKey, err := saKeyService.Create(newSA.Name, &iam.CreateServiceAccountKeyRequest{PrivateKeyType: jsonKeyType}).Do()
+	newSAKey, err := saKeyService.Create(newSA.Name, &iam.CreateServiceAccountKeyRequest{}).Do()
 	if err != nil {
 		return models.ServiceBindingCredentials{}, fmt.Errorf("ERROR creating new service account key: %s", err)
 	}
