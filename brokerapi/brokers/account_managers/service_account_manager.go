@@ -23,9 +23,10 @@ import (
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/utils"
+	"net/http"
+
 	cloudres "google.golang.org/api/cloudresourcemanager/v1"
 	iam "google.golang.org/api/iam/v1"
-	"net/http"
 )
 
 const roleResourcePrefix = "roles/"
@@ -33,8 +34,7 @@ const saResourcePrefix = "serviceAccount:"
 const saPrefix = "pcf-binding-"
 const projectResourcePrefix = "projects/"
 
-const Pkcs12KeyType = "TYPE_PKCS12_FILE"
-const JsonKeyType = "TYPE_GOOGLE_CREDENTIALS_FILE"
+const jsonKeyType = "TYPE_GOOGLE_CREDENTIALS_FILE"
 
 type ServiceAccountManager struct {
 	ProjectId string
@@ -42,20 +42,8 @@ type ServiceAccountManager struct {
 }
 
 // creates a new service account for the given binding id with the role listed in details.Parameters["role"]
-// furnishes a p12 Key
-func (sam *ServiceAccountManager) CreateAccountInGoogleP12(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
-  return sam.CreateAccountInGoogleWithPrivateKeyType(instanceID, bindingID, details, instance, Pkcs12KeyType)
-}
-
-// creates a new service account for the given binding id with the role listed in details.Parameters["role"]
 // furnishes a JSON key
 func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
-  return sam.CreateAccountInGoogleWithPrivateKeyType(instanceID, bindingID, details, instance, JsonKeyType)
-}
-
-// creates a new service account for the given binding id with the role listed in details.Parameters["role"]
-func (sam *ServiceAccountManager) CreateAccountInGoogleWithPrivateKeyType(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails, privateKeyType string) (models.ServiceBindingCredentials, error) {
-
 	role, ok := details.Parameters["role"].(string)
 	if !ok {
 		return models.ServiceBindingCredentials{}, errors.New("Error getting role as string from request")
@@ -126,7 +114,7 @@ func (sam *ServiceAccountManager) CreateAccountInGoogleWithPrivateKeyType(instan
 
 	// create and save key
 	saKeyService := iam.NewProjectsServiceAccountsKeysService(iamService)
-  newSAKey, err := saKeyService.Create(newSA.Name, &iam.CreateServiceAccountKeyRequest{PrivateKeyType: privateKeyType}).Do()
+	newSAKey, err := saKeyService.Create(newSA.Name, &iam.CreateServiceAccountKeyRequest{PrivateKeyType: jsonKeyType}).Do()
 	if err != nil {
 		return models.ServiceBindingCredentials{}, fmt.Errorf("ERROR creating new service account key: %s", err)
 	}
