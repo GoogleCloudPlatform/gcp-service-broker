@@ -105,6 +105,21 @@ const Services string = `[
             "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg"
           },
           "tags": ["gcp", "spanner"]
+	    },
+        {
+		  "id": "83837945-1547-41e0-b661-ea31d76eed11",
+          "description": "Stackdriver Debugger",
+          "name": "google-stackdriver-debugger",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+            "displayName": "Google Stackdriver Debugger",
+            "longDescription": "Google Stackdriver Debugger provides powerful production diagnostics tools",
+            "documentationUrl": "https://cloud.google.com/debugger/docs/",
+            "supportUrl": "https://cloud.google.com/support/",
+            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg"
+          },
+          "tags": ["gcp", "debugger"]
         }
       ]`
 

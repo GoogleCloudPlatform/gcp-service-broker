@@ -2,6 +2,7 @@ package integration_tests
 
 import (
 	. "gcp-service-broker/brokerapi/brokers"
+
 	"golang.org/x/net/context"
 
 	"fmt"
@@ -16,10 +17,11 @@ import (
 
 	googlepubsub "cloud.google.com/go/pubsub"
 
+	"encoding/json"
+
 	googlebigtable "cloud.google.com/go/bigtable"
 	googlestorage "cloud.google.com/go/storage"
 	"code.cloudfoundry.org/lager"
-	"encoding/json"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -199,8 +201,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	Describe("Broker init", func() {
-		It("should have 7 services in sevices map", func() {
-			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(7))
+		It("should have 8 services in sevices map", func() {
+			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(8))
 		})
 
 		It("should have a default client", func() {
@@ -213,8 +215,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	Describe("getting broker catalog", func() {
-		It("should have 7 services available", func() {
-			Expect(len(gcpBroker.Services())).To(Equal(7))
+		It("should have 8 services available", func() {
+			Expect(len(gcpBroker.Services())).To(Equal(8))
 		})
 
 		It("should have 3 storage plans available", func() {
