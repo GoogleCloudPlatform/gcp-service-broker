@@ -185,4 +185,4 @@ applications:
           "description": "Stackdriver Trace default plan",
           "features": ""
          }
-      ]
+      ]'
