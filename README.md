@@ -316,10 +316,12 @@ Notes:
 * [Stackdriver Debugger](https://cloud.google.com/debugger/)
     * Provison (none)
     * Bind (none)
+	* provided credentials will have the role of `clouddebugger.agent
 
 * [Stackdriver Trace](https://cloud.google.com/trace/)
     * Provison (none)
     * Bind (none)
+	* provided credentials will have the role of `cloudtrace.agent`
 
 ## Change Notes
 
