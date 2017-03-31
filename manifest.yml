@@ -172,7 +172,7 @@ applications:
           "features": ""
         },
         {
-          "service_id": "b9e4312e-b42c-4680-bda5-39411832e",
+          "service_id": "83837945-1547-41e0-b661-ea31d76eed11",
           "name": "default",
           "display_name": "Default",
           "description": "Stackdriver Debugger default plan",
