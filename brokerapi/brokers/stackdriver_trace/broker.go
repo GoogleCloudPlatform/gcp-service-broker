@@ -37,15 +37,17 @@ type StackdriverTraceBroker struct {
 type InstanceInformation struct {
 }
 
-// Creates a service account for Stackdriver Trace
+// No-op, no serivce is required for Stackdriver Trace
 func (b *StackdriverTraceBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
 	return models.ServiceInstanceDetails{}, nil
 }
 
+// No-op, no serivce is required for Stackdriver Trace
 func (b *StackdriverTraceBroker) Deprovision(instanceID string, details models.DeprovisionDetails) error {
 	return nil
 }
 
+// Creates a service account with access to Stackdriver Trace
 func (b *StackdriverTraceBroker) Bind(instanceID, bindingID string, details models.BindDetails) (models.ServiceBindingCredentials, error) {
 	if details.Parameters == nil {
 		b.Logger.Info("the parameters are nil!")

@@ -37,16 +37,17 @@ type StackdriverDebuggerBroker struct {
 type InstanceInformation struct {
 }
 
-// Creates a service account for Stackdriver Debugger
+// No-op, no service is required for the Debugger
 func (b *StackdriverDebuggerBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
 	return models.ServiceInstanceDetails{}, nil
 }
 
-// Deletes the topic associated with the given instanceID
+// No-op, no service is required for the Debugger
 func (b *StackdriverDebuggerBroker) Deprovision(instanceID string, details models.DeprovisionDetails) error {
 	return nil
 }
 
+// Creates a service account with access to Stackdriver Debugger
 func (b *StackdriverDebuggerBroker) Bind(instanceID, bindingID string, details models.BindDetails) (models.ServiceBindingCredentials, error) {
 	if details.Parameters == nil {
 		b.Logger.Info("the parameters are nil!")
