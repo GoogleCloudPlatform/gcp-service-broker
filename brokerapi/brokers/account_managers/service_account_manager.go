@@ -23,9 +23,10 @@ import (
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/utils"
+	"net/http"
+
 	cloudres "google.golang.org/api/cloudresourcemanager/v1"
 	iam "google.golang.org/api/iam/v1"
-	"net/http"
 )
 
 const roleResourcePrefix = "roles/"
@@ -40,7 +41,6 @@ type ServiceAccountManager struct {
 
 // creates a new service account for the given binding id with the role listed in details.Parameters["role"]
 func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
-
 	role, ok := details.Parameters["role"].(string)
 	if !ok {
 		return models.ServiceBindingCredentials{}, errors.New("Error getting role as string from request")

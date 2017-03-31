@@ -1,7 +1,6 @@
 package brokers_test
 
 import (
-	"code.cloudfoundry.org/lager"
 	"encoding/json"
 	"gcp-service-broker/brokerapi/brokers"
 	. "gcp-service-broker/brokerapi/brokers"
@@ -16,7 +15,10 @@ import (
 	"net/http"
 	"os"
 
+	"code.cloudfoundry.org/lager"
+
 	"gcp-service-broker/fakes"
+
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -135,8 +137,8 @@ var _ = Describe("Brokers", func() {
 	})
 
 	Describe("Broker init", func() {
-		It("should have 7 services in sevices map", func() {
-			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(7))
+		It("should have 9 services in sevices map", func() {
+			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(9))
 		})
 
 		It("should have a default client", func() {
@@ -149,8 +151,8 @@ var _ = Describe("Brokers", func() {
 	})
 
 	Describe("getting broker catalog", func() {
-		It("should have 7 services available", func() {
-			Expect(len(gcpBroker.Services())).To(Equal(7))
+		It("should have 9 services available", func() {
+			Expect(len(gcpBroker.Services())).To(Equal(9))
 		})
 
 		It("should have 3 storage plans available", func() {
@@ -181,6 +183,15 @@ var _ = Describe("Brokers", func() {
 				}
 			}
 
+		})
+
+		It("should have 1 debugger plan available", func() {
+			serviceList := gcpBroker.Services()
+			for _, s := range serviceList {
+				if s.ID == serviceNameToId[models.StackdriverDebuggerName] {
+					Expect(len(s.Plans)).To(Equal(1))
+				}
+			}
 		})
 	})
 

@@ -105,6 +105,36 @@ const Services string = `[
             "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg"
           },
           "tags": ["gcp", "spanner"]
+	    },
+        {
+		  "id": "83837945-1547-41e0-b661-ea31d76eed11",
+          "description": "Stackdriver Debugger",
+          "name": "google-stackdriver-debugger",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+            "displayName": "Google Stackdriver Debugger",
+            "longDescription": "Google Stackdriver Debugger provides powerful production diagnostics tools",
+            "documentationUrl": "https://cloud.google.com/debugger/docs/",
+            "supportUrl": "https://cloud.google.com/support/",
+            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg"
+          },
+          "tags": ["gcp", "stackdriver", "debugger"]
+        },
+        {
+          "id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
+          "description": "Stackdriver Trace",
+          "name": "google-stackdriver-trace",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+            "displayName": "Stackdriver Trace",
+            "longDescription": "Stackdriver Trace is a distributed tracing system that collects latency data from your applications and displays it in the Google Cloud Platform Console. You can track how requests propagate through your application and receive detailed near real-time performance insights.",
+            "documentationUrl": "https://cloud.google.com/trace/docs/",
+            "supportUrl": "https://cloud.google.com/support/",
+            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg"
+          },
+          "tags": ["gcp", "stackdriver", "trace"]
         }
       ]`
 
@@ -149,7 +179,21 @@ const PreconfiguredPlans = `[
 			  "display_name": "Default",
 			  "description": "Machine Learning api default plan",
 			  "features": ""
-			}
+			},
+			{
+			  "service_id": "83837945-1547-41e0-b661-ea31d76eed11",
+			  "name": "default",
+			  "display_name": "Default",
+			  "description": "Stackdriver Debugger default plan" ,
+			  "features": ""
+			},
+			{
+			  "service_id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
+			  "name": "default",
+			  "display_name": "Default",
+			  "description": "Stackdriver Trace default plan",
+			  "features": ""
+			 }
 		      ]`
 
 const TestCloudSQLPlan = `{

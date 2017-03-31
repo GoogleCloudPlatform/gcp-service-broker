@@ -2,6 +2,7 @@ package integration_tests
 
 import (
 	. "gcp-service-broker/brokerapi/brokers"
+
 	"golang.org/x/net/context"
 
 	"fmt"
@@ -16,15 +17,16 @@ import (
 
 	googlepubsub "cloud.google.com/go/pubsub"
 
+	"encoding/json"
+
 	googlebigtable "cloud.google.com/go/bigtable"
 	googlestorage "cloud.google.com/go/storage"
 	"code.cloudfoundry.org/lager"
-	"encoding/json"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	googlebigquery "google.golang.org/api/bigquery/v2"
-	"google.golang.org/api/iam/v1"
+	iam "google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 )
 
@@ -41,6 +43,12 @@ type genericService struct {
 	serviceMetadataSavedFn func(string) bool
 }
 
+type iamService struct {
+	bindingId string
+	serviceId string
+	planId    string
+}
+
 func getAndUnmarshalInstanceDetails(instanceId string) map[string]string {
 	var instanceRecord models.ServiceInstanceDetails
 	db_service.DbConnection.Find(&instanceRecord).Where("id = ?", instanceId)
@@ -51,7 +59,7 @@ func getAndUnmarshalInstanceDetails(instanceId string) map[string]string {
 
 func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService) {
 	// If the service already exists (eg, failed previous test), clean it up before the run
-	if params.serviceExistsFn(false) {
+	if params.serviceExistsFn != nil && params.serviceExistsFn(false) {
 		params.cleanupFn()
 	}
 	//
@@ -70,7 +78,9 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 	db_service.DbConnection.Model(&models.ServiceInstanceDetails{}).Where("id = ?", params.instanceId).Count(&count)
 	Expect(count).To(Equal(1))
 
-	Expect(params.serviceExistsFn(true)).To(BeTrue())
+	if params.serviceExistsFn != nil {
+		Expect(params.serviceExistsFn(true)).To(BeTrue())
+	}
 	Expect(params.serviceMetadataSavedFn(params.instanceId)).To(BeTrue())
 
 	//
@@ -128,7 +138,27 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 	}
 	Expect(instance.DeletedAt).NotTo(Equal(nil))
 
-	Expect(params.serviceExistsFn(false)).To(BeFalse())
+	if params.serviceExistsFn != nil {
+		Expect(params.serviceExistsFn(false)).To(BeFalse())
+	}
+}
+
+// For services that only create a service account and bind those credentials.
+func testIamBasedService(gcpBroker *GCPAsyncServiceBroker, params *iamService) {
+	genericServiceParams := &genericService{
+		serviceId:        params.serviceId,
+		planId:           params.planId,
+		instanceId:       "iam-instance",
+		bindingId:        "iam-instance",
+		rawBindingParams: map[string]interface{}{},
+		serviceMetadataSavedFn: func(instanceId string) bool {
+			// Metadata should be empty, there is no additional information required
+			instanceDetails := getAndUnmarshalInstanceDetails(instanceId)
+			return len(instanceDetails) == 0
+		},
+	}
+
+	testGenericService(gcpBroker, genericServiceParams)
 }
 
 // Instance Name is used to name every instance created in GCP (eg, a storage bucket)
@@ -199,8 +229,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	Describe("Broker init", func() {
-		It("should have 7 services in sevices map", func() {
-			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(7))
+		It("should have 9 services in sevices map", func() {
+			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(9))
 		})
 
 		It("should have a default client", func() {
@@ -213,8 +243,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	Describe("getting broker catalog", func() {
-		It("should have 7 services available", func() {
-			Expect(len(gcpBroker.Services())).To(Equal(7))
+		It("should have 9 services available", func() {
+			Expect(len(gcpBroker.Services())).To(Equal(9))
 		})
 
 		It("should have 3 storage plans available", func() {
@@ -365,6 +395,26 @@ var _ = Describe("LiveIntegrationTests", func() {
 			}
 
 			testGenericService(gcpBroker, params)
+		}, timeout)
+	})
+
+	Describe("stackdriver debugger", func() {
+		It("can provision/bind/unbind/deprovision", func() {
+			params := &iamService{
+				serviceId: serviceNameToId[models.StackdriverDebuggerName],
+				planId:    serviceNameToPlanId[models.StackdriverDebuggerName],
+			}
+			testIamBasedService(gcpBroker, params)
+		}, timeout)
+	})
+
+	Describe("stackdriver trace", func() {
+		It("can provision/bind/unbind/deprovision", func() {
+			params := &iamService{
+				serviceId: serviceNameToId[models.StackdriverTraceName],
+				planId:    serviceNameToPlanId[models.StackdriverTraceName],
+			}
+			testIamBasedService(gcpBroker, params)
 		}, timeout)
 	})
 
