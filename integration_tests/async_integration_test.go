@@ -183,6 +183,13 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			Expect(err).NotTo(HaveOccurred())
 			pollForMaxFiveMins(gcpBroker, "integration_test_instance")
 
+			// make sure the instance is deleted from the db
+			instance := models.ServiceInstanceDetails{}
+			if err := db_service.DbConnection.Unscoped().Where("ID = ?", "integration_test_instance").First(&instance).Error; err != nil {
+				panic("error checking for service instance details: " + err.Error())
+			}
+			Expect(instance.DeletedAt).NotTo(BeNil())
+
 			// make sure the instance is deleted from google
 			_, err = dbService.Get(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName).Do()
 			Expect(err).To(HaveOccurred())
@@ -226,7 +233,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			creds, err := gcpBroker.Bind("integration_test_instance", "bind-id", bindDetails)
 			Expect(err).NotTo(HaveOccurred())
 			credsMap := creds.Credentials.(map[string]string)
-			Expect(credsMap["credentials"]).ToNot(Equal(nil))
+			Expect(credsMap["credentials"]).ToNot(BeNil())
 
 			iamService, err := iam.New(gcpBroker.GCPClient)
 			Expect(err).ToNot(HaveOccurred())
@@ -251,7 +258,12 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			}
 			_, err = gcpBroker.Deprovision("integration_test_instance", deprovisionDetails, true)
 			Expect(err).NotTo(HaveOccurred())
-			pollForMaxFiveMins(gcpBroker, "integration_test_instance")
+
+			instance := models.ServiceInstanceDetails{}
+			if err := db_service.DbConnection.Unscoped().Where("ID = ?", "integration_test_instance").First(&instance).Error; err != nil {
+				panic("error checking for service instance details: " + err.Error())
+			}
+			Expect(instance.DeletedAt).NotTo(BeNil())
 
 			_, err = client.GetInstance(context.Background(), &instancepb.GetInstanceRequest{
 				Name: "projects/" + gcpBroker.RootGCPCredentials.ProjectId + "/instances/" + instance_name,

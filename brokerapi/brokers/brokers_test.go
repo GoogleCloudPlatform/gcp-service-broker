@@ -11,6 +11,7 @@ import (
 	"gcp-service-broker/brokerapi/brokers/models/modelsfakes"
 	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/brokerapi/brokers/pubsub"
+	"gcp-service-broker/brokerapi/brokers/spanner"
 	"gcp-service-broker/db_service"
 	"net/http"
 	"os"
@@ -100,7 +101,8 @@ var _ = Describe("Brokers", func() {
 				async = true
 			}
 			gcpBroker.ServiceBrokerMap[k] = &modelsfakes.FakeServiceBrokerHelper{
-				AsyncStub: func() bool { return async },
+				ProvisionsAsyncStub:   func() bool { return async },
+				DeprovisionsAsyncStub: func() bool { return async },
 				ProvisionStub: func(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
 					return models.ServiceInstanceDetails{ID: instanceId, OtherDetails: "{\"mynameis\": \"instancename\"}"}, nil
 				},
@@ -447,6 +449,7 @@ var _ = Describe("AccountManagers", func() {
 	var (
 		logger         lager.Logger
 		iamStyleBroker models.ServiceBrokerHelper
+		spannerBroker  models.ServiceBrokerHelper
 		cloudsqlBroker models.ServiceBrokerHelper
 		accountManager modelsfakes.FakeAccountManager
 		err            error
@@ -475,6 +478,11 @@ var _ = Describe("AccountManagers", func() {
 		}
 
 		cloudsqlBroker = &cloudsql.CloudSQLBroker{
+			Logger:         logger,
+			AccountManager: &accountManager,
+		}
+
+		spannerBroker = &spanner.SpannerBroker{
 			Logger:         logger,
 			AccountManager: &accountManager,
 		}
@@ -555,13 +563,22 @@ var _ = Describe("AccountManagers", func() {
 	Describe("async", func() {
 		Context("with a pubsub broker", func() {
 			It("should return false", func() {
-				Expect(iamStyleBroker.Async()).To(Equal(false))
+				Expect(iamStyleBroker.ProvisionsAsync()).To(Equal(false))
+				Expect(iamStyleBroker.DeprovisionsAsync()).To(Equal(false))
 			})
 		})
 
 		Context("with a cloudsql broker", func() {
 			It("should return true", func() {
-				Expect(cloudsqlBroker.Async()).To(Equal(true))
+				Expect(cloudsqlBroker.ProvisionsAsync()).To(Equal(true))
+				Expect(cloudsqlBroker.DeprovisionsAsync()).To(Equal(true))
+			})
+		})
+
+		Context("with a spanner broker", func() {
+			It("should return true", func() {
+				Expect(spannerBroker.ProvisionsAsync()).To(Equal(true))
+				Expect(spannerBroker.DeprovisionsAsync()).To(Equal(false))
 			})
 		})
 	})

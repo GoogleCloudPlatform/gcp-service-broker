@@ -115,3 +115,12 @@ func CheckAndGetPlan(planName string, serviceId string) (bool, models.PlanDetail
 
 	return count > 0, existingPlan, nil
 }
+
+func GetLastOperation(instanceId string) (models.CloudOperation, error) {
+	var op models.CloudOperation
+
+	if err := DbConnection.Where("service_instance_id = ?", instanceId).Order("created_at desc").First(&op).Error; err != nil {
+		return models.CloudOperation{}, err
+	}
+	return op, nil
+}

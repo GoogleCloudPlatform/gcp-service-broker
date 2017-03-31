@@ -64,10 +64,25 @@ type FakeServiceBrokerHelper struct {
 		result1 bool
 		result2 error
 	}
-	AsyncStub        func() bool
-	asyncMutex       sync.RWMutex
-	asyncArgsForCall []struct{}
-	asyncReturns     struct {
+	LastOperationWasDeleteStub        func(instanceID string) (bool, error)
+	lastOperationWasDeleteMutex       sync.RWMutex
+	lastOperationWasDeleteArgsForCall []struct {
+		instanceID string
+	}
+	lastOperationWasDeleteReturns struct {
+		result1 bool
+		result2 error
+	}
+	ProvisionsAsyncStub        func() bool
+	provisionsAsyncMutex       sync.RWMutex
+	provisionsAsyncArgsForCall []struct{}
+	provisionsAsyncReturns     struct {
+		result1 bool
+	}
+	DeprovisionsAsyncStub        func() bool
+	deprovisionsAsyncMutex       sync.RWMutex
+	deprovisionsAsyncArgsForCall []struct{}
+	deprovisionsAsyncReturns     struct {
 		result1 bool
 	}
 	invocations      map[string][][]interface{}
@@ -281,27 +296,86 @@ func (fake *FakeServiceBrokerHelper) PollInstanceReturns(result1 bool, result2 e
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) Async() bool {
-	fake.asyncMutex.Lock()
-	fake.asyncArgsForCall = append(fake.asyncArgsForCall, struct{}{})
-	fake.recordInvocation("Async", []interface{}{})
-	fake.asyncMutex.Unlock()
-	if fake.AsyncStub != nil {
-		return fake.AsyncStub()
+func (fake *FakeServiceBrokerHelper) LastOperationWasDelete(instanceID string) (bool, error) {
+	fake.lastOperationWasDeleteMutex.Lock()
+	fake.lastOperationWasDeleteArgsForCall = append(fake.lastOperationWasDeleteArgsForCall, struct {
+		instanceID string
+	}{instanceID})
+	fake.recordInvocation("LastOperationWasDelete", []interface{}{instanceID})
+	fake.lastOperationWasDeleteMutex.Unlock()
+	if fake.LastOperationWasDeleteStub != nil {
+		return fake.LastOperationWasDeleteStub(instanceID)
 	} else {
-		return fake.asyncReturns.result1
+		return fake.lastOperationWasDeleteReturns.result1, fake.lastOperationWasDeleteReturns.result2
 	}
 }
 
-func (fake *FakeServiceBrokerHelper) AsyncCallCount() int {
-	fake.asyncMutex.RLock()
-	defer fake.asyncMutex.RUnlock()
-	return len(fake.asyncArgsForCall)
+func (fake *FakeServiceBrokerHelper) LastOperationWasDeleteCallCount() int {
+	fake.lastOperationWasDeleteMutex.RLock()
+	defer fake.lastOperationWasDeleteMutex.RUnlock()
+	return len(fake.lastOperationWasDeleteArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) AsyncReturns(result1 bool) {
-	fake.AsyncStub = nil
-	fake.asyncReturns = struct {
+func (fake *FakeServiceBrokerHelper) LastOperationWasDeleteArgsForCall(i int) string {
+	fake.lastOperationWasDeleteMutex.RLock()
+	defer fake.lastOperationWasDeleteMutex.RUnlock()
+	return fake.lastOperationWasDeleteArgsForCall[i].instanceID
+}
+
+func (fake *FakeServiceBrokerHelper) LastOperationWasDeleteReturns(result1 bool, result2 error) {
+	fake.LastOperationWasDeleteStub = nil
+	fake.lastOperationWasDeleteReturns = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeServiceBrokerHelper) ProvisionsAsync() bool {
+	fake.provisionsAsyncMutex.Lock()
+	fake.provisionsAsyncArgsForCall = append(fake.provisionsAsyncArgsForCall, struct{}{})
+	fake.recordInvocation("ProvisionsAsync", []interface{}{})
+	fake.provisionsAsyncMutex.Unlock()
+	if fake.ProvisionsAsyncStub != nil {
+		return fake.ProvisionsAsyncStub()
+	} else {
+		return fake.provisionsAsyncReturns.result1
+	}
+}
+
+func (fake *FakeServiceBrokerHelper) ProvisionsAsyncCallCount() int {
+	fake.provisionsAsyncMutex.RLock()
+	defer fake.provisionsAsyncMutex.RUnlock()
+	return len(fake.provisionsAsyncArgsForCall)
+}
+
+func (fake *FakeServiceBrokerHelper) ProvisionsAsyncReturns(result1 bool) {
+	fake.ProvisionsAsyncStub = nil
+	fake.provisionsAsyncReturns = struct {
+		result1 bool
+	}{result1}
+}
+
+func (fake *FakeServiceBrokerHelper) DeprovisionsAsync() bool {
+	fake.deprovisionsAsyncMutex.Lock()
+	fake.deprovisionsAsyncArgsForCall = append(fake.deprovisionsAsyncArgsForCall, struct{}{})
+	fake.recordInvocation("DeprovisionsAsync", []interface{}{})
+	fake.deprovisionsAsyncMutex.Unlock()
+	if fake.DeprovisionsAsyncStub != nil {
+		return fake.DeprovisionsAsyncStub()
+	} else {
+		return fake.deprovisionsAsyncReturns.result1
+	}
+}
+
+func (fake *FakeServiceBrokerHelper) DeprovisionsAsyncCallCount() int {
+	fake.deprovisionsAsyncMutex.RLock()
+	defer fake.deprovisionsAsyncMutex.RUnlock()
+	return len(fake.deprovisionsAsyncArgsForCall)
+}
+
+func (fake *FakeServiceBrokerHelper) DeprovisionsAsyncReturns(result1 bool) {
+	fake.DeprovisionsAsyncStub = nil
+	fake.deprovisionsAsyncReturns = struct {
 		result1 bool
 	}{result1}
 }
@@ -321,8 +395,12 @@ func (fake *FakeServiceBrokerHelper) Invocations() map[string][][]interface{} {
 	defer fake.deprovisionMutex.RUnlock()
 	fake.pollInstanceMutex.RLock()
 	defer fake.pollInstanceMutex.RUnlock()
-	fake.asyncMutex.RLock()
-	defer fake.asyncMutex.RUnlock()
+	fake.lastOperationWasDeleteMutex.RLock()
+	defer fake.lastOperationWasDeleteMutex.RUnlock()
+	fake.provisionsAsyncMutex.RLock()
+	defer fake.provisionsAsyncMutex.RUnlock()
+	fake.deprovisionsAsyncMutex.RLock()
+	defer fake.deprovisionsAsyncMutex.RUnlock()
 	return fake.invocations
 }
 

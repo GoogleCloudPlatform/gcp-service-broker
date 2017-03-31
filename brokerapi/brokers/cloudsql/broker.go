@@ -421,20 +421,15 @@ func (b *CloudSQLBroker) Unbind(creds models.ServiceBindingCredentials) error {
 
 // gets the last operation for this instance and polls the status of it
 func (b *CloudSQLBroker) PollInstance(instanceId string) (bool, error) {
-	var op models.CloudOperation
-	var ii InstanceInformation
 	var instance models.ServiceInstanceDetails
 
 	if err := db_service.DbConnection.Where("id = ?", instanceId).First(&instance).Error; err != nil {
 		return false, models.ErrInstanceDoesNotExist
 	}
 
-	if err := json.Unmarshal([]byte(instance.OtherDetails), &ii); err != nil {
-		return false, fmt.Errorf("Error unmarshalling operation status details: %s", err)
-	}
-
-	if err := db_service.DbConnection.Where("name = ?", ii.LastMasterOperationId).First(&op).Error; err != nil {
-		return false, fmt.Errorf("Could not locate CloudOperation in database")
+	op, err := db_service.GetLastOperation(instanceId)
+	if err != nil {
+		return false, err
 	}
 
 	return b.PollOperation(instance, op)
@@ -609,8 +604,22 @@ func updateOperationId(instance models.ServiceInstanceDetails, operationId strin
 	return nil
 }
 
+// used during polling of async operations to determine if the workflow is a provision or deprovision flow based off the
+// type of the most recent operation
+func (b *CloudSQLBroker) LastOperationWasDelete(instanceId string) (bool, error) {
+	op, err := db_service.GetLastOperation(instanceId)
+	if err != nil {
+		return false, err
+	}
+	return op.OperationType == "DELETE", nil
+}
+
 // Indicates that CloudSQL uses asynchronous provisioning
-func (b *CloudSQLBroker) Async() bool {
+func (b *CloudSQLBroker) ProvisionsAsync() bool {
+	return true
+}
+
+func (b *CloudSQLBroker) DeprovisionsAsync() bool {
 	return true
 }
 

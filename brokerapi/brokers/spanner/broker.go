@@ -140,13 +140,23 @@ func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 	var op models.CloudOperation
 
 	if err := db_service.DbConnection.Where("service_instance_id = ?", instanceId).First(&op).Error; err != nil {
-		return false, fmt.Errorf("Could not locate CloudOperation in database")
+		return false, fmt.Errorf("Could not locate CloudOperation in database: %s", err)
 	}
 
 	var instance models.ServiceInstanceDetails
 
 	if err := db_service.DbConnection.Where("id = ?", instanceId).First(&instance).Error; err != nil {
 		return false, models.ErrInstanceDoesNotExist
+	}
+
+	// we're polling on instance deletion, which is synchronous, unlike creation. Exit early if the instance has been deleted
+	wasDelete, err := s.LastOperationWasDelete(instanceId)
+
+	if err != nil {
+		return false, fmt.Errorf("Can't check last operation type: %s", err)
+	}
+	if wasDelete {
+		return true, nil
 	}
 
 	client, err := googlespanner.NewInstanceAdminClient(context.Background())
@@ -246,15 +256,22 @@ func (s *SpannerBroker) Deprovision(instanceID string, details models.Deprovisio
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error creating client: %s", err)
+		return fmt.Errorf("Error deleting instance: %s", err)
 	}
 
 	return nil
 }
 
 // Indicates that Spanner uses asynchronous provisioning
-func (s *SpannerBroker) Async() bool {
+func (s *SpannerBroker) ProvisionsAsync() bool {
 	return true
+}
+
+// used during polling of async operations to determine if the workflow is a provision or deprovision flow based off the
+// type of the most recent operation
+// since spanner deprovisions synchronously, the last operation will never have been delete
+func (s *SpannerBroker) LastOperationWasDelete(instanceId string) (bool, error) {
+	return false, nil
 }
 
 type SpannerDynamicPlan struct {

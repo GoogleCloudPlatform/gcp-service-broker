@@ -57,6 +57,16 @@ func (b *BrokerBase) PollInstance(instanceID string) (bool, error) {
 }
 
 // Indicates provisioning is done synchronously
-func (b *BrokerBase) Async() bool {
+func (b *BrokerBase) ProvisionsAsync() bool {
 	return false
+}
+
+func (b *BrokerBase) DeprovisionsAsync() bool {
+	return false
+}
+
+// used during polling of async operations to determine if the workflow is a provision or deprovision flow based off the
+// type of the most recent operation
+func (b *BrokerBase) LastOperationWasDelete(instanceId string) (bool, error) {
+	panic("Can't check last operation on a synchronous service")
 }
