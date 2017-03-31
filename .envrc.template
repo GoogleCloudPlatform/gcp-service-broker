@@ -1,3 +1,7 @@
 # http://direnv.net
 
 export ROOT_SERVICE_ACCOUNT_JSON=
+
+export TEST_DB_USERNAME=
+export TEST_DB_PASSWORD=
+export TEST_DB_HOST=
