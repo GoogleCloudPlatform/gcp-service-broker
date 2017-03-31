@@ -137,8 +137,8 @@ var _ = Describe("Brokers", func() {
 	})
 
 	Describe("Broker init", func() {
-		It("should have 8 services in sevices map", func() {
-			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(8))
+		It("should have 9 services in sevices map", func() {
+			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(9))
 		})
 
 		It("should have a default client", func() {
@@ -151,8 +151,8 @@ var _ = Describe("Brokers", func() {
 	})
 
 	Describe("getting broker catalog", func() {
-		It("should have 8 services available", func() {
-			Expect(len(gcpBroker.Services())).To(Equal(8))
+		It("should have 9 services available", func() {
+			Expect(len(gcpBroker.Services())).To(Equal(9))
 		})
 
 		It("should have 3 storage plans available", func() {

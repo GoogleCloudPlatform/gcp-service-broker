@@ -120,6 +120,21 @@ const Services string = `[
             "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg"
           },
           "tags": ["gcp", "debugger"]
+        },
+        {
+          "id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
+          "description": "Stackdriver Trace",
+          "name": "google-stackdriver-trace",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+            "displayName": "Stackdriver Trace",
+            "longDescription": "Stackdriver Trace is a distributed tracing system that collects latency data from your applications and displays it in the Google Cloud Platform Console. You can track how requests propagate through your application and receive detailed near real-time performance insights.",
+            "documentationUrl": "https://cloud.google.com/trace/docs/",
+            "supportUrl": "https://cloud.google.com/support/",
+            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg"
+          },
+          "tags": ["gcp", "trace"]
         }
       ]`
 
@@ -171,7 +186,14 @@ const PreconfiguredPlans = `[
 			  "display_name": "Default",
 			  "description": "Stackdriver Debugger default plan" ,
 			  "features": ""
-			}
+			},
+			{
+			  "service_id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
+			  "name": "default",
+			  "display_name": "Default",
+			  "description": "Stackdriver Trace default plan",
+			  "features": ""
+			 }
 		      ]`
 
 const TestCloudSQLPlan = `{

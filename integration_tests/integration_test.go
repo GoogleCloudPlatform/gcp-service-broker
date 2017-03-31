@@ -26,7 +26,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	googlebigquery "google.golang.org/api/bigquery/v2"
-	"google.golang.org/api/iam/v1"
+	iam "google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 )
 
@@ -229,8 +229,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	Describe("Broker init", func() {
-		It("should have 8 services in sevices map", func() {
-			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(8))
+		It("should have 9 services in sevices map", func() {
+			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(9))
 		})
 
 		It("should have a default client", func() {
@@ -243,8 +243,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	Describe("getting broker catalog", func() {
-		It("should have 8 services available", func() {
-			Expect(len(gcpBroker.Services())).To(Equal(8))
+		It("should have 9 services available", func() {
+			Expect(len(gcpBroker.Services())).To(Equal(9))
 		})
 
 		It("should have 3 storage plans available", func() {

@@ -38,6 +38,7 @@ import (
 	"gcp-service-broker/brokerapi/brokers/pubsub"
 	"gcp-service-broker/brokerapi/brokers/spanner"
 	"gcp-service-broker/brokerapi/brokers/stackdriver_debugger"
+	"gcp-service-broker/brokerapi/brokers/stackdriver_trace"
 	"gcp-service-broker/brokerapi/brokers/storage"
 	"gcp-service-broker/db_service"
 	"gcp-service-broker/utils"
@@ -126,6 +127,15 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 			},
 		},
 		models.StackdriverDebuggerName: &stackdriver_debugger.StackdriverDebuggerBroker{
+			Client:                self.GCPClient,
+			ProjectId:             self.RootGCPCredentials.ProjectId,
+			Logger:                self.Logger,
+			ServiceAccountManager: saManager,
+			BrokerBase: broker_base.BrokerBase{
+				AccountManager: saManager,
+			},
+		},
+		models.StackdriverTraceName: &stackdriver_trace.StackdriverTraceBroker{
 			Client:                self.GCPClient,
 			ProjectId:             self.RootGCPCredentials.ProjectId,
 			Logger:                self.Logger,
