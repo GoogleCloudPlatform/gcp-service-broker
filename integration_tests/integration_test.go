@@ -398,11 +398,21 @@ var _ = Describe("LiveIntegrationTests", func() {
 		}, timeout)
 	})
 
-	Describe("stadkdriver debugger", func() {
+	Describe("stackdriver debugger", func() {
 		It("can provision/bind/unbind/deprovision", func() {
 			params := &iamService{
 				serviceId: serviceNameToId[models.StackdriverDebuggerName],
 				planId:    serviceNameToPlanId[models.StackdriverDebuggerName],
+			}
+			testIamBasedService(gcpBroker, params)
+		}, timeout)
+	})
+
+	Describe("stackdriver trace", func() {
+		It("can provision/bind/unbind/deprovision", func() {
+			params := &iamService{
+				serviceId: serviceNameToId[models.StackdriverTraceName],
+				planId:    serviceNameToPlanId[models.StackdriverTraceName],
 			}
 			testIamBasedService(gcpBroker, params)
 		}, timeout)
