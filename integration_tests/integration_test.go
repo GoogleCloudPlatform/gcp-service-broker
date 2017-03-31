@@ -43,6 +43,12 @@ type genericService struct {
 	serviceMetadataSavedFn func(string) bool
 }
 
+type iamService struct {
+	bindingId string
+	serviceId string
+	planId    string
+}
+
 func getAndUnmarshalInstanceDetails(instanceId string) map[string]string {
 	var instanceRecord models.ServiceInstanceDetails
 	db_service.DbConnection.Find(&instanceRecord).Where("id = ?", instanceId)
@@ -131,6 +137,27 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 	Expect(instance.DeletedAt).NotTo(Equal(nil))
 
 	Expect(params.serviceExistsFn(false)).To(BeFalse())
+}
+
+func testIamBasedService(gcpBroker *GCPAsyncServiceBroker, params *iamService) {
+	genericServiceParams := &genericService{
+		serviceId:        params.serviceId,
+		planId:           params.planId,
+		instanceId:       "iam-instance",
+		bindingId:        "iam-instance",
+		rawBindingParams: map[string]interface{}{},
+		serviceExistsFn: func(expected bool) bool {
+			return expected
+		},
+		serviceMetadataSavedFn: func(instanceId string) bool {
+			instanceDetails := getAndUnmarshalInstanceDetails(instanceId)
+			return len(instanceDetails) == 0
+		},
+		cleanupFn: func() {
+		},
+	}
+
+	testGenericService(gcpBroker, genericServiceParams)
 }
 
 // Instance Name is used to name every instance created in GCP (eg, a storage bucket)
@@ -371,30 +398,12 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	Describe("stadkdriver debugger", func() {
-		FIt("can provision/bind/unbind/deprovision", func() {
-			iamService, err := iam.New(gcpBroker.GCPClient)
-			Expect(err).NotTo(HaveOccurred())
-
-			_ = iam.NewProjectsServiceAccountsService(iamService)
-
-			params := &genericService{
-				serviceId:        serviceNameToId[models.StackdriverDebuggerName],
-				planId:           serviceNameToPlanId[models.StackdriverDebuggerName],
-				instanceId:       "integration_test_debugger_instance",
-				bindingId:        "debugr",
-				rawBindingParams: map[string]interface{}{},
-				serviceExistsFn: func(expected bool) bool {
-					return expected
-				},
-				serviceMetadataSavedFn: func(instanceId string) bool {
-					instanceDetails := getAndUnmarshalInstanceDetails(instanceId)
-					return len(instanceDetails) == 0
-				},
-				cleanupFn: func() {
-				},
+		It("can provision/bind/unbind/deprovision", func() {
+			params := &iamService{
+				serviceId: serviceNameToId[models.StackdriverDebuggerName],
+				planId:    serviceNameToPlanId[models.StackdriverDebuggerName],
 			}
-
-			testGenericService(gcpBroker, params)
+			testIamBasedService(gcpBroker, params)
 		}, timeout)
 	})
 
