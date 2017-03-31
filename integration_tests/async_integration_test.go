@@ -235,7 +235,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			creds, err := gcpBroker.Bind("integration_test_instance", "bind-id", bindDetails)
 			Expect(err).NotTo(HaveOccurred())
 			credsMap := creds.Credentials.(map[string]string)
-			Expect(credsMap["credentials"]).ToNot(Equal(nil))
+			Expect(credsMap["credentials"]).ToNot(BeNil())
 
 			iamService, err := iam.New(gcpBroker.GCPClient)
 			Expect(err).ToNot(HaveOccurred())
@@ -265,7 +265,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			if err := db_service.DbConnection.Unscoped().Where("ID = ?", "integration_test_instance").First(&instance).Error; err != nil {
 				panic("error checking for service instance details: " + err.Error())
 			}
-			Expect(instance.DeletedAt).NotTo(Equal(nil))
+			Expect(instance.DeletedAt).NotTo(BeNil())
 
 			_, err = client.GetInstance(context.Background(), &instancepb.GetInstanceRequest{
 				Name: "projects/" + gcpBroker.RootGCPCredentials.ProjectId + "/instances/" + instance_name,
