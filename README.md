@@ -20,8 +20,10 @@ See the [examples](https://github.com/GoogleCloudPlatform/gcp-service-broker/tre
 ### Enable APIS
 
 1. Navigate to **API Manager > Library**.
-1. Enable the <a href="https://console.cloud.google.com/apis/api/cloudresourcemanager.googleapis.com/overview">Google Cloud Resource Manager API</a>
-1. Enable the <a href="https://console.cloud.google.com/apis/api/iam.googleapis.com/overview">Google Identity and Access Management (IAM) API</a>
+1. Enable the <a href="https://console.cloud.google.com/apis/api/cloudresourcemanager.googleapis.com/overview">
+        Google Cloud Resource Manager API</a>
+1. Enable the <a href="https://console.cloud.google.com/apis/api/iam.googleapis.com/overview">
+        Google Identity and Access Management (IAM) API</a>
 1. If you want to enable Cloud SQL as a service, enable the <a href="https://console.cloud.google.com/apis/api/sqladmin/overview">Cloud SQL API</a>
 1. If you want to enable BigQuery as a service, enable the <a href="https://console.cloud.google.com/apis/api/bigquery/overview">BigQuery API</a>
 1. If you want to enable Cloud Storage as a service, enable the <a href="https://console.cloud.google.com/apis/api/storage_component/overview">Cloud Storage API</a>

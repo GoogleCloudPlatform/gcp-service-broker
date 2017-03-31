@@ -26,6 +26,7 @@ import (
 	cloudres "google.golang.org/api/cloudresourcemanager/v1"
 	iam "google.golang.org/api/iam/v1"
 	"net/http"
+	"strconv"
 )
 
 const roleResourcePrefix = "roles/"
@@ -33,13 +34,28 @@ const saResourcePrefix = "serviceAccount:"
 const saPrefix = "pcf-binding-"
 const projectResourcePrefix = "projects/"
 
+const Pkcs12KeyType = "TYPE_PKCS12_FILE"
+const JsonKeyType = "TYPE_GOOGLE_CREDENTIALS_FILE"
+
 type ServiceAccountManager struct {
 	ProjectId string
 	GCPClient *http.Client
 }
 
 // creates a new service account for the given binding id with the role listed in details.Parameters["role"]
+// furnishes a p12 Key
+func (sam *ServiceAccountManager) CreateAccountInGoogleP12(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+	return sam.CreateAccountInGoogleWithPrivateKeyType(instanceID, bindingID, details, instance, Pkcs12KeyType)
+}
+
+// creates a new service account for the given binding id with the role listed in details.Parameters["role"]
+// furnishes a JSON key
 func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+	return sam.CreateAccountInGoogleWithPrivateKeyType(instanceID, bindingID, details, instance, JsonKeyType)
+}
+
+// creates a new service account for the given binding id with the role listed in details.Parameters["role"]
+func (sam *ServiceAccountManager) CreateAccountInGoogleWithPrivateKeyType(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails, privateKeyType string) (models.ServiceBindingCredentials, error) {
 
 	role, ok := details.Parameters["role"].(string)
 	if !ok {
@@ -74,6 +90,11 @@ func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindi
 	cloudresService, err := cloudres.New(sam.GCPClient)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating new cloud resource management service: %s", err)
+	}
+
+	project, err := cloudresService.Projects.Get(sam.ProjectId).Do()
+	if err != nil {
+		return models.ServiceBindingCredentials{}, fmt.Errorf("Error fetching the Project metadata: %s", err)
 	}
 
 	currPolicy, err := cloudresService.Projects.GetIamPolicy(sam.ProjectId, &cloudres.GetIamPolicyRequest{}).Do()
@@ -111,7 +132,7 @@ func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindi
 
 	// create and save key
 	saKeyService := iam.NewProjectsServiceAccountsKeysService(iamService)
-	newSAKey, err := saKeyService.Create(newSA.Name, &iam.CreateServiceAccountKeyRequest{}).Do()
+	newSAKey, err := saKeyService.Create(newSA.Name, &iam.CreateServiceAccountKeyRequest{PrivateKeyType: privateKeyType}).Do()
 	if err != nil {
 		return models.ServiceBindingCredentials{}, fmt.Errorf("ERROR creating new service account key: %s", err)
 	}
@@ -122,6 +143,7 @@ func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindi
 		UniqueId:       newSA.UniqueId,
 		PrivateKeyData: newSAKey.PrivateKeyData,
 		ProjectId:      sam.ProjectId,
+		ProjectNumber:  strconv.FormatInt(project.ProjectNumber, 10),
 	}
 
 	saBytes, err := json.Marshal(&newSAInfo)
@@ -176,10 +198,11 @@ func ServiceAccountName(bindingId string) string {
 
 type ServiceAccountInfo struct {
 	// the bits to save
-	Name      string
-	Email     string
-	UniqueId  string
-	ProjectId string
+	Name          string
+	Email         string
+	UniqueId      string
+	ProjectId     string
+	ProjectNumber string
 
 	// the bit to return
 	PrivateKeyData string

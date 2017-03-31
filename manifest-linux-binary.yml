@@ -16,10 +16,14 @@
 applications:
   - name: gcp-service-broker
     product_version: "3.1.2"
+    path : .
+    buildpack:  https://github.com/cloudfoundry/binary-buildpack.git
     metadata_version: "1.0"
     label: 'GCP Service Broker'
     description: Easily configure and grant access to GCP products
     memory: 1G
+    services:
+      - gcp-service-broker-db 
     env:
       GO15VENDOREXPERIMENT: 1
       SERVICES: '[

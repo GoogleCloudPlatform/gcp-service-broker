@@ -13,10 +13,9 @@
  */
 package com.google.cloud.servicebroker.awwvision;
 
-import java.io.IOException;
-import java.net.URL;
-import java.security.GeneralSecurityException;
-
+import com.google.api.services.storage.model.StorageObject;
+import com.google.cloud.servicebroker.awwvision.RedditResponse.Listing;
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -30,9 +29,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.RestTemplate;
 
-import com.google.api.services.storage.model.StorageObject;
-import com.google.cloud.servicebroker.awwvision.RedditResponse.Listing;
-import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
+import java.net.URL;
+import java.security.GeneralSecurityException;
 
 /**
  * Provides a request mapping for scraping images from reddit, labeling them with the Vision API,
@@ -41,60 +40,61 @@ import com.google.common.collect.ImmutableMap;
 @Controller
 public class RedditScraper {
 
-  private static final String REDDIT_URL = "https://www.reddit.com/r/aww/hot.json";
+	private static final String REDDIT_URL = "https://www.reddit.com/r/aww/hot.json";
 
-  @Autowired
-  private VisionAPI visionAPI;
-  @Autowired
-  private StorageAPI storageAPI;
+	@Autowired
+	private VisionAPI visionAPI;
 
-  private final Log logger = LogFactory.getLog(getClass());
+	@Autowired
+	private StorageAPI storageAPI;
 
-  @Value("${reddit-user-agent}")
-  private String redditUserAgent;
+	private final Log logger = LogFactory.getLog(getClass());
 
-  @RequestMapping("/reddit")
-  String getRedditUrls(Model model, RestTemplate restTemplate) throws GeneralSecurityException {
-    HttpHeaders headers = new HttpHeaders();
-    headers.add(HttpHeaders.USER_AGENT, redditUserAgent);
-    RedditResponse response = restTemplate
-        .exchange(REDDIT_URL, HttpMethod.GET, new HttpEntity<String>(headers), RedditResponse.class)
-        .getBody();
+	@Value("${reddit-user-agent}")
+	private String redditUserAgent;
 
-    storeAndLabel(response);
+	@RequestMapping("/reddit")
+	String getRedditUrls(Model model, RestTemplate restTemplate) throws GeneralSecurityException {
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.USER_AGENT, redditUserAgent);
+		RedditResponse response = restTemplate
+				.exchange(REDDIT_URL, HttpMethod.GET, new HttpEntity<String>(headers), RedditResponse.class)
+				.getBody();
 
-    return "reddit";
-  }
+		storeAndLabel(response);
 
-  void storeAndLabel(RedditResponse response) throws GeneralSecurityException {
-    for (Listing listing : response.data.children) {
-      for (RedditResponse.Image img : listing.data.preview.images) {
-        URL url;
-        byte[] raw;
-        try {
-          url = new URL(img.source.url);
-          raw = download(url);
-        } catch (IOException e) {
-          logger.warn("Issue in streaming image " + img.source.url, e);
-          continue;
-        }
-        try {
-          // Only label and upload the image if it does not already exist in storage.
-          StorageObject existing = storageAPI.get(img.id);
-          if (existing == null) {
-            String label = visionAPI.labelImage(raw);
-            if (label != null) {
-              storageAPI.uploadJpeg(img.id + ".jpg", url, ImmutableMap.of("label", label));
-            }
-          }
-        } catch (IOException e) {
-          logger.error("Issue with labeling image " + img.source.url, e);
-        }
-      }
-    }
-  }
+		return "reddit";
+	}
 
-  byte[] download(URL url) throws IOException {
-    return IOUtils.toByteArray(url.openStream());
-  }
+	void storeAndLabel(RedditResponse response) throws GeneralSecurityException {
+		for (Listing listing : response.data.children) {
+			for (RedditResponse.Image img : listing.data.preview.images) {
+				URL url;
+				byte[] raw;
+				try {
+					url = new URL(img.source.url);
+					raw = download(url);
+				} catch (IOException e) {
+					logger.warn("Issue in streaming image " + img.source.url, e);
+					continue;
+				}
+				try {
+					// Only label and upload the image if it does not already exist in storage.
+					StorageObject existing = storageAPI.get(img.id);
+					if (existing == null) {
+						String label = visionAPI.labelImage(raw);
+						if (label != null) {
+							storageAPI.uploadJpeg(img.id + ".jpg", url, ImmutableMap.of("label", label));
+						}
+					}
+				} catch (IOException e) {
+					logger.error("Issue with labeling image " + img.source.url, e);
+				}
+			}
+		}
+	}
+
+	byte[] download(URL url) throws IOException {
+		return IOUtils.toByteArray(url.openStream());
+	}
 }
