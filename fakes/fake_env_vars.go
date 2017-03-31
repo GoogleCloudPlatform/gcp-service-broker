@@ -119,7 +119,7 @@ const Services string = `[
             "supportUrl": "https://cloud.google.com/support/",
             "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg"
           },
-          "tags": ["gcp", "debugger"]
+          "tags": ["gcp", "stackdriver", "debugger"]
         },
         {
           "id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
@@ -134,7 +134,7 @@ const Services string = `[
             "supportUrl": "https://cloud.google.com/support/",
             "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg"
           },
-          "tags": ["gcp", "trace"]
+          "tags": ["gcp", "stackdriver", "trace"]
         }
       ]`
 
