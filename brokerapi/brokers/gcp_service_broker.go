@@ -397,40 +397,44 @@ func (gcpBroker *GCPServiceBroker) LastOperation(instanceID string) (models.Last
 	}
 
 	if gcpBroker.ServiceBrokerMap[instance.ServiceId].ProvisionsAsync() || gcpBroker.ServiceBrokerMap[instance.ServiceId].DeprovisionsAsync() {
-		done, err := gcpBroker.ServiceBrokerMap[instance.ServiceId].PollInstance(instanceID)
-		if err != nil {
-			if gerr, ok := err.(*googleapi.Error); ok {
-				if gerr.Code == 503 {
-					return models.LastOperation{State: models.InProgress, Description: ""}, err
-				}
-			}
-			// This is not a retryable error. Return fail
-			return models.LastOperation{State: models.Failed, Description: ""}, err
-		} else {
-
-			if done {
-				// no error and we're done! Delete from the SB database if this was a delete flow and return success
-				deleteFlow, err := gcpBroker.ServiceBrokerMap[instance.ServiceId].LastOperationWasDelete(instanceID)
-				if err != nil {
-					return models.LastOperation{State: models.Succeeded, Description: ""}, fmt.Errorf("Couldn't determine if provision or deprovision flow, this may leave orphaned resources, contact your operator for cleanup")
-				}
-				if deleteFlow {
-					err = db_service.SoftDeleteInstanceDetails(instanceID)
-					if err != nil {
-						return models.LastOperation{State: models.Succeeded, Description: ""}, fmt.Errorf("Error deleting instance details from database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup", err)
-					}
-				}
-				return models.LastOperation{State: models.Succeeded, Description: ""}, nil
-			} else {
-				return models.LastOperation{State: models.InProgress, Description: ""}, nil
-			}
-		}
+		return gcpBroker.lastOperationAsync(instanceID, instance.ServiceId)
 
 	} else {
 		return models.LastOperation{State: models.Succeeded, Description: ""}, errors.New("Can't call LastOperation on a synchronous service")
 
 	}
 
+}
+
+func (gcpBroker *GCPServiceBroker) lastOperationAsync(instanceId, serviceId string) (models.LastOperation, error) {
+	done, err := gcpBroker.ServiceBrokerMap[serviceId].PollInstance(instanceId)
+	if err != nil {
+		// this is a retryable error
+		if gerr, ok := err.(*googleapi.Error); ok {
+			if gerr.Code == 503 {
+				return models.LastOperation{State: models.InProgress, Description: ""}, err
+			}
+		}
+		// This is not a retryable error. Return fail
+		return models.LastOperation{State: models.Failed, Description: ""}, err
+	}
+
+	if done {
+		// no error and we're done! Delete from the SB database if this was a delete flow and return success
+		deleteFlow, err := gcpBroker.ServiceBrokerMap[serviceId].LastOperationWasDelete(instanceId)
+		if err != nil {
+			return models.LastOperation{State: models.Succeeded, Description: ""}, fmt.Errorf("Couldn't determine if provision or deprovision flow, this may leave orphaned resources, contact your operator for cleanup")
+		}
+		if deleteFlow {
+			err = db_service.SoftDeleteInstanceDetails(instanceId)
+			if err != nil {
+				return models.LastOperation{State: models.Succeeded, Description: ""}, fmt.Errorf("Error deleting instance details from database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup", err)
+			}
+		}
+		return models.LastOperation{State: models.Succeeded, Description: ""}, nil
+	} else {
+		return models.LastOperation{State: models.InProgress, Description: ""}, nil
+	}
 }
 
 // updates a service instance plan. This functionality is not implemented and will return an error indicating that plan

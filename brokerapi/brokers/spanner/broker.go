@@ -245,7 +245,7 @@ func (s *SpannerBroker) Deprovision(instanceID string, details models.Deprovisio
 	}
 
 	// set up client
-	client, err := googlespanner.NewInstanceAdminClient(context.Background())
+	client, err := googlespanner.NewInstanceAdminClient(context.Background(), option.WithUserAgent(models.CustomUserAgent))
 	if err != nil {
 		return fmt.Errorf("Error creating client: %s", err)
 	}
@@ -262,7 +262,7 @@ func (s *SpannerBroker) Deprovision(instanceID string, details models.Deprovisio
 	return nil
 }
 
-/// Indicates that Spanner uses asynchronous provisioning
+// Indicates that Spanner uses asynchronous provisioning
 func (s *SpannerBroker) ProvisionsAsync() bool {
 	return true
 }
