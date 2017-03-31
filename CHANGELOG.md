@@ -90,3 +90,8 @@ any extra access details
 - Added a Golang example application
 - Added Concourse CI pipeline
 - Added integration testing for async services
+
+## [3.2.1] - 2017-03-31
+
+- fixed a bug where Spanner instances could be deleted from Google but not deprovisioned in CF
+- fixed a bug where Cloud SQL instances were not being marked as deleted in the Service Broker database
