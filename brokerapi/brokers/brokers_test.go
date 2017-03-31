@@ -151,8 +151,8 @@ var _ = Describe("Brokers", func() {
 	})
 
 	Describe("getting broker catalog", func() {
-		It("should have 7 services available", func() {
-			Expect(len(gcpBroker.Services())).To(Equal(7))
+		It("should have 8 services available", func() {
+			Expect(len(gcpBroker.Services())).To(Equal(8))
 		})
 
 		It("should have 3 storage plans available", func() {

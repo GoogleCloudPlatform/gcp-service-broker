@@ -164,6 +164,13 @@ const PreconfiguredPlans = `[
 			  "display_name": "Default",
 			  "description": "Machine Learning api default plan",
 			  "features": ""
+			},
+			{
+			  "service_id": "83837945-1547-41e0-b661-ea31d76eed11",
+			  "name": "default",
+			  "display_name": "Default",
+			  "description": "Stackdriver Debugger default plan" ,
+			  "features": ""
 			}
 		      ]`
 
