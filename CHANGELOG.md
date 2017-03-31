@@ -95,3 +95,7 @@ any extra access details
 
 - fixed a bug where Spanner instances could be deleted from Google but not deprovisioned in CF
 - fixed a bug where Cloud SQL instances were not being marked as deleted in the Service Broker database
+
+## [3.3.0] - 2017-03-31
+
+- Added Stackdriver Debugger and Trace support
