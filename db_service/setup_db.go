@@ -36,8 +36,14 @@ func SetupDb(logger lager.Logger) *gorm.DB {
 	dbUsername := os.Getenv("DB_USERNAME")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbPort := os.Getenv("DB_PORT")
+	dbName := os.Getenv("DB_NAME")
+
 	if dbPort == "" {
 		dbPort = "3306"
+	}
+
+	if dbName == "" {
+		dbName = "servicebroker"
 	}
 
 	tlsStr, err := generateTlsStringFromEnv()
@@ -46,7 +52,7 @@ func SetupDb(logger lager.Logger) *gorm.DB {
 		os.Exit(1)
 	}
 
-	connStr := fmt.Sprintf("%v:%v@tcp(%v:%v)/servicebroker?charset=utf8&parseTime=True&loc=Local%v", dbUsername, dbPassword, dbHost, dbPort, tlsStr)
+	connStr := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=utf8&parseTime=True&loc=Local%v", dbUsername, dbPassword, dbHost, dbPort, dbName, tlsStr)
 	db, err := gorm.Open("mysql", connStr)
 	if err != nil {
 		logger.Error("Error connecting to db", err)
