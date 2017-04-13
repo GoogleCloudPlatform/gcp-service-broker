@@ -118,7 +118,7 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 	if err := db_service.DbConnection.Unscoped().Where("binding_id = ?", params.bindingId).First(&binding).Error; err != nil {
 		panic("error checking for binding details: " + err.Error())
 	}
-	Expect(binding.DeletedAt).NotTo(Equal(nil))
+	Expect(binding.DeletedAt).NotTo(BeNil())
 
 	_, err = saService.Get(resourceName).Do()
 	Expect(err).To(HaveOccurred())
@@ -136,7 +136,7 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 	if err := db_service.DbConnection.Unscoped().Where("ID = ?", params.instanceId).First(&instance).Error; err != nil {
 		panic("error checking for service instance details: " + err.Error())
 	}
-	Expect(instance.DeletedAt).NotTo(Equal(nil))
+	Expect(instance.DeletedAt).NotTo(BeNil())
 
 	if params.serviceExistsFn != nil {
 		Expect(params.serviceExistsFn(false)).To(BeFalse())
