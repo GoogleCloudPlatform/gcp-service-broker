@@ -152,6 +152,27 @@ applications:
           "features": {"storage_class": "DURABLE_REDUCED_AVAILABILITY"}
         },
         {
+          "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
+          "name": "coldline",
+          "display_name": "Coldline",
+          "description": "Coldline storage class",
+          "features": {"storage_class": "COLDLINE"}
+        },
+        {
+          "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
+          "name": "multi_regional",
+          "display_name": "Multi Regional",
+          "description": "Multi Regional storage class",
+          "features": {"storage_class": "MULTI_REGIONAL"}
+        },
+        {
+          "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
+          "name": "regional",
+          "display_name": "Regional",
+          "description": "Regional storage class",
+          "features": {"storage_class": "REGIONAL"}
+        },
+        {
           "service_id": "628629e3-79f5-4255-b981-d14c6c7856be",
           "name": "default",
           "display_name": "Default",
