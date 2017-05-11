@@ -4,7 +4,6 @@ icon_file: gcp_logo.png
 label: Google Cloud Platform Service Broker
 description: A service broker for Google Cloud Platform services
 org: system
-buildpack: go_buildpack
 
 apply_open_security_group: true
 
@@ -14,6 +13,7 @@ migration: |
 packages:
 - name: gcp-service-broker
   type: app-broker
+  buildpack: go_buildpack
   manifest:
     path: /tmp/gcp-service-broker.zip
     env:
