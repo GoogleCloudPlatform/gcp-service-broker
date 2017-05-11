@@ -104,3 +104,8 @@ any extra access details
 
 - Security updates to address CVE-2017-4975
 - database name is configurable by setting `DB_NAME`
+
+## [3.3.2] - 2017-05-11
+
+- Security updates to address CVE-2017-4975
+- properly set buildpack

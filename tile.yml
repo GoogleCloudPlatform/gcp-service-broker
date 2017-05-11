@@ -13,8 +13,8 @@ migration: |
 packages:
 - name: gcp-service-broker
   type: app-broker
-  buildpack: go_buildpack
   manifest:
+    buildpack: go_buildpack
     path: /tmp/gcp-service-broker.zip
     env:
       SERVICES: '[
