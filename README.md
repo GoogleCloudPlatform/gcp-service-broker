@@ -57,6 +57,7 @@ See the [examples](https://github.com/GoogleCloudPlatform/gcp-service-broker/tre
 ### optional env vars - if deploying as an app, optionally add these to missing-properties.yml
 
 * `DB_PORT` (defaults to 3306)
+* `DB_NAME` (defaults to "servicebroker")
 * `CA_CERT`
 * `CLIENT_CERT`
 * `CLIENT_KEY`

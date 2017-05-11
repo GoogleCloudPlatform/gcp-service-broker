@@ -99,3 +99,8 @@ any extra access details
 ## [3.3.0] - 2017-03-31
 
 - Added Stackdriver Debugger and Trace support
+
+## [3.3.1] - 2017-03-31
+
+- Security updates to address CVE-2017-4975
+- database name is configurable by setting `DB_NAME`
