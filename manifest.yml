@@ -20,6 +20,7 @@ applications:
     label: 'GCP Service Broker'
     description: Easily configure and grant access to GCP products
     memory: 1G
+    buildpack: go_buildpack
     env:
       GO15VENDOREXPERIMENT: 1
       SERVICES: '[
