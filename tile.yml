@@ -122,6 +122,36 @@ packages:
             "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg"
           },
           "tags": ["gcp", "spanner"]
+        },
+        {
+          "id": "83837945-1547-41e0-b661-ea31d76eed11",
+          "description": "Stackdriver Debugger",
+          "name": "google-stackdriver-debugger",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+           "displayName": "Stackdriver Debugger",
+           "longDescription": "Stackdriver Debugger is a feature of the Google Cloud Platform that lets you inspect the state of an application at any code location without using logging statements and without stopping or slowing down your applications. Your users are not impacted during debugging. Using the production debugger you can capture the local variables and call stack and link it back to a specific line location in your source code.",
+           "documentationUrl": "https://cloud.google.com/debugger/docs/",
+           "supportUrl": "https://cloud.google.com/support/",
+           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg"
+          },
+          "tags": ["gcp", "stackdriver", "debugger"]
+        },
+        {
+          "id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
+          "description": "Stackdriver Trace",
+          "name": "google-stackdriver-trace",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+           "displayName": "Stackdriver Trace",
+           "longDescription": "Stackdriver Trace is a distributed tracing system that collects latency data from your applications and displays it in the Google Cloud Platform Console. You can track how requests propagate through your application and receive detailed near real-time performance insights.",
+           "documentationUrl": "https://cloud.google.com/trace/docs/",
+           "supportUrl": "https://cloud.google.com/support/",
+           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg"
+          },
+          "tags": ["gcp", "stackdriver", "trace"]
         }
       ]'
       PRECONFIGURED_PLANS: '[
@@ -165,8 +195,22 @@ packages:
           "display_name": "Default",
           "description": "Machine Learning api default plan",
           "features": ""
+        },
+        {
+          "service_id": "83837945-1547-41e0-b661-ea31d76eed11",
+          "name": "default",
+          "display_name": "Default",
+          "description": "Stackdriver Debugger default plan",
+          "features": ""
+        },
+        {
+          "service_id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
+          "name": "default",
+          "display_name": "Default",
+          "description": "Stackdriver Trace default plan",
+          "features": ""
         }
-      ]'
+        ]'
   needs_cf_credentials: true
   enable_global_access_to_plans: true
 
