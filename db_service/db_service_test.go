@@ -1,15 +1,15 @@
 package db_service
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/jinzhu/gorm"
 	"code.cloudfoundry.org/lager"
-	"os"
 	"database/sql"
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/fakes"
+	"github.com/jinzhu/gorm"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"os"
 )
 
 func getLocalTestConnectionStr(dbName string) string {
@@ -37,12 +37,12 @@ func createTestDatabase() {
 		dropTestDatabase()
 	}
 
-	_,err = db.Exec("CREATE DATABASE servicebroker")
+	_, err = db.Exec("CREATE DATABASE servicebroker")
 	if err != nil {
 		panic(err)
 	}
 
-	_,err = db.Exec("USE servicebroker")
+	_, err = db.Exec("USE servicebroker")
 	if err != nil {
 		panic(err)
 	}
@@ -55,7 +55,7 @@ func dropTestDatabase() {
 	}
 	defer db.Close()
 
-	_,err = db.Exec("DROP DATABASE servicebroker")
+	_, err = db.Exec("DROP DATABASE servicebroker")
 	if err != nil {
 		panic(err)
 	}
@@ -63,8 +63,8 @@ func dropTestDatabase() {
 
 var _ = Describe("DbService", func() {
 	var (
-		err                      error
-		logger                   lager.Logger
+		err    error
+		logger lager.Logger
 	)
 
 	BeforeEach(func() {

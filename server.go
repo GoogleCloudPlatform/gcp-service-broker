@@ -24,9 +24,9 @@ import (
 	"code.cloudfoundry.org/lager"
 	"gcp-service-broker/brokerapi"
 	"gcp-service-broker/brokerapi/brokers"
+	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
-	"gcp-service-broker/brokerapi/brokers/models"
 )
 
 func main() {
