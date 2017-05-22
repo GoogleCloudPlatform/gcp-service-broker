@@ -109,3 +109,16 @@ any extra access details
 
 - Security updates to address CVE-2017-4975
 - properly set buildpack
+
+## [3.3.2] - 2017-05-11
+
+- Security updates to address CVE-2017-4975
+- properly set buildpack
+
+## [3.4.0] - 2017-05-16
+
+- Add Stackdriver services to tile.yml
+
+## [3.4.1] - 2017-05-22
+
+- fixes uninitialized security group
