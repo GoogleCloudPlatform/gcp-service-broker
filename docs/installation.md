@@ -1,52 +1,10 @@
-# Cloud Foundry Service Broker for Google Cloud Platform
-
-This is the home of the Cloud Foundry Service Broker for Google Cloud Platform. For a demo of installing and using the broker,
-see [here](https://www.youtube.com/watch?v=8nc4624K91A&list=PLIivdWyY5sqKJ48ycao632rEDuVbFm8yJ&index=3)
-
-## Background
-
-### Service Brokers
-
-This product is a [Cloud Foundry Service Broker](https://docs.cloudfoundry.org/services/overview.html). It adheres
-to [v2.8](https://docs.pivotal.io/pivotalcf/1-7/services/api.html) of the Service Broker API.
-
-### Google Cloud Platform (GCP)
-
-GCP is a cloud service provider. In addition to VMs and networking, many other useful services are available. The ones
-available through this Service Broker are:
-
-* [PubSub](https://cloud.google.com/pubsub/)
-* [Cloud Storage](https://cloud.google.com/storage/)
-* [BigQuery](https://cloud.google.com/bigquery/)
-* [CloudSQL](https://cloud.google.com/sql/)
-* [ML APIs](https://cloud.google.com/ml/)
-* [Bigtable](https://cloud.google.com/bigtable/)
-* [Spanner](https://cloud.google.com/spanner/)
-* [Stackdriver Debugger](https://cloud.google.com/debugger/)
-* [Stackdriver Trace](https://cloud.google.com/trace/)
-
-
 ## Installation
 
 Requires Go 1.8 and the associated buildpack.
 
-* [Installing as a Pivotal Ops Manager tile](#tile)
-* [Installing as a Cloud Foundry Application](#cf)
-    * [Set up a GCP Project](#project)
-    * [Enable APIs](#apis)
-    * [Create a root service account](#service-account)
-    * [Set up a backing database](#database)
-    * [Set required env vars](#required-env)
-    * [Optional env vars](#optional-env)
-    * [Push the service broker to CF and enable services](#push)
-    * [(Optional) Increase the default provision/bind timeout](#timeout)
-
-
-### Installing as a Pivotal Ops Manager tile <a name="tile"></a>
-
 Documentation for installing as a Pivotal Ops Manager tile is available [here](http://docs.pivotal.io/partners/gcp-sb/index.html)
 
-### Installing as a Cloud Foundry Application <a name="cf"></a>
+### Prerequisites
 
 #### Set up a GCP Project <a name="project"></a>
 
@@ -55,7 +13,7 @@ Documentation for installing as a Pivotal Ops Manager tile is available [here](h
 1. give your project a name and click "Create"
 1. when the project is created (a notification will show in the upper right), refresh the page.
 
-#### Enable APIs <a name="apis"></a>
+#### Enable APIS <a name="apis"></a>
 
 1. Navigate to **API Manager > Library**.
 1. Enable the <a href="https://console.cloud.google.com/apis/api/cloudresourcemanager.googleapis.com/overview">Google Cloud Resource Manager API</a>
@@ -96,8 +54,61 @@ Add these to `manifest.yml`
 
 #### Optional env vars <a name="optional-env"></a>
 
-See [here](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/installation.md#optional-env) 
-for instructions on providing database name and port overrides, ssl certs, and custom service plans for Cloud SQL, Bigtable, and Spanner.
+optionally add these to `manifest.yml`
+
+* `DB_PORT` (defaults to 3306)
+* `DB_NAME` (defaults to "servicebroker")
+* `CA_CERT`
+* `CLIENT_CERT`
+* `CLIENT_KEY`
+* `CLOUDSQL_CUSTOM_PLANS` (A map of plan names to string maps with fields `guid`, `name`, `description`, `tier`,
+`pricing_plan`, `max_disk_size`, `display_name`, and `service` (Cloud SQL's service id)) - if unset, the service
+will be disabled. e.g.,
+
+```json
+{
+    "test_plan": {
+        "name": "test_plan",
+        "description": "testplan",
+        "tier": "D8",
+        "pricing_plan": "PER_USE",
+        "max_disk_size": "15",
+        "display_name": "FOOBAR",
+        "service": "4bc59b9a-8520-409f-85da-1c7552315863"
+    }
+}
+```
+* `BIGTABLE_CUSTOM_PLANS` (A map of plan names to string maps with fields `guid`, `name`, `description`,
+`storage_type`, `num_nodes`, `display_name`, and `service` (Bigtable's service id)) - if unset, the service
+will be disabled. e.g.,
+
+```json
+{
+    "bt_plan": {
+        "name": "bt_plan",
+        "description": "Bigtable basic plan",
+        "storage_type": "HDD",
+        "num_nodes": "5",
+        "display_name": "Bigtable Plan",
+        "service": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
+    }
+}
+```
+* `SPANNER_CUSTOM_PLANS` (A map of plan names to string maps with fields `guid`, `name`, `description`,
+`num_nodes` `display_name`, and `service` (Spanner's service id)) - if unset, the service
+will be disabled. e.g.,
+
+```json
+{
+    "spannerplan": {
+        "name": "spannerplan",
+        "description": "Basic Spanner plan",
+        "num_nodes": "15",
+        "display_name": "Spanner Plan",
+        "service": "51b3e27e-d323-49ce-8c5f-1211e6409e82"
+    }
+}
+```
 
 #### Push the service broker to CF and enable services <a name="push"></a>
 1. `cf push gcp-service-broker`
@@ -106,52 +117,9 @@ for instructions on providing database name and port overrides, ssl certs, and c
 
 For more information, see the Cloud Foundry docs on [managing Service Brokers](https://docs.cloudfoundry.org/services/managing-service-brokers.html)
 
+
 #### (Optional) Increase the default provision/bind timeout <a name="timeout"></a>
 It is advisable, if you want to use CloudSQL, to increase the default timeout for provision and
 bind operations to 90 seconds. CloudFoundry does not, at this point in time, support asynchronous
 binding, and CloudSQL bind operations may exceed 60 seconds. To change this setting, set
 `broker_client_timeout_seconds` = 90
-
-## Usage
-
-See [here](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/use.md) for instructions on creating and binding to GCP Services
- 
-See the [examples](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/examples/) folder to understand how to use services once they are created and bound.
-
-## Commands
-
-The [cmd](insert link) folder contains commands that can be run independent of the broker.
-
-* `migrate`: migrates the database to the latest schema
-
-## Testing
-
-Production testing for the GCP Service Broker is administered via a private Concourse pipeline.
-
-To run tests locally, use [Ginkgo](https://onsi.github.io/ginkgo/). Integration tests require the
-`ROOT_SERVICE_ACCOUNT_JSON` environment variable to be set and create and destroy real project resources.
-
-
-## Change Notes
-
-see https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/CHANGELOG.md
-
-## Support
-
-For functional issues with the service broker or feature requests, please file a github issue here:
-
-https://github.com/GoogleCloudPlatform/gcp-service-broker/issues
-
-They will be prioritized and updated here:
-
-https://github.com/GoogleCloudPlatform/gcp-service-broker/projects/1
-
-For discussions and updates, please subscribe to this group:
-
-https://groups.google.com/forum/#!forum/gcp-service-broker
-
-## Contributing
-
-see https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/CONTRIBUTING
-
-# This is not an official Google product.
