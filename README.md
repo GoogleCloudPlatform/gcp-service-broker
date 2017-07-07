@@ -12,15 +12,15 @@ to [v2.8](https://docs.pivotal.io/pivotalcf/1-7/services/api.html) of the Servic
 
 ### Google Cloud Platform (GCP)
 
-GCP is a cloud service provider. In addition to VMs and networking, many other useful services are available. The ones
+[GCP](cloud.google.com) is a cloud service provider. In addition to VMs and networking, many other useful services are available. The ones
 available through this Service Broker are:
 
-* [PubSub](https://cloud.google.com/pubsub/)
-* [Cloud Storage](https://cloud.google.com/storage/)
 * [BigQuery](https://cloud.google.com/bigquery/)
-* [CloudSQL](https://cloud.google.com/sql/)
-* [ML APIs](https://cloud.google.com/ml/)
 * [Bigtable](https://cloud.google.com/bigtable/)
+* [Cloud SQL](https://cloud.google.com/sql/)
+* [Cloud Storage](https://cloud.google.com/storage/)
+* [ML APIs](https://cloud.google.com/ml/)
+* [PubSub](https://cloud.google.com/pubsub/)
 * [Spanner](https://cloud.google.com/spanner/)
 * [Stackdriver Debugger](https://cloud.google.com/debugger/)
 * [Stackdriver Trace](https://cloud.google.com/trace/)
@@ -50,14 +50,15 @@ Documentation for installing as a Pivotal Ops Manager tile is available [here](h
 
 #### Set up a GCP Project <a name="project"></a>
 
-1. go to [Google Cloud Console](https://console.cloud.google.com) and sign up, walking through the setup wizard
-1. next to the Google Cloud Platform logo in the upper left-hand corner, click the dropdown and select "Create Project"
-1. give your project a name and click "Create"
-1. when the project is created (a notification will show in the upper right), refresh the page.
+1. Go to [Google Cloud Console](https://console.cloud.google.com) and sign up, walking through the setup wizard
+1. Next to the Google Cloud Platform logo in the upper left-hand corner, click the dropdown and select "Create Project"
+1. Give your project a name and click "Create"
+1. When the project is created (a notification will show in the upper right), refresh the page.
 
 #### Enable APIs <a name="apis"></a>
 
-1. Navigate to **API Manager > Library**.
+Enable the following services in **[API Manager > Library](https://console.cloud.google.com/apis/library)**.
+
 1. Enable the <a href="https://console.cloud.google.com/apis/api/cloudresourcemanager.googleapis.com/overview">Google Cloud Resource Manager API</a>
 1. Enable the <a href="https://console.cloud.google.com/apis/api/iam.googleapis.com/overview">Google Identity and Access Management (IAM) API</a>
 1. If you want to enable Cloud SQL as a service, enable the <a href="https://console.cloud.google.com/apis/api/sqladmin/overview">Cloud SQL API</a>
@@ -66,7 +67,7 @@ Documentation for installing as a Pivotal Ops Manager tile is available [here](h
 1. If you want to enable Pub/Sub as a service, enable the <a href="https://console.cloud.google.com/apis/api/pubsub/overview">Cloud Pub/Sub API</a>
 1. If you want to enable Bigtable as a service, enable the <a href="https://console.cloud.google.com/apis/api/bigtableadmin/overview">Bigtable Admin API</a>
 
-#### Create a root service account <a name="service-account"></a>
+#### Create a root [service account](https://cloud.google.com/iam/docs/service-accounts) <a name="service-account"></a>
 
 1. From the GCP console, navigate to **IAM & Admin > Service accounts** and click **Create Service Account**.
 1. Enter a **Service account name**.
@@ -77,11 +78,11 @@ Documentation for installing as a Pivotal Ops Manager tile is available [here](h
 
 #### Set up a backing database <a name="database"></a>
 
-1. create new MySQL instance
-1. run `CREATE DATABASE servicebroker;`
-1. run `CREATE USER '<username>'@'%' IDENTIFIED BY '<password>';`
-1. run `GRANT ALL PRIVILEGES ON servicebroker.* TO '<username>'@'%' WITH GRANT OPTION;`
-1. (optional) create SSL certs for the database and save them somewhere secure
+1. Create new MySQL instance
+1. Run `CREATE DATABASE servicebroker;`
+1. Run `CREATE USER '<username>'@'%' IDENTIFIED BY '<password>';`
+1. Run `GRANT ALL PRIVILEGES ON servicebroker.* TO '<username>'@'%' WITH GRANT OPTION;`
+1. (Optional) create SSL certs for the database and save them somewhere secure
 
 #### Set required env vars <a name="required-env"></a>
 
@@ -120,7 +121,7 @@ See the [examples](https://github.com/GoogleCloudPlatform/gcp-service-broker/blo
 
 ## Commands
 
-The [cmd](insert link) folder contains commands that can be run independent of the broker.
+The [cmd](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/cmd/) folder contains commands that can be run independent of the broker.
 
 * `migrate`: migrates the database to the latest schema
 
@@ -128,8 +129,11 @@ The [cmd](insert link) folder contains commands that can be run independent of t
 
 Production testing for the GCP Service Broker is administered via a private Concourse pipeline.
 
-To run tests locally, use [Ginkgo](https://onsi.github.io/ginkgo/). Integration tests require the
-`ROOT_SERVICE_ACCOUNT_JSON` environment variable to be set and create and destroy real project resources.
+To run tests locally, use [Ginkgo](https://onsi.github.io/ginkgo/). 
+
+Integration tests require the `ROOT_SERVICE_ACCOUNT_JSON` environment variable to be set.
+ 
+**Note: Integration tests create and destroy real project resources and therefore have associated costs to run**
 
 
 ## Change Notes
