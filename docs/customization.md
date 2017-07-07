@@ -1,6 +1,6 @@
 # Installation Customization
 
-Optionally add these to `manifest.yml`
+Optionally add these to the env section of `manifest.yml`
 
 ## [Optional db vars](#optional-db)
 
