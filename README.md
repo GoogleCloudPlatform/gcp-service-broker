@@ -30,7 +30,7 @@ available through this Service Broker are:
 
 Requires Go 1.8 and the associated buildpack.
 
-* [Installing as a Pivotal Ops Manager tile](#tile)
+* [Installing as a Pivotal Ops Manager tile](http://docs.pivotal.io/partners/gcp-sb/index.html)
 * [Installing as a Cloud Foundry Application](#cf)
     * [Set up a GCP Project](#project)
     * [Enable APIs](#apis)
@@ -42,20 +42,20 @@ Requires Go 1.8 and the associated buildpack.
     * [(Optional) Increase the default provision/bind timeout](#timeout)
 
 
-### Installing as a Pivotal Ops Manager tile <a name="tile"></a>
+### Installing as a Pivotal Ops Manager tile
 
 Documentation for installing as a Pivotal Ops Manager tile is available [here](http://docs.pivotal.io/partners/gcp-sb/index.html)
 
-### Installing as a Cloud Foundry Application <a name="cf"></a>
+### [Installing as a Cloud Foundry Application](#cf)
 
-#### Set up a GCP Project <a name="project"></a>
+#### [Set up a GCP Project](#project)
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com) and sign up, walking through the setup wizard
 1. Next to the Google Cloud Platform logo in the upper left-hand corner, click the dropdown and select "Create Project"
 1. Give your project a name and click "Create"
 1. When the project is created (a notification will show in the upper right), refresh the page.
 
-#### Enable APIs <a name="apis"></a>
+#### [Enable APIs](#apis)
 
 Enable the following services in **[API Manager > Library](https://console.cloud.google.com/apis/library)**.
 
@@ -67,7 +67,7 @@ Enable the following services in **[API Manager > Library](https://console.cloud
 1. If you want to enable Pub/Sub as a service, enable the <a href="https://console.cloud.google.com/apis/api/pubsub/overview">Cloud Pub/Sub API</a>
 1. If you want to enable Bigtable as a service, enable the <a href="https://console.cloud.google.com/apis/api/bigtableadmin/overview">Bigtable Admin API</a>
 
-#### Create a root [service account](https://cloud.google.com/iam/docs/service-accounts) <a name="service-account"></a>
+#### [Create a root service account](#service-account)
 
 1. From the GCP console, navigate to **IAM & Admin > Service accounts** and click **Create Service Account**.
 1. Enter a **Service account name**.
@@ -76,7 +76,7 @@ Enable the following services in **[API Manager > Library](https://console.cloud
 1. Navigate to **IAM & Admin > IAM** and locate your service account.
 1. From the dropdown on the right, choose **Project > Owner** and click **Save**.
 
-#### Set up a backing database <a name="database"></a>
+#### [Set up a backing database](#database)
 
 1. Create new MySQL instance
 1. Run `CREATE DATABASE servicebroker;`
@@ -84,7 +84,7 @@ Enable the following services in **[API Manager > Library](https://console.cloud
 1. Run `GRANT ALL PRIVILEGES ON servicebroker.* TO '<username>'@'%' WITH GRANT OPTION;`
 1. (Optional) create SSL certs for the database and save them somewhere secure
 
-#### Set required env vars <a name="required-env"></a>
+#### [Set required env vars](#required-env)
 
 Add these to `manifest.yml`
 
@@ -95,27 +95,27 @@ Add these to `manifest.yml`
 * `DB_USERNAME` (the database username for the service broker to use)
 * `DB_PASSWORD` (the database password for the service broker to use)
 
-#### Optional env vars <a name="optional-env"></a>
+#### [Optional env vars](#optional-env)
 
-See [here](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/installation.md#optional-env) 
+See https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/customization.md 
 for instructions on providing database name and port overrides, ssl certs, and custom service plans for Cloud SQL, Bigtable, and Spanner.
 
-#### Push the service broker to CF and enable services <a name="push"></a>
+#### [Push the service broker to CF and enable services](#push)
 1. `cf push gcp-service-broker`
 1. `cf create-service-broker <service broker name> <username> <password> <service broker url>`
 1. (for all applicable services, e.g.) `cf enable-service-access google-pubsub`
 
 For more information, see the Cloud Foundry docs on [managing Service Brokers](https://docs.cloudfoundry.org/services/managing-service-brokers.html)
 
-#### (Optional) Increase the default provision/bind timeout <a name="timeout"></a>
+#### [(Optional) Increase the default provision/bind timeout](#timeout)
 It is advisable, if you want to use CloudSQL, to increase the default timeout for provision and
 bind operations to 90 seconds. CloudFoundry does not, at this point in time, support asynchronous
 binding, and CloudSQL bind operations may exceed 60 seconds. To change this setting, set
-`broker_client_timeout_seconds` = 90
+`broker_client_timeout_seconds` = 90 in your deployment manifest.
 
 ## Usage
 
-See [here](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/use.md) for instructions on creating and binding to GCP Services
+See https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/use.md for instructions on creating and binding to GCP Services
  
 See the [examples](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/examples/) folder to understand how to use services once they are created and bound.
 
