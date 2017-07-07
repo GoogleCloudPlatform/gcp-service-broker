@@ -500,6 +500,18 @@ func getStaticPlans() (map[string][]models.ServicePlan, error) {
 			return map[string][]models.ServicePlan{}, err
 		}
 
+		featureBytes, err := json.Marshal(p["features"])
+		if err != nil {
+			return map[string][]models.ServicePlan{}, fmt.Errorf("error marshalling features: %s", err)
+		}
+
+		featureMap := make(map[string]string)
+		if p["features"] != nil {
+			if err := json.Unmarshal(featureBytes, &featureMap); err != nil {
+				return map[string][]models.ServicePlan{}, fmt.Errorf("error unmarshalling features: %s, %v", err, featureBytes)
+			}
+		}
+
 		plan := models.ServicePlan{
 			Name:        planName,
 			Description: p["description"].(string),
@@ -507,12 +519,8 @@ func getStaticPlans() (map[string][]models.ServicePlan, error) {
 				DisplayName: p["display_name"].(string),
 				Bullets:     []string{p["description"].(string), "For pricing information see https://cloud.google.com/pricing/#details"},
 			},
-			ID: id,
-		}
-
-		featureBytes, err := json.Marshal(p["features"])
-		if err != nil {
-			return map[string][]models.ServicePlan{}, fmt.Errorf("error marshalling features: %s", err)
+			ID:        id,
+			APIFields: featureMap,
 		}
 
 		exists, existingPlan, err := db_service.CheckAndGetPlan(planName, serviceId)
@@ -600,7 +608,8 @@ func getDynamicPlans(envVarName string, translatePlanFunc func(details map[strin
 					DisplayName: planDetails["display_name"],
 					Bullets:     []string{planDetails["description"], "For pricing information see https://cloud.google.com/pricing/#details"},
 				},
-				ID: existingPlan.ID,
+				ID:        existingPlan.ID,
+				APIFields: features,
 			}
 
 			plansGenerated = append(plansGenerated, plan)

@@ -155,6 +155,16 @@ var _ = Describe("Brokers", func() {
 			Expect(len(gcpBroker.Services())).To(Equal(9))
 		})
 
+		It("should record api fields in the catalog", func() {
+			serviceList := gcpBroker.Services()
+
+			for _, s := range serviceList {
+				if s.ID == serviceNameToId[models.StorageName] || s.ID == serviceNameToId[models.CloudsqlName] {
+					Expect(len(s.Plans[0].APIFields)).ToNot(Equal(0))
+				}
+			}
+		})
+
 		It("should have 3 storage plans available", func() {
 			serviceList := gcpBroker.Services()
 			for _, s := range serviceList {

@@ -42,6 +42,7 @@ type ServicePlan struct {
 	Description string               `json:"description"`
 	Free        *bool                `json:"free,omitempty"`
 	Metadata    *ServicePlanMetadata `json:"metadata,omitempty"`
+	APIFields   map[string]string
 }
 
 type ServicePlanMetadata struct {
