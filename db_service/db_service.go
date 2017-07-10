@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"github.com/jinzhu/gorm"
-	"github.com/leonelquinteros/gorand"
 	"sync"
 )
 
@@ -62,34 +61,6 @@ func SoftDeleteInstanceDetails(instanceID string) error {
 		return models.ErrInstanceDoesNotExist
 	}
 	return DbConnection.Delete(&instance).Error
-}
-
-// Searches the db by planName and serviceId (since plan names must be disctinct within services)
-// If an entry exists, returns its id. If not, constructs a new UUID and returns it.
-func GetOrCreatePlanId(planName string, serviceId string) (string, error) {
-	var count int
-	var existingPlan models.PlanDetails
-	var id string
-	var err error
-
-	if err = DbConnection.Model(&models.PlanDetails{}).Where("name = ? and service_id = ?", planName, serviceId).Count(&count).Error; err != nil {
-		return "", err
-	}
-	if count > 0 {
-		if err = DbConnection.Where("name = ? and service_id = ?", planName, serviceId).First(&existingPlan).Error; err != nil {
-			return "", err
-		}
-
-		id = existingPlan.ID
-	} else {
-
-		id, err = gorand.UUID()
-		if err != nil {
-			return "", err
-		}
-	}
-
-	return id, nil
 }
 
 // Searches the db by planName and serviceId (since plan names must be distinct within services)

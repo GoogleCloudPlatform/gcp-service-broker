@@ -12,13 +12,14 @@ Optionally add these to the env section of `manifest.yml`
 
 ## [Optional plan vars](#optional-plan)
 
-* `CLOUDSQL_CUSTOM_PLANS` (A map of plan names to string maps with fields `guid`, `name`, `description`, `tier`,
+* `CLOUDSQL_CUSTOM_PLANS` (A map of plan names to string maps with fields `id`, `name`, `description`, `tier`,
 `pricing_plan`, `max_disk_size`, `display_name`, and `service` (Cloud SQL's service id)) - if unset, the service
 will be disabled. e.g.,
 
 ```json
 {
     "test_plan": {
+        "id": "test-cloudsql-plan",
         "name": "test_plan",
         "description": "testplan",
         "tier": "D8",
@@ -29,13 +30,14 @@ will be disabled. e.g.,
     }
 }
 ```
-* `BIGTABLE_CUSTOM_PLANS` (A map of plan names to string maps with fields `guid`, `name`, `description`,
+* `BIGTABLE_CUSTOM_PLANS` (A map of plan names to string maps with fields `id`, `name`, `description`,
 `storage_type`, `num_nodes`, `display_name`, and `service` (Bigtable's service id)) - if unset, the service
 will be disabled. e.g.,
 
 ```json
 {
     "bt_plan": {
+        "id": "test-bigtable-plan",
         "name": "bt_plan",
         "description": "Bigtable basic plan",
         "storage_type": "HDD",
@@ -45,13 +47,14 @@ will be disabled. e.g.,
     }
 }
 ```
-* `SPANNER_CUSTOM_PLANS` (A map of plan names to string maps with fields `guid`, `name`, `description`,
+* `SPANNER_CUSTOM_PLANS` (A map of plan names to string maps with fields `id`, `name`, `description`,
 `num_nodes` `display_name`, and `service` (Spanner's service id)) - if unset, the service
 will be disabled. e.g.,
 
 ```json
 {
     "spannerplan": {
+        "id": "test-spanner-plan",
         "name": "spannerplan",
         "description": "Basic Spanner plan",
         "num_nodes": "15",

@@ -132,6 +132,7 @@ applications:
       ]'
       PRECONFIGURED_PLANS: '[
         {
+          "id": "e1d11f65-da66-46ad-977c-6d56513baf43",
           "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
           "name": "standard",
           "display_name": "Standard",
@@ -139,6 +140,7 @@ applications:
           "features": {"storage_class": "STANDARD"}
         },
         {
+          "id": "a42c1182-d1a0-4d40-82c1-28220518b360",
           "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
           "name": "nearline",
           "display_name": "Nearline",
@@ -146,6 +148,7 @@ applications:
           "features": {"storage_class": "NEARLINE"}
         },
         {
+          "id": "1a1f4fe6-1904-44d0-838c-4c87a9490a6b",
           "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
           "name": "reduced_availability",
           "display_name": "Durable Reduced Availability",
@@ -153,19 +156,23 @@ applications:
           "features": {"storage_class": "DURABLE_REDUCED_AVAILABILITY"}
         },
         {
+          "id": "622f4da3-8731-492a-af29-66a9146f8333",
           "service_id": "628629e3-79f5-4255-b981-d14c6c7856be",
           "name": "default",
           "display_name": "Default",
           "description": "PubSub Default plan",
           "features": ""
         },
-        { "service_id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
+        {
+          "id": "10ff4e72-6e84-44eb-851f-bdb38a791914",
+          "service_id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
           "name": "default",
           "display_name": "Default",
           "description": "BigQuery default plan",
           "features": ""
         },
         {
+          "id": "be7954e1-ecfb-4936-a0b6-db35e6424c7a",
           "service_id": "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4",
           "name": "default",
           "display_name": "Default",
@@ -173,6 +180,7 @@ applications:
           "features": ""
         },
         {
+          "id": "10866183-a775-49e8-96e3-4e7a901e4a79",
           "service_id": "83837945-1547-41e0-b661-ea31d76eed11",
           "name": "default",
           "display_name": "Default",
@@ -180,6 +188,7 @@ applications:
           "features": ""
          },
          {
+          "id": "ab6c2287-b4bc-4ff4-a36a-0575e7910164",
           "service_id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
           "name": "default",
           "display_name": "Default",

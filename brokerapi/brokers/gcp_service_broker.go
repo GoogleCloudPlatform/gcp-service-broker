@@ -494,10 +494,9 @@ func getStaticPlans() (map[string][]models.ServicePlan, error) {
 	for _, p := range plans {
 		serviceId := p["service_id"].(string)
 		planName := p["name"].(string)
-
-		id, err := db_service.GetOrCreatePlanId(planName, serviceId)
-		if err != nil {
-			return map[string][]models.ServicePlan{}, err
+		planId, planIdOk := p["id"]
+		if !planIdOk {
+			return map[string][]models.ServicePlan{}, errors.New("Error: plan id required")
 		}
 
 		plan := models.ServicePlan{
@@ -507,7 +506,7 @@ func getStaticPlans() (map[string][]models.ServicePlan, error) {
 				DisplayName: p["display_name"].(string),
 				Bullets:     []string{p["description"].(string), "For pricing information see https://cloud.google.com/pricing/#details"},
 			},
-			ID: id,
+			ID: planId.(string),
 		}
 
 		featureBytes, err := json.Marshal(p["features"])
@@ -528,7 +527,7 @@ func getStaticPlans() (map[string][]models.ServicePlan, error) {
 				ServiceId: serviceId,
 				Name:      p["name"].(string),
 				Features:  string(featureBytes),
-				ID:        id,
+				ID:        planId.(string),
 			}
 			db_service.DbConnection.Create(&planDetails)
 		}
@@ -557,10 +556,9 @@ func getDynamicPlans(envVarName string, translatePlanFunc func(details map[strin
 		// save custom plans to database and construct mapping
 		for planName, planDetails := range dynamicPlans {
 			serviceId = planDetails["service"]
-
-			id, err := db_service.GetOrCreatePlanId(planName, planDetails["service"])
-			if err != nil {
-				return []models.ServicePlan{}, "", err
+			planId, planIdOk := planDetails["id"]
+			if !planIdOk {
+				return []models.ServicePlan{}, "", errors.New("Error: plan id required")
 			}
 
 			// get service-specific plan features from plan interface
@@ -588,7 +586,7 @@ func getDynamicPlans(envVarName string, translatePlanFunc func(details map[strin
 					ServiceId: planDetails["service"],
 					Name:      planDetails["name"],
 					Features:  string(featuresStr),
-					ID:        id,
+					ID:        planId,
 				}
 				db_service.DbConnection.Create(&existingPlan)
 			}
