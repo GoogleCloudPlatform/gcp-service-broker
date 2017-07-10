@@ -122,3 +122,7 @@ any extra access details
 ## [3.4.1] - 2017-05-22
 
 - fixes uninitialized security group
+
+## [4.0.0] - 2017-07-XX
+
+- added command `get_plan_info` to dump plan information to the console. Advised to run before updating.
