@@ -165,34 +165,34 @@ const PreconfiguredPlans = `[
 			  "name": "default",
 			  "display_name": "Default",
 			  "description": "PubSub Default plan",
-			  "featurs": {}
+			  "features": {}
 			},
 			{ "service_id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
 			  "name": "default",
 			  "display_name": "Default",
 			  "description": "BigQuery default plan",
-			  "featurs": {}
+			  "features": {}
 			},
 			{
 			  "service_id": "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4",
 			  "name": "default",
 			  "display_name": "Default",
 			  "description": "Machine Learning api default plan",
-			  "featurs": {}
+			  "features": {}
 			},
 			{
 			  "service_id": "83837945-1547-41e0-b661-ea31d76eed11",
 			  "name": "default",
 			  "display_name": "Default",
 			  "description": "Stackdriver Debugger default plan" ,
-			  "featurs": {}
+			  "features": {}
 			},
 			{
 			  "service_id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
 			  "name": "default",
 			  "display_name": "Default",
 			  "description": "Stackdriver Trace default plan",
-			  "featurs": {}
+			  "features": {}
 			 }
 		      ]`
 
