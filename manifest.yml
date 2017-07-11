@@ -137,7 +137,7 @@ applications:
           "name": "standard",
           "display_name": "Standard",
           "description": "Standard storage class",
-          "features": {"storage_class": "STANDARD"}
+          "service_properties": {"storage_class": "STANDARD"}
         },
         {
           "id": "a42c1182-d1a0-4d40-82c1-28220518b360",
@@ -145,7 +145,7 @@ applications:
           "name": "nearline",
           "display_name": "Nearline",
           "description": "Nearline storage class",
-          "features": {"storage_class": "NEARLINE"}
+          "service_properties": {"storage_class": "NEARLINE"}
         },
         {
           "id": "1a1f4fe6-1904-44d0-838c-4c87a9490a6b",
@@ -153,7 +153,7 @@ applications:
           "name": "reduced_availability",
           "display_name": "Durable Reduced Availability",
           "description": "Durable Reduced Availability storage class",
-          "features": {"storage_class": "DURABLE_REDUCED_AVAILABILITY"}
+          "service_properties": {"storage_class": "DURABLE_REDUCED_AVAILABILITY"}
         },
         {
           "id": "622f4da3-8731-492a-af29-66a9146f8333",
@@ -161,7 +161,7 @@ applications:
           "name": "default",
           "display_name": "Default",
           "description": "PubSub Default plan",
-          "features": ""
+          "service_properties": {}
         },
         {
           "id": "10ff4e72-6e84-44eb-851f-bdb38a791914",
@@ -169,7 +169,7 @@ applications:
           "name": "default",
           "display_name": "Default",
           "description": "BigQuery default plan",
-          "features": ""
+          "service_properties": {}
         },
         {
           "id": "be7954e1-ecfb-4936-a0b6-db35e6424c7a",
@@ -177,7 +177,7 @@ applications:
           "name": "default",
           "display_name": "Default",
           "description": "Machine Learning api default plan",
-          "features": ""
+          "service_properties": {}
         },
         {
           "id": "10866183-a775-49e8-96e3-4e7a901e4a79",
@@ -185,7 +185,7 @@ applications:
           "name": "default",
           "display_name": "Default",
           "description": "Stackdriver Debugger default plan",
-          "features": ""
+          "service_properties": {}
          },
          {
           "id": "ab6c2287-b4bc-4ff4-a36a-0575e7910164",
@@ -193,6 +193,6 @@ applications:
           "name": "default",
           "display_name": "Default",
           "description": "Stackdriver Trace default plan",
-          "features": ""
+          "service_properties": {}
          }
       ]'

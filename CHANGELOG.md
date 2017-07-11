@@ -128,3 +128,4 @@ any extra access details
 - added command `get_plan_info` to dump plan information to the console. Advised to run before updating.
 - plan ids are now required and will not be generated if not supplied.
 - changed custom plan id field name from `guid` to `id`
+- modified `"features"` plan config field name to `"service_properties"`
