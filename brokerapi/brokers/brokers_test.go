@@ -198,7 +198,6 @@ var _ = Describe("Brokers", func() {
 			os.Setenv("PRECONFIGURED_PLANS", fakes.PlanNoId)
 			_, err := brokers.New(logger)
 			Expect(err).To(HaveOccurred())
-			os.Setenv("PRECONFIGURED_PLANS", fakes.PreconfiguredPlans)
 		})
 	})
 

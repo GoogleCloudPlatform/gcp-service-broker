@@ -496,7 +496,7 @@ func getStaticPlans() (map[string][]models.ServicePlan, error) {
 		planName := p["name"].(string)
 		planId, planIdOk := p["id"]
 		if !planIdOk {
-			return map[string][]models.ServicePlan{}, errors.New("Error: plan id required")
+			return map[string][]models.ServicePlan{}, fmt.Errorf("Error: plan ids are required. Plan %s needs an id.", p["name"].(string))
 		}
 
 		plan := models.ServicePlan{
@@ -558,7 +558,7 @@ func getDynamicPlans(envVarName string, translatePlanFunc func(details map[strin
 			serviceId = planDetails["service"]
 			planId, planIdOk := planDetails["id"]
 			if !planIdOk {
-				return []models.ServicePlan{}, "", errors.New("Error: plan id required")
+				return []models.ServicePlan{}, "", fmt.Errorf("Error: plan ids are required. Plan %s needs an id.", p["name"].(string))
 			}
 
 			// get service-specific plan features from plan interface
