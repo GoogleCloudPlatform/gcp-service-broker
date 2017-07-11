@@ -203,6 +203,12 @@ var _ = Describe("Brokers", func() {
 				}
 			}
 		})
+
+		It("should error if plan ids are not supplied", func() {
+			os.Setenv("PRECONFIGURED_PLANS", fakes.PlanNoId)
+			_, err := brokers.New(logger)
+			Expect(err).To(HaveOccurred())
+		})
 	})
 
 	Describe("updating broker catalog", func() {
@@ -211,6 +217,7 @@ var _ = Describe("Brokers", func() {
 
 			os.Setenv("CLOUDSQL_CUSTOM_PLANS", `{
 				"newPlan": {
+					"id": "some-other-cloudsql-plan",
 					"name": "newPlan",
 					"description": "testplan",
 					"tier": "D8",
@@ -247,6 +254,7 @@ var _ = Describe("Brokers", func() {
 
 			os.Setenv("CLOUDSQL_CUSTOM_PLANS", `{
 				"test_plan": {
+					"id": "some-other-cloudsql-plan",
 					"name": "test_plan",
 					"description": "testplan",
 					"tier": "D8",
