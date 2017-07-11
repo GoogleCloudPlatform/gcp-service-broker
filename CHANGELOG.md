@@ -126,3 +126,4 @@ any extra access details
 ## [4.0.0] - 2017-07-XX
 
 - added command `get_plan_info` to dump plan information to the console. Advised to run before updating.
+- modified `"features"` plan config field name to `"service_properties"`
