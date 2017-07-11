@@ -37,12 +37,12 @@ type ServiceDashboardClient struct {
 }
 
 type ServicePlan struct {
-	ID          string               `json:"id"`
-	Name        string               `json:"name"`
-	Description string               `json:"description"`
-	Free        *bool                `json:"free,omitempty"`
-	Metadata    *ServicePlanMetadata `json:"metadata,omitempty"`
-	APIFields   map[string]string
+	ID                string               `json:"id"`
+	Name              string               `json:"name"`
+	Description       string               `json:"description"`
+	Free              *bool                `json:"free,omitempty"`
+	Metadata          *ServicePlanMetadata `json:"metadata,omitempty"`
+	ServiceProperties map[string]string
 }
 
 type ServicePlanMetadata struct {

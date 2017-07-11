@@ -160,7 +160,7 @@ var _ = Describe("Brokers", func() {
 
 			for _, s := range serviceList {
 				if s.ID == serviceNameToId[models.StorageName] || s.ID == serviceNameToId[models.CloudsqlName] {
-					Expect(len(s.Plans[0].APIFields)).ToNot(Equal(0))
+					Expect(len(s.Plans[0].ServiceProperties)).ToNot(Equal(0))
 				}
 			}
 		})

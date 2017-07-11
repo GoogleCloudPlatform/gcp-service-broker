@@ -500,15 +500,15 @@ func getStaticPlans() (map[string][]models.ServicePlan, error) {
 			return map[string][]models.ServicePlan{}, err
 		}
 
-		featureBytes, err := json.Marshal(p["features"])
+		servicePropertyBytes, err := json.Marshal(p["service_properties"])
 		if err != nil {
-			return map[string][]models.ServicePlan{}, fmt.Errorf("error marshalling features: %s", err)
+			return map[string][]models.ServicePlan{}, fmt.Errorf("error marshalling service_properties: %s", err)
 		}
 
-		featureMap := make(map[string]string)
-		if p["features"] != nil {
-			if err := json.Unmarshal(featureBytes, &featureMap); err != nil {
-				return map[string][]models.ServicePlan{}, fmt.Errorf("error unmarshalling features: %s, %v", err, featureBytes)
+		servicePropertyMap := make(map[string]string)
+		if p["service_properties"] != nil {
+			if err := json.Unmarshal(servicePropertyBytes, &servicePropertyMap); err != nil {
+				return map[string][]models.ServicePlan{}, fmt.Errorf("error unmarshalling service_properties: %s, %v", err, servicePropertyBytes)
 			}
 		}
 
@@ -519,8 +519,8 @@ func getStaticPlans() (map[string][]models.ServicePlan, error) {
 				DisplayName: p["display_name"].(string),
 				Bullets:     []string{p["description"].(string), "For pricing information see https://cloud.google.com/pricing/#details"},
 			},
-			ID:        id,
-			APIFields: featureMap,
+			ID:                id,
+			ServiceProperties: servicePropertyMap,
 		}
 
 		exists, existingPlan, err := db_service.CheckAndGetPlan(planName, serviceId)
@@ -529,13 +529,13 @@ func getStaticPlans() (map[string][]models.ServicePlan, error) {
 		}
 
 		if exists {
-			existingPlan.Features = string(featureBytes)
+			existingPlan.Features = string(servicePropertyBytes)
 			db_service.DbConnection.Save(&existingPlan)
 		} else {
 			planDetails := models.PlanDetails{
 				ServiceId: serviceId,
 				Name:      p["name"].(string),
-				Features:  string(featureBytes),
+				Features:  string(servicePropertyBytes),
 				ID:        id,
 			}
 			db_service.DbConnection.Create(&planDetails)
@@ -571,10 +571,10 @@ func getDynamicPlans(envVarName string, translatePlanFunc func(details map[strin
 				return []models.ServicePlan{}, "", err
 			}
 
-			// get service-specific plan features from plan interface
-			features := translatePlanFunc(planDetails)
+			// get service-specific plan service_properties from plan interface
+			serviceProperties := translatePlanFunc(planDetails)
 
-			featuresStr, err := json.Marshal(&features)
+			servicePropertiesStr, err := json.Marshal(&serviceProperties)
 			if err != nil {
 				return []models.ServicePlan{}, "", err
 			}
@@ -589,13 +589,13 @@ func getDynamicPlans(envVarName string, translatePlanFunc func(details map[strin
 			// update or make a new plan and save to the database
 			if exists {
 
-				existingPlan.Features = string(featuresStr)
+				existingPlan.Features = string(servicePropertiesStr)
 				db_service.DbConnection.Save(&existingPlan)
 			} else {
 				existingPlan = models.PlanDetails{
 					ServiceId: planDetails["service"],
 					Name:      planDetails["name"],
-					Features:  string(featuresStr),
+					Features:  string(servicePropertiesStr),
 					ID:        id,
 				}
 				db_service.DbConnection.Create(&existingPlan)
@@ -608,8 +608,8 @@ func getDynamicPlans(envVarName string, translatePlanFunc func(details map[strin
 					DisplayName: planDetails["display_name"],
 					Bullets:     []string{planDetails["description"], "For pricing information see https://cloud.google.com/pricing/#details"},
 				},
-				ID:        existingPlan.ID,
-				APIFields: features,
+				ID:                existingPlan.ID,
+				ServiceProperties: serviceProperties,
 			}
 
 			plansGenerated = append(plansGenerated, plan)

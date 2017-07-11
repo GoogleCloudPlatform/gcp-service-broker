@@ -136,54 +136,54 @@ applications:
           "name": "standard",
           "display_name": "Standard",
           "description": "Standard storage class",
-          "features": {"storage_class": "STANDARD"}
+          "service_properties": {"storage_class": "STANDARD"}
         },
         {
           "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
           "name": "nearline",
           "display_name": "Nearline",
           "description": "Nearline storage class",
-          "features": {"storage_class": "NEARLINE"}
+          "service_properties": {"storage_class": "NEARLINE"}
         },
         {
           "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
           "name": "reduced_availability",
           "display_name": "Durable Reduced Availability",
           "description": "Durable Reduced Availability storage class",
-          "features": {"storage_class": "DURABLE_REDUCED_AVAILABILITY"}
+          "service_properties": {"storage_class": "DURABLE_REDUCED_AVAILABILITY"}
         },
         {
           "service_id": "628629e3-79f5-4255-b981-d14c6c7856be",
           "name": "default",
           "display_name": "Default",
           "description": "PubSub Default plan",
-          "features": {}
+          "service_properties": {}
         },
         { "service_id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
           "name": "default",
           "display_name": "Default",
           "description": "BigQuery default plan",
-          "features": {}
+          "service_properties": {}
         },
         {
           "service_id": "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4",
           "name": "default",
           "display_name": "Default",
           "description": "Machine Learning api default plan",
-          "features": {}
+          "service_properties": {}
         },
         {
           "service_id": "83837945-1547-41e0-b661-ea31d76eed11",
           "name": "default",
           "display_name": "Default",
           "description": "Stackdriver Debugger default plan",
-          "features": {}
+          "service_properties": {}
          },
          {
           "service_id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
           "name": "default",
           "display_name": "Default",
           "description": "Stackdriver Trace default plan",
-          "features": {}
+          "service_properties": {}
          }
       ]'
