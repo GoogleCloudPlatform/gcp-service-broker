@@ -38,7 +38,7 @@ type InstanceInformation struct {
 }
 
 // No-op, no serivce is required for Stackdriver Trace
-func (b *StackdriverTraceBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (b *StackdriverTraceBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	return models.ServiceInstanceDetails{}, nil
 }
 

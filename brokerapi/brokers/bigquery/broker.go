@@ -44,7 +44,7 @@ type InstanceInformation struct {
 
 // Creates a new BigQuery dataset identified by the name provided in details.RawParameters.name and optional location
 // (possible values are "US" or "EU", defaults to "US")
-func (b *BigQueryBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (b *BigQueryBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 	var params map[string]string
 
