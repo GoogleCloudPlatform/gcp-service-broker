@@ -202,20 +202,19 @@ func (gcpBroker *GCPServiceBroker) Services() []models.Service {
 	return *gcpBroker.Catalog
 }
 
-func (gcpBroker *GCPServiceBroker) GetPlanFromId(serviceId, planId string) models.ServicePlan {
+func (gcpBroker *GCPServiceBroker) GetPlanFromId(serviceId, planId string) (models.ServicePlan, error) {
 
 	cat := *gcpBroker.Catalog
 	for _, s := range cat {
 		if s.ID == serviceId {
 			for _, p := range s.Plans {
 				if p.ID == planId {
-					return p
+					return p, nil
 				}
 			}
 		}
 	}
-	panic(fmt.Sprintf("Plan with id %s and serviceId %s not found", planId, serviceId))
-
+	return models.ServicePlan{}, fmt.Errorf("Plan with id %s and serviceId %s not found", planId, serviceId)
 }
 
 // cf create-service
@@ -249,13 +248,17 @@ func (gcpBroker *GCPAsyncServiceBroker) Provision(instanceID string, details mod
 
 	serviceId := details.ServiceID
 
+	plan, err := gcpBroker.GetPlanFromId(serviceId, details.PlanID)
+	if err != nil {
+		return models.ProvisionedServiceSpec{}, err
+	}
+
 	// verify async provisioning is allowed if it is required
 	gcpBroker.ShouldProvisionAsync = gcpBroker.ServiceBrokerMap[serviceId].ProvisionsAsync()
 	if gcpBroker.ShouldProvisionAsync && !asyncAllowed {
 		return models.ProvisionedServiceSpec{}, models.ErrAsyncRequired
 	}
 
-	plan := gcpBroker.GetPlanFromId(serviceId, details.PlanID)
 	// get instance details
 	instanceDetails, err := gcpBroker.ServiceBrokerMap[serviceId].Provision(instanceID, details, plan)
 	if err != nil {

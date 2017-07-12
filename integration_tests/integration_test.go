@@ -195,7 +195,6 @@ var _ = Describe("LiveIntegrationTests", func() {
 		testDb, _ := gorm.Open("sqlite3", "test.db")
 		testDb.CreateTable(models.ServiceInstanceDetails{})
 		testDb.CreateTable(models.ServiceBindingCredentials{})
-		testDb.CreateTable(models.PlanDetails{})
 		testDb.CreateTable(models.ProvisionRequestDetails{})
 
 		db_service.DbConnection = testDb

@@ -235,9 +235,10 @@ var _ = Describe("Brokers", func() {
 					Expect(s.Plans[0].Name).To(Equal("newPlan"))
 					Expect(len(s.Plans)).To(Equal(1))
 
-					planDetails := gcpBroker.GetPlanFromId(serviceNameToId[models.CloudsqlName], "some-other-cloudsql-plan").ServiceProperties
-					Expect(planDetails["tier"]).To(Equal("D8"))
-					Expect(planDetails["max_disk_size"]).To(Equal("15"))
+					planDetails, err := newBroker.GetPlanFromId(serviceNameToId[models.CloudsqlName], "some-other-cloudsql-plan")
+					Expect(err).ToNot(HaveOccurred())
+					Expect(planDetails.ServiceProperties["tier"]).To(Equal("D8"))
+					Expect(planDetails.ServiceProperties["max_disk_size"]).To(Equal("15"))
 				}
 			}
 
@@ -265,8 +266,9 @@ var _ = Describe("Brokers", func() {
 			for _, s := range serviceList {
 				if s.ID == serviceNameToId[models.CloudsqlName] {
 					Expect(len(s.Plans)).To(Equal(1))
-					planDetails := gcpBroker.GetPlanFromId(serviceNameToId[models.CloudsqlName], "some-other-cloudsql-plan").ServiceProperties
-					Expect(planDetails["tier"]).To(Equal("D8"))
+					planDetails, err := newBroker.GetPlanFromId(serviceNameToId[models.CloudsqlName], "some-other-cloudsql-plan")
+					Expect(err).ToNot(HaveOccurred())
+					Expect(planDetails.ServiceProperties["tier"]).To(Equal("D8"))
 				}
 			}
 
