@@ -77,7 +77,6 @@ var _ = Describe("AsyncIntegrationTests", func() {
 		testDb, _ := gorm.Open("sqlite3", "test.db")
 		testDb.CreateTable(models.ServiceInstanceDetails{})
 		testDb.CreateTable(models.ServiceBindingCredentials{})
-		testDb.CreateTable(models.PlanDetails{})
 		testDb.CreateTable(models.ProvisionRequestDetails{})
 		testDb.CreateTable(models.CloudOperation{})
 

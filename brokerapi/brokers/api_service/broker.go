@@ -33,7 +33,7 @@ type ApiServiceBroker struct {
 	broker_base.BrokerBase
 }
 
-func (b *ApiServiceBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (b *ApiServiceBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 
 	return models.ServiceInstanceDetails{}, nil
 }

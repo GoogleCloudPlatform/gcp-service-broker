@@ -46,14 +46,10 @@ type InstanceInformation struct {
 
 // creates a new bucket with the name given in provision details and optional location
 // (defaults to "US", for acceptable location values see: https://cloud.google.com/storage/docs/bucket-locations)
-func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 
-	var planDetails map[string]string
-	if err = json.Unmarshal([]byte(plan.Features), &planDetails); err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling plan features: %s", err)
-	}
-	storageClass := planDetails["storage_class"]
+	storageClass := plan.ServiceProperties["storage_class"]
 
 	var params map[string]string
 	if len(details.RawParameters) == 0 {

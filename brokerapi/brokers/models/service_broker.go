@@ -23,7 +23,7 @@ import (
 )
 
 type ServiceBrokerHelper interface {
-	Provision(instanceId string, details ProvisionDetails, plan PlanDetails) (ServiceInstanceDetails, error)
+	Provision(instanceId string, details ProvisionDetails, plan ServicePlan) (ServiceInstanceDetails, error)
 	Bind(instanceID, bindingID string, details BindDetails) (ServiceBindingCredentials, error)
 	BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string
 	Unbind(details ServiceBindingCredentials) error

@@ -50,7 +50,7 @@ type InstanceInformation struct {
 // Creates a new PubSub topic with the name given in details.topic_name
 // if subscription_name is supplied, will also create a subscription for this topic with optional config parameters
 // is_push (defaults to "false"; i.e. pull), endpoint (defaults to nil), ack_deadline (seconds, defaults to 10, 600 max)
-func (b *PubSubBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (b *PubSubBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 
 	var err error
 	var params map[string]string

@@ -202,6 +202,19 @@ func (gcpBroker *GCPServiceBroker) Services() []models.Service {
 	return *gcpBroker.Catalog
 }
 
+func (gcpBroker *GCPServiceBroker) GetPlanFromId(serviceId, planId string) (models.ServicePlan, error) {
+	for _, s := range *gcpBroker.Catalog {
+		if s.ID == serviceId {
+			for _, p := range s.Plans {
+				if p.ID == planId {
+					return p, nil
+				}
+			}
+		}
+	}
+	return models.ServicePlan{}, fmt.Errorf("Plan with id %s and serviceId %s not found", planId, serviceId)
+}
+
 // cf create-service
 // creates a new service instance. What a "new service instance" means varies based on the service type
 // CloudSQL: a new database instance and database
@@ -222,13 +235,6 @@ func (gcpBroker *GCPAsyncServiceBroker) Provision(instanceID string, details mod
 		}
 	}
 
-	// get service plan
-	plan := models.PlanDetails{}
-
-	if err := db_service.DbConnection.Where("id = ?", details.PlanID).First(&plan).Error; err != nil {
-		return models.ProvisionedServiceSpec{}, errors.New("The provided plan does not exist " + err.Error())
-	}
-
 	// make sure that instance hasn't already been provisioned
 	count, err := db_service.GetServiceInstanceCount(instanceID)
 	if err != nil {
@@ -239,6 +245,11 @@ func (gcpBroker *GCPAsyncServiceBroker) Provision(instanceID string, details mod
 	}
 
 	serviceId := details.ServiceID
+
+	plan, err := gcpBroker.GetPlanFromId(serviceId, details.PlanID)
+	if err != nil {
+		return models.ProvisionedServiceSpec{}, err
+	}
 
 	// verify async provisioning is allowed if it is required
 	gcpBroker.ShouldProvisionAsync = gcpBroker.ServiceBrokerMap[serviceId].ProvisionsAsync()
@@ -522,24 +533,6 @@ func getStaticPlans() (map[string][]models.ServicePlan, error) {
 			ServiceProperties: servicePropertyMap,
 		}
 
-		exists, existingPlan, err := db_service.CheckAndGetPlan(planName, serviceId)
-		if err != nil {
-			return map[string][]models.ServicePlan{}, err
-		}
-
-		if exists {
-			existingPlan.Features = string(servicePropertyBytes)
-			db_service.DbConnection.Save(&existingPlan)
-		} else {
-			planDetails := models.PlanDetails{
-				ServiceId: serviceId,
-				Name:      p["name"].(string),
-				Features:  string(servicePropertyBytes),
-				ID:        planId.(string),
-			}
-			db_service.DbConnection.Create(&planDetails)
-		}
-
 		servicePlans[serviceId] = append(servicePlans[serviceId], plan)
 
 	}
@@ -566,47 +559,20 @@ func getDynamicPlans(envVarName string, translatePlanFunc func(details map[strin
 			serviceId = planDetails["service"]
 			planId, planIdOk := planDetails["id"]
 			if !planIdOk {
-				return []models.ServicePlan{}, "", fmt.Errorf("Error: plan ids are required. Plan %s needs an id.", planDetails["name"])
+				return []models.ServicePlan{}, "", fmt.Errorf("Error: plan ids are required. Plan %s needs an id.", planName)
 			}
 
 			// get service-specific plan service_properties from plan interface
 			serviceProperties := translatePlanFunc(planDetails)
 
-			servicePropertiesStr, err := json.Marshal(&serviceProperties)
-			if err != nil {
-				return []models.ServicePlan{}, "", err
-			}
-
-			// check for an existing plan by name. If it exists, get it.
-			exists, existingPlan, err := db_service.CheckAndGetPlan(planName, planDetails["service"])
-
-			if err != nil {
-				return []models.ServicePlan{}, "", err
-			}
-
-			// update or make a new plan and save to the database
-			if exists {
-
-				existingPlan.Features = string(servicePropertiesStr)
-				db_service.DbConnection.Save(&existingPlan)
-			} else {
-				existingPlan = models.PlanDetails{
-					ServiceId: planDetails["service"],
-					Name:      planDetails["name"],
-					Features:  string(servicePropertiesStr),
-					ID:        planId,
-				}
-				db_service.DbConnection.Create(&existingPlan)
-			}
-
 			plan := models.ServicePlan{
-				Name:        planDetails["name"],
+				Name:        planName,
 				Description: planDetails["description"],
 				Metadata: &models.ServicePlanMetadata{
 					DisplayName: planDetails["display_name"],
 					Bullets:     []string{planDetails["description"], "For pricing information see https://cloud.google.com/pricing/#details"},
 				},
-				ID:                existingPlan.ID,
+				ID:                planId,
 				ServiceProperties: serviceProperties,
 			}
 
@@ -656,11 +622,6 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 		}
 	}
 
-	// soft delete unusued plans
-	if err := db_service.DbConnection.Not("id in (?)", currentPlanIds).Delete(models.PlanDetails{}).Error; err != nil {
-		return []models.Service{}, err
-	}
-
 	// set up services
 	var serviceList []models.Service
 
@@ -684,13 +645,4 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 	}
 
 	return serviceList, nil
-}
-
-func valInStringSlice(slice []string, val string) bool {
-	for _, elem := range slice {
-		if val == elem {
-			return true
-		}
-	}
-	return false
 }

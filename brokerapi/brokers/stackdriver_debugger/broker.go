@@ -38,7 +38,7 @@ type InstanceInformation struct {
 }
 
 // No-op, no service is required for the Debugger
-func (b *StackdriverDebuggerBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (b *StackdriverDebuggerBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	return models.ServiceInstanceDetails{}, nil
 }
 
