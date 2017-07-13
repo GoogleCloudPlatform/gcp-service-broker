@@ -48,7 +48,7 @@ type InstanceInformation struct {
 
 // Creates a new Spanner Instance identified by the name provided in details.RawParameters.name and
 // an optional region (defaults to regional-us-central1) and optional display_name
-func (s *SpannerBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (s *SpannerBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 	var params map[string]string
 
@@ -63,12 +63,6 @@ func (s *SpannerBroker) Provision(instanceId string, details models.ProvisionDet
 		params["name"] = name_generator.Basic.InstanceNameWithSeparator("-")
 	}
 
-	// get plan parameters
-	var planDetails map[string]string
-	if err = json.Unmarshal([]byte(plan.Features), &planDetails); err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling plan features: %s", err)
-	}
-
 	// set up client
 
 	co := option.WithUserAgent(models.CustomUserAgent)
@@ -79,7 +73,7 @@ func (s *SpannerBroker) Provision(instanceId string, details models.ProvisionDet
 	}
 
 	// set up params
-	numNodes, err := strconv.Atoi(planDetails["num_nodes"])
+	numNodes, err := strconv.Atoi(plan.ServiceProperties["num_nodes"])
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error getting number of nodes: %s", err)
 	}

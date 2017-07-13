@@ -93,7 +93,7 @@ var _ = Describe("DbService", func() {
 			err = DbConnection.Order("id desc").Find(&storedMigrations).Error
 			Expect(err).NotTo(HaveOccurred())
 			lastMigrationNumber := storedMigrations[0].MigrationId
-			Expect(lastMigrationNumber).To(Equal(1))
+			Expect(lastMigrationNumber).To(Equal(2))
 		})
 
 		It("should be able to run migrations multiple times", func() {

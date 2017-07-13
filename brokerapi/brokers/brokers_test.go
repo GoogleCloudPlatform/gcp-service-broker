@@ -1,7 +1,6 @@
 package brokers_test
 
 import (
-	"encoding/json"
 	"gcp-service-broker/brokerapi/brokers"
 	. "gcp-service-broker/brokerapi/brokers"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
@@ -45,7 +44,6 @@ var _ = Describe("Brokers", func() {
 		testDb, _ := gorm.Open("sqlite3", "test.db")
 		testDb.CreateTable(models.ServiceInstanceDetails{})
 		testDb.CreateTable(models.ServiceBindingCredentials{})
-		testDb.CreateTable(models.PlanDetails{})
 		testDb.CreateTable(models.ProvisionRequestDetails{})
 
 		db_service.DbConnection = testDb
@@ -105,7 +103,7 @@ var _ = Describe("Brokers", func() {
 			gcpBroker.ServiceBrokerMap[k] = &modelsfakes.FakeServiceBrokerHelper{
 				ProvisionsAsyncStub:   func() bool { return async },
 				DeprovisionsAsyncStub: func() bool { return async },
-				ProvisionStub: func(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+				ProvisionStub: func(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 					return models.ServiceInstanceDetails{ID: instanceId, OtherDetails: "{\"mynameis\": \"instancename\"}"}, nil
 				},
 				BindStub: func(instanceID, bindingID string, details models.BindDetails) (models.ServiceBindingCredentials, error) {
@@ -229,22 +227,18 @@ var _ = Describe("Brokers", func() {
 			}`)
 
 			newBroker, err := brokers.New(logger)
+			Expect(err).ToNot(HaveOccurred())
 
 			serviceList := newBroker.Services()
 			for _, s := range serviceList {
 				if s.ID == serviceNameToId[models.CloudsqlName] {
 					Expect(s.Plans[0].Name).To(Equal("newPlan"))
 					Expect(len(s.Plans)).To(Equal(1))
-					plan := models.PlanDetails{}
-					if err := db_service.DbConnection.Where("service_id = ?", "4bc59b9a-8520-409f-85da-1c7552315863").First(&plan).Error; err != nil {
-						panic("The provided plan does not exist " + err.Error())
-					}
-					var planDetails map[string]string
-					if err = json.Unmarshal([]byte(plan.Features), &planDetails); err != nil {
-						panic("Error unmarshalling plan features: " + err.Error())
-					}
-					Expect(planDetails["tier"]).To(Equal("D8"))
-					Expect(planDetails["max_disk_size"]).To(Equal("15"))
+
+					planDetails, err := newBroker.GetPlanFromId(serviceNameToId[models.CloudsqlName], "some-other-cloudsql-plan")
+					Expect(err).ToNot(HaveOccurred())
+					Expect(planDetails.ServiceProperties["tier"]).To(Equal("D8"))
+					Expect(planDetails.ServiceProperties["max_disk_size"]).To(Equal("15"))
 				}
 			}
 
@@ -266,20 +260,15 @@ var _ = Describe("Brokers", func() {
 			}`)
 
 			newBroker, err := brokers.New(logger)
+			Expect(err).ToNot(HaveOccurred())
 
 			serviceList := newBroker.Services()
 			for _, s := range serviceList {
 				if s.ID == serviceNameToId[models.CloudsqlName] {
 					Expect(len(s.Plans)).To(Equal(1))
-					plan := models.PlanDetails{}
-					if err := db_service.DbConnection.Where("service_id = ?", "4bc59b9a-8520-409f-85da-1c7552315863").First(&plan).Error; err != nil {
-						panic("The provided plan does not exist " + err.Error())
-					}
-					var planDetails map[string]string
-					if err = json.Unmarshal([]byte(plan.Features), &planDetails); err != nil {
-						panic("Error unmarshalling plan features: " + err.Error())
-					}
-					Expect(planDetails["tier"]).To(Equal("D8"))
+					planDetails, err := newBroker.GetPlanFromId(serviceNameToId[models.CloudsqlName], "some-other-cloudsql-plan")
+					Expect(err).ToNot(HaveOccurred())
+					Expect(planDetails.ServiceProperties["tier"]).To(Equal("D8"))
 				}
 			}
 
@@ -490,7 +479,6 @@ var _ = Describe("AccountManagers", func() {
 		testDb, _ := gorm.Open("sqlite3", "test.db")
 		testDb.CreateTable(models.ServiceInstanceDetails{})
 		testDb.CreateTable(models.ServiceBindingCredentials{})
-		testDb.CreateTable(models.PlanDetails{})
 		testDb.CreateTable(models.ProvisionRequestDetails{})
 
 		db_service.DbConnection = testDb

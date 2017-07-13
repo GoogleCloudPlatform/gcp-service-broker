@@ -52,7 +52,7 @@ var StorageTypes = map[string]googlebigtable.StorageType{
 
 // Creates a new Bigtable Instance identified by the name provided in details.RawParameters.name and
 // optional cluster_id (a default will be supplied), display_name, and zone (defaults to us-east1-b)
-func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 	var params map[string]string
 
@@ -65,12 +65,6 @@ func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDe
 	// Ensure there is a name for this instance
 	if _, ok := params["name"]; !ok {
 		params["name"] = name_generator.Basic.InstanceNameWithSeparator("-")
-	}
-
-	// get plan parameters
-	var planDetails map[string]string
-	if err = json.Unmarshal([]byte(plan.Features), &planDetails); err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling plan features: %s", err)
 	}
 
 	ctx := context.Background()
@@ -92,7 +86,7 @@ func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDe
 		clusterId = userClusterId
 	}
 
-	numNodes, err := strconv.Atoi(planDetails["num_nodes"])
+	numNodes, err := strconv.Atoi(plan.ServiceProperties["num_nodes"])
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error converting num_nodes to int: %s", err)
 	}
@@ -111,7 +105,7 @@ func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDe
 		InstanceId:  params["name"],
 		ClusterId:   clusterId,
 		NumNodes:    int32(numNodes),
-		StorageType: StorageTypes[planDetails["storage_type"]],
+		StorageType: StorageTypes[plan.ServiceProperties["storage_type"]],
 		Zone:        zone,
 		DisplayName: displayName,
 	}

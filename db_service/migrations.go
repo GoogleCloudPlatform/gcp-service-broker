@@ -31,7 +31,7 @@ import (
 // runs schema migrations on the provided service broker database to get it up to date
 func RunMigrations(db *gorm.DB) error {
 
-	migrations := make([]func() error, 2)
+	migrations := make([]func() error, 3)
 
 	// initial migration - creates tables
 	migrations[0] = func() error {
@@ -204,6 +204,14 @@ func RunMigrations(db *gorm.DB) error {
 			}
 		}
 
+		return nil
+	}
+
+	// drops plan details table
+	migrations[2] = func() error {
+		if err := db.Exec(`DROP TABLE plan_details`).Error; err != nil {
+			return err
+		}
 		return nil
 	}
 

@@ -73,7 +73,7 @@ const SecondGenPricingPlan string = "PER_USE"
 //   - auto_resize (2nd gen only, defaults to false)
 //
 // for more information, see: https://cloud.google.com/sql/docs/admin-api/v1beta4/instances/insert
-func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	// validate parameters
 	var params map[string]string
 	var err error
@@ -90,17 +90,11 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 
 	instanceName := params["instance_name"]
 
-	// get plan parameters
-	var planDetails map[string]string
-	if err = json.Unmarshal([]byte(plan.Features), &planDetails); err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling plan features: %s", err)
-	}
-
 	// set default parameters or cast strings to proper values
 	firstGenTiers := []string{"d0", "d1", "d2", "d4", "d8", "d16", "d32"}
 	isFirstGen := false
 	for _, a := range firstGenTiers {
-		if a == strings.ToLower(planDetails["tier"]) {
+		if a == strings.ToLower(plan.ServiceProperties["tier"]) {
 			isFirstGen = true
 		}
 	}
@@ -147,8 +141,8 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 					AuthorizedNetworks: []*googlecloudsql.AclEntry{&openAcl},
 					Ipv4Enabled:        true,
 				},
-				Tier:        planDetails["tier"],
-				PricingPlan: planDetails["pricing_plan"],
+				Tier:        plan.ServiceProperties["tier"],
+				PricingPlan: plan.ServiceProperties["pricing_plan"],
 				BackupConfiguration: &googlecloudsql.BackupConfiguration{
 					Enabled:          backupsEnabled,
 					StartTime:        backupStartTime,
@@ -168,7 +162,7 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 				return models.ServiceInstanceDetails{}, fmt.Errorf("Error converting disk_size gb string to int: %s", err)
 			}
 		}
-		maxDiskSize, err := strconv.Atoi(planDetails["max_disk_size"])
+		maxDiskSize, err := strconv.Atoi(plan.ServiceProperties["max_disk_size"])
 		if err != nil {
 			return models.ServiceInstanceDetails{}, fmt.Errorf("Error converting max_disk_size gb string to int: %s", err)
 		}
@@ -209,7 +203,7 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 					AuthorizedNetworks: []*googlecloudsql.AclEntry{&openAcl},
 					Ipv4Enabled:        true,
 				},
-				Tier:           planDetails["tier"],
+				Tier:           plan.ServiceProperties["tier"],
 				DataDiskSizeGb: int64(diskSize),
 				LocationPreference: &googlecloudsql.LocationPreference{
 					Zone: params["zone"],
