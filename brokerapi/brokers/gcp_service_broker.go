@@ -203,9 +203,7 @@ func (gcpBroker *GCPServiceBroker) Services() []models.Service {
 }
 
 func (gcpBroker *GCPServiceBroker) GetPlanFromId(serviceId, planId string) (models.ServicePlan, error) {
-
-	cat := *gcpBroker.Catalog
-	for _, s := range cat {
+	for _, s := range *gcpBroker.Catalog {
 		if s.ID == serviceId {
 			for _, p := range s.Plans {
 				if p.ID == planId {
