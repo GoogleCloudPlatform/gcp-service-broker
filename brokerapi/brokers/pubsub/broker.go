@@ -23,21 +23,21 @@ import (
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"golang.org/x/net/context"
-	"net/http"
 
 	"code.cloudfoundry.org/lager"
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/db_service"
+	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/option"
 	"strconv"
 	"time"
 )
 
 type PubSubBroker struct {
-	Client    *http.Client
-	ProjectId string
-	Logger    lager.Logger
+	HttpConfig *jwt.Config
+	ProjectId  string
+	Logger     lager.Logger
 
 	broker_base.BrokerBase
 }
@@ -67,7 +67,8 @@ func (b *PubSubBroker) Provision(instanceId string, details models.ProvisionDeta
 
 	ctx := context.Background()
 	co := option.WithUserAgent(models.CustomUserAgent)
-	pubsubClient, err := googlepubsub.NewClient(ctx, b.ProjectId, co)
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
+	pubsubClient, err := googlepubsub.NewClient(ctx, b.ProjectId, co, ct)
 
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new pubsub client: %s", err)
@@ -132,8 +133,8 @@ func (b *PubSubBroker) Deprovision(instanceID string, details models.Deprovision
 	}
 
 	ctx := context.Background()
-
-	service, err := googlepubsub.NewClient(ctx, b.ProjectId)
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
+	service, err := googlepubsub.NewClient(ctx, b.ProjectId, ct)
 	if err != nil {
 		return fmt.Errorf("Error creating new pubsub client: %s", err)
 	}

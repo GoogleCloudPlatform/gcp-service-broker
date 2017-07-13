@@ -97,7 +97,7 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 	db_service.DbConnection.Model(&models.ServiceBindingCredentials{}).Where("binding_id = ?", params.bindingId).Count(&count)
 	Expect(count).To(Equal(1))
 
-	iamService, err := iam.New(gcpBroker.GCPClient)
+	iamService, err := iam.New(gcpBroker.HttpConfig.Client(context.Background()))
 	Expect(err).ToNot(HaveOccurred())
 	saService := iam.NewProjectsServiceAccountsService(iamService)
 	resourceName := "projects/" + gcpBroker.RootGCPCredentials.ProjectId + "/serviceAccounts/" + creds.Credentials.(map[string]string)["UniqueId"]
@@ -234,7 +234,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 		})
 
 		It("should have a default client", func() {
-			Expect(gcpBroker.GCPClient).NotTo(Equal(&http.Client{}))
+			Expect(gcpBroker.HttpConfig).NotTo(Equal(&http.Client{}))
 		})
 
 		It("should have loaded credentials correctly and have a project id", func() {
@@ -260,7 +260,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 	Describe("bigquery", func() {
 		It("can provision/bind/unbind/deprovision", func() {
-			service, err := googlebigquery.New(gcpBroker.GCPClient)
+			service, err := googlebigquery.New(gcpBroker.HttpConfig.Client(context.Background()))
 			Expect(err).NotTo(HaveOccurred())
 
 			params := &genericService{
@@ -303,7 +303,9 @@ var _ = Describe("LiveIntegrationTests", func() {
 		It("can provision/bind/unbind/deprovision", func() {
 
 			ctx := context.Background()
-			service, err := googlebigtable.NewInstanceAdminClient(ctx, gcpBroker.RootGCPCredentials.ProjectId)
+			co := option.WithUserAgent(models.CustomUserAgent)
+			ct := option.WithTokenSource(gcpBroker.HttpConfig.TokenSource(context.Background()))
+			service, err := googlebigtable.NewInstanceAdminClient(ctx, gcpBroker.RootGCPCredentials.ProjectId, co, ct)
 			Expect(err).NotTo(HaveOccurred())
 
 			params := &genericService{
@@ -334,7 +336,9 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 	Describe("cloud storage", func() {
 		It("can provision/bind/unbind/deprovision", func() {
-			service, err := googlestorage.NewClient(context.Background(), option.WithUserAgent(models.CustomUserAgent))
+			co := option.WithUserAgent(models.CustomUserAgent)
+			ct := option.WithTokenSource(gcpBroker.HttpConfig.TokenSource(context.Background()))
+			service, err := googlestorage.NewClient(context.Background(), co, ct)
 			Expect(err).NotTo(HaveOccurred())
 
 			params := &genericService{
@@ -367,7 +371,9 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 	Describe("pub sub", func() {
 		It("can provision/bind/unbind/deprovision", func() {
-			service, err := googlepubsub.NewClient(context.Background(), gcpBroker.RootGCPCredentials.ProjectId, option.WithUserAgent(models.CustomUserAgent))
+			co := option.WithUserAgent(models.CustomUserAgent)
+			ct := option.WithTokenSource(gcpBroker.HttpConfig.TokenSource(context.Background()))
+			service, err := googlepubsub.NewClient(context.Background(), gcpBroker.RootGCPCredentials.ProjectId, co, ct)
 			Expect(err).NotTo(HaveOccurred())
 
 			topic := service.Topic(instance_name)
@@ -419,7 +425,6 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	AfterEach(func() {
-		os.Remove(models.AppCredsFileName)
 		os.Remove("test.db")
 	})
 })

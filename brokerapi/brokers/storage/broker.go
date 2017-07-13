@@ -18,8 +18,6 @@
 package storage
 
 import (
-	"net/http"
-
 	googlestorage "cloud.google.com/go/storage"
 	"code.cloudfoundry.org/lager"
 	"encoding/json"
@@ -29,13 +27,14 @@ import (
 	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
 	"golang.org/x/net/context"
+	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/option"
 )
 
 type StorageBroker struct {
-	Client    *http.Client
-	ProjectId string
-	Logger    lager.Logger
+	HttpConfig *jwt.Config
+	ProjectId  string
+	Logger     lager.Logger
 
 	broker_base.BrokerBase
 }
@@ -70,7 +69,8 @@ func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDet
 	// make a new bucket
 	ctx := context.Background()
 	co := option.WithUserAgent(models.CustomUserAgent)
-	storageService, err := googlestorage.NewClient(ctx, co)
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
+	storageService, err := googlestorage.NewClient(ctx, co, ct)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new storage client: %s", err)
 	}
@@ -123,7 +123,8 @@ func (b *StorageBroker) Deprovision(instanceID string, details models.Deprovisio
 	}
 
 	ctx := context.Background()
-	storageService, err := googlestorage.NewClient(ctx)
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
+	storageService, err := googlestorage.NewClient(ctx, ct)
 	if err != nil {
 		return fmt.Errorf("Error creating storage client: %s", err)
 	}

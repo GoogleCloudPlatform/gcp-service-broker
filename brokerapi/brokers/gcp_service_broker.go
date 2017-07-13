@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"net/http"
 	"os"
 
 	"code.cloudfoundry.org/lager"
@@ -42,11 +41,12 @@ import (
 	"gcp-service-broker/brokerapi/brokers/storage"
 	"gcp-service-broker/db_service"
 	"gcp-service-broker/utils"
+	"golang.org/x/oauth2/jwt"
 )
 
 type GCPServiceBroker struct {
 	RootGCPCredentials *models.GCPCredentials
-	GCPClient          *http.Client
+	HttpConfig         *jwt.Config
 	Catalog            *[]models.Service
 	ServiceBrokerMap   map[string]models.ServiceBrokerHelper
 
@@ -79,16 +79,12 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 	}
 	self.RootGCPCredentials = &rootCreds
 
-	if err := utils.SetGCPCredsFromEnv(); err != nil {
-		return nil, fmt.Errorf("Error writing GCP credentials: %s", err)
-	}
-
 	// set up GCP client with root gcp credentials
-	client, err := utils.GetAuthedClient()
+	cfg, err := utils.GetAuthedConfig()
 	if err != nil {
 		return nil, fmt.Errorf("Error getting authorized http client: %s", err)
 	}
-	self.GCPClient = client
+	self.HttpConfig = cfg
 
 	// save catalog to broker object
 
@@ -99,35 +95,35 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 	self.Catalog = &cat
 
 	saManager := &account_managers.ServiceAccountManager{
-		GCPClient: self.GCPClient,
-		ProjectId: self.RootGCPCredentials.ProjectId,
+		HttpConfig: self.HttpConfig,
+		ProjectId:  self.RootGCPCredentials.ProjectId,
 	}
 
 	sqlManager := &account_managers.SqlAccountManager{
-		GCPClient: self.GCPClient,
-		ProjectId: self.RootGCPCredentials.ProjectId,
+		HttpConfig: self.HttpConfig,
+		ProjectId:  self.RootGCPCredentials.ProjectId,
 	}
 
 	// map service specific brokers to general broker
 	self.ServiceBrokerMap = map[string]models.ServiceBrokerHelper{
 		models.StorageName: &storage.StorageBroker{
-			Client:    self.GCPClient,
-			ProjectId: self.RootGCPCredentials.ProjectId,
-			Logger:    self.Logger,
+			HttpConfig: self.HttpConfig,
+			ProjectId:  self.RootGCPCredentials.ProjectId,
+			Logger:     self.Logger,
 			BrokerBase: broker_base.BrokerBase{
 				AccountManager: saManager,
 			},
 		},
 		models.PubsubName: &pubsub.PubSubBroker{
-			Client:    self.GCPClient,
-			ProjectId: self.RootGCPCredentials.ProjectId,
-			Logger:    self.Logger,
+			HttpConfig: self.HttpConfig,
+			ProjectId:  self.RootGCPCredentials.ProjectId,
+			Logger:     self.Logger,
 			BrokerBase: broker_base.BrokerBase{
 				AccountManager: saManager,
 			},
 		},
 		models.StackdriverDebuggerName: &stackdriver_debugger.StackdriverDebuggerBroker{
-			Client:                self.GCPClient,
+			HttpConfig:            self.HttpConfig,
 			ProjectId:             self.RootGCPCredentials.ProjectId,
 			Logger:                self.Logger,
 			ServiceAccountManager: saManager,
@@ -136,7 +132,7 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 			},
 		},
 		models.StackdriverTraceName: &stackdriver_trace.StackdriverTraceBroker{
-			Client:                self.GCPClient,
+			HttpConfig:            self.HttpConfig,
 			ProjectId:             self.RootGCPCredentials.ProjectId,
 			Logger:                self.Logger,
 			ServiceAccountManager: saManager,
@@ -145,39 +141,39 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 			},
 		},
 		models.BigqueryName: &bigquery.BigQueryBroker{
-			Client:    self.GCPClient,
-			ProjectId: self.RootGCPCredentials.ProjectId,
-			Logger:    self.Logger,
+			HttpConfig: self.HttpConfig,
+			ProjectId:  self.RootGCPCredentials.ProjectId,
+			Logger:     self.Logger,
 			BrokerBase: broker_base.BrokerBase{
 				AccountManager: saManager,
 			},
 		},
 		models.MlName: &api_service.ApiServiceBroker{
-			Client:    self.GCPClient,
-			ProjectId: self.RootGCPCredentials.ProjectId,
-			Logger:    self.Logger,
+			HttpConfig: self.HttpConfig,
+			ProjectId:  self.RootGCPCredentials.ProjectId,
+			Logger:     self.Logger,
 			BrokerBase: broker_base.BrokerBase{
 				AccountManager: saManager,
 			},
 		},
 		models.CloudsqlName: &cloudsql.CloudSQLBroker{
-			Client:         self.GCPClient,
+			HttpConfig:     self.HttpConfig,
 			ProjectId:      self.RootGCPCredentials.ProjectId,
 			Logger:         self.Logger,
 			AccountManager: sqlManager,
 		},
 		models.BigtableName: &bigtable.BigTableBroker{
-			Client:    self.GCPClient,
-			ProjectId: self.RootGCPCredentials.ProjectId,
-			Logger:    self.Logger,
+			HttpConfig: self.HttpConfig,
+			ProjectId:  self.RootGCPCredentials.ProjectId,
+			Logger:     self.Logger,
 			BrokerBase: broker_base.BrokerBase{
 				AccountManager: saManager,
 			},
 		},
 		models.SpannerName: &spanner.SpannerBroker{
-			Client:    self.GCPClient,
-			ProjectId: self.RootGCPCredentials.ProjectId,
-			Logger:    self.Logger,
+			HttpConfig: self.HttpConfig,
+			ProjectId:  self.RootGCPCredentials.ProjectId,
+			Logger:     self.Logger,
 			BrokerBase: broker_base.BrokerBase{
 				AccountManager: saManager,
 			},

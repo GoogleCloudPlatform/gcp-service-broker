@@ -12,7 +12,6 @@ import (
 	"gcp-service-broker/brokerapi/brokers/pubsub"
 	"gcp-service-broker/brokerapi/brokers/spanner"
 	"gcp-service-broker/db_service"
-	"net/http"
 	"os"
 
 	"code.cloudfoundry.org/lager"
@@ -22,6 +21,7 @@ import (
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"golang.org/x/oauth2/jwt"
 )
 
 var _ = Describe("Brokers", func() {
@@ -142,7 +142,7 @@ var _ = Describe("Brokers", func() {
 		})
 
 		It("should have a default client", func() {
-			Expect(gcpBroker.GCPClient).NotTo(Equal(&http.Client{}))
+			Expect(gcpBroker.HttpConfig).NotTo(Equal(&jwt.Config{}))
 		})
 
 		It("should have loaded credentials correctly and have a project id", func() {
@@ -468,7 +468,6 @@ var _ = Describe("Brokers", func() {
 	})
 
 	AfterEach(func() {
-		os.Remove(models.AppCredsFileName)
 		os.Remove("test.db")
 	})
 })
@@ -613,7 +612,6 @@ var _ = Describe("AccountManagers", func() {
 	})
 
 	AfterEach(func() {
-		os.Remove(models.AppCredsFileName)
 		os.Remove("test.db")
 	})
 

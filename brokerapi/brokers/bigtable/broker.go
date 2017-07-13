@@ -27,13 +27,13 @@ import (
 	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
 	"golang.org/x/net/context"
+	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/option"
-	"net/http"
 	"strconv"
 )
 
 type BigTableBroker struct {
-	Client         *http.Client
+	HttpConfig     *jwt.Config
 	ProjectId      string
 	Logger         lager.Logger
 	AccountManager models.AccountManager
@@ -75,7 +75,9 @@ func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDe
 
 	ctx := context.Background()
 	co := option.WithUserAgent(models.CustomUserAgent)
-	service, err := googlebigtable.NewInstanceAdminClient(ctx, b.ProjectId, co)
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
+
+	service, err := googlebigtable.NewInstanceAdminClient(ctx, b.ProjectId, co, ct)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating bigtable client: %s", err)
 	}
@@ -142,7 +144,8 @@ func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDe
 func (b *BigTableBroker) Deprovision(instanceID string, details models.DeprovisionDetails) error {
 	var err error
 	ctx := context.Background()
-	service, err := googlebigtable.NewInstanceAdminClient(ctx, b.ProjectId)
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
+	service, err := googlebigtable.NewInstanceAdminClient(ctx, b.ProjectId, ct)
 	if err != nil {
 		return fmt.Errorf("Error creating BigQuery client: %s", err)
 	}

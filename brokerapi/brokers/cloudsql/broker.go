@@ -24,17 +24,18 @@ import (
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
-	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"code.cloudfoundry.org/lager"
+	"context"
+	"golang.org/x/oauth2/jwt"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 )
 
 type CloudSQLBroker struct {
-	Client         *http.Client
+	HttpConfig     *jwt.Config
 	ProjectId      string
 	Logger         lager.Logger
 	AccountManager models.AccountManager
@@ -235,7 +236,7 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 	}
 
 	// init sqladmin service
-	sqlService, err := googlecloudsql.New(b.Client)
+	sqlService, err := googlecloudsql.New(b.HttpConfig.Client(context.Background()))
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new CloudSQL Client: %s", err)
 	}
@@ -285,7 +286,7 @@ func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string
 		return models.ErrInstanceDoesNotExist
 	}
 
-	sqlService, err := googlecloudsql.New(b.Client)
+	sqlService, err := googlecloudsql.New(b.HttpConfig.Client(context.Background()))
 	if err != nil {
 		return fmt.Errorf("Error creating new CloudSQL Client: %s", err)
 	}
@@ -445,7 +446,7 @@ func (b *CloudSQLBroker) PollOperation(instance models.ServiceInstanceDetails, o
 	var err error
 
 	// create operation service
-	sqlService, err := googlecloudsql.New(b.Client)
+	sqlService, err := googlecloudsql.New(b.HttpConfig.Client(context.Background()))
 	if err != nil {
 		return false, err
 	}
@@ -501,7 +502,7 @@ func (b *CloudSQLBroker) PollOperation(instance models.ServiceInstanceDetails, o
 // XXX: note that for this function in particular, we are being explicit to return errors from the google api exactly
 // as we get them, because further up the stack these errors will be evaluated differently and need to be preserved
 func (b *CloudSQLBroker) pollOperationUntilDone(op *googlecloudsql.Operation, projectId string) error {
-	sqlService, err := googlecloudsql.New(b.Client)
+	sqlService, err := googlecloudsql.New(b.HttpConfig.Client(context.Background()))
 	opsService := googlecloudsql.NewOperationsService(sqlService)
 	done := false
 	for done == false {
@@ -530,7 +531,7 @@ func (b *CloudSQLBroker) Deprovision(instanceId string, details models.Deprovisi
 		return models.ErrInstanceDoesNotExist
 	}
 
-	sqlService, err := googlecloudsql.New(b.Client)
+	sqlService, err := googlecloudsql.New(b.HttpConfig.Client(context.Background()))
 	if err != nil {
 		return fmt.Errorf("Error creating CloudSQL client: %s", err)
 	}
