@@ -21,13 +21,13 @@ import (
 	"gcp-service-broker/brokerapi/brokers/account_managers"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/models"
-	"net/http"
 
 	"code.cloudfoundry.org/lager"
+	"golang.org/x/oauth2/jwt"
 )
 
 type StackdriverDebuggerBroker struct {
-	Client                *http.Client
+	HttpConfig            *jwt.Config
 	ProjectId             string
 	Logger                lager.Logger
 	ServiceAccountManager *account_managers.ServiceAccountManager

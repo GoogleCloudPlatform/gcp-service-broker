@@ -32,6 +32,7 @@ import (
 	. "github.com/onsi/gomega"
 	"golang.org/x/net/context"
 	"google.golang.org/api/iam/v1"
+	"google.golang.org/api/option"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 	instancepb "google.golang.org/genproto/googleapis/spanner/admin/instance/v1"
 	"os"
@@ -121,7 +122,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 		var dbService *googlecloudsql.InstancesService
 		var sslService *googlecloudsql.SslCertsService
 		BeforeEach(func() {
-			sqlService, err := googlecloudsql.New(gcpBroker.GCPClient)
+			sqlService, err := googlecloudsql.New(gcpBroker.HttpConfig.Client(context.Background()))
 			Expect(err).NotTo(HaveOccurred())
 			dbService = googlecloudsql.NewInstancesService(sqlService)
 			sslService = googlecloudsql.NewSslCertsService(sqlService)
@@ -200,7 +201,10 @@ var _ = Describe("AsyncIntegrationTests", func() {
 
 		var client *googlespanner.InstanceAdminClient
 		BeforeEach(func() {
-			client, err = googlespanner.NewInstanceAdminClient(context.Background())
+			co := option.WithUserAgent(models.CustomUserAgent)
+			ct := option.WithTokenSource(gcpBroker.HttpConfig.TokenSource(context.Background()))
+			client, err = googlespanner.NewInstanceAdminClient(context.Background(), co, ct)
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("can provision/bind/unbind/deprovision", func() {
@@ -234,7 +238,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			credsMap := creds.Credentials.(map[string]string)
 			Expect(credsMap["credentials"]).ToNot(BeNil())
 
-			iamService, err := iam.New(gcpBroker.GCPClient)
+			iamService, err := iam.New(gcpBroker.HttpConfig.Client(context.Background()))
 			Expect(err).ToNot(HaveOccurred())
 			saService := iam.NewProjectsServiceAccountsService(iamService)
 			bindResourceName := "projects/" + gcpBroker.RootGCPCredentials.ProjectId + "/serviceAccounts/" + creds.Credentials.(map[string]string)["UniqueId"]
@@ -273,7 +277,6 @@ var _ = Describe("AsyncIntegrationTests", func() {
 	})
 
 	AfterEach(func() {
-		os.Remove(models.AppCredsFileName)
 		os.Remove("test.db")
 	})
 })

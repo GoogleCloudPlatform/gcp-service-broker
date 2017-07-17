@@ -23,8 +23,9 @@ import (
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/utils"
-	"net/http"
 
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2/jwt"
 	cloudres "google.golang.org/api/cloudresourcemanager/v1"
 	iam "google.golang.org/api/iam/v1"
 )
@@ -35,12 +36,14 @@ const saPrefix = "pcf-binding-"
 const projectResourcePrefix = "projects/"
 
 type ServiceAccountManager struct {
-	ProjectId string
-	GCPClient *http.Client
+	ProjectId  string
+	HttpConfig *jwt.Config
 }
 
 // creates a new service account for the given binding id with the role listed in details.Parameters["role"]
 func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+	client := sam.HttpConfig.Client(context.Background())
+
 	role, ok := details.Parameters["role"].(string)
 	if !ok {
 		return models.ServiceBindingCredentials{}, errors.New("Error getting role as string from request")
@@ -50,7 +53,7 @@ func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindi
 	var resourceName = projectResourcePrefix + sam.ProjectId
 	var err error
 
-	iamService, err := iam.New(sam.GCPClient)
+	iamService, err := iam.New(client)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating new iam service: %s", err)
 	}
@@ -71,7 +74,7 @@ func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindi
 
 	// adjust account permissions
 	// roles defined here: https://cloud.google.com/iam/docs/understanding-roles?hl=en_US#curated_roles
-	cloudresService, err := cloudres.New(sam.GCPClient)
+	cloudresService, err := cloudres.New(client)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating new cloud resource management service: %s", err)
 	}
@@ -145,7 +148,7 @@ func (sam *ServiceAccountManager) DeleteAccountFromGoogle(binding models.Service
 		return fmt.Errorf("Error unmarshalling credentials: %s", err)
 	}
 
-	iamService, err := iam.New(sam.GCPClient)
+	iamService, err := iam.New(sam.HttpConfig.Client(context.Background()))
 	if err != nil {
 		return fmt.Errorf("Error creating IAM service: %s", err)
 	}

@@ -27,14 +27,14 @@ import (
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
+	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/option"
 	instancepb "google.golang.org/genproto/googleapis/spanner/admin/instance/v1"
-	"net/http"
 	"strconv"
 )
 
 type SpannerBroker struct {
-	Client         *http.Client
+	HttpConfig     *jwt.Config
 	ProjectId      string
 	Logger         lager.Logger
 	AccountManager models.AccountManager
@@ -65,7 +65,9 @@ func (s *SpannerBroker) Provision(instanceId string, details models.ProvisionDet
 
 	// set up client
 
-	client, err := googlespanner.NewInstanceAdminClient(context.Background(), option.WithUserAgent(models.CustomUserAgent))
+	co := option.WithUserAgent(models.CustomUserAgent)
+	ct := option.WithTokenSource(s.HttpConfig.TokenSource(context.Background()))
+	client, err := googlespanner.NewInstanceAdminClient(context.Background(), co, ct)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating client: %s", err)
 	}
@@ -153,7 +155,8 @@ func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 		return true, nil
 	}
 
-	client, err := googlespanner.NewInstanceAdminClient(context.Background())
+	ct := option.WithTokenSource(s.HttpConfig.TokenSource(context.Background()))
+	client, err := googlespanner.NewInstanceAdminClient(context.Background(), ct)
 	if err != nil {
 		return false, fmt.Errorf("Error creating client: %s", err)
 	}
@@ -239,7 +242,9 @@ func (s *SpannerBroker) Deprovision(instanceID string, details models.Deprovisio
 	}
 
 	// set up client
-	client, err := googlespanner.NewInstanceAdminClient(context.Background(), option.WithUserAgent(models.CustomUserAgent))
+	co := option.WithUserAgent(models.CustomUserAgent)
+	ct := option.WithTokenSource(s.HttpConfig.TokenSource(context.Background()))
+	client, err := googlespanner.NewInstanceAdminClient(context.Background(), co, ct)
 	if err != nil {
 		return fmt.Errorf("Error creating client: %s", err)
 	}
