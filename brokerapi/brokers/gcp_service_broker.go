@@ -488,7 +488,6 @@ func GetCredentialsFromEnv() (models.GCPCredentials, error) {
 func getPlansFromEnv(envVar string) (map[string][]models.ServicePlan, error) {
 	servicePlans := make(map[string][]models.ServicePlan)
 
-	// get static plans
 	planJson := os.Getenv(envVar)
 	var plans []map[string]interface{}
 
@@ -501,7 +500,7 @@ func getPlansFromEnv(envVar string) (map[string][]models.ServicePlan, error) {
 		return map[string][]models.ServicePlan{}, fmt.Errorf("Error unmarshalling plan json %s", err)
 	}
 
-	// save plans to database and construct service id to plan list map
+	// construct service id to plan list map
 	for _, p := range plans {
 		serviceId := p["service_id"].(string)
 		planName := p["name"].(string)
@@ -540,41 +539,20 @@ func getPlansFromEnv(envVar string) (map[string][]models.ServicePlan, error) {
 	return servicePlans, nil
 }
 
-// pulls SERVICES, PLANS, and PRECONFIGURED_PLANS environment variables to construct catalog and save plans to db
+// pulls SERVICES, PLANS, and PRECONFIGURED_PLANS environment variables to construct catalog
 func InitCatalogFromEnv() ([]models.Service, error) {
 	var err error
 
-	// get static plans from catalog
-	servicePlans, err := getPlansFromEnv("PRECONFIGURED_PLANS")
-	if err != nil {
-		return []models.Service{}, err
-	}
+	servicePlans := make(map[string][]models.ServicePlan)
 
-	// set up cloudsql custom plans
-	cloudSQLPlans, err := getPlansFromEnv("CLOUDSQL_CUSTOM_PLANS")
-	if err != nil {
-		return []models.Service{}, err
-	}
-	for k, v := range cloudSQLPlans {
-		servicePlans[k] = v
-	}
-
-	// set up bigtable custom plans
-	bigtablePlans, err := getPlansFromEnv("BIGTABLE_CUSTOM_PLANS")
-	if err != nil {
-		return []models.Service{}, err
-	}
-	for k, v := range bigtablePlans {
-		servicePlans[k] = v
-	}
-
-	// set up spanner custom plans
-	spannerPlans, err := getPlansFromEnv("SPANNER_CUSTOM_PLANS")
-	if err != nil {
-		return []models.Service{}, err
-	}
-	for k, v := range spannerPlans {
-		servicePlans[k] = v
+	for _, varname := range []string{"PRECONFIGURED_PLANS", "CLOUDSQL_CUSTOM_PLANS", "BIGTABLE_CUSTOM_PLANS", "SPANNER_CUSTOM_PLANS"} {
+		varServicePlans, err := getPlansFromEnv(varname)
+		if err != nil {
+			return []models.Service{}, err
+		}
+		for k, v := range varServicePlans {
+			servicePlans[k] = v
+		}
 	}
 
 	// set up services
