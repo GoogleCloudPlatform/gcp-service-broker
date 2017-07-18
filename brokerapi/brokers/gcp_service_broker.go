@@ -485,16 +485,20 @@ func GetCredentialsFromEnv() (models.GCPCredentials, error) {
 	return g, nil
 }
 
-func getStaticPlans() (map[string][]models.ServicePlan, error) {
+func getPlansFromEnv(envVar string) (map[string][]models.ServicePlan, error) {
 	servicePlans := make(map[string][]models.ServicePlan)
 
 	// get static plans
-	planJson := os.Getenv("PRECONFIGURED_PLANS")
+	planJson := os.Getenv(envVar)
 	var plans []map[string]interface{}
+
+	if planJson == "" {
+		return map[string][]models.ServicePlan{}, nil
+	}
 
 	err := json.Unmarshal([]byte(planJson), &plans)
 	if err != nil {
-		return map[string][]models.ServicePlan{}, fmt.Errorf("Error unmarshalling preconfigured plan json %s", err)
+		return map[string][]models.ServicePlan{}, fmt.Errorf("Error unmarshalling plan json %s", err)
 	}
 
 	// save plans to database and construct service id to plan list map
@@ -536,86 +540,41 @@ func getStaticPlans() (map[string][]models.ServicePlan, error) {
 	return servicePlans, nil
 }
 
-func getDynamicPlans(envVarName string, translatePlanFunc func(details map[string]string) map[string]string) ([]models.ServicePlan, string, error) {
-	var err error
-	var serviceId string
-
-	var plansGenerated []models.ServicePlan
-	var dynamicPlans map[string]map[string]string
-	dynamicPlanJson := os.Getenv(envVarName)
-
-	if dynamicPlanJson != "" {
-		err = json.Unmarshal([]byte(dynamicPlanJson), &dynamicPlans)
-		if err != nil {
-			return []models.ServicePlan{}, "", fmt.Errorf("Error unmarshalling custom plan json %s", err)
-		}
-
-		// save custom plans to database and construct mapping
-		for planName, planDetails := range dynamicPlans {
-			serviceId = planDetails["service"]
-			planId, planIdOk := planDetails["id"]
-			if !planIdOk {
-				return []models.ServicePlan{}, "", fmt.Errorf("Error: plan ids are required. Plan %s needs an id.", planName)
-			}
-
-			// get service-specific plan service_properties from plan interface
-			serviceProperties := translatePlanFunc(planDetails)
-
-			plan := models.ServicePlan{
-				Name:        planName,
-				Description: planDetails["description"],
-				Metadata: &models.ServicePlanMetadata{
-					DisplayName: planDetails["display_name"],
-					Bullets:     []string{planDetails["description"], "For pricing information see https://cloud.google.com/pricing/#details"},
-				},
-				ID:                planId,
-				ServiceProperties: serviceProperties,
-			}
-
-			plansGenerated = append(plansGenerated, plan)
-		}
-
-	}
-	return plansGenerated, serviceId, nil
-}
-
 // pulls SERVICES, PLANS, and PRECONFIGURED_PLANS environment variables to construct catalog and save plans to db
 func InitCatalogFromEnv() ([]models.Service, error) {
 	var err error
 
 	// get static plans from catalog
-	servicePlans, err := getStaticPlans()
+	servicePlans, err := getPlansFromEnv("PRECONFIGURED_PLANS")
 	if err != nil {
 		return []models.Service{}, err
 	}
 
 	// set up cloudsql custom plans
-	cloudSQLPlans, cloudSQLServiceId, err := getDynamicPlans("CLOUDSQL_CUSTOM_PLANS", cloudsql.MapPlan)
+	cloudSQLPlans, err := getPlansFromEnv("CLOUDSQL_CUSTOM_PLANS")
 	if err != nil {
 		return []models.Service{}, err
 	}
-	servicePlans[cloudSQLServiceId] = append(servicePlans[cloudSQLServiceId], cloudSQLPlans...)
+	for k, v := range cloudSQLPlans {
+		servicePlans[k] = v
+	}
 
 	// set up bigtable custom plans
-	bigtablePlans, bigtableServiceId, err := getDynamicPlans("BIGTABLE_CUSTOM_PLANS", bigtable.MapPlan)
+	bigtablePlans, err := getPlansFromEnv("BIGTABLE_CUSTOM_PLANS")
 	if err != nil {
 		return []models.Service{}, err
 	}
-	servicePlans[bigtableServiceId] = append(servicePlans[bigtableServiceId], bigtablePlans...)
+	for k, v := range bigtablePlans {
+		servicePlans[k] = v
+	}
 
 	// set up spanner custom plans
-	spannerPlans, spannerServiceId, err := getDynamicPlans("SPANNER_CUSTOM_PLANS", spanner.MapPlan)
+	spannerPlans, err := getPlansFromEnv("SPANNER_CUSTOM_PLANS")
 	if err != nil {
 		return []models.Service{}, err
 	}
-	servicePlans[spannerServiceId] = append(servicePlans[spannerServiceId], spannerPlans...)
-
-	// get the ids of all plans in the current catalog
-	var currentPlanIds []string
-	for _, plans := range servicePlans {
-		for _, plan := range plans {
-			currentPlanIds = append(currentPlanIds, plan.ID)
-		}
+	for k, v := range spannerPlans {
+		servicePlans[k] = v
 	}
 
 	// set up services
@@ -630,7 +589,6 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 	}
 
 	// init catalog
-	// store plans
 	for _, s := range cat {
 
 		s.Plans = servicePlans[s.ID]

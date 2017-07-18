@@ -617,24 +617,3 @@ func (b *CloudSQLBroker) ProvisionsAsync() bool {
 func (b *CloudSQLBroker) DeprovisionsAsync() bool {
 	return true
 }
-
-type CloudSQLDynamicPlan struct {
-	Guid        string `json:"guid"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Tier        string `json:"tier"`
-	PricingPlan string `json:"pricing_plan"`
-	MaxDiskSize string `json:"max_disk_size"`
-	DisplayName string `json:"display_name"`
-	ServiceId   string `json:"service"`
-}
-
-func MapPlan(details map[string]string) map[string]string {
-
-	features := map[string]string{
-		"tier":          details["tier"],
-		"max_disk_size": details["max_disk_size"],
-		"pricing_plan":  details["pricing_plan"],
-	}
-	return features
-}

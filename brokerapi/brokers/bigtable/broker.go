@@ -155,22 +155,3 @@ func (b *BigTableBroker) Deprovision(instanceID string, details models.Deprovisi
 
 	return nil
 }
-
-type BigtableDynamicPlan struct {
-	Guid        string `json:"guid"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	NumNodes    string `json:"num_nodes"`
-	StorageType string `json:"storage_type"`
-	DisplayName string `json:"display_name"`
-	ServiceId   string `json:"service"`
-}
-
-func MapPlan(details map[string]string) map[string]string {
-
-	features := map[string]string{
-		"num_nodes":    details["num_nodes"],
-		"storage_type": details["storage_type"],
-	}
-	return features
-}

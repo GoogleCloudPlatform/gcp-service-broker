@@ -211,40 +211,43 @@ const PlanNoId = `[
 		"name": "default",
 		"display_name": "Default",
 		"description": "Stackdriver Trace default plan",
-		"features": ""
+		"service_properties": {}
 	}
 ]`
 
-const TestCloudSQLPlan = `{
-			"test_cloudsql_plan": {
+const TestCloudSQLPlan = `[{
 				"id": "test_cloudsql_plan",
 				"name": "test_cloudsql_plan",
 				"description": "test-cloudsql-plan",
-				"tier": "D4",
-				"pricing_plan": "PER_USE",
-				"max_disk_size": "20",
+				"service_properties": {
+					"tier": "D4",
+					"pricing_plan": "PER_USE",
+					"max_disk_size": "20"
+				},
 				"display_name": "test_cloudsql_plan",
-				"service": "4bc59b9a-8520-409f-85da-1c7552315863"
+				"service_id": "4bc59b9a-8520-409f-85da-1c7552315863"
 			}
-		}`
-const TestBigtablePlan = `{
-			"test_bigtable_plan": {
+		]`
+const TestBigtablePlan = `[{
 				"id": "test_bigtable_plan",
 				"name": "test_bigtable_plan",
 				"description": "test-bigtable-plan",
-				"storage_type": "SSD",
-				"num_nodes": "3",
+				"service_properties": {
+					"storage_type": "SSD",
+					"num_nodes": "3"
+				},
 				"display_name": "test_bigtable_plan",
-				"service": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
+				"service_id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
 			}
-		}`
-const TestSpannerPlan = `{
-			"test_spanner_plan": {
+		]`
+const TestSpannerPlan = `[{
 				"id": "test_spanner_plan",
 				"name": "test_spanner_plan",
 				"description": "test-spanner-plan",
-				"num_nodes": "3",
+				"service_properties": {
+					"num_nodes": "3"
+				},
 				"display_name": "test_spanner_plan",
-				"service": "51b3e27e-d323-49ce-8c5f-1211e6409e82"
+				"service_id": "51b3e27e-d323-49ce-8c5f-1211e6409e82"
 			}
-		}`
+		]`
