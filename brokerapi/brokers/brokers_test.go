@@ -213,7 +213,9 @@ var _ = Describe("Brokers", func() {
 
 		It("should update cloudsql custom plans with different names on startup", func() {
 
-			os.Setenv("CLOUDSQL_CUSTOM_PLANS", `[{
+			os.Setenv("CLOUDSQL_CUSTOM_PLANS", `
+			[
+				{
 					"id": "some-other-cloudsql-plan",
 					"name": "newPlan",
 					"description": "testplan",
@@ -247,7 +249,9 @@ var _ = Describe("Brokers", func() {
 
 		It("should update cloudsql custom plans with the same name on startup", func() {
 
-			os.Setenv("CLOUDSQL_CUSTOM_PLANS", `[{
+			os.Setenv("CLOUDSQL_CUSTOM_PLANS", `
+			[
+				{
 					"id": "some-other-cloudsql-plan",
 					"name": "test_plan",
 					"description": "testplan",
