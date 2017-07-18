@@ -129,3 +129,4 @@ any extra access details
 - plan ids are now required and will not be generated if not supplied.
 - changed custom plan id field name from `guid` to `id`
 - modified `"features"` plan config field name to `"service_properties"`
+- modified the formatting of custom plans to be consistent with that of preconfigured plans

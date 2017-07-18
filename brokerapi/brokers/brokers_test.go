@@ -213,18 +213,21 @@ var _ = Describe("Brokers", func() {
 
 		It("should update cloudsql custom plans with different names on startup", func() {
 
-			os.Setenv("CLOUDSQL_CUSTOM_PLANS", `{
-				"newPlan": {
+			os.Setenv("CLOUDSQL_CUSTOM_PLANS", `
+			[
+				{
 					"id": "some-other-cloudsql-plan",
 					"name": "newPlan",
 					"description": "testplan",
-					"tier": "D8",
-					"pricing_plan": "athing",
-					"max_disk_size": "15",
+					"service_properties": {
+						"tier": "D8",
+						"pricing_plan": "athing",
+						"max_disk_size": "15"
+					},
 					"display_name": "FOOBAR",
-					"service": "4bc59b9a-8520-409f-85da-1c7552315863"
+					"service_id": "4bc59b9a-8520-409f-85da-1c7552315863"
 				}
-			}`)
+			]`)
 
 			newBroker, err := brokers.New(logger)
 			Expect(err).ToNot(HaveOccurred())
@@ -246,18 +249,21 @@ var _ = Describe("Brokers", func() {
 
 		It("should update cloudsql custom plans with the same name on startup", func() {
 
-			os.Setenv("CLOUDSQL_CUSTOM_PLANS", `{
-				"test_plan": {
+			os.Setenv("CLOUDSQL_CUSTOM_PLANS", `
+			[
+				{
 					"id": "some-other-cloudsql-plan",
 					"name": "test_plan",
 					"description": "testplan",
-					"tier": "D8",
-					"pricing_plan": "athing",
-					"max_disk_size": "15",
+					"service_properties": {
+						"tier": "D8",
+						"pricing_plan": "athing",
+						"max_disk_size": "15"
+					},
 					"display_name": "FOOBAR",
-					"service": "4bc59b9a-8520-409f-85da-1c7552315863"
+					"service_id": "4bc59b9a-8520-409f-85da-1c7552315863"
 				}
-			}`)
+			]`)
 
 			newBroker, err := brokers.New(logger)
 			Expect(err).ToNot(HaveOccurred())

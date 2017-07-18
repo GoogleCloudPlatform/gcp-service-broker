@@ -272,20 +272,3 @@ func (s *SpannerBroker) ProvisionsAsync() bool {
 func (s *SpannerBroker) LastOperationWasDelete(instanceId string) (bool, error) {
 	return false, nil
 }
-
-type SpannerDynamicPlan struct {
-	Guid        string `json:"guid"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	NumNodes    string `json:"num_nodes"`
-	DisplayName string `json:"display_name"`
-	ServiceId   string `json:"service"`
-}
-
-func MapPlan(details map[string]string) map[string]string {
-
-	features := map[string]string{
-		"num_nodes": details["num_nodes"],
-	}
-	return features
-}
