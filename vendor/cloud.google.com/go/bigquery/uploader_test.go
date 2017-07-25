@@ -15,10 +15,12 @@
 package bigquery
 
 import (
-	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
 	"cloud.google.com/go/internal/pretty"
+	"cloud.google.com/go/internal/testutil"
 
 	"golang.org/x/net/context"
 )
@@ -35,27 +37,18 @@ func (ts testSaver) Save() (map[string]Value, string, error) {
 func TestRejectsNonValueSavers(t *testing.T) {
 	client := &Client{projectID: "project-id"}
 	u := Uploader{t: client.Dataset("dataset-id").Table("table-id")}
-
-	testCases := []struct {
-		src interface{}
-	}{
-		{
-			src: 1,
+	inputs := []interface{}{
+		1,
+		[]int{1, 2},
+		[]interface{}{
+			testSaver{ir: &insertionRow{"a", map[string]Value{"one": 1}}},
+			1,
 		},
-		{
-			src: []int{1, 2},
-		},
-		{
-			src: []interface{}{
-				testSaver{ir: &insertionRow{"a", map[string]Value{"one": 1}}},
-				1,
-			},
-		},
+		StructSaver{},
 	}
-
-	for _, tc := range testCases {
-		if err := u.Put(context.Background(), tc.src); err == nil {
-			t.Errorf("put value: %v; got nil, want error", tc.src)
+	for _, in := range inputs {
+		if err := u.Put(context.Background(), in); err == nil {
+			t.Errorf("put value: %v; got nil, want error", in)
 		}
 	}
 }
@@ -142,7 +135,7 @@ func TestInsertsData(t *testing.T) {
 				t.Errorf("expected successful Put of ValueSaver; got: %v", err)
 			}
 		}
-		if got, want := irr.rowBatches, tc.data; !reflect.DeepEqual(got, want) {
+		if got, want := irr.rowBatches, tc.data; !testutil.Equal(got, want) {
 			t.Errorf("got: %v, want: %v", got, want)
 		}
 	}
@@ -265,13 +258,16 @@ func TestValueSavers(t *testing.T) {
 			&StructSaver{Schema: schema, Struct: T{I: 1}},
 			&StructSaver{Schema: schema, Struct: &T{I: 2}},
 		}},
+		{&StructSaver{Struct: T{I: 3}, InsertID: "foo"},
+			[]ValueSaver{
+				&StructSaver{Schema: schema, Struct: T{I: 3}, InsertID: "foo"},
+			}},
 	} {
 		got, err := valueSavers(test.in)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !reflect.DeepEqual(got, test.want) {
-
+		if !testutil.Equal(got, test.want, cmp.AllowUnexported(testSaver{})) {
 			t.Errorf("%+v: got %v, want %v", test.in, pretty.Value(got), pretty.Value(test.want))
 		}
 		// Make sure Save is successful.

@@ -218,7 +218,7 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 				},
 				ActivationPolicy:  params["activation_policy"],
 				ReplicationType:   params["replication_type"],
-				StorageAutoResize: autoResize,
+				StorageAutoResize: &autoResize,
 			},
 			DatabaseVersion: params["version"],
 			Region:          params["region"],

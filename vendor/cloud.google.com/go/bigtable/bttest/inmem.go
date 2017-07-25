@@ -42,6 +42,7 @@ import (
 	"time"
 
 	"bytes"
+
 	emptypb "github.com/golang/protobuf/ptypes/empty"
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"golang.org/x/net/context"
@@ -118,7 +119,7 @@ func (s *server) CreateTable(ctx context.Context, req *btapb.CreateTableRequest)
 	s.mu.Lock()
 	if _, ok := s.tables[tbl]; ok {
 		s.mu.Unlock()
-		return nil, fmt.Errorf("table %q already exists", tbl)
+		return nil, grpc.Errorf(codes.AlreadyExists, "table %q already exists", tbl)
 	}
 	s.tables[tbl] = newTable(req)
 	s.mu.Unlock()
@@ -183,7 +184,7 @@ func (s *server) ModifyColumnFamilies(ctx context.Context, req *btapb.ModifyColu
 	for _, mod := range req.Modifications {
 		if create := mod.GetCreate(); create != nil {
 			if _, ok := tbl.families[mod.Id]; ok {
-				return nil, fmt.Errorf("family %q already exists", mod.Id)
+				return nil, grpc.Errorf(codes.AlreadyExists, "family %q already exists", mod.Id)
 			}
 			newcf := &columnFamily{
 				name:   req.Name + "/columnFamilies/" + mod.Id,
@@ -398,7 +399,9 @@ func filterRow(f *btpb.RowFilter, r *row) bool {
 	switch f := f.Filter.(type) {
 	case *btpb.RowFilter_Chain_:
 		for _, sub := range f.Chain.Filters {
-			filterRow(sub, r)
+			if !filterRow(sub, r) {
+				return false
+			}
 		}
 		return true
 	case *btpb.RowFilter_Interleave_:
@@ -456,6 +459,33 @@ func filterRow(f *btpb.RowFilter, r *row) bool {
 		if !rx.MatchString(r.key) {
 			return false
 		}
+	case *btpb.RowFilter_CellsPerRowLimitFilter:
+		// Grab the first n cells in the row.
+		lim := int(f.CellsPerRowLimitFilter)
+		for _, fam := range r.families {
+			for col, cs := range fam.cells {
+				if len(cs) > lim {
+					fam.cells[col] = cs[:lim]
+					return true
+				}
+				lim -= len(cs)
+			}
+		}
+		return true
+	case *btpb.RowFilter_CellsPerRowOffsetFilter:
+		// Skip the first n cells in the row.
+		offset := int(f.CellsPerRowOffsetFilter)
+		for _, fam := range r.families {
+			for col, cs := range fam.cells {
+				if offset > 0 && offset < len(cs) {
+					fam.cells[col] = cs[offset:]
+					offset = 0
+				} else {
+					offset -= len(cs)
+				}
+			}
+		}
+		return true
 	}
 
 	// Any other case, operate on a per-cell basis.
@@ -593,8 +623,8 @@ func (s *server) MutateRow(ctx context.Context, req *btpb.MutateRowRequest) (*bt
 	fs := tbl.columnFamilies()
 	r := tbl.mutableRow(string(req.RowKey))
 	r.mu.Lock()
+	defer tbl.resortRowIndex() // Make sure the row lock is released before this grabs the table lock
 	defer r.mu.Unlock()
-
 	if err := applyMutations(tbl, r, req.Mutations, fs); err != nil {
 		return nil, err
 	}
@@ -613,6 +643,7 @@ func (s *server) MutateRows(req *btpb.MutateRowsRequest, stream btpb.Bigtable_Mu
 
 	fs := tbl.columnFamilies()
 
+	defer tbl.resortRowIndex()
 	for i, entry := range req.Entries {
 		r := tbl.mutableRow(string(entry.RowKey))
 		r.mu.Lock()
@@ -667,6 +698,7 @@ func (s *server) CheckAndMutateRow(ctx context.Context, req *btpb.CheckAndMutate
 		muts = req.TrueMutations
 	}
 
+	defer tbl.resortRowIndex()
 	if err := applyMutations(tbl, r, muts, fs); err != nil {
 		return nil, err
 	}
@@ -1004,10 +1036,15 @@ func (t *table) mutableRow(row string) *row {
 		r = newRow(row)
 		t.rowIndex[row] = r
 		t.rows = append(t.rows, r)
-		sort.Sort(byRowKey(t.rows)) // yay, inefficient!
 	}
 	t.mu.Unlock()
 	return r
+}
+
+func (t *table) resortRowIndex() {
+	t.mu.Lock()
+	sort.Sort(byRowKey(t.rows))
+	t.mu.Unlock()
 }
 
 func (t *table) gc() {

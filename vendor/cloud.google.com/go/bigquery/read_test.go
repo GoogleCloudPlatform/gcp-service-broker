@@ -16,20 +16,19 @@ package bigquery
 
 import (
 	"errors"
-	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+
+	"cloud.google.com/go/internal/testutil"
+
 	"golang.org/x/net/context"
+	bq "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
 
 type readTabledataArgs struct {
 	conf *readTableConf
-	tok  string
-}
-
-type readQueryArgs struct {
-	conf *readQueryConf
 	tok  string
 }
 
@@ -41,7 +40,6 @@ type readServiceStub struct {
 
 	// arguments are recorded for later inspection.
 	readTabledataCalls []readTabledataArgs
-	readQueryCalls     []readQueryArgs
 
 	service
 }
@@ -55,13 +53,13 @@ func (s *readServiceStub) readValues(tok string) *readDataResult {
 
 	return result
 }
-func (s *readServiceStub) readTabledata(ctx context.Context, conf *readTableConf, token string) (*readDataResult, error) {
-	s.readTabledataCalls = append(s.readTabledataCalls, readTabledataArgs{conf, token})
-	return s.readValues(token), nil
+
+func (s *readServiceStub) waitForQuery(ctx context.Context, projectID, jobID string) (Schema, error) {
+	return nil, nil
 }
 
-func (s *readServiceStub) readQuery(ctx context.Context, conf *readQueryConf, token string) (*readDataResult, error) {
-	s.readQueryCalls = append(s.readQueryCalls, readQueryArgs{conf, token})
+func (s *readServiceStub) readTabledata(ctx context.Context, conf *readTableConf, token string) (*readDataResult, error) {
+	s.readTabledataCalls = append(s.readTabledataCalls, readTabledataArgs{conf, token})
 	return s.readValues(token), nil
 }
 
@@ -77,8 +75,13 @@ func TestRead(t *testing.T) {
 	queryJob := &Job{
 		projectID: "project-id",
 		jobID:     "job-id",
-		service:   service,
+		c:         c,
 		isQuery:   true,
+		destinationTable: &bq.TableReference{
+			ProjectId: "project-id",
+			DatasetId: "dataset-id",
+			TableId:   "table-id",
+		},
 	}
 
 	for _, readFunc := range []func() *RowIterator{
@@ -113,7 +116,7 @@ func TestRead(t *testing.T) {
 			service.values = tc.data
 			service.pageTokens = tc.pageTokens
 			if got, ok := collectValues(t, readFunc()); ok {
-				if !reflect.DeepEqual(got, tc.want) {
+				if !testutil.Equal(got, tc.want) {
 					t.Errorf("reading: got:\n%v\nwant:\n%v", got, tc.want)
 				}
 			}
@@ -156,55 +159,6 @@ func TestNoMoreValues(t *testing.T) {
 	}
 	if err := it.Next(&vals); err != iterator.Done {
 		t.Fatalf("Next: got: %v: want: iterator.Done", err)
-	}
-}
-
-// delayedReadStub simulates reading results from a query that has not yet
-// completed. Its readQuery method initially reports that the query job is not
-// yet complete. Subsequently, it proxies the request through to another
-// service stub.
-type delayedReadStub struct {
-	numDelays int
-
-	readServiceStub
-}
-
-func (s *delayedReadStub) readQuery(ctx context.Context, conf *readQueryConf, token string) (*readDataResult, error) {
-	if s.numDelays > 0 {
-		s.numDelays--
-		return nil, errIncompleteJob
-	}
-	return s.readServiceStub.readQuery(ctx, conf, token)
-}
-
-// TestIncompleteJob tests that an Iterator which reads from a query job will block until the job is complete.
-func TestIncompleteJob(t *testing.T) {
-	service := &delayedReadStub{
-		numDelays: 2,
-		readServiceStub: readServiceStub{
-			values: [][][]Value{{{1, 2}}},
-		},
-	}
-	queryJob := &Job{
-		projectID: "project-id",
-		jobID:     "job-id",
-		service:   service,
-		isQuery:   true,
-	}
-	it, err := queryJob.Read(context.Background())
-	if err != nil {
-		t.Fatalf("err calling Read: %v", err)
-	}
-	var got []Value
-	want := []Value{1, 2}
-	if err := it.Next(&got); err != nil {
-		t.Fatalf("Next: got: %v: want: nil", err)
-	}
-	if service.numDelays != 0 {
-		t.Errorf("remaining numDelays : got: %v want:0", service.numDelays)
-	}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("reading: got:\n%v\nwant:\n%v", got, want)
 	}
 }
 
@@ -259,7 +213,7 @@ func TestReadTabledataOptions(t *testing.T) {
 		tok: "",
 	}}
 
-	if !reflect.DeepEqual(s.readTabledataCalls, want) {
+	if !testutil.Equal(s.readTabledataCalls, want, cmp.AllowUnexported(readTabledataArgs{}, readTableConf{}, pagingConf{})) {
 		t.Errorf("reading: got:\n%v\nwant:\n%v", s.readTabledataCalls, want)
 	}
 }
@@ -272,8 +226,13 @@ func TestReadQueryOptions(t *testing.T) {
 	queryJob := &Job{
 		projectID: "project-id",
 		jobID:     "job-id",
-		service:   s,
+		c:         &Client{service: s},
 		isQuery:   true,
+		destinationTable: &bq.TableReference{
+			ProjectId: "project-id",
+			DatasetId: "dataset-id",
+			TableId:   "table-id",
+		},
 	}
 	it, err := queryJob.Read(context.Background())
 	if err != nil {
@@ -285,10 +244,11 @@ func TestReadQueryOptions(t *testing.T) {
 		t.Fatalf("Next: got: %v: want: nil", err)
 	}
 
-	want := []readQueryArgs{{
-		conf: &readQueryConf{
+	want := []readTabledataArgs{{
+		conf: &readTableConf{
 			projectID: "project-id",
-			jobID:     "job-id",
+			datasetID: "dataset-id",
+			tableID:   "table-id",
 			paging: pagingConf{
 				recordsPerRequest:    5,
 				setRecordsPerRequest: true,
@@ -297,7 +257,7 @@ func TestReadQueryOptions(t *testing.T) {
 		tok: "",
 	}}
 
-	if !reflect.DeepEqual(s.readQueryCalls, want) {
-		t.Errorf("reading: got:\n%v\nwant:\n%v", s.readQueryCalls, want)
+	if !testutil.Equal(s.readTabledataCalls, want, cmp.AllowUnexported(readTabledataArgs{}, readTableConf{}, pagingConf{})) {
+		t.Errorf("reading: got:\n%v\nwant:\n%v", s.readTabledataCalls, want)
 	}
 }

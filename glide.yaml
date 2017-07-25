@@ -31,6 +31,7 @@ import:
   - storage
   - spanner/admin/instance/apiv1
   - spanner/...
+- package: github.com/kelseyhightower/envconfig
 testImport:
 - package: github.com/onsi/ginkgo
   version: ~1.2.0

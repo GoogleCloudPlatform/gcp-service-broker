@@ -90,7 +90,7 @@ func (b *PubSubBroker) Provision(instanceId string, details models.ProvisionDeta
 	}
 
 	if sub_name, ok := params["subscription_name"]; ok {
-		var pushConfig *googlepubsub.PushConfig
+		var pushConfig googlepubsub.PushConfig
 		var ackDeadline = 10
 
 		if ackd, ok := params["ack_deadline"]; ok {
@@ -102,13 +102,19 @@ func (b *PubSubBroker) Provision(instanceId string, details models.ProvisionDeta
 
 		if isPush, ok := params["is_push"]; ok {
 			if isPush == "true" {
-				pushConfig = &googlepubsub.PushConfig{
+				pushConfig = googlepubsub.PushConfig{
 					Endpoint: params["endpoint"],
 				}
 			}
 		}
 
-		_, err = pubsubClient.CreateSubscription(ctx, sub_name, t, time.Duration(ackDeadline)*time.Second, pushConfig)
+		subsConfig := googlepubsub.SubscriptionConfig{
+			PushConfig:  pushConfig,
+			Topic:       t,
+			AckDeadline: time.Duration(ackDeadline) * time.Second,
+		}
+
+		_, err = pubsubClient.CreateSubscription(ctx, sub_name, subsConfig)
 		if err != nil {
 			return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating subscription: %s", err)
 		}
