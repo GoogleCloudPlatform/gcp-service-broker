@@ -1,8 +1,8 @@
-hash: e0ead3c87ed54032c68b42dda0c3356c7d5b1a88454634c0529368ecfa16a13c
-updated: 2017-07-25T14:50:23.947929129-07:00
+hash: 63f234cdd2e0e3cb3fcc6c916abfea7c6508a350224f2644ecfc3f3a2fea5158
+updated: 2017-07-25T16:04:09.159654888-07:00
 imports:
 - name: cloud.google.com/go
-  version: c6036dd8ca3967aae2271f06ea064e360956eba3
+  version: c687e443ccef6592a33739e1d732a6c839e33845
   subpackages:
   - bigquery
   - bigtable
@@ -155,6 +155,8 @@ imports:
   - status
   - tap
   - transport
+- name: gopkg.in/validator.v2
+  version: 07ffaad256c8e957050ad83d6472eb97d785013d
 testImports:
 - name: github.com/onsi/ginkgo
   version: 462326b1628e124b23f42e87a8f2750e3c4e2d24
