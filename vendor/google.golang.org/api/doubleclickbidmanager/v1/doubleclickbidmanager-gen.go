@@ -45,6 +45,12 @@ const apiName = "doubleclickbidmanager"
 const apiVersion = "v1"
 const basePath = "https://www.googleapis.com/doubleclickbidmanager/v1/"
 
+// OAuth2 scopes used by this API.
+const (
+	// View and manage your reports in DoubleClick Bid Manager
+	DoubleclickbidmanagerScope = "https://www.googleapis.com/auth/doubleclickbidmanager"
+)
+
 func New(client *http.Client) (*Service, error) {
 	if client == nil {
 		return nil, errors.New("client is nil")
@@ -58,10 +64,9 @@ func New(client *http.Client) (*Service, error) {
 }
 
 type Service struct {
-	client                    *http.Client
-	BasePath                  string // API endpoint base URL
-	UserAgent                 string // optional additional User-Agent fragment
-	GoogleClientHeaderElement string // client header fragment, for Google use only
+	client    *http.Client
+	BasePath  string // API endpoint base URL
+	UserAgent string // optional additional User-Agent fragment
 
 	Lineitems *LineitemsService
 
@@ -77,10 +82,6 @@ func (s *Service) userAgent() string {
 		return googleapi.UserAgent
 	}
 	return googleapi.UserAgent + " " + s.UserAgent
-}
-
-func (s *Service) clientHeader() string {
-	return gensupport.GoogleClientHeader("20170210", s.GoogleClientHeaderElement)
 }
 
 func NewLineitemsService(s *Service) *LineitemsService {
@@ -126,7 +127,6 @@ type DownloadLineItemsRequest struct {
 	//
 	// Possible values:
 	//   "EWF"
-	//   "SDF"
 	FileSpec string `json:"fileSpec,omitempty"`
 
 	// FilterIds: Ids of the specified filter type used to filter line items
@@ -314,6 +314,7 @@ type FilterPair struct {
 	//   "FILTER_AGE"
 	//   "FILTER_BRANDSAFE_CHANNEL_ID"
 	//   "FILTER_BROWSER"
+	//   "FILTER_BUDGET_SEGMENT_DESCRIPTION"
 	//   "FILTER_CAMPAIGN_DAILY_FREQUENCY"
 	//   "FILTER_CARRIER"
 	//   "FILTER_CHANNEL_ID"
@@ -539,6 +540,7 @@ type Parameters struct {
 	//   "FILTER_AGE"
 	//   "FILTER_BRANDSAFE_CHANNEL_ID"
 	//   "FILTER_BROWSER"
+	//   "FILTER_BUDGET_SEGMENT_DESCRIPTION"
 	//   "FILTER_CAMPAIGN_DAILY_FREQUENCY"
 	//   "FILTER_CARRIER"
 	//   "FILTER_CHANNEL_ID"
@@ -847,6 +849,7 @@ type Parameters struct {
 	//   "METRIC_PROFIT_VIEWABLE_ECPM_ADVERTISER"
 	//   "METRIC_PROFIT_VIEWABLE_ECPM_PARTNER"
 	//   "METRIC_PROFIT_VIEWABLE_ECPM_USD"
+	//   "METRIC_REACH_COOKIE_FREQUENCY"
 	//   "METRIC_REACH_COOKIE_REACH"
 	//   "METRIC_REVENUE_ADVERTISER"
 	//   "METRIC_REVENUE_ECPAPC_ADVERTISER"
@@ -1683,7 +1686,6 @@ func (c *LineitemsDownloadlineitemsCall) doRequest(alt string) (*http.Response, 
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.downloadlineitemsrequest)
 	if err != nil {
@@ -1745,7 +1747,10 @@ func (c *LineitemsDownloadlineitemsCall) Do(opts ...googleapi.CallOption) (*Down
 	//   },
 	//   "response": {
 	//     "$ref": "DownloadLineItemsResponse"
-	//   }
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/doubleclickbidmanager"
+	//   ]
 	// }
 
 }
@@ -1798,7 +1803,6 @@ func (c *LineitemsUploadlineitemsCall) doRequest(alt string) (*http.Response, er
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.uploadlineitemsrequest)
 	if err != nil {
@@ -1860,7 +1864,10 @@ func (c *LineitemsUploadlineitemsCall) Do(opts ...googleapi.CallOption) (*Upload
 	//   },
 	//   "response": {
 	//     "$ref": "UploadLineItemsResponse"
-	//   }
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/doubleclickbidmanager"
+	//   ]
 	// }
 
 }
@@ -1913,7 +1920,6 @@ func (c *QueriesCreatequeryCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.query)
 	if err != nil {
@@ -1975,7 +1981,10 @@ func (c *QueriesCreatequeryCall) Do(opts ...googleapi.CallOption) (*Query, error
 	//   },
 	//   "response": {
 	//     "$ref": "Query"
-	//   }
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/doubleclickbidmanager"
+	//   ]
 	// }
 
 }
@@ -2029,7 +2038,6 @@ func (c *QueriesDeletequeryCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "query/{queryId}")
@@ -2070,7 +2078,10 @@ func (c *QueriesDeletequeryCall) Do(opts ...googleapi.CallOption) error {
 	//       "type": "string"
 	//     }
 	//   },
-	//   "path": "query/{queryId}"
+	//   "path": "query/{queryId}",
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/doubleclickbidmanager"
+	//   ]
 	// }
 
 }
@@ -2134,7 +2145,6 @@ func (c *QueriesGetqueryCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -2206,7 +2216,10 @@ func (c *QueriesGetqueryCall) Do(opts ...googleapi.CallOption) (*Query, error) {
 	//   "path": "query/{queryId}",
 	//   "response": {
 	//     "$ref": "Query"
-	//   }
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/doubleclickbidmanager"
+	//   ]
 	// }
 
 }
@@ -2268,7 +2281,6 @@ func (c *QueriesListqueriesCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -2325,7 +2337,10 @@ func (c *QueriesListqueriesCall) Do(opts ...googleapi.CallOption) (*ListQueriesR
 	//   "path": "queries",
 	//   "response": {
 	//     "$ref": "ListQueriesResponse"
-	//   }
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/doubleclickbidmanager"
+	//   ]
 	// }
 
 }
@@ -2380,7 +2395,6 @@ func (c *QueriesRunqueryCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.runqueryrequest)
 	if err != nil {
@@ -2429,7 +2443,10 @@ func (c *QueriesRunqueryCall) Do(opts ...googleapi.CallOption) error {
 	//   "path": "query/{queryId}",
 	//   "request": {
 	//     "$ref": "RunQueryRequest"
-	//   }
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/doubleclickbidmanager"
+	//   ]
 	// }
 
 }
@@ -2493,7 +2510,6 @@ func (c *ReportsListreportsCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -2565,7 +2581,10 @@ func (c *ReportsListreportsCall) Do(opts ...googleapi.CallOption) (*ListReportsR
 	//   "path": "queries/{queryId}/reports",
 	//   "response": {
 	//     "$ref": "ListReportsResponse"
-	//   }
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/doubleclickbidmanager"
+	//   ]
 	// }
 
 }
@@ -2618,7 +2637,6 @@ func (c *SdfDownloadCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.downloadrequest)
 	if err != nil {
@@ -2680,7 +2698,10 @@ func (c *SdfDownloadCall) Do(opts ...googleapi.CallOption) (*DownloadResponse, e
 	//   },
 	//   "response": {
 	//     "$ref": "DownloadResponse"
-	//   }
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/doubleclickbidmanager"
+	//   ]
 	// }
 
 }

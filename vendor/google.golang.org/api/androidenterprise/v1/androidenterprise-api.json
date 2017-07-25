@@ -1,12 +1,12 @@
 {
  "kind": "discovery#restDescription",
- "etag": "\"tbys6C40o18GZwyMen5GMkdK-3s/7Hat7OD71pyaIh88VMr8fQ27dGA\"",
+ "etag": "\"YWOzh2SDasdU84ArJnpYek-OMdg/Eo4yAE5hsqiZm3AyzEBz2cSs7e4\"",
  "discoveryVersion": "v1",
  "id": "androidenterprise:v1",
  "name": "androidenterprise",
  "canonicalName": "Android Enterprise",
  "version": "v1",
- "revision": "20170215",
+ "revision": "20170531",
  "title": "Google Play EMM API",
  "description": "Manages the deployment of apps to Android for Work users.",
  "ownerDomain": "google.com",
@@ -311,7 +311,7 @@
     },
     "managementType": {
      "type": "string",
-     "description": "Identifies the extent to which the device is controlled by a managed Google Play EMM in various deployment configurations.\n\nPossible values include: \n- \"managedDevice\", a device that has the EMM's device policy controller (DPC) as the device owner, \n- \"managedProfile\", a device that has a profile managed by the DPC (DPC is profile owner) in addition to a separate, personal profile that is unavailable to the DPC, \n- \"containerApp\", a device running the container App. The container App is managed by the DPC, \n- \"unmanagedProfile\", a device that has been allowed (by the domain's admin, using the Admin Console to enable the privilege) to use managed Google Play, but the profile is itself not owned by a DPC."
+     "description": "Identifies the extent to which the device is controlled by a managed Google Play EMM in various deployment configurations.\n\nPossible values include: \n- \"managedDevice\", a device that has the EMM's device policy controller (DPC) as the device owner. \n- \"managedProfile\", a device that has a profile managed by the DPC (DPC is profile owner) in addition to a separate, personal profile that is unavailable to the DPC. \n- \"containerApp\", no longer used (deprecated). \n- \"unmanagedProfile\", a device that has been allowed (by the domain's admin, using the Admin Console to enable the privilege) to use managed Google Play, but the profile is itself not owned by a DPC."
     }
    }
   },
@@ -501,6 +501,10 @@
      "type": "integer",
      "description": "The number of purchased licenses (possibly in multiple purchases). If this field is omitted, then there is no limit on the number of licenses that can be provisioned (for example, if the acquisition kind is \"free\").",
      "format": "int32"
+    },
+    "permissions": {
+     "type": "string",
+     "description": "The permission approval status of the product. This field is only set if the product is approved. Possible states are: \n- \"currentApproved\", the current set of permissions is approved, but additional permissions will require the administrator to reapprove the product (If the product was approved without specifying the approved permissions setting, then this is the default behavior.), \n- \"needsReapproval\", the product has unapproved permissions. No additional product licenses can be assigned until the product is reapproved, \n- \"allCurrentAndFutureApproved\", the current permissions are approved and any future permission updates will be automatically approved without administrator review."
     },
     "productId": {
      "type": "string",
@@ -822,6 +826,10 @@
      "$ref": "NewPermissionsEvent",
      "description": "Notifications about new app permissions."
     },
+    "notificationType": {
+     "type": "string",
+     "description": "Type of the notification."
+    },
     "productApprovalEvent": {
      "$ref": "ProductApprovalEvent",
      "description": "Notifications about changes to a product's approval status."
@@ -945,7 +953,7 @@
     },
     "requiresContainerApp": {
      "type": "boolean",
-     "description": "Whether this app can only be installed on devices using the Android container app."
+     "description": "Deprecated."
     },
     "smallIconUrl": {
      "type": "string",
@@ -1048,7 +1056,7 @@
     },
     "productSetBehavior": {
      "type": "string",
-     "description": "The interpretation of this product set. \"unknown\" should never be sent and is ignored if received. \"whitelist\" means that this product set constitutes a whitelist. \"includeAll\" means that all products are accessible, including products that are approved, products with revoked approval, and products that have never been approved. If the value is \"includeAll\", the value of the productId field is therefore ignored. If a value is not supplied, it is interpreted to be \"whitelist\" for backwards compatibility."
+     "description": "The interpretation of this product set. \"unknown\" should never be sent and is ignored if received. \"whitelist\" means that the user is entitled to access the product set. \"includeAll\" means that all products are accessible, including products that are approved, products with revoked approval, and products that have never been approved. \"allApproved\" means that the user is entitled to access all products that are approved for the enterprise. If the value is \"allApproved\" or \"includeAll\", the productId field is ignored. If no value is provided, it is interpreted as \"whitelist\" for backwards compatibility."
     }
    }
   },
@@ -1059,6 +1067,10 @@
     "approvalUrlInfo": {
      "$ref": "ApprovalUrlInfo",
      "description": "The approval URL that was shown to the user. Only the permissions shown to the user with that URL will be accepted, which may not be the product's entire set of permissions. For example, the URL may only display new permissions from an update after the product was approved, or not include new permissions if the product was updated since the URL was generated."
+    },
+    "approvedPermissions": {
+     "type": "string",
+     "description": "Sets how new permission requests for the product are handled. \"allPermissions\" automatically approves all current and future permissions for the product. \"currentPermissionsOnly\" approves the current set of permissions for the product, but any future permissions added through updates will require manual reapproval. If not specified, only the current set of permissions will be approved."
     }
    }
   },
@@ -1226,7 +1238,7 @@
    "properties": {
     "homepageId": {
      "type": "string",
-     "description": "The ID of the store page to be used as the homepage. The homepage will be used as the first page shown in the managed Google Play store.\n\nIf a homepage has not been set, the Play store shown on devices will be empty. Not specifying a homepage on a store layout effectively empties the store.\n\nIf there exists at least one page, this field must be set to the ID of a valid page."
+     "description": "The ID of the store page to be used as the homepage. The homepage is the first page shown in the managed Google Play Store.\n\nNot specifying a homepage is equivalent to setting the store layout type to \"basic\"."
     },
     "kind": {
      "type": "string",
@@ -1235,7 +1247,7 @@
     },
     "storeLayoutType": {
      "type": "string",
-     "description": "The store layout type. By default, this value is set to \"basic\". If set to \"custom\", \"homepageId\" must be specified. If set to \"basic\", the layout will consist of all approved apps accessible by the user, split in pages of 100 each; in this case, \"homepageId\" must not be specified. The \"basic\" setting takes precedence over any existing collections setup for this enterprise (if any). Should the enterprise use collectionViewers for controlling access rights, these will still be respected."
+     "description": "The store layout type. By default, this value is set to \"basic\" if the homepageId field is not set, and to \"custom\" otherwise. If set to \"basic\", the layout will consist of all approved apps that have been whitelisted for the user."
     }
    }
   },
@@ -1750,7 +1762,7 @@
      "id": "androidenterprise.enterprises.getStoreLayout",
      "path": "enterprises/{enterpriseId}/storeLayout",
      "httpMethod": "GET",
-     "description": "Returns the store layout for the enterprise. If the store layout has not been set, or if the store layout has no homepageId set, returns a NOT_FOUND error.",
+     "description": "Returns the store layout for the enterprise. If the store layout has not been set, returns \"basic\" as the store layout type and no homepage.",
      "parameters": {
       "enterpriseId": {
        "type": "string",
@@ -1898,7 +1910,7 @@
      "id": "androidenterprise.enterprises.setStoreLayout",
      "path": "enterprises/{enterpriseId}/storeLayout",
      "httpMethod": "PUT",
-     "description": "Sets the store layout for the enterprise. By default, storeLayoutType is set to \"basic\" and the basic store layout is enabled. The basic layout only contains apps approved by the admin, and that have been added to the available product set for a user (using the  setAvailableProductSet call). Apps on the page are sorted in order of their product ID value. If you create a custom store layout (by setting storeLayoutType = \"custom\"), the basic store layout is disabled.",
+     "description": "Sets the store layout for the enterprise. By default, storeLayoutType is set to \"basic\" and the basic store layout is enabled. The basic layout only contains apps approved by the admin, and that have been added to the available product set for a user (using the  setAvailableProductSet call). Apps on the page are sorted in order of their product ID value. If you create a custom store layout (by setting storeLayoutType = \"custom\" and setting a homepage), the basic store layout is disabled.",
      "parameters": {
       "enterpriseId": {
        "type": "string",

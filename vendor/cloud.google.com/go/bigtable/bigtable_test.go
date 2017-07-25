@@ -308,6 +308,17 @@ func TestClientIntegration(t *testing.T) {
 			filter: InterleaveFilters(ColumnFilter(".*g.*"), ColumnFilter(".*g.*")),
 			want:   "jadams-gwashington-1,jadams-gwashington-1,tjefferson-gwashington-1,tjefferson-gwashington-1",
 		},
+		{
+			desc: "read with a RowRangeList and no filter",
+			rr:   RowRangeList{NewRange("gargamel", "hubbard"), InfiniteRange("wmckinley")},
+			want: "gwashington-jadams-1,wmckinley-tjefferson-1",
+		},
+		{
+			desc:   "chain that excludes rows and matches nothing, in a condition",
+			rr:     RowRange{},
+			filter: ConditionFilter(ChainFilters(ColumnFilter(".*j.*"), ColumnFilter(".*mckinley.*")), StripValueFilter(), nil),
+			want:   "",
+		},
 	}
 	for _, tc := range readTests {
 		var opts []ReadOption
@@ -478,6 +489,29 @@ func TestClientIntegration(t *testing.T) {
 	}}
 	if !reflect.DeepEqual(r, wantRow) {
 		t.Errorf("Cell with multiple versions and LatestNFilter(2),\n got %v\nwant %v", r, wantRow)
+	}
+	// Check cell offset / limit
+	r, err = tbl.ReadRow(ctx, "testrow", RowFilter(CellsPerRowLimitFilter(3)))
+	if err != nil {
+		t.Fatalf("Reading row: %v", err)
+	}
+	wantRow = Row{"ts": []ReadItem{
+		{Row: "testrow", Column: "ts:col", Timestamp: 3000, Value: []byte("val-3")},
+		{Row: "testrow", Column: "ts:col", Timestamp: 2000, Value: []byte("val-2")},
+		{Row: "testrow", Column: "ts:col", Timestamp: 1000, Value: []byte("val-1")},
+	}}
+	if !reflect.DeepEqual(r, wantRow) {
+		t.Errorf("Cell with multiple versions and CellsPerRowLimitFilter(3),\n got %v\nwant %v", r, wantRow)
+	}
+	r, err = tbl.ReadRow(ctx, "testrow", RowFilter(CellsPerRowOffsetFilter(3)))
+	if err != nil {
+		t.Fatalf("Reading row: %v", err)
+	}
+	wantRow = Row{"ts": []ReadItem{
+		{Row: "testrow", Column: "ts:col", Timestamp: 0, Value: []byte("val-0")},
+	}}
+	if !reflect.DeepEqual(r, wantRow) {
+		t.Errorf("Cell with multiple versions and CellsPerRowOffsetFilter(3),\n got %v\nwant %v", r, wantRow)
 	}
 	// Check timestamp range filtering (with truncation)
 	r, err = tbl.ReadRow(ctx, "testrow", RowFilter(TimestampRangeFilterMicros(1001, 3000)))

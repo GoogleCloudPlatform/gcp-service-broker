@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/civil"
-	"github.com/golang/protobuf/proto"
 	proto3 "github.com/golang/protobuf/ptypes/struct"
 	sppb "google.golang.org/genproto/googleapis/spanner/v1"
 )
@@ -74,45 +73,51 @@ func TestEncodeValue(t *testing.T) {
 		// STRING / STRING ARRAY
 		{"abc", stringProto("abc"), tString},
 		{NullString{"abc", true}, stringProto("abc"), tString},
-		{NullString{"abc", false}, nullProto(), nil},
+		{NullString{"abc", false}, nullProto(), tString},
+		{[]string(nil), nullProto(), listType(tString)},
 		{[]string{"abc", "bcd"}, listProto(stringProto("abc"), stringProto("bcd")), listType(tString)},
 		{[]NullString{{"abcd", true}, {"xyz", false}}, listProto(stringProto("abcd"), nullProto()), listType(tString)},
 		// BYTES / BYTES ARRAY
 		{[]byte("foo"), bytesProto([]byte("foo")), tBytes},
-		{[]byte(nil), nullProto(), nil},
+		{[]byte(nil), nullProto(), tBytes},
 		{[][]byte{nil, []byte("ab")}, listProto(nullProto(), bytesProto([]byte("ab"))), listType(tBytes)},
-		{[][]byte(nil), nullProto(), nil},
+		{[][]byte(nil), nullProto(), listType(tBytes)},
 		// INT64 / INT64 ARRAY
 		{7, intProto(7), tInt},
+		{[]int(nil), nullProto(), listType(tInt)},
 		{[]int{31, 127}, listProto(intProto(31), intProto(127)), listType(tInt)},
 		{int64(81), intProto(81), tInt},
+		{[]int64(nil), nullProto(), listType(tInt)},
 		{[]int64{33, 129}, listProto(intProto(33), intProto(129)), listType(tInt)},
 		{NullInt64{11, true}, intProto(11), tInt},
-		{NullInt64{11, false}, nullProto(), nil},
+		{NullInt64{11, false}, nullProto(), tInt},
 		{[]NullInt64{{35, true}, {131, false}}, listProto(intProto(35), nullProto()), listType(tInt)},
 		// BOOL / BOOL ARRAY
 		{true, boolProto(true), tBool},
 		{NullBool{true, true}, boolProto(true), tBool},
-		{NullBool{true, false}, nullProto(), nil},
+		{NullBool{true, false}, nullProto(), tBool},
 		{[]bool{true, false}, listProto(boolProto(true), boolProto(false)), listType(tBool)},
 		{[]NullBool{{true, true}, {true, false}}, listProto(boolProto(true), nullProto()), listType(tBool)},
 		// FLOAT64 / FLOAT64 ARRAY
 		{3.14, floatProto(3.14), tFloat},
 		{NullFloat64{3.1415, true}, floatProto(3.1415), tFloat},
 		{NullFloat64{math.Inf(1), true}, floatProto(math.Inf(1)), tFloat},
-		{NullFloat64{3.14159, false}, nullProto(), nil},
+		{NullFloat64{3.14159, false}, nullProto(), tFloat},
+		{[]float64(nil), nullProto(), listType(tFloat)},
 		{[]float64{3.141, 0.618, math.Inf(-1)}, listProto(floatProto(3.141), floatProto(0.618), floatProto(math.Inf(-1))), listType(tFloat)},
 		{[]NullFloat64{{3.141, true}, {0.618, false}}, listProto(floatProto(3.141), nullProto()), listType(tFloat)},
 		// TIMESTAMP / TIMESTAMP ARRAY
 		{t1, timeProto(t1), tTime},
 		{NullTime{t1, true}, timeProto(t1), tTime},
-		{NullTime{t1, false}, nullProto(), nil},
+		{NullTime{t1, false}, nullProto(), tTime},
+		{[]time.Time(nil), nullProto(), listType(tTime)},
 		{[]time.Time{t1, t2, t3, t4}, listProto(timeProto(t1), timeProto(t2), timeProto(t3), timeProto(t4)), listType(tTime)},
 		{[]NullTime{{t1, true}, {t1, false}}, listProto(timeProto(t1), nullProto()), listType(tTime)},
 		// DATE / DATE ARRAY
 		{d1, dateProto(d1), tDate},
 		{NullDate{d1, true}, dateProto(d1), tDate},
-		{NullDate{civil.Date{}, false}, nullProto(), nil},
+		{NullDate{civil.Date{}, false}, nullProto(), tDate},
+		{[]civil.Date(nil), nullProto(), listType(tDate)},
 		{[]civil.Date{d1, d2}, listProto(dateProto(d1), dateProto(d2)), listType(tDate)},
 		{[]NullDate{{d1, true}, {civil.Date{}, false}}, listProto(dateProto(d1), nullProto()), listType(tDate)},
 		// GenericColumnValue
@@ -469,13 +474,8 @@ func TestGenericColumnValue(t *testing.T) {
 		{GenericColumnValue{listType(intType()), listProto(intProto(91), nullProto(), intProto(87))}, []NullInt64{{91, true}, {}, {87, true}}, false},
 		{GenericColumnValue{intType(), intProto(42)}, GenericColumnValue{intType(), intProto(42)}, false}, // trippy! :-)
 	} {
-		// We take a copy and mutate because we're paranoid about immutability.
-		inCopy := GenericColumnValue{
-			Type:  proto.Clone(test.in.Type).(*sppb.Type),
-			Value: proto.Clone(test.in.Value).(*proto3.Value),
-		}
 		gotp := reflect.New(reflect.TypeOf(test.want))
-		if err := inCopy.Decode(gotp.Interface()); err != nil {
+		if err := test.in.Decode(gotp.Interface()); err != nil {
 			if !test.fail {
 				t.Errorf("cannot decode %v to %v: %v", test.in, test.want, err)
 			}
@@ -484,31 +484,15 @@ func TestGenericColumnValue(t *testing.T) {
 		if test.fail {
 			t.Errorf("decoding %v to %v succeeds unexpectedly", test.in, test.want)
 		}
-		// mutations to inCopy should be invisible to gotp.
-		inCopy.Type.Code = sppb.TypeCode_TIMESTAMP
-		inCopy.Value.Kind = &proto3.Value_NumberValue{NumberValue: 999}
-		got := reflect.Indirect(gotp).Interface()
-		if !reflect.DeepEqual(got, test.want) {
-			t.Errorf("unexpected decode result - got %v, want %v", got, test.want)
-		}
 
 		// Test we can go backwards as well.
-		v, err := NewGenericColumnValue(test.want)
+		v, err := newGenericColumnValue(test.want)
 		if err != nil {
 			t.Errorf("NewGenericColumnValue failed: %v", err)
 			continue
 		}
 		if !reflect.DeepEqual(*v, test.in) {
 			t.Errorf("unexpected encode result - got %v, want %v", v, test.in)
-		}
-		// If want is a GenericColumnValue, mutate its underlying value to validate
-		// we have taken a deep copy.
-		if gcv, ok := test.want.(GenericColumnValue); ok {
-			gcv.Type.Code = sppb.TypeCode_TIMESTAMP
-			gcv.Value.Kind = &proto3.Value_NumberValue{NumberValue: 999}
-			if !reflect.DeepEqual(*v, test.in) {
-				t.Errorf("expected deep copy - got %v, want %v", v, test.in)
-			}
 		}
 	}
 }
@@ -608,4 +592,14 @@ func encodeArrayReflect(a interface{}) (*proto3.Value, error) {
 		}
 	}
 	return listProto(vs...), nil
+}
+
+func BenchmarkDecodeGeneric(b *testing.B) {
+	v := stringProto("test")
+	t := stringType()
+	var g GenericColumnValue
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		decodeValue(v, t, &g)
+	}
 }
