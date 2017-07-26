@@ -130,3 +130,5 @@ any extra access details
 - changed custom plan id field name from `guid` to `id`
 - modified `"features"` plan config field name to `"service_properties"`
 - modified the formatting of custom plans to be consistent with that of preconfigured plans
+- modified structure of all catalog-related environment variables - `plans` is now a sub-field of the Service object, 
+and Service objects are defined individually by setting env variables like `GOOGLE_<SERVICE_NAME>`
