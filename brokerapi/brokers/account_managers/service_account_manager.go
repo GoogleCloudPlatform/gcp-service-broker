@@ -19,7 +19,6 @@ package account_managers
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/utils"
@@ -43,7 +42,7 @@ type ServiceAccountManager struct {
 func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 	role, ok := details.Parameters["role"].(string)
 	if !ok {
-		return models.ServiceBindingCredentials{}, errors.New("Error getting role as string from request")
+		role = "storage.objectAdmin"
 	}
 
 	someName := ServiceAccountName(bindingID)
