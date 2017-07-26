@@ -42,7 +42,7 @@ type ServiceAccountManager struct {
 func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 	role, ok := details.Parameters["role"].(string)
 	if !ok {
-		role = "owner"
+		role = "storage.objectAdmin"
 	}
 
 	someName := ServiceAccountName(bindingID)
