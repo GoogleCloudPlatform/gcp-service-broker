@@ -42,6 +42,7 @@ import (
 	"gcp-service-broker/db_service"
 	"gcp-service-broker/utils"
 	"golang.org/x/oauth2/jwt"
+	"gopkg.in/validator.v2"
 )
 
 type GCPServiceBroker struct {
@@ -485,95 +486,25 @@ func GetCredentialsFromEnv() (models.GCPCredentials, error) {
 	return g, nil
 }
 
-func getPlansFromEnv(envVar string) (map[string][]models.ServicePlan, error) {
-	servicePlans := make(map[string][]models.ServicePlan)
-
-	planJson := os.Getenv(envVar)
-	var plans []map[string]interface{}
-
-	if planJson == "" {
-		return map[string][]models.ServicePlan{}, nil
-	}
-
-	err := json.Unmarshal([]byte(planJson), &plans)
-	if err != nil {
-		return map[string][]models.ServicePlan{}, fmt.Errorf("Error unmarshalling plan json %s", err)
-	}
-
-	// construct service id to plan list map
-	for _, p := range plans {
-		serviceId := p["service_id"].(string)
-		planName := p["name"].(string)
-		planId, planIdOk := p["id"]
-		if !planIdOk {
-			return map[string][]models.ServicePlan{}, fmt.Errorf("Error: plan ids are required. Plan %s needs an id.", p["name"].(string))
-		}
-
-		servicePropertyBytes, err := json.Marshal(p["service_properties"])
-		if err != nil {
-			return map[string][]models.ServicePlan{}, fmt.Errorf("error marshalling service_properties: %s", err)
-		}
-
-		servicePropertyMap := make(map[string]string)
-		if p["service_properties"] != nil {
-			if err := json.Unmarshal(servicePropertyBytes, &servicePropertyMap); err != nil {
-				return map[string][]models.ServicePlan{}, fmt.Errorf("error unmarshalling service_properties: %s, %v", err, servicePropertyBytes)
-			}
-		}
-
-		plan := models.ServicePlan{
-			Name:        planName,
-			Description: p["description"].(string),
-			Metadata: &models.ServicePlanMetadata{
-				DisplayName: p["display_name"].(string),
-				Bullets:     []string{p["description"].(string), "For pricing information see https://cloud.google.com/pricing/#details"},
-			},
-			ID:                planId.(string),
-			ServiceProperties: servicePropertyMap,
-		}
-
-		servicePlans[serviceId] = append(servicePlans[serviceId], plan)
-
-	}
-
-	return servicePlans, nil
-}
-
 // pulls SERVICES, PLANS, and PRECONFIGURED_PLANS environment variables to construct catalog
 func InitCatalogFromEnv() ([]models.Service, error) {
-	var err error
-
-	servicePlans := make(map[string][]models.ServicePlan)
-
-	for _, varname := range []string{"PRECONFIGURED_PLANS", "CLOUDSQL_CUSTOM_PLANS", "BIGTABLE_CUSTOM_PLANS", "SPANNER_CUSTOM_PLANS"} {
-		varServicePlans, err := getPlansFromEnv(varname)
-		if err != nil {
-			return []models.Service{}, err
-		}
-		for k, v := range varServicePlans {
-			servicePlans[k] = v
-		}
-	}
 
 	// set up services
 	var serviceList []models.Service
 
-	catalogJson := os.Getenv("SERVICES")
-	var cat []models.Service
+	for _, varname := range models.ServiceEnvVarNames {
 
-	err = json.Unmarshal([]byte(catalogJson), &cat)
-	if err != nil {
-		return []models.Service{}, fmt.Errorf("Error unmarshalling service json %s", err)
-	}
-
-	// init catalog
-	for _, s := range cat {
-
-		s.Plans = servicePlans[s.ID]
-
-		if len(s.Plans) > 0 {
-			serviceList = append(serviceList, s)
+		var svc models.Service
+		if err := json.Unmarshal([]byte(os.Getenv(varname)), &svc); err != nil {
+			return []models.Service{}, err
+		} else {
+			if errs := validator.Validate(svc); errs != nil {
+				return []models.Service{}, errs
+			} else {
+				serviceList = append(serviceList, svc)
+			}
 		}
+
 	}
 
 	return serviceList, nil

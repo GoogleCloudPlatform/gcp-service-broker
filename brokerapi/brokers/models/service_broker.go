@@ -172,3 +172,15 @@ const SpannerName = "google-spanner"
 const StackdriverTraceName = "google-stackdriver-trace"
 const StackdriverDebuggerName = "google-stackdriver-debugger"
 const RootSaEnvVar = "ROOT_SERVICE_ACCOUNT_JSON"
+
+var ServiceEnvVarNames = []string{
+	"GOOGLE_SPANNER",
+	"GOOGLE_BIGQUERY",
+	"GOOGLE_BIGTABLE",
+	"GOOGLE_STORAGE",
+	"GOOGLE_PUBSUB",
+	"GOOGLE_STACKDRIVER_DEBUGGER",
+	"GOOGLE_STACKDRIVER_TRACE",
+	"GOOGLE_ML_APIS",
+	"GOOGLE_CLOUDSQL",
+}

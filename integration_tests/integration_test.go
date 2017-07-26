@@ -201,12 +201,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 		os.Setenv("SECURITY_USER_NAME", "username")
 		os.Setenv("SECURITY_USER_PASSWORD", "password")
-		os.Setenv("SERVICES", fakes.Services)
-		os.Setenv("PRECONFIGURED_PLANS", fakes.PreconfiguredPlans)
 
-		os.Setenv("CLOUDSQL_CUSTOM_PLANS", fakes.TestCloudSQLPlan)
-		os.Setenv("BIGTABLE_CUSTOM_PLANS", fakes.TestBigtablePlan)
-		os.Setenv("SPANNER_CUSTOM_PLANS", fakes.TestSpannerPlan)
+		fakes.SetUpTestServices()
 
 		var creds models.GCPCredentials
 		creds, err = brokers.GetCredentialsFromEnv()

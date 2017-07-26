@@ -10,9 +10,11 @@ Optionally add these to the env section of `manifest.yml`
 * `CLIENT_CERT`
 * `CLIENT_KEY`
 
-## [Optional plan vars](#optional-plan)
+## [Optional service vars](#optional-plan)
 
-* `CLOUDSQL_CUSTOM_PLANS` (A list of json objects with fields `id`, `name`, `description`, `
+update the following variables in `manifest.yml` if you wish to enable these services
+
+* `GOOGLE_CLOUDSQL.plans` (A list of json objects with fields `id`, `name`, `description`, `
 service_properties` (containing `tier`, `pricing_plan`, `max_disk_size`), `display_name`, and `service_id` 
 (Cloud SQL's service id)) - if unset, the service will be disabled. 
 
@@ -34,7 +36,7 @@ e.g.,
     }
 ]
 ```
-* `BIGTABLE_CUSTOM_PLANS` (A list of json objects with fields `id`, `name`, `description`,
+* `GOOGLE_BIGTABLE.plans` (A list of json objects with fields `id`, `name`, `description`,
 `service_properties` (containing `storage_type`, `num_nodes`), `display_name`, and `service_id` (Bigtable's service id)) 
 - if unset, the service will be disabled. 
 
@@ -55,7 +57,7 @@ e.g.,
     }
 ]
 ```
-* `SPANNER_CUSTOM_PLANS` (A list of json objects with fields `id`, `name`, `description`, `service_properties` (containing 
+* `GOOGLE_SPANNER.plans` (A list of json objects with fields `id`, `name`, `description`, `service_properties` (containing 
 `num_nodes`), `display_name`, and `service_id` (Spanner's service id)) - if unset, the service will be disabled. 
 
 e.g.,
