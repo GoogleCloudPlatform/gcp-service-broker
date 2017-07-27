@@ -27,7 +27,6 @@ import (
 
 func MapServiceIdToName() (map[string]string, error) {
 	idToNameMap := make(map[string]string)
-	var serviceList []models.Service
 
 	for _, varname := range models.ServiceEnvVarNames {
 
@@ -35,13 +34,10 @@ func MapServiceIdToName() (map[string]string, error) {
 		if err := json.Unmarshal([]byte(os.Getenv(varname)), &svc); err != nil {
 			return map[string]string{}, err
 		} else {
-			serviceList = append(serviceList, svc)
+			idToNameMap[svc.ID] = svc.Name
 		}
 	}
 
-	for _, service := range serviceList {
-		idToNameMap[service.ID] = service.Name
-	}
 	return idToNameMap, nil
 }
 
