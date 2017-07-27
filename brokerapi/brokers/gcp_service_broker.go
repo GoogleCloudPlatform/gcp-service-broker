@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"os"
 
 	"code.cloudfoundry.org/lager"
 	"google.golang.org/api/googleapi"
@@ -33,6 +32,7 @@ import (
 	"gcp-service-broker/brokerapi/brokers/bigtable"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/cloudsql"
+	"gcp-service-broker/brokerapi/brokers/config"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/brokerapi/brokers/pubsub"
 	"gcp-service-broker/brokerapi/brokers/spanner"
@@ -40,16 +40,11 @@ import (
 	"gcp-service-broker/brokerapi/brokers/stackdriver_trace"
 	"gcp-service-broker/brokerapi/brokers/storage"
 	"gcp-service-broker/db_service"
-	"gcp-service-broker/utils"
-	"golang.org/x/oauth2/jwt"
-	"gopkg.in/validator.v2"
 )
 
 type GCPServiceBroker struct {
-	RootGCPCredentials *models.GCPCredentials
-	HttpConfig         *jwt.Config
-	Catalog            *[]models.Service
-	ServiceBrokerMap   map[string]models.ServiceBrokerHelper
+	Catalog          *[]models.Service
+	ServiceBrokerMap map[string]models.ServiceBrokerHelper
 
 	InstanceLimit int
 
@@ -62,8 +57,7 @@ type GCPAsyncServiceBroker struct {
 }
 
 // returns a new service broker and nil if no errors occur else nil and the error
-func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
-	var err error
+func New(cfg *config.BrokerConfig, Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 
 	self := GCPAsyncServiceBroker{}
 	self.Logger = Logger
@@ -73,111 +67,56 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 	// handle that as a config option.
 	self.InstanceLimit = math.MaxInt32
 
-	// save credentials to broker object
-	rootCreds, err := GetCredentialsFromEnv()
-	if err != nil {
-		return nil, fmt.Errorf("Error initializing GCP credentials: %s", err)
-	}
-	self.RootGCPCredentials = &rootCreds
-
-	// set up GCP client with root gcp credentials
-	cfg, err := utils.GetAuthedConfig()
-	if err != nil {
-		return nil, fmt.Errorf("Error getting authorized http client: %s", err)
-	}
-	self.HttpConfig = cfg
-
-	// save catalog to broker object
-
-	cat, err := InitCatalogFromEnv()
-	if err != nil {
-		return nil, fmt.Errorf("Error initializing catalog: %s", err)
-	}
-	self.Catalog = &cat
+	self.Catalog = cfg.ServiceList()
 
 	saManager := &account_managers.ServiceAccountManager{
-		HttpConfig: self.HttpConfig,
-		ProjectId:  self.RootGCPCredentials.ProjectId,
+		HttpConfig: cfg.HttpConfig,
+		ProjectId:  cfg.ProjectId,
 	}
 
 	sqlManager := &account_managers.SqlAccountManager{
-		HttpConfig: self.HttpConfig,
-		ProjectId:  self.RootGCPCredentials.ProjectId,
+		HttpConfig: cfg.HttpConfig,
+		ProjectId:  cfg.ProjectId,
+	}
+
+	bb := broker_base.BrokerBase{
+		AccountManager: saManager,
+		HttpConfig:     cfg.HttpConfig,
+		ProjectId:      cfg.ProjectId,
+		Logger:         self.Logger,
 	}
 
 	// map service specific brokers to general broker
 	self.ServiceBrokerMap = map[string]models.ServiceBrokerHelper{
 		models.StorageName: &storage.StorageBroker{
-			HttpConfig: self.HttpConfig,
-			ProjectId:  self.RootGCPCredentials.ProjectId,
-			Logger:     self.Logger,
-			BrokerBase: broker_base.BrokerBase{
-				AccountManager: saManager,
-			},
+			BrokerBase: bb,
 		},
 		models.PubsubName: &pubsub.PubSubBroker{
-			HttpConfig: self.HttpConfig,
-			ProjectId:  self.RootGCPCredentials.ProjectId,
-			Logger:     self.Logger,
-			BrokerBase: broker_base.BrokerBase{
-				AccountManager: saManager,
-			},
+			BrokerBase: bb,
 		},
 		models.StackdriverDebuggerName: &stackdriver_debugger.StackdriverDebuggerBroker{
-			HttpConfig:            self.HttpConfig,
-			ProjectId:             self.RootGCPCredentials.ProjectId,
-			Logger:                self.Logger,
-			ServiceAccountManager: saManager,
-			BrokerBase: broker_base.BrokerBase{
-				AccountManager: saManager,
-			},
+			BrokerBase: bb,
 		},
 		models.StackdriverTraceName: &stackdriver_trace.StackdriverTraceBroker{
-			HttpConfig:            self.HttpConfig,
-			ProjectId:             self.RootGCPCredentials.ProjectId,
-			Logger:                self.Logger,
-			ServiceAccountManager: saManager,
-			BrokerBase: broker_base.BrokerBase{
-				AccountManager: saManager,
-			},
+			BrokerBase: bb,
 		},
 		models.BigqueryName: &bigquery.BigQueryBroker{
-			HttpConfig: self.HttpConfig,
-			ProjectId:  self.RootGCPCredentials.ProjectId,
-			Logger:     self.Logger,
-			BrokerBase: broker_base.BrokerBase{
-				AccountManager: saManager,
-			},
+			BrokerBase: bb,
 		},
 		models.MlName: &api_service.ApiServiceBroker{
-			HttpConfig: self.HttpConfig,
-			ProjectId:  self.RootGCPCredentials.ProjectId,
-			Logger:     self.Logger,
-			BrokerBase: broker_base.BrokerBase{
-				AccountManager: saManager,
-			},
+			BrokerBase: bb,
 		},
 		models.CloudsqlName: &cloudsql.CloudSQLBroker{
-			HttpConfig:     self.HttpConfig,
-			ProjectId:      self.RootGCPCredentials.ProjectId,
+			HttpConfig:     cfg.HttpConfig,
+			ProjectId:      cfg.ProjectId,
 			Logger:         self.Logger,
 			AccountManager: sqlManager,
 		},
 		models.BigtableName: &bigtable.BigTableBroker{
-			HttpConfig: self.HttpConfig,
-			ProjectId:  self.RootGCPCredentials.ProjectId,
-			Logger:     self.Logger,
-			BrokerBase: broker_base.BrokerBase{
-				AccountManager: saManager,
-			},
+			BrokerBase: bb,
 		},
 		models.SpannerName: &spanner.SpannerBroker{
-			HttpConfig: self.HttpConfig,
-			ProjectId:  self.RootGCPCredentials.ProjectId,
-			Logger:     self.Logger,
-			BrokerBase: broker_base.BrokerBase{
-				AccountManager: saManager,
-			},
+			BrokerBase: bb,
 		},
 	}
 	// replace the mapping from name to a mapping from id
@@ -469,43 +408,4 @@ func (gcpBroker *GCPServiceBroker) lastOperationAsync(instanceId, serviceId stri
 // changes are not supported.
 func (gcpBroker *GCPServiceBroker) Update(instanceID string, details models.UpdateDetails, asyncAllowed bool) (models.IsAsync, error) {
 	return models.IsAsync(asyncAllowed), models.ErrPlanChangeNotSupported
-}
-
-// reads the service account json string from the environment variable ROOT_SERVICE_ACCOUNT_JSON, writes it to a file,
-// and then exports the file location to the environment variable GOOGLE_APPLICATION_CREDENTIALS, making it visible to
-// all google cloud apis
-func GetCredentialsFromEnv() (models.GCPCredentials, error) {
-	var err error
-	g := models.GCPCredentials{}
-
-	rootCreds := os.Getenv(models.RootSaEnvVar)
-	if err = json.Unmarshal([]byte(rootCreds), &g); err != nil {
-		return models.GCPCredentials{}, fmt.Errorf("Error unmarshalling service account json: %s", err)
-	}
-
-	return g, nil
-}
-
-// pulls SERVICES, PLANS, and PRECONFIGURED_PLANS environment variables to construct catalog
-func InitCatalogFromEnv() ([]models.Service, error) {
-
-	// set up services
-	var serviceList []models.Service
-
-	for _, varname := range models.ServiceEnvVarNames {
-
-		var svc models.Service
-		if err := json.Unmarshal([]byte(os.Getenv(varname)), &svc); err != nil {
-			return []models.Service{}, err
-		} else {
-			if errs := validator.Validate(svc); errs != nil {
-				return []models.Service{}, errs
-			} else {
-				serviceList = append(serviceList, svc)
-			}
-		}
-
-	}
-
-	return serviceList, nil
 }

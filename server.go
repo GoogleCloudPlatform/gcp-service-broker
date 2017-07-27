@@ -24,6 +24,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"gcp-service-broker/brokerapi"
 	"gcp-service-broker/brokerapi/brokers"
+	"gcp-service-broker/brokerapi/brokers/config"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
@@ -41,7 +42,11 @@ func main() {
 	name_generator.New()
 
 	// init broker
-	serviceBroker, err := brokers.New(logger)
+	cfg, err := config.NewBrokerConfig()
+	if err != nil {
+		logger.Fatal("Error initializing service broker config: %s", err)
+	}
+	serviceBroker, err := brokers.New(cfg, logger)
 	if err != nil {
 		logger.Fatal("Error initializing service broker: %s", err)
 	}

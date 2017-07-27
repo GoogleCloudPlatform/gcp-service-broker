@@ -19,7 +19,6 @@ package spanner
 
 import (
 	googlespanner "cloud.google.com/go/spanner/admin/instance/apiv1"
-	"code.cloudfoundry.org/lager"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -27,18 +26,12 @@ import (
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
-	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/option"
 	instancepb "google.golang.org/genproto/googleapis/spanner/admin/instance/v1"
 	"strconv"
 )
 
 type SpannerBroker struct {
-	HttpConfig     *jwt.Config
-	ProjectId      string
-	Logger         lager.Logger
-	AccountManager models.AccountManager
-
 	broker_base.BrokerBase
 }
 
@@ -179,7 +172,7 @@ func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 
 		return true, fmt.Errorf("Error provisioning instance: %v", err)
 	} else if spannerInstance == nil && err == nil && !done {
-		op.Status = spannerInstance.State.String()
+		op.Status = string(instancepb.Instance_STATE_UNSPECIFIED)
 
 		if err = db_service.DbConnection.Save(&op).Error; err != nil {
 			return false, fmt.Errorf(`Error saving operation details to database: %s.`, err)

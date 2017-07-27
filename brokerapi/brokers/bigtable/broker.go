@@ -19,7 +19,6 @@ package bigtable
 
 import (
 	googlebigtable "cloud.google.com/go/bigtable"
-	"code.cloudfoundry.org/lager"
 	"encoding/json"
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
@@ -27,17 +26,11 @@ import (
 	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/option"
 	"strconv"
 )
 
 type BigTableBroker struct {
-	HttpConfig     *jwt.Config
-	ProjectId      string
-	Logger         lager.Logger
-	AccountManager models.AccountManager
-
 	broker_base.BrokerBase
 }
 

@@ -18,7 +18,6 @@
 package bigquery
 
 import (
-	"code.cloudfoundry.org/lager"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -26,16 +25,10 @@ import (
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
-	"golang.org/x/oauth2/jwt"
 	googlebigquery "google.golang.org/api/bigquery/v2"
 )
 
 type BigQueryBroker struct {
-	HttpConfig     *jwt.Config
-	ProjectId      string
-	Logger         lager.Logger
-	AccountManager models.AccountManager
-
 	broker_base.BrokerBase
 }
 

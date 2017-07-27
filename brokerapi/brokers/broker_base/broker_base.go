@@ -18,11 +18,16 @@
 package broker_base
 
 import (
+	"code.cloudfoundry.org/lager"
 	"gcp-service-broker/brokerapi/brokers/models"
+	"golang.org/x/oauth2/jwt"
 )
 
 type BrokerBase struct {
 	AccountManager models.AccountManager
+	HttpConfig     *jwt.Config
+	ProjectId      string
+	Logger         lager.Logger
 }
 
 func (b *BrokerBase) Bind(instanceID, bindingID string, details models.BindDetails) (models.ServiceBindingCredentials, error) {
