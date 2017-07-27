@@ -63,12 +63,8 @@ var _ = Describe("Brokers", func() {
 		      }`)
 		os.Setenv("SECURITY_USER_NAME", "username")
 		os.Setenv("SECURITY_USER_PASSWORD", "password")
-		os.Setenv("SERVICES", fakes.Services)
-		os.Setenv("PRECONFIGURED_PLANS", fakes.PreconfiguredPlans)
 
-		os.Setenv("CLOUDSQL_CUSTOM_PLANS", fakes.TestCloudSQLPlan)
-		os.Setenv("BIGTABLE_CUSTOM_PLANS", fakes.TestBigtablePlan)
-		os.Setenv("SPANNER_CUSTOM_PLANS", fakes.TestSpannerPlan)
+		fakes.SetUpTestServices()
 
 		instanceId = "newid"
 		bindingId = "newbinding"
@@ -203,7 +199,7 @@ var _ = Describe("Brokers", func() {
 		})
 
 		It("should error if plan ids are not supplied", func() {
-			os.Setenv("PRECONFIGURED_PLANS", fakes.PlanNoId)
+			os.Setenv("GOOGLE_STACKDRIVER_TRACE", fakes.PlanNoId)
 			_, err := brokers.New(logger)
 			Expect(err).To(HaveOccurred())
 		})
@@ -211,23 +207,9 @@ var _ = Describe("Brokers", func() {
 
 	Describe("updating broker catalog", func() {
 
-		It("should update cloudsql custom plans with different names on startup", func() {
+		It("should update plans on startup", func() {
 
-			os.Setenv("CLOUDSQL_CUSTOM_PLANS", `
-			[
-				{
-					"id": "some-other-cloudsql-plan",
-					"name": "newPlan",
-					"description": "testplan",
-					"service_properties": {
-						"tier": "D8",
-						"pricing_plan": "athing",
-						"max_disk_size": "15"
-					},
-					"display_name": "FOOBAR",
-					"service_id": "4bc59b9a-8520-409f-85da-1c7552315863"
-				}
-			]`)
+			os.Setenv("GOOGLE_CLOUDSQL", fakes.CloudSqlNewPlan)
 
 			newBroker, err := brokers.New(logger)
 			Expect(err).ToNot(HaveOccurred())
@@ -247,38 +229,6 @@ var _ = Describe("Brokers", func() {
 
 		})
 
-		It("should update cloudsql custom plans with the same name on startup", func() {
-
-			os.Setenv("CLOUDSQL_CUSTOM_PLANS", `
-			[
-				{
-					"id": "some-other-cloudsql-plan",
-					"name": "test_plan",
-					"description": "testplan",
-					"service_properties": {
-						"tier": "D8",
-						"pricing_plan": "athing",
-						"max_disk_size": "15"
-					},
-					"display_name": "FOOBAR",
-					"service_id": "4bc59b9a-8520-409f-85da-1c7552315863"
-				}
-			]`)
-
-			newBroker, err := brokers.New(logger)
-			Expect(err).ToNot(HaveOccurred())
-
-			serviceList := newBroker.Services()
-			for _, s := range serviceList {
-				if s.ID == serviceNameToId[models.CloudsqlName] {
-					Expect(len(s.Plans)).To(Equal(1))
-					planDetails, err := newBroker.GetPlanFromId(serviceNameToId[models.CloudsqlName], "some-other-cloudsql-plan")
-					Expect(err).ToNot(HaveOccurred())
-					Expect(planDetails.ServiceProperties["tier"]).To(Equal("D8"))
-				}
-			}
-
-		})
 	})
 
 	Describe("provision", func() {

@@ -71,7 +71,7 @@ var _ = Describe("DbService", func() {
 		logger = lager.NewLogger("brokers_test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 
-		os.Setenv("SERVICES", fakes.Services)
+		fakes.SetUpTestServices()
 
 		createTestDatabase()
 		testDb, _ := gorm.Open("mysql", getLocalTestConnectionStr("servicebroker"))

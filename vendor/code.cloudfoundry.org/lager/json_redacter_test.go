@@ -1,6 +1,5 @@
 package lager_test
 
-
 import (
 	"code.cloudfoundry.org/lager"
 
@@ -10,9 +9,9 @@ import (
 
 var _ = Describe("JSON Redacter", func() {
 	var (
-	  resp []byte
-	  err error
-	  jsonRedacter *lager.JSONRedacter
+		resp         []byte
+		err          error
+		jsonRedacter *lager.JSONRedacter
 	)
 
 	BeforeEach(func() {
@@ -21,10 +20,10 @@ var _ = Describe("JSON Redacter", func() {
 	})
 
 	Context("when called with normal (non-secret) json", func() {
-		BeforeEach(func(){
+		BeforeEach(func() {
 			resp = jsonRedacter.Redact([]byte(`{"foo":"bar"}`))
 		})
-		It("should return the same text", func(){
+		It("should return the same text", func() {
 			Expect(resp).To(Equal([]byte(`{"foo":"bar"}`)))
 		})
 	})

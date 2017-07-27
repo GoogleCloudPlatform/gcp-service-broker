@@ -173,11 +173,11 @@ func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 		op.Status = "FAILED"
 		op.ErrorMessage = err.Error()
 
-		if err = db_service.DbConnection.Save(&op).Error; err != nil {
-			return false, fmt.Errorf(`Error saving operation details to database: %s.`, err)
+		if dberr := db_service.DbConnection.Save(&op).Error; dberr != nil {
+			return false, fmt.Errorf(`Error saving operation details to database: %s.`, dberr)
 		}
 
-		return true, fmt.Errorf("Error provisioning instance: %s", err)
+		return true, fmt.Errorf("Error provisioning instance: %v", err)
 	} else if spannerInstance == nil && err == nil && !done {
 		op.Status = spannerInstance.State.String()
 
