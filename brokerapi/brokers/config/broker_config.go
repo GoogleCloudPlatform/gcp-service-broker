@@ -101,4 +101,5 @@ func (bc *BrokerConfig) ServiceList() *[]models.Service {
 	}
 
 	return &svcs
+
 }
