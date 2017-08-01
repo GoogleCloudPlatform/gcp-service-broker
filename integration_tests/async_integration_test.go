@@ -90,7 +90,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 
 		fakes.SetUpTestServices()
 
-		brokerConfig, err = config.NewBrokerConfig()
+		brokerConfig, err = config.NewBrokerConfigFromEnv()
 
 		if err != nil {
 			panic(err.Error())

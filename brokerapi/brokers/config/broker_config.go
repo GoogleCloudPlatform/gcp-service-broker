@@ -33,7 +33,7 @@ type BrokerConfig struct {
 	ProjectId  string
 }
 
-func NewBrokerConfig() (*BrokerConfig, error) {
+func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
 	var err error
 	bc := BrokerConfig{}
 	creds, err := bc.GetCredentialsFromEnv()

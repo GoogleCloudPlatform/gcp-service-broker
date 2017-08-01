@@ -42,7 +42,7 @@ func main() {
 	name_generator.New()
 
 	// init broker
-	cfg, err := config.NewBrokerConfig()
+	cfg, err := config.NewBrokerConfigFromEnv()
 	if err != nil {
 		logger.Fatal("Error initializing service broker config: %s", err)
 	}

@@ -68,7 +68,7 @@ var _ = Describe("Brokers", func() {
 
 		fakes.SetUpTestServices()
 
-		brokerConfig, err = config.NewBrokerConfig()
+		brokerConfig, err = config.NewBrokerConfigFromEnv()
 		if err != nil {
 			logger.Error("error", err)
 		}
@@ -207,7 +207,7 @@ var _ = Describe("Brokers", func() {
 
 		It("should error if plan ids are not supplied", func() {
 			os.Setenv("GOOGLE_STACKDRIVER_TRACE", fakes.PlanNoId)
-			_, err := config.NewBrokerConfig()
+			_, err := config.NewBrokerConfigFromEnv()
 			Expect(err).To(HaveOccurred())
 		})
 	})
@@ -218,7 +218,7 @@ var _ = Describe("Brokers", func() {
 
 			os.Setenv("GOOGLE_CLOUDSQL", fakes.CloudSqlNewPlan)
 
-			newcfg, err := config.NewBrokerConfig()
+			newcfg, err := config.NewBrokerConfigFromEnv()
 			Expect(err).ToNot(HaveOccurred())
 			newBroker, err := brokers.New(newcfg, logger)
 			Expect(err).ToNot(HaveOccurred())

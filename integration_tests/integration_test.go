@@ -206,7 +206,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 		fakes.SetUpTestServices()
 
-		brokerConfig, err = config.NewBrokerConfig()
+		brokerConfig, err = config.NewBrokerConfigFromEnv()
 		if err != nil {
 			logger.Error("error", err)
 		}
