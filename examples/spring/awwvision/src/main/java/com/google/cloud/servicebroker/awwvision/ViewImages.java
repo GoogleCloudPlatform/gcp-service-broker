@@ -33,9 +33,6 @@ import com.google.api.services.storage.model.StorageObject;
 @Controller
 public class ViewImages {
 
-  @Value("${gcp-storage-bucket}")
-  private String bucketName;
-
   @Autowired
   private StorageAPI storageAPI;
 
@@ -44,7 +41,7 @@ public class ViewImages {
     List<StorageObject> objects = storageAPI.listAll();
     List<Image> images = new ArrayList<>();
     for (StorageObject obj : objects) {
-      Image image = new Image(getPublicUrl(bucketName, obj.getName()), obj.getMetadata().get("label"));
+      Image image = new Image(getPublicUrl(storageAPI.bucketName, obj.getName()), obj.getMetadata().get("label"));
       images.add(image);
     }
     model.addAttribute("images", images);
@@ -57,7 +54,7 @@ public class ViewImages {
     List<StorageObject> objects = storageAPI.listAll();
     List<Image> images = new ArrayList<>();
     for (StorageObject obj : objects) {
-      Image image = new Image(getPublicUrl(bucketName, obj.getName()), obj.getMetadata().get("label"));
+      Image image = new Image(getPublicUrl(storageAPI.bucketName, obj.getName()), obj.getMetadata().get("label"));
       if (image.label.equals(label)) {
         images.add(image);
       }
