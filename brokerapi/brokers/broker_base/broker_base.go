@@ -33,7 +33,7 @@ type BrokerBase struct {
 func (b *BrokerBase) Bind(instanceID, bindingID string, details models.BindDetails) (models.ServiceBindingCredentials, error) {
 
 	// Create account
-	newBinding, err := b.AccountManager.CreateAccountInGoogle(instanceID, bindingID, details, models.ServiceInstanceDetails{})
+	newBinding, err := b.AccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
 
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
@@ -48,7 +48,7 @@ func (b *BrokerBase) BuildInstanceCredentials(bindDetails map[string]string, ins
 
 func (b *BrokerBase) Unbind(creds models.ServiceBindingCredentials) error {
 
-	err := b.AccountManager.DeleteAccountFromGoogle(creds)
+	err := b.AccountManager.DeleteCredentials(creds)
 	if err != nil {
 		return err
 	}

@@ -48,7 +48,7 @@ func (b *StackdriverTraceBroker) Bind(instanceID, bindingID string, details mode
 	details.Parameters["role"] = "cloudtrace.agent"
 
 	// Create account
-	newBinding, err := b.AccountManager.CreateAccountInGoogle(instanceID, bindingID, details, models.ServiceInstanceDetails{})
+	newBinding, err := b.AccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
 
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err

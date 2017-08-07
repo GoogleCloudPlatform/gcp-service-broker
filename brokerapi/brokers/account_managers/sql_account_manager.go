@@ -37,7 +37,7 @@ type SqlAccountManager struct {
 }
 
 // inserts a new user into the database and creates new ssl certs
-func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+func (sam *SqlAccountManager) CreateCredentials(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 	var err error
 	username, usernameOk := details.Parameters["username"].(string)
 	password, passwordOk := details.Parameters["password"].(string)
@@ -98,7 +98,7 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 }
 
 // deletes the user from the database and invalidates the associated ssl certs
-func (sam *SqlAccountManager) DeleteAccountFromGoogle(binding models.ServiceBindingCredentials) error {
+func (sam *SqlAccountManager) DeleteCredentials(binding models.ServiceBindingCredentials) error {
 	var err error
 
 	var sqlCreds SqlAccountInfo

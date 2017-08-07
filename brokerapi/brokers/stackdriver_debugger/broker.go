@@ -48,7 +48,7 @@ func (b *StackdriverDebuggerBroker) Bind(instanceID, bindingID string, details m
 	details.Parameters["role"] = "clouddebugger.agent"
 
 	// Create account
-	newBinding, err := b.AccountManager.CreateAccountInGoogle(instanceID, bindingID, details, models.ServiceInstanceDetails{})
+	newBinding, err := b.AccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
 
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err

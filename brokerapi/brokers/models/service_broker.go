@@ -49,8 +49,8 @@ type ServiceBroker interface {
 }
 
 type AccountManager interface {
-	CreateAccountInGoogle(instanceID string, bindingID string, details BindDetails, instance ServiceInstanceDetails) (ServiceBindingCredentials, error)
-	DeleteAccountFromGoogle(creds ServiceBindingCredentials) error
+	CreateCredentials(instanceID string, bindingID string, details BindDetails, instance ServiceInstanceDetails) (ServiceBindingCredentials, error)
+	DeleteCredentials(creds ServiceBindingCredentials) error
 	BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string
 }
 

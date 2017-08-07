@@ -219,7 +219,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 			logger.Error("error", err)
 		}
 
-		for _, service := range *gcpBroker.Catalog {
+		for _, service := range gcpBroker.Catalog {
 			serviceNameToId[service.Name] = service.ID
 			serviceNameToPlanId[service.Name] = service.Plans[0].ID
 		}

@@ -92,14 +92,3 @@ func (bc *BrokerConfig) InitCatalogFromEnv() (map[string]models.Service, error) 
 
 	return serviceMap, nil
 }
-
-func (bc *BrokerConfig) ServiceList() *[]models.Service {
-	svcs := []models.Service{}
-
-	for _, svc := range bc.Catalog {
-		svcs = append(svcs, svc)
-	}
-
-	return &svcs
-
-}

@@ -41,7 +41,7 @@ type ServiceAccountManager struct {
 }
 
 // creates a new service account for the given binding id with the role listed in details.Parameters["role"]
-func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+func (sam *ServiceAccountManager) CreateCredentials(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 	client := sam.HttpConfig.Client(context.Background())
 
 	role, ok := details.Parameters["role"].(string)
@@ -141,7 +141,7 @@ func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindi
 }
 
 // deletes the given service account from Google
-func (sam *ServiceAccountManager) DeleteAccountFromGoogle(binding models.ServiceBindingCredentials) error {
+func (sam *ServiceAccountManager) DeleteCredentials(binding models.ServiceBindingCredentials) error {
 
 	var saCreds ServiceAccountInfo
 	if err := json.Unmarshal([]byte(binding.OtherDetails), &saCreds); err != nil {

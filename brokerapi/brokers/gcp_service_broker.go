@@ -43,7 +43,7 @@ import (
 )
 
 type GCPServiceBroker struct {
-	Catalog          *[]models.Service
+	Catalog          map[string]models.Service
 	ServiceBrokerMap map[string]models.ServiceBrokerHelper
 
 	InstanceLimit int
@@ -67,7 +67,7 @@ func New(cfg *config.BrokerConfig, Logger lager.Logger) (*GCPAsyncServiceBroker,
 	// handle that as a config option.
 	self.InstanceLimit = math.MaxInt32
 
-	self.Catalog = cfg.ServiceList()
+	self.Catalog = cfg.Catalog
 
 	saManager := &account_managers.ServiceAccountManager{
 		HttpConfig: cfg.HttpConfig,
@@ -119,8 +119,9 @@ func New(cfg *config.BrokerConfig, Logger lager.Logger) (*GCPAsyncServiceBroker,
 			BrokerBase: bb,
 		},
 	}
+
 	// replace the mapping from name to a mapping from id
-	for _, service := range *self.Catalog {
+	for _, service := range self.Catalog {
 		self.ServiceBrokerMap[service.ID] = self.ServiceBrokerMap[service.Name]
 		delete(self.ServiceBrokerMap, service.Name)
 	}
@@ -135,20 +136,28 @@ func New(cfg *config.BrokerConfig, Logger lager.Logger) (*GCPAsyncServiceBroker,
 // lists services in the broker's catalog
 func (gcpBroker *GCPServiceBroker) Services() []models.Service {
 
-	return *gcpBroker.Catalog
+	svcs := []models.Service{}
+
+	for _, svc := range gcpBroker.Catalog {
+		svcs = append(svcs, svc)
+	}
+
+	return svcs
+
 }
 
 func (gcpBroker *GCPServiceBroker) GetPlanFromId(serviceId, planId string) (models.ServicePlan, error) {
-	for _, s := range *gcpBroker.Catalog {
-		if s.ID == serviceId {
-			for _, p := range s.Plans {
-				if p.ID == planId {
-					return p, nil
-				}
-			}
+	if _, sidOk := gcpBroker.Catalog[serviceId]; !sidOk {
+		return models.ServicePlan{}, fmt.Errorf("serviceId %s not found", serviceId)
+	}
+
+	for _, plan := range gcpBroker.Catalog[serviceId].Plans {
+		if plan.ID == planId {
+			return plan, nil
 		}
 	}
-	return models.ServicePlan{}, fmt.Errorf("Plan with id %s and serviceId %s not found", planId, serviceId)
+
+	return models.ServicePlan{}, fmt.Errorf("planId %s not found", planId)
 }
 
 // cf create-service

@@ -84,7 +84,7 @@ var _ = Describe("Brokers", func() {
 		var someBigQueryPlanId string
 		var someCloudSQLPlanId string
 		var someStoragePlanId string
-		for _, service := range *gcpBroker.Catalog {
+		for _, service := range gcpBroker.Catalog {
 			serviceNameToId[service.Name] = service.ID
 			if service.Name == models.BigqueryName {
 				someBigQueryPlanId = service.Plans[0].ID
@@ -474,7 +474,7 @@ var _ = Describe("AccountManagers", func() {
 			It("should call the account manager create account in google method", func() {
 				_, err = iamStyleBroker.Bind("foo", "bar", models.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(accountManager.CreateAccountInGoogleCallCount()).To(Equal(1))
+				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 			})
 		})
 
@@ -483,7 +483,7 @@ var _ = Describe("AccountManagers", func() {
 				db_service.DbConnection.Save(&models.ServiceInstanceDetails{ID: "foo"})
 				_, err = iamStyleBroker.Bind("foo", "bar", models.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(accountManager.CreateAccountInGoogleCallCount()).To(Equal(1))
+				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 			})
 		})
 
@@ -501,8 +501,8 @@ var _ = Describe("AccountManagers", func() {
 				_, err := cloudsqlBroker.Bind("foo", "bar", models.BindDetails{})
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(accountManager.CreateAccountInGoogleCallCount()).To(Equal(1))
-				_, _, details, _ := accountManager.CreateAccountInGoogleArgsForCall(0)
+				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
+				_, _, details, _ := accountManager.CreateCredentialsArgsForCall(0)
 				Expect(details.Parameters).NotTo(BeEmpty())
 
 				username, usernameOk := details.Parameters["username"].(string)
@@ -528,7 +528,7 @@ var _ = Describe("AccountManagers", func() {
 			It("it should call the account manager delete account from google method", func() {
 				err = iamStyleBroker.Unbind(models.ServiceBindingCredentials{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(accountManager.DeleteAccountFromGoogleCallCount()).To(Equal(1))
+				Expect(accountManager.DeleteCredentialsCallCount()).To(Equal(1))
 			})
 		})
 
@@ -536,7 +536,7 @@ var _ = Describe("AccountManagers", func() {
 			It("it should call the account manager delete account from google method", func() {
 				err = cloudsqlBroker.Unbind(models.ServiceBindingCredentials{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(accountManager.DeleteAccountFromGoogleCallCount()).To(Equal(1))
+				Expect(accountManager.DeleteCredentialsCallCount()).To(Equal(1))
 			})
 		})
 	})
