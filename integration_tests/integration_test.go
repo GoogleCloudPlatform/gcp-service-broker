@@ -22,6 +22,7 @@ import (
 	googlebigtable "cloud.google.com/go/bigtable"
 	googlestorage "cloud.google.com/go/storage"
 	"code.cloudfoundry.org/lager"
+	"gcp-service-broker/brokerapi/brokers/config"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -57,7 +58,7 @@ func getAndUnmarshalInstanceDetails(instanceId string) map[string]string {
 	return instanceDetails
 }
 
-func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService) {
+func testGenericService(brokerConfig *config.BrokerConfig, gcpBroker *GCPAsyncServiceBroker, params *genericService) {
 	// If the service already exists (eg, failed previous test), clean it up before the run
 	if params.serviceExistsFn != nil && params.serviceExistsFn(false) {
 		params.cleanupFn()
@@ -97,10 +98,10 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 	db_service.DbConnection.Model(&models.ServiceBindingCredentials{}).Where("binding_id = ?", params.bindingId).Count(&count)
 	Expect(count).To(Equal(1))
 
-	iamService, err := iam.New(gcpBroker.HttpConfig.Client(context.Background()))
+	iamService, err := iam.New(brokerConfig.HttpConfig.Client(context.Background()))
 	Expect(err).ToNot(HaveOccurred())
 	saService := iam.NewProjectsServiceAccountsService(iamService)
-	resourceName := "projects/" + gcpBroker.RootGCPCredentials.ProjectId + "/serviceAccounts/" + creds.Credentials.(map[string]string)["UniqueId"]
+	resourceName := "projects/" + brokerConfig.ProjectId + "/serviceAccounts/" + creds.Credentials.(map[string]string)["UniqueId"]
 	_, err = saService.Get(resourceName).Do()
 	Expect(err).ToNot(HaveOccurred())
 
@@ -144,7 +145,7 @@ func testGenericService(gcpBroker *GCPAsyncServiceBroker, params *genericService
 }
 
 // For services that only create a service account and bind those credentials.
-func testIamBasedService(gcpBroker *GCPAsyncServiceBroker, params *iamService) {
+func testIamBasedService(brokerConfig *config.BrokerConfig, gcpBroker *GCPAsyncServiceBroker, params *iamService) {
 	genericServiceParams := &genericService{
 		serviceId:        params.serviceId,
 		planId:           params.planId,
@@ -158,7 +159,7 @@ func testIamBasedService(gcpBroker *GCPAsyncServiceBroker, params *iamService) {
 		},
 	}
 
-	testGenericService(gcpBroker, genericServiceParams)
+	testGenericService(brokerConfig, gcpBroker, genericServiceParams)
 }
 
 // Instance Name is used to name every instance created in GCP (eg, a storage bucket)
@@ -180,6 +181,7 @@ func generateInstanceName(projectId string, sep string) string {
 
 var _ = Describe("LiveIntegrationTests", func() {
 	var (
+		brokerConfig        *config.BrokerConfig
 		gcpBroker           *GCPAsyncServiceBroker
 		err                 error
 		logger              lager.Logger
@@ -204,20 +206,20 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 		fakes.SetUpTestServices()
 
-		var creds models.GCPCredentials
-		creds, err = brokers.GetCredentialsFromEnv()
+		brokerConfig, err = config.NewBrokerConfigFromEnv()
 		if err != nil {
 			logger.Error("error", err)
 		}
-		instance_name = generateInstanceName(creds.ProjectId, "")
+
+		instance_name = generateInstanceName(brokerConfig.ProjectId, "")
 		name_generator.Basic = &fakes.StaticNameGenerator{Val: instance_name}
 
-		gcpBroker, err = brokers.New(logger)
+		gcpBroker, err = brokers.New(brokerConfig, logger)
 		if err != nil {
 			logger.Error("error", err)
 		}
 
-		for _, service := range *gcpBroker.Catalog {
+		for _, service := range gcpBroker.Catalog {
 			serviceNameToId[service.Name] = service.ID
 			serviceNameToPlanId[service.Name] = service.Plans[0].ID
 		}
@@ -229,11 +231,11 @@ var _ = Describe("LiveIntegrationTests", func() {
 		})
 
 		It("should have a default client", func() {
-			Expect(gcpBroker.HttpConfig).NotTo(Equal(&http.Client{}))
+			Expect(brokerConfig.HttpConfig).NotTo(Equal(&http.Client{}))
 		})
 
 		It("should have loaded credentials correctly and have a project id", func() {
-			Expect(gcpBroker.RootGCPCredentials.ProjectId).ToNot(BeEmpty())
+			Expect(brokerConfig.ProjectId).ToNot(BeEmpty())
 		})
 	})
 
@@ -255,7 +257,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 	Describe("bigquery", func() {
 		It("can provision/bind/unbind/deprovision", func() {
-			service, err := googlebigquery.New(gcpBroker.HttpConfig.Client(context.Background()))
+			service, err := googlebigquery.New(brokerConfig.HttpConfig.Client(context.Background()))
 			Expect(err).NotTo(HaveOccurred())
 
 			params := &genericService{
@@ -267,7 +269,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 					"role": "bigquery.admin",
 				},
 				serviceExistsFn: func(expected bool) bool {
-					_, err = service.Datasets.Get(gcpBroker.RootGCPCredentials.ProjectId, instance_name).Do()
+					_, err = service.Datasets.Get(brokerConfig.ProjectId, instance_name).Do()
 
 					return err == nil
 				},
@@ -276,18 +278,18 @@ var _ = Describe("LiveIntegrationTests", func() {
 					return instanceDetails["dataset_id"] != ""
 				},
 				cleanupFn: func() {
-					err := service.Datasets.Delete(gcpBroker.RootGCPCredentials.ProjectId, instance_name).Do()
+					err := service.Datasets.Delete(brokerConfig.ProjectId, instance_name).Do()
 					Expect(err).NotTo(HaveOccurred())
 				},
 			}
-			testGenericService(gcpBroker, params)
+			testGenericService(brokerConfig, gcpBroker, params)
 		}, timeout)
 	})
 
 	Describe("bigtable", func() {
 		var bigtableInstanceName string
 		BeforeEach(func() {
-			bigtableInstanceName = generateInstanceName(gcpBroker.RootGCPCredentials.ProjectId, "-")
+			bigtableInstanceName = generateInstanceName(brokerConfig.ProjectId, "-")
 			name_generator.Basic = &fakes.StaticNameGenerator{Val: bigtableInstanceName}
 		})
 
@@ -299,8 +301,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 			ctx := context.Background()
 			co := option.WithUserAgent(models.CustomUserAgent)
-			ct := option.WithTokenSource(gcpBroker.HttpConfig.TokenSource(context.Background()))
-			service, err := googlebigtable.NewInstanceAdminClient(ctx, gcpBroker.RootGCPCredentials.ProjectId, co, ct)
+			ct := option.WithTokenSource(brokerConfig.HttpConfig.TokenSource(context.Background()))
+			service, err := googlebigtable.NewInstanceAdminClient(ctx, brokerConfig.ProjectId, co, ct)
 			Expect(err).NotTo(HaveOccurred())
 
 			params := &genericService{
@@ -325,14 +327,14 @@ var _ = Describe("LiveIntegrationTests", func() {
 					Expect(err).NotTo(HaveOccurred())
 				},
 			}
-			testGenericService(gcpBroker, params)
+			testGenericService(brokerConfig, gcpBroker, params)
 		}, timeout)
 	})
 
 	Describe("cloud storage", func() {
 		It("can provision/bind/unbind/deprovision", func() {
 			co := option.WithUserAgent(models.CustomUserAgent)
-			ct := option.WithTokenSource(gcpBroker.HttpConfig.TokenSource(context.Background()))
+			ct := option.WithTokenSource(brokerConfig.HttpConfig.TokenSource(context.Background()))
 			service, err := googlestorage.NewClient(context.Background(), co, ct)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -360,15 +362,15 @@ var _ = Describe("LiveIntegrationTests", func() {
 				},
 			}
 
-			testGenericService(gcpBroker, params)
+			testGenericService(brokerConfig, gcpBroker, params)
 		}, timeout)
 	})
 
 	Describe("pub sub", func() {
 		It("can provision/bind/unbind/deprovision", func() {
 			co := option.WithUserAgent(models.CustomUserAgent)
-			ct := option.WithTokenSource(gcpBroker.HttpConfig.TokenSource(context.Background()))
-			service, err := googlepubsub.NewClient(context.Background(), gcpBroker.RootGCPCredentials.ProjectId, co, ct)
+			ct := option.WithTokenSource(brokerConfig.HttpConfig.TokenSource(context.Background()))
+			service, err := googlepubsub.NewClient(context.Background(), brokerConfig.ProjectId, co, ct)
 			Expect(err).NotTo(HaveOccurred())
 
 			topic := service.Topic(instance_name)
@@ -395,7 +397,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 				},
 			}
 
-			testGenericService(gcpBroker, params)
+			testGenericService(brokerConfig, gcpBroker, params)
 		}, timeout)
 	})
 
@@ -405,7 +407,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 				serviceId: serviceNameToId[models.StackdriverDebuggerName],
 				planId:    serviceNameToPlanId[models.StackdriverDebuggerName],
 			}
-			testIamBasedService(gcpBroker, params)
+			testIamBasedService(brokerConfig, gcpBroker, params)
 		}, timeout)
 	})
 
@@ -415,7 +417,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 				serviceId: serviceNameToId[models.StackdriverTraceName],
 				planId:    serviceNameToPlanId[models.StackdriverTraceName],
 			}
-			testIamBasedService(gcpBroker, params)
+			testIamBasedService(brokerConfig, gcpBroker, params)
 		}, timeout)
 	})
 

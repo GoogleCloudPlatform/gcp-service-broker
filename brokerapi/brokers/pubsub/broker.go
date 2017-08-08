@@ -24,21 +24,15 @@ import (
 	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"golang.org/x/net/context"
 
-	"code.cloudfoundry.org/lager"
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/db_service"
-	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/option"
 	"strconv"
 	"time"
 )
 
 type PubSubBroker struct {
-	HttpConfig *jwt.Config
-	ProjectId  string
-	Logger     lager.Logger
-
 	broker_base.BrokerBase
 }
 

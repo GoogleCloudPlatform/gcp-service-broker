@@ -7,24 +7,24 @@ import (
 )
 
 type FakeAccountManager struct {
-	CreateAccountInGoogleStub        func(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error)
-	createAccountInGoogleMutex       sync.RWMutex
-	createAccountInGoogleArgsForCall []struct {
+	CreateCredentialsStub        func(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error)
+	createCredentialsMutex       sync.RWMutex
+	createCredentialsArgsForCall []struct {
 		instanceID string
 		bindingID  string
 		details    models.BindDetails
 		instance   models.ServiceInstanceDetails
 	}
-	createAccountInGoogleReturns struct {
+	createCredentialsReturns struct {
 		result1 models.ServiceBindingCredentials
 		result2 error
 	}
-	DeleteAccountFromGoogleStub        func(creds models.ServiceBindingCredentials) error
-	deleteAccountFromGoogleMutex       sync.RWMutex
-	deleteAccountFromGoogleArgsForCall []struct {
+	DeleteCredentialsStub        func(creds models.ServiceBindingCredentials) error
+	deleteCredentialsMutex       sync.RWMutex
+	deleteCredentialsArgsForCall []struct {
 		creds models.ServiceBindingCredentials
 	}
-	deleteAccountFromGoogleReturns struct {
+	deleteCredentialsReturns struct {
 		result1 error
 	}
 	BuildInstanceCredentialsStub        func(bindDetails map[string]string, instanceDetails map[string]string) map[string]string
@@ -40,72 +40,72 @@ type FakeAccountManager struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeAccountManager) CreateAccountInGoogle(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
-	fake.createAccountInGoogleMutex.Lock()
-	fake.createAccountInGoogleArgsForCall = append(fake.createAccountInGoogleArgsForCall, struct {
+func (fake *FakeAccountManager) CreateCredentials(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+	fake.createCredentialsMutex.Lock()
+	fake.createCredentialsArgsForCall = append(fake.createCredentialsArgsForCall, struct {
 		instanceID string
 		bindingID  string
 		details    models.BindDetails
 		instance   models.ServiceInstanceDetails
 	}{instanceID, bindingID, details, instance})
-	fake.recordInvocation("CreateAccountInGoogle", []interface{}{instanceID, bindingID, details, instance})
-	fake.createAccountInGoogleMutex.Unlock()
-	if fake.CreateAccountInGoogleStub != nil {
-		return fake.CreateAccountInGoogleStub(instanceID, bindingID, details, instance)
+	fake.recordInvocation("CreateCredentials", []interface{}{instanceID, bindingID, details, instance})
+	fake.createCredentialsMutex.Unlock()
+	if fake.CreateCredentialsStub != nil {
+		return fake.CreateCredentialsStub(instanceID, bindingID, details, instance)
 	} else {
-		return fake.createAccountInGoogleReturns.result1, fake.createAccountInGoogleReturns.result2
+		return fake.createCredentialsReturns.result1, fake.createCredentialsReturns.result2
 	}
 }
 
-func (fake *FakeAccountManager) CreateAccountInGoogleCallCount() int {
-	fake.createAccountInGoogleMutex.RLock()
-	defer fake.createAccountInGoogleMutex.RUnlock()
-	return len(fake.createAccountInGoogleArgsForCall)
+func (fake *FakeAccountManager) CreateCredentialsCallCount() int {
+	fake.createCredentialsMutex.RLock()
+	defer fake.createCredentialsMutex.RUnlock()
+	return len(fake.createCredentialsArgsForCall)
 }
 
-func (fake *FakeAccountManager) CreateAccountInGoogleArgsForCall(i int) (string, string, models.BindDetails, models.ServiceInstanceDetails) {
-	fake.createAccountInGoogleMutex.RLock()
-	defer fake.createAccountInGoogleMutex.RUnlock()
-	return fake.createAccountInGoogleArgsForCall[i].instanceID, fake.createAccountInGoogleArgsForCall[i].bindingID, fake.createAccountInGoogleArgsForCall[i].details, fake.createAccountInGoogleArgsForCall[i].instance
+func (fake *FakeAccountManager) CreateCredentialsArgsForCall(i int) (string, string, models.BindDetails, models.ServiceInstanceDetails) {
+	fake.createCredentialsMutex.RLock()
+	defer fake.createCredentialsMutex.RUnlock()
+	return fake.createCredentialsArgsForCall[i].instanceID, fake.createCredentialsArgsForCall[i].bindingID, fake.createCredentialsArgsForCall[i].details, fake.createCredentialsArgsForCall[i].instance
 }
 
-func (fake *FakeAccountManager) CreateAccountInGoogleReturns(result1 models.ServiceBindingCredentials, result2 error) {
-	fake.CreateAccountInGoogleStub = nil
-	fake.createAccountInGoogleReturns = struct {
+func (fake *FakeAccountManager) CreateCredentialsReturns(result1 models.ServiceBindingCredentials, result2 error) {
+	fake.CreateCredentialsStub = nil
+	fake.createCredentialsReturns = struct {
 		result1 models.ServiceBindingCredentials
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeAccountManager) DeleteAccountFromGoogle(creds models.ServiceBindingCredentials) error {
-	fake.deleteAccountFromGoogleMutex.Lock()
-	fake.deleteAccountFromGoogleArgsForCall = append(fake.deleteAccountFromGoogleArgsForCall, struct {
+func (fake *FakeAccountManager) DeleteCredentials(creds models.ServiceBindingCredentials) error {
+	fake.deleteCredentialsMutex.Lock()
+	fake.deleteCredentialsArgsForCall = append(fake.deleteCredentialsArgsForCall, struct {
 		creds models.ServiceBindingCredentials
 	}{creds})
-	fake.recordInvocation("DeleteAccountFromGoogle", []interface{}{creds})
-	fake.deleteAccountFromGoogleMutex.Unlock()
-	if fake.DeleteAccountFromGoogleStub != nil {
-		return fake.DeleteAccountFromGoogleStub(creds)
+	fake.recordInvocation("DeleteCredentials", []interface{}{creds})
+	fake.deleteCredentialsMutex.Unlock()
+	if fake.DeleteCredentialsStub != nil {
+		return fake.DeleteCredentialsStub(creds)
 	} else {
-		return fake.deleteAccountFromGoogleReturns.result1
+		return fake.deleteCredentialsReturns.result1
 	}
 }
 
-func (fake *FakeAccountManager) DeleteAccountFromGoogleCallCount() int {
-	fake.deleteAccountFromGoogleMutex.RLock()
-	defer fake.deleteAccountFromGoogleMutex.RUnlock()
-	return len(fake.deleteAccountFromGoogleArgsForCall)
+func (fake *FakeAccountManager) DeleteCredentialsCallCount() int {
+	fake.deleteCredentialsMutex.RLock()
+	defer fake.deleteCredentialsMutex.RUnlock()
+	return len(fake.deleteCredentialsArgsForCall)
 }
 
-func (fake *FakeAccountManager) DeleteAccountFromGoogleArgsForCall(i int) models.ServiceBindingCredentials {
-	fake.deleteAccountFromGoogleMutex.RLock()
-	defer fake.deleteAccountFromGoogleMutex.RUnlock()
-	return fake.deleteAccountFromGoogleArgsForCall[i].creds
+func (fake *FakeAccountManager) DeleteCredentialsArgsForCall(i int) models.ServiceBindingCredentials {
+	fake.deleteCredentialsMutex.RLock()
+	defer fake.deleteCredentialsMutex.RUnlock()
+	return fake.deleteCredentialsArgsForCall[i].creds
 }
 
-func (fake *FakeAccountManager) DeleteAccountFromGoogleReturns(result1 error) {
-	fake.DeleteAccountFromGoogleStub = nil
-	fake.deleteAccountFromGoogleReturns = struct {
+func (fake *FakeAccountManager) DeleteCredentialsReturns(result1 error) {
+	fake.DeleteCredentialsStub = nil
+	fake.deleteCredentialsReturns = struct {
 		result1 error
 	}{result1}
 }
@@ -147,10 +147,10 @@ func (fake *FakeAccountManager) BuildInstanceCredentialsReturns(result1 map[stri
 func (fake *FakeAccountManager) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.createAccountInGoogleMutex.RLock()
-	defer fake.createAccountInGoogleMutex.RUnlock()
-	fake.deleteAccountFromGoogleMutex.RLock()
-	defer fake.deleteAccountFromGoogleMutex.RUnlock()
+	fake.createCredentialsMutex.RLock()
+	defer fake.createCredentialsMutex.RUnlock()
+	fake.deleteCredentialsMutex.RLock()
+	defer fake.deleteCredentialsMutex.RUnlock()
 	fake.buildInstanceCredentialsMutex.RLock()
 	defer fake.buildInstanceCredentialsMutex.RUnlock()
 	return fake.invocations

@@ -388,7 +388,7 @@ func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details models.BindD
 		return models.ServiceBindingCredentials{}, err
 	}
 
-	credBytes, err := b.AccountManager.CreateAccountInGoogle(instanceID, bindingID, details, cloudDb)
+	credBytes, err := b.AccountManager.CreateCredentials(instanceID, bindingID, details, cloudDb)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}
@@ -405,7 +405,7 @@ func (b *CloudSQLBroker) BuildInstanceCredentials(bindDetails map[string]string,
 // some of these operations are async
 func (b *CloudSQLBroker) Unbind(creds models.ServiceBindingCredentials) error {
 
-	err := b.AccountManager.DeleteAccountFromGoogle(creds)
+	err := b.AccountManager.DeleteCredentials(creds)
 
 	if err != nil {
 		return err

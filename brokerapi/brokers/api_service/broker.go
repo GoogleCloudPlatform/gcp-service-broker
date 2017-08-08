@@ -18,18 +18,11 @@
 package api_service
 
 import (
-	"code.cloudfoundry.org/lager"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/models"
-	"golang.org/x/oauth2/jwt"
 )
 
 type ApiServiceBroker struct {
-	HttpConfig     *jwt.Config
-	ProjectId      string
-	Logger         lager.Logger
-	AccountManager models.AccountManager
-
 	broker_base.BrokerBase
 }
 

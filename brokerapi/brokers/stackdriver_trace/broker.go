@@ -18,19 +18,11 @@
 package stackdriver_trace
 
 import (
-	"gcp-service-broker/brokerapi/brokers/account_managers"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/models"
-
-	"code.cloudfoundry.org/lager"
-	"golang.org/x/oauth2/jwt"
 )
 
 type StackdriverTraceBroker struct {
-	HttpConfig            *jwt.Config
-	ProjectId             string
-	Logger                lager.Logger
-	ServiceAccountManager *account_managers.ServiceAccountManager
 	broker_base.BrokerBase
 }
 
@@ -56,7 +48,7 @@ func (b *StackdriverTraceBroker) Bind(instanceID, bindingID string, details mode
 	details.Parameters["role"] = "cloudtrace.agent"
 
 	// Create account
-	newBinding, err := b.ServiceAccountManager.CreateAccountInGoogle(instanceID, bindingID, details, models.ServiceInstanceDetails{})
+	newBinding, err := b.AccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
 
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err

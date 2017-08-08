@@ -17,6 +17,7 @@ import (
 
 	"gcp-service-broker/fakes"
 
+	"gcp-service-broker/brokerapi/brokers/config"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -26,6 +27,7 @@ import (
 var _ = Describe("Brokers", func() {
 	var (
 		gcpBroker                *GCPAsyncServiceBroker
+		brokerConfig             *config.BrokerConfig
 		err                      error
 		logger                   lager.Logger
 		serviceNameToId          map[string]string = make(map[string]string)
@@ -66,10 +68,15 @@ var _ = Describe("Brokers", func() {
 
 		fakes.SetUpTestServices()
 
+		brokerConfig, err = config.NewBrokerConfigFromEnv()
+		if err != nil {
+			logger.Error("error", err)
+		}
+
 		instanceId = "newid"
 		bindingId = "newbinding"
 
-		gcpBroker, err = brokers.New(logger)
+		gcpBroker, err = brokers.New(brokerConfig, logger)
 		if err != nil {
 			logger.Error("error", err)
 		}
@@ -77,7 +84,7 @@ var _ = Describe("Brokers", func() {
 		var someBigQueryPlanId string
 		var someCloudSQLPlanId string
 		var someStoragePlanId string
-		for _, service := range *gcpBroker.Catalog {
+		for _, service := range gcpBroker.Catalog {
 			serviceNameToId[service.Name] = service.ID
 			if service.Name == models.BigqueryName {
 				someBigQueryPlanId = service.Plans[0].ID
@@ -136,11 +143,11 @@ var _ = Describe("Brokers", func() {
 		})
 
 		It("should have a default client", func() {
-			Expect(gcpBroker.HttpConfig).NotTo(Equal(&jwt.Config{}))
+			Expect(brokerConfig.HttpConfig).NotTo(Equal(&jwt.Config{}))
 		})
 
 		It("should have loaded credentials correctly and have a project id", func() {
-			Expect(gcpBroker.RootGCPCredentials.ProjectId).To(Equal("foo"))
+			Expect(brokerConfig.ProjectId).To(Equal("foo"))
 		})
 	})
 
@@ -200,7 +207,7 @@ var _ = Describe("Brokers", func() {
 
 		It("should error if plan ids are not supplied", func() {
 			os.Setenv("GOOGLE_STACKDRIVER_TRACE", fakes.PlanNoId)
-			_, err := brokers.New(logger)
+			_, err := config.NewBrokerConfigFromEnv()
 			Expect(err).To(HaveOccurred())
 		})
 	})
@@ -211,7 +218,9 @@ var _ = Describe("Brokers", func() {
 
 			os.Setenv("GOOGLE_CLOUDSQL", fakes.CloudSqlNewPlan)
 
-			newBroker, err := brokers.New(logger)
+			newcfg, err := config.NewBrokerConfigFromEnv()
+			Expect(err).ToNot(HaveOccurred())
+			newBroker, err := brokers.New(newcfg, logger)
 			Expect(err).ToNot(HaveOccurred())
 
 			serviceList := newBroker.Services()
@@ -443,7 +452,6 @@ var _ = Describe("AccountManagers", func() {
 		accountManager = modelsfakes.FakeAccountManager{}
 
 		iamStyleBroker = &pubsub.PubSubBroker{
-			Logger: logger,
 			BrokerBase: broker_base.BrokerBase{
 				AccountManager: &accountManager,
 			},
@@ -455,8 +463,9 @@ var _ = Describe("AccountManagers", func() {
 		}
 
 		spannerBroker = &spanner.SpannerBroker{
-			Logger:         logger,
-			AccountManager: &accountManager,
+			BrokerBase: broker_base.BrokerBase{
+				AccountManager: &accountManager,
+			},
 		}
 	})
 
@@ -465,7 +474,7 @@ var _ = Describe("AccountManagers", func() {
 			It("should call the account manager create account in google method", func() {
 				_, err = iamStyleBroker.Bind("foo", "bar", models.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(accountManager.CreateAccountInGoogleCallCount()).To(Equal(1))
+				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 			})
 		})
 
@@ -474,7 +483,7 @@ var _ = Describe("AccountManagers", func() {
 				db_service.DbConnection.Save(&models.ServiceInstanceDetails{ID: "foo"})
 				_, err = iamStyleBroker.Bind("foo", "bar", models.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(accountManager.CreateAccountInGoogleCallCount()).To(Equal(1))
+				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 			})
 		})
 
@@ -492,8 +501,8 @@ var _ = Describe("AccountManagers", func() {
 				_, err := cloudsqlBroker.Bind("foo", "bar", models.BindDetails{})
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(accountManager.CreateAccountInGoogleCallCount()).To(Equal(1))
-				_, _, details, _ := accountManager.CreateAccountInGoogleArgsForCall(0)
+				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
+				_, _, details, _ := accountManager.CreateCredentialsArgsForCall(0)
 				Expect(details.Parameters).NotTo(BeEmpty())
 
 				username, usernameOk := details.Parameters["username"].(string)
@@ -519,7 +528,7 @@ var _ = Describe("AccountManagers", func() {
 			It("it should call the account manager delete account from google method", func() {
 				err = iamStyleBroker.Unbind(models.ServiceBindingCredentials{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(accountManager.DeleteAccountFromGoogleCallCount()).To(Equal(1))
+				Expect(accountManager.DeleteCredentialsCallCount()).To(Equal(1))
 			})
 		})
 
@@ -527,7 +536,7 @@ var _ = Describe("AccountManagers", func() {
 			It("it should call the account manager delete account from google method", func() {
 				err = cloudsqlBroker.Unbind(models.ServiceBindingCredentials{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(accountManager.DeleteAccountFromGoogleCallCount()).To(Equal(1))
+				Expect(accountManager.DeleteCredentialsCallCount()).To(Equal(1))
 			})
 		})
 	})

@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers"
 	. "gcp-service-broker/brokerapi/brokers"
+	"gcp-service-broker/brokerapi/brokers/config"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/brokerapi/brokers/name_generator"
 	"gcp-service-broker/db_service"
@@ -63,6 +64,7 @@ func pollForMaxFiveMins(gcpb *GCPAsyncServiceBroker, instanceId string) error {
 var _ = Describe("AsyncIntegrationTests", func() {
 	var (
 		gcpBroker            *GCPAsyncServiceBroker
+		brokerConfig         *config.BrokerConfig
 		err                  error
 		logger               lager.Logger
 		serviceNameToId      map[string]string = make(map[string]string)
@@ -88,12 +90,14 @@ var _ = Describe("AsyncIntegrationTests", func() {
 
 		fakes.SetUpTestServices()
 
-		var creds models.GCPCredentials
-		creds, err = brokers.GetCredentialsFromEnv()
+		brokerConfig, err = config.NewBrokerConfigFromEnv()
+
 		if err != nil {
+			panic(err.Error())
 			logger.Error("error", err)
 		}
-		instance_name = generateInstanceName(creds.ProjectId, "-")
+
+		instance_name = generateInstanceName(brokerConfig.ProjectId, "-")
 
 		// cloudsql instance names need to be random because the recycle time is so long it's untenable to be consistent
 		cloudsqlInstanceName = fmt.Sprintf("pcf-sb-test-%d", time.Now().UnixNano())
@@ -102,12 +106,12 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			StaticNameGenerator: fakes.StaticNameGenerator{Val: cloudsqlInstanceName},
 		}
 
-		gcpBroker, err = brokers.New(logger)
+		gcpBroker, err = brokers.New(brokerConfig, logger)
 		if err != nil {
 			logger.Error("error", err)
 		}
 
-		for _, service := range *gcpBroker.Catalog {
+		for _, service := range gcpBroker.Catalog {
 			serviceNameToId[service.Name] = service.ID
 			serviceNameToPlanId[service.Name] = service.Plans[0].ID
 		}
@@ -118,7 +122,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 		var dbService *googlecloudsql.InstancesService
 		var sslService *googlecloudsql.SslCertsService
 		BeforeEach(func() {
-			sqlService, err := googlecloudsql.New(gcpBroker.HttpConfig.Client(context.Background()))
+			sqlService, err := googlecloudsql.New(brokerConfig.HttpConfig.Client(context.Background()))
 			Expect(err).NotTo(HaveOccurred())
 			dbService = googlecloudsql.NewInstancesService(sqlService)
 			sslService = googlecloudsql.NewSslCertsService(sqlService)
@@ -140,7 +144,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			Expect(count).To(Equal(1))
 
 			// make sure we can get it from google
-			clouddb, err := dbService.Get(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName).Do()
+			clouddb, err := dbService.Get(brokerConfig.ProjectId, cloudsqlInstanceName).Do()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(clouddb.Name).To(Equal(cloudsqlInstanceName))
 
@@ -155,7 +159,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 
 			// make sure we have a username and google has ssl certs
 			Expect(credsMap["Username"]).ToNot(Equal(""))
-			_, err = sslService.Get(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName, credsMap["Sha1Fingerprint"]).Do()
+			_, err = sslService.Get(brokerConfig.ProjectId, cloudsqlInstanceName, credsMap["Sha1Fingerprint"]).Do()
 			Expect(err).NotTo(HaveOccurred())
 
 			// unbind the instance
@@ -167,7 +171,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			// make sure google no longer has certs
-			certsList, err := sslService.List(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName).Do()
+			certsList, err := sslService.List(brokerConfig.ProjectId, cloudsqlInstanceName).Do()
 			Expect(len(certsList.Items)).To(Equal(0))
 
 			// deprovision the instance
@@ -187,7 +191,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			Expect(instance.DeletedAt).NotTo(BeNil())
 
 			// make sure the instance is deleted from google
-			_, err = dbService.Get(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName).Do()
+			_, err = dbService.Get(brokerConfig.ProjectId, cloudsqlInstanceName).Do()
 			Expect(err).To(HaveOccurred())
 		})
 
@@ -198,7 +202,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 		var client *googlespanner.InstanceAdminClient
 		BeforeEach(func() {
 			co := option.WithUserAgent(models.CustomUserAgent)
-			ct := option.WithTokenSource(gcpBroker.HttpConfig.TokenSource(context.Background()))
+			ct := option.WithTokenSource(brokerConfig.HttpConfig.TokenSource(context.Background()))
 			client, err = googlespanner.NewInstanceAdminClient(context.Background(), co, ct)
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -218,7 +222,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			Expect(count).To(Equal(1))
 
 			_, err = client.GetInstance(context.Background(), &instancepb.GetInstanceRequest{
-				Name: "projects/" + gcpBroker.RootGCPCredentials.ProjectId + "/instances/" + instance_name,
+				Name: "projects/" + brokerConfig.ProjectId + "/instances/" + instance_name,
 			})
 			Expect(err).ToNot(HaveOccurred())
 
@@ -234,10 +238,10 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			credsMap := creds.Credentials.(map[string]string)
 			Expect(credsMap["credentials"]).ToNot(BeNil())
 
-			iamService, err := iam.New(gcpBroker.HttpConfig.Client(context.Background()))
+			iamService, err := iam.New(brokerConfig.HttpConfig.Client(context.Background()))
 			Expect(err).ToNot(HaveOccurred())
 			saService := iam.NewProjectsServiceAccountsService(iamService)
-			bindResourceName := "projects/" + gcpBroker.RootGCPCredentials.ProjectId + "/serviceAccounts/" + creds.Credentials.(map[string]string)["UniqueId"]
+			bindResourceName := "projects/" + brokerConfig.ProjectId + "/serviceAccounts/" + creds.Credentials.(map[string]string)["UniqueId"]
 			_, err = saService.Get(bindResourceName).Do()
 			Expect(err).ToNot(HaveOccurred())
 
@@ -265,7 +269,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			Expect(instance.DeletedAt).NotTo(BeNil())
 
 			_, err = client.GetInstance(context.Background(), &instancepb.GetInstanceRequest{
-				Name: "projects/" + gcpBroker.RootGCPCredentials.ProjectId + "/instances/" + instance_name,
+				Name: "projects/" + brokerConfig.ProjectId + "/instances/" + instance_name,
 			})
 			Expect(err).To(HaveOccurred())
 		})
