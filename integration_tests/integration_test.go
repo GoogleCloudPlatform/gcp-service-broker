@@ -230,7 +230,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	Describe("Broker init", func() {
-		It("should have 9 services in sevices map", func() {
+		It("should have 10 services in sevices map", func() {
 			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(10))
 		})
 

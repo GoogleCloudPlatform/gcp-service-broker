@@ -231,8 +231,8 @@ var _ = Describe("AsyncIntegrationTests", func() {
 
 			// bind the instance
 			bindDetails := models.BindDetails{
-				ServiceID: serviceNameToId[models.CloudsqlMySQLName],
-				PlanID:    serviceNameToPlanId[models.CloudsqlMySQLName],
+				ServiceID: serviceNameToId[models.CloudsqlPostgresName],
+				PlanID:    serviceNameToPlanId[models.CloudsqlPostgresName],
 			}
 			creds, err := gcpBroker.Bind("integration_test_instance", "binding_id", bindDetails)
 			Expect(err).NotTo(HaveOccurred())
@@ -245,8 +245,8 @@ var _ = Describe("AsyncIntegrationTests", func() {
 
 			// unbind the instance
 			unBindDetails := models.UnbindDetails{
-				ServiceID: serviceNameToId[models.CloudsqlMySQLName],
-				PlanID:    serviceNameToPlanId[models.CloudsqlMySQLName],
+				ServiceID: serviceNameToId[models.CloudsqlPostgresName],
+				PlanID:    serviceNameToPlanId[models.CloudsqlPostgresName],
 			}
 			err = gcpBroker.Unbind("integration_test_instance", "binding_id", unBindDetails)
 			Expect(err).NotTo(HaveOccurred())
@@ -257,8 +257,8 @@ var _ = Describe("AsyncIntegrationTests", func() {
 
 			// deprovision the instance
 			deprovisionDetails := models.DeprovisionDetails{
-				ServiceID: serviceNameToId[models.CloudsqlMySQLName],
-				PlanID:    serviceNameToPlanId[models.CloudsqlMySQLName],
+				ServiceID: serviceNameToId[models.CloudsqlPostgresName],
+				PlanID:    serviceNameToPlanId[models.CloudsqlPostgresName],
 			}
 			_, err = gcpBroker.Deprovision("integration_test_instance", deprovisionDetails, true)
 			Expect(err).NotTo(HaveOccurred())
