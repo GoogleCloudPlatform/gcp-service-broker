@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager"
+	"gcp-service-broker/utils"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 )
 
@@ -73,9 +74,19 @@ const SecondGenPricingPlan string = "PER_USE"
 //
 // for more information, see: https://cloud.google.com/sql/docs/admin-api/v1beta4/instances/insert
 func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
-	// validate parameters
 	var params map[string]string
 	var err error
+	var isPostgres = false
+
+	idToNameMap, err := utils.MapServiceIdToName()
+	if err != nil {
+		return models.ServiceInstanceDetails{}, err
+	}
+	if idToNameMap[details.ServiceID] == models.CloudsqlPostgresName {
+		isPostgres = true
+	}
+
+	// validate parameters
 
 	if len(details.RawParameters) == 0 {
 		params = map[string]string{}
@@ -95,28 +106,30 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling plan features: %s", err)
 	}
 
-	// set default parameters or cast strings to proper values
-	firstGenTiers := []string{"d0", "d1", "d2", "d4", "d8", "d16", "d32"}
+	var binlogEnabled = false
 	isFirstGen := false
-	for _, a := range firstGenTiers {
-		if a == strings.ToLower(planDetails["tier"]) {
-			isFirstGen = true
+	// set default parameters or cast strings to proper values
+	if isPostgres {
+		params["version"] = "POSTGRES_9_6"
+	} else {
+		firstGenTiers := []string{"d0", "d1", "d2", "d4", "d8", "d16", "d32"}
+
+		for _, a := range firstGenTiers {
+			if a == strings.ToLower(planDetails["tier"]) {
+				isFirstGen = true
+			}
 		}
-	}
 
-	// 1st and second gen values
-	binlogEnabledDefault := true
-
-	if isFirstGen {
-		binlogEnabledDefault = false
-	}
-	binlogEnabled := binlogEnabledDefault
-	binlog, binlogOk := params["binlog"]
-	if binlogOk {
-		if binlog == "true" {
+		if !isFirstGen {
 			binlogEnabled = true
-		} else if binlog == "false" {
-			binlogEnabled = false
+		}
+		binlog, binlogOk := params["binlog"]
+		if binlogOk {
+			if binlog == "true" {
+				binlogEnabled = true
+			} else if binlog == "false" {
+				binlogEnabled = false
+			}
 		}
 	}
 
@@ -136,103 +149,21 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 
 	var di googlecloudsql.DatabaseInstance
 	if isFirstGen {
-
-		// set up instance resource
-		di = googlecloudsql.DatabaseInstance{
-			Name: instanceName,
-			Settings: &googlecloudsql.Settings{
-				IpConfiguration: &googlecloudsql.IpConfiguration{
-					RequireSsl:         true,
-					AuthorizedNetworks: []*googlecloudsql.AclEntry{&openAcl},
-					Ipv4Enabled:        true,
-				},
-				Tier:        planDetails["tier"],
-				PricingPlan: planDetails["pricing_plan"],
-				BackupConfiguration: &googlecloudsql.BackupConfiguration{
-					Enabled:          backupsEnabled,
-					StartTime:        backupStartTime,
-					BinaryLogEnabled: binlogEnabled,
-				},
-				ActivationPolicy: params["activation_policy"],
-				ReplicationType:  params["replication_type"],
-			},
-			DatabaseVersion: params["version"],
-			Region:          params["region"],
-		}
+		di = createFirstGenRequest(planDetails, params)
 	} else {
-		diskSize := 10
-		if _, diskSizeOk := params["disk_size"]; diskSizeOk {
-			diskSize, err = strconv.Atoi(params["disk_size"])
-			if err != nil {
-				return models.ServiceInstanceDetails{}, fmt.Errorf("Error converting disk_size gb string to int: %s", err)
-			}
-		}
-		maxDiskSize, err := strconv.Atoi(planDetails["max_disk_size"])
+		di, err = createSecondGenOrPostgresRequest(planDetails, params)
 		if err != nil {
-			return models.ServiceInstanceDetails{}, fmt.Errorf("Error converting max_disk_size gb string to int: %s", err)
-		}
-		if diskSize > maxDiskSize {
-			return models.ServiceInstanceDetails{}, errors.New("disk size is greater than max allowed disk size for this plan")
-		}
-
-		var mw *googlecloudsql.MaintenanceWindow = nil
-		day, dayOk := params["maintenance_window_day"]
-		hour, hourOk := params["maintenance_window_hour"]
-		if dayOk && hourOk {
-			intDay, err := strconv.Atoi(day)
-			if err != nil {
-				return models.ServiceInstanceDetails{}, fmt.Errorf("Error converting maintenance_window_day string to int: %s", err)
-			}
-			intHour, err := strconv.Atoi(hour)
-			if err != nil {
-				return models.ServiceInstanceDetails{}, fmt.Errorf("Error converting maintenance_window_hour string to int: %s", err)
-			}
-			mw = &googlecloudsql.MaintenanceWindow{
-				Day:         int64(intDay),
-				Hour:        int64(intHour),
-				UpdateTrack: "stable",
-			}
-		}
-
-		autoResize := false
-		if params["auto_resize"] == "true" {
-			autoResize = true
-		}
-
-		// set up instance resource
-		di = googlecloudsql.DatabaseInstance{
-			Name: instanceName,
-			Settings: &googlecloudsql.Settings{
-				IpConfiguration: &googlecloudsql.IpConfiguration{
-					RequireSsl:         true,
-					AuthorizedNetworks: []*googlecloudsql.AclEntry{&openAcl},
-					Ipv4Enabled:        true,
-				},
-				Tier:           planDetails["tier"],
-				DataDiskSizeGb: int64(diskSize),
-				LocationPreference: &googlecloudsql.LocationPreference{
-					Zone: params["zone"],
-				},
-				DataDiskType:      params["disk_type"],
-				MaintenanceWindow: mw,
-				PricingPlan:       SecondGenPricingPlan,
-				BackupConfiguration: &googlecloudsql.BackupConfiguration{
-					Enabled:          backupsEnabled,
-					StartTime:        backupStartTime,
-					BinaryLogEnabled: binlogEnabled,
-				},
-				ActivationPolicy:  params["activation_policy"],
-				ReplicationType:   params["replication_type"],
-				StorageAutoResize: autoResize,
-			},
-			DatabaseVersion: params["version"],
-			Region:          params["region"],
-			FailoverReplica: &googlecloudsql.DatabaseInstanceFailoverReplica{
-				Name: params["failover_replica_name"],
-			},
+			return models.ServiceInstanceDetails{}, err
 		}
 
 	}
+	di.Name = instanceName
+	di.Settings.BackupConfiguration = &googlecloudsql.BackupConfiguration{
+		Enabled:          backupsEnabled,
+		StartTime:        backupStartTime,
+		BinaryLogEnabled: binlogEnabled,
+	}
+	di.Settings.IpConfiguration.AuthorizedNetworks = []*googlecloudsql.AclEntry{&openAcl}
 
 	// init sqladmin service
 	sqlService, err := googlecloudsql.New(b.Client)
@@ -272,6 +203,92 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 
 	return i, nil
 
+}
+
+func createFirstGenRequest(planDetails, params map[string]string) googlecloudsql.DatabaseInstance {
+	// set up instance resource
+	return googlecloudsql.DatabaseInstance{
+		Settings: &googlecloudsql.Settings{
+			IpConfiguration: &googlecloudsql.IpConfiguration{
+				RequireSsl:  true,
+				Ipv4Enabled: true,
+			},
+			Tier:             planDetails["tier"],
+			PricingPlan:      planDetails["pricing_plan"],
+			ActivationPolicy: params["activation_policy"],
+			ReplicationType:  params["replication_type"],
+		},
+		DatabaseVersion: params["version"],
+		Region:          params["region"],
+	}
+}
+
+func createSecondGenOrPostgresRequest(planDetails, params map[string]string) (googlecloudsql.DatabaseInstance, error) {
+	var err error
+	diskSize := 10
+	if _, diskSizeOk := params["disk_size"]; diskSizeOk {
+		diskSize, err = strconv.Atoi(params["disk_size"])
+		if err != nil {
+			return googlecloudsql.DatabaseInstance{}, fmt.Errorf("Error converting disk_size gb string to int: %s", err)
+		}
+	}
+	maxDiskSize, err := strconv.Atoi(planDetails["max_disk_size"])
+	if err != nil {
+		return googlecloudsql.DatabaseInstance{}, fmt.Errorf("Error converting max_disk_size gb string to int: %s", err)
+	}
+	if diskSize > maxDiskSize {
+		return googlecloudsql.DatabaseInstance{}, errors.New("disk size is greater than max allowed disk size for this plan")
+	}
+
+	var mw *googlecloudsql.MaintenanceWindow = nil
+	day, dayOk := params["maintenance_window_day"]
+	hour, hourOk := params["maintenance_window_hour"]
+	if dayOk && hourOk {
+		intDay, err := strconv.Atoi(day)
+		if err != nil {
+			return googlecloudsql.DatabaseInstance{}, fmt.Errorf("Error converting maintenance_window_day string to int: %s", err)
+		}
+		intHour, err := strconv.Atoi(hour)
+		if err != nil {
+			return googlecloudsql.DatabaseInstance{}, fmt.Errorf("Error converting maintenance_window_hour string to int: %s", err)
+		}
+		mw = &googlecloudsql.MaintenanceWindow{
+			Day:         int64(intDay),
+			Hour:        int64(intHour),
+			UpdateTrack: "stable",
+		}
+	}
+
+	autoResize := false
+	if params["auto_resize"] == "true" {
+		autoResize = true
+	}
+
+	// set up instance resource
+	return googlecloudsql.DatabaseInstance{
+		Settings: &googlecloudsql.Settings{
+			IpConfiguration: &googlecloudsql.IpConfiguration{
+				RequireSsl:  true,
+				Ipv4Enabled: true,
+			},
+			Tier:           planDetails["tier"],
+			DataDiskSizeGb: int64(diskSize),
+			LocationPreference: &googlecloudsql.LocationPreference{
+				Zone: params["zone"],
+			},
+			DataDiskType:      params["disk_type"],
+			MaintenanceWindow: mw,
+			PricingPlan:       SecondGenPricingPlan,
+			ActivationPolicy:  params["activation_policy"],
+			ReplicationType:   params["replication_type"],
+			StorageAutoResize: autoResize,
+		},
+		DatabaseVersion: params["version"],
+		Region:          params["region"],
+		FailoverReplica: &googlecloudsql.DatabaseInstanceFailoverReplica{
+			Name: params["failover_replica_name"],
+		},
+	}, nil
 }
 
 // Completes the second step in provisioning a cloudsql instance, namely, creating the db.

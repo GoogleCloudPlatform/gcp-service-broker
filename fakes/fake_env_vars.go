@@ -49,17 +49,32 @@ const Services string = `[
         {
           "id": "4bc59b9a-8520-409f-85da-1c7552315863",
           "description": "Google Cloud SQL is a fully-managed MySQL database service",
-          "name": "google-cloudsql",
+          "name": "google-cloudsql-mysql",
           "bindable": true,
           "plan_updateable": false,
           "metadata": {
-            "displayName": "Google CloudSQL",
+            "displayName": "Google CloudSQL MySQL",
             "longDescription": "Google Cloud SQL is a fully-managed MySQL database service",
             "documentationUrl": "https://cloud.google.com/sql/docs/",
             "supportUrl": "https://cloud.google.com/support/",
             "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
           },
-          "tags": ["gcp", "cloudsql"]
+          "tags": ["gcp", "cloudsql", "mysql"]
+        },
+        {
+          "id": "cbad6d78-a73c-432d-b8ff-b219a17a803a",
+          "description": "Google Cloud SQL is a fully-managed PostgreSQL database service",
+          "name": "google-cloudsql-postgres",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+            "displayName": "Google CloudSQL PostgreSQL",
+            "longDescription": "Google Cloud SQL is a fully-managed MySQL database service",
+            "documentationUrl": "https://cloud.google.com/sql/docs/",
+            "supportUrl": "https://cloud.google.com/support/",
+            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
+          },
+          "tags": ["gcp", "cloudsql", "postgres"]
         },
         {
           "id": "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4",
@@ -196,16 +211,28 @@ const PreconfiguredPlans = `[
 			 }
 		      ]`
 
-const TestCloudSQLPlan = `{
-			"test_cloudsql_plan": {
-				"guid": "test_cloudsql_plan",
-				"name": "test_cloudsql_plan",
-				"description": "test-cloudsql-plan",
+const TestCloudSQLMySQLPlan = `{
+			"test_cloudsql_mysql_plan": {
+				"guid": "test_cloudsql_mysql_plan",
+				"name": "test_cloudsql_mysql_plan",
+				"description": "test-cloudsql-mysql-plan",
 				"tier": "D4",
 				"pricing_plan": "PER_USE",
 				"max_disk_size": "20",
-				"display_name": "test_cloudsql_plan",
+				"display_name": "test_cloudsql_mysql_plan",
 				"service": "4bc59b9a-8520-409f-85da-1c7552315863"
+			}
+		}`
+const TestCloudSQLPostgresPlan = `{
+			"test_cloudsql_postgres_plan": {
+				"guid": "test_cloudsql_postgres_plan",
+				"name": "test_cloudsql_postgres_plan",
+				"description": "test-postgres-plan",
+				"tier": "db-custom-2-4096",
+				"pricing_plan": "PER_USE",
+				"max_disk_size": "20",
+				"display_name": "test_cloudsql_postgres_plan",
+				"service": "cbad6d78-a73c-432d-b8ff-b219a17a803a"
 			}
 		}`
 const TestBigtablePlan = `{
