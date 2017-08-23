@@ -278,9 +278,9 @@ forms:
 
 
 service_plan_forms:
-- name: cloudsql_custom_plans
-  description: Generate custom plans for CloudSQL (required to enable the service for developers)
-  label: CloudSQL Custom Plans
+- name: cloudsql_mysql_custom_plans
+  description: Generate custom plans for CloudSQL MySQL (required to enable the service for developers)
+  label: CloudSQL MySQL Custom Plans
   optional: true
   properties:
     - name: display_name
@@ -299,7 +299,7 @@ service_plan_forms:
       description: "The service this plan is associated with"
       options:
         - name: '4bc59b9a-8520-409f-85da-1c7552315863'
-          label: 'CloudSQL'
+          label: 'CloudSQL - MySQL'
     - name: tier
       label: Tier/Machine Type
       type: string
@@ -321,6 +321,48 @@ service_plan_forms:
       type: string
       default: '10'
       description: "Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default)"
+      configurable: true
+- name: cloudsql_postgres_custom_plans
+  description: Generate custom plans for CloudSQL PostgreSQL (required to enable the service for developers)
+  label: CloudSQL PostgreSQL Custom Plans
+  optional: true
+  properties:
+    - name: display_name
+      label: Display Name
+      type: string
+      description: "Display name"
+      configurable: true
+    - name: description
+      label: Plan description
+      type: string
+      description: "Plan description"
+      configurable: true
+    - name: service
+      label: Service
+      type: dropdown_select
+      configurable: false
+      description: "The service this plan is associated with"
+      options:
+        - name: 'cbad6d78-a73c-432d-b8ff-b219a17a803a'
+          label: 'CloudSQL - PostgreSQL'
+    - name: tier
+      label: Tier/Machine Type
+      type: string
+      description: "a string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840"
+      configurable: true
+    - name: pricing_plan
+      label: Pricing Plan
+      type: dropdown_select
+      configurable: false
+      description: "the pricing plan"
+      options:
+        - name: PER_USE
+          label: 'Per-Use'
+    - name: max_disk_size
+      label: Max Disk Size
+      type: string
+      default: '10'
+      description: "Maximum disk size in GB (10 minimum/default)"
       configurable: true
 - name: bigtable_custom_plans
   description: Generate custom plans for Bigtable (required to enable the service for developers)
