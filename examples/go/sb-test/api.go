@@ -12,6 +12,7 @@ import (
 	googlespanner "cloud.google.com/go/spanner/admin/instance/apiv1"
 	"crypto/tls"
 	"crypto/x509"
+	"database/sql"
 	"fmt"
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -24,6 +25,9 @@ import (
 	"google.golang.org/api/option"
 	storage "google.golang.org/api/storage/v1"
 	instancepb "google.golang.org/genproto/googleapis/spanner/admin/instance/v1"
+
+	"encoding/pem"
+	_ "github.com/lib/pq"
 )
 
 var projectId string
@@ -34,7 +38,8 @@ func AttachRoutes(router *mux.Router) {
 	router.HandleFunc("/test-pubsub", testPubSub).Methods("GET")
 	router.HandleFunc("/test-bigquery", testBigquery).Methods("GET")
 	router.HandleFunc("/test-bigtable", testBigtable).Methods("GET")
-	router.HandleFunc("/test-cloudsql", testCloudSQL).Methods("GET")
+	router.HandleFunc("/test-cloudsql-mysql", testCloudSQL).Methods("GET")
+	router.HandleFunc("/test-cloudsql-postgres", testCloudPostgreSQL).Methods("GET")
 	router.HandleFunc("/test-spanner", testSpanner).Methods("GET")
 }
 
@@ -238,7 +243,7 @@ func testCloudSQL(w http.ResponseWriter, req *http.Request) {
 		println(vcap)
 	}
 
-	credsInterface := asMap["google-cloudsql"][0]["credentials"]
+	credsInterface := asMap["google-cloudsql-mysql"][0]["credentials"]
 	caCert := credsInterface.(map[string]interface{})["CaCert"].(string)
 	clientCertStr := credsInterface.(map[string]interface{})["ClientCert"].(string)
 	clientKeyStr := credsInterface.(map[string]interface{})["ClientKey"].(string)
@@ -277,6 +282,58 @@ func testCloudSQL(w http.ResponseWriter, req *http.Request) {
 
 	connStr := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local%s", dbUsername, dbPassword, dbHost, dbPort, databaseName, tlsStr)
 	_, err = gorm.Open("mysql", connStr)
+	if err != nil {
+		respond(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respond(w, http.StatusOK, fmt.Sprintf("I connected to the %s database, yay!", databaseName))
+}
+
+// connects to the given cloudsql database
+func testCloudPostgreSQL(w http.ResponseWriter, req *http.Request) {
+	vcap := os.Getenv("VCAP_SERVICES")
+
+	var asMap map[string][]map[string]interface{}
+	if err := json.Unmarshal([]byte(vcap), &asMap); err != nil {
+		println("ERROR setting config from json")
+		println(err.Error())
+		println(vcap)
+	}
+
+	credsInterface := asMap["google-cloudsql-postgres"][0]["credentials"]
+	caCert := credsInterface.(map[string]interface{})["CaCert"].(string)
+	clientCertStr := credsInterface.(map[string]interface{})["ClientCert"].(string)
+	clientKeyStr := credsInterface.(map[string]interface{})["ClientKey"].(string)
+
+	certpem, err := os.Create("/tmp/clientcert.pem")
+	defer certpem.Close()
+	pem.Encode(certpem, &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: []byte(clientCertStr),
+	})
+	keypem, err := os.Create("/tmp/clientkey.pem")
+	defer keypem.Close()
+	pem.Encode(keypem, &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: []byte(caCert),
+	})
+	capem, err := os.Create("/tmp/cacert.pem")
+	defer capem.Close()
+	pem.Encode(capem, &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: []byte(caCert),
+	})
+
+	dbHost := credsInterface.(map[string]interface{})["host"].(string)
+	dbUsername := credsInterface.(map[string]interface{})["Username"].(string)
+	dbPassword := credsInterface.(map[string]interface{})["Password"].(string)
+	databaseName := credsInterface.(map[string]interface{})["database_name"].(string)
+	dbPort := "3306"
+
+	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=require&sslcert=%s&sslkey=%s&sslrootcert=%s",
+		dbUsername, dbPassword, dbHost, dbPort, databaseName, clientCertStr, clientKeyStr, caCert)
+	_, err = sql.Open("postgres", connStr)
 	if err != nil {
 		respond(w, http.StatusInternalServerError, err.Error())
 		return

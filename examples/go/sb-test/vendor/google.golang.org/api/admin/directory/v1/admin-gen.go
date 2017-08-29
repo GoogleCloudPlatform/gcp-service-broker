@@ -157,10 +157,9 @@ func New(client *http.Client) (*Service, error) {
 }
 
 type Service struct {
-	client                    *http.Client
-	BasePath                  string // API endpoint base URL
-	UserAgent                 string // optional additional User-Agent fragment
-	GoogleClientHeaderElement string // client header fragment, for Google use only
+	client    *http.Client
+	BasePath  string // API endpoint base URL
+	UserAgent string // optional additional User-Agent fragment
 
 	Asps *AspsService
 
@@ -206,10 +205,6 @@ func (s *Service) userAgent() string {
 		return googleapi.UserAgent
 	}
 	return googleapi.UserAgent + " " + s.UserAgent
-}
-
-func (s *Service) clientHeader() string {
-	return gensupport.GoogleClientHeader("20170210", s.GoogleClientHeaderElement)
 }
 
 func NewAspsService(s *Service) *AspsService {
@@ -814,7 +809,7 @@ type ChromeOsDevice struct {
 	LastEnrollmentTime string `json:"lastEnrollmentTime,omitempty"`
 
 	// LastSync: Date and time the device was last synchronized with the
-	// policy settings in the Google Apps administrator control panel
+	// policy settings in the G Suite administrator control panel
 	// (Read-only)
 	LastSync string `json:"lastSync,omitempty"`
 
@@ -1024,6 +1019,35 @@ func (s *ChromeOsDevices) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// ChromeOsMoveDevicesToOu: JSON request template for moving ChromeOs
+// Device to given OU in Directory Devices API.
+type ChromeOsMoveDevicesToOu struct {
+	// DeviceIds: ChromeOs Devices to be moved to OU
+	DeviceIds []string `json:"deviceIds,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "DeviceIds") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DeviceIds") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ChromeOsMoveDevicesToOu) MarshalJSON() ([]byte, error) {
+	type noMethod ChromeOsMoveDevicesToOu
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // Customer: JSON template for Customer Resource object in Directory
 // API.
 type Customer struct {
@@ -1041,7 +1065,7 @@ type Customer struct {
 	// Etag: ETag of the resource.
 	Etag string `json:"etag,omitempty"`
 
-	// Id: The unique ID for the customer's Google account. (Readonly)
+	// Id: The unique ID for the customer's G Suite account. (Readonly)
 	Id string `json:"id,omitempty"`
 
 	// Kind: Identifies the resource as a customer. Value:
@@ -1566,7 +1590,7 @@ type MobileDevice struct {
 	Etag string `json:"etag,omitempty"`
 
 	// FirstSync: Date and time the device was first synchronized with the
-	// policy settings in the Google Apps administrator control panel
+	// policy settings in the G Suite administrator control panel
 	// (Read-only)
 	FirstSync string `json:"firstSync,omitempty"`
 
@@ -1586,7 +1610,7 @@ type MobileDevice struct {
 	Kind string `json:"kind,omitempty"`
 
 	// LastSync: Date and time the device was last synchronized with the
-	// policy settings in the Google Apps administrator control panel
+	// policy settings in the G Suite administrator control panel
 	// (Read-only)
 	LastSync string `json:"lastSync,omitempty"`
 
@@ -2607,7 +2631,7 @@ type User struct {
 	// change password in next login
 	ChangePasswordAtNextLogin bool `json:"changePasswordAtNextLogin,omitempty"`
 
-	// CreationTime: User's Google account creation time. (Read-only)
+	// CreationTime: User's G Suite account creation time. (Read-only)
 	CreationTime string `json:"creationTime,omitempty"`
 
 	// CustomSchemas: Custom fields of the user.
@@ -2657,11 +2681,17 @@ type User struct {
 	// IsMailboxSetup: Is mailbox setup (Read-only)
 	IsMailboxSetup bool `json:"isMailboxSetup,omitempty"`
 
+	Keywords interface{} `json:"keywords,omitempty"`
+
 	// Kind: Kind of resource this is.
 	Kind string `json:"kind,omitempty"`
 
+	Languages interface{} `json:"languages,omitempty"`
+
 	// LastLoginTime: User's last login time. (Read-only)
 	LastLoginTime string `json:"lastLoginTime,omitempty"`
+
+	Locations interface{} `json:"locations,omitempty"`
 
 	// Name: User's name
 	Name *UserName `json:"name,omitempty"`
@@ -2963,6 +2993,134 @@ func (s *UserIm) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// UserKeyword: JSON template for a keyword entry.
+type UserKeyword struct {
+	// CustomType: Custom Type.
+	CustomType string `json:"customType,omitempty"`
+
+	// Type: Each entry can have a type which indicates standard type of
+	// that entry. For example, keyword could be of type occupation or
+	// outlook. In addition to the standard type, an entry can have a custom
+	// type and can give it any name. Such types should have the CUSTOM
+	// value as type and also have a customType value.
+	Type string `json:"type,omitempty"`
+
+	// Value: Keyword.
+	Value string `json:"value,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "CustomType") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "CustomType") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *UserKeyword) MarshalJSON() ([]byte, error) {
+	type noMethod UserKeyword
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// UserLanguage: JSON template for a language entry.
+type UserLanguage struct {
+	// CustomLanguage: Other language. User can provide own language name if
+	// there is no corresponding Google III language code. If this is set
+	// LanguageCode can't be set
+	CustomLanguage string `json:"customLanguage,omitempty"`
+
+	// LanguageCode: Language Code. Should be used for storing Google III
+	// LanguageCode string representation for language. Illegal values cause
+	// SchemaException.
+	LanguageCode string `json:"languageCode,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "CustomLanguage") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "CustomLanguage") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *UserLanguage) MarshalJSON() ([]byte, error) {
+	type noMethod UserLanguage
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// UserLocation: JSON template for a location entry.
+type UserLocation struct {
+	// Area: Textual location. This is most useful for display purposes to
+	// concisely describe the location. For example, "Mountain View, CA",
+	// "Near Seattle", "US-NYC-9TH 9A209A".
+	Area string `json:"area,omitempty"`
+
+	// BuildingId: Building Identifier.
+	BuildingId string `json:"buildingId,omitempty"`
+
+	// CustomType: Custom Type.
+	CustomType string `json:"customType,omitempty"`
+
+	// DeskCode: Most specific textual code of individual desk location.
+	DeskCode string `json:"deskCode,omitempty"`
+
+	// FloorName: Floor name/number.
+	FloorName string `json:"floorName,omitempty"`
+
+	// FloorSection: Floor section. More specific location within the floor.
+	// For example, if a floor is divided into sections "A", "B", and "C",
+	// this field would identify one of those values.
+	FloorSection string `json:"floorSection,omitempty"`
+
+	// Type: Each entry can have a type which indicates standard types of
+	// that entry. For example location could be of types default and desk.
+	// In addition to standard type, an entry can have a custom type and can
+	// give it any name. Such types should have "custom" as type and also
+	// have a customType value.
+	Type string `json:"type,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Area") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Area") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *UserLocation) MarshalJSON() ([]byte, error) {
+	type noMethod UserLocation
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // UserMakeAdmin: JSON request template for setting/revoking admin
 // status of a user in Directory API.
 type UserMakeAdmin struct {
@@ -3042,6 +3200,10 @@ type UserOrganization struct {
 
 	// Domain: The domain to which the organization belongs to.
 	Domain string `json:"domain,omitempty"`
+
+	// FullTimeEquivalent: The full-time equivalent percent within the
+	// organization (100000 = 100%).
+	FullTimeEquivalent int64 `json:"fullTimeEquivalent,omitempty"`
 
 	// Location: Location of the organization. This need not be fully
 	// qualified address.
@@ -3186,7 +3348,7 @@ func (s *UserPhoto) MarshalJSON() ([]byte, error) {
 // UserPosixAccount: JSON template for a POSIX account entry.
 // Description of the field family: go/fbs-posix.
 type UserPosixAccount struct {
-	// Gecos: The GECOS (user information) entry for this account.
+	// Gecos: The GECOS (user information) for this account.
 	Gecos string `json:"gecos,omitempty"`
 
 	// Gid: The default group ID.
@@ -3205,7 +3367,7 @@ type UserPosixAccount struct {
 	// to.
 	SystemId string `json:"systemId,omitempty"`
 
-	// Uid: The user ID.
+	// Uid: The POSIX compliant user ID.
 	Uid int64 `json:"uid,omitempty"`
 
 	// Username: The username of the account.
@@ -3551,7 +3713,6 @@ func (c *AspsDeleteCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/{userKey}/asps/{codeId}")
@@ -3669,7 +3830,6 @@ func (c *AspsGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -3816,7 +3976,6 @@ func (c *AspsListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -3943,7 +4102,6 @@ func (c *ChannelsStopCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.channel)
 	if err != nil {
@@ -4041,7 +4199,6 @@ func (c *ChromeosdevicesActionCall) doRequest(alt string) (*http.Response, error
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.chromeosdeviceaction)
 	if err != nil {
@@ -4082,13 +4239,13 @@ func (c *ChromeosdevicesActionCall) Do(opts ...googleapi.CallOption) error {
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
 	//     },
 	//     "resourceId": {
-	//       "description": "Immutable id of Chrome OS Device",
+	//       "description": "Immutable ID of Chrome OS Device",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -4178,7 +4335,6 @@ func (c *ChromeosdevicesGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -4242,13 +4398,13 @@ func (c *ChromeosdevicesGetCall) Do(opts ...googleapi.CallOption) (*ChromeOsDevi
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
 	//     },
 	//     "deviceId": {
-	//       "description": "Immutable id of Chrome OS Device",
+	//       "description": "Immutable ID of Chrome OS Device",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -4318,6 +4474,13 @@ func (c *ChromeosdevicesListCall) MaxResults(maxResults int64) *ChromeosdevicesL
 //   "supportEndDate" - Chromebook support end date.
 func (c *ChromeosdevicesListCall) OrderBy(orderBy string) *ChromeosdevicesListCall {
 	c.urlParams_.Set("orderBy", orderBy)
+	return c
+}
+
+// OrgUnitPath sets the optional parameter "orgUnitPath": Full path of
+// the organization unit or its Id
+func (c *ChromeosdevicesListCall) OrgUnitPath(orgUnitPath string) *ChromeosdevicesListCall {
+	c.urlParams_.Set("orgUnitPath", orgUnitPath)
 	return c
 }
 
@@ -4401,7 +4564,6 @@ func (c *ChromeosdevicesListCall) doRequest(alt string) (*http.Response, error) 
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -4463,7 +4625,7 @@ func (c *ChromeosdevicesListCall) Do(opts ...googleapi.CallOption) (*ChromeOsDev
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -4495,6 +4657,11 @@ func (c *ChromeosdevicesListCall) Do(opts ...googleapi.CallOption) (*ChromeOsDev
 	//         "Chromebook status.",
 	//         "Chromebook support end date."
 	//       ],
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "orgUnitPath": {
+	//       "description": "Full path of the organization unit or its Id",
 	//       "location": "query",
 	//       "type": "string"
 	//     },
@@ -4568,6 +4735,120 @@ func (c *ChromeosdevicesListCall) Pages(ctx context.Context, f func(*ChromeOsDev
 	}
 }
 
+// method id "directory.chromeosdevices.moveDevicesToOu":
+
+type ChromeosdevicesMoveDevicesToOuCall struct {
+	s                       *Service
+	customerId              string
+	chromeosmovedevicestoou *ChromeOsMoveDevicesToOu
+	urlParams_              gensupport.URLParams
+	ctx_                    context.Context
+	header_                 http.Header
+}
+
+// MoveDevicesToOu: Move or insert multiple Chrome OS Devices to
+// Organization Unit
+func (r *ChromeosdevicesService) MoveDevicesToOu(customerId string, orgUnitPath string, chromeosmovedevicestoou *ChromeOsMoveDevicesToOu) *ChromeosdevicesMoveDevicesToOuCall {
+	c := &ChromeosdevicesMoveDevicesToOuCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.customerId = customerId
+	c.urlParams_.Set("orgUnitPath", orgUnitPath)
+	c.chromeosmovedevicestoou = chromeosmovedevicestoou
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *ChromeosdevicesMoveDevicesToOuCall) Fields(s ...googleapi.Field) *ChromeosdevicesMoveDevicesToOuCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *ChromeosdevicesMoveDevicesToOuCall) Context(ctx context.Context) *ChromeosdevicesMoveDevicesToOuCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *ChromeosdevicesMoveDevicesToOuCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *ChromeosdevicesMoveDevicesToOuCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.chromeosmovedevicestoou)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "customer/{customerId}/devices/chromeos/moveDevicesToOu")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("POST", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"customerId": c.customerId,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "directory.chromeosdevices.moveDevicesToOu" call.
+func (c *ChromeosdevicesMoveDevicesToOuCall) Do(opts ...googleapi.CallOption) error {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if err != nil {
+		return err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return err
+	}
+	return nil
+	// {
+	//   "description": "Move or insert multiple Chrome OS Devices to Organization Unit",
+	//   "httpMethod": "POST",
+	//   "id": "directory.chromeosdevices.moveDevicesToOu",
+	//   "parameterOrder": [
+	//     "customerId",
+	//     "orgUnitPath"
+	//   ],
+	//   "parameters": {
+	//     "customerId": {
+	//       "description": "Immutable ID of the G Suite account",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "orgUnitPath": {
+	//       "description": "Full path of the target organization unit or its Id",
+	//       "location": "query",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "customer/{customerId}/devices/chromeos/moveDevicesToOu",
+	//   "request": {
+	//     "$ref": "ChromeOsMoveDevicesToOu"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/admin.directory.device.chromeos"
+	//   ]
+	// }
+
+}
+
 // method id "directory.chromeosdevices.patch":
 
 type ChromeosdevicesPatchCall struct {
@@ -4632,7 +4913,6 @@ func (c *ChromeosdevicesPatchCall) doRequest(alt string) (*http.Response, error)
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.chromeosdevice)
 	if err != nil {
@@ -4698,13 +4978,13 @@ func (c *ChromeosdevicesPatchCall) Do(opts ...googleapi.CallOption) (*ChromeOsDe
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
 	//     },
 	//     "deviceId": {
-	//       "description": "Immutable id of Chrome OS Device",
+	//       "description": "Immutable ID of Chrome OS Device",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -4801,7 +5081,6 @@ func (c *ChromeosdevicesUpdateCall) doRequest(alt string) (*http.Response, error
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.chromeosdevice)
 	if err != nil {
@@ -4867,13 +5146,13 @@ func (c *ChromeosdevicesUpdateCall) Do(opts ...googleapi.CallOption) (*ChromeOsD
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
 	//     },
 	//     "deviceId": {
-	//       "description": "Immutable id of Chrome OS Device",
+	//       "description": "Immutable ID of Chrome OS Device",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -4965,7 +5244,6 @@ func (c *CustomersGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -5095,7 +5373,6 @@ func (c *CustomersPatchCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.customer)
 	if err != nil {
@@ -5229,7 +5506,6 @@ func (c *CustomersUpdateCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.customer)
 	if err != nil {
@@ -5363,7 +5639,6 @@ func (c *DomainAliasesDeleteCall) doRequest(alt string) (*http.Response, error) 
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "customer/{customer}/domainaliases/{domainAliasName}")
@@ -5399,7 +5674,7 @@ func (c *DomainAliasesDeleteCall) Do(opts ...googleapi.CallOption) error {
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable id of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -5480,7 +5755,6 @@ func (c *DomainAliasesGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -5544,7 +5818,7 @@ func (c *DomainAliasesGetCall) Do(opts ...googleapi.CallOption) (*DomainAlias, e
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable id of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -5618,7 +5892,6 @@ func (c *DomainAliasesInsertCall) doRequest(alt string) (*http.Response, error) 
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.domainalias)
 	if err != nil {
@@ -5682,7 +5955,7 @@ func (c *DomainAliasesInsertCall) Do(opts ...googleapi.CallOption) (*DomainAlias
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable id of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -5768,7 +6041,6 @@ func (c *DomainAliasesListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -5830,7 +6102,7 @@ func (c *DomainAliasesListCall) Do(opts ...googleapi.CallOption) (*DomainAliases
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable id of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -5903,7 +6175,6 @@ func (c *DomainsDeleteCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "customer/{customer}/domains/{domainName}")
@@ -5939,7 +6210,7 @@ func (c *DomainsDeleteCall) Do(opts ...googleapi.CallOption) error {
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable id of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -6020,7 +6291,6 @@ func (c *DomainsGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -6084,7 +6354,7 @@ func (c *DomainsGetCall) Do(opts ...googleapi.CallOption) (*Domains, error) {
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable id of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -6158,7 +6428,6 @@ func (c *DomainsInsertCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.domains)
 	if err != nil {
@@ -6222,7 +6491,7 @@ func (c *DomainsInsertCall) Do(opts ...googleapi.CallOption) (*Domains, error) {
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable id of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -6301,7 +6570,6 @@ func (c *DomainsListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -6363,7 +6631,7 @@ func (c *DomainsListCall) Do(opts ...googleapi.CallOption) (*Domains2, error) {
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable id of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -6429,7 +6697,6 @@ func (c *GroupsDeleteCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "groups/{groupKey}")
@@ -6536,7 +6803,6 @@ func (c *GroupsGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -6664,7 +6930,6 @@ func (c *GroupsInsertCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.group)
 	if err != nil {
@@ -6750,9 +7015,9 @@ func (r *GroupsService) List() *GroupsListCall {
 	return c
 }
 
-// Customer sets the optional parameter "customer": Immutable id of the
-// Google Apps account. In case of multi-domain, to fetch all groups for
-// a customer, fill this field instead of domain.
+// Customer sets the optional parameter "customer": Immutable ID of the
+// G Suite account. In case of multi-domain, to fetch all groups for a
+// customer, fill this field instead of domain.
 func (c *GroupsListCall) Customer(customer string) *GroupsListCall {
 	c.urlParams_.Set("customer", customer)
 	return c
@@ -6829,7 +7094,6 @@ func (c *GroupsListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -6885,7 +7149,7 @@ func (c *GroupsListCall) Do(opts ...googleapi.CallOption) (*Groups, error) {
 	//   "id": "directory.groups.list",
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable id of the Google Apps account. In case of multi-domain, to fetch all groups for a customer, fill this field instead of domain.",
+	//       "description": "Immutable ID of the G Suite account. In case of multi-domain, to fetch all groups for a customer, fill this field instead of domain.",
 	//       "location": "query",
 	//       "type": "string"
 	//     },
@@ -6995,7 +7259,6 @@ func (c *GroupsPatchCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.group)
 	if err != nil {
@@ -7129,7 +7392,6 @@ func (c *GroupsUpdateCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.group)
 	if err != nil {
@@ -7263,7 +7525,6 @@ func (c *GroupsAliasesDeleteCall) doRequest(alt string) (*http.Response, error) 
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "groups/{groupKey}/aliases/{alias}")
@@ -7369,7 +7630,6 @@ func (c *GroupsAliasesInsertCall) doRequest(alt string) (*http.Response, error) 
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.alias)
 	if err != nil {
@@ -7512,7 +7772,6 @@ func (c *GroupsAliasesListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -7643,7 +7902,6 @@ func (c *MembersDeleteCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "groups/{groupKey}/members/{memberKey}")
@@ -7761,7 +8019,6 @@ func (c *MembersGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -7901,7 +8158,6 @@ func (c *MembersInsertCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.member)
 	if err != nil {
@@ -8066,7 +8322,6 @@ func (c *MembersListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -8239,7 +8494,6 @@ func (c *MembersPatchCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.member)
 	if err != nil {
@@ -8384,7 +8638,6 @@ func (c *MembersUpdateCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.member)
 	if err != nil {
@@ -8529,7 +8782,6 @@ func (c *MobiledevicesActionCall) doRequest(alt string) (*http.Response, error) 
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.mobiledeviceaction)
 	if err != nil {
@@ -8570,13 +8822,13 @@ func (c *MobiledevicesActionCall) Do(opts ...googleapi.CallOption) error {
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
 	//     },
 	//     "resourceId": {
-	//       "description": "Immutable id of Mobile Device",
+	//       "description": "Immutable ID of Mobile Device",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -8644,7 +8896,6 @@ func (c *MobiledevicesDeleteCall) doRequest(alt string) (*http.Response, error) 
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "customer/{customerId}/devices/mobile/{resourceId}")
@@ -8680,13 +8931,13 @@ func (c *MobiledevicesDeleteCall) Do(opts ...googleapi.CallOption) error {
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
 	//     },
 	//     "resourceId": {
-	//       "description": "Immutable id of Mobile Device",
+	//       "description": "Immutable ID of Mobile Device",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -8773,7 +9024,6 @@ func (c *MobiledevicesGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -8837,7 +9087,7 @@ func (c *MobiledevicesGetCall) Do(opts ...googleapi.CallOption) (*MobileDevice, 
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -8856,7 +9106,7 @@ func (c *MobiledevicesGetCall) Do(opts ...googleapi.CallOption) (*MobileDevice, 
 	//       "type": "string"
 	//     },
 	//     "resourceId": {
-	//       "description": "Immutable id of Mobile Device",
+	//       "description": "Immutable ID of Mobile Device",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -8997,7 +9247,6 @@ func (c *MobiledevicesListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -9059,7 +9308,7 @@ func (c *MobiledevicesListCall) Do(opts ...googleapi.CallOption) (*MobileDevices
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -9217,7 +9466,6 @@ func (c *NotificationsDeleteCall) doRequest(alt string) (*http.Response, error) 
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "customer/{customer}/notifications/{notificationId}")
@@ -9253,7 +9501,7 @@ func (c *NotificationsDeleteCall) Do(opts ...googleapi.CallOption) error {
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "The unique ID for the customer's Google account. The customerId is also returned as part of the Users resource.",
+	//       "description": "The unique ID for the customer's G Suite account. The customerId is also returned as part of the Users resource.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -9334,7 +9582,6 @@ func (c *NotificationsGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -9398,7 +9645,7 @@ func (c *NotificationsGetCall) Do(opts ...googleapi.CallOption) (*Notification, 
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "The unique ID for the customer's Google account. The customerId is also returned as part of the Users resource.",
+	//       "description": "The unique ID for the customer's G Suite account. The customerId is also returned as part of the Users resource.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -9502,7 +9749,6 @@ func (c *NotificationsListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -9564,7 +9810,7 @@ func (c *NotificationsListCall) Do(opts ...googleapi.CallOption) (*Notifications
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "The unique ID for the customer's Google account.",
+	//       "description": "The unique ID for the customer's G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -9670,7 +9916,6 @@ func (c *NotificationsPatchCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.notification)
 	if err != nil {
@@ -9736,7 +9981,7 @@ func (c *NotificationsPatchCall) Do(opts ...googleapi.CallOption) (*Notification
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "The unique ID for the customer's Google account.",
+	//       "description": "The unique ID for the customer's G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -9814,7 +10059,6 @@ func (c *NotificationsUpdateCall) doRequest(alt string) (*http.Response, error) 
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.notification)
 	if err != nil {
@@ -9880,7 +10124,7 @@ func (c *NotificationsUpdateCall) Do(opts ...googleapi.CallOption) (*Notificatio
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "The unique ID for the customer's Google account.",
+	//       "description": "The unique ID for the customer's G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -9956,7 +10200,6 @@ func (c *OrgunitsDeleteCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "customer/{customerId}/orgunits{/orgUnitPath*}")
@@ -9992,7 +10235,7 @@ func (c *OrgunitsDeleteCall) Do(opts ...googleapi.CallOption) error {
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -10074,7 +10317,6 @@ func (c *OrgunitsGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -10138,7 +10380,7 @@ func (c *OrgunitsGetCall) Do(opts ...googleapi.CallOption) (*OrgUnit, error) {
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -10213,7 +10455,6 @@ func (c *OrgunitsInsertCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.orgunit)
 	if err != nil {
@@ -10277,7 +10518,7 @@ func (c *OrgunitsInsertCall) Do(opts ...googleapi.CallOption) (*OrgUnit, error) 
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -10374,7 +10615,6 @@ func (c *OrgunitsListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -10436,7 +10676,7 @@ func (c *OrgunitsListCall) Do(opts ...googleapi.CallOption) (*OrgUnits, error) {
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -10526,7 +10766,6 @@ func (c *OrgunitsPatchCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.orgunit)
 	if err != nil {
@@ -10592,7 +10831,7 @@ func (c *OrgunitsPatchCall) Do(opts ...googleapi.CallOption) (*OrgUnit, error) {
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -10671,7 +10910,6 @@ func (c *OrgunitsUpdateCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.orgunit)
 	if err != nil {
@@ -10737,7 +10975,7 @@ func (c *OrgunitsUpdateCall) Do(opts ...googleapi.CallOption) (*OrgUnit, error) 
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -10823,7 +11061,6 @@ func (c *PrivilegesListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -10885,7 +11122,7 @@ func (c *PrivilegesListCall) Do(opts ...googleapi.CallOption) (*Privileges, erro
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable ID of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -10953,7 +11190,6 @@ func (c *ResourcesCalendarsDeleteCall) doRequest(alt string) (*http.Response, er
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "customer/{customer}/resources/calendars/{calendarResourceId}")
@@ -10995,7 +11231,7 @@ func (c *ResourcesCalendarsDeleteCall) Do(opts ...googleapi.CallOption) error {
 	//       "type": "string"
 	//     },
 	//     "customer": {
-	//       "description": "The unique ID for the customer's Google account. As an account administrator, you can also use the my_customer alias to represent your account's customer ID.",
+	//       "description": "The unique ID for the customer's G Suite account. As an account administrator, you can also use the my_customer alias to represent your account's customer ID.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -11070,7 +11306,6 @@ func (c *ResourcesCalendarsGetCall) doRequest(alt string) (*http.Response, error
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -11140,7 +11375,7 @@ func (c *ResourcesCalendarsGetCall) Do(opts ...googleapi.CallOption) (*CalendarR
 	//       "type": "string"
 	//     },
 	//     "customer": {
-	//       "description": "The unique ID for the customer's Google account. As an account administrator, you can also use the my_customer alias to represent your account's customer ID.",
+	//       "description": "The unique ID for the customer's G Suite account. As an account administrator, you can also use the my_customer alias to represent your account's customer ID.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -11208,7 +11443,6 @@ func (c *ResourcesCalendarsInsertCall) doRequest(alt string) (*http.Response, er
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.calendarresource)
 	if err != nil {
@@ -11272,7 +11506,7 @@ func (c *ResourcesCalendarsInsertCall) Do(opts ...googleapi.CallOption) (*Calend
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "The unique ID for the customer's Google account. As an account administrator, you can also use the my_customer alias to represent your account's customer ID.",
+	//       "description": "The unique ID for the customer's G Suite account. As an account administrator, you can also use the my_customer alias to represent your account's customer ID.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -11365,7 +11599,6 @@ func (c *ResourcesCalendarsListCall) doRequest(alt string) (*http.Response, erro
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -11427,7 +11660,7 @@ func (c *ResourcesCalendarsListCall) Do(opts ...googleapi.CallOption) (*Calendar
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "The unique ID for the customer's Google account. As an account administrator, you can also use the my_customer alias to represent your account's customer ID.",
+	//       "description": "The unique ID for the customer's G Suite account. As an account administrator, you can also use the my_customer alias to represent your account's customer ID.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -11532,7 +11765,6 @@ func (c *ResourcesCalendarsPatchCall) doRequest(alt string) (*http.Response, err
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.calendarresource)
 	if err != nil {
@@ -11604,7 +11836,7 @@ func (c *ResourcesCalendarsPatchCall) Do(opts ...googleapi.CallOption) (*Calenda
 	//       "type": "string"
 	//     },
 	//     "customer": {
-	//       "description": "The unique ID for the customer's Google account. As an account administrator, you can also use the my_customer alias to represent your account's customer ID.",
+	//       "description": "The unique ID for the customer's G Suite account. As an account administrator, you can also use the my_customer alias to represent your account's customer ID.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -11676,7 +11908,6 @@ func (c *ResourcesCalendarsUpdateCall) doRequest(alt string) (*http.Response, er
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.calendarresource)
 	if err != nil {
@@ -11748,7 +11979,7 @@ func (c *ResourcesCalendarsUpdateCall) Do(opts ...googleapi.CallOption) (*Calend
 	//       "type": "string"
 	//     },
 	//     "customer": {
-	//       "description": "The unique ID for the customer's Google account. As an account administrator, you can also use the my_customer alias to represent your account's customer ID.",
+	//       "description": "The unique ID for the customer's G Suite account. As an account administrator, you can also use the my_customer alias to represent your account's customer ID.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -11818,7 +12049,6 @@ func (c *RoleAssignmentsDeleteCall) doRequest(alt string) (*http.Response, error
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "customer/{customer}/roleassignments/{roleAssignmentId}")
@@ -11854,7 +12084,7 @@ func (c *RoleAssignmentsDeleteCall) Do(opts ...googleapi.CallOption) error {
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable ID of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -11935,7 +12165,6 @@ func (c *RoleAssignmentsGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -11999,7 +12228,7 @@ func (c *RoleAssignmentsGetCall) Do(opts ...googleapi.CallOption) (*RoleAssignme
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable ID of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -12073,7 +12302,6 @@ func (c *RoleAssignmentsInsertCall) doRequest(alt string) (*http.Response, error
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.roleassignment)
 	if err != nil {
@@ -12137,7 +12365,7 @@ func (c *RoleAssignmentsInsertCall) Do(opts ...googleapi.CallOption) (*RoleAssig
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable ID of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -12246,7 +12474,6 @@ func (c *RoleAssignmentsListCall) doRequest(alt string) (*http.Response, error) 
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -12308,7 +12535,7 @@ func (c *RoleAssignmentsListCall) Do(opts ...googleapi.CallOption) (*RoleAssignm
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable ID of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -12420,7 +12647,6 @@ func (c *RolesDeleteCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "customer/{customer}/roles/{roleId}")
@@ -12456,7 +12682,7 @@ func (c *RolesDeleteCall) Do(opts ...googleapi.CallOption) error {
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable ID of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -12537,7 +12763,6 @@ func (c *RolesGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -12601,7 +12826,7 @@ func (c *RolesGetCall) Do(opts ...googleapi.CallOption) (*Role, error) {
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable ID of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -12675,7 +12900,6 @@ func (c *RolesInsertCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.role)
 	if err != nil {
@@ -12739,7 +12963,7 @@ func (c *RolesInsertCall) Do(opts ...googleapi.CallOption) (*Role, error) {
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable ID of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -12832,7 +13056,6 @@ func (c *RolesListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -12894,7 +13117,7 @@ func (c *RolesListCall) Do(opts ...googleapi.CallOption) (*Roles, error) {
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable id of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -12998,7 +13221,6 @@ func (c *RolesPatchCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.role)
 	if err != nil {
@@ -13064,7 +13286,7 @@ func (c *RolesPatchCall) Do(opts ...googleapi.CallOption) (*Role, error) {
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable ID of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -13142,7 +13364,6 @@ func (c *RolesUpdateCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.role)
 	if err != nil {
@@ -13208,7 +13429,7 @@ func (c *RolesUpdateCall) Do(opts ...googleapi.CallOption) (*Role, error) {
 	//   ],
 	//   "parameters": {
 	//     "customer": {
-	//       "description": "Immutable ID of the Google Apps account.",
+	//       "description": "Immutable ID of the G Suite account.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -13284,7 +13505,6 @@ func (c *SchemasDeleteCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "customer/{customerId}/schemas/{schemaKey}")
@@ -13320,7 +13540,7 @@ func (c *SchemasDeleteCall) Do(opts ...googleapi.CallOption) error {
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -13401,7 +13621,6 @@ func (c *SchemasGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -13465,7 +13684,7 @@ func (c *SchemasGetCall) Do(opts ...googleapi.CallOption) (*Schema, error) {
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -13539,7 +13758,6 @@ func (c *SchemasInsertCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.schema)
 	if err != nil {
@@ -13603,7 +13821,7 @@ func (c *SchemasInsertCall) Do(opts ...googleapi.CallOption) (*Schema, error) {
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -13682,7 +13900,6 @@ func (c *SchemasListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -13744,7 +13961,7 @@ func (c *SchemasListCall) Do(opts ...googleapi.CallOption) (*Schemas, error) {
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -13814,7 +14031,6 @@ func (c *SchemasPatchCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.schema)
 	if err != nil {
@@ -13880,7 +14096,7 @@ func (c *SchemasPatchCall) Do(opts ...googleapi.CallOption) (*Schema, error) {
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -13958,7 +14174,6 @@ func (c *SchemasUpdateCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.schema)
 	if err != nil {
@@ -14024,7 +14239,7 @@ func (c *SchemasUpdateCall) Do(opts ...googleapi.CallOption) (*Schema, error) {
 	//   ],
 	//   "parameters": {
 	//     "customerId": {
-	//       "description": "Immutable id of the Google Apps account",
+	//       "description": "Immutable ID of the G Suite account",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -14100,7 +14315,6 @@ func (c *TokensDeleteCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/{userKey}/tokens/{clientId}")
@@ -14217,7 +14431,6 @@ func (c *TokensGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -14364,7 +14577,6 @@ func (c *TokensListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -14491,7 +14703,6 @@ func (c *UsersDeleteCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/{userKey}")
@@ -14630,7 +14841,6 @@ func (c *UsersGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -14793,7 +15003,6 @@ func (c *UsersInsertCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.user)
 	if err != nil {
@@ -14888,9 +15097,9 @@ func (c *UsersListCall) CustomFieldMask(customFieldMask string) *UsersListCall {
 	return c
 }
 
-// Customer sets the optional parameter "customer": Immutable id of the
-// Google Apps account. In case of multi-domain, to fetch all users for
-// a customer, fill this field instead of domain.
+// Customer sets the optional parameter "customer": Immutable ID of the
+// G Suite account. In case of multi-domain, to fetch all users for a
+// customer, fill this field instead of domain.
 func (c *UsersListCall) Customer(customer string) *UsersListCall {
 	c.urlParams_.Set("customer", customer)
 	return c
@@ -15035,7 +15244,6 @@ func (c *UsersListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -15096,7 +15304,7 @@ func (c *UsersListCall) Do(opts ...googleapi.CallOption) (*Users, error) {
 	//       "type": "string"
 	//     },
 	//     "customer": {
-	//       "description": "Immutable id of the Google Apps account. In case of multi-domain, to fetch all users for a customer, fill this field instead of domain.",
+	//       "description": "Immutable ID of the G Suite account. In case of multi-domain, to fetch all users for a customer, fill this field instead of domain.",
 	//       "location": "query",
 	//       "type": "string"
 	//     },
@@ -15290,7 +15498,6 @@ func (c *UsersMakeAdminCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.usermakeadmin)
 	if err != nil {
@@ -15396,7 +15603,6 @@ func (c *UsersPatchCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.user)
 	if err != nil {
@@ -15530,7 +15736,6 @@ func (c *UsersUndeleteCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.userundelete)
 	if err != nil {
@@ -15636,7 +15841,6 @@ func (c *UsersUpdateCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.user)
 	if err != nil {
@@ -15745,9 +15949,9 @@ func (c *UsersWatchCall) CustomFieldMask(customFieldMask string) *UsersWatchCall
 	return c
 }
 
-// Customer sets the optional parameter "customer": Immutable id of the
-// Google Apps account. In case of multi-domain, to fetch all users for
-// a customer, fill this field instead of domain.
+// Customer sets the optional parameter "customer": Immutable ID of the
+// G Suite account. In case of multi-domain, to fetch all users for a
+// customer, fill this field instead of domain.
 func (c *UsersWatchCall) Customer(customer string) *UsersWatchCall {
 	c.urlParams_.Set("customer", customer)
 	return c
@@ -15882,7 +16086,6 @@ func (c *UsersWatchCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.channel)
 	if err != nil {
@@ -15945,7 +16148,7 @@ func (c *UsersWatchCall) Do(opts ...googleapi.CallOption) (*Channel, error) {
 	//       "type": "string"
 	//     },
 	//     "customer": {
-	//       "description": "Immutable id of the Google Apps account. In case of multi-domain, to fetch all users for a customer, fill this field instead of domain.",
+	//       "description": "Immutable ID of the G Suite account. In case of multi-domain, to fetch all users for a customer, fill this field instead of domain.",
 	//       "location": "query",
 	//       "type": "string"
 	//     },
@@ -16122,7 +16325,6 @@ func (c *UsersAliasesDeleteCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/{userKey}/aliases/{alias}")
@@ -16229,7 +16431,6 @@ func (c *UsersAliasesInsertCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.alias)
 	if err != nil {
@@ -16384,7 +16585,6 @@ func (c *UsersAliasesListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -16541,7 +16741,6 @@ func (c *UsersAliasesWatchCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.channel)
 	if err != nil {
@@ -16691,7 +16890,6 @@ func (c *UsersPhotosDeleteCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/{userKey}/photos/thumbnail")
@@ -16798,7 +16996,6 @@ func (c *UsersPhotosGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -16929,7 +17126,6 @@ func (c *UsersPhotosPatchCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.userphoto)
 	if err != nil {
@@ -17063,7 +17259,6 @@ func (c *UsersPhotosUpdateCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.userphoto)
 	if err != nil {
@@ -17195,7 +17390,6 @@ func (c *VerificationCodesGenerateCall) doRequest(alt string) (*http.Response, e
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/{userKey}/verificationCodes/generate")
@@ -17292,7 +17486,6 @@ func (c *VerificationCodesInvalidateCall) doRequest(alt string) (*http.Response,
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/{userKey}/verificationCodes/invalidate")
@@ -17400,7 +17593,6 @@ func (c *VerificationCodesListCall) doRequest(alt string) (*http.Response, error
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}

@@ -18,14 +18,7 @@
 //
 // See https://cloud.google.com/error-reporting/ for more information.
 //
-// To initialize a client, use the NewClient function.  Generally you will want
-// to do this on program initialization.  The NewClient function takes as
-// arguments a context, the project name, a service name, and a version string.
-// The service name and version string identify the running program, and are
-// included in error reports.  The version string can be left empty.  NewClient
-// also takes a bool that indicates whether to report errors using Stackdriver
-// Logging, which will result in errors appearing in both the logs and the error
-// dashboard.  This is useful if you are already a user of Stackdriver Logging.
+// To initialize a client, use the NewClient function.
 //
 //   import "cloud.google.com/go/errors"
 //   ...
@@ -76,6 +69,8 @@
 // If you try to write an error report with a nil client, or if the client
 // fails to write the report to the server, the error report is logged using
 // log.Println.
+//
+// Deprecated: Use cloud.google.com/go/errorreporting instead.
 package errors // import "cloud.google.com/go/errors"
 
 import (
@@ -91,6 +86,7 @@ import (
 	"cloud.google.com/go/internal/version"
 	"cloud.google.com/go/logging"
 	"github.com/golang/protobuf/ptypes/timestamp"
+	gax "github.com/googleapis/gax-go"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
 	erpb "google.golang.org/genproto/googleapis/devtools/clouderrorreporting/v1beta1"
@@ -101,7 +97,8 @@ const (
 )
 
 type apiInterface interface {
-	ReportErrorEvent(ctx context.Context, req *erpb.ReportErrorEventRequest) (*erpb.ReportErrorEventResponse, error)
+	ReportErrorEvent(ctx context.Context, req *erpb.ReportErrorEventRequest, opts ...gax.CallOption) (*erpb.ReportErrorEventResponse, error)
+	Close() error
 }
 
 var newApiInterface = func(ctx context.Context, opts ...option.ClientOption) (apiInterface, error) {
@@ -115,6 +112,16 @@ var newApiInterface = func(ctx context.Context, opts ...option.ClientOption) (ap
 
 type loggerInterface interface {
 	LogSync(ctx context.Context, e logging.Entry) error
+	Close() error
+}
+
+type logger struct {
+	*logging.Logger
+	c *logging.Client
+}
+
+func (l logger) Close() error {
+	return l.c.Close()
 }
 
 var newLoggerInterface = func(ctx context.Context, projectID string, opts ...option.ClientOption) (loggerInterface, error) {
@@ -123,11 +130,12 @@ var newLoggerInterface = func(ctx context.Context, projectID string, opts ...opt
 		return nil, fmt.Errorf("creating Logging client: %v", err)
 	}
 	l := lc.Logger("errorreports")
-	return l, nil
+	return logger{l, lc}, nil
 }
 
 type sender interface {
 	send(ctx context.Context, r *http.Request, message string)
+	close() error
 }
 
 // errorApiSender sends error reports using the Stackdriver Error Reporting API.
@@ -144,6 +152,7 @@ type loggingSender struct {
 	serviceContext map[string]string
 }
 
+// Client represents a Google Cloud Error Reporting client.
 type Client struct {
 	sender
 	// RepanicDefault determines whether Catch will re-panic after recovering a
@@ -152,6 +161,16 @@ type Client struct {
 	RepanicDefault bool
 }
 
+// NewClient returns a new error reporting client. Generally you will want
+// to create a client on program initialization and use it through the lifetime
+// of the process.
+//
+// The service name and version string identify the running program, and are
+// included in error reports.  The version string can be left empty.
+//
+// Set useLogging to report errors also using Stackdriver Logging,
+// which will result in errors appearing in both the logs and the error
+// dashboard.  This is useful if you are already a user of Stackdriver Logging.
 func NewClient(ctx context.Context, projectID, serviceName, serviceVersion string, useLogging bool, opts ...option.ClientOption) (*Client, error) {
 	if useLogging {
 		l, err := newLoggerInterface(ctx, projectID, opts...)
@@ -191,6 +210,15 @@ func NewClient(ctx context.Context, projectID, serviceName, serviceVersion strin
 		}
 		return c, nil
 	}
+}
+
+// Close closes any resources held by the client.
+// Close should be called when the client is no longer needed.
+// It need not be called at program exit.
+func (c *Client) Close() error {
+	err := c.sender.close()
+	c.sender = nil
+	return err
 }
 
 // An Option is an optional argument to Catch.
@@ -359,6 +387,10 @@ func (s *loggingSender) send(ctx context.Context, r *http.Request, message strin
 	}
 }
 
+func (s *loggingSender) close() error {
+	return s.logger.Close()
+}
+
 func (s *errorApiSender) send(ctx context.Context, r *http.Request, message string) {
 	time := time.Now()
 	var errorContext *erpb.ErrorContext
@@ -389,6 +421,10 @@ func (s *errorApiSender) send(ctx context.Context, r *http.Request, message stri
 	if err != nil {
 		log.Println("Error writing error report:", err, "report:", message)
 	}
+}
+
+func (s *errorApiSender) close() error {
+	return s.apiClient.Close()
 }
 
 // chopStack trims a stack trace so that the function which panics or calls
