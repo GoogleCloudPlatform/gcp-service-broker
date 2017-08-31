@@ -137,7 +137,7 @@ var _ = Describe("Brokers", func() {
 	})
 
 	Describe("Broker init", func() {
-		It("should have 9 services in sevices map", func() {
+		It("should have 10 services in sevices map", func() {
 			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(9))
 		})
 
@@ -151,7 +151,7 @@ var _ = Describe("Brokers", func() {
 	})
 
 	Describe("getting broker catalog", func() {
-		It("should have 9 services available", func() {
+		It("should have 10 services available", func() {
 			Expect(len(gcpBroker.Services())).To(Equal(9))
 		})
 
@@ -189,6 +189,15 @@ var _ = Describe("Brokers", func() {
 			serviceList := gcpBroker.Services()
 			for _, s := range serviceList {
 				if s.ID == serviceNameToId[models.StackdriverDebuggerName] {
+					Expect(len(s.Plans)).To(Equal(1))
+				}
+			}
+		})
+
+		It("should have 1 datastore plan available", func() {
+			serviceList := gcpBroker.Services()
+			for _, s := range serviceList {
+				if s.ID == serviceNameToId[models.DatastoreName] {
 					Expect(len(s.Plans)).To(Equal(1))
 				}
 			}

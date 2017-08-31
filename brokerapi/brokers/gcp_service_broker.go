@@ -40,6 +40,7 @@ import (
 	"gcp-service-broker/brokerapi/brokers/stackdriver_debugger"
 	"gcp-service-broker/brokerapi/brokers/stackdriver_trace"
 	"gcp-service-broker/brokerapi/brokers/storage"
+	"gcp-service-broker/brokerapi/brokers/datastore"
 	"gcp-service-broker/db_service"
 	"gcp-service-broker/utils"
 )
@@ -178,6 +179,15 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 			Client:    self.GCPClient,
 			ProjectId: self.RootGCPCredentials.ProjectId,
 			Logger:    self.Logger,
+			BrokerBase: broker_base.BrokerBase{
+				AccountManager: saManager,
+			},
+		},
+		models.DatastoreName: &datastore.DatastoreBroker{
+			Client:                self.GCPClient,
+			ProjectId:             self.RootGCPCredentials.ProjectId,
+			Logger:                self.Logger,
+			ServiceAccountManager: saManager,
 			BrokerBase: broker_base.BrokerBase{
 				AccountManager: saManager,
 			},

@@ -229,7 +229,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	Describe("Broker init", func() {
-		It("should have 9 services in sevices map", func() {
+		It("should have 10 services in sevices map", func() {
 			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(9))
 		})
 
@@ -243,7 +243,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	Describe("getting broker catalog", func() {
-		It("should have 9 services available", func() {
+		It("should have 10 services available", func() {
 			Expect(len(gcpBroker.Services())).To(Equal(9))
 		})
 
@@ -413,6 +413,16 @@ var _ = Describe("LiveIntegrationTests", func() {
 			params := &iamService{
 				serviceId: serviceNameToId[models.StackdriverTraceName],
 				planId:    serviceNameToPlanId[models.StackdriverTraceName],
+			}
+			testIamBasedService(gcpBroker, params)
+		}, timeout)
+	})
+
+	Describe("datastore", func() {
+		It("can provision/bind/unbind/deprovision", func() {
+			params := &iamService{
+				serviceId: serviceNameToId[models.DatastoreName],
+				planId:    serviceNameToPlanId[models.DatastoreName],
 			}
 			testIamBasedService(gcpBroker, params)
 		}, timeout)

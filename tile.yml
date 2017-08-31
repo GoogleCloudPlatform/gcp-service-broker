@@ -152,6 +152,21 @@ packages:
            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg"
           },
           "tags": ["gcp", "stackdriver", "trace"]
+        },
+        {
+          "id": "76d4abb2-fee7-4c8f-aee1-bcea2837f02b",
+          "description": "Google Cloud Datastore is a NoSQL document database service",
+          "name": "google-datastore",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+            "displayName": "Google Cloud Datastore",
+            "longDescription": "Google Cloud Datastore is a NoSQL document database built for automatic scaling, high performance, and ease of application development.",
+            "documentationUrl": "https://cloud.google.com/datastore/docs/",
+            "supportUrl": "https://cloud.google.com/support/",
+            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/datastore.svg"
+          },
+          "tags": ["gcp", "datastore"]
         }
       ]'
       PRECONFIGURED_PLANS: '[
@@ -208,6 +223,13 @@ packages:
           "name": "default",
           "display_name": "Default",
           "description": "Stackdriver Trace default plan",
+          "features": ""
+        },
+        {
+          "service_id": "76d4abb2-fee7-4c8f-aee1-bcea2837f02b",
+          "name": "default",
+          "display_name": "Default",
+          "description": "Datastore default plan",
           "features": ""
         }
         ]'
