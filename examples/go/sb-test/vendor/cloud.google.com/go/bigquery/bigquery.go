@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"google.golang.org/api/option"
-	"google.golang.org/api/transport"
+	htransport "google.golang.org/api/transport/http"
 
 	"golang.org/x/net/context"
 	bq "google.golang.org/api/bigquery/v2"
@@ -51,7 +51,7 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 		option.WithUserAgent(userAgent),
 	}
 	o = append(o, opts...)
-	httpClient, endpoint, err := transport.NewHTTPClient(ctx, o...)
+	httpClient, endpoint, err := htransport.NewClient(ctx, o...)
 	if err != nil {
 		return nil, fmt.Errorf("dialing: %v", err)
 	}
@@ -73,4 +73,13 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 // It need not be called at program exit.
 func (c *Client) Close() error {
 	return nil
+}
+
+func (c *Client) insertJob(ctx context.Context, conf *insertJobConf) (*Job, error) {
+	job, err := c.service.insertJob(ctx, c.projectID, conf)
+	if err != nil {
+		return nil, err
+	}
+	job.c = c
+	return job, nil
 }

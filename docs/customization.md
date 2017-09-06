@@ -12,8 +12,8 @@ Optionally add these to the env section of `manifest.yml`
 
 ## [Optional plan vars](#optional-plan)
 
-* `CLOUDSQL_CUSTOM_PLANS` (A map of plan names to string maps with fields `guid`, `name`, `description`, `tier`,
-`pricing_plan`, `max_disk_size`, `display_name`, and `service` (Cloud SQL's service id)) - if unset, the service
+* `CLOUDSQL_MYSQL_CUSTOM_PLANS` (A map of plan names to string maps with fields `guid`, `name`, `description`, `tier`,
+`pricing_plan`, `max_disk_size`, `display_name`, and `service` (CloudSQL MySQL's service id)) - if unset, the service
 will be disabled. e.g.,
 
 ```json
@@ -29,6 +29,25 @@ will be disabled. e.g.,
     }
 }
 ```
+
+* `CLOUDSQL_POSTGRES_CUSTOM_PLANS` (A map of plan names to string maps with fields `guid`, `name`, `description`, `tier`,
+`pricing_plan`, `max_disk_size`, `display_name`, and `service` (CloudSQL PostgreSQL's service id)) - if unset, the service
+will be disabled. e.g.,
+
+```json
+{
+    "test_plan": {
+        "name": "test_plan",
+        "description": "testplan",
+        "tier": "custom-db-4-4096",
+        "pricing_plan": "PER_USE",
+        "max_disk_size": "15",
+        "display_name": "FOOBAR",
+        "service": "cbad6d78-a73c-432d-b8ff-b219a17a803a"
+    }
+}
+```
+
 * `BIGTABLE_CUSTOM_PLANS` (A map of plan names to string maps with fields `guid`, `name`, `description`,
 `storage_type`, `num_nodes`, `display_name`, and `service` (Bigtable's service id)) - if unset, the service
 will be disabled. e.g.,

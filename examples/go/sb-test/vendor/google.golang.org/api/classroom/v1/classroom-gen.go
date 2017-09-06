@@ -68,6 +68,16 @@ const (
 	// classes you teach or administer
 	ClassroomCourseworkStudentsReadonlyScope = "https://www.googleapis.com/auth/classroom.coursework.students.readonly"
 
+	// View your Google Classroom guardians
+	ClassroomGuardianlinksMeReadonlyScope = "https://www.googleapis.com/auth/classroom.guardianlinks.me.readonly"
+
+	// View and manage guardians for students in your Google Classroom
+	// classes
+	ClassroomGuardianlinksStudentsScope = "https://www.googleapis.com/auth/classroom.guardianlinks.students"
+
+	// View guardians for students in your Google Classroom classes
+	ClassroomGuardianlinksStudentsReadonlyScope = "https://www.googleapis.com/auth/classroom.guardianlinks.students.readonly"
+
 	// View the email addresses of people in your classes
 	ClassroomProfileEmailsScope = "https://www.googleapis.com/auth/classroom.profile.emails"
 
@@ -100,10 +110,9 @@ func New(client *http.Client) (*Service, error) {
 }
 
 type Service struct {
-	client                    *http.Client
-	BasePath                  string // API endpoint base URL
-	UserAgent                 string // optional additional User-Agent fragment
-	GoogleClientHeaderElement string // client header fragment, for Google use only
+	client    *http.Client
+	BasePath  string // API endpoint base URL
+	UserAgent string // optional additional User-Agent fragment
 
 	Courses *CoursesService
 
@@ -117,10 +126,6 @@ func (s *Service) userAgent() string {
 		return googleapi.UserAgent
 	}
 	return googleapi.UserAgent + " " + s.UserAgent
-}
-
-func (s *Service) clientHeader() string {
-	return gensupport.GoogleClientHeader("20170210", s.GoogleClientHeaderElement)
 }
 
 func NewCoursesService(s *Service) *CoursesService {
@@ -238,7 +243,7 @@ type UserProfilesGuardiansService struct {
 type Assignment struct {
 	// StudentWorkFolder: Drive folder where attachments from student
 	// submissions are placed.
-	// This is only populated for course teachers.
+	// This is only populated for course teachers and administrators.
 	StudentWorkFolder *DriveFolder `json:"studentWorkFolder,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "StudentWorkFolder")
@@ -350,6 +355,14 @@ type Course struct {
 	//
 	// Read-only.
 	AlternateLink string `json:"alternateLink,omitempty"`
+
+	// CalendarId: The Calendar ID for a calendar that all course members
+	// can see, to which
+	// Classroom adds events for course work and announcements in the
+	// course.
+	//
+	// Read-only.
+	CalendarId string `json:"calendarId,omitempty"`
 
 	// CourseGroupEmail: The email address of a Google group containing all
 	// members of the course.
@@ -472,9 +485,10 @@ type Course struct {
 	// * the email address of the user
 	// * the string literal "me", indicating the requesting user
 	//
-	// This must be set in a create request. Specifying this field in a
-	// course
-	// update mask results in an `INVALID_ARGUMENT` error.
+	// This must be set in a create request. Admins can also specify this
+	// field
+	// in a patch course request to
+	// transfer ownership. In other contexts, it is read-only.
 	OwnerId string `json:"ownerId,omitempty"`
 
 	// Room: Optional room location.
@@ -761,6 +775,10 @@ type CourseWork struct {
 	// not be
 	// set otherwise.
 	MultipleChoiceQuestion *MultipleChoiceQuestion `json:"multipleChoiceQuestion,omitempty"`
+
+	// ScheduledTime: Optional timestamp when this course work is scheduled
+	// to be published.
+	ScheduledTime string `json:"scheduledTime,omitempty"`
 
 	// State: Status of this course work.
 	// If unspecified, the default state is `DRAFT`.
@@ -1091,6 +1109,75 @@ func (s *GlobalPermission) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// GradeHistory: The history of each grade on this submission.
+type GradeHistory struct {
+	// ActorUserId: The teacher who made the grade change.
+	ActorUserId string `json:"actorUserId,omitempty"`
+
+	// GradeChangeType: The type of grade change at this time in the
+	// submission grade history.
+	//
+	// Possible values:
+	//   "UNKNOWN_GRADE_CHANGE_TYPE" - No grade change type specified. This
+	// should never be returned.
+	//   "DRAFT_GRADE_POINTS_EARNED_CHANGE" - A change in the numerator of
+	// the draft grade.
+	//   "ASSIGNED_GRADE_POINTS_EARNED_CHANGE" - A change in the numerator
+	// of the assigned grade.
+	//   "MAX_POINTS_CHANGE" - A change in the denominator of the grade.
+	GradeChangeType string `json:"gradeChangeType,omitempty"`
+
+	// GradeTimestamp: When the grade of the submission was changed.
+	GradeTimestamp string `json:"gradeTimestamp,omitempty"`
+
+	// MaxPoints: The denominator of the grade at this time in the
+	// submission grade
+	// history.
+	MaxPoints float64 `json:"maxPoints,omitempty"`
+
+	// PointsEarned: The numerator of the grade at this time in the
+	// submission grade history.
+	PointsEarned float64 `json:"pointsEarned,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "ActorUserId") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ActorUserId") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *GradeHistory) MarshalJSON() ([]byte, error) {
+	type noMethod GradeHistory
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+func (s *GradeHistory) UnmarshalJSON(data []byte) error {
+	type noMethod GradeHistory
+	var s1 struct {
+		MaxPoints    gensupport.JSONFloat64 `json:"maxPoints"`
+		PointsEarned gensupport.JSONFloat64 `json:"pointsEarned"`
+		*noMethod
+	}
+	s1.noMethod = (*noMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.MaxPoints = float64(s1.MaxPoints)
+	s.PointsEarned = float64(s1.PointsEarned)
+	return nil
+}
+
 // Guardian: Association between a student and a guardian of that
 // student. The guardian
 // may receive information about the student's course work.
@@ -1213,6 +1300,7 @@ type Invitation struct {
 	//   "COURSE_ROLE_UNSPECIFIED" - No course role.
 	//   "STUDENT" - Student in the course.
 	//   "TEACHER" - Teacher of the course.
+	//   "OWNER" - Owner of the course.
 	Role string `json:"role,omitempty"`
 
 	// UserId: Identifier of the invited user.
@@ -1882,6 +1970,58 @@ func (s *ShortAnswerSubmission) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// StateHistory: The history of each state this submission has been in.
+type StateHistory struct {
+	// ActorUserId: The teacher or student who made the change
+	ActorUserId string `json:"actorUserId,omitempty"`
+
+	// State: The workflow pipeline stage.
+	//
+	// Possible values:
+	//   "STATE_UNSPECIFIED" - No state specified. This should never be
+	// returned.
+	//   "CREATED" - The Submission has been created.
+	//   "TURNED_IN" - The student has turned in an assigned document, which
+	// may or may not be
+	// a template.
+	//   "RETURNED" - The teacher has returned the assigned document to the
+	// student.
+	//   "RECLAIMED_BY_STUDENT" - The student turned in the assigned
+	// document, and then chose to
+	// "unsubmit" the assignment, giving the student control again as
+	// the
+	// owner.
+	//   "STUDENT_EDITED_AFTER_TURN_IN" - The student edited their
+	// submission after turning it in. Currently,
+	// only used by Questions, when the student edits their answer.
+	State string `json:"state,omitempty"`
+
+	// StateTimestamp: When the submission entered this state.
+	StateTimestamp string `json:"stateTimestamp,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "ActorUserId") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ActorUserId") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *StateHistory) MarshalJSON() ([]byte, error) {
+	type noMethod StateHistory
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // Student: Student in a course.
 type Student struct {
 	// CourseId: Identifier of the course.
@@ -1956,7 +2096,9 @@ type StudentSubmission struct {
 	AlternateLink string `json:"alternateLink,omitempty"`
 
 	// AssignedGrade: Optional grade. If unset, no grade was set.
-	// This must be a non-negative integer value.
+	// This value must be non-negative. Decimal (i.e. non-integer) values
+	// are
+	// allowed, but will be rounded to two decimal places.
 	//
 	// This may be modified only by course teachers.
 	AssignedGrade float64 `json:"assignedGrade,omitempty"`
@@ -2008,7 +2150,9 @@ type StudentSubmission struct {
 	CreationTime string `json:"creationTime,omitempty"`
 
 	// DraftGrade: Optional pending grade. If unset, no grade was set.
-	// This must be a non-negative integer value.
+	// This value must be non-negative. Decimal (i.e. non-integer) values
+	// are
+	// allowed, but will be rounded to two decimal places.
 	//
 	// This is only visible to and modifiable by course teachers.
 	DraftGrade float64 `json:"draftGrade,omitempty"`
@@ -2049,6 +2193,12 @@ type StudentSubmission struct {
 	//   "RECLAIMED_BY_STUDENT" - Student chose to "unsubmit" the
 	// assignment.
 	State string `json:"state,omitempty"`
+
+	// SubmissionHistory: The history of the submission (includes state and
+	// grade histories).
+	//
+	// Read-only.
+	SubmissionHistory []*SubmissionHistory `json:"submissionHistory,omitempty"`
 
 	// UpdateTime: Last update time of this submission.
 	// This may be unset if the student has not accessed this
@@ -2104,6 +2254,41 @@ func (s *StudentSubmission) UnmarshalJSON(data []byte) error {
 	s.AssignedGrade = float64(s1.AssignedGrade)
 	s.DraftGrade = float64(s1.DraftGrade)
 	return nil
+}
+
+// SubmissionHistory: The history of the submission. This currently
+// includes state and grade
+// histories.
+type SubmissionHistory struct {
+	// GradeHistory: The grade history information of the submission, if
+	// present.
+	GradeHistory *GradeHistory `json:"gradeHistory,omitempty"`
+
+	// StateHistory: The state history information of the submission, if
+	// present.
+	StateHistory *StateHistory `json:"stateHistory,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "GradeHistory") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "GradeHistory") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *SubmissionHistory) MarshalJSON() ([]byte, error) {
+	type noMethod SubmissionHistory
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // Teacher: Teacher of a course.
@@ -2234,6 +2419,16 @@ type UserProfile struct {
 	//
 	// Read-only.
 	PhotoUrl string `json:"photoUrl,omitempty"`
+
+	// VerifiedTeacher: Represents whether a G Suite for Education user's
+	// domain administrator has
+	// explicitly verified them as being a teacher. If the user is not a
+	// member of
+	// a G Suite for Education domain, than this field will always be
+	// false.
+	//
+	// Read-only
+	VerifiedTeacher bool `json:"verifiedTeacher,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
 	// server.
@@ -2372,7 +2567,6 @@ func (c *CoursesCreateCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.course)
 	if err != nil {
@@ -2500,7 +2694,6 @@ func (c *CoursesDeleteCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/courses/{id}")
@@ -2643,7 +2836,6 @@ func (c *CoursesGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -2736,7 +2928,9 @@ type CoursesListCall struct {
 
 // List: Returns a list of courses that the requesting user is permitted
 // to view,
-// restricted to those that match the request.
+// restricted to those that match the request. Returned courses are
+// ordered by
+// creation time, with the most recently created coming first.
 //
 // This method returns the following error codes:
 //
@@ -2854,7 +3048,6 @@ func (c *CoursesListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -2905,7 +3098,7 @@ func (c *CoursesListCall) Do(opts ...googleapi.CallOption) (*ListCoursesResponse
 	}
 	return ret, nil
 	// {
-	//   "description": "Returns a list of courses that the requesting user is permitted to view,\nrestricted to those that match the request.\n\nThis method returns the following error codes:\n\n* `PERMISSION_DENIED` for access errors.\n* `INVALID_ARGUMENT` if the query argument is malformed.\n* `NOT_FOUND` if any users specified in the query arguments do not exist.",
+	//   "description": "Returns a list of courses that the requesting user is permitted to view,\nrestricted to those that match the request. Returned courses are ordered by\ncreation time, with the most recently created coming first.\n\nThis method returns the following error codes:\n\n* `PERMISSION_DENIED` for access errors.\n* `INVALID_ARGUMENT` if the query argument is malformed.\n* `NOT_FOUND` if any users specified in the query arguments do not exist.",
 	//   "flatPath": "v1/courses",
 	//   "httpMethod": "GET",
 	//   "id": "classroom.courses.list",
@@ -3023,6 +3216,13 @@ func (r *CoursesService) Patch(id string, course *Course) *CoursesPatchCall {
 // * `description`
 // * `room`
 // * `courseState`
+// * `ownerId`
+//
+// Note: patches to ownerId are treated as being effective immediately,
+// but in
+// practice it may take some time for the ownership transfer of all
+// affected
+// resources to complete.
 //
 // When set in a query parameter, this field should be specified
 // as
@@ -3064,7 +3264,6 @@ func (c *CoursesPatchCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.course)
 	if err != nil {
@@ -3135,7 +3334,7 @@ func (c *CoursesPatchCall) Do(opts ...googleapi.CallOption) (*Course, error) {
 	//       "type": "string"
 	//     },
 	//     "updateMask": {
-	//       "description": "Mask that identifies which fields on the course to update.\nThis field is required to do an update. The update will fail if invalid\nfields are specified. The following fields are valid:\n\n* `name`\n* `section`\n* `descriptionHeading`\n* `description`\n* `room`\n* `courseState`\n\nWhen set in a query parameter, this field should be specified as\n\n`updateMask=\u003cfield1\u003e,\u003cfield2\u003e,...`",
+	//       "description": "Mask that identifies which fields on the course to update.\nThis field is required to do an update. The update will fail if invalid\nfields are specified. The following fields are valid:\n\n* `name`\n* `section`\n* `descriptionHeading`\n* `description`\n* `room`\n* `courseState`\n* `ownerId`\n\nNote: patches to ownerId are treated as being effective immediately, but in\npractice it may take some time for the ownership transfer of all affected\nresources to complete.\n\nWhen set in a query parameter, this field should be specified as\n\n`updateMask=\u003cfield1\u003e,\u003cfield2\u003e,...`",
 	//       "format": "google-fieldmask",
 	//       "location": "query",
 	//       "type": "string"
@@ -3214,7 +3413,6 @@ func (c *CoursesUpdateCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.course)
 	if err != nil {
@@ -3361,7 +3559,6 @@ func (c *CoursesAliasesCreateCall) doRequest(alt string) (*http.Response, error)
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.coursealias)
 	if err != nil {
@@ -3507,7 +3704,6 @@ func (c *CoursesAliasesDeleteCall) doRequest(alt string) (*http.Response, error)
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/courses/{courseId}/aliases/{alias}")
@@ -3682,7 +3878,6 @@ func (c *CoursesAliasesListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -3868,7 +4063,6 @@ func (c *CoursesCourseWorkCreateCall) doRequest(alt string) (*http.Response, err
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.coursework)
 	if err != nil {
@@ -4021,7 +4215,6 @@ func (c *CoursesCourseWorkDeleteCall) doRequest(alt string) (*http.Response, err
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/courses/{courseId}/courseWork/{id}")
@@ -4175,7 +4368,6 @@ func (c *CoursesCourseWorkGetCall) doRequest(alt string) (*http.Response, error)
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -4392,7 +4584,6 @@ func (c *CoursesCourseWorkListCall) doRequest(alt string) (*http.Response, error
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -4591,6 +4782,7 @@ func (r *CoursesCourseWorkService) Patch(courseId string, id string, coursework 
 // * `due_date`
 // * `due_time`
 // * `max_points`
+// * `scheduled_time`
 // * `submission_modification_mode`
 func (c *CoursesCourseWorkPatchCall) UpdateMask(updateMask string) *CoursesCourseWorkPatchCall {
 	c.urlParams_.Set("updateMask", updateMask)
@@ -4628,7 +4820,6 @@ func (c *CoursesCourseWorkPatchCall) doRequest(alt string) (*http.Response, erro
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.coursework)
 	if err != nil {
@@ -4707,7 +4898,7 @@ func (c *CoursesCourseWorkPatchCall) Do(opts ...googleapi.CallOption) (*CourseWo
 	//       "type": "string"
 	//     },
 	//     "updateMask": {
-	//       "description": "Mask that identifies which fields on the course work to update.\nThis field is required to do an update. The update fails if invalid\nfields are specified. If a field supports empty values, it can be cleared\nby specifying it in the update mask and not in the CourseWork object. If a\nfield that does not support empty values is included in the update mask and\nnot set in the CourseWork object, an `INVALID_ARGUMENT` error will be\nreturned.\n\nThe following fields may be specified by teachers:\n* `title`\n* `description`\n* `state`\n* `due_date`\n* `due_time`\n* `max_points`\n* `submission_modification_mode`",
+	//       "description": "Mask that identifies which fields on the course work to update.\nThis field is required to do an update. The update fails if invalid\nfields are specified. If a field supports empty values, it can be cleared\nby specifying it in the update mask and not in the CourseWork object. If a\nfield that does not support empty values is included in the update mask and\nnot set in the CourseWork object, an `INVALID_ARGUMENT` error will be\nreturned.\n\nThe following fields may be specified by teachers:\n* `title`\n* `description`\n* `state`\n* `due_date`\n* `due_time`\n* `max_points`\n* `scheduled_time`\n* `submission_modification_mode`",
 	//       "format": "google-fieldmask",
 	//       "location": "query",
 	//       "type": "string"
@@ -4799,7 +4990,6 @@ func (c *CoursesCourseWorkStudentSubmissionsGetCall) doRequest(alt string) (*htt
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -5045,7 +5235,6 @@ func (c *CoursesCourseWorkStudentSubmissionsListCall) doRequest(alt string) (*ht
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -5116,7 +5305,7 @@ func (c *CoursesCourseWorkStudentSubmissionsListCall) Do(opts ...googleapi.CallO
 	//       "type": "string"
 	//     },
 	//     "courseWorkId": {
-	//       "description": "Identifer of the student work to request.\nThis may be set to the string literal `\"-\"` to request student work for\nall course work in the specified course.",
+	//       "description": "Identifier of the student work to request.\nThis may be set to the string literal `\"-\"` to request student work for\nall course work in the specified course.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -5277,7 +5466,6 @@ func (c *CoursesCourseWorkStudentSubmissionsModifyAttachmentsCall) doRequest(alt
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.modifyattachmentsrequest)
 	if err != nil {
@@ -5469,7 +5657,6 @@ func (c *CoursesCourseWorkStudentSubmissionsPatchCall) doRequest(alt string) (*h
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.studentsubmission)
 	if err != nil {
@@ -5661,7 +5848,6 @@ func (c *CoursesCourseWorkStudentSubmissionsReclaimCall) doRequest(alt string) (
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.reclaimstudentsubmissionrequest)
 	if err != nil {
@@ -5845,7 +6031,6 @@ func (c *CoursesCourseWorkStudentSubmissionsReturnCall) doRequest(alt string) (*
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.returnstudentsubmissionrequest)
 	if err != nil {
@@ -6026,7 +6211,6 @@ func (c *CoursesCourseWorkStudentSubmissionsTurnInCall) doRequest(alt string) (*
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.turninstudentsubmissionrequest)
 	if err != nil {
@@ -6204,7 +6388,6 @@ func (c *CoursesStudentsCreateCall) doRequest(alt string) (*http.Response, error
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.student)
 	if err != nil {
@@ -6355,7 +6538,6 @@ func (c *CoursesStudentsDeleteCall) doRequest(alt string) (*http.Response, error
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/courses/{courseId}/students/{userId}")
@@ -6510,7 +6692,6 @@ func (c *CoursesStudentsGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -6688,7 +6869,6 @@ func (c *CoursesStudentsListCall) doRequest(alt string) (*http.Response, error) 
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -6870,7 +7050,6 @@ func (c *CoursesTeachersCreateCall) doRequest(alt string) (*http.Response, error
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.teacher)
 	if err != nil {
@@ -7019,7 +7198,6 @@ func (c *CoursesTeachersDeleteCall) doRequest(alt string) (*http.Response, error
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/courses/{courseId}/teachers/{userId}")
@@ -7174,7 +7352,6 @@ func (c *CoursesTeachersGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -7352,7 +7529,6 @@ func (c *CoursesTeachersListCall) doRequest(alt string) (*http.Response, error) 
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -7531,7 +7707,6 @@ func (c *InvitationsAcceptCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/invitations/{id}:accept")
@@ -7671,7 +7846,6 @@ func (c *InvitationsCreateCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.invitation)
 	if err != nil {
@@ -7799,7 +7973,6 @@ func (c *InvitationsDeleteCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/invitations/{id}")
@@ -7942,7 +8115,6 @@ func (c *InvitationsGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -8132,7 +8304,6 @@ func (c *InvitationsListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -8311,7 +8482,6 @@ func (c *UserProfilesGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -8489,7 +8659,6 @@ func (c *UserProfilesGuardianInvitationsCreateCall) doRequest(alt string) (*http
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.guardianinvitation)
 	if err != nil {
@@ -8566,7 +8735,10 @@ func (c *UserProfilesGuardianInvitationsCreateCall) Do(opts ...googleapi.CallOpt
 	//   },
 	//   "response": {
 	//     "$ref": "GuardianInvitation"
-	//   }
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/classroom.guardianlinks.students"
+	//   ]
 	// }
 
 }
@@ -8651,7 +8823,6 @@ func (c *UserProfilesGuardianInvitationsGetCall) doRequest(alt string) (*http.Re
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -8731,7 +8902,11 @@ func (c *UserProfilesGuardianInvitationsGetCall) Do(opts ...googleapi.CallOption
 	//   "path": "v1/userProfiles/{studentId}/guardianInvitations/{invitationId}",
 	//   "response": {
 	//     "$ref": "GuardianInvitation"
-	//   }
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/classroom.guardianlinks.students",
+	//     "https://www.googleapis.com/auth/classroom.guardianlinks.students.readonly"
+	//   ]
 	// }
 
 }
@@ -8865,7 +9040,6 @@ func (c *UserProfilesGuardianInvitationsListCall) doRequest(alt string) (*http.R
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -8964,7 +9138,11 @@ func (c *UserProfilesGuardianInvitationsListCall) Do(opts ...googleapi.CallOptio
 	//   "path": "v1/userProfiles/{studentId}/guardianInvitations",
 	//   "response": {
 	//     "$ref": "ListGuardianInvitationsResponse"
-	//   }
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/classroom.guardianlinks.students",
+	//     "https://www.googleapis.com/auth/classroom.guardianlinks.students.readonly"
+	//   ]
 	// }
 
 }
@@ -9084,7 +9262,6 @@ func (c *UserProfilesGuardianInvitationsPatchCall) doRequest(alt string) (*http.
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.guardianinvitation)
 	if err != nil {
@@ -9175,7 +9352,10 @@ func (c *UserProfilesGuardianInvitationsPatchCall) Do(opts ...googleapi.CallOpti
 	//   },
 	//   "response": {
 	//     "$ref": "GuardianInvitation"
-	//   }
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/classroom.guardianlinks.students"
+	//   ]
 	// }
 
 }
@@ -9254,7 +9434,6 @@ func (c *UserProfilesGuardiansDeleteCall) doRequest(alt string) (*http.Response,
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/userProfiles/{studentId}/guardians/{guardianId}")
@@ -9331,7 +9510,10 @@ func (c *UserProfilesGuardiansDeleteCall) Do(opts ...googleapi.CallOption) (*Emp
 	//   "path": "v1/userProfiles/{studentId}/guardians/{guardianId}",
 	//   "response": {
 	//     "$ref": "Empty"
-	//   }
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/classroom.guardianlinks.students"
+	//   ]
 	// }
 
 }
@@ -9418,7 +9600,6 @@ func (c *UserProfilesGuardiansGetCall) doRequest(alt string) (*http.Response, er
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -9498,7 +9679,12 @@ func (c *UserProfilesGuardiansGetCall) Do(opts ...googleapi.CallOption) (*Guardi
 	//   "path": "v1/userProfiles/{studentId}/guardians/{guardianId}",
 	//   "response": {
 	//     "$ref": "Guardian"
-	//   }
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/classroom.guardianlinks.me.readonly",
+	//     "https://www.googleapis.com/auth/classroom.guardianlinks.students",
+	//     "https://www.googleapis.com/auth/classroom.guardianlinks.students.readonly"
+	//   ]
 	// }
 
 }
@@ -9626,7 +9812,6 @@ func (c *UserProfilesGuardiansListCall) doRequest(alt string) (*http.Response, e
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -9714,7 +9899,12 @@ func (c *UserProfilesGuardiansListCall) Do(opts ...googleapi.CallOption) (*ListG
 	//   "path": "v1/userProfiles/{studentId}/guardians",
 	//   "response": {
 	//     "$ref": "ListGuardiansResponse"
-	//   }
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/classroom.guardianlinks.me.readonly",
+	//     "https://www.googleapis.com/auth/classroom.guardianlinks.students",
+	//     "https://www.googleapis.com/auth/classroom.guardianlinks.students.readonly"
+	//   ]
 	// }
 
 }

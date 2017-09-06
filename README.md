@@ -19,6 +19,7 @@ available through this Service Broker are:
 * [Bigtable](https://cloud.google.com/bigtable/)
 * [Cloud SQL](https://cloud.google.com/sql/)
 * [Cloud Storage](https://cloud.google.com/storage/)
+* [Datastore](https://cloud.google.com/datastore/)
 * [ML APIs](https://cloud.google.com/ml/)
 * [PubSub](https://cloud.google.com/pubsub/)
 * [Spanner](https://cloud.google.com/spanner/)
@@ -66,6 +67,7 @@ Enable the following services in **[API Manager > Library](https://console.cloud
 1. If you want to enable Cloud Storage as a service, enable the [Cloud Storage API](https://console.cloud.google.com/apis/api/storage_component/overview)
 1. If you want to enable Pub/Sub as a service, enable the [Cloud Pub/Sub API](https://console.cloud.google.com/apis/api/pubsub/overview)
 1. If you want to enable Bigtable as a service, enable the [Bigtable Admin API](https://console.cloud.google.com/apis/api/bigtableadmin/overview)
+1. If you want to enable Datastore as a service, enable the [Datastore API](https://console.cloud.google.com/apis/api/datastore.googleapis.com/overview)
 
 #### [Create a root service account](#service-account)
 

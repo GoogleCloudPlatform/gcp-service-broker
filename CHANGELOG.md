@@ -122,3 +122,8 @@ any extra access details
 ## [3.4.1] - 2017-05-22
 
 - fixes uninitialized security group
+
+## [3.5.1] - 2017-09-06
+
+- added PostgreSQL support to CloudSQL (and migrated existing plans)
+- added Datastore support

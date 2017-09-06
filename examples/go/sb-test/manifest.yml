@@ -6,7 +6,6 @@ applications:
     label: 'A small app to test the Google Cloud Platform Service Broker'
     description: A small app to test the Google Cloud Platform Service Broker
     env:
-      GO15VENDOREXPERIMENT: 1
       GOPACKAGENAME: main
 
 
