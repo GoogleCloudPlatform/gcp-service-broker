@@ -177,3 +177,8 @@ Notes:
     * Provison (none)
     * Bind (none)
 	* provided credentials will have the role of `cloudtrace.agent`
+	
+* [Datastore](https://cloud.google.com/datastore/)
+    * Provison (none)
+    * Bind (none)
+	* provided credentials will have the role of `datastore.user`	
