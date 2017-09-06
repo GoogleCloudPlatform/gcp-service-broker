@@ -120,19 +120,19 @@ const Services string = `[
             "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg"
           },
           "tags": ["gcp", "spanner"]
-	    },
+        },
         {
-		  "id": "83837945-1547-41e0-b661-ea31d76eed11",
+          "id": "83837945-1547-41e0-b661-ea31d76eed11",
           "description": "Stackdriver Debugger",
           "name": "google-stackdriver-debugger",
           "bindable": true,
           "plan_updateable": false,
           "metadata": {
-            "displayName": "Google Stackdriver Debugger",
-            "longDescription": "Google Stackdriver Debugger provides powerful production diagnostics tools",
-            "documentationUrl": "https://cloud.google.com/debugger/docs/",
-            "supportUrl": "https://cloud.google.com/support/",
-            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg"
+           "displayName": "Stackdriver Debugger",
+           "longDescription": "Stackdriver Debugger is a feature of the Google Cloud Platform that lets you inspect the state of an application at any code location without using logging statements and without stopping or slowing down your applications. Your users are not impacted during debugging. Using the production debugger you can capture the local variables and call stack and link it back to a specific line location in your source code.",
+           "documentationUrl": "https://cloud.google.com/debugger/docs/",
+           "supportUrl": "https://cloud.google.com/support/",
+           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg"
           },
           "tags": ["gcp", "stackdriver", "debugger"]
         },
@@ -143,73 +143,95 @@ const Services string = `[
           "bindable": true,
           "plan_updateable": false,
           "metadata": {
-            "displayName": "Stackdriver Trace",
-            "longDescription": "Stackdriver Trace is a distributed tracing system that collects latency data from your applications and displays it in the Google Cloud Platform Console. You can track how requests propagate through your application and receive detailed near real-time performance insights.",
-            "documentationUrl": "https://cloud.google.com/trace/docs/",
-            "supportUrl": "https://cloud.google.com/support/",
-            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg"
+           "displayName": "Stackdriver Trace",
+           "longDescription": "Stackdriver Trace is a distributed tracing system that collects latency data from your applications and displays it in the Google Cloud Platform Console. You can track how requests propagate through your application and receive detailed near real-time performance insights.",
+           "documentationUrl": "https://cloud.google.com/trace/docs/",
+           "supportUrl": "https://cloud.google.com/support/",
+           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg"
           },
           "tags": ["gcp", "stackdriver", "trace"]
+        },
+        {
+          "id": "76d4abb2-fee7-4c8f-aee1-bcea2837f02b",
+          "description": "Google Cloud Datastore is a NoSQL document database service",
+          "name": "google-datastore",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+            "displayName": "Google Cloud Datastore",
+            "longDescription": "Google Cloud Datastore is a NoSQL document database built for automatic scaling, high performance, and ease of application development.",
+            "documentationUrl": "https://cloud.google.com/datastore/docs/",
+            "supportUrl": "https://cloud.google.com/support/",
+            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/datastore.svg"
+          },
+          "tags": ["gcp", "datastore"]
         }
       ]`
 
 const PreconfiguredPlans = `[
-			{
-			  "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
-			  "name": "standard",
-			  "display_name": "Standard",
-			  "description": "Standard storage class",
-			  "features": {"storage_class": "STANDARD"}
-			},
-			{
-			  "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
-			  "name": "nearline",
-			  "display_name": "Nearline",
-			  "description": "Nearline storage class",
-			  "features": {"storage_class": "NEARLINE"}
-			},
-			{
-			  "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
-			  "name": "reduced_availability",
-			  "display_name": "Durable Reduced Availability",
-			  "description": "Durable Reduced Availability storage class",
-			  "features": {"storage_class": "DURABLE_REDUCED_AVAILABILITY"}
-			},
-			{
-			  "service_id": "628629e3-79f5-4255-b981-d14c6c7856be",
-			  "name": "default",
-			  "display_name": "Default",
-			  "description": "PubSub Default plan",
-			  "features": ""
-			},
-			{ "service_id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
-			  "name": "default",
-			  "display_name": "Default",
-			  "description": "BigQuery default plan",
-			  "features": ""
-			},
-			{
-			  "service_id": "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4",
-			  "name": "default",
-			  "display_name": "Default",
-			  "description": "Machine Learning api default plan",
-			  "features": ""
-			},
-			{
-			  "service_id": "83837945-1547-41e0-b661-ea31d76eed11",
-			  "name": "default",
-			  "display_name": "Default",
-			  "description": "Stackdriver Debugger default plan" ,
-			  "features": ""
-			},
-			{
-			  "service_id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
-			  "name": "default",
-			  "display_name": "Default",
-			  "description": "Stackdriver Trace default plan",
-			  "features": ""
-			 }
-		      ]`
+        {
+          "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
+          "name": "standard",
+          "display_name": "Standard",
+          "description": "Standard storage class",
+          "features": {"storage_class": "STANDARD"}
+        },
+        {
+          "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
+          "name": "nearline",
+          "display_name": "Nearline",
+          "description": "Nearline storage class",
+          "features": {"storage_class": "NEARLINE"}
+        },
+        {
+          "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
+          "name": "reduced_availability",
+          "display_name": "Durable Reduced Availability",
+          "description": "Durable Reduced Availability storage class",
+          "features": {"storage_class": "DURABLE_REDUCED_AVAILABILITY"}
+        },
+        {
+          "service_id": "628629e3-79f5-4255-b981-d14c6c7856be",
+          "name": "default",
+          "display_name": "Default",
+          "description": "PubSub Default plan",
+          "features": ""
+        },
+        { "service_id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
+          "name": "default",
+          "display_name": "Default",
+          "description": "BigQuery default plan",
+          "features": ""
+        },
+        {
+          "service_id": "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4",
+          "name": "default",
+          "display_name": "Default",
+          "description": "Machine Learning api default plan",
+          "features": ""
+        },
+        {
+          "service_id": "83837945-1547-41e0-b661-ea31d76eed11",
+          "name": "default",
+          "display_name": "Default",
+          "description": "Stackdriver Debugger default plan",
+          "features": ""
+        },
+        {
+          "service_id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
+          "name": "default",
+          "display_name": "Default",
+          "description": "Stackdriver Trace default plan",
+          "features": ""
+        },
+        {
+          "service_id": "76d4abb2-fee7-4c8f-aee1-bcea2837f02b",
+          "name": "default",
+          "display_name": "Default",
+          "description": "Datastore default plan",
+          "features": ""
+        }
+        ]`
 
 const TestCloudSQLMySQLPlan = `{
 			"test_cloudsql_mysql_plan": {
