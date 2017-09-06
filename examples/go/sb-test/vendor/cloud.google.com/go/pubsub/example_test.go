@@ -49,6 +49,18 @@ func ExampleClient_CreateTopic() {
 	_ = topic // TODO: use the topic.
 }
 
+// Use TopicInProject to refer to a topic that is not in the client's project, such
+// as a public topic.
+func ExampleClient_TopicInProject() {
+	ctx := context.Background()
+	client, err := pubsub.NewClient(ctx, "project-id")
+	if err != nil {
+		// TODO: Handle error.
+	}
+	topic := client.TopicInProject("topicName", "another-project-id")
+	_ = topic // TODO: use the topic.
+}
+
 func ExampleClient_CreateSubscription() {
 	ctx := context.Background()
 	client, err := pubsub.NewClient(ctx, "project-id")
@@ -64,7 +76,10 @@ func ExampleClient_CreateSubscription() {
 
 	// Create a new subscription to the previously created topic
 	// with the given name.
-	sub, err := client.CreateSubscription(ctx, "subName", topic, 10*time.Second, nil)
+	sub, err := client.CreateSubscription(ctx, "subName", pubsub.SubscriptionConfig{
+		Topic:       topic,
+		AckDeadline: 10 * time.Second,
+	})
 	if err != nil {
 		// TODO: Handle error.
 	}
@@ -207,17 +222,18 @@ func ExampleSubscription_Receive() {
 	}
 }
 
-func ExampleSubscription_Receive_options() {
+// This example shows how to configure keepalive so that unacknoweldged messages
+// expire quickly, allowing other subscribers to take them.
+func ExampleSubscription_Receive_maxExtension() {
 	ctx := context.Background()
 	client, err := pubsub.NewClient(ctx, "project-id")
 	if err != nil {
 		// TODO: Handle error.
 	}
 	sub := client.Subscription("subName")
-	// This program is expected to process and acknowledge messages
-	// in 5 seconds. If not, Pub/Sub API will assume the message is not
-	// acknowledged.
-	sub.ReceiveSettings.MaxExtension = 5 * time.Second
+	// This program is expected to process and acknowledge messages in 30 seconds. If
+	// not, the Pub/Sub API will assume the message is not acknowledged.
+	sub.ReceiveSettings.MaxExtension = 30 * time.Second
 	err = sub.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
 		// TODO: Handle message.
 		m.Ack()
@@ -227,14 +243,39 @@ func ExampleSubscription_Receive_options() {
 	}
 }
 
-func ExampleSubscription_ModifyPushConfig() {
+// This example shows how to throttle Subscription.Receive, which aims for high
+// throughput by default. By limiting the number of messages and/or bytes being
+// processed at once, you can bound your program's resource consumption.
+func ExampleSubscription_Receive_maxOutstanding() {
 	ctx := context.Background()
 	client, err := pubsub.NewClient(ctx, "project-id")
 	if err != nil {
 		// TODO: Handle error.
 	}
 	sub := client.Subscription("subName")
-	if err := sub.ModifyPushConfig(ctx, &pubsub.PushConfig{Endpoint: "https://example.com/push"}); err != nil {
+	sub.ReceiveSettings.MaxOutstandingMessages = 5
+	sub.ReceiveSettings.MaxOutstandingBytes = 10e6
+	err = sub.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
+		// TODO: Handle message.
+		m.Ack()
+	})
+	if err != context.Canceled {
 		// TODO: Handle error.
 	}
+}
+
+func ExampleSubscription_Update() {
+	ctx := context.Background()
+	client, err := pubsub.NewClient(ctx, "project-id")
+	if err != nil {
+		// TODO: Handle error.
+	}
+	sub := client.Subscription("subName")
+	subConfig, err := sub.Update(ctx, pubsub.SubscriptionConfigToUpdate{
+		PushConfig: &pubsub.PushConfig{Endpoint: "https://example.com/push"},
+	})
+	if err != nil {
+		// TODO: Handle error.
+	}
+	_ = subConfig // TODO: Use SubscriptionConfig.
 }

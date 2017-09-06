@@ -24,3 +24,4 @@ import:
 - package: google.golang.org/genproto
   subpackages:
   - googleapis/spanner/admin/instance/v1
+- package: github.com/lib/pq

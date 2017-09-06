@@ -161,7 +161,13 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 				AccountManager: saManager,
 			},
 		},
-		models.CloudsqlName: &cloudsql.CloudSQLBroker{
+		models.CloudsqlMySQLName: &cloudsql.CloudSQLBroker{
+			Client:         self.GCPClient,
+			ProjectId:      self.RootGCPCredentials.ProjectId,
+			Logger:         self.Logger,
+			AccountManager: sqlManager,
+		},
+		models.CloudsqlPostgresName: &cloudsql.CloudSQLBroker{
 			Client:         self.GCPClient,
 			ProjectId:      self.RootGCPCredentials.ProjectId,
 			Logger:         self.Logger,
@@ -631,11 +637,18 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 	}
 
 	// set up cloudsql custom plans
-	cloudSQLPlans, cloudSQLServiceId, err := getDynamicPlans("CLOUDSQL_CUSTOM_PLANS", cloudsql.MapPlan)
+	cloudSQLMySQLPlans, CloudSQLMySQLServiceId, err := getDynamicPlans("CLOUDSQL_MYSQL_CUSTOM_PLANS", cloudsql.MapPlan)
 	if err != nil {
 		return []models.Service{}, err
 	}
-	servicePlans[cloudSQLServiceId] = append(servicePlans[cloudSQLServiceId], cloudSQLPlans...)
+	servicePlans[CloudSQLMySQLServiceId] = append(servicePlans[CloudSQLMySQLServiceId], cloudSQLMySQLPlans...)
+
+	// set up cloudsql custom plans
+	cloudSQLPostgresPlans, CloudSQLPostgresServiceId, err := getDynamicPlans("CLOUDSQL_POSTGRES_CUSTOM_PLANS", cloudsql.MapPlan)
+	if err != nil {
+		return []models.Service{}, err
+	}
+	servicePlans[CloudSQLPostgresServiceId] = append(servicePlans[CloudSQLPostgresServiceId], cloudSQLPostgresPlans...)
 
 	// set up bigtable custom plans
 	bigtablePlans, bigtableServiceId, err := getDynamicPlans("BIGTABLE_CUSTOM_PLANS", bigtable.MapPlan)

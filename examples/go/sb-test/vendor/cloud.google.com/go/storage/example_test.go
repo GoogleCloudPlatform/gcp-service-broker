@@ -16,6 +16,7 @@ package storage_test
 
 import (
 	"fmt"
+	"hash/crc32"
 	"io"
 	"io/ioutil"
 	"log"
@@ -88,6 +89,48 @@ func ExampleBucketHandle_Attrs() {
 		// TODO: handle error.
 	}
 	attrs, err := client.Bucket("my-bucket").Attrs(ctx)
+	if err != nil {
+		// TODO: handle error.
+	}
+	fmt.Println(attrs)
+}
+
+func ExampleBucketHandle_Update() {
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		// TODO: handle error.
+	}
+	// Enable versioning in the bucket, regardless of its previous value.
+	attrs, err := client.Bucket("my-bucket").Update(ctx,
+		storage.BucketAttrsToUpdate{VersioningEnabled: true})
+	if err != nil {
+		// TODO: handle error.
+	}
+	fmt.Println(attrs)
+}
+
+// If your update is based on the bucket's previous attributes, match the
+// metageneration number to make sure the bucket hasn't changed since you read it.
+func ExampleBucketHandle_Update_readModifyWrite() {
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		// TODO: handle error.
+	}
+	b := client.Bucket("my-bucket")
+	attrs, err := b.Attrs(ctx)
+	if err != nil {
+		// TODO: handle error.
+	}
+	var au storage.BucketAttrsToUpdate
+	au.SetLabel("lab", attrs.Labels["lab"]+"-more")
+	if attrs.Labels["delete-me"] == "yes" {
+		au.DeleteLabel("delete-me")
+	}
+	attrs, err = b.
+		If(storage.BucketConditions{MetagenerationMatch: attrs.MetaGeneration}).
+		Update(ctx, au)
 	if err != nil {
 		// TODO: handle error.
 	}
@@ -279,6 +322,31 @@ func ExampleWriter_Write() {
 	wc.ACL = []storage.ACLRule{{storage.AllUsers, storage.RoleReader}}
 	if _, err := wc.Write([]byte("hello world")); err != nil {
 		// TODO: handle error.
+		// Note that Write may return nil in some error situations,
+		// so always check the error from Close.
+	}
+	if err := wc.Close(); err != nil {
+		// TODO: handle error.
+	}
+	fmt.Println("updated object:", wc.Attrs())
+}
+
+// To make sure the data you write is uncorrupted, use an MD5 or CRC32c
+// checksum. This example illustrates CRC32c.
+func ExampleWriter_Write_checksum() {
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		// TODO: handle error.
+	}
+	data := []byte("verify me")
+	wc := client.Bucket("bucketname").Object("filename1").NewWriter(ctx)
+	wc.CRC32C = crc32.Checksum(data, crc32.MakeTable(crc32.Castagnoli))
+	wc.SendCRC32C = true
+	if _, err := wc.Write([]byte("hello world")); err != nil {
+		// TODO: handle error.
+		// Note that Write may return nil in some error situations,
+		// so always check the error from Close.
 	}
 	if err := wc.Close(); err != nil {
 		// TODO: handle error.

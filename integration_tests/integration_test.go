@@ -205,7 +205,8 @@ var _ = Describe("LiveIntegrationTests", func() {
 		os.Setenv("SERVICES", fakes.Services)
 		os.Setenv("PRECONFIGURED_PLANS", fakes.PreconfiguredPlans)
 
-		os.Setenv("CLOUDSQL_CUSTOM_PLANS", fakes.TestCloudSQLPlan)
+		os.Setenv("CLOUDSQL_MYSQL_CUSTOM_PLANS", fakes.TestCloudSQLMySQLPlan)
+		os.Setenv("CLOUDSQL_POSTGRES_CUSTOM_PLANS", fakes.TestCloudSQLPostgresPlan)
 		os.Setenv("BIGTABLE_CUSTOM_PLANS", fakes.TestBigtablePlan)
 		os.Setenv("SPANNER_CUSTOM_PLANS", fakes.TestSpannerPlan)
 

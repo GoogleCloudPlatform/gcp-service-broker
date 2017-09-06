@@ -68,7 +68,8 @@ var _ = Describe("Brokers", func() {
 		os.Setenv("SERVICES", fakes.Services)
 		os.Setenv("PRECONFIGURED_PLANS", fakes.PreconfiguredPlans)
 
-		os.Setenv("CLOUDSQL_CUSTOM_PLANS", fakes.TestCloudSQLPlan)
+		os.Setenv("CLOUDSQL_MYSQL_CUSTOM_PLANS", fakes.TestCloudSQLMySQLPlan)
+		os.Setenv("CLOUDSQL_POSTGRES_CUSTOM_PLANS", fakes.TestCloudSQLPostgresPlan)
 		os.Setenv("BIGTABLE_CUSTOM_PLANS", fakes.TestBigtablePlan)
 		os.Setenv("SPANNER_CUSTOM_PLANS", fakes.TestSpannerPlan)
 
@@ -88,7 +89,7 @@ var _ = Describe("Brokers", func() {
 			if service.Name == models.BigqueryName {
 				someBigQueryPlanId = service.Plans[0].ID
 			}
-			if service.Name == models.CloudsqlName {
+			if service.Name == models.CloudsqlMySQLName {
 
 				someCloudSQLPlanId = service.Plans[0].ID
 			}
@@ -99,7 +100,7 @@ var _ = Describe("Brokers", func() {
 
 		for k, _ := range gcpBroker.ServiceBrokerMap {
 			async := false
-			if k == serviceNameToId[models.CloudsqlName] {
+			if k == serviceNameToId[models.CloudsqlMySQLName] {
 				async = true
 			}
 			gcpBroker.ServiceBrokerMap[k] = &modelsfakes.FakeServiceBrokerHelper{
@@ -120,7 +121,7 @@ var _ = Describe("Brokers", func() {
 		}
 
 		cloudSqlProvisionDetails = models.ProvisionDetails{
-			ServiceID: serviceNameToId[models.CloudsqlName],
+			ServiceID: serviceNameToId[models.CloudsqlMySQLName],
 			PlanID:    someCloudSQLPlanId,
 		}
 
@@ -168,7 +169,7 @@ var _ = Describe("Brokers", func() {
 		It("should have 1 cloudsql plan available", func() {
 			serviceList := gcpBroker.Services()
 			for _, s := range serviceList {
-				if s.ID == serviceNameToId[models.CloudsqlName] {
+				if s.ID == serviceNameToId[models.CloudsqlMySQLName] {
 					Expect(len(s.Plans)).To(Equal(1))
 				}
 			}
@@ -208,7 +209,7 @@ var _ = Describe("Brokers", func() {
 
 		It("should update cloudsql custom plans with different names on startup", func() {
 
-			os.Setenv("CLOUDSQL_CUSTOM_PLANS", `{
+			os.Setenv("CLOUDSQL_MYSQL_CUSTOM_PLANS", `{
 				"newPlan": {
 					"name": "newPlan",
 					"description": "testplan",
@@ -224,7 +225,7 @@ var _ = Describe("Brokers", func() {
 
 			serviceList := newBroker.Services()
 			for _, s := range serviceList {
-				if s.ID == serviceNameToId[models.CloudsqlName] {
+				if s.ID == serviceNameToId[models.CloudsqlMySQLName] {
 					Expect(s.Plans[0].Name).To(Equal("newPlan"))
 					Expect(len(s.Plans)).To(Equal(1))
 					plan := models.PlanDetails{}
@@ -244,7 +245,7 @@ var _ = Describe("Brokers", func() {
 
 		It("should update cloudsql custom plans with the same name on startup", func() {
 
-			os.Setenv("CLOUDSQL_CUSTOM_PLANS", `{
+			os.Setenv("CLOUDSQL_MYSQL_CUSTOM_PLANS", `{
 				"test_plan": {
 					"name": "test_plan",
 					"description": "testplan",
@@ -260,7 +261,7 @@ var _ = Describe("Brokers", func() {
 
 			serviceList := newBroker.Services()
 			for _, s := range serviceList {
-				if s.ID == serviceNameToId[models.CloudsqlName] {
+				if s.ID == serviceNameToId[models.CloudsqlMySQLName] {
 					Expect(len(s.Plans)).To(Equal(1))
 					plan := models.PlanDetails{}
 					if err := db_service.DbConnection.Where("service_id = ?", "4bc59b9a-8520-409f-85da-1c7552315863").First(&plan).Error; err != nil {
@@ -361,7 +362,7 @@ var _ = Describe("Brokers", func() {
 		Context("when async provisioning isn't allowed but the service requested requires it", func() {
 			It("should return an error", func() {
 				_, err := gcpBroker.Deprovision(instanceId, models.DeprovisionDetails{
-					ServiceID: serviceNameToId[models.CloudsqlName],
+					ServiceID: serviceNameToId[models.CloudsqlMySQLName],
 				}, false)
 				Expect(err).To(HaveOccurred())
 			})
@@ -452,7 +453,7 @@ var _ = Describe("Brokers", func() {
 				Expect(err).NotTo(HaveOccurred())
 				_, err = gcpBroker.LastOperation(instanceId)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.CloudsqlName]].(*modelsfakes.FakeServiceBrokerHelper).PollInstanceCallCount()).To(Equal(1))
+				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.CloudsqlMySQLName]].(*modelsfakes.FakeServiceBrokerHelper).PollInstanceCallCount()).To(Equal(1))
 			})
 		})
 
