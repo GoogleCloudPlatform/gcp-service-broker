@@ -9,6 +9,10 @@ apply_open_security_group: true
 
 migration: |
   properties['properties']['.properties.org']['value'] = 'system';
+  if ('.properties.cloudsql_custom_plans' in properties['properties']){
+      properties['properties']['.properties.cloudsql_mysql_custom_plans'] =
+      {'value': properties['properties']['.properties.cloudsql_custom_plans']['value']};
+  }
 
 packages:
 - name: gcp-service-broker
