@@ -1,11 +1,11 @@
 {
  "kind": "discovery#restDescription",
- "etag": "\"tbys6C40o18GZwyMen5GMkdK-3s/nNHa5d4TJZ825afZFgDJZn14WPw\"",
+ "etag": "\"YWOzh2SDasdU84ArJnpYek-OMdg/Kao4BYxqk4XjAGvTP0MqtIG26pc\"",
  "discoveryVersion": "v1",
  "id": "gmail:v1",
  "name": "gmail",
  "version": "v1",
- "revision": "20170222",
+ "revision": "20170516",
  "title": "Gmail API",
  "description": "Access Gmail mailboxes including sending user email.",
  "ownerDomain": "google.com",
@@ -2027,7 +2027,7 @@
         "accept": [
          "message/rfc822"
         ],
-        "maxSize": "35MB",
+        "maxSize": "50MB",
         "protocols": {
          "simple": {
           "multipart": true,
@@ -2093,7 +2093,7 @@
         "accept": [
          "message/rfc822"
         ],
-        "maxSize": "35MB",
+        "maxSize": "50MB",
         "protocols": {
          "simple": {
           "multipart": true,
@@ -2138,7 +2138,7 @@
         },
         "q": {
          "type": "string",
-         "description": "Only return messages matching the specified query. Supports the same query format as the Gmail search box. For example, \"from:someuser@example.com rfc822msgid: is:unread\". Parameter cannot be used when accessing the api using the gmail.metadata scope.",
+         "description": "Only return messages matching the specified query. Supports the same query format as the Gmail search box. For example, \"from:someuser@example.com rfc822msgid:\u003csomemsgid@example.com\u003e is:unread\". Parameter cannot be used when accessing the api using the gmail.metadata scope.",
          "location": "query"
         },
         "userId": {

@@ -209,32 +209,32 @@ func TestKeyRange(t *testing.T) {
 		{
 			kr: KeyRange{Key{"A"}, Key{"D"}, OpenOpen},
 			wantProto: &sppb.KeyRange{
-				&sppb.KeyRange_StartOpen{listValueProto(stringProto("A"))},
-				&sppb.KeyRange_EndOpen{listValueProto(stringProto("D"))},
+				StartKeyType: &sppb.KeyRange_StartOpen{StartOpen: listValueProto(stringProto("A"))},
+				EndKeyType:   &sppb.KeyRange_EndOpen{EndOpen: listValueProto(stringProto("D"))},
 			},
 			wantStr: `(("A"),("D"))`,
 		},
 		{
 			kr: KeyRange{Key{1}, Key{10}, OpenClosed},
 			wantProto: &sppb.KeyRange{
-				&sppb.KeyRange_StartOpen{listValueProto(stringProto("1"))},
-				&sppb.KeyRange_EndClosed{listValueProto(stringProto("10"))},
+				StartKeyType: &sppb.KeyRange_StartOpen{StartOpen: listValueProto(stringProto("1"))},
+				EndKeyType:   &sppb.KeyRange_EndClosed{EndClosed: listValueProto(stringProto("10"))},
 			},
 			wantStr: "((1),(10)]",
 		},
 		{
 			kr: KeyRange{Key{1.5, 2.1, 0.2}, Key{1.9, 0.7}, ClosedOpen},
 			wantProto: &sppb.KeyRange{
-				&sppb.KeyRange_StartClosed{listValueProto(floatProto(1.5), floatProto(2.1), floatProto(0.2))},
-				&sppb.KeyRange_EndOpen{listValueProto(floatProto(1.9), floatProto(0.7))},
+				StartKeyType: &sppb.KeyRange_StartClosed{StartClosed: listValueProto(floatProto(1.5), floatProto(2.1), floatProto(0.2))},
+				EndKeyType:   &sppb.KeyRange_EndOpen{EndOpen: listValueProto(floatProto(1.9), floatProto(0.7))},
 			},
 			wantStr: "[(1.5,2.1,0.2),(1.9,0.7))",
 		},
 		{
 			kr: KeyRange{Key{NullInt64{1, true}}, Key{10}, ClosedClosed},
 			wantProto: &sppb.KeyRange{
-				&sppb.KeyRange_StartClosed{listValueProto(stringProto("1"))},
-				&sppb.KeyRange_EndClosed{listValueProto(stringProto("10"))},
+				StartKeyType: &sppb.KeyRange_StartClosed{StartClosed: listValueProto(stringProto("1"))},
+				EndKeyType:   &sppb.KeyRange_EndClosed{EndClosed: listValueProto(stringProto("10"))},
 			},
 			wantStr: "[(1),(10)]",
 		},
@@ -248,6 +248,126 @@ func TestKeyRange(t *testing.T) {
 		}
 		if !reflect.DeepEqual(gotProto, test.wantProto) {
 			t.Errorf("%v.proto() = \n%v\nwant:\n%v", test.kr, gotProto.String(), test.wantProto.String())
+		}
+	}
+}
+
+func TestPrefixRange(t *testing.T) {
+	got := Key{1}.AsPrefix()
+	want := KeyRange{Start: Key{1}, End: Key{1}, Kind: ClosedClosed}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func TestKeySets(t *testing.T) {
+	int1 := intProto(1)
+	int2 := intProto(2)
+	int3 := intProto(3)
+	int4 := intProto(4)
+	for i, test := range []struct {
+		ks        KeySet
+		wantProto *sppb.KeySet
+	}{
+		{
+			KeySets(),
+			&sppb.KeySet{},
+		},
+		{
+			Key{4},
+			&sppb.KeySet{
+				Keys: []*proto3.ListValue{listValueProto(int4)},
+			},
+		},
+		{
+			AllKeys(),
+			&sppb.KeySet{All: true},
+		},
+		{
+			KeySets(Key{1, 2}, Key{3, 4}),
+			&sppb.KeySet{
+				Keys: []*proto3.ListValue{
+					listValueProto(int1, int2),
+					listValueProto(int3, int4),
+				},
+			},
+		},
+		{
+			KeyRange{Key{1}, Key{2}, ClosedOpen},
+			&sppb.KeySet{Ranges: []*sppb.KeyRange{
+				&sppb.KeyRange{
+					StartKeyType: &sppb.KeyRange_StartClosed{StartClosed: listValueProto(int1)},
+					EndKeyType:   &sppb.KeyRange_EndOpen{EndOpen: listValueProto(int2)},
+				},
+			}},
+		},
+		{
+			Key{2}.AsPrefix(),
+			&sppb.KeySet{Ranges: []*sppb.KeyRange{
+				&sppb.KeyRange{
+					StartKeyType: &sppb.KeyRange_StartClosed{StartClosed: listValueProto(int2)},
+					EndKeyType:   &sppb.KeyRange_EndClosed{EndClosed: listValueProto(int2)},
+				},
+			}},
+		},
+		{
+			KeySets(
+				KeyRange{Key{1}, Key{2}, ClosedClosed},
+				KeyRange{Key{3}, Key{4}, OpenClosed},
+			),
+			&sppb.KeySet{
+				Ranges: []*sppb.KeyRange{
+					&sppb.KeyRange{
+						StartKeyType: &sppb.KeyRange_StartClosed{StartClosed: listValueProto(int1)},
+						EndKeyType:   &sppb.KeyRange_EndClosed{EndClosed: listValueProto(int2)},
+					},
+					&sppb.KeyRange{
+						StartKeyType: &sppb.KeyRange_StartOpen{StartOpen: listValueProto(int3)},
+						EndKeyType:   &sppb.KeyRange_EndClosed{EndClosed: listValueProto(int4)},
+					},
+				},
+			},
+		},
+		{
+			KeySets(
+				Key{1},
+				KeyRange{Key{2}, Key{3}, ClosedClosed},
+				KeyRange{Key{4}, Key{5}, OpenClosed},
+				KeySets(),
+				Key{6}),
+			&sppb.KeySet{
+				Keys: []*proto3.ListValue{
+					listValueProto(int1),
+					listValueProto(intProto(6)),
+				},
+				Ranges: []*sppb.KeyRange{
+					&sppb.KeyRange{
+						StartKeyType: &sppb.KeyRange_StartClosed{StartClosed: listValueProto(int2)},
+						EndKeyType:   &sppb.KeyRange_EndClosed{EndClosed: listValueProto(int3)},
+					},
+					&sppb.KeyRange{
+						StartKeyType: &sppb.KeyRange_StartOpen{StartOpen: listValueProto(int4)},
+						EndKeyType:   &sppb.KeyRange_EndClosed{EndClosed: listValueProto(intProto(5))},
+					},
+				},
+			},
+		},
+		{
+			KeySets(
+				Key{1},
+				KeyRange{Key{2}, Key{3}, ClosedClosed},
+				AllKeys(),
+				KeyRange{Key{4}, Key{5}, OpenClosed},
+				Key{6}),
+			&sppb.KeySet{All: true},
+		},
+	} {
+		gotProto, err := test.ks.keySetProto()
+		if err != nil {
+			t.Errorf("#%d: %v.proto() returns error %v; want nil error", i, test.ks, err)
+		}
+		if !reflect.DeepEqual(gotProto, test.wantProto) {
+			t.Errorf("#%d: %v.proto() = \n%v\nwant:\n%v", i, test.ks, gotProto.String(), test.wantProto.String())
 		}
 	}
 }

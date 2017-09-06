@@ -15,8 +15,9 @@
 package bigquery
 
 import (
-	"reflect"
 	"testing"
+
+	"cloud.google.com/go/internal/testutil"
 
 	"golang.org/x/net/context"
 
@@ -25,10 +26,11 @@ import (
 
 func defaultQueryJob() *bq.Job {
 	return &bq.Job{
+		JobReference: &bq.JobReference{ProjectId: "client-project-id"},
 		Configuration: &bq.JobConfiguration{
 			Query: &bq.JobConfigurationQuery{
 				DestinationTable: &bq.TableReference{
-					ProjectId: "project-id",
+					ProjectId: "client-project-id",
 					DatasetId: "dataset-id",
 					TableId:   "table-id",
 				},
@@ -44,7 +46,7 @@ func defaultQueryJob() *bq.Job {
 
 func TestQuery(t *testing.T) {
 	c := &Client{
-		projectID: "project-id",
+		projectID: "client-project-id",
 	}
 	testCases := []struct {
 		dst  *Table
@@ -143,6 +145,7 @@ func TestQuery(t *testing.T) {
 			},
 			want: func() *bq.Job {
 				j := defaultQueryJob()
+				j.Configuration.Query.DestinationTable.ProjectId = "project-id"
 				j.Configuration.Query.WriteDisposition = "WRITE_TRUNCATE"
 				j.Configuration.Query.CreateDisposition = "CREATE_NEVER"
 				return j
@@ -250,19 +253,17 @@ func TestQuery(t *testing.T) {
 			}(),
 		},
 	}
-	for _, tc := range testCases {
+	for i, tc := range testCases {
 		s := &testService{}
 		c.service = s
 		query := c.Query("")
 		query.QueryConfig = *tc.src
 		query.Dst = tc.dst
 		if _, err := query.Run(context.Background()); err != nil {
-			t.Errorf("err calling query: %v", err)
+			t.Errorf("#%d: err calling query: %v", i, err)
 			continue
 		}
-		if !reflect.DeepEqual(s.Job, tc.want) {
-			t.Errorf("querying: got:\n%v\nwant:\n%v", s.Job, tc.want)
-		}
+		checkJob(t, i, s.Job, tc.want)
 	}
 }
 
@@ -299,7 +300,7 @@ func TestConfiguringQuery(t *testing.T) {
 	if _, err := query.Run(context.Background()); err != nil {
 		t.Fatalf("err calling Query.Run: %v", err)
 	}
-	if !reflect.DeepEqual(s.Job, want) {
+	if !testutil.Equal(s.Job, want) {
 		t.Errorf("querying: got:\n%v\nwant:\n%v", s.Job, want)
 	}
 }
