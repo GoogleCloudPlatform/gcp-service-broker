@@ -164,6 +164,7 @@ var _ = Describe("Brokers", func() {
 					Expect(len(s.Plans[0].ServiceProperties)).ToNot(Equal(0))
 				}
 			}
+
 		})
 
 		It("should have 3 storage plans available", func() {
