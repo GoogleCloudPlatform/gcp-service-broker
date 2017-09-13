@@ -165,12 +165,14 @@ const CloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
 const StorageName = "google-storage"
 const BigqueryName = "google-bigquery"
 const BigtableName = "google-bigtable"
-const CloudsqlName = "google-cloudsql"
+const CloudsqlMySQLName = "google-cloudsql-mysql"
+const CloudsqlPostgresName = "google-cloudsql-postgres"
 const PubsubName = "google-pubsub"
 const MlName = "google-ml-apis"
 const SpannerName = "google-spanner"
 const StackdriverTraceName = "google-stackdriver-trace"
 const StackdriverDebuggerName = "google-stackdriver-debugger"
+const DatastoreName = "google-datastore"
 const RootSaEnvVar = "ROOT_SERVICE_ACCOUNT_JSON"
 
 var ServiceEnvVarNames = []string{
@@ -182,5 +184,7 @@ var ServiceEnvVarNames = []string{
 	"GOOGLE_STACKDRIVER_DEBUGGER",
 	"GOOGLE_STACKDRIVER_TRACE",
 	"GOOGLE_ML_APIS",
-	"GOOGLE_CLOUDSQL",
+	"GOOGLE_CLOUDSQL_MYSQL",
+	"GOOGLE_CLOUDSQL_POSTGRES",
+	"GOOGLE_DATASTORE",
 }

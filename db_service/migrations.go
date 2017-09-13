@@ -160,7 +160,7 @@ func RunMigrations(db *gorm.DB) error {
 
 			// cloudsql
 			switch serviceName := idToNameMap[si.ServiceId]; serviceName {
-			case models.CloudsqlName:
+			case models.CloudsqlMySQLName:
 				newOd["instance_name"] = od["instance_name"]
 				newOd["database_name"] = od["database_name"]
 

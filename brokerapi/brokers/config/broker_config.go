@@ -37,6 +37,7 @@ func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
 	var err error
 	bc := BrokerConfig{}
 	creds, err := bc.GetCredentialsFromEnv()
+
 	if err != nil {
 		return &BrokerConfig{}, err
 	}

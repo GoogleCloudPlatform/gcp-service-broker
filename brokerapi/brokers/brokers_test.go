@@ -89,7 +89,7 @@ var _ = Describe("Brokers", func() {
 			if service.Name == models.BigqueryName {
 				someBigQueryPlanId = service.Plans[0].ID
 			}
-			if service.Name == models.CloudsqlName {
+			if service.Name == models.CloudsqlMySQLName {
 
 				someCloudSQLPlanId = service.Plans[0].ID
 			}
@@ -100,7 +100,7 @@ var _ = Describe("Brokers", func() {
 
 		for k, _ := range gcpBroker.ServiceBrokerMap {
 			async := false
-			if k == serviceNameToId[models.CloudsqlName] {
+			if k == serviceNameToId[models.CloudsqlMySQLName] {
 				async = true
 			}
 			gcpBroker.ServiceBrokerMap[k] = &modelsfakes.FakeServiceBrokerHelper{
@@ -121,7 +121,7 @@ var _ = Describe("Brokers", func() {
 		}
 
 		cloudSqlProvisionDetails = models.ProvisionDetails{
-			ServiceID: serviceNameToId[models.CloudsqlName],
+			ServiceID: serviceNameToId[models.CloudsqlMySQLName],
 			PlanID:    someCloudSQLPlanId,
 		}
 
@@ -138,8 +138,8 @@ var _ = Describe("Brokers", func() {
 	})
 
 	Describe("Broker init", func() {
-		It("should have 9 services in sevices map", func() {
-			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(9))
+		It("should have 11 services in sevices map", func() {
+			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(11))
 		})
 
 		It("should have a default client", func() {
@@ -152,15 +152,15 @@ var _ = Describe("Brokers", func() {
 	})
 
 	Describe("getting broker catalog", func() {
-		It("should have 9 services available", func() {
-			Expect(len(gcpBroker.Services())).To(Equal(9))
+		It("should have 11 services available", func() {
+			Expect(len(gcpBroker.Services())).To(Equal(11))
 		})
 
 		It("should record api fields in the catalog", func() {
 			serviceList := gcpBroker.Services()
 
 			for _, s := range serviceList {
-				if s.ID == serviceNameToId[models.StorageName] || s.ID == serviceNameToId[models.CloudsqlName] {
+				if s.ID == serviceNameToId[models.StorageName] || s.ID == serviceNameToId[models.CloudsqlMySQLName] {
 					Expect(len(s.Plans[0].ServiceProperties)).ToNot(Equal(0))
 				}
 			}
@@ -179,7 +179,7 @@ var _ = Describe("Brokers", func() {
 		It("should have 1 cloudsql plan available", func() {
 			serviceList := gcpBroker.Services()
 			for _, s := range serviceList {
-				if s.ID == serviceNameToId[models.CloudsqlName] {
+				if s.ID == serviceNameToId[models.CloudsqlMySQLName] {
 					Expect(len(s.Plans)).To(Equal(1))
 				}
 			}
@@ -210,13 +210,22 @@ var _ = Describe("Brokers", func() {
 			_, err := config.NewBrokerConfigFromEnv()
 			Expect(err).To(HaveOccurred())
 		})
+
+		It("should have 1 datastore plan available", func() {
+			serviceList := gcpBroker.Services()
+			for _, s := range serviceList {
+				if s.ID == serviceNameToId[models.DatastoreName] {
+					Expect(len(s.Plans)).To(Equal(1))
+				}
+			}
+		})
 	})
 
 	Describe("updating broker catalog", func() {
 
 		It("should update plans on startup", func() {
 
-			os.Setenv("GOOGLE_CLOUDSQL", fakes.CloudSqlNewPlan)
+			os.Setenv("GOOGLE_CLOUDSQL_MYSQL", fakes.CloudSqlNewPlan)
 
 			newcfg, err := config.NewBrokerConfigFromEnv()
 			Expect(err).ToNot(HaveOccurred())
@@ -225,14 +234,14 @@ var _ = Describe("Brokers", func() {
 
 			serviceList := newBroker.Services()
 			for _, s := range serviceList {
-				if s.ID == serviceNameToId[models.CloudsqlName] {
+				if s.ID == serviceNameToId[models.CloudsqlMySQLName] {
 					Expect(s.Plans[0].Name).To(Equal("newPlan"))
 					Expect(len(s.Plans)).To(Equal(1))
 
-					planDetails, err := newBroker.GetPlanFromId(serviceNameToId[models.CloudsqlName], "some-other-cloudsql-plan")
 					Expect(err).ToNot(HaveOccurred())
-					Expect(planDetails.ServiceProperties["tier"]).To(Equal("D8"))
-					Expect(planDetails.ServiceProperties["max_disk_size"]).To(Equal("15"))
+					Expect(s.Plans[0].ServiceProperties["tier"]).To(Equal("D8"))
+					Expect(s.Plans[0].ServiceProperties["max_disk_size"]).To(Equal("15"))
+
 				}
 			}
 
@@ -324,7 +333,7 @@ var _ = Describe("Brokers", func() {
 		Context("when async provisioning isn't allowed but the service requested requires it", func() {
 			It("should return an error", func() {
 				_, err := gcpBroker.Deprovision(instanceId, models.DeprovisionDetails{
-					ServiceID: serviceNameToId[models.CloudsqlName],
+					ServiceID: serviceNameToId[models.CloudsqlMySQLName],
 				}, false)
 				Expect(err).To(HaveOccurred())
 			})
@@ -415,7 +424,7 @@ var _ = Describe("Brokers", func() {
 				Expect(err).NotTo(HaveOccurred())
 				_, err = gcpBroker.LastOperation(instanceId)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.CloudsqlName]].(*modelsfakes.FakeServiceBrokerHelper).PollInstanceCallCount()).To(Equal(1))
+				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.CloudsqlMySQLName]].(*modelsfakes.FakeServiceBrokerHelper).PollInstanceCallCount()).To(Equal(1))
 			})
 		})
 

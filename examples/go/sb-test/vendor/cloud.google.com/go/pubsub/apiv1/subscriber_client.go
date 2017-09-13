@@ -32,13 +32,6 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-var (
-	subscriberProjectPathTemplate      = gax.MustCompilePathTemplate("projects/{project}")
-	subscriberSnapshotPathTemplate     = gax.MustCompilePathTemplate("projects/{project}/snapshots/{snapshot}")
-	subscriberSubscriptionPathTemplate = gax.MustCompilePathTemplate("projects/{project}/subscriptions/{subscription}")
-	subscriberTopicPathTemplate        = gax.MustCompilePathTemplate("projects/{project}/topics/{topic}")
-)
-
 // SubscriberCallOptions contains the retry settings for each method of SubscriberClient.
 type SubscriberCallOptions struct {
 	CreateSubscription []gax.CallOption
@@ -53,6 +46,7 @@ type SubscriberCallOptions struct {
 	ModifyPushConfig   []gax.CallOption
 	ListSnapshots      []gax.CallOption
 	CreateSnapshot     []gax.CallOption
+	UpdateSnapshot     []gax.CallOption
 	DeleteSnapshot     []gax.CallOption
 	Seek               []gax.CallOption
 }
@@ -60,10 +54,7 @@ type SubscriberCallOptions struct {
 func defaultSubscriberClientOptions() []option.ClientOption {
 	return []option.ClientOption{
 		option.WithEndpoint("pubsub.googleapis.com:443"),
-		option.WithScopes(
-			"https://www.googleapis.com/auth/cloud-platform",
-			"https://www.googleapis.com/auth/pubsub",
-		),
+		option.WithScopes(DefaultAuthScopes()...),
 	}
 }
 
@@ -81,29 +72,22 @@ func defaultSubscriberCallOptions() *SubscriberCallOptions {
 				})
 			}),
 		},
-		{"default", "non_idempotent"}: {
-			gax.WithRetry(func() gax.Retryer {
-				return gax.OnCodes([]codes.Code{
-					codes.Unavailable,
-				}, gax.Backoff{
-					Initial:    100 * time.Millisecond,
-					Max:        60000 * time.Millisecond,
-					Multiplier: 1.3,
-				})
-			}),
-		},
-		{"messaging", "non_idempotent"}: {
-			gax.WithRetry(func() gax.Retryer {
-				return gax.OnCodes([]codes.Code{
-					codes.Unavailable,
-				}, gax.Backoff{
-					Initial:    100 * time.Millisecond,
-					Max:        60000 * time.Millisecond,
-					Multiplier: 1.3,
-				})
-			}),
-		},
 		{"messaging", "pull"}: {
+			gax.WithRetry(func() gax.Retryer {
+				return gax.OnCodes([]codes.Code{
+					codes.Canceled,
+					codes.DeadlineExceeded,
+					codes.ResourceExhausted,
+					codes.Internal,
+					codes.Unavailable,
+				}, gax.Backoff{
+					Initial:    100 * time.Millisecond,
+					Max:        60000 * time.Millisecond,
+					Multiplier: 1.3,
+				})
+			}),
+		},
+		{"streaming_messaging", "pull"}: {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
 					codes.Canceled,
@@ -128,10 +112,11 @@ func defaultSubscriberCallOptions() *SubscriberCallOptions {
 		ModifyAckDeadline:  retry[[2]string{"default", "non_idempotent"}],
 		Acknowledge:        retry[[2]string{"messaging", "non_idempotent"}],
 		Pull:               retry[[2]string{"messaging", "pull"}],
-		StreamingPull:      retry[[2]string{"messaging", "pull"}],
+		StreamingPull:      retry[[2]string{"streaming_messaging", "pull"}],
 		ModifyPushConfig:   retry[[2]string{"default", "non_idempotent"}],
 		ListSnapshots:      retry[[2]string{"default", "idempotent"}],
 		CreateSnapshot:     retry[[2]string{"default", "idempotent"}],
+		UpdateSnapshot:     retry[[2]string{"default", "idempotent"}],
 		DeleteSnapshot:     retry[[2]string{"default", "idempotent"}],
 		Seek:               retry[[2]string{"default", "non_idempotent"}],
 	}
@@ -149,13 +134,13 @@ type SubscriberClient struct {
 	CallOptions *SubscriberCallOptions
 
 	// The metadata to be sent with each request.
-	xGoogHeader string
+	xGoogHeader []string
 }
 
 // NewSubscriberClient creates a new subscriber client.
 //
 // The service that an application uses to manipulate subscriptions and to
-// consume messages from a subscription via the `Pull` method.
+// consume messages from a subscription via the Pull method.
 func NewSubscriberClient(ctx context.Context, opts ...option.ClientOption) (*SubscriberClient, error) {
 	conn, err := transport.DialGRPC(ctx, append(defaultSubscriberClientOptions(), opts...)...)
 	if err != nil {
@@ -187,55 +172,46 @@ func (c *SubscriberClient) Close() error {
 // use by Google-written clients.
 func (c *SubscriberClient) SetGoogleClientInfo(keyval ...string) {
 	kv := append([]string{"gl-go", version.Go()}, keyval...)
-	kv = append(kv, "gapic", version.Repo, "gax", gax.Version, "grpc", "")
-	c.xGoogHeader = gax.XGoogHeader(kv...)
+	kv = append(kv, "gapic", version.Repo, "gax", gax.Version, "grpc", grpc.Version)
+	c.xGoogHeader = []string{gax.XGoogHeader(kv...)}
 }
 
 // SubscriberProjectPath returns the path for the project resource.
 func SubscriberProjectPath(project string) string {
-	path, err := subscriberProjectPathTemplate.Render(map[string]string{
-		"project": project,
-	})
-	if err != nil {
-		panic(err)
-	}
-	return path
+	return "" +
+		"projects/" +
+		project +
+		""
 }
 
 // SubscriberSnapshotPath returns the path for the snapshot resource.
 func SubscriberSnapshotPath(project, snapshot string) string {
-	path, err := subscriberSnapshotPathTemplate.Render(map[string]string{
-		"project":  project,
-		"snapshot": snapshot,
-	})
-	if err != nil {
-		panic(err)
-	}
-	return path
+	return "" +
+		"projects/" +
+		project +
+		"/snapshots/" +
+		snapshot +
+		""
 }
 
 // SubscriberSubscriptionPath returns the path for the subscription resource.
 func SubscriberSubscriptionPath(project, subscription string) string {
-	path, err := subscriberSubscriptionPathTemplate.Render(map[string]string{
-		"project":      project,
-		"subscription": subscription,
-	})
-	if err != nil {
-		panic(err)
-	}
-	return path
+	return "" +
+		"projects/" +
+		project +
+		"/subscriptions/" +
+		subscription +
+		""
 }
 
 // SubscriberTopicPath returns the path for the topic resource.
 func SubscriberTopicPath(project, topic string) string {
-	path, err := subscriberTopicPathTemplate.Render(map[string]string{
-		"project": project,
-		"topic":   topic,
-	})
-	if err != nil {
-		panic(err)
-	}
-	return path
+	return "" +
+		"projects/" +
+		project +
+		"/topics/" +
+		topic +
+		""
 }
 
 func (c *SubscriberClient) SubscriptionIAM(subscription *pubsubpb.Subscription) *iam.Handle {
@@ -247,23 +223,24 @@ func (c *SubscriberClient) TopicIAM(topic *pubsubpb.Topic) *iam.Handle {
 }
 
 // CreateSubscription creates a subscription to a given topic.
-// If the subscription already exists, returns `ALREADY_EXISTS`.
-// If the corresponding topic doesn't exist, returns `NOT_FOUND`.
+// If the subscription already exists, returns ALREADY_EXISTS.
+// If the corresponding topic doesn't exist, returns NOT_FOUND.
 //
 // If the name is not provided in the request, the server will assign a random
 // name for this subscription on the same project as the topic, conforming
 // to the
-// [resource name format](https://cloud.google.com/pubsub/docs/overview#names).
+// resource name format (at https://cloud.google.com/pubsub/docs/overview#names).
 // The generated name is populated in the returned Subscription object.
 // Note that for REST API requests, you must specify a name in the request.
-func (c *SubscriberClient) CreateSubscription(ctx context.Context, req *pubsubpb.Subscription) (*pubsubpb.Subscription, error) {
+func (c *SubscriberClient) CreateSubscription(ctx context.Context, req *pubsubpb.Subscription, opts ...gax.CallOption) (*pubsubpb.Subscription, error) {
 	ctx = insertXGoog(ctx, c.xGoogHeader)
+	opts = append(c.CallOptions.CreateSubscription[0:len(c.CallOptions.CreateSubscription):len(c.CallOptions.CreateSubscription)], opts...)
 	var resp *pubsubpb.Subscription
-	err := gax.Invoke(ctx, func(ctx context.Context) error {
+	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
-		resp, err = c.subscriberClient.CreateSubscription(ctx, req)
+		resp, err = c.subscriberClient.CreateSubscription(ctx, req, settings.GRPC...)
 		return err
-	}, c.CallOptions.CreateSubscription...)
+	}, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -271,14 +248,15 @@ func (c *SubscriberClient) CreateSubscription(ctx context.Context, req *pubsubpb
 }
 
 // GetSubscription gets the configuration details of a subscription.
-func (c *SubscriberClient) GetSubscription(ctx context.Context, req *pubsubpb.GetSubscriptionRequest) (*pubsubpb.Subscription, error) {
+func (c *SubscriberClient) GetSubscription(ctx context.Context, req *pubsubpb.GetSubscriptionRequest, opts ...gax.CallOption) (*pubsubpb.Subscription, error) {
 	ctx = insertXGoog(ctx, c.xGoogHeader)
+	opts = append(c.CallOptions.GetSubscription[0:len(c.CallOptions.GetSubscription):len(c.CallOptions.GetSubscription)], opts...)
 	var resp *pubsubpb.Subscription
-	err := gax.Invoke(ctx, func(ctx context.Context) error {
+	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
-		resp, err = c.subscriberClient.GetSubscription(ctx, req)
+		resp, err = c.subscriberClient.GetSubscription(ctx, req, settings.GRPC...)
 		return err
-	}, c.CallOptions.GetSubscription...)
+	}, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -287,14 +265,19 @@ func (c *SubscriberClient) GetSubscription(ctx context.Context, req *pubsubpb.Ge
 
 // UpdateSubscription updates an existing subscription. Note that certain properties of a
 // subscription, such as its topic, are not modifiable.
-func (c *SubscriberClient) UpdateSubscription(ctx context.Context, req *pubsubpb.UpdateSubscriptionRequest) (*pubsubpb.Subscription, error) {
+// NOTE:  The style guide requires body: "subscription" instead of body: "*".
+// Keeping the latter for internal consistency in V1, however it should be
+// corrected in V2.  See
+// https://cloud.google.com/apis/design/standard_methods#update for details.
+func (c *SubscriberClient) UpdateSubscription(ctx context.Context, req *pubsubpb.UpdateSubscriptionRequest, opts ...gax.CallOption) (*pubsubpb.Subscription, error) {
 	ctx = insertXGoog(ctx, c.xGoogHeader)
+	opts = append(c.CallOptions.UpdateSubscription[0:len(c.CallOptions.UpdateSubscription):len(c.CallOptions.UpdateSubscription)], opts...)
 	var resp *pubsubpb.Subscription
-	err := gax.Invoke(ctx, func(ctx context.Context) error {
+	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
-		resp, err = c.subscriberClient.UpdateSubscription(ctx, req)
+		resp, err = c.subscriberClient.UpdateSubscription(ctx, req, settings.GRPC...)
 		return err
-	}, c.CallOptions.UpdateSubscription...)
+	}, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -302,8 +285,9 @@ func (c *SubscriberClient) UpdateSubscription(ctx context.Context, req *pubsubpb
 }
 
 // ListSubscriptions lists matching subscriptions.
-func (c *SubscriberClient) ListSubscriptions(ctx context.Context, req *pubsubpb.ListSubscriptionsRequest) *SubscriptionIterator {
+func (c *SubscriberClient) ListSubscriptions(ctx context.Context, req *pubsubpb.ListSubscriptionsRequest, opts ...gax.CallOption) *SubscriptionIterator {
 	ctx = insertXGoog(ctx, c.xGoogHeader)
+	opts = append(c.CallOptions.ListSubscriptions[0:len(c.CallOptions.ListSubscriptions):len(c.CallOptions.ListSubscriptions)], opts...)
 	it := &SubscriptionIterator{}
 	it.InternalFetch = func(pageSize int, pageToken string) ([]*pubsubpb.Subscription, string, error) {
 		var resp *pubsubpb.ListSubscriptionsResponse
@@ -313,11 +297,11 @@ func (c *SubscriberClient) ListSubscriptions(ctx context.Context, req *pubsubpb.
 		} else {
 			req.PageSize = int32(pageSize)
 		}
-		err := gax.Invoke(ctx, func(ctx context.Context) error {
+		err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 			var err error
-			resp, err = c.subscriberClient.ListSubscriptions(ctx, req)
+			resp, err = c.subscriberClient.ListSubscriptions(ctx, req, settings.GRPC...)
 			return err
-		}, c.CallOptions.ListSubscriptions...)
+		}, opts...)
 		if err != nil {
 			return nil, "", err
 		}
@@ -336,17 +320,18 @@ func (c *SubscriberClient) ListSubscriptions(ctx context.Context, req *pubsubpb.
 }
 
 // DeleteSubscription deletes an existing subscription. All messages retained in the subscription
-// are immediately dropped. Calls to `Pull` after deletion will return
-// `NOT_FOUND`. After a subscription is deleted, a new one may be created with
+// are immediately dropped. Calls to Pull after deletion will return
+// NOT_FOUND. After a subscription is deleted, a new one may be created with
 // the same name, but the new one has no association with the old
 // subscription or its topic unless the same topic is specified.
-func (c *SubscriberClient) DeleteSubscription(ctx context.Context, req *pubsubpb.DeleteSubscriptionRequest) error {
+func (c *SubscriberClient) DeleteSubscription(ctx context.Context, req *pubsubpb.DeleteSubscriptionRequest, opts ...gax.CallOption) error {
 	ctx = insertXGoog(ctx, c.xGoogHeader)
-	err := gax.Invoke(ctx, func(ctx context.Context) error {
+	opts = append(c.CallOptions.DeleteSubscription[0:len(c.CallOptions.DeleteSubscription):len(c.CallOptions.DeleteSubscription)], opts...)
+	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
-		_, err = c.subscriberClient.DeleteSubscription(ctx, req)
+		_, err = c.subscriberClient.DeleteSubscription(ctx, req, settings.GRPC...)
 		return err
-	}, c.CallOptions.DeleteSubscription...)
+	}, opts...)
 	return err
 }
 
@@ -354,46 +339,49 @@ func (c *SubscriberClient) DeleteSubscription(ctx context.Context, req *pubsubpb
 // to indicate that more time is needed to process a message by the
 // subscriber, or to make the message available for redelivery if the
 // processing was interrupted. Note that this does not modify the
-// subscription-level `ackDeadlineSeconds` used for subsequent messages.
-func (c *SubscriberClient) ModifyAckDeadline(ctx context.Context, req *pubsubpb.ModifyAckDeadlineRequest) error {
+// subscription-level ackDeadlineSeconds used for subsequent messages.
+func (c *SubscriberClient) ModifyAckDeadline(ctx context.Context, req *pubsubpb.ModifyAckDeadlineRequest, opts ...gax.CallOption) error {
 	ctx = insertXGoog(ctx, c.xGoogHeader)
-	err := gax.Invoke(ctx, func(ctx context.Context) error {
+	opts = append(c.CallOptions.ModifyAckDeadline[0:len(c.CallOptions.ModifyAckDeadline):len(c.CallOptions.ModifyAckDeadline)], opts...)
+	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
-		_, err = c.subscriberClient.ModifyAckDeadline(ctx, req)
+		_, err = c.subscriberClient.ModifyAckDeadline(ctx, req, settings.GRPC...)
 		return err
-	}, c.CallOptions.ModifyAckDeadline...)
+	}, opts...)
 	return err
 }
 
-// Acknowledge acknowledges the messages associated with the `ack_ids` in the
-// `AcknowledgeRequest`. The Pub/Sub system can remove the relevant messages
+// Acknowledge acknowledges the messages associated with the ack_ids in the
+// AcknowledgeRequest. The Pub/Sub system can remove the relevant messages
 // from the subscription.
 //
 // Acknowledging a message whose ack deadline has expired may succeed,
 // but such a message may be redelivered later. Acknowledging a message more
 // than once will not result in an error.
-func (c *SubscriberClient) Acknowledge(ctx context.Context, req *pubsubpb.AcknowledgeRequest) error {
+func (c *SubscriberClient) Acknowledge(ctx context.Context, req *pubsubpb.AcknowledgeRequest, opts ...gax.CallOption) error {
 	ctx = insertXGoog(ctx, c.xGoogHeader)
-	err := gax.Invoke(ctx, func(ctx context.Context) error {
+	opts = append(c.CallOptions.Acknowledge[0:len(c.CallOptions.Acknowledge):len(c.CallOptions.Acknowledge)], opts...)
+	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
-		_, err = c.subscriberClient.Acknowledge(ctx, req)
+		_, err = c.subscriberClient.Acknowledge(ctx, req, settings.GRPC...)
 		return err
-	}, c.CallOptions.Acknowledge...)
+	}, opts...)
 	return err
 }
 
 // Pull pulls messages from the server. Returns an empty list if there are no
-// messages available in the backlog. The server may return `UNAVAILABLE` if
+// messages available in the backlog. The server may return UNAVAILABLE if
 // there are too many concurrent pull requests pending for the given
 // subscription.
-func (c *SubscriberClient) Pull(ctx context.Context, req *pubsubpb.PullRequest) (*pubsubpb.PullResponse, error) {
+func (c *SubscriberClient) Pull(ctx context.Context, req *pubsubpb.PullRequest, opts ...gax.CallOption) (*pubsubpb.PullResponse, error) {
 	ctx = insertXGoog(ctx, c.xGoogHeader)
+	opts = append(c.CallOptions.Pull[0:len(c.CallOptions.Pull):len(c.CallOptions.Pull)], opts...)
 	var resp *pubsubpb.PullResponse
-	err := gax.Invoke(ctx, func(ctx context.Context) error {
+	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
-		resp, err = c.subscriberClient.Pull(ctx, req)
+		resp, err = c.subscriberClient.Pull(ctx, req, settings.GRPC...)
 		return err
-	}, c.CallOptions.Pull...)
+	}, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -407,44 +395,47 @@ func (c *SubscriberClient) Pull(ctx context.Context, req *pubsubpb.PullRequest) 
 // Establishes a stream with the server, which sends messages down to the
 // client. The client streams acknowledgements and ack deadline modifications
 // back to the server. The server will close the stream and return the status
-// on any error. The server may close the stream with status `OK` to reassign
+// on any error. The server may close the stream with status OK to reassign
 // server-side resources, in which case, the client should re-establish the
-// stream. `UNAVAILABLE` may also be returned in the case of a transient error
+// stream. UNAVAILABLE may also be returned in the case of a transient error
 // (e.g., a server restart). These should also be retried by the client. Flow
 // control can be achieved by configuring the underlying RPC channel.
-func (c *SubscriberClient) StreamingPull(ctx context.Context) (pubsubpb.Subscriber_StreamingPullClient, error) {
+func (c *SubscriberClient) StreamingPull(ctx context.Context, opts ...gax.CallOption) (pubsubpb.Subscriber_StreamingPullClient, error) {
 	ctx = insertXGoog(ctx, c.xGoogHeader)
+	opts = append(c.CallOptions.StreamingPull[0:len(c.CallOptions.StreamingPull):len(c.CallOptions.StreamingPull)], opts...)
 	var resp pubsubpb.Subscriber_StreamingPullClient
-	err := gax.Invoke(ctx, func(ctx context.Context) error {
+	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
-		resp, err = c.subscriberClient.StreamingPull(ctx)
+		resp, err = c.subscriberClient.StreamingPull(ctx, settings.GRPC...)
 		return err
-	}, c.CallOptions.StreamingPull...)
+	}, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return resp, nil
 }
 
-// ModifyPushConfig modifies the `PushConfig` for a specified subscription.
+// ModifyPushConfig modifies the PushConfig for a specified subscription.
 //
 // This may be used to change a push subscription to a pull one (signified by
-// an empty `PushConfig`) or vice versa, or change the endpoint URL and other
+// an empty PushConfig) or vice versa, or change the endpoint URL and other
 // attributes of a push subscription. Messages will accumulate for delivery
-// continuously through the call regardless of changes to the `PushConfig`.
-func (c *SubscriberClient) ModifyPushConfig(ctx context.Context, req *pubsubpb.ModifyPushConfigRequest) error {
+// continuously through the call regardless of changes to the PushConfig.
+func (c *SubscriberClient) ModifyPushConfig(ctx context.Context, req *pubsubpb.ModifyPushConfigRequest, opts ...gax.CallOption) error {
 	ctx = insertXGoog(ctx, c.xGoogHeader)
-	err := gax.Invoke(ctx, func(ctx context.Context) error {
+	opts = append(c.CallOptions.ModifyPushConfig[0:len(c.CallOptions.ModifyPushConfig):len(c.CallOptions.ModifyPushConfig)], opts...)
+	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
-		_, err = c.subscriberClient.ModifyPushConfig(ctx, req)
+		_, err = c.subscriberClient.ModifyPushConfig(ctx, req, settings.GRPC...)
 		return err
-	}, c.CallOptions.ModifyPushConfig...)
+	}, opts...)
 	return err
 }
 
 // ListSnapshots lists the existing snapshots.
-func (c *SubscriberClient) ListSnapshots(ctx context.Context, req *pubsubpb.ListSnapshotsRequest) *SnapshotIterator {
+func (c *SubscriberClient) ListSnapshots(ctx context.Context, req *pubsubpb.ListSnapshotsRequest, opts ...gax.CallOption) *SnapshotIterator {
 	ctx = insertXGoog(ctx, c.xGoogHeader)
+	opts = append(c.CallOptions.ListSnapshots[0:len(c.CallOptions.ListSnapshots):len(c.CallOptions.ListSnapshots)], opts...)
 	it := &SnapshotIterator{}
 	it.InternalFetch = func(pageSize int, pageToken string) ([]*pubsubpb.Snapshot, string, error) {
 		var resp *pubsubpb.ListSnapshotsResponse
@@ -454,11 +445,11 @@ func (c *SubscriberClient) ListSnapshots(ctx context.Context, req *pubsubpb.List
 		} else {
 			req.PageSize = int32(pageSize)
 		}
-		err := gax.Invoke(ctx, func(ctx context.Context) error {
+		err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 			var err error
-			resp, err = c.subscriberClient.ListSnapshots(ctx, req)
+			resp, err = c.subscriberClient.ListSnapshots(ctx, req, settings.GRPC...)
 			return err
-		}, c.CallOptions.ListSnapshots...)
+		}, opts...)
 		if err != nil {
 			return nil, "", err
 		}
@@ -477,23 +468,45 @@ func (c *SubscriberClient) ListSnapshots(ctx context.Context, req *pubsubpb.List
 }
 
 // CreateSnapshot creates a snapshot from the requested subscription.
-// If the snapshot already exists, returns `ALREADY_EXISTS`.
-// If the requested subscription doesn't exist, returns `NOT_FOUND`.
+// If the snapshot already exists, returns ALREADY_EXISTS.
+// If the requested subscription doesn't exist, returns NOT_FOUND.
 //
 // If the name is not provided in the request, the server will assign a random
 // name for this snapshot on the same project as the subscription, conforming
 // to the
-// [resource name format](https://cloud.google.com/pubsub/docs/overview#names).
+// resource name format (at https://cloud.google.com/pubsub/docs/overview#names).
 // The generated name is populated in the returned Snapshot object.
 // Note that for REST API requests, you must specify a name in the request.
-func (c *SubscriberClient) CreateSnapshot(ctx context.Context, req *pubsubpb.CreateSnapshotRequest) (*pubsubpb.Snapshot, error) {
+func (c *SubscriberClient) CreateSnapshot(ctx context.Context, req *pubsubpb.CreateSnapshotRequest, opts ...gax.CallOption) (*pubsubpb.Snapshot, error) {
 	ctx = insertXGoog(ctx, c.xGoogHeader)
+	opts = append(c.CallOptions.CreateSnapshot[0:len(c.CallOptions.CreateSnapshot):len(c.CallOptions.CreateSnapshot)], opts...)
 	var resp *pubsubpb.Snapshot
-	err := gax.Invoke(ctx, func(ctx context.Context) error {
+	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
-		resp, err = c.subscriberClient.CreateSnapshot(ctx, req)
+		resp, err = c.subscriberClient.CreateSnapshot(ctx, req, settings.GRPC...)
 		return err
-	}, c.CallOptions.CreateSnapshot...)
+	}, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+// UpdateSnapshot updates an existing snapshot. Note that certain properties of a snapshot
+// are not modifiable.
+// NOTE:  The style guide requires body: "snapshot" instead of body: "*".
+// Keeping the latter for internal consistency in V1, however it should be
+// corrected in V2.  See
+// https://cloud.google.com/apis/design/standard_methods#update for details.
+func (c *SubscriberClient) UpdateSnapshot(ctx context.Context, req *pubsubpb.UpdateSnapshotRequest, opts ...gax.CallOption) (*pubsubpb.Snapshot, error) {
+	ctx = insertXGoog(ctx, c.xGoogHeader)
+	opts = append(c.CallOptions.UpdateSnapshot[0:len(c.CallOptions.UpdateSnapshot):len(c.CallOptions.UpdateSnapshot)], opts...)
+	var resp *pubsubpb.Snapshot
+	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
+		var err error
+		resp, err = c.subscriberClient.UpdateSnapshot(ctx, req, settings.GRPC...)
+		return err
+	}, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -504,26 +517,28 @@ func (c *SubscriberClient) CreateSnapshot(ctx context.Context, req *pubsubpb.Cre
 // are immediately dropped. After a snapshot is deleted, a new one may be
 // created with the same name, but the new one has no association with the old
 // snapshot or its subscription, unless the same subscription is specified.
-func (c *SubscriberClient) DeleteSnapshot(ctx context.Context, req *pubsubpb.DeleteSnapshotRequest) error {
+func (c *SubscriberClient) DeleteSnapshot(ctx context.Context, req *pubsubpb.DeleteSnapshotRequest, opts ...gax.CallOption) error {
 	ctx = insertXGoog(ctx, c.xGoogHeader)
-	err := gax.Invoke(ctx, func(ctx context.Context) error {
+	opts = append(c.CallOptions.DeleteSnapshot[0:len(c.CallOptions.DeleteSnapshot):len(c.CallOptions.DeleteSnapshot)], opts...)
+	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
-		_, err = c.subscriberClient.DeleteSnapshot(ctx, req)
+		_, err = c.subscriberClient.DeleteSnapshot(ctx, req, settings.GRPC...)
 		return err
-	}, c.CallOptions.DeleteSnapshot...)
+	}, opts...)
 	return err
 }
 
 // Seek seeks an existing subscription to a point in time or to a given snapshot,
 // whichever is provided in the request.
-func (c *SubscriberClient) Seek(ctx context.Context, req *pubsubpb.SeekRequest) (*pubsubpb.SeekResponse, error) {
+func (c *SubscriberClient) Seek(ctx context.Context, req *pubsubpb.SeekRequest, opts ...gax.CallOption) (*pubsubpb.SeekResponse, error) {
 	ctx = insertXGoog(ctx, c.xGoogHeader)
+	opts = append(c.CallOptions.Seek[0:len(c.CallOptions.Seek):len(c.CallOptions.Seek)], opts...)
 	var resp *pubsubpb.SeekResponse
-	err := gax.Invoke(ctx, func(ctx context.Context) error {
+	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
-		resp, err = c.subscriberClient.Seek(ctx, req)
+		resp, err = c.subscriberClient.Seek(ctx, req, settings.GRPC...)
 		return err
-	}, c.CallOptions.Seek...)
+	}, opts...)
 	if err != nil {
 		return nil, err
 	}

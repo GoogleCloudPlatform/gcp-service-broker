@@ -117,7 +117,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 		}
 	})
 
-	Describe("Cloud SQL", func() {
+	Describe("Cloud SQL - MySQL", func() {
 
 		var dbService *googlecloudsql.InstancesService
 		var sslService *googlecloudsql.SslCertsService
@@ -131,8 +131,8 @@ var _ = Describe("AsyncIntegrationTests", func() {
 		It("can provision/bind/unbind/deprovision", func() {
 			// create the instance
 			provisionDetails := models.ProvisionDetails{
-				ServiceID: serviceNameToId[models.CloudsqlName],
-				PlanID:    serviceNameToPlanId[models.CloudsqlName],
+				ServiceID: serviceNameToId[models.CloudsqlMySQLName],
+				PlanID:    serviceNameToPlanId[models.CloudsqlMySQLName],
 			}
 			_, err = gcpBroker.Provision("integration_test_instance", provisionDetails, true)
 			Expect(err).NotTo(HaveOccurred())
@@ -150,8 +150,8 @@ var _ = Describe("AsyncIntegrationTests", func() {
 
 			// bind the instance
 			bindDetails := models.BindDetails{
-				ServiceID: serviceNameToId[models.CloudsqlName],
-				PlanID:    serviceNameToPlanId[models.CloudsqlName],
+				ServiceID: serviceNameToId[models.CloudsqlMySQLName],
+				PlanID:    serviceNameToPlanId[models.CloudsqlMySQLName],
 			}
 			creds, err := gcpBroker.Bind("integration_test_instance", "binding_id", bindDetails)
 			Expect(err).NotTo(HaveOccurred())
@@ -164,8 +164,8 @@ var _ = Describe("AsyncIntegrationTests", func() {
 
 			// unbind the instance
 			unBindDetails := models.UnbindDetails{
-				ServiceID: serviceNameToId[models.CloudsqlName],
-				PlanID:    serviceNameToPlanId[models.CloudsqlName],
+				ServiceID: serviceNameToId[models.CloudsqlMySQLName],
+				PlanID:    serviceNameToPlanId[models.CloudsqlMySQLName],
 			}
 			err = gcpBroker.Unbind("integration_test_instance", "binding_id", unBindDetails)
 			Expect(err).NotTo(HaveOccurred())
@@ -176,8 +176,88 @@ var _ = Describe("AsyncIntegrationTests", func() {
 
 			// deprovision the instance
 			deprovisionDetails := models.DeprovisionDetails{
-				ServiceID: serviceNameToId[models.CloudsqlName],
-				PlanID:    serviceNameToPlanId[models.CloudsqlName],
+				ServiceID: serviceNameToId[models.CloudsqlMySQLName],
+				PlanID:    serviceNameToPlanId[models.CloudsqlMySQLName],
+			}
+			_, err = gcpBroker.Deprovision("integration_test_instance", deprovisionDetails, true)
+			Expect(err).NotTo(HaveOccurred())
+			pollForMaxFiveMins(gcpBroker, "integration_test_instance")
+
+			// make sure the instance is deleted from the db
+			instance := models.ServiceInstanceDetails{}
+			if err := db_service.DbConnection.Unscoped().Where("ID = ?", "integration_test_instance").First(&instance).Error; err != nil {
+				panic("error checking for service instance details: " + err.Error())
+			}
+			Expect(instance.DeletedAt).NotTo(BeNil())
+
+			// make sure the instance is deleted from google
+			_, err = dbService.Get(brokerConfig.ProjectId, cloudsqlInstanceName).Do()
+			Expect(err).To(HaveOccurred())
+		})
+
+	})
+
+	Describe("Cloud SQL - PostgreSQL", func() {
+
+		var dbService *googlecloudsql.InstancesService
+		var sslService *googlecloudsql.SslCertsService
+		BeforeEach(func() {
+			sqlService, err := googlecloudsql.New(brokerConfig.HttpConfig.Client(context.Background()))
+			Expect(err).NotTo(HaveOccurred())
+			dbService = googlecloudsql.NewInstancesService(sqlService)
+			sslService = googlecloudsql.NewSslCertsService(sqlService)
+		})
+
+		It("can provision/bind/unbind/deprovision", func() {
+			// create the instance
+			provisionDetails := models.ProvisionDetails{
+				ServiceID: serviceNameToId[models.CloudsqlPostgresName],
+				PlanID:    serviceNameToPlanId[models.CloudsqlPostgresName],
+			}
+			_, err = gcpBroker.Provision("integration_test_instance", provisionDetails, true)
+			Expect(err).NotTo(HaveOccurred())
+			pollForMaxFiveMins(gcpBroker, "integration_test_instance")
+
+			// make sure it's in the database
+			var count int
+			db_service.DbConnection.Model(&models.ServiceInstanceDetails{}).Where("id = ?", "integration_test_instance").Count(&count)
+			Expect(count).To(Equal(1))
+
+			// make sure we can get it from google
+			clouddb, err := dbService.Get(brokerConfig.ProjectId, cloudsqlInstanceName).Do()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(clouddb.Name).To(Equal(cloudsqlInstanceName))
+
+			// bind the instance
+			bindDetails := models.BindDetails{
+				ServiceID: serviceNameToId[models.CloudsqlPostgresName],
+				PlanID:    serviceNameToPlanId[models.CloudsqlPostgresName],
+			}
+			creds, err := gcpBroker.Bind("integration_test_instance", "binding_id", bindDetails)
+			Expect(err).NotTo(HaveOccurred())
+			credsMap := creds.Credentials.(map[string]string)
+
+			// make sure we have a username and google has ssl certs
+			Expect(credsMap["Username"]).ToNot(Equal(""))
+			_, err = sslService.Get(brokerConfig.ProjectId, cloudsqlInstanceName, credsMap["Sha1Fingerprint"]).Do()
+			Expect(err).NotTo(HaveOccurred())
+
+			// unbind the instance
+			unBindDetails := models.UnbindDetails{
+				ServiceID: serviceNameToId[models.CloudsqlPostgresName],
+				PlanID:    serviceNameToPlanId[models.CloudsqlPostgresName],
+			}
+			err = gcpBroker.Unbind("integration_test_instance", "binding_id", unBindDetails)
+			Expect(err).NotTo(HaveOccurred())
+
+			// make sure google no longer has certs
+			certsList, err := sslService.List(brokerConfig.ProjectId, cloudsqlInstanceName).Do()
+			Expect(len(certsList.Items)).To(Equal(0))
+
+			// deprovision the instance
+			deprovisionDetails := models.DeprovisionDetails{
+				ServiceID: serviceNameToId[models.CloudsqlPostgresName],
+				PlanID:    serviceNameToPlanId[models.CloudsqlPostgresName],
 			}
 			_, err = gcpBroker.Deprovision("integration_test_instance", deprovisionDetails, true)
 			Expect(err).NotTo(HaveOccurred())

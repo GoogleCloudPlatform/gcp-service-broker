@@ -14,7 +14,7 @@ Optionally add these to the env section of `manifest.yml`
 
 update the following variables in `manifest.yml` if you wish to enable these services
 
-* `GOOGLE_CLOUDSQL.plans` (A list of json objects with fields `id`, `name`, `description`, `
+* `GOOGLE_CLOUDSQL_MYSQL.plans` (A list of json objects with fields `id`, `name`, `description`, `
 service_properties` (containing `tier`, `pricing_plan`, `max_disk_size`), `display_name`, and `service_id` 
 (Cloud SQL's service id)) - if unset, the service will be disabled. 
 
@@ -36,6 +36,27 @@ e.g.,
     }
 ]
 ```
+
+
+* `GOOGLE_CLOUDSQL_MYSQL.plans` (A list of json objects with fields `id`, `name`, `description`, `tier`,
+`pricing_plan`, `max_disk_size`, `display_name`, and `service` (CloudSQL PostgreSQL's service id)) - if unset, the service
+will be disabled. e.g.,
+
+```json
+{
+    "test_plan": {
+        "name": "test_plan",
+        "description": "testplan",
+        "tier": "custom-db-4-4096",
+        "pricing_plan": "PER_USE",
+        "max_disk_size": "15",
+        "display_name": "FOOBAR",
+        "service": "cbad6d78-a73c-432d-b8ff-b219a17a803a"
+    }
+}
+```
+
+
 * `GOOGLE_BIGTABLE.plans` (A list of json objects with fields `id`, `name`, `description`,
 `service_properties` (containing `storage_type`, `num_nodes`), `display_name`, and `service_id` (Bigtable's service id)) 
 - if unset, the service will be disabled. 

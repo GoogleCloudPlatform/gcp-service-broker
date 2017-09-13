@@ -123,6 +123,11 @@ any extra access details
 
 - fixes uninitialized security group
 
+## [3.5.1] - 2017-09-06
+
+- added PostgreSQL support to CloudSQL (and migrated existing plans)
+- added Datastore support
+
 ## [4.0.0] - 2017-07-XX
 
 - added command `get_plan_info` to dump plan information to the console. Advised to run before updating.
@@ -132,3 +137,4 @@ any extra access details
 - modified the formatting of custom plans to be consistent with that of preconfigured plans
 - modified structure of all catalog-related environment variables - `plans` is now a sub-field of the Service object, 
 and Service objects are defined individually by setting env variables like `GOOGLE_<SERVICE_NAME>`
+

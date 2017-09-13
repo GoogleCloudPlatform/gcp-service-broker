@@ -166,7 +166,7 @@ func (s *session) ping() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	return runRetryable(ctx, func(ctx context.Context) error {
-		_, err := s.client.GetSession(contextWithMetadata(ctx, s.pool.md), &sppb.GetSessionRequest{Name: s.getID()}) // s.getID is safe even when s is invalid.
+		_, err := s.client.GetSession(contextWithOutgoingMetadata(ctx, s.pool.md), &sppb.GetSessionRequest{Name: s.getID()}) // s.getID is safe even when s is invalid.
 		return err
 	})
 }
@@ -185,7 +185,7 @@ func (s *session) refreshIdle() bool {
 	defer cancel()
 	var sid string
 	err := runRetryable(ctx, func(ctx context.Context) error {
-		session, e := s.client.CreateSession(contextWithMetadata(ctx, s.pool.md), &sppb.CreateSessionRequest{Database: s.pool.db})
+		session, e := s.client.CreateSession(contextWithOutgoingMetadata(ctx, s.pool.md), &sppb.CreateSessionRequest{Database: s.pool.db})
 		if e != nil {
 			return e
 		}
@@ -201,6 +201,7 @@ func (s *session) refreshIdle() bool {
 	if s.valid && s.idleList != nil {
 		// session is in idle list, refresh its session id.
 		sid, s.id = s.id, sid
+		s.createTime = time.Now()
 		if s.tx != nil {
 			s.tx = nil
 			s.pool.idleWriteList.Remove(s.idleList)
@@ -216,10 +217,10 @@ func (s *session) refreshIdle() bool {
 	// If we fail to explicitly destroy the session, it will be eventually garbage collected by
 	// Cloud Spanner.
 	if err = runRetryable(ctx, func(ctx context.Context) error {
-		_, e := s.client.DeleteSession(contextWithMetadata(ctx, s.pool.md), &sppb.DeleteSessionRequest{Name: sid})
+		_, e := s.client.DeleteSession(contextWithOutgoingMetadata(ctx, s.pool.md), &sppb.DeleteSessionRequest{Name: sid})
 		return e
-	}); err != nil {
-		return false
+	}); err != nil && log.V(2) {
+		log.Warningf("Failed to delete session %v. Error: %v", sid, err)
 	}
 	return true
 }
@@ -315,10 +316,13 @@ func (s *session) destroy(isExpire bool) bool {
 	defer cancel()
 	// Ignore the error returned by runRetryable because even if we fail to explicitly destroy the session,
 	// it will be eventually garbage collected by Cloud Spanner.
-	runRetryable(ctx, func(ctx context.Context) error {
+	err := runRetryable(ctx, func(ctx context.Context) error {
 		_, e := s.client.DeleteSession(ctx, &sppb.DeleteSessionRequest{Name: s.getID()})
 		return e
 	})
+	if err != nil && log.V(2) {
+		log.Warningf("Failed to delete session %v. Error: %v", s.getID(), err)
+	}
 	return true
 }
 
@@ -340,7 +344,7 @@ type SessionPoolConfig struct {
 	// getRPCClient is the caller supplied method for getting a gRPC client to Cloud Spanner, this makes session pool able to use client pooling.
 	getRPCClient func() (sppb.SpannerClient, error)
 	// MaxOpened is the maximum number of opened sessions that is allowed by the
-	// session pool, zero means unlimited.
+	// session pool. Default to NumChannels * 100.
 	MaxOpened uint64
 	// MinOpened is the minimum number of opened sessions that the session pool
 	// tries to maintain. Session pool won't continue to expire sessions if number
@@ -348,17 +352,23 @@ type SessionPoolConfig struct {
 	// to be broken, it will still be evicted from session pool, therefore it is
 	// posssible that the number of opened sessions drops below MinOpened.
 	MinOpened uint64
-	// MaxSessionAge is the maximum duration that a session can be reused, zero
+	// maxSessionAge is the maximum duration that a session can be reused, zero
 	// means session pool will never expire sessions.
-	MaxSessionAge time.Duration
-	// MaxBurst is the maximum number of concurrent session creation requests,
+	maxSessionAge time.Duration
+	// MaxIdle is the maximum number of idle sessions, pool is allowed to keep. Defaults to 0.
+	MaxIdle uint64
+	// MaxBurst is the maximum number of concurrent session creation requests. Defaults to 10.
 	MaxBurst uint64
 	// WriteSessions is the fraction of sessions we try to keep prepared for write.
 	WriteSessions float64
 	// HealthCheckWorkers is number of workers used by health checker for this pool.
 	HealthCheckWorkers int
-	// HealthCheckInterval is how often the health checker pings a session.
+	// HealthCheckInterval is how often the health checker pings a session. Defaults to 5 min.
 	HealthCheckInterval time.Duration
+	// healthCheckMaintainerEnabled enables the session pool maintainer.
+	healthCheckMaintainerEnabled bool
+	// healthCheckSampleInterval is how often the health checker samples live session (for use in maintaining session pool size). Defaults to 1 min.
+	healthCheckSampleInterval time.Duration
 }
 
 // errNoRPCGetter returns error for SessionPoolConfig missing getRPCClient method.
@@ -433,9 +443,13 @@ func newSessionPool(db string, config SessionPoolConfig, md metadata.MD) (*sessi
 	if config.HealthCheckInterval == 0 {
 		config.HealthCheckInterval = 5 * time.Minute
 	}
+	if config.healthCheckSampleInterval == 0 {
+		config.healthCheckSampleInterval = time.Minute
+	}
 	// On GCE VM, within the same region an healthcheck ping takes on average 10ms to finish, given a 5 minutes interval and
 	// 10 healthcheck workers, a healthChecker can effectively mantain 100 checks_per_worker/sec * 10 workers * 300 seconds = 300K sessions.
-	pool.hc = newHealthChecker(config.HealthCheckInterval, config.HealthCheckWorkers, pool)
+	pool.hc = newHealthChecker(config.HealthCheckInterval, config.HealthCheckWorkers, config.healthCheckSampleInterval, pool)
+	close(pool.hc.ready)
 	return pool, nil
 }
 
@@ -541,7 +555,7 @@ func (p *sessionPool) isHealthy(s *session) bool {
 // take returns a cached session if there are available ones; if there isn't any, it tries to allocate a new one.
 // Session returned by take should be used for read operations.
 func (p *sessionPool) take(ctx context.Context) (*sessionHandle, error) {
-	ctx = contextWithMetadata(ctx, p.md)
+	ctx = contextWithOutgoingMetadata(ctx, p.md)
 	for {
 		var (
 			s   *session
@@ -595,7 +609,7 @@ func (p *sessionPool) take(ctx context.Context) (*sessionHandle, error) {
 // takeWriteSession returns a write prepared cached session if there are available ones; if there isn't any, it tries to allocate a new one.
 // Session returned should be used for read write transactions.
 func (p *sessionPool) takeWriteSession(ctx context.Context) (*sessionHandle, error) {
-	ctx = contextWithMetadata(ctx, p.md)
+	ctx = contextWithOutgoingMetadata(ctx, p.md)
 	for {
 		var (
 			s   *session
@@ -663,15 +677,15 @@ func (p *sessionPool) recycle(s *session) bool {
 		// Reject the session if session is invalid or pool itself is invalid.
 		return false
 	}
-	if p.MaxSessionAge != 0 && s.createTime.Add(p.MaxSessionAge).Before(time.Now()) && p.numOpened > p.MinOpened {
-		// session expires and number of opened sessions exceeds MinOpened, let the session destroy itself.
+	if p.maxSessionAge != 0 && s.createTime.Add(p.maxSessionAge).Before(time.Now()) && p.numOpened > p.MinOpened {
+		// session expires and number of opened sessions exceeds MinOpened, let the session  itself.
 		return false
 	}
-	// Hot sessions will be converging at the front of the list, cold sessions will be evicted by healthcheck workers.
+	// Put session at the back of the list to round robin for load balancing across channels.
 	if s.isWritePrepared() {
-		s.setIdleList(p.idleWriteList.PushFront(s))
+		s.setIdleList(p.idleWriteList.PushBack(s))
 	} else {
-		s.setIdleList(p.idleList.PushFront(s))
+		s.setIdleList(p.idleList.PushBack(s))
 	}
 	// Broadcast that a session has been returned to idle list.
 	close(p.mayGetSession)
@@ -759,21 +773,34 @@ type healthChecker struct {
 	waitWorkers sync.WaitGroup
 	// pool is the underlying session pool.
 	pool *sessionPool
-	// closed marks if a healthChecker has been closed.
-	closed bool
+	// sampleInterval is the interval of sampling by the maintainer.
+	sampleInterval time.Duration
+	// ready is used to signal that maintainer can start running.
+	ready chan struct{}
+	// done is used to signal that health checker should be closed.
+	done chan struct{}
+	// once is used for closing channel done only once.
+	once sync.Once
 }
 
 // newHealthChecker initializes new instance of healthChecker.
-func newHealthChecker(interval time.Duration, workers int, pool *sessionPool) *healthChecker {
+func newHealthChecker(interval time.Duration, workers int, sampleInterval time.Duration, pool *sessionPool) *healthChecker {
 	if workers <= 0 {
 		workers = 1
 	}
 	hc := &healthChecker{
-		interval: interval,
-		workers:  workers,
-		pool:     pool,
+		interval:       interval,
+		workers:        workers,
+		pool:           pool,
+		sampleInterval: sampleInterval,
+		ready:          make(chan struct{}),
+		done:           make(chan struct{}),
 	}
-	for i := 0; i < hc.workers; i++ {
+	if hc.pool.healthCheckMaintainerEnabled {
+		hc.waitWorkers.Add(1)
+		go hc.maintainer()
+	}
+	for i := 1; i <= hc.workers; i++ {
 		hc.waitWorkers.Add(1)
 		go hc.worker(i)
 	}
@@ -782,17 +809,18 @@ func newHealthChecker(interval time.Duration, workers int, pool *sessionPool) *h
 
 // close closes the healthChecker and waits for all healthcheck workers to exit.
 func (hc *healthChecker) close() {
-	hc.mu.Lock()
-	hc.closed = true
-	hc.mu.Unlock()
+	hc.once.Do(func() { close(hc.done) })
 	hc.waitWorkers.Wait()
 }
 
 // isClosing checks if a healthChecker is already closing.
 func (hc *healthChecker) isClosing() bool {
-	hc.mu.Lock()
-	defer hc.mu.Unlock()
-	return hc.closed
+	select {
+	case <-hc.done:
+		return true
+	default:
+		return false
+	}
 }
 
 // getInterval gets the healthcheck interval.
@@ -853,7 +881,7 @@ func (hc *healthChecker) healthCheck(s *session) {
 		s.destroy(false)
 		return
 	}
-	if s.pool.MaxSessionAge != 0 && s.createTime.Add(s.pool.MaxSessionAge).Before(time.Now()) {
+	if s.pool.maxSessionAge != 0 && s.createTime.Add(s.pool.maxSessionAge).Before(time.Now()) {
 		// Session reaches its maximum age, retire it. Failing that try to refresh it.
 		if s.destroy(true) || !s.refreshIdle() {
 			return
@@ -867,9 +895,6 @@ func (hc *healthChecker) healthCheck(s *session) {
 
 // worker performs the healthcheck on sessions in healthChecker's priority queue.
 func (hc *healthChecker) worker(i int) {
-	if log.V(2) {
-		log.Info("Starting health check worker %v", i)
-	}
 	// Returns a session which we should ping to keep it alive.
 	getNextForPing := func() *session {
 		hc.pool.mu.Lock()
@@ -915,9 +940,6 @@ func (hc *healthChecker) worker(i int) {
 
 	for {
 		if hc.isClosing() {
-			if log.V(2) {
-				log.Info("Closing health check worker %v", i)
-			}
 			// Exit when the pool has been closed and all sessions have been destroyed
 			// or when health checker has been closed.
 			hc.waitWorkers.Done()
@@ -927,7 +949,7 @@ func (hc *healthChecker) worker(i int) {
 		if ws != nil {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
-			ws.prepareForWrite(contextWithMetadata(ctx, hc.pool.md))
+			ws.prepareForWrite(contextWithOutgoingMetadata(ctx, hc.pool.md))
 			hc.pool.recycle(ws)
 			hc.pool.mu.Lock()
 			hc.pool.prepareReqs--
@@ -942,11 +964,146 @@ func (hc *healthChecker) worker(i int) {
 				if pause > int64(hc.interval) {
 					pause = int64(hc.interval)
 				}
-				<-time.After(time.Duration(rand.Int63n(pause) + pause/2))
+				select {
+				case <-time.After(time.Duration(rand.Int63n(pause) + pause/2)):
+					break
+				case <-hc.done:
+					break
+				}
+
 			}
 			continue
 		}
 		hc.healthCheck(rs)
+	}
+}
+
+// maintainer maintains the maxSessionsInUse by a window of kWindowSize * sampleInterval.
+// Based on this information, health checker will try to maintain the number of sessions by hc..
+func (hc *healthChecker) maintainer() {
+	// Wait so that pool is ready.
+	<-hc.ready
+
+	var (
+		windowSize uint64 = 10
+		iteration  uint64
+		timeout    <-chan time.Time
+	)
+
+	// replenishPool is run if numOpened is less than sessionsToKeep, timeouts on sampleInterval.
+	replenishPool := func(sessionsToKeep uint64) {
+		ctx, _ := context.WithTimeout(context.Background(), hc.sampleInterval)
+		for {
+			select {
+			case <-timeout:
+				return
+			default:
+				break
+			}
+
+			p := hc.pool
+			p.mu.Lock()
+			// Take budget before the actual session creation.
+			if sessionsToKeep <= p.numOpened {
+				p.mu.Unlock()
+				break
+			}
+			p.numOpened++
+			p.createReqs++
+			shouldPrepareWrite := p.shouldPrepareWrite()
+			p.mu.Unlock()
+			var (
+				s   *session
+				err error
+			)
+			if s, err = p.createSession(ctx); err != nil {
+				log.Warningf("Failed to create session, error: %v", toSpannerError(err))
+				continue
+			}
+			if shouldPrepareWrite {
+				if err = s.prepareForWrite(ctx); err != nil {
+					log.Warningf("Failed to prepare session, error: %v", toSpannerError(err))
+					continue
+				}
+			}
+			p.recycle(s)
+		}
+	}
+
+	// shrinkPool, scales down the session pool.
+	shrinkPool := func(sessionsToKeep uint64) {
+		for {
+			select {
+			case <-timeout:
+				return
+			default:
+				break
+			}
+
+			p := hc.pool
+			p.mu.Lock()
+
+			if sessionsToKeep >= p.numOpened {
+				p.mu.Unlock()
+				break
+			}
+
+			var s *session
+			if p.idleList.Len() > 0 {
+				s = p.idleList.Front().Value.(*session)
+			} else if p.idleWriteList.Len() > 0 {
+				s = p.idleWriteList.Front().Value.(*session)
+			}
+			p.mu.Unlock()
+			if s != nil {
+				// destroy session as expire.
+				s.destroy(true)
+			} else {
+				break
+			}
+		}
+	}
+
+	for {
+		if hc.isClosing() {
+			hc.waitWorkers.Done()
+			return
+		}
+
+		// maxSessionsInUse is the maximum number of sessions in use concurrently over a period of time.
+		var maxSessionsInUse uint64
+
+		// Updates metrics.
+		hc.pool.mu.Lock()
+		currSessionsInUse := hc.pool.numOpened - uint64(hc.pool.idleList.Len()) - uint64(hc.pool.idleWriteList.Len())
+		currSessionsOpened := hc.pool.numOpened
+		hc.pool.mu.Unlock()
+
+		hc.mu.Lock()
+		if iteration%windowSize == 0 || maxSessionsInUse < currSessionsInUse {
+			maxSessionsInUse = currSessionsInUse
+		}
+		sessionsToKeep := maxUint64(hc.pool.MinOpened,
+			minUint64(currSessionsOpened, hc.pool.MaxIdle+maxSessionsInUse))
+		hc.mu.Unlock()
+
+		timeout = time.After(hc.sampleInterval)
+		// Replenish or Shrink pool if needed.
+		// Note: we don't need to worry about pending create session requests, we only need to sample the current sessions in use.
+		// the routines will not try to create extra / delete creating sessions.
+		if sessionsToKeep > currSessionsOpened {
+			replenishPool(sessionsToKeep)
+		} else {
+			shrinkPool(sessionsToKeep)
+		}
+
+		select {
+		case <-timeout:
+			break
+		case <-hc.done:
+			break
+		}
+		iteration++
 	}
 }
 

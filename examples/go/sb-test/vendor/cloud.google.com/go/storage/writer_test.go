@@ -15,12 +15,16 @@
 package storage
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"net/http"
-	"reflect"
+	"strings"
 	"testing"
+
+	"cloud.google.com/go/internal/testutil"
 
 	"golang.org/x/net/context"
 
@@ -28,36 +32,72 @@ import (
 )
 
 type fakeTransport struct {
-	gotReq *http.Request
+	gotReq  *http.Request
+	results []transportResult
+}
+
+type transportResult struct {
+	res *http.Response
+	err error
+}
+
+func (t *fakeTransport) addResult(res *http.Response, err error) {
+	t.results = append(t.results, transportResult{res, err})
 }
 
 func (t *fakeTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	t.gotReq = req
-	return nil, fmt.Errorf("error handling request")
+	if len(t.results) == 0 {
+		return nil, fmt.Errorf("error handling request")
+	}
+	result := t.results[0]
+	t.results = t.results[1:]
+	return result.res, result.err
 }
 
 func TestErrorOnObjectsInsertCall(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
-	hc := &http.Client{Transport: &fakeTransport{}}
-	client, err := NewClient(ctx, option.WithHTTPClient(hc))
-	if err != nil {
-		t.Fatalf("error when creating client: %v", err)
+
+	doWrite := func(hc *http.Client) *Writer {
+		client, err := NewClient(ctx, option.WithHTTPClient(hc))
+		if err != nil {
+			t.Fatalf("error when creating client: %v", err)
+		}
+		wc := client.Bucket("bucketname").Object("filename1").NewWriter(ctx)
+		wc.ContentType = "text/plain"
+
+		// We can't check that the Write fails, since it depends on the write to the
+		// underling fakeTransport failing which is racy.
+		wc.Write([]byte("hello world"))
+		return wc
 	}
-	wc := client.Bucket("bucketname").Object("filename1").NewWriter(ctx)
-	wc.ContentType = "text/plain"
 
-	// We can't check that the Write fails, since it depends on the write to the
-	// underling fakeTransport failing which is racy.
-	wc.Write([]byte("hello world"))
-
+	wc := doWrite(&http.Client{Transport: &fakeTransport{}})
 	// Close must always return an error though since it waits for the transport to
 	// have closed.
 	if err := wc.Close(); err == nil {
 		t.Errorf("expected error on close, got nil")
 	}
+
+	// Retry on 5xx
+	ft := &fakeTransport{}
+	ft.addResult(&http.Response{
+		StatusCode: 503,
+		Body:       ioutil.NopCloser(&bytes.Buffer{}),
+	}, nil)
+	ft.addResult(&http.Response{
+		StatusCode: 200,
+		Body:       ioutil.NopCloser(strings.NewReader("{}")),
+	}, nil)
+	wc = doWrite(&http.Client{Transport: ft})
+	if err := wc.Close(); err != nil {
+		t.Errorf("got %v, want nil", err)
+	}
 }
 
 func TestEncryption(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	ft := &fakeTransport{}
 	hc := &http.Client{Transport: ft}
@@ -78,7 +118,7 @@ func TestEncryption(t *testing.T) {
 	if err != nil {
 		t.Fatalf("decoding key: %v", err)
 	}
-	if !reflect.DeepEqual(gotKey, key) {
+	if !testutil.Equal(gotKey, key) {
 		t.Errorf("key: got %v, want %v", gotKey, key)
 	}
 	wantHash := sha256.Sum256(key)
@@ -86,7 +126,7 @@ func TestEncryption(t *testing.T) {
 	if err != nil {
 		t.Fatalf("decoding hash: %v", err)
 	}
-	if !reflect.DeepEqual(gotHash, wantHash[:]) { // wantHash is an array
+	if !testutil.Equal(gotHash, wantHash[:]) { // wantHash is an array
 		t.Errorf("hash: got\n%v, want\n%v", gotHash, wantHash)
 	}
 }

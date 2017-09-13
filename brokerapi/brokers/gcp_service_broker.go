@@ -18,21 +18,21 @@
 package brokers
 
 import (
+	"code.cloudfoundry.org/lager"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
-
-	"code.cloudfoundry.org/lager"
-	"google.golang.org/api/googleapi"
-
 	"gcp-service-broker/brokerapi/brokers/account_managers"
 	"gcp-service-broker/brokerapi/brokers/api_service"
 	"gcp-service-broker/brokerapi/brokers/bigquery"
 	"gcp-service-broker/brokerapi/brokers/bigtable"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/cloudsql"
+	"google.golang.org/api/googleapi"
+	"math"
+
 	"gcp-service-broker/brokerapi/brokers/config"
+	"gcp-service-broker/brokerapi/brokers/datastore"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/brokerapi/brokers/pubsub"
 	"gcp-service-broker/brokerapi/brokers/spanner"
@@ -106,7 +106,13 @@ func New(cfg *config.BrokerConfig, Logger lager.Logger) (*GCPAsyncServiceBroker,
 		models.MlName: &api_service.ApiServiceBroker{
 			BrokerBase: bb,
 		},
-		models.CloudsqlName: &cloudsql.CloudSQLBroker{
+		models.CloudsqlMySQLName: &cloudsql.CloudSQLBroker{
+			HttpConfig:     cfg.HttpConfig,
+			ProjectId:      cfg.ProjectId,
+			Logger:         self.Logger,
+			AccountManager: sqlManager,
+		},
+		models.CloudsqlPostgresName: &cloudsql.CloudSQLBroker{
 			HttpConfig:     cfg.HttpConfig,
 			ProjectId:      cfg.ProjectId,
 			Logger:         self.Logger,
@@ -116,6 +122,9 @@ func New(cfg *config.BrokerConfig, Logger lager.Logger) (*GCPAsyncServiceBroker,
 			BrokerBase: bb,
 		},
 		models.SpannerName: &spanner.SpannerBroker{
+			BrokerBase: bb,
+		},
+		models.DatastoreName: &datastore.DatastoreBroker{
 			BrokerBase: bb,
 		},
 	}

@@ -39,6 +39,10 @@ func (c *fakeLogger) LogSync(ctx context.Context, e logging.Entry) error {
 	return nil
 }
 
+func (c *fakeLogger) Close() error {
+	return nil
+}
+
 func newTestClientUsingLogging(c *fakeLogger) *Client {
 	newLoggerInterface = func(ctx context.Context, project string, opts ...option.ClientOption) (loggerInterface, error) {
 		return c, nil
@@ -198,5 +202,14 @@ func TestReportfUsingLogging(t *testing.T) {
 	commonLoggingChecks(t, e, "TestReportf")
 	if !strings.Contains(entryMessage(e), "2+2=4") {
 		t.Errorf("error report didn't contain formatted message")
+	}
+}
+
+func TestCloseUsingLogging(t *testing.T) {
+	fl := &fakeLogger{}
+	c := newTestClientUsingLogging(fl)
+	err := c.Close()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
