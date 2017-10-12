@@ -174,6 +174,9 @@ const StackdriverTraceName = "google-stackdriver-trace"
 const StackdriverDebuggerName = "google-stackdriver-debugger"
 const DatastoreName = "google-datastore"
 const RootSaEnvVar = "ROOT_SERVICE_ACCOUNT_JSON"
+const TileDeploymentEnvVar = "IS_TILE_DEPLOYMENT"
+const PlansSuffix = "_PLANS"
+const EnabledSuffix = "_ENABLED"
 
 var ServiceEnvVarNames = []string{
 	"GOOGLE_SPANNER",

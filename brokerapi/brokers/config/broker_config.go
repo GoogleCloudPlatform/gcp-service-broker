@@ -77,16 +77,50 @@ func (bc *BrokerConfig) InitCatalogFromEnv() (map[string]models.Service, error) 
 	serviceMap := make(map[string]models.Service)
 
 	for _, varname := range models.ServiceEnvVarNames {
+		println(os.Getenv(varname + models.EnabledSuffix))
 
-		var svc models.Service
-		if err := json.Unmarshal([]byte(os.Getenv(varname)), &svc); err != nil {
-			return map[string]models.Service{}, err
-		} else {
-			if errs := validator.Validate(svc); errs != nil {
-				return map[string]models.Service{}, errs
+		if os.Getenv(varname+models.EnabledSuffix) == "true" {
+			var svc models.Service
+			var plancandidates []models.ServicePlanCandidate
+
+			if err := json.Unmarshal([]byte(os.Getenv(varname)), &svc); err != nil {
+				return map[string]models.Service{}, err
 			} else {
-				serviceMap[svc.ID] = svc
+
+				if errs := validator.Validate(svc); errs != nil {
+					return map[string]models.Service{}, errs
+				} else {
+					println(os.Getenv(varname + models.PlansSuffix))
+
+					if planerr := json.Unmarshal([]byte(os.Getenv(varname+models.PlansSuffix)), &plancandidates); planerr != nil {
+						return map[string]models.Service{}, planerr
+					} else {
+						var plans []models.ServicePlan
+						for _, plancandidate := range plancandidates {
+							var service_properties map[string]string
+
+							if sperr := json.Unmarshal([]byte(plancandidate.ServiceProperties), &service_properties); sperr != nil {
+								return map[string]models.Service{}, sperr
+							} else {
+
+								plans = append(plans, models.ServicePlan{
+									ID:   plancandidate.Guid,
+									Name: plancandidate.Name,
+									Metadata: &models.ServicePlanMetadata{
+										DisplayName: plancandidate.DisplayName,
+									},
+									ServiceProperties: service_properties,
+									Description:       plancandidate.Description,
+								})
+							}
+						}
+
+						svc.Plans = plans
+						serviceMap[svc.ID] = svc
+					}
+				}
 			}
+
 		}
 
 	}
