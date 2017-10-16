@@ -242,6 +242,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			Expect(credsMap["Username"]).ToNot(Equal(""))
 			_, err = sslService.Get(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName, credsMap["Sha1Fingerprint"]).Do()
 			Expect(err).NotTo(HaveOccurred())
+			Expect(credsMap["uri"]).To(ContainSubstring("postgres"))
 
 			// unbind the instance
 			unBindDetails := models.UnbindDetails{

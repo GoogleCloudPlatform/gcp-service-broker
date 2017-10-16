@@ -165,11 +165,29 @@ func (sam *SqlAccountManager) pollOperationUntilDone(op *googlecloudsql.Operatio
 	return nil
 }
 
-func (b *SqlAccountManager) BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
+func (b *SqlAccountManager) BuildInstanceCredentials(bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error) {
+	instanceDetails := instanceRecord.GetOtherDetails()
+	bindDetails := bindRecord.GetOtherDetails()
+
+	sid := instanceRecord.ServiceId
+	service_to_name, err := utils.MapServiceIdToName()
+	if err != nil {
+		return map[string]string{}, err
+	}
+
 	combinedCreds := utils.MergeStringMaps(bindDetails, instanceDetails)
-	combinedCreds["uri"] = fmt.Sprintf("mysql://%s:%s@%s/%s?ssl_mode=required",
-		url.QueryEscape(combinedCreds["Username"]), url.QueryEscape(combinedCreds["Password"]), combinedCreds["host"], combinedCreds["database_name"])
-	return combinedCreds
+
+	if service_to_name[sid] == models.CloudsqlMySQLName {
+		combinedCreds["uri"] = fmt.Sprintf("mysql://%s:%s@%s/%s?ssl_mode=required",
+			url.QueryEscape(combinedCreds["Username"]), url.QueryEscape(combinedCreds["Password"]), combinedCreds["host"], combinedCreds["database_name"])
+	} else if service_to_name[sid] == models.CloudsqlPostgresName {
+		combinedCreds["uri"] = fmt.Sprintf("postgres://%s/%s?user=%s&password=%s&ssl=true",
+			combinedCreds["host"], combinedCreds["database_name"], url.QueryEscape(combinedCreds["Username"]), url.QueryEscape(combinedCreds["Password"]))
+	} else {
+		return map[string]string{}, errors.New("Unknown service")
+	}
+
+	return combinedCreds, nil
 }
 
 type SqlAccountInfo struct {

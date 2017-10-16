@@ -367,26 +367,16 @@ func (gcpBroker *GCPServiceBroker) Bind(instanceID string, bindingID string, det
 			err)
 	}
 
-	var creds map[string]string
-	if err := json.Unmarshal([]byte(newCreds.OtherDetails), &creds); err != nil {
-		return models.Binding{}, err
-	}
-
-	// copy provision.otherDetails to creds.
+	// get existing service instance details
 	var instanceRecord models.ServiceInstanceDetails
 	if err = db_service.DbConnection.Where("id = ?", instanceID).First(&instanceRecord).Error; err != nil {
 		return models.Binding{}, fmt.Errorf("Error retrieving service instance details: %s", err)
 	}
 
-	var instanceDetails map[string]string
-	// if the instance has access details saved
-	if instanceRecord.OtherDetails != "" {
-		if err := json.Unmarshal([]byte(instanceRecord.OtherDetails), &instanceDetails); err != nil {
-			return models.Binding{}, err
-		}
+	updatedCreds, err := gcpBroker.ServiceBrokerMap[serviceId].BuildInstanceCredentials(newCreds, instanceRecord)
+	if err != nil {
+		return models.Binding{}, err
 	}
-
-	updatedCreds := gcpBroker.ServiceBrokerMap[serviceId].BuildInstanceCredentials(creds, instanceDetails)
 
 	return models.Binding{
 		Credentials:     updatedCreds,
