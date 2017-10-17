@@ -250,9 +250,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 				ServiceID: serviceNameToId[models.CloudsqlPostgresName],
 				PlanID:    serviceNameToPlanId[models.CloudsqlPostgresName],
 			}
-			// I don't know what it is about postgres, but it pretty reliably claims that another operation is
-			// in progress here. So let's wait for 10 seconds before unbinding.
-			time.Sleep(10 * time.Second)
+
 			err = gcpBroker.Unbind("integration_test_instance", "binding_id", unBindDetails)
 			Expect(err).NotTo(HaveOccurred())
 
