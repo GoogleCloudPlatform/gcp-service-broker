@@ -74,6 +74,11 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 	if err != nil {
 		return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating ssl certs: %s", err)
 	}
+	certInsertOperation := newCert.Operation
+	err = sam.pollOperationUntilDone(certInsertOperation, sam.ProjectId)
+	if err != nil {
+		return models.ServiceBindingCredentials{}, fmt.Errorf("Error encountered while polling until operation id %s completes: %s", op.Name, err)
+	}
 
 	creds := SqlAccountInfo{
 		Username:        username,
