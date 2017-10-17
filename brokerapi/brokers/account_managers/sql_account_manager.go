@@ -169,11 +169,12 @@ func (b *SqlAccountManager) BuildInstanceCredentials(bindRecord models.ServiceBi
 	instanceDetails := instanceRecord.GetOtherDetails()
 	bindDetails := bindRecord.GetOtherDetails()
 
-	sid := instanceRecord.ServiceId
 	service_to_name, err := utils.MapServiceIdToName()
 	if err != nil {
 		return map[string]string{}, err
 	}
+
+	sid := instanceRecord.ServiceId
 
 	combinedCreds := utils.MergeStringMaps(bindDetails, instanceDetails)
 

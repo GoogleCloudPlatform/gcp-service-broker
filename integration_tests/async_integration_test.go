@@ -157,6 +157,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			creds, err := gcpBroker.Bind("integration_test_instance", "binding_id", bindDetails)
 			Expect(err).NotTo(HaveOccurred())
 			credsMap := creds.Credentials.(map[string]string)
+			Expect(credsMap["uri"]).To(ContainSubstring("mysql"))
 
 			// make sure we have a username and google has ssl certs
 			Expect(credsMap["Username"]).ToNot(Equal(""))
