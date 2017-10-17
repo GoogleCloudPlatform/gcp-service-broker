@@ -445,7 +445,7 @@ func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details models.BindD
 	return credBytes, nil
 }
 
-func (b *CloudSQLBroker) BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
+func (b *CloudSQLBroker) BuildInstanceCredentials(bindDetails models.ServiceBindingCredentials, instanceDetails models.ServiceInstanceDetails) (map[string]string, error) {
 	return b.AccountManager.BuildInstanceCredentials(bindDetails, instanceDetails)
 }
 

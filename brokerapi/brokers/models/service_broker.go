@@ -25,7 +25,7 @@ import (
 type ServiceBrokerHelper interface {
 	Provision(instanceId string, details ProvisionDetails, plan PlanDetails) (ServiceInstanceDetails, error)
 	Bind(instanceID, bindingID string, details BindDetails) (ServiceBindingCredentials, error)
-	BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string
+	BuildInstanceCredentials(bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
 	Unbind(details ServiceBindingCredentials) error
 	Deprovision(instanceID string, details DeprovisionDetails) error
 	PollInstance(instanceID string) (bool, error)
@@ -51,7 +51,7 @@ type ServiceBroker interface {
 type AccountManager interface {
 	CreateAccountInGoogle(instanceID string, bindingID string, details BindDetails, instance ServiceInstanceDetails) (ServiceBindingCredentials, error)
 	DeleteAccountFromGoogle(creds ServiceBindingCredentials) error
-	BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string
+	BuildInstanceCredentials(bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
 }
 
 type GCPCredentials struct {

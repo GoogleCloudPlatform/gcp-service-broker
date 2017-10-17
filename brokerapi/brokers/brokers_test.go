@@ -557,7 +557,8 @@ var _ = Describe("AccountManagers", func() {
 
 		Context("when MergeCredentialsAndInstanceInfo is called on a broker", func() {
 			It("should call MergeCredentialsAndInstanceInfo on the account manager", func() {
-				_ = iamStyleBroker.BuildInstanceCredentials(make(map[string]string), make(map[string]string))
+				_, err = iamStyleBroker.BuildInstanceCredentials(models.ServiceBindingCredentials{}, models.ServiceInstanceDetails{})
+				Expect(err).ToNot(HaveOccurred())
 				Expect(accountManager.BuildInstanceCredentialsCallCount()).To(Equal(1))
 			})
 		})
