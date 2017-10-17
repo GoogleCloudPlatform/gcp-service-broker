@@ -127,3 +127,8 @@ any extra access details
 
 - added PostgreSQL support to CloudSQL (and migrated existing plans)
 - added Datastore support
+
+## [3.5.2] - 2017-10-17
+ 
+- fixed Postgres connection uri
+- added wait for ssl certs to finish being created in sql account manager
