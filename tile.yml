@@ -9,21 +9,9 @@ apply_open_security_group: true
 
 migration: |
   properties['properties']['.properties.org']['value'] = 'system';
-
   if ('.properties.cloudsql_custom_plans' in properties['properties']){
       properties['properties']['.properties.cloudsql_mysql_custom_plans'] =
       {'value': properties['properties']['.properties.cloudsql_custom_plans']['value']};
-  }
-
-  if('.properties.preconfigured_plans' in properties['properties']){
-      properties['properties']['.properties.google_storage_plans'][0]['guid'] = properties['properties']['.properties.preconfigured_plans'][0]['guid'];
-      properties['properties']['.properties.google_storage_plans'][1]['guid'] = properties['properties']['.properties.preconfigured_plans'][1]['guid'];
-      properties['properties']['.properties.google_storage_plans'][2]['guid'] = properties['properties']['.properties.preconfigured_plans'][2]['guid'];
-      properties['properties']['.properties.google_pubsub_plans'][0]['guid'] = properties['properties']['.properties.preconfigured_plans'][3]['guid'];
-      properties['properties']['.properties.google_bigquery_plans'][0]['guid'] = properties['properties']['.properties.preconfigured_plans'][4]['guid'];
-      properties['properties']['.properties.google_ml_apis_plans'][0]['guid'] = properties['properties']['.properties.preconfigured_plans'][5]['guid'];
-      properties['properties']['.properties.google_stackdriver_debugger_plans'][0]['guid'] = properties['properties']['.properties.preconfigured_plans'][6]['guid'];
-      properties['properties']['.properties.google_stackdriver_trace_plans'][0]['guid'] = properties['properties']['.properties.preconfigured_plans'][7]['guid'];
   }
 
 packages:
@@ -32,9 +20,240 @@ packages:
   manifest:
     buildpack: go_buildpack
     path: /tmp/gcp-service-broker.zip
+    env:
+      SERVICES: '[
+        {
+          "id": "b9e4332e-b42b-4680-bda5-ea1506797474",
+          "description": "A Powerful, Simple and Cost Effective Object Storage Service",
+          "name": "google-storage",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+            "displayName": "Google Cloud Storage",
+            "longDescription": "A Powerful, Simple and Cost Effective Object Storage Service",
+            "documentationUrl": "https://cloud.google.com/storage/docs/",
+            "supportUrl": "https://cloud.google.com/support/",
+            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/storage.svg"
+          },
+          "tags": ["gcp", "storage"]
+        },
+        {
+          "id": "628629e3-79f5-4255-b981-d14c6c7856be",
+          "description": "A global service for real-time and reliable messaging and streaming data",
+          "name": "google-pubsub",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+            "displayName": "Google PubSub",
+            "longDescription": "A global service for real-time and reliable messaging and streaming data",
+            "documentationUrl": "https://cloud.google.com/pubsub/docs/",
+            "supportUrl": "https://cloud.google.com/support/",
+            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/pubsub.svg"
+          },
+          "tags": ["gcp", "pubsub"]
+        },
+        {
+          "id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
+          "description": "A fast, economical and fully managed data warehouse for large-scale data analytics",
+          "name": "google-bigquery",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+            "displayName": "Google BigQuery",
+            "longDescription": "A fast, economical and fully managed data warehouse for large-scale data analytics",
+            "documentationUrl": "https://cloud.google.com/bigquery/docs/",
+            "supportUrl": "https://cloud.google.com/support/",
+            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigquery.svg"
+          },
+          "tags": ["gcp", "bigquery"]
+        },
+        {
+          "id": "4bc59b9a-8520-409f-85da-1c7552315863",
+          "description": "Google Cloud SQL is a fully-managed MySQL database service",
+          "name": "google-cloudsql-mysql",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+            "displayName": "Google CloudSQL MySQL",
+            "longDescription": "Google Cloud SQL is a fully-managed MySQL database service",
+            "documentationUrl": "https://cloud.google.com/sql/docs/",
+            "supportUrl": "https://cloud.google.com/support/",
+            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
+          },
+          "tags": ["gcp", "cloudsql", "mysql"]
+        },
+        {
+          "id": "cbad6d78-a73c-432d-b8ff-b219a17a803a",
+          "description": "Google Cloud SQL is a fully-managed PostgreSQL database service",
+          "name": "google-cloudsql-postgres",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+            "displayName": "Google CloudSQL PostgreSQL",
+            "longDescription": "Google Cloud SQL is a fully-managed MySQL database service",
+            "documentationUrl": "https://cloud.google.com/sql/docs/",
+            "supportUrl": "https://cloud.google.com/support/",
+            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
+          },
+          "tags": ["gcp", "cloudsql", "postgres"]
+        },
+        {
+          "id": "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4",
+          "description": "Machine Learning Apis including Vision, Translate, Speech, and Natural Language",
+          "name": "google-ml-apis",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+            "displayName": "Google Machine Learning APIs",
+            "longDescription": "Machine Learning Apis including Vision, Translate, Speech, and Natural Language",
+            "documentationUrl": "https://cloud.google.com/ml/",
+            "supportUrl": "https://cloud.google.com/support/",
+            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/machine-learning.svg"
+          },
+          "tags": ["gcp", "ml"]
+        },
+        {
+         "id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe",
+         "description": "A high performance NoSQL database service for large analytical and operational workloads",
+         "name": "google-bigtable",
+         "bindable": true,
+         "plan_updateable": false,
+         "metadata": {
+           "displayName": "Google Bigtable",
+           "longDescription": "A high performance NoSQL database service for large analytical and operational workloads",
+           "documentationUrl": "https://cloud.google.com/bigtable/",
+           "supportUrl": "https://cloud.google.com/support/",
+           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigtable.svg"
+         },
+         "tags": ["gcp", "bigtable"]
+        },
+        {
+          "id": "51b3e27e-d323-49ce-8c5f-1211e6409e82",
+          "description": "The first horizontally scalable, globally consistent, relational database service",
+          "name": "google-spanner",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+            "displayName": "Google Spanner",
+            "longDescription": "The first horizontally scalable, globally consistent, relational database service",
+            "documentationUrl": "https://cloud.google.com/spanner/",
+            "supportUrl": "https://cloud.google.com/support/",
+            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg"
+          },
+          "tags": ["gcp", "spanner"]
+        },
+        {
+          "id": "83837945-1547-41e0-b661-ea31d76eed11",
+          "description": "Stackdriver Debugger",
+          "name": "google-stackdriver-debugger",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+           "displayName": "Stackdriver Debugger",
+           "longDescription": "Stackdriver Debugger is a feature of the Google Cloud Platform that lets you inspect the state of an application at any code location without using logging statements and without stopping or slowing down your applications. Your users are not impacted during debugging. Using the production debugger you can capture the local variables and call stack and link it back to a specific line location in your source code.",
+           "documentationUrl": "https://cloud.google.com/debugger/docs/",
+           "supportUrl": "https://cloud.google.com/support/",
+           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg"
+          },
+          "tags": ["gcp", "stackdriver", "debugger"]
+        },
+        {
+          "id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
+          "description": "Stackdriver Trace",
+          "name": "google-stackdriver-trace",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+           "displayName": "Stackdriver Trace",
+           "longDescription": "Stackdriver Trace is a distributed tracing system that collects latency data from your applications and displays it in the Google Cloud Platform Console. You can track how requests propagate through your application and receive detailed near real-time performance insights.",
+           "documentationUrl": "https://cloud.google.com/trace/docs/",
+           "supportUrl": "https://cloud.google.com/support/",
+           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg"
+          },
+          "tags": ["gcp", "stackdriver", "trace"]
+        },
+        {
+          "id": "76d4abb2-fee7-4c8f-aee1-bcea2837f02b",
+          "description": "Google Cloud Datastore is a NoSQL document database service",
+          "name": "google-datastore",
+          "bindable": true,
+          "plan_updateable": false,
+          "metadata": {
+            "displayName": "Google Cloud Datastore",
+            "longDescription": "Google Cloud Datastore is a NoSQL document database built for automatic scaling, high performance, and ease of application development.",
+            "documentationUrl": "https://cloud.google.com/datastore/docs/",
+            "supportUrl": "https://cloud.google.com/support/",
+            "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/datastore.svg"
+          },
+          "tags": ["gcp", "datastore"]
+        }
+      ]'
+      PRECONFIGURED_PLANS: '[
+        {
+          "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
+          "name": "standard",
+          "display_name": "Standard",
+          "description": "Standard storage class",
+          "features": {"storage_class": "STANDARD"}
+        },
+        {
+          "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
+          "name": "nearline",
+          "display_name": "Nearline",
+          "description": "Nearline storage class",
+          "features": {"storage_class": "NEARLINE"}
+        },
+        {
+          "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
+          "name": "reduced_availability",
+          "display_name": "Durable Reduced Availability",
+          "description": "Durable Reduced Availability storage class",
+          "features": {"storage_class": "DURABLE_REDUCED_AVAILABILITY"}
+        },
+        {
+          "service_id": "628629e3-79f5-4255-b981-d14c6c7856be",
+          "name": "default",
+          "display_name": "Default",
+          "description": "PubSub Default plan",
+          "features": ""
+        },
+        { "service_id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
+          "name": "default",
+          "display_name": "Default",
+          "description": "BigQuery default plan",
+          "features": ""
+        },
+        {
+          "service_id": "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4",
+          "name": "default",
+          "display_name": "Default",
+          "description": "Machine Learning api default plan",
+          "features": ""
+        },
+        {
+          "service_id": "83837945-1547-41e0-b661-ea31d76eed11",
+          "name": "default",
+          "display_name": "Default",
+          "description": "Stackdriver Debugger default plan",
+          "features": ""
+        },
+        {
+          "service_id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
+          "name": "default",
+          "display_name": "Default",
+          "description": "Stackdriver Trace default plan",
+          "features": ""
+        },
+        {
+          "service_id": "76d4abb2-fee7-4c8f-aee1-bcea2837f02b",
+          "name": "default",
+          "display_name": "Default",
+          "description": "Datastore default plan",
+          "features": ""
+        }
+        ]'
   needs_cf_credentials: true
-  env:
-    is_tile_deployment: true
+  enable_global_access_to_plans: true
 
 
 # Uncomment this section if you want to display forms with configurable
@@ -82,694 +301,154 @@ forms:
     type: text
     label: Client key
     optional: true
-- name: google_storage_service
-  label: Google Storage
-  description: stuff for storage
-  properties:
-  - name: google_storage
-    label: Service info
-    type: text
-    configurable: false
-    hidden: true
-    value: '{
-       "id": "b9e4332e-b42b-4680-bda5-ea1506797474",
-       "description": "A Powerful, Simple and Cost Effective Object Storage Service",
-       "name": "google-storage",
-       "bindable": true,
-       "plan_updateable": false,
-       "metadata": {
-         "displayName": "Google Cloud Storage",
-         "longDescription": "A Powerful, Simple and Cost Effective Object Storage Service",
-         "documentationUrl": "https://cloud.google.com/storage/docs/overview",
-         "supportUrl": "https://cloud.google.com/support/",
-         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/storage.svg"
-       },
-       "tags": ["gcp", "storage"]
-     }'
-  - name: google_storage_enabled
-    type: boolean
-    default: true
-    label: Enabled
-  - name: google_storage_plans
-    type: collection
-    label: Plans
-    property_blueprints:
-      - name: name
-        label: Name
-        type: string
-      - name: display_name
-        label: Display Name
-        type: string
-      - name: description
-        label: Description
-        type: text
-      - name: service_properties
-        label: Service Properties Map
-        type: text
-    default:
-      - guid: "e1d11f65-da66-46ad-977c-6d56513baf43"
-        name: "standard"
-        display_name: "Standard"
-        description: "Standard storage class"
-        service_properties: '{"storage_class": "STANDARD"}'
-      - guid: "a42c1182-d1a0-4d40-82c1-28220518b360"
-        name: "nearline"
-        display_name: "Nearline"
-        description: "Nearline storage class"
-        service_properties: '{"storage_class": "NEARLINE"}'
-      - guid: "1a1f4fe6-1904-44d0-838c-4c87a9490a6b"
-        name: "reduced_availability"
-        display_name: "Durable Reduced Availability"
-        description: "Durable Reduced Availability storage class"
-        service_properties: '{"storage_class": "DURABLE_REDUCED_AVAILABILITY"}'
-- name: google_pubsub_service
-  label: Google Pubsub
-  description: stuff for Pubsub
-  properties:
-  - name: google_pubsub
-    label: Service info
-    type: text
-    configurable: false
-    hidden: true
-    value: '{
-                    "id": "628629e3-79f5-4255-b981-d14c6c7856be",
-                    "description": "A global service for real-time and reliable messaging and streaming data",
-                    "name": "google-pubsub",
-                    "bindable": true,
-                    "plan_updateable": false,
-                    "metadata": {
-                      "displayName": "Google PubSub",
-                      "longDescription": "A global service for real-time and reliable messaging and streaming data",
-                      "documentationUrl": "https://cloud.google.com/pubsub/docs/",
-                      "supportUrl": "https://cloud.google.com/support/",
-                      "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/pubsub.svg"
-                    },
-                    "tags": ["gcp", "pubsub"]
-                    }'
-  - name: google_pubsub_enabled
-    type: boolean
-    default: true
-    label: Enabled
-  - name: google_pubsub_plans
-    type: collection
-    label: Plans
-    property_blueprints:
-      - name: name
-        label: Name
-        type: string
-      - name: display_name
-        label: Display Name
-        type: string
-      - name: description
-        label: Description
-        type: text
-      - name: service_properties
-        label: Service Properties Map
-        type: text
-    default:
-      - guid: "622f4da3-8731-492a-af29-66a9146f8333"
-        name: "default"
-        display_name: "Default"
-        description: "PubSub default plan"
-        service_properties: "{}"
-- name: google_bigquery_service
-  label: Google Bigquery
-  description: stuff for Bigquery
-  properties:
-  - name: google_bigquery
-    label: Service info
-    type: text
-    configurable: false
-    hidden: true
-    value: '{
-                    "id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
-                    "description": "A fast, economical and fully managed data warehouse for large-scale data analytics",
-                    "name": "google-bigquery",
-                    "bindable": true,
-                    "plan_updateable": false,
-                    "metadata": {
-                      "displayName": "Google BigQuery",
-                      "longDescription": "A fast, economical and fully managed data warehouse for large-scale data analytics",
-                      "documentationUrl": "https://cloud.google.com/bigquery/docs/",
-                      "supportUrl": "https://cloud.google.com/support/",
-                      "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigquery.svg"
-                    },
-                    "tags": ["gcp", "bigquery"]
-                  }'
-  - name: google_bigquery_enabled
-    type: boolean
-    default: true
-    label: Enabled
-  - name: google_bigquery_plans
-    type: collection
-    label: Plans
-    property_blueprints:
-      - name: name
-        label: Name
-        type: string
-      - name: display_name
-        label: Display Name
-        type: string
-      - name: description
-        label: Description
-        type: text
-      - name: service_properties
-        label: Service Properties Map
-        type: text
-    default:
-      - guid: "10ff4e72-6e84-44eb-851f-bdb38a791914"
-        name: "default"
-        display_name: "Default"
-        description: "BigQuery default plan"
-        service_properties: "{}"
-- name: google_cloudsql_mysql_service
-  label: Google CloudSQL MySQL
-  description: stuff for cloudsql_mysql
-  properties:
-  - name: google_cloudsql_mysql
-    label: Service info
-    type: text
-    configurable: false
-    hidden: true
-    value: '{
-                      "id": "4bc59b9a-8520-409f-85da-1c7552315863",
-                      "description": "Google Cloud SQL is a fully-managed MySQL database service",
-                      "name": "google-cloudsql-mysql",
-                      "bindable": true,
-                      "plan_updateable": false,
-                      "metadata": {
-                        "displayName": "Google CloudSQL MySQL",
-                        "longDescription": "Google Cloud SQL is a fully-managed MySQL database service",
-                        "documentationUrl": "https://cloud.google.com/sql/docs/",
-                        "supportUrl": "https://cloud.google.com/support/",
-                        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
-                      },
-                      "tags": ["gcp", "cloudsql", "mysql"]
-                  }'
-  - name: google_cloudsql_mysql_enabled
-    type: boolean
-    default: false
-    label: Enabled
-  - name: google_cloudsql_mysql_plans
-    type: collection
-    label: Plans
-    optional: true
-    property_blueprints:
-      - name: name
-        label: Name
-        type: string
-      - name: display_name
-        label: Display Name
-        type: string
-      - name: description
-        label: Description
-        type: text
-      - name: service_properties
-        label: Service Properties Map
-        type: text
-- name: google_cloudsql_postgresql_service
-  label: Google CloudSQL PostgreSQL
-  description: stuff for cloudsql_postgresql
-  properties:
-  - name: google_cloudsql_postgresql
-    label: Service info
-    type: text
-    configurable: false
-    hidden: true
-    value: '{
-                      "id": "cbad6d78-a73c-432d-b8ff-b219a17a803a",
-                        "description": "Google Cloud SQL is a fully-managed PostgreSQL database service",
-                        "name": "google-cloudsql-postgres",
-                        "bindable": true,
-                        "plan_updateable": false,
-                        "metadata": {
-                      	"displayName": "Google CloudSQL PostgreSQL",
-                      	"longDescription": "Google Cloud SQL is a fully-managed MySQL database service",
-                      	"documentationUrl": "https://cloud.google.com/sql/docs/",
-                      	"supportUrl": "https://cloud.google.com/support/",
-                      	"imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
-                        },
-                        "tags": ["gcp", "cloudsql", "postgres"]
-                  }'
-  - name: google_cloudsql_postgresql_enabled
-    type: boolean
-    default: false
-    label: Enabled
-  - name: google_cloudsql_postgresql_plans
-    type: collection
-    label: Plans
-    optional: true
-    property_blueprints:
-      - name: name
-        label: Name
-        type: string
-      - name: display_name
-        label: Display Name
-        type: string
-      - name: description
-        label: Description
-        type: text
-      - name: service_properties
-        label: Service Properties Map
-        type: text
-- name: google_ml_apis_service
-  label: Google ML APIs
-  description: stuff for ml_apis
-  properties:
-  - name: google_ml_apis
-    label: Service info
-    type: text
-    configurable: false
-    hidden: true
-    value: '{
-                    "id": "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4",
-                    "description": "Machine Learning Apis including Vision, Translate, Speech, and Natural Language",
-                    "name": "google-ml-apis",
-                    "bindable": true,
-                    "plan_updateable": false,
-                    "metadata": {
-                      "displayName": "Google Machine Learning APIs",
-                      "longDescription": "Machine Learning Apis including Vision, Translate, Speech, and Natural Language",
-                      "documentationUrl": "https://cloud.google.com/ml/",
-                      "supportUrl": "https://cloud.google.com/support/",
-                      "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/machine-learning.svg"
-                    },
-                    "tags": ["gcp", "ml"]
-                  }'
-  - name: google_ml_apis_enabled
-    type: boolean
-    default: true
-    label: Enabled
-  - name: google_ml_apis_plans
-    type: collection
-    label: Plans
-    property_blueprints:
-      - name: name
-        label: Name
-        type: string
-      - name: display_name
-        label: Display Name
-        type: string
-      - name: description
-        label: Description
-        type: text
-      - name: service_properties
-        label: Service Properties Map
-        type: text
-    default:
-      - guid: "be7954e1-ecfb-4936-a0b6-db35e6424c7a"
-        name: "default"
-        display_name: "Default"
-        description: "Machine Learning API default plan"
-        service_properties: "{}"
-- name: google_stackdriver_debugger_service
-  label: Google Stackdriver Debugger
-  description: stuff for stackdriver_debugger
-  properties:
-  - name: google_stackdriver_debugger
-    label: Service info
-    type: text
-    configurable: false
-    hidden: true
-    value: '{
-                    "id": "83837945-1547-41e0-b661-ea31d76eed11",
-                    "description": "Stackdriver Debugger",
-                    "name": "google-stackdriver-debugger",
-                    "bindable": true,
-                    "plan_updateable": false,
-                    "metadata": {
-                      "displayName": "Stackdriver Debugger",
-                      "longDescription": "Stackdriver Debugger is a feature of the Google Cloud Platform that lets you inspect the state of an application at any code location without using logging statements and without stopping or slowing down your applications. Your users are not impacted during debugging. Using the production debugger you can capture the local variables and call stack and link it back to a specific line location in your source code.",
-                      "documentationUrl": "https://cloud.google.com/debugger/docs/",
-                      "supportUrl": "https://cloud.google.com/support/",
-                      "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg"
-                    },
-                    "tags": ["gcp", "stackdriver", "debugger"]
-                  }'
-  - name: google_stackdriver_debugger_enabled
-    type: boolean
-    default: true
-    label: Enabled
-  - name: google_stackdriver_debugger_plans
-    type: collection
-    label: Plans
-    property_blueprints:
-      - name: name
-        label: Name
-        type: string
-      - name: display_name
-        label: Display Name
-        type: string
-      - name: description
-        label: Description
-        type: text
-      - name: service_properties
-        label: Service Properties Map
-        type: text
-    default:
-      - guid: "10866183-a775-49e8-96e3-4e7a901e4a79"
-        name: "default"
-        display_name: "Default"
-        description: "Stackdriver Debugger default plan"
-        service_properties: "{}"
-- name: google_stackdriver_trace_service
-  label: Google Stackdriver Trace
-  description: stuff for stackdriver_trace
-  properties:
-  - name: google_stackdriver_trace
-    label: Service info
-    type: text
-    configurable: false
-    hidden: true
-    value: '{
-                    "id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
-                    "description": "Stackdriver Trace",
-                    "name": "google-stackdriver-trace",
-                    "bindable": true,
-                    "plan_updateable": false,
-                    "metadata": {
-                      "displayName": "Stackdriver Trace",
-                      "longDescription": "Stackdriver Trace is a distributed tracing system that collects latency data from your applications and displays it in the Google Cloud Platform Console. You can track how requests propagate through your application and receive detailed near real-time performance insights.",
-                      "documentationUrl": "https://cloud.google.com/trace/docs/",
-                      "supportUrl": "https://cloud.google.com/support/",
-                      "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg"
-                    },
-                    "tags": ["gcp", "stackdriver", "trace"]
-                  }'
-  - name: google_stackdriver_trace_enabled
-    type: boolean
-    default: true
-    label: Enabled
-  - name: google_stackdriver_trace_plans
-    type: collection
-    label: Plans
-    property_blueprints:
-      - name: name
-        label: Name
-        type: string
-      - name: display_name
-        label: Display Name
-        type: string
-      - name: description
-        label: Description
-        type: text
-      - name: service_properties
-        label: Service Properties Map
-        type: text
-    default:
-      - guid: "ab6c2287-b4bc-4ff4-a36a-0575e7910164"
-        name: "default"
-        display_name: "Default"
-        description: "Stackdriver Trace default plan"
-        service_properties: "{}"
-- name: google_spanner_service
-  label: Google Spanner
-  description: stuff for spanner
-  properties:
-  - name: google_spanner
-    label: Service info
-    type: text
-    configurable: false
-    hidden: true
-    value: '{
-                    "id": "51b3e27e-d323-49ce-8c5f-1211e6409e82",
-                    "description": "The first horizontally scalable, globally consistent, relational database service",
-                    "name": "google-spanner",
-                    "bindable": true,
-                    "plan_updateable": false,
-                    "metadata": {
-                      "displayName": "Google Spanner",
-                      "longDescription": "The first horizontally scalable, globally consistent, relational database service",
-                      "documentationUrl": "https://cloud.google.com/spanner/",
-                      "supportUrl": "https://cloud.google.com/support/",
-                      "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg"
-                    },
-                    "tags": ["gcp", "spanner"]
-                  }'
-  - name: google_spanner_enabled
-    type: boolean
-    default: false
-    label: Enabled
-  - name: google_spanner_plans
-    type: collection
-    label: Plans
-    optional: true
-    property_blueprints:
-      - name: name
-        label: Name
-        type: string
-      - name: display_name
-        label: Display Name
-        type: string
-      - name: description
-        label: Description
-        type: text
-      - name: service_properties
-        label: Service Properties Map
-        type: text
-- name: google_bigtable_service
-  label: Google Bigtable
-  description: stuff for bigtable
-  properties:
-  - name: google_bigtable
-    label: Service info
-    type: text
-    configurable: false
-    hidden: true
-    value: '{
-      "id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe",
-      "description": "A high performance NoSQL database service for large analytical and operational workloads",
-      "name": "google-bigtable",
-      "bindable": true,
-      "plan_updateable": false,
-      "metadata": {
-          "displayName": "Google Bigtable",
-          "longDescription": "A high performance NoSQL database service for large analytical and operational workloads",
-          "documentationUrl": "https://cloud.google.com/bigtable/",
-          "supportUrl": "https://cloud.google.com/support/",
-          "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigtable.svg"
-      },
-      "tags": ["gcp", "bigtable"]
-    }'
-  - name: google_bigtable_enabled
-    type: boolean
-    default: false
-    label: Enabled
-  - name: google_bigtable_plans
-    type: collection
-    label: Plans
-    optional: true
-    property_blueprints:
-      - name: name
-        label: Name
-        type: string
-      - name: display_name
-        label: Display Name
-        type: string
-      - name: description
-        label: Description
-        type: text
-      - name: service_properties
-        label: Service Properties Map
-        type: text
-- name: google_datastore_service
-  label: Google Datastore
-  description: stuff for datastore
-  properties:
-  - name: google_datastore
-    label: Service info
-    type: text
-    configurable: false
-    hidden: true
-    value: '{
-                    "id": "76d4abb2-fee7-4c8f-aee1-bcea2837f02b",
-                    "description": "Google Cloud Datastore is a NoSQL document database service",
-                    "name": "google-datastore",
-                    "bindable": true,
-                    "plan_updateable": false,
-                    "metadata": {
-                      "displayName": "Google Cloud Datastore",
-                      "longDescription": "Google Cloud Datastore is a NoSQL document database built for automatic scaling, high performance, and ease of application development.",
-                      "documentationUrl": "https://cloud.google.com/datastore/docs/",
-                      "supportUrl": "https://cloud.google.com/support/",
-                      "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/datastore.svg"
-                    },
-                    "tags": ["gcp", "datastore"]
-                  }'
-  - name: google_datastore_enabled
-    type: boolean
-    default: true
-    label: Enabled
-  - name: google_datastore_plans
-    type: collection
-    label: Plans
-    property_blueprints:
-      - name: name
-        label: Name
-        type: string
-      - name: display_name
-        label: Display Name
-        type: string
-      - name: description
-        label: Description
-        type: text
-      - name: service_properties
-        label: Service Properties Map
-        type: text
-    default:
-      - guid: "05f1fb6b-b5f0-48a2-9c2b-a5f236507a97"
-        name: "default"
-        display_name: "Default"
-        description: "Datastore default plan"
-        service_properties: "{}"
 
 
-
-#- name: cloudsql_mysql_custom_plans
-#  description: Generate custom plans for CloudSQL MySQL (required to enable the service for developers)
-#  label: CloudSQL MySQL Custom Plans
-#  optional: true
-#  properties:
-#    - name: display_name
-#      label: Display Name
-#      type: string
-#      description: "Display name"
-#      configurable: true
-#    - name: description
-#      label: Plan description
-#      type: string
-#      description: "Plan description"
-#      configurable: true
-#    - name: service
-#      label: Service
-#      type: dropdown_select
-#      description: "The service this plan is associated with"
-#      options:
-#        - name: '4bc59b9a-8520-409f-85da-1c7552315863'
-#          label: 'CloudSQL - MySQL'
-#    - name: tier
-#      label: Tier/Machine Type
-#      type: string
-#      description: "Case-sensitive tier/machine type name (see https://cloud.google.com/sql/pricing for more information)"
-#      configurable: true
-#    - name: pricing_plan
-#      label: Pricing Plan
-#      type: dropdown_select
-#      configurable: true
-#      default: PER_USE
-#      description: "Select a pricing plan (only for 1st generation instances)"
-#      options:
-#        - name: PER_USE
-#          label: 'Per-Use'
-#        - name: PACKAGE
-#          label: "Package"
-#    - name: max_disk_size
-#      label: Max Disk Size
-#      type: string
-#      default: '10'
-#      description: "Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default)"
-#      configurable: true
-#- name: cloudsql_postgres_custom_plans
-#  description: Generate custom plans for CloudSQL PostgreSQL (required to enable the service for developers)
-#  label: CloudSQL PostgreSQL Custom Plans
-#  optional: true
-#  properties:
-#    - name: display_name
-#      label: Display Name
-#      type: string
-#      description: "Display name"
-#      configurable: true
-#    - name: description
-#      label: Plan description
-#      type: string
-#      description: "Plan description"
-#      configurable: true
-#    - name: service
-#      label: Service
-#      type: dropdown_select
-#      configurable: false
-#      description: "The service this plan is associated with"
-#      options:
-#        - name: 'cbad6d78-a73c-432d-b8ff-b219a17a803a'
-#          label: 'CloudSQL - PostgreSQL'
-#    - name: tier
-#      label: Tier/Machine Type
-#      type: string
-#      description: "a string of the form db-custom-[CPUs']-[MEMORY_MBs'], where memory is at least 3840"
-#      configurable: true
-#    - name: pricing_plan
-#      label: Pricing Plan
-#      type: dropdown_select
-#      configurable: false
-#      description: "the pricing plan"
-#      options:
-#        - name: PER_USE
-#          label: 'Per-Use'
-#    - name: max_disk_size
-#      label: Max Disk Size
-#      type: string
-#      default: '10'
-#      description: "Maximum disk size in GB (10 minimum/default)"
-#      configurable: true
-#- name: bigtable_custom_plans
-#  description: Generate custom plans for Bigtable (required to enable the service for developers)
-#  label: Bigtable Custom Plans
-#  optional: true
-#  properties:
-#    - name: display_name
-#      label: Display Name
-#      type: string
-#      description: "Display name"
-#      configurable: true
-#    - name: description
-#      label: Plan description
-#      type: string
-#      description: "Plan description"
-#      configurable: true
-#    - name: service
-#      label: Service
-#      type: dropdown_select
-#      description: "The service this plan is associated with"
-#      options:
-#        - name: 'b8e19880-ac58-42ef-b033-f7cd9c94d1fe'
-#          label: 'Bigtable'
-#    - name: storage_type
-#      label: Storage Type
-#      type: string
-#      description: "Either HDD or SSD (see https://cloud.google.com/bigtable/pricing for more information)"
-#      configurable: true
-#      default: 'SSD'
-#    - name: num_nodes
-#      label: Number of Nodes
-#      type: string
-#      description: "Between 3 and 30 (see https://cloud.google.com/bigtable/pricing for more information)"
-#      configurable: true
-#      default: '3'
-#- name: spanner_custom_plans
-#  description: Generate custom plans for Spanner (required to enable the service for developers)
-#  label: Spanner Custom Plans
-#  optional: true
-#  properties:
-#    - name: display_name
-#      label: Display Name
-#      type: string
-#      description: "Display name"
-#      configurable: true
-#    - name: description
-#      label: Plan description
-#      type: string
-#      description: "Plan description"
-#      configurable: true
-#    - name: service
-#      label: Service
-#      type: dropdown_select
-#      description: "The service this plan is associated with"
-#      options:
-#        - name: '51b3e27e-d323-49ce-8c5f-1211e6409e82'
-#          label: 'Spanner'
-#    - name: num_nodes
-#      label: Number of Nodes
-#      type: string
-#      description: "Between 3 and 30 (see https://cloud.google.com/bigtable/pricing for more information)"
-#      configurable: true
-#      default: '3'
+service_plan_forms:
+- name: cloudsql_mysql_custom_plans
+  description: Generate custom plans for CloudSQL MySQL (required to enable the service for developers)
+  label: CloudSQL MySQL Custom Plans
+  optional: true
+  properties:
+    - name: display_name
+      label: Display Name
+      type: string
+      description: "Display name"
+      configurable: true
+    - name: description
+      label: Plan description
+      type: string
+      description: "Plan description"
+      configurable: true
+    - name: service
+      label: Service
+      type: dropdown_select
+      description: "The service this plan is associated with"
+      options:
+        - name: '4bc59b9a-8520-409f-85da-1c7552315863'
+          label: 'CloudSQL - MySQL'
+    - name: tier
+      label: Tier/Machine Type
+      type: string
+      description: "Case-sensitive tier/machine type name (see https://cloud.google.com/sql/pricing for more information)"
+      configurable: true
+    - name: pricing_plan
+      label: Pricing Plan
+      type: dropdown_select
+      configurable: true
+      default: PER_USE
+      description: "Select a pricing plan (only for 1st generation instances)"
+      options:
+        - name: PER_USE
+          label: 'Per-Use'
+        - name: PACKAGE
+          label: "Package"
+    - name: max_disk_size
+      label: Max Disk Size
+      type: string
+      default: '10'
+      description: "Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default)"
+      configurable: true
+- name: cloudsql_postgres_custom_plans
+  description: Generate custom plans for CloudSQL PostgreSQL (required to enable the service for developers)
+  label: CloudSQL PostgreSQL Custom Plans
+  optional: true
+  properties:
+    - name: display_name
+      label: Display Name
+      type: string
+      description: "Display name"
+      configurable: true
+    - name: description
+      label: Plan description
+      type: string
+      description: "Plan description"
+      configurable: true
+    - name: service
+      label: Service
+      type: dropdown_select
+      configurable: false
+      description: "The service this plan is associated with"
+      options:
+        - name: 'cbad6d78-a73c-432d-b8ff-b219a17a803a'
+          label: 'CloudSQL - PostgreSQL'
+    - name: tier
+      label: Tier/Machine Type
+      type: string
+      description: "a string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840"
+      configurable: true
+    - name: pricing_plan
+      label: Pricing Plan
+      type: dropdown_select
+      configurable: false
+      description: "the pricing plan"
+      options:
+        - name: PER_USE
+          label: 'Per-Use'
+    - name: max_disk_size
+      label: Max Disk Size
+      type: string
+      default: '10'
+      description: "Maximum disk size in GB (10 minimum/default)"
+      configurable: true
+- name: bigtable_custom_plans
+  description: Generate custom plans for Bigtable (required to enable the service for developers)
+  label: Bigtable Custom Plans
+  optional: true
+  properties:
+    - name: display_name
+      label: Display Name
+      type: string
+      description: "Display name"
+      configurable: true
+    - name: description
+      label: Plan description
+      type: string
+      description: "Plan description"
+      configurable: true
+    - name: service
+      label: Service
+      type: dropdown_select
+      description: "The service this plan is associated with"
+      options:
+        - name: 'b8e19880-ac58-42ef-b033-f7cd9c94d1fe'
+          label: 'Bigtable'
+    - name: storage_type
+      label: Storage Type
+      type: string
+      description: "Either HDD or SSD (see https://cloud.google.com/bigtable/pricing for more information)"
+      configurable: true
+      default: 'SSD'
+    - name: num_nodes
+      label: Number of Nodes
+      type: string
+      description: "Between 3 and 30 (see https://cloud.google.com/bigtable/pricing for more information)"
+      configurable: true
+      default: '3'
+- name: spanner_custom_plans
+  description: Generate custom plans for Spanner (required to enable the service for developers)
+  label: Spanner Custom Plans
+  optional: true
+  properties:
+    - name: display_name
+      label: Display Name
+      type: string
+      description: "Display name"
+      configurable: true
+    - name: description
+      label: Plan description
+      type: string
+      description: "Plan description"
+      configurable: true
+    - name: service
+      label: Service
+      type: dropdown_select
+      description: "The service this plan is associated with"
+      options:
+        - name: '51b3e27e-d323-49ce-8c5f-1211e6409e82'
+          label: 'Spanner'
+    - name: num_nodes
+      label: Number of Nodes
+      type: string
+      description: "Between 3 and 30 (see https://cloud.google.com/bigtable/pricing for more information)"
+      configurable: true
+      default: '3'

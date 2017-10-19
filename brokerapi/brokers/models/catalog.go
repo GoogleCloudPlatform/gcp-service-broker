@@ -45,14 +45,6 @@ type ServicePlan struct {
 	ServiceProperties map[string]string    `json:"service_properties"`
 }
 
-type ServicePlanCandidate struct {
-	Guid              string `json:"guid"`
-	Name              string `json:"name"`
-	Description       string `json:"description"`
-	DisplayName       string `json:"display_name"`
-	ServiceProperties string `json:"service_properties"`
-}
-
 type ServicePlanMetadata struct {
 	DisplayName string            `json:"displayName,omitempty"`
 	Bullets     []string          `json:"bullets,omitempty"`

@@ -36,9 +36,8 @@ applications:
           "supportUrl": "https://cloud.google.com/support/",
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/storage.svg"
         },
-        "tags": ["gcp", "storage"]
-        }'
-      GOOGLE_STORAGE_PLANS: [
+        "tags": ["gcp", "storage"],
+        "plans": [
           {
             "id": "e1d11f65-da66-46ad-977c-6d56513baf43",
             "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
@@ -64,7 +63,7 @@ applications:
             "service_properties": {"storage_class": "DURABLE_REDUCED_AVAILABILITY"}
           }
         ]
-      GOOGLE_STORAGE_ENABLED: true
+      }'
       GOOGLE_PUBSUB: '{
         "id": "628629e3-79f5-4255-b981-d14c6c7856be",
         "description": "A global service for real-time and reliable messaging and streaming data",
@@ -78,18 +77,18 @@ applications:
           "supportUrl": "https://cloud.google.com/support/",
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/pubsub.svg"
         },
-        "tags": ["gcp", "pubsub"]
-        }'
-      GOOGLE_PUBSUB_PLANS: [
+        "tags": ["gcp", "pubsub"],
+        "plans": [
           {
             "id": "622f4da3-8731-492a-af29-66a9146f8333",
+            "service_id": "628629e3-79f5-4255-b981-d14c6c7856be",
             "name": "default",
             "display_name": "Default",
             "description": "PubSub Default plan",
-            "service_properties": "{}"
+            "service_properties": {}
           }
         ]
-      GOOGLE_PUBSUB_ENABLED: true
+      }'
       GOOGLE_BIGQUERY: '{
         "id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
         "description": "A fast, economical and fully managed data warehouse for large-scale data analytics",
@@ -103,18 +102,18 @@ applications:
           "supportUrl": "https://cloud.google.com/support/",
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigquery.svg"
         },
-        "tags": ["gcp", "bigquery"]
+        "tags": ["gcp", "bigquery"],
+        "plans": [
+          {
+            "id": "10ff4e72-6e84-44eb-851f-bdb38a791914",
+            "service_id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
+            "name": "default",
+            "display_name": "Default",
+            "description": "BigQuery default plan",
+            "service_properties": {}
+          }
+        ]
       }'
-      GOOGLE_BIGQUERY_PLANS: [
-        {
-          "id": "10ff4e72-6e84-44eb-851f-bdb38a791914",
-          "name": "default",
-          "display_name": "Default",
-          "description": "BigQuery default plan",
-          "service_properties": "{}"
-        }
-      ]
-      GOOGLE_BIGQUERY_ENABLED: true
       GOOGLE_CLOUDSQL_MYSQL: '{
           "id": "4bc59b9a-8520-409f-85da-1c7552315863",
           "description": "Google Cloud SQL is a fully-managed MySQL database service",
@@ -128,10 +127,9 @@ applications:
             "supportUrl": "https://cloud.google.com/support/",
             "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
           },
-          "tags": ["gcp", "cloudsql", "mysql"]
+          "tags": ["gcp", "cloudsql", "mysql"],
+          "plans": []
       }'
-      GOOGLE_CLOUDSQL_MYSQL_PLANS: []
-      GOOGLE_CLOUDSQL_MYSQL_ENABLED: true
       GOOGLE_CLOUDSQL_POSTGRES: '{
           "id": "cbad6d78-a73c-432d-b8ff-b219a17a803a",
             "description": "Google Cloud SQL is a fully-managed PostgreSQL database service",
@@ -145,10 +143,9 @@ applications:
           	"supportUrl": "https://cloud.google.com/support/",
           	"imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
             },
-            "tags": ["gcp", "cloudsql", "postgres"]
+            "tags": ["gcp", "cloudsql", "postgres"],
+          "plans": []
       }'
-      GOOGLE_CLOUDSQL_POSTGRES_PLANS: []
-      GOOGLE_CLOUDSQL_POSTGRES_ENABLED: true
       GOOGLE_ML_APIS: '{
         "id": "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4",
         "description": "Machine Learning Apis including Vision, Translate, Speech, and Natural Language",
@@ -162,18 +159,18 @@ applications:
           "supportUrl": "https://cloud.google.com/support/",
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/machine-learning.svg"
         },
-        "tags": ["gcp", "ml"]
+        "tags": ["gcp", "ml"],
+        "plans":  [
+          {
+           "id": "be7954e1-ecfb-4936-a0b6-db35e6424c7a",
+           "service_id": "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4",
+           "name": "default",
+           "display_name": "Default",
+           "description": "Machine Learning api default plan",
+           "service_properties": {}
+          }
+        ]
       }'
-      GOOGLE_ML_APIS_PLANS: [
-        {
-         "id": "be7954e1-ecfb-4936-a0b6-db35e6424c7a",
-         "name": "default",
-         "display_name": "Default",
-         "description": "Machine Learning api default plan",
-         "service_properties": {}
-        }
-      ]
-      GOOGLE_ML_APIS_ENABLED: true
       GOOGLE_STACKDRIVER_DEBUGGER: '{
         "id": "83837945-1547-41e0-b661-ea31d76eed11",
         "description": "Stackdriver Debugger",
@@ -187,18 +184,18 @@ applications:
           "supportUrl": "https://cloud.google.com/support/",
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg"
         },
-        "tags": ["gcp", "stackdriver", "debugger"]
+        "tags": ["gcp", "stackdriver", "debugger"],
+        "plans": [
+          {
+            "id": "10866183-a775-49e8-96e3-4e7a901e4a79",
+            "service_id": "83837945-1547-41e0-b661-ea31d76eed11",
+            "name": "default",
+            "display_name": "Default",
+            "description": "Stackdriver Debugger default plan",
+            "service_properties": {}
+          }
+        ]
       }'
-      GOOGLE_STACKDRIVER_DEBUGGER_PLANS: [
-         {
-           "id": "10866183-a775-49e8-96e3-4e7a901e4a79",
-           "name": "default",
-           "display_name": "Default",
-           "description": "Stackdriver Debugger default plan",
-           "service_properties": "{}"
-         }
-      ]
-      GOOGLE_STACKDRIVER_DEBUGGER_ENABLED: true
       GOOGLE_STACKDRIVER_TRACE: '{
         "id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
         "description": "Stackdriver Trace",
@@ -212,18 +209,18 @@ applications:
           "supportUrl": "https://cloud.google.com/support/",
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg"
         },
-        "tags": ["gcp", "stackdriver", "trace"]
+        "tags": ["gcp", "stackdriver", "trace"],
+        "plans": [
+          {
+            "id": "ab6c2287-b4bc-4ff4-a36a-0575e7910164",
+            "service_id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
+            "name": "default",
+            "display_name": "Default",
+            "description": "Stackdriver Trace default plan",
+            "service_properties": {}
+          }
+        ]
       }'
-      GOOGLE_STACKDRIVER_TRACE_PLANS: [
-        {
-          "id": "ab6c2287-b4bc-4ff4-a36a-0575e7910164",
-          "name": "default",
-          "display_name": "Default",
-          "description": "Stackdriver Trace default plan",
-          "service_properties": {}
-        }
-      ]
-      GOOGLE_STACKDRIVER_TRACE_ENABLED: true
       GOOGLE_SPANNER: '{
         "id": "51b3e27e-d323-49ce-8c5f-1211e6409e82",
         "description": "The first horizontally scalable, globally consistent, relational database service",
@@ -237,10 +234,9 @@ applications:
           "supportUrl": "https://cloud.google.com/support/",
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg"
         },
-        "tags": ["gcp", "spanner"]
+        "tags": ["gcp", "spanner"],
+        "plans": []
       }'
-      GOOGLE_SPANNER_PLANS: []
-      GOOGLE_SPANNER_ENABLED: true
       GOOGLE_BIGTABLE: '{
         "id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe",
         "description": "A high performance NoSQL database service for large analytical and operational workloads",
@@ -254,10 +250,9 @@ applications:
             "supportUrl": "https://cloud.google.com/support/",
             "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigtable.svg"
         },
-        "tags": ["gcp", "bigtable"]
+        "tags": ["gcp", "bigtable"],
+        "plans": []
       }'
-      GOOGLE_BIGTABLE_PLANS: []
-      GOOGLE_BIGTABLE_ENABLED: true
       GOOGLE_DATASTORE: '{
         "id": "76d4abb2-fee7-4c8f-aee1-bcea2837f02b",
         "description": "Google Cloud Datastore is a NoSQL document database service",
@@ -271,17 +266,17 @@ applications:
           "supportUrl": "https://cloud.google.com/support/",
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/datastore.svg"
         },
-        "tags": ["gcp", "datastore"]
+        "tags": ["gcp", "datastore"],
+        "plans": [
+          {
+           "id": "05f1fb6b-b5f0-48a2-9c2b-a5f236507a97",
+           "service_id": "76d4abb2-fee7-4c8f-aee1-bcea2837f02b",
+           "name": "default",
+           "display_name": "Default",
+           "description": "Datastore default plan",
+           "service_properties": {}
+          }
+        ]
       }'
-      GOOGLE_DATASTORE_PLANS: [
-        {
-         "id": "05f1fb6b-b5f0-48a2-9c2b-a5f236507a97",
-         "name": "default",
-         "display_name": "Default",
-         "description": "Datastore default plan",
-         "service_properties": {}
-        }
-      ]
-      GOOGLE_DATASTORE_ENABLED: true
 
 
