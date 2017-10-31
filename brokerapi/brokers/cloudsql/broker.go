@@ -99,6 +99,8 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 		params["instance_name"] = name_generator.Sql.InstanceName()
 	}
 
+
+
 	instanceName := params["instance_name"]
 
 	// get plan parameters
@@ -106,6 +108,7 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 	if err = json.Unmarshal([]byte(plan.Features), &planDetails); err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling plan features: %s", err)
 	}
+
 
 	var binlogEnabled = false
 	isFirstGen := false
@@ -144,8 +147,23 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 		}
 	}
 
-	openAcl := googlecloudsql.AclEntry{
-		Value: "0.0.0.0/0",
+	var authorizedNetworks []string
+	openAcls := []*googlecloudsql.AclEntry{}
+	aclsPlanDetails, aclsPlanDetailsOk := planDetails["authorized_networks"]
+	if !aclsPlanDetailsOk || aclsPlanDetails == "" {
+		openAcl := googlecloudsql.AclEntry{
+			Value: "0.0.0.0/0",
+		}
+		openAcls = append(openAcls, &openAcl)
+	} else if err = json.Unmarshal([]byte(aclsPlanDetails), &authorizedNetworks); err != nil {
+		return models.ServiceInstanceDetails{}, fmt.Errorf("%s is not a valid value for authorized_networks", aclsPlanDetails)
+	} else {
+		for _, v := range authorizedNetworks {
+			openAcl := googlecloudsql.AclEntry{
+				Value: v,
+			}
+			openAcls = append(openAcls, &openAcl)
+		}
 	}
 
 	backupsEnabled := true
@@ -174,7 +192,7 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 		StartTime:        backupStartTime,
 		BinaryLogEnabled: binlogEnabled,
 	}
-	di.Settings.IpConfiguration.AuthorizedNetworks = []*googlecloudsql.AclEntry{&openAcl}
+	di.Settings.IpConfiguration.AuthorizedNetworks = openAcls
 
 	// init sqladmin service
 	sqlService, err := googlecloudsql.New(b.Client)
@@ -734,6 +752,7 @@ func MapPlan(details map[string]string) map[string]string {
 
 	features := map[string]string{
 		"tier":          details["tier"],
+		"authorized_networks":          details["authorized_networks"],
 		"max_disk_size": details["max_disk_size"],
 		"pricing_plan":  details["pricing_plan"],
 	}
