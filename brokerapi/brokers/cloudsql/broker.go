@@ -145,17 +145,10 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 		}
 	}
 
-	var authorizedNetworks []string
 	openAcls := []*googlecloudsql.AclEntry{}
 	aclsPlanDetails, aclsPlanDetailsOk := planDetails["authorized_networks"]
-	if !aclsPlanDetailsOk || aclsPlanDetails == "" {
-		openAcl := googlecloudsql.AclEntry{
-			Value: "0.0.0.0/0",
-		}
-		openAcls = append(openAcls, &openAcl)
-	} else if err = json.Unmarshal([]byte(aclsPlanDetails), &authorizedNetworks); err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("%s is not a valid value for authorized_networks", aclsPlanDetails)
-	} else {
+	if aclsPlanDetailsOk && aclsPlanDetails != "" {
+		authorizedNetworks := strings.Split(aclsPlanDetails, ",")
 		for _, v := range authorizedNetworks {
 			openAcl := googlecloudsql.AclEntry{
 				Value: v,
