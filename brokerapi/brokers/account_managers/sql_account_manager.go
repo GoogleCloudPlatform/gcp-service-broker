@@ -40,9 +40,14 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 	var err error
 	username, usernameOk := details.Parameters["username"].(string)
 	password, passwordOk := details.Parameters["password"].(string)
+	credType, sslCertsOk := details.Parameters["credential_type"].(string)
 
 	if !passwordOk || !usernameOk {
 		return models.ServiceBindingCredentials{}, errors.New("Error binding, missing parameters. Required parameters are username and password")
+	}
+
+	if !sslCertsOk {
+		credType = "service_account"
 	}
 
 	// create username, pw with grants
@@ -65,28 +70,30 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 	if err != nil {
 		return models.ServiceBindingCredentials{}, fmt.Errorf("Error encountered while polling until operation id %s completes: %s", op.Name, err)
 	}
-
-	// create ssl certs
-	certname := bindingID[:10] + "cert"
-	newCert, err := sqlService.SslCerts.Insert(sam.ProjectId, instance.Name, &googlecloudsql.SslCertsInsertRequest{
-		CommonName: certname,
-	}).Do()
-	if err != nil {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating ssl certs: %s", err)
-	}
-	certInsertOperation := newCert.Operation
-	err = sam.pollOperationUntilDone(certInsertOperation, sam.ProjectId)
-	if err != nil {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("Error encountered while polling until operation id %s completes: %s", op.Name, err)
-	}
-
+	
 	creds := SqlAccountInfo{
 		Username:        username,
 		Password:        password,
-		Sha1Fingerprint: newCert.ClientCert.CertInfo.Sha1Fingerprint,
-		CaCert:          newCert.ServerCaCert.Cert,
-		ClientCert:      newCert.ClientCert.CertInfo.Cert,
-		ClientKey:       newCert.ClientCert.CertPrivateKey,
+	}
+
+	if credType == "ssl_certifcate" {
+		// create ssl certs
+		certname := bindingID[:10] + "cert"
+		newCert, err := sqlService.SslCerts.Insert(sam.ProjectId, instance.Name, &googlecloudsql.SslCertsInsertRequest{
+			CommonName: certname,
+		}).Do()
+		if err != nil {
+			return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating ssl certs: %s", err)
+		}
+
+		creds = SqlAccountInfo{
+			Username:        username,
+			Password:        password,
+			Sha1Fingerprint: newCert.ClientCert.CertInfo.Sha1Fingerprint,
+			CaCert:          newCert.ServerCaCert.Cert,
+			ClientCert:      newCert.ClientCert.CertInfo.Cert,
+			ClientKey:       newCert.ClientCert.CertPrivateKey,
+		}
 	}
 
 	credBytes, err := json.Marshal(&creds)
@@ -120,25 +127,27 @@ func (sam *SqlAccountManager) DeleteAccountFromGoogle(binding models.ServiceBind
 		return fmt.Errorf("Error creating CloudSQL client: %s", err)
 	}
 
-	op, err := sqlService.SslCerts.Delete(sam.ProjectId, instance.Name, sqlCreds.Sha1Fingerprint).Do()
-	if err != nil {
-		return fmt.Errorf("Error deleting ssl cert: %s", err)
-	}
+	if sqlCreds.CaCert != "" {
+		certOp, err := sqlService.SslCerts.Delete(sam.ProjectId, instance.Name, sqlCreds.Sha1Fingerprint).Do()
+		if err != nil {
+			return fmt.Errorf("Error deleting ssl cert: %s", err)
+		}
 
-	err = sam.pollOperationUntilDone(op, sam.ProjectId)
-	if err != nil {
-		return fmt.Errorf("Error encountered while polling until operation id %s completes: %s", op.Name, err)
+		err = sam.pollOperationUntilDone(certOp, sam.ProjectId)
+		if err != nil {
+			return fmt.Errorf("Error encountered while polling until operation id %s completes: %s", certOp.Name, err)
+		}
 	}
 
 	// delete our user
-	op, err = sqlService.Users.Delete(sam.ProjectId, instance.Name, "", sqlCreds.Username).Do()
+	userOp, err := sqlService.Users.Delete(sam.ProjectId, instance.Name, "", sqlCreds.Username).Do()
 	if err != nil {
 		return fmt.Errorf("Error deleting user: %s", err)
 	}
 
-	err = sam.pollOperationUntilDone(op, sam.ProjectId)
+	err = sam.pollOperationUntilDone(userOp, sam.ProjectId)
 	if err != nil {
-		return fmt.Errorf("Error encountered while polling until operation id %s completes: %s", op.Name, err)
+		return fmt.Errorf("Error encountered while polling until operation id %s completes: %s", userOp.Name, err)
 	}
 
 	return nil
