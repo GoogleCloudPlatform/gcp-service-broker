@@ -40,14 +40,14 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 	var err error
 	username, usernameOk := details.Parameters["username"].(string)
 	password, passwordOk := details.Parameters["password"].(string)
-	credType, sslCertsOk := details.Parameters["credential_type"].(string)
+	generateCerts, sslCertsOk := details.Parameters["generate_ssl_certs"].(string)
 
 	if !passwordOk || !usernameOk {
 		return models.ServiceBindingCredentials{}, errors.New("Error binding, missing parameters. Required parameters are username and password")
 	}
 
 	if !sslCertsOk {
-		credType = "service_account"
+		generateCerts = "false"
 	}
 
 	// create username, pw with grants
@@ -76,7 +76,7 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 		Password:        password,
 	}
 
-	if credType == "ssl_certifcate" {
+	if generateCerts == "true" {
 		// create ssl certs
 		certname := bindingID[:10] + "cert"
 		newCert, err := sqlService.SslCerts.Insert(sam.ProjectId, instance.Name, &googlecloudsql.SslCertsInsertRequest{
