@@ -351,9 +351,8 @@ service_plan_forms:
     - name: authorized_networks
       label: Authorized Networks
       type: string
-      description: "Comma separated list without spaces of authorized networks, defaults to none"
+      description: "Comma separated list without spaces of authorized networks, or \"none\""
       configurable: true
-      optional: true
 - name: cloudsql_postgres_custom_plans
   description: Generate custom plans for CloudSQL PostgreSQL (required to enable the service for developers)
   label: CloudSQL PostgreSQL Custom Plans
@@ -399,9 +398,8 @@ service_plan_forms:
     - name: authorized_networks
       label: Authorized Networks
       type: string
-      description: "Comma separated list without spaces of authorized networks, defaults to none"
+      description: "Comma separated list without spaces of authorized networks, or \"none\""
       configurable: true
-      optional: true
 - name: bigtable_custom_plans
   description: Generate custom plans for Bigtable (required to enable the service for developers)
   label: Bigtable Custom Plans

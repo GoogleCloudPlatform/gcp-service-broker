@@ -97,8 +97,6 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 		params["instance_name"] = name_generator.Sql.InstanceName()
 	}
 
-
-
 	instanceName := params["instance_name"]
 
 	// get plan parameters
@@ -106,7 +104,6 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 	if err = json.Unmarshal([]byte(plan.Features), &planDetails); err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling plan features: %s", err)
 	}
-
 
 	var binlogEnabled = false
 	isFirstGen := false
@@ -147,7 +144,10 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 
 	openAcls := []*googlecloudsql.AclEntry{}
 	aclsPlanDetails, aclsPlanDetailsOk := planDetails["authorized_networks"]
-	if aclsPlanDetailsOk && aclsPlanDetails != "" {
+	if aclsPlanDetailsOk && aclsPlanDetails == "" {
+		return models.ServiceInstanceDetails{}, fmt.Errorf("authorized_networks is a required field")
+	}
+	if aclsPlanDetailsOk && aclsPlanDetails != "none" && aclsPlanDetails != "\"none\"" && aclsPlanDetails != "None" {
 		authorizedNetworks := strings.Split(aclsPlanDetails, ",")
 		for _, v := range authorizedNetworks {
 			openAcl := googlecloudsql.AclEntry{
@@ -692,10 +692,10 @@ type CloudSQLDynamicPlan struct {
 func MapPlan(details map[string]string) map[string]string {
 
 	features := map[string]string{
-		"tier":          details["tier"],
-		"authorized_networks":          details["authorized_networks"],
-		"max_disk_size": details["max_disk_size"],
-		"pricing_plan":  details["pricing_plan"],
+		"tier":                details["tier"],
+		"authorized_networks": details["authorized_networks"],
+		"max_disk_size":       details["max_disk_size"],
+		"pricing_plan":        details["pricing_plan"],
 	}
 	return features
 }
