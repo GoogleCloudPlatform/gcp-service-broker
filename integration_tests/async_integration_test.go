@@ -245,6 +245,9 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(credsMap["uri"]).To(ContainSubstring("postgres"))
 
+			// The bind oepration finishes before the instance has finished updating
+			time.Sleep(60 * time.Second)
+
 			// unbind the instance
 			unBindDetails := models.UnbindDetails{
 				ServiceID: serviceNameToId[models.CloudsqlPostgresName],
