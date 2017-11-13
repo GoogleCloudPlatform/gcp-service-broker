@@ -241,6 +241,7 @@ const TestCloudSQLMySQLPlan = `{
 				"tier": "D4",
 				"pricing_plan": "PER_USE",
 				"max_disk_size": "20",
+				"authorized_networks": "0.0.0.0/0",
 				"display_name": "test_cloudsql_mysql_plan",
 				"service": "4bc59b9a-8520-409f-85da-1c7552315863"
 			}
@@ -253,6 +254,7 @@ const TestCloudSQLPostgresPlan = `{
 				"tier": "db-custom-2-4096",
 				"pricing_plan": "PER_USE",
 				"max_disk_size": "20",
+				"authorized_networks": "0.0.0.0/0",
 				"display_name": "test_cloudsql_postgres_plan",
 				"service": "cbad6d78-a73c-432d-b8ff-b219a17a803a"
 			}
