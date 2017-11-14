@@ -201,10 +201,11 @@ var _ = Describe("AsyncIntegrationTests", func() {
 
 	Describe("Cloud SQL - PostgreSQL", func() {
 
+		var sqlService *googlecloudsql.Service
 		var dbService *googlecloudsql.InstancesService
 		var sslService *googlecloudsql.SslCertsService
 		BeforeEach(func() {
-			sqlService, err := googlecloudsql.New(gcpBroker.GCPClient)
+			sqlService, err = googlecloudsql.New(gcpBroker.GCPClient)
 			Expect(err).NotTo(HaveOccurred())
 			dbService = googlecloudsql.NewInstancesService(sqlService)
 			sslService = googlecloudsql.NewSslCertsService(sqlService)
@@ -244,6 +245,21 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			_, err = sslService.Get(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName, credsMap["Sha1Fingerprint"]).Do()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(credsMap["uri"]).To(ContainSubstring("postgres"))
+
+			// The bind oepration finishes before the instance has finished updating
+			keepWaiting := true
+			for keepWaiting == true {
+				resp, err := sqlService.Operations.List(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName).Do()
+				Expect(err).NotTo(HaveOccurred())
+				keepWaiting = false
+				for _, op := range resp.Items {
+					if op.EndTime == "" {
+						keepWaiting = true
+					}
+				}
+				// sleep for 1 second between polling so we don't hit our rate limit
+				time.Sleep(time.Second)
+			}
 
 			// unbind the instance
 			unBindDetails := models.UnbindDetails{
