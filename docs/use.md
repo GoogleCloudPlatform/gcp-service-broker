@@ -74,7 +74,7 @@ Notes:
     * Provision
         * `instance_name` (defaults to a generated value)
         * `database_name` (defaults to a generated value)
-        * `version` (defaults to `5.6`)
+        * `version` (defaults to `MYSQL_5_6` for 1st gen MySQL instances, `MYSQL_5_7` for 2nd gen MySQL instances, or `POSTGRES_9_6` for PostgreSQL instances)
         * `disk_size`in GB (only for 2nd gen, defaults to `10`)
         * `region` (defaults to `"us-central"`)
         * `zone` (for 2nd gen)

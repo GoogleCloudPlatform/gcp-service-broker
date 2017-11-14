@@ -70,7 +70,7 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 	if err != nil {
 		return models.ServiceBindingCredentials{}, fmt.Errorf("Error encountered while polling until operation id %s completes: %s", op.Name, err)
 	}
-	
+
 	creds := SqlAccountInfo{
 		Username:        username,
 		Password:        password,
