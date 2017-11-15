@@ -40,12 +40,12 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 	var err error
 	username, usernameOk := details.Parameters["username"].(string)
 	password, passwordOk := details.Parameters["password"].(string)
-	generateCerts, sslCertsOk := details.Parameters["generate_ssl_certs"].(string)
 
 	if !passwordOk || !usernameOk {
 		return models.ServiceBindingCredentials{}, errors.New("Error binding, missing parameters. Required parameters are username and password")
 	}
 
+	generateCerts, sslCertsOk := details.Parameters["generate_ssl_certs"].(string)
 	if !sslCertsOk {
 		generateCerts = "false"
 	}
@@ -71,11 +71,7 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 		return models.ServiceBindingCredentials{}, fmt.Errorf("Error encountered while polling until operation id %s completes: %s", op.Name, err)
 	}
 
-	creds := SqlAccountInfo{
-		Username:        username,
-		Password:        password,
-	}
-
+	var creds SqlAccountInfo
 	if generateCerts == "true" {
 		// create ssl certs
 		certname := bindingID[:10] + "cert"
@@ -93,6 +89,11 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 			CaCert:          newCert.ServerCaCert.Cert,
 			ClientCert:      newCert.ClientCert.CertInfo.Cert,
 			ClientKey:       newCert.ClientCert.CertPrivateKey,
+		}
+	} else {
+		creds = SqlAccountInfo{
+			Username: username,
+			Password: password,
 		}
 	}
 
@@ -127,6 +128,7 @@ func (sam *SqlAccountManager) DeleteAccountFromGoogle(binding models.ServiceBind
 		return fmt.Errorf("Error creating CloudSQL client: %s", err)
 	}
 
+	// If we didn't generate ssl certs for this binding, then we cannot delete them
 	if sqlCreds.CaCert != "" {
 		certOp, err := sqlService.SslCerts.Delete(sam.ProjectId, instance.Name, sqlCreds.Sha1Fingerprint).Do()
 		if err != nil {
