@@ -166,12 +166,14 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 			ProjectId:      self.RootGCPCredentials.ProjectId,
 			Logger:         self.Logger,
 			AccountManager: sqlManager,
+			SaAccountManager: saManager,
 		},
 		models.CloudsqlPostgresName: &cloudsql.CloudSQLBroker{
 			Client:         self.GCPClient,
 			ProjectId:      self.RootGCPCredentials.ProjectId,
 			Logger:         self.Logger,
 			AccountManager: sqlManager,
+			SaAccountManager: saManager,
 		},
 		models.BigtableName: &bigtable.BigTableBroker{
 			Client:    self.GCPClient,

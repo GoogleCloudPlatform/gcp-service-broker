@@ -153,8 +153,11 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			bindDetails := models.BindDetails{
 				ServiceID: serviceNameToId[models.CloudsqlMySQLName],
 				PlanID:    serviceNameToPlanId[models.CloudsqlMySQLName],
+				Parameters: map[string]interface{}{
+					"role": "editor",
+				},
 			}
-			creds, err := gcpBroker.Bind("integration_test_instance", "binding_id", bindDetails)
+			creds, err := gcpBroker.Bind("integration_test_instance", "bind-id", bindDetails)
 			Expect(err).NotTo(HaveOccurred())
 			credsMap := creds.Credentials.(map[string]string)
 			Expect(credsMap["uri"]).To(ContainSubstring("mysql"))
@@ -169,7 +172,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 				ServiceID: serviceNameToId[models.CloudsqlMySQLName],
 				PlanID:    serviceNameToPlanId[models.CloudsqlMySQLName],
 			}
-			err = gcpBroker.Unbind("integration_test_instance", "binding_id", unBindDetails)
+			err = gcpBroker.Unbind("integration_test_instance", "bind-id", unBindDetails)
 			Expect(err).NotTo(HaveOccurred())
 
 			// make sure google no longer has certs
@@ -235,8 +238,11 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			bindDetails := models.BindDetails{
 				ServiceID: serviceNameToId[models.CloudsqlPostgresName],
 				PlanID:    serviceNameToPlanId[models.CloudsqlPostgresName],
+				Parameters: map[string]interface{}{
+					"role": "editor",
+				},
 			}
-			creds, err := gcpBroker.Bind("integration_test_instance", "binding_id", bindDetails)
+			creds, err := gcpBroker.Bind("integration_test_instance", "bind-id", bindDetails)
 			Expect(err).NotTo(HaveOccurred())
 			credsMap := creds.Credentials.(map[string]string)
 
@@ -267,7 +273,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 				PlanID:    serviceNameToPlanId[models.CloudsqlPostgresName],
 			}
 
-			err = gcpBroker.Unbind("integration_test_instance", "binding_id", unBindDetails)
+			err = gcpBroker.Unbind("integration_test_instance", "bind-id", unBindDetails)
 			Expect(err).NotTo(HaveOccurred())
 
 			// make sure google no longer has certs
