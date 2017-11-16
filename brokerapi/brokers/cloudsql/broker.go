@@ -144,8 +144,19 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 		}
 	}
 
-	openAcl := googlecloudsql.AclEntry{
-		Value: "0.0.0.0/0",
+	openAcls := []*googlecloudsql.AclEntry{}
+	aclsPlanDetails, aclsPlanDetailsOk := planDetails["authorized_networks"]
+	if aclsPlanDetailsOk && aclsPlanDetails == "" {
+		return models.ServiceInstanceDetails{}, fmt.Errorf("authorized_networks is a required field")
+	}
+	if aclsPlanDetailsOk && aclsPlanDetails != "none" && aclsPlanDetails != "\"none\"" && aclsPlanDetails != "None" {
+		authorizedNetworks := strings.Split(aclsPlanDetails, ",")
+		for _, v := range authorizedNetworks {
+			openAcl := googlecloudsql.AclEntry{
+				Value: v,
+			}
+			openAcls = append(openAcls, &openAcl)
+		}
 	}
 
 	backupsEnabled := true
@@ -174,7 +185,7 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 		StartTime:        backupStartTime,
 		BinaryLogEnabled: binlogEnabled,
 	}
-	di.Settings.IpConfiguration.AuthorizedNetworks = []*googlecloudsql.AclEntry{&openAcl}
+	di.Settings.IpConfiguration.AuthorizedNetworks = openAcls
 
 	// init sqladmin service
 	sqlService, err := googlecloudsql.New(b.Client)
@@ -733,9 +744,10 @@ type CloudSQLDynamicPlan struct {
 func MapPlan(details map[string]string) map[string]string {
 
 	features := map[string]string{
-		"tier":          details["tier"],
-		"max_disk_size": details["max_disk_size"],
-		"pricing_plan":  details["pricing_plan"],
+		"tier":                details["tier"],
+		"authorized_networks": details["authorized_networks"],
+		"max_disk_size":       details["max_disk_size"],
+		"pricing_plan":        details["pricing_plan"],
 	}
 	return features
 }

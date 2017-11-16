@@ -348,6 +348,11 @@ service_plan_forms:
       default: '10'
       description: "Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default)"
       configurable: true
+    - name: authorized_networks
+      label: Authorized Networks
+      type: string
+      description: "Comma separated list without spaces of authorized networks, or \"none\""
+      configurable: true
 - name: cloudsql_postgres_custom_plans
   description: Generate custom plans for CloudSQL PostgreSQL (required to enable the service for developers)
   label: CloudSQL PostgreSQL Custom Plans
@@ -389,6 +394,11 @@ service_plan_forms:
       type: string
       default: '10'
       description: "Maximum disk size in GB (10 minimum/default)"
+      configurable: true
+    - name: authorized_networks
+      label: Authorized Networks
+      type: string
+      description: "Comma separated list without spaces of authorized networks, or \"none\""
       configurable: true
 - name: bigtable_custom_plans
   description: Generate custom plans for Bigtable (required to enable the service for developers)
