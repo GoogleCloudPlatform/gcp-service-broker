@@ -86,7 +86,7 @@ Notes:
         * `backup_start_time` (defaults to `"06:00"`)
         * `binlog` (defaults to `false` for 1st gen, true for 2nd gen, set to "true" to use)
         * `activation_policy` (defaults to `on demand`)
-        * `authorized_networks` (defaults to none)
+        * `authorized_networks` (a comma separated list without spaces, defaults to none)
         * `replication_type` (defaults to `synchronous`)
         * `auto_resize` (2nd gen only, defaults to `false`, set to "true" to use)
     * Bind
