@@ -188,7 +188,7 @@ applications:
             "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg"
           },
           "tags": ["gcp", "spanner"]
-        },
+        }
       ]'
       PRECONFIGURED_PLANS: '[
         {
