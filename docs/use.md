@@ -93,7 +93,6 @@ Notes:
         * `role` without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles)
         * `username` (defaults to a generated value)
         * `password` (defaults to a generated value)
-        * `generate_ssl_certs` (defaults to false)
 
         **Example Binding credentials**
 
