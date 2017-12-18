@@ -460,34 +460,19 @@ func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details models.BindD
 		return models.ServiceBindingCredentials{}, err
 	}
 
-	credBytes, err := combineServiceBindingCreds(sqlCredBytes, saCredBytes)
+	credsJSON, err := combineServiceBindingCreds(sqlCredBytes, saCredBytes)
 
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}
 
-	return credBytes, nil
-}
-
-func combineServiceBindingCreds(sqlCreds models.ServiceBindingCredentials, saCreds models.ServiceBindingCredentials) (models.ServiceBindingCredentials, error) {
-	var sqlCredsJSON map[string]string
-
-	if err := json.Unmarshal([]byte(sqlCreds.OtherDetails), &sqlCredsJSON); err != nil {
-		return models.ServiceBindingCredentials{}, err
+	jdbcUriFormat, jdbcUriFormatOk := details.Parameters["jdbc_uri_format"].(string)
+	credsJSON["UriPrefix"] = ""
+	if jdbcUriFormatOk && jdbcUriFormat == "true" {
+		credsJSON["UriPrefix"] = "jbdc:"
 	}
 
-	var saCredsJSON map[string]string
-
-	if err := json.Unmarshal([]byte(saCreds.OtherDetails), &saCredsJSON); err != nil {
-		return models.ServiceBindingCredentials{}, err
-	}
-
-	sqlCredsJSON["PrivateKeyData"] = saCredsJSON["PrivateKeyData"]
-	sqlCredsJSON["ProjectId"] = saCredsJSON["ProjectId"]
-	sqlCredsJSON["Email"] = saCredsJSON["Email"]
-	sqlCredsJSON["UniqueId"] = saCredsJSON["UniqueId"]
-
-	credBytes, err := json.Marshal(&sqlCredsJSON)
+	credBytes, err := json.Marshal(&credsJSON)
 	
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
@@ -496,8 +481,29 @@ func combineServiceBindingCreds(sqlCreds models.ServiceBindingCredentials, saCre
 	newBinding := models.ServiceBindingCredentials{
 		OtherDetails: string(credBytes),
 	}
-	
+
 	return newBinding, nil
+}
+
+func combineServiceBindingCreds(sqlCreds models.ServiceBindingCredentials, saCreds models.ServiceBindingCredentials) (map[string]string, error) {
+	var sqlCredsJSON map[string]string
+
+	if err := json.Unmarshal([]byte(sqlCreds.OtherDetails), &sqlCredsJSON); err != nil {
+		return map[string]string{}, err
+	}
+
+	var saCredsJSON map[string]string
+
+	if err := json.Unmarshal([]byte(saCreds.OtherDetails), &saCredsJSON); err != nil {
+		return map[string]string{}, err
+	}
+
+	sqlCredsJSON["PrivateKeyData"] = saCredsJSON["PrivateKeyData"]
+	sqlCredsJSON["ProjectId"] = saCredsJSON["ProjectId"]
+	sqlCredsJSON["Email"] = saCredsJSON["Email"]
+	sqlCredsJSON["UniqueId"] = saCredsJSON["UniqueId"]
+
+	return sqlCredsJSON, nil
 }
 
 func (b *CloudSQLBroker) BuildInstanceCredentials(bindDetails models.ServiceBindingCredentials, instanceDetails models.ServiceInstanceDetails) (map[string]string, error) {
