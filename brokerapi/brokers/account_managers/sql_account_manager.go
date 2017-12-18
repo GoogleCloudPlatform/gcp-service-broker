@@ -183,11 +183,11 @@ func (b *SqlAccountManager) BuildInstanceCredentials(bindRecord models.ServiceBi
 	combinedCreds := utils.MergeStringMaps(bindDetails, instanceDetails)
 
 	if service_to_name[sid] == models.CloudsqlMySQLName {
-		combinedCreds["uri"] = fmt.Sprintf("mysql://%s:%s@%s/%s?ssl_mode=required",
-			url.QueryEscape(combinedCreds["Username"]), url.QueryEscape(combinedCreds["Password"]), combinedCreds["host"], combinedCreds["database_name"])
+		combinedCreds["uri"] = fmt.Sprintf("%smysql://%s:%s@%s/%s?ssl_mode=required",
+			combinedCreds["UriPrefix"], url.QueryEscape(combinedCreds["Username"]), url.QueryEscape(combinedCreds["Password"]), combinedCreds["host"], combinedCreds["database_name"])
 	} else if service_to_name[sid] == models.CloudsqlPostgresName {
-		combinedCreds["uri"] = fmt.Sprintf("postgres://%s/%s?user=%s&password=%s&ssl=true",
-			combinedCreds["host"], combinedCreds["database_name"], url.QueryEscape(combinedCreds["Username"]), url.QueryEscape(combinedCreds["Password"]))
+		combinedCreds["uri"] = fmt.Sprintf("%spostgres://%s:%s@%s/%s?sslmode=require&sslcert=%s&sslkey=%s&sslrootcert=%s",
+			combinedCreds["UriPrefix"], url.QueryEscape(combinedCreds["Username"]), url.QueryEscape(combinedCreds["Password"]), combinedCreds["host"], combinedCreds["database_name"], url.QueryEscape(combinedCreds["ClientCert"]), url.QueryEscape(combinedCreds["ClientKey"]), url.QueryEscape(combinedCreds["CaCert"]))
 	} else {
 		return map[string]string{}, errors.New("Unknown service")
 	}

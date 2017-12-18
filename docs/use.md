@@ -93,6 +93,7 @@ Notes:
         * `role` without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles)
         * `username` (defaults to a generated value)
         * `password` (defaults to a generated value)
+	* `jdbc_uri_format` (if `true`, `uri` field will contain a jdbc formatted uri, defaults to false)
 
         **Example Binding credentials**
 
