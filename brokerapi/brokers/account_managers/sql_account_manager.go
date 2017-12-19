@@ -68,7 +68,10 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 
 	var creds SqlAccountInfo
 	// create ssl certs
-	certname := bindingID[:10] + "cert"
+        certname := bindingID + "cert"
+	if len(bindingID) >= 10 {
+ 		certname = bindingID[:10] + "cert"
+	}
 	newCert, err := sqlService.SslCerts.Insert(sam.ProjectId, instance.Name, &googlecloudsql.SslCertsInsertRequest{
 		CommonName: certname,
 	}).Do()
