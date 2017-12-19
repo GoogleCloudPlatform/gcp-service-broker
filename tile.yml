@@ -449,6 +449,6 @@ service_plan_forms:
     - name: num_nodes
       label: Number of Nodes
       type: string
-      description: "Between 3 and 30 (see https://cloud.google.com/bigtable/pricing for more information)"
+      description: "A minimum of 3 nodes is recommended for production environments. (see https://cloud.google.com/spanner/pricing for more information)"
       configurable: true
-      default: '3'
+      default: '1'
