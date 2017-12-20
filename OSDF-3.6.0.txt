@@ -1,4 +1,4 @@
-open_source_disclosures_GCP_Service_Broker-3.5.2.txt
+open_source_disclosures_GCP_Service_Broker-3.6.0.txt
 
 
 =============== TABLE OF CONTENTS =============================
