@@ -74,7 +74,7 @@ Notes:
     * Provision
         * `instance_name` (defaults to a generated value)
         * `database_name` (defaults to a generated value)
-        * `version` (defaults to `5.6`)
+        * `version` (defaults to `MYSQL_5_6` for 1st gen MySQL instances, `MYSQL_5_7` for 2nd gen MySQL instances, or `POSTGRES_9_6` for PostgreSQL instances)
         * `disk_size`in GB (only for 2nd gen, defaults to `10`)
         * `region` (defaults to `"us-central"`)
         * `zone` (for 2nd gen)
@@ -86,11 +86,14 @@ Notes:
         * `backup_start_time` (defaults to `"06:00"`)
         * `binlog` (defaults to `false` for 1st gen, true for 2nd gen, set to "true" to use)
         * `activation_policy` (defaults to `on demand`)
+        * `authorized_networks` (a comma separated list without spaces, defaults to none)
         * `replication_type` (defaults to `synchronous`)
         * `auto_resize` (2nd gen only, defaults to `false`, set to "true" to use)
     * Bind
+        * `role` without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles)
         * `username` (defaults to a generated value)
         * `password` (defaults to a generated value)
+	* `jdbc_uri_format` (if `true`, `uri` field will contain a jdbc formatted uri, defaults to false)
 
         **Example Binding credentials**
 

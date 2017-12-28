@@ -27,14 +27,15 @@ type FakeAccountManager struct {
 	deleteAccountFromGoogleReturns struct {
 		result1 error
 	}
-	BuildInstanceCredentialsStub        func(bindDetails map[string]string, instanceDetails map[string]string) map[string]string
+	BuildInstanceCredentialsStub        func(bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error)
 	buildInstanceCredentialsMutex       sync.RWMutex
 	buildInstanceCredentialsArgsForCall []struct {
-		bindDetails     map[string]string
-		instanceDetails map[string]string
+		bindRecord     models.ServiceBindingCredentials
+		instanceRecord models.ServiceInstanceDetails
 	}
 	buildInstanceCredentialsReturns struct {
 		result1 map[string]string
+		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -110,18 +111,18 @@ func (fake *FakeAccountManager) DeleteAccountFromGoogleReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeAccountManager) BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
+func (fake *FakeAccountManager) BuildInstanceCredentials(bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error) {
 	fake.buildInstanceCredentialsMutex.Lock()
 	fake.buildInstanceCredentialsArgsForCall = append(fake.buildInstanceCredentialsArgsForCall, struct {
-		bindDetails     map[string]string
-		instanceDetails map[string]string
-	}{bindDetails, instanceDetails})
-	fake.recordInvocation("BuildInstanceCredentials", []interface{}{bindDetails, instanceDetails})
+		bindRecord     models.ServiceBindingCredentials
+		instanceRecord models.ServiceInstanceDetails
+	}{bindRecord, instanceRecord})
+	fake.recordInvocation("BuildInstanceCredentials", []interface{}{bindRecord, instanceRecord})
 	fake.buildInstanceCredentialsMutex.Unlock()
 	if fake.BuildInstanceCredentialsStub != nil {
-		return fake.BuildInstanceCredentialsStub(bindDetails, instanceDetails)
+		return fake.BuildInstanceCredentialsStub(bindRecord, instanceRecord)
 	} else {
-		return fake.buildInstanceCredentialsReturns.result1
+		return fake.buildInstanceCredentialsReturns.result1, fake.buildInstanceCredentialsReturns.result2
 	}
 }
 
@@ -131,17 +132,18 @@ func (fake *FakeAccountManager) BuildInstanceCredentialsCallCount() int {
 	return len(fake.buildInstanceCredentialsArgsForCall)
 }
 
-func (fake *FakeAccountManager) BuildInstanceCredentialsArgsForCall(i int) (map[string]string, map[string]string) {
+func (fake *FakeAccountManager) BuildInstanceCredentialsArgsForCall(i int) (models.ServiceBindingCredentials, models.ServiceInstanceDetails) {
 	fake.buildInstanceCredentialsMutex.RLock()
 	defer fake.buildInstanceCredentialsMutex.RUnlock()
-	return fake.buildInstanceCredentialsArgsForCall[i].bindDetails, fake.buildInstanceCredentialsArgsForCall[i].instanceDetails
+	return fake.buildInstanceCredentialsArgsForCall[i].bindRecord, fake.buildInstanceCredentialsArgsForCall[i].instanceRecord
 }
 
-func (fake *FakeAccountManager) BuildInstanceCredentialsReturns(result1 map[string]string) {
+func (fake *FakeAccountManager) BuildInstanceCredentialsReturns(result1 map[string]string, result2 error) {
 	fake.BuildInstanceCredentialsStub = nil
 	fake.buildInstanceCredentialsReturns = struct {
 		result1 map[string]string
-	}{result1}
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeAccountManager) Invocations() map[string][][]interface{} {

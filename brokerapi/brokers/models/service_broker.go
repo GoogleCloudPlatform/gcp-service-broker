@@ -25,7 +25,7 @@ import (
 type ServiceBrokerHelper interface {
 	Provision(instanceId string, details ProvisionDetails, plan PlanDetails) (ServiceInstanceDetails, error)
 	Bind(instanceID, bindingID string, details BindDetails) (ServiceBindingCredentials, error)
-	BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string
+	BuildInstanceCredentials(bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
 	Unbind(details ServiceBindingCredentials) error
 	Deprovision(instanceID string, details DeprovisionDetails) error
 	PollInstance(instanceID string) (bool, error)
@@ -51,7 +51,7 @@ type ServiceBroker interface {
 type AccountManager interface {
 	CreateAccountInGoogle(instanceID string, bindingID string, details BindDetails, instance ServiceInstanceDetails) (ServiceBindingCredentials, error)
 	DeleteAccountFromGoogle(creds ServiceBindingCredentials) error
-	BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string
+	BuildInstanceCredentials(bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
 }
 
 type GCPCredentials struct {
@@ -155,10 +155,10 @@ var (
 // This custom user agent string is added to provision calls so that Google can track the aggregated use of this tool
 // We can better advocate for devoting resources to supporting cloud foundry and this service broker if we can show
 // good usage statistics for it, so if you feel the need to fork this repo, please leave this string in place!
-var CustomUserAgent = "cf-gcp-service-broker-test 3.3.0"
+var CustomUserAgent = "cf-gcp-service-broker-test 3.6.0"
 
 func ProductionizeUserAgent() {
-	CustomUserAgent = "cf-gcp-service-broker 3.3.0"
+	CustomUserAgent = "cf-gcp-service-broker 3.6.0"
 }
 
 const CloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"

@@ -37,7 +37,7 @@ func (b *BrokerBase) Bind(instanceID, bindingID string, details models.BindDetai
 	return newBinding, nil
 }
 
-func (b *BrokerBase) BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
+func (b *BrokerBase) BuildInstanceCredentials(bindDetails models.ServiceBindingCredentials, instanceDetails models.ServiceInstanceDetails) (map[string]string, error) {
 	return b.AccountManager.BuildInstanceCredentials(bindDetails, instanceDetails)
 }
 

@@ -127,3 +127,18 @@ any extra access details
 
 - added PostgreSQL support to CloudSQL (and migrated existing plans)
 - added Datastore support
+
+## [3.5.2] - 2017-10-17
+ 
+- fixed Postgres connection uri
+- added wait for ssl certs to finish being created in sql account manager
+
+## [3.6.0] - 2017-12-20
+ 
+- changed default authorized networks for cloudsql instances from `0.0.0.0/0` to none
+- added optional parameter to cloudsql provision operation to specify authorized networks
+- added service account and key provisioning on cloudsql bind operations
+- updated postgres `uri` field to include ssl certificates
+- added optional parameter to cloudsql bind operation to pass back jdbc formatted `uri` field
+- removed waiting for ssl certs to finish being created in sql account manager
+- changed default number of spanner nodes to 1 in `tile.yml`

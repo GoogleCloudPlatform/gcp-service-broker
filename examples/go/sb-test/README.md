@@ -37,7 +37,8 @@ This is not an official Google product.
 
 * `/test-storage` - lists all buckets in the given project
 * `/test-pubsub` - returns the name of the first topic in the project
-* `/test-cloudsql` - tests the connection to the first bound database
+* `/test-cloudsql-mysql` - tests the connection to the first bound mysql database
+* `/test-cloudsql-postgres` - tests the connection to the first bound postgres database
 * `/test-bigquery` - lists all the bigquery datasets in the project
 * `/test-bigtable` - lists all the bigtable instances in the project
 * `/test-spanner` - lists all the spanner instances in the project

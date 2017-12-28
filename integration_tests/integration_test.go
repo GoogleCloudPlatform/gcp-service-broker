@@ -231,7 +231,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 	Describe("Broker init", func() {
 		It("should have 11 services in sevices map", func() {
-			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(9))
+			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(11))
 		})
 
 		It("should have a default client", func() {
@@ -245,7 +245,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 	Describe("getting broker catalog", func() {
 		It("should have 11 services available", func() {
-			Expect(len(gcpBroker.Services())).To(Equal(9))
+			Expect(len(gcpBroker.Services())).To(Equal(11))
 		})
 
 		It("should have 3 storage plans available", func() {

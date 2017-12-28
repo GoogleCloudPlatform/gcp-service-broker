@@ -22,7 +22,6 @@ applications:
     memory: 1G
     buildpack: go_buildpack
     env:
-      GO15VENDOREXPERIMENT: 1
       SERVICES: '[
         {
           "id": "b9e4332e-b42b-4680-bda5-ea1506797474",
@@ -188,7 +187,7 @@ applications:
             "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg"
           },
           "tags": ["gcp", "spanner"]
-        },
+        }
       ]'
       PRECONFIGURED_PLANS: '[
         {

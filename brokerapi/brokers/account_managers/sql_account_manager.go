@@ -66,8 +66,12 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 		return models.ServiceBindingCredentials{}, fmt.Errorf("Error encountered while polling until operation id %s completes: %s", op.Name, err)
 	}
 
+	var creds SqlAccountInfo
 	// create ssl certs
-	certname := bindingID[:10] + "cert"
+        certname := bindingID + "cert"
+	if len(bindingID) >= 10 {
+ 		certname = bindingID[:10] + "cert"
+	}
 	newCert, err := sqlService.SslCerts.Insert(sam.ProjectId, instance.Name, &googlecloudsql.SslCertsInsertRequest{
 		CommonName: certname,
 	}).Do()
@@ -75,7 +79,7 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 		return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating ssl certs: %s", err)
 	}
 
-	creds := SqlAccountInfo{
+	creds = SqlAccountInfo{
 		Username:        username,
 		Password:        password,
 		Sha1Fingerprint: newCert.ClientCert.CertInfo.Sha1Fingerprint,
@@ -115,25 +119,28 @@ func (sam *SqlAccountManager) DeleteAccountFromGoogle(binding models.ServiceBind
 		return fmt.Errorf("Error creating CloudSQL client: %s", err)
 	}
 
-	op, err := sqlService.SslCerts.Delete(sam.ProjectId, instance.Name, sqlCreds.Sha1Fingerprint).Do()
-	if err != nil {
-		return fmt.Errorf("Error deleting ssl cert: %s", err)
-	}
+	// If we didn't generate ssl certs for this binding, then we cannot delete them
+	if sqlCreds.CaCert != "" {
+		certOp, err := sqlService.SslCerts.Delete(sam.ProjectId, instance.Name, sqlCreds.Sha1Fingerprint).Do()
+		if err != nil {
+			return fmt.Errorf("Error deleting ssl cert: %s", err)
+		}
 
-	err = sam.pollOperationUntilDone(op, sam.ProjectId)
-	if err != nil {
-		return fmt.Errorf("Error encountered while polling until operation id %s completes: %s", op.Name, err)
+		err = sam.pollOperationUntilDone(certOp, sam.ProjectId)
+		if err != nil {
+			return fmt.Errorf("Error encountered while polling until operation id %s completes: %s", certOp.Name, err)
+		}
 	}
 
 	// delete our user
-	op, err = sqlService.Users.Delete(sam.ProjectId, instance.Name, "", sqlCreds.Username).Do()
+	userOp, err := sqlService.Users.Delete(sam.ProjectId, instance.Name, "", sqlCreds.Username).Do()
 	if err != nil {
 		return fmt.Errorf("Error deleting user: %s", err)
 	}
 
-	err = sam.pollOperationUntilDone(op, sam.ProjectId)
+	err = sam.pollOperationUntilDone(userOp, sam.ProjectId)
 	if err != nil {
-		return fmt.Errorf("Error encountered while polling until operation id %s completes: %s", op.Name, err)
+		return fmt.Errorf("Error encountered while polling until operation id %s completes: %s", userOp.Name, err)
 	}
 
 	return nil
@@ -165,11 +172,30 @@ func (sam *SqlAccountManager) pollOperationUntilDone(op *googlecloudsql.Operatio
 	return nil
 }
 
-func (b *SqlAccountManager) BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
+func (b *SqlAccountManager) BuildInstanceCredentials(bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error) {
+	instanceDetails := instanceRecord.GetOtherDetails()
+	bindDetails := bindRecord.GetOtherDetails()
+
+	service_to_name, err := utils.MapServiceIdToName()
+	if err != nil {
+		return map[string]string{}, err
+	}
+
+	sid := instanceRecord.ServiceId
+
 	combinedCreds := utils.MergeStringMaps(bindDetails, instanceDetails)
-	combinedCreds["uri"] = fmt.Sprintf("mysql://%s:%s@%s/%s?ssl_mode=required",
-		url.QueryEscape(combinedCreds["Username"]), url.QueryEscape(combinedCreds["Password"]), combinedCreds["host"], combinedCreds["database_name"])
-	return combinedCreds
+
+	if service_to_name[sid] == models.CloudsqlMySQLName {
+		combinedCreds["uri"] = fmt.Sprintf("%smysql://%s:%s@%s/%s?ssl_mode=required",
+			combinedCreds["UriPrefix"], url.QueryEscape(combinedCreds["Username"]), url.QueryEscape(combinedCreds["Password"]), combinedCreds["host"], combinedCreds["database_name"])
+	} else if service_to_name[sid] == models.CloudsqlPostgresName {
+		combinedCreds["uri"] = fmt.Sprintf("%spostgres://%s:%s@%s/%s?sslmode=require&sslcert=%s&sslkey=%s&sslrootcert=%s",
+			combinedCreds["UriPrefix"], url.QueryEscape(combinedCreds["Username"]), url.QueryEscape(combinedCreds["Password"]), combinedCreds["host"], combinedCreds["database_name"], url.QueryEscape(combinedCreds["ClientCert"]), url.QueryEscape(combinedCreds["ClientKey"]), url.QueryEscape(combinedCreds["CaCert"]))
+	} else {
+		return map[string]string{}, errors.New("Unknown service")
+	}
+
+	return combinedCreds, nil
 }
 
 type SqlAccountInfo struct {

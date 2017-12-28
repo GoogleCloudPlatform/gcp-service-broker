@@ -35,16 +35,18 @@ import (
 )
 
 type CloudSQLBroker struct {
-	Client         *http.Client
-	ProjectId      string
-	Logger         lager.Logger
-	AccountManager models.AccountManager
+	Client           *http.Client
+	ProjectId        string
+	Logger           lager.Logger
+	AccountManager   models.AccountManager
+	SaAccountManager models.AccountManager
 }
 
 type InstanceInformation struct {
 	InstanceName string `json:"instance_name"`
 	DatabaseName string `json:"database_name"`
 	Host         string `json:"host"`
+	Region       string `json:"region"`
 
 	LastMasterOperationId string `json:"last_master_operation_id"`
 }
@@ -142,9 +144,18 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 		}
 	}
 
-	openAcl := googlecloudsql.AclEntry{
-		Value: "0.0.0.0/0",
+	openAcls := []*googlecloudsql.AclEntry{}
+	aclsParamDetails, aclsParamOk := params["authorized_networks"]
+	if aclsParamOk && aclsParamDetails != "" {
+		authorizedNetworks := strings.Split(aclsParamDetails, ",")
+	 	for _, v := range authorizedNetworks {
+			openAcl := googlecloudsql.AclEntry{
+				Value: v,
+			}
+			openAcls = append(openAcls, &openAcl)
+		}
 	}
+	
 
 	backupsEnabled := true
 	if params["backups_enabled"] == "false" {
@@ -172,7 +183,7 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 		StartTime:        backupStartTime,
 		BinaryLogEnabled: binlogEnabled,
 	}
-	di.Settings.IpConfiguration.AuthorizedNetworks = []*googlecloudsql.AclEntry{&openAcl}
+	di.Settings.IpConfiguration.AuthorizedNetworks = openAcls
 
 	// init sqladmin service
 	sqlService, err := googlecloudsql.New(b.Client)
@@ -385,6 +396,7 @@ func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string
 
 	ii.Host = clouddb.IpAddresses[0].IpAddress
 	ii.DatabaseName = params["database_name"]
+	ii.Region = instance.Location
 	otherDetails, err := json.Marshal(ii)
 	if err != nil {
 		return fmt.Errorf("Error marshalling instance information: %s.", err)
@@ -437,15 +449,64 @@ func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details models.BindD
 		return models.ServiceBindingCredentials{}, err
 	}
 
-	credBytes, err := b.AccountManager.CreateAccountInGoogle(instanceID, bindingID, details, cloudDb)
+	sqlCredBytes, err := b.AccountManager.CreateAccountInGoogle(instanceID, bindingID, details, cloudDb)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}
 
-	return credBytes, nil
+	saCredBytes, err := b.SaAccountManager.CreateAccountInGoogle(instanceID, bindingID, details, models.ServiceInstanceDetails{})
+
+	if err != nil {
+		return models.ServiceBindingCredentials{}, err
+	}
+
+	credsJSON, err := combineServiceBindingCreds(sqlCredBytes, saCredBytes)
+
+	if err != nil {
+		return models.ServiceBindingCredentials{}, err
+	}
+
+	jdbcUriFormat, jdbcUriFormatOk := details.Parameters["jdbc_uri_format"].(string)
+	credsJSON["UriPrefix"] = ""
+	if jdbcUriFormatOk && jdbcUriFormat == "true" {
+		credsJSON["UriPrefix"] = "jbdc:"
+	}
+
+	credBytes, err := json.Marshal(&credsJSON)
+	
+	if err != nil {
+		return models.ServiceBindingCredentials{}, err
+	}
+	
+	newBinding := models.ServiceBindingCredentials{
+		OtherDetails: string(credBytes),
+	}
+
+	return newBinding, nil
 }
 
-func (b *CloudSQLBroker) BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
+func combineServiceBindingCreds(sqlCreds models.ServiceBindingCredentials, saCreds models.ServiceBindingCredentials) (map[string]string, error) {
+	var sqlCredsJSON map[string]string
+
+	if err := json.Unmarshal([]byte(sqlCreds.OtherDetails), &sqlCredsJSON); err != nil {
+		return map[string]string{}, err
+	}
+
+	var saCredsJSON map[string]string
+
+	if err := json.Unmarshal([]byte(saCreds.OtherDetails), &saCredsJSON); err != nil {
+		return map[string]string{}, err
+	}
+
+	sqlCredsJSON["PrivateKeyData"] = saCredsJSON["PrivateKeyData"]
+	sqlCredsJSON["ProjectId"] = saCredsJSON["ProjectId"]
+	sqlCredsJSON["Email"] = saCredsJSON["Email"]
+	sqlCredsJSON["UniqueId"] = saCredsJSON["UniqueId"]
+
+	return sqlCredsJSON, nil
+}
+
+func (b *CloudSQLBroker) BuildInstanceCredentials(bindDetails models.ServiceBindingCredentials, instanceDetails models.ServiceInstanceDetails) (map[string]string, error) {
 	return b.AccountManager.BuildInstanceCredentials(bindDetails, instanceDetails)
 }
 
@@ -455,6 +516,12 @@ func (b *CloudSQLBroker) BuildInstanceCredentials(bindDetails map[string]string,
 func (b *CloudSQLBroker) Unbind(creds models.ServiceBindingCredentials) error {
 
 	err := b.AccountManager.DeleteAccountFromGoogle(creds)
+
+	if err != nil {
+		return err
+	}
+
+	err = b.SaAccountManager.DeleteAccountFromGoogle(creds)
 
 	if err != nil {
 		return err
