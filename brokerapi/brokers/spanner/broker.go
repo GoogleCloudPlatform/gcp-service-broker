@@ -20,7 +20,7 @@ package spanner
 import (
 	googlespanner "cloud.google.com/go/spanner/admin/instance/apiv1"
 	"code.cloudfoundry.org/lager"
-	"context"
+	"golang.org/x/net/context"
 	"encoding/json"
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
