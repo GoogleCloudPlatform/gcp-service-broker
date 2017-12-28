@@ -81,6 +81,7 @@ Enable the following services in **[API Manager > Library](https://console.cloud
 #### [Set up a backing database](#database)
 
 1. Create new MySQL instance
+1. Make sure that the database can be accessed, if you are using GCP cloudsql, add `0.0.0.0/0` as an authorized network.
 1. Run `CREATE DATABASE servicebroker;`
 1. Run `CREATE USER '<username>'@'%' IDENTIFIED BY '<password>';`
 1. Run `GRANT ALL PRIVILEGES ON servicebroker.* TO '<username>'@'%' WITH GRANT OPTION;`
