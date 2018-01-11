@@ -161,4 +161,4 @@ https://groups.google.com/forum/#!forum/gcp-service-broker
 
 see https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/CONTRIBUTING
 
-# This is not an official Google product.
+This is not an officially supported Google product.
