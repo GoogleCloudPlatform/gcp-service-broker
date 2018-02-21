@@ -28,7 +28,7 @@ Awwvision: Spring Boot edition has two endpoints:
 
 1. Create a Storage Bucket:
     ```
-	cf create-service google-storage standard awwvision-storage'
+	cf create-service google-storage standard awwvision-storage
     ```
 
 1. Bind the bucket to your app and give the service account storage object admin permissions:

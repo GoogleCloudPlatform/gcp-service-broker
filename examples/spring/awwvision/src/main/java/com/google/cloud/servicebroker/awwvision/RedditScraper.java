@@ -68,29 +68,29 @@ public class RedditScraper {
 
   void storeAndLabel(RedditResponse response) throws GeneralSecurityException {
     for (Listing listing : response.data.children) {
-      for (RedditResponse.Image img : listing.data.preview.images) {
-        URL url;
-        byte[] raw;
-        try {
-          url = new URL(img.source.url);
-          raw = download(url);
-        } catch (IOException e) {
-          logger.warn("Issue in streaming image " + img.source.url, e);
-          continue;
-        }
-        try {
-          // Only label and upload the image if it does not already exist in storage.
-          StorageObject existing = storageAPI.get(img.id);
-          if (existing == null) {
-            String label = visionAPI.labelImage(raw);
-            if (label != null) {
-              storageAPI.uploadJpeg(img.id + ".jpg", url, ImmutableMap.of("label", label));
+      if (listing.data.preview != null) {
+            URL url;
+            byte[] raw;
+            try {
+              url = new URL(listing.data.url);
+              raw = download(url);
+            } catch (IOException e) {
+              logger.warn("Issue in streaming image " + listing.data.url, e);
+              continue;
             }
-          }
-        } catch (IOException e) {
-          logger.error("Issue with labeling image " + img.source.url, e);
-        }
-      }
+            try {
+              // Only label and upload the image if it does not already exist in storage.
+              StorageObject existing = storageAPI.get(listing.data.url);
+              if (existing == null) {
+                String label = visionAPI.labelImage(raw);
+                if (label != null) {
+                  storageAPI.uploadJpeg(listing.data.url, url, ImmutableMap.of("label", label));
+                }
+              }
+            } catch (IOException e) {
+              logger.error("Issue with labeling image " + listing.data.url, e);
+            }
+       }
     }
   }
 

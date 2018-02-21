@@ -133,7 +133,7 @@ any extra access details
 - fixed Postgres connection uri
 - added wait for ssl certs to finish being created in sql account manager
 
-## [3.6.0] - 2017-12-20
+## [3.6.0] - 2017-01-03
  
 - changed default authorized networks for cloudsql instances from `0.0.0.0/0` to none
 - added optional parameter to cloudsql provision operation to specify authorized networks
