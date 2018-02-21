@@ -50,6 +50,7 @@ public class RedditResponse {
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class ListingData {
     public Preview preview;
+    public String url;
 
     public ListingData() {}
     public ListingData(Preview preview) {
