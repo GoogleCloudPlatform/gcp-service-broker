@@ -24,8 +24,8 @@ Notes:
 
         ```
         "credentials": {
-             "Email": "redacted",
-             "Name": "redacted",
+             "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
+             "Name": "pcf-binding-abc123",
              "PrivateKeyData": "redacted",
              "UniqueId": "redacted",
              "topic_name": "foobar",
@@ -44,7 +44,7 @@ Notes:
 
         ```
         "credentials": {
-             "Email": "redacted",
+             "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
              "Name": "redacted",
              "PrivateKeyData": "redacted",
              "UniqueId": "redacted",
@@ -62,7 +62,7 @@ Notes:
 
         ```
         "credentials": {
-             "Email": "redacted",
+             "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
              "Name": "redacted",
              "PrivateKeyData": "redacted",
              "UniqueId": "redacted",
@@ -121,7 +121,7 @@ Notes:
 
         ```
         "credentials": {
-             "Email": "redacted",
+             "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
              "Name": "redacted",
              "PrivateKeyData": "redacted",
              "UniqueId": "redacted",
@@ -176,12 +176,48 @@ Notes:
     * Bind (none)
 	* provided credentials will have the role of `clouddebugger.agent`
 
+        **Example Binding credentials**
+
+        ```
+        "credentials": {
+             "Email": "redacted",
+             "Name": "redacted",
+	     "ProjectId": "",
+             "PrivateKeyData": "redacted",
+             "UniqueId": "redacted",
+        }
+        ```
+
 * [Stackdriver Trace](https://cloud.google.com/trace/)
     * Provison (none)
     * Bind (none)
 	* provided credentials will have the role of `cloudtrace.agent`
+
+        **Example Binding credentials**
+
+        ```
+        "credentials": {
+             "Email": "redacted",
+             "Name": "redacted",
+	     "ProjectId": "",
+             "PrivateKeyData": "redacted",
+             "UniqueId": "redacted",
+        }
+        ```
 	
 * [Datastore](https://cloud.google.com/datastore/)
     * Provison (none)
     * Bind (none)
 	* provided credentials will have the role of `datastore.user`	
+
+        **Example Binding credentials**
+
+        ```
+        "credentials": {
+             "Email": "redacted",
+             "Name": "redacted",
+	     "ProjectId": "",
+             "PrivateKeyData": "redacted",
+             "UniqueId": "redacted",
+        }
+        ```
