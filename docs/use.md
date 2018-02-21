@@ -27,10 +27,10 @@ Notes:
              "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
              "Name": "pcf-binding-abc123",
              "PrivateKeyData": "redacted",
-	     "ProjectId": "projectid",
+             "ProjectId": "projectid",
              "UniqueId": "12345",
              "subscription_name": "empty_if_not_set",
-	     "topic_name": "pcf_sb_1_123456",
+             "topic_name": "pcf_sb_1_123456",
         }
         ```
 
@@ -48,7 +48,7 @@ Notes:
              "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
              "Name": "pcf-binding-abc123",
              "PrivateKeyData": "redacted",
-	     "ProjectId": "projectid",
+             "ProjectId": "projectid",
              "UniqueId": "12345",
              "bucket_name": "pcf_sb_1_123456",
         }
@@ -66,8 +66,8 @@ Notes:
         "credentials": {
              "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
              "Name": "pcf-binding-abc123",
-	     "PrivateKeyData": "redacted",
-	     "ProjectId": "projectid",
+             "PrivateKeyData": "redacted",
+             "ProjectId": "projectid",
              "UniqueId": "12345",
              "dataset_id": "pcf_sb_1_123456",
         }
@@ -106,18 +106,18 @@ Notes:
              "ClientCert": "-----BEGIN CERTIFICATE-----\nredacted\n-----END CERTIFICATE-----",
              "ClientKey": "-----BEGIN RSA PRIVATE KEY-----\redacted\n-----END RSA PRIVATE KEY-----",
              "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
-	     "Password": "unencoded-redacted",
-	     "PrivateKeyData": "redacted",
-	     "ProjectId": "projectid",
+             "Password": "unencoded-redacted",
+             "PrivateKeyData": "redacted",
+             "ProjectId": "projectid",
              "Sha1Fingerprint": "redacted",
-	     "UniqueId": "12345",
-	     "UriPrefix": "empty_if_not_set",
+             "UniqueId": "12345",
+             "UriPrefix": "empty_if_not_set",
              "Username": "aaa-bbb-c",
              "database_name": "pcf_sb_2_654321",
              "host": "255.255.255.255",
              "instance_name": "pcf_sb_1_123456",
              "last_master_operation_id": "some-guid",
-	     "region": "us-central",
+             "region": "us-central",
              "uri": "mysql://username:encodedpassword@host/databasename?ssl_mode=required"
         }
         ```
@@ -133,7 +133,7 @@ Notes:
              "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
              "Name": "pcf-binding-abc123",
              "PrivateKeyData": "redacted",
-	     "ProjectId": "projectid",
+             "ProjectId": "projectid",
              "UniqueId": "12345",
         }
         ```
@@ -156,7 +156,7 @@ Notes:
              "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
              "Name": "pcf-binding-abc123",
              "PrivateKeyData": "redacted",
-	     "ProjectId": "projectid",
+             "ProjectId": "projectid",
              "UniqueId": "12345",
              "instance_id": "pcf_sb_1_123456",
         }
@@ -177,7 +177,7 @@ Notes:
              "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
              "Name": "pcf-binding-abc123",
              "PrivateKeyData": "redacted",
-	     "ProjectId": "projectid",
+             "ProjectId": "projectid",
              "UniqueId": "12345",
              "instance_id": "pcf_sb_1_123456",
         }
@@ -195,7 +195,7 @@ Notes:
              "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
              "Name": "pcf-binding-abc123",
              "PrivateKeyData": "redacted",
-	     "ProjectId": "projectid",
+             "ProjectId": "projectid",
              "UniqueId": "12345",
         }
         ```
@@ -212,7 +212,7 @@ Notes:
              "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
              "Name": "pcf-binding-abc123",
              "PrivateKeyData": "redacted",
-	     "ProjectId": "projectid",
+             "ProjectId": "projectid",
              "UniqueId": "12345",
         }
         ```
@@ -229,7 +229,7 @@ Notes:
              "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
              "Name": "pcf-binding-abc123",
              "PrivateKeyData": "redacted",
-	     "ProjectId": "projectid",
+             "ProjectId": "projectid",
              "UniqueId": "12345",
         }
         ```
