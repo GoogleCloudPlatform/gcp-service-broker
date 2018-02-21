@@ -10,7 +10,7 @@ Notes:
 `create-service` calls take the following optional custom parameters, all as strings.
 
 
-* [PubSub](https://cloud.google.com/pubsub/docs/)
+* [google-pubsub](https://cloud.google.com/pubsub/docs/)
     * Provision
         * `topic_name` (defaults to a generated value)
         * `subscription_name`
@@ -27,13 +27,14 @@ Notes:
              "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
              "Name": "pcf-binding-abc123",
              "PrivateKeyData": "redacted",
-             "UniqueId": "redacted",
-             "topic_name": "foobar",
+	     "ProjectId": "projectid",
+             "UniqueId": "12345",
              "subscription_name": "empty_if_not_set",
+	     "topic_name": "pcf_sb_1_123456",
         }
         ```
 
-* [Cloud Storage](https://cloud.google.com/storage/docs/)
+* [google-storage](https://cloud.google.com/storage/docs/)
     * Provision
         * `name` (defaults to a generated value)
         * `location` (for options, see https://cloud.google.com/storage/docs/bucket-locations. Defaults to `"us"`)
@@ -45,14 +46,15 @@ Notes:
         ```
         "credentials": {
              "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
-             "Name": "redacted",
+             "Name": "pcf-binding-abc123",
              "PrivateKeyData": "redacted",
-             "UniqueId": "redacted",
-             "bucket_name": "foobar",
+	     "ProjectId": "projectid",
+             "UniqueId": "12345",
+             "bucket_name": "pcf_sb_1_123456",
         }
         ```
 
-* [BigQuery](https://cloud.google.com/bigquery/docs/)
+* [google-bigquery](https://cloud.google.com/bigquery/docs/)
     * Provision
         * `name` (defaults to a generated value)
     * Bind
@@ -63,14 +65,15 @@ Notes:
         ```
         "credentials": {
              "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
-             "Name": "redacted",
-             "PrivateKeyData": "redacted",
-             "UniqueId": "redacted",
-             "dataset_id": "foobar",
+             "Name": "pcf-binding-abc123",
+	     "PrivateKeyData": "redacted",
+	     "ProjectId": "projectid",
+             "UniqueId": "12345",
+             "dataset_id": "pcf_sb_1_123456",
         }
         ```
 
-* [CloudSQL](https://cloud.google.com/sql/docs/)
+* [google-cloudsql-mysql and google-cloudsql-postgres](https://cloud.google.com/sql/docs/)
     * Provision
         * `instance_name` (defaults to a generated value)
         * `database_name` (defaults to a generated value)
@@ -102,18 +105,24 @@ Notes:
              "CaCert": "-----BEGIN CERTIFICATE-----\nredacted\n-----END CERTIFICATE-----",
              "ClientCert": "-----BEGIN CERTIFICATE-----\nredacted\n-----END CERTIFICATE-----",
              "ClientKey": "-----BEGIN RSA PRIVATE KEY-----\redacted\n-----END RSA PRIVATE KEY-----",
-             "Password": "unencoded-redacted",
+             "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
+	     "Password": "unencoded-redacted",
+	     "PrivateKeyData": "redacted",
+	     "ProjectId": "projectid",
              "Sha1Fingerprint": "redacted",
-             "Username": "redacted",
-             "database_name": "redacted",
+	     "UniqueId": "12345",
+	     "UriPrefix": "empty_if_not_set",
+             "Username": "aaa-bbb-c",
+             "database_name": "pcf_sb_2_654321",
              "host": "255.255.255.255",
-             "instance_name": "redacted",
+             "instance_name": "pcf_sb_1_123456",
              "last_master_operation_id": "some-guid",
+	     "region": "us-central",
              "uri": "mysql://username:encodedpassword@host/databasename?ssl_mode=required"
         }
         ```
 
-* [ML APIs](https://cloud.google.com/ml/)
+* [google-ml-apis](https://cloud.google.com/ml/)
     * Bind
         * `role` without "roles/" prefix (see https://cloud.google.com/iam/docs/understanding-roles for available roles)
 
@@ -122,13 +131,14 @@ Notes:
         ```
         "credentials": {
              "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
-             "Name": "redacted",
+             "Name": "pcf-binding-abc123",
              "PrivateKeyData": "redacted",
-             "UniqueId": "redacted",
+	     "ProjectId": "projectid",
+             "UniqueId": "12345",
         }
         ```
 
-* [Bigtable](https://cloud.google.com/bigtable/docs/)
+* [google-bigtable](https://cloud.google.com/bigtable/docs/)
     * Provison
         * `name` (defaults to a generated value)
         * `cluster_id` (defaults to a generated value)
@@ -143,15 +153,16 @@ Notes:
 
         ```
         "credentials": {
-             "Email": "redacted",
-             "Name": "redacted",
+             "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
+             "Name": "pcf-binding-abc123",
              "PrivateKeyData": "redacted",
-             "UniqueId": "redacted",
-             "instance_id": "foobar",
+	     "ProjectId": "projectid",
+             "UniqueId": "12345",
+             "instance_id": "pcf_sb_1_123456",
         }
         ```
 
-* [Spanner](https://cloud.google.com/spanner/docs/) (BETA Google Service)
+* [google-spanner](https://cloud.google.com/spanner/docs/) (BETA Google Service)
     * Provison
         * `name` (defaults to a generated value)
         * `display_name` (defaults to a generated value)
@@ -163,15 +174,16 @@ Notes:
 
         ```
         "credentials": {
-             "Email": "redacted",
-             "Name": "redacted",
+             "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
+             "Name": "pcf-binding-abc123",
              "PrivateKeyData": "redacted",
-             "UniqueId": "redacted",
-             "instance_id": "foobar",
+	     "ProjectId": "projectid",
+             "UniqueId": "12345",
+             "instance_id": "pcf_sb_1_123456",
         }
         ```
 
-* [Stackdriver Debugger](https://cloud.google.com/debugger/)
+* [google-stackdriver-debugger](https://cloud.google.com/debugger/)
     * Provison (none)
     * Bind (none)
 	* provided credentials will have the role of `clouddebugger.agent`
@@ -180,15 +192,15 @@ Notes:
 
         ```
         "credentials": {
-             "Email": "redacted",
-             "Name": "redacted",
-	     "ProjectId": "",
+             "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
+             "Name": "pcf-binding-abc123",
              "PrivateKeyData": "redacted",
-             "UniqueId": "redacted",
+	     "ProjectId": "projectid",
+             "UniqueId": "12345",
         }
         ```
 
-* [Stackdriver Trace](https://cloud.google.com/trace/)
+* [google-stackdriver-trace](https://cloud.google.com/trace/)
     * Provison (none)
     * Bind (none)
 	* provided credentials will have the role of `cloudtrace.agent`
@@ -197,15 +209,15 @@ Notes:
 
         ```
         "credentials": {
-             "Email": "redacted",
-             "Name": "redacted",
-	     "ProjectId": "",
+             "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
+             "Name": "pcf-binding-abc123",
              "PrivateKeyData": "redacted",
-             "UniqueId": "redacted",
+	     "ProjectId": "projectid",
+             "UniqueId": "12345",
         }
         ```
 	
-* [Datastore](https://cloud.google.com/datastore/)
+* [google-datastore](https://cloud.google.com/datastore/)
     * Provison (none)
     * Bind (none)
 	* provided credentials will have the role of `datastore.user`	
@@ -214,10 +226,10 @@ Notes:
 
         ```
         "credentials": {
-             "Email": "redacted",
-             "Name": "redacted",
-	     "ProjectId": "",
+             "Email": "pcf-binding-abc123@projectid.iam.gserviceaccount.com",
+             "Name": "pcf-binding-abc123",
              "PrivateKeyData": "redacted",
-             "UniqueId": "redacted",
+	     "ProjectId": "projectid",
+             "UniqueId": "12345",
         }
         ```
