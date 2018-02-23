@@ -23,12 +23,12 @@ Awwvision: Spring Boot edition has two endpoints:
 
 1. From the main project directory, build an executable jar and push it to Cloud Foundry. This step will initially fail due to lack of credentials.
     ```
-    mvn package -DskipTests && cf push -p target/awwvision-spring-0.0.1-SNAPSHOT.jar awwvision
+    mvn package -DskipTests && cf push -p target/awwvision-spring-0.0.1-SNAPSHOT.jar awwvision --no-start
     ```
 
 1. Create a Storage Bucket:
     ```
-	cf create-service google-storage standard awwvision-storage
+    cf create-service google-storage standard awwvision-storage
     ```
 
 1. Bind the bucket to your app and give the service account storage object admin permissions:
@@ -36,9 +36,19 @@ Awwvision: Spring Boot edition has two endpoints:
     cf bind-service awwvision awwvision-storage -c '{"role":"storage.objectAdmin"}'
     ```
 
-1. Restage the app so the new environment variables take effect:
+1. Create a Machine Learning API Instance:
     ```
-    cf restage awwvision
+    cf create-service google-ml-apis default ml
+    ```
+
+1. Bind the machine learning API instance to your app:
+    ```
+    cf bind-service awwvision ml  -c '{"role":"ml.viewer"}'
+    ```
+
+1. Start the app so the new environment variables take effect:
+    ```
+    cf start awwvision
     ```
 
 ### Visit the application and start the crawler
