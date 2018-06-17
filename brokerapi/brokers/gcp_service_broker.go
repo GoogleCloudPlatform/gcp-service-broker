@@ -162,17 +162,17 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 			},
 		},
 		models.CloudsqlMySQLName: &cloudsql.CloudSQLBroker{
-			Client:         self.GCPClient,
-			ProjectId:      self.RootGCPCredentials.ProjectId,
-			Logger:         self.Logger,
-			AccountManager: sqlManager,
+			Client:           self.GCPClient,
+			ProjectId:        self.RootGCPCredentials.ProjectId,
+			Logger:           self.Logger,
+			AccountManager:   sqlManager,
 			SaAccountManager: saManager,
 		},
 		models.CloudsqlPostgresName: &cloudsql.CloudSQLBroker{
-			Client:         self.GCPClient,
-			ProjectId:      self.RootGCPCredentials.ProjectId,
-			Logger:         self.Logger,
-			AccountManager: sqlManager,
+			Client:           self.GCPClient,
+			ProjectId:        self.RootGCPCredentials.ProjectId,
+			Logger:           self.Logger,
+			AccountManager:   sqlManager,
 			SaAccountManager: saManager,
 		},
 		models.BigtableName: &bigtable.BigTableBroker{
@@ -517,6 +517,21 @@ func getStaticPlans() (map[string][]models.ServicePlan, error) {
 			},
 			ID: id,
 		}
+		if _, ok := p["provision_params"]; ok {
+			if params, ok := p["provision_params"].(map[string]interface{}); ok {
+				plan.Schemas.Instance.Create.Parameters = generateSchema(params)
+			}
+		}
+		if _, ok := p["update_params"]; ok {
+			if params, ok := p["update_params"].(map[string]interface{}); ok {
+				plan.Schemas.Instance.Update.Parameters = generateSchema(params)
+			}
+		}
+		if _, ok := p["bind_params"]; ok {
+			if params, ok := p["bind_params"].(map[string]interface{}); ok {
+				plan.Schemas.Binding.Create.Parameters = generateSchema(params)
+			}
+		}
 
 		featureBytes, err := json.Marshal(p["features"])
 		if err != nil {
@@ -692,6 +707,42 @@ func InitCatalogFromEnv() ([]models.Service, error) {
 	}
 
 	return serviceList, nil
+}
+
+func generateSchema(params map[string]interface{}) *map[string]interface{} {
+	required := []string{}
+	parameters := map[string]interface{}{}
+	for k, rawV := range params {
+		if v, ok := rawV.(map[string]interface{}); ok {
+			param := map[string]interface{}{
+				"type": v["type"],
+			}
+			if _, ok := v["title"]; ok {
+				param["title"] = v["title"]
+			}
+			if _, ok := v["default"]; ok {
+				param["default"] = v["default"]
+			}
+			if _, ok := v["valid_values"]; ok {
+				param["enum"] = v["valid_values"]
+			}
+			if _, ok := v["description"]; ok {
+				param["description"] = v["description"]
+			}
+			if _, ok := v["required"]; ok {
+				if isRequired, ok := v["required"].(bool); ok && isRequired {
+					required = append(required, k)
+				}
+			}
+			parameters[k] = param
+		}
+	}
+	retval := map[string]interface{}{
+		"$schema":    "http://json-schema.org/draft-06/schema#",
+		"type":       "object",
+		"properties": parameters,
+	}
+	return &retval
 }
 
 func valInStringSlice(slice []string, val string) bool {

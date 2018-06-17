@@ -42,6 +42,7 @@ type ServicePlan struct {
 	Description string               `json:"description"`
 	Free        *bool                `json:"free,omitempty"`
 	Metadata    *ServicePlanMetadata `json:"metadata,omitempty"`
+	Schemas     ServiceSchemas       `json:"schemas,omitempty"`
 }
 
 type ServicePlanMetadata struct {
@@ -62,6 +63,24 @@ type ServiceMetadata struct {
 	ProviderDisplayName string `json:"providerDisplayName,omitempty"`
 	DocumentationUrl    string `json:"documentationUrl,omitempty"`
 	SupportUrl          string `json:"supportUrl,omitempty"`
+}
+
+type ServiceSchemas struct {
+	Instance ServiceInstance `json:"service_instance,omitempty"`
+	Binding  ServiceBinding  `json:"service_binding,omitempty"`
+}
+
+type ServiceInstance struct {
+	Create Schema `json:"create,omitempty"`
+	Update Schema `json:"update,omitempty"`
+}
+
+type ServiceBinding struct {
+	Create Schema `json:"create,omitempty"`
+}
+
+type Schema struct {
+	Parameters *map[string]interface{} `json:"parameters,omitempty"`
 }
 
 func FreeValue(v bool) *bool {
