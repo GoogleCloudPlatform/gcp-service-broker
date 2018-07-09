@@ -439,12 +439,13 @@ var _ = Describe("Brokers", func() {
 var _ = Describe("AccountManagers", func() {
 
 	var (
-		logger         lager.Logger
-		iamStyleBroker models.ServiceBrokerHelper
-		spannerBroker  models.ServiceBrokerHelper
-		cloudsqlBroker models.ServiceBrokerHelper
-		accountManager modelsfakes.FakeAccountManager
-		err            error
+		logger            lager.Logger
+		iamStyleBroker    models.ServiceBrokerHelper
+		spannerBroker     models.ServiceBrokerHelper
+		cloudsqlBroker    models.ServiceBrokerHelper
+		accountManager    modelsfakes.FakeAccountManager
+		sqlAccountManager modelsfakes.FakeAccountManager
+		err               error
 	)
 
 	BeforeEach(func() {
@@ -459,7 +460,16 @@ var _ = Describe("AccountManagers", func() {
 		db_service.DbConnection = testDb
 		name_generator.New()
 
-		accountManager = modelsfakes.FakeAccountManager{}
+		accountManager = modelsfakes.FakeAccountManager{
+			CreateAccountInGoogleStub: func(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+				return models.ServiceBindingCredentials{OtherDetails: "{}"}, nil
+			},
+		}
+		sqlAccountManager = modelsfakes.FakeAccountManager{
+			CreateAccountInGoogleStub: func(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+				return models.ServiceBindingCredentials{OtherDetails: "{}"}, nil
+			},
+		}
 
 		iamStyleBroker = &pubsub.PubSubBroker{
 			BrokerBase: broker_base.BrokerBase{
@@ -468,8 +478,9 @@ var _ = Describe("AccountManagers", func() {
 		}
 
 		cloudsqlBroker = &cloudsql.CloudSQLBroker{
-			Logger:         logger,
-			AccountManager: &accountManager,
+			Logger:           logger,
+			AccountManager:   &sqlAccountManager,
+			SaAccountManager: &accountManager,
 		}
 
 		spannerBroker = &spanner.SpannerBroker{
@@ -512,22 +523,25 @@ var _ = Describe("AccountManagers", func() {
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
+				Expect(sqlAccountManager.CreateCredentialsCallCount()).To(Equal(1))
 				_, _, details, _ := accountManager.CreateCredentialsArgsForCall(0)
 				Expect(details.Parameters).NotTo(BeEmpty())
 
 				username, usernameOk := details.Parameters["username"].(string)
 				password, passwordOk := details.Parameters["password"].(string)
-
+				
 				Expect(usernameOk).To(BeTrue())
 				Expect(passwordOk).To(BeTrue())
 				Expect(username).NotTo(BeEmpty())
 				Expect(password).NotTo(BeEmpty())
 			})
+
 		})
 
 		Context("when MergeCredentialsAndInstanceInfo is called on a broker", func() {
 			It("should call MergeCredentialsAndInstanceInfo on the account manager", func() {
-				_ = iamStyleBroker.BuildInstanceCredentials(make(map[string]string), make(map[string]string))
+				_, err = iamStyleBroker.BuildInstanceCredentials(models.ServiceBindingCredentials{}, models.ServiceInstanceDetails{})
+				Expect(err).ToNot(HaveOccurred())
 				Expect(accountManager.BuildInstanceCredentialsCallCount()).To(Equal(1))
 			})
 		})
@@ -547,6 +561,7 @@ var _ = Describe("AccountManagers", func() {
 				err = cloudsqlBroker.Unbind(models.ServiceBindingCredentials{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.DeleteCredentialsCallCount()).To(Equal(1))
+				Expect(sqlAccountManager.DeleteCredentialsCallCount()).To(Equal(1))
 			})
 		})
 	})

@@ -30,14 +30,14 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.vision.v1.Vision;
-import com.google.api.services.vision.v1.VisionScopes;
+import com.google.api.services.storage.Storage;
+import com.google.api.services.storage.StorageScopes;
 
 /**
  * Sets up connections to client libraries and other injectable beans.
  */
 @Configuration
-public class VisionConfig {
+public class StorageConfig {
 
   @Value("${gcp-application-name}")
   private String applicationName;
@@ -68,11 +68,11 @@ public class VisionConfig {
   }
 
   @Bean
-  Vision vision(HttpTransport transport, JsonFactory jsonFactory, GoogleCredential credential) {
+  Storage storage(HttpTransport transport, JsonFactory jsonFactory, GoogleCredential credential) {
     if (credential.createScopedRequired()) {
-      credential = credential.createScoped(VisionScopes.all());
+      credential = credential.createScoped(StorageScopes.all());
     }
-    return new Vision.Builder(transport, jsonFactory, credential)
+    return new Storage.Builder(transport, jsonFactory, credential)
         .setApplicationName(applicationName).build();
   }
 

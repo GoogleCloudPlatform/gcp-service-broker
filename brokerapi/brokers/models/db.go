@@ -18,6 +18,7 @@
 package models
 
 import (
+	"encoding/json"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"time"
@@ -31,6 +32,14 @@ type ServiceBindingCredentials struct {
 	ServiceId         string
 	ServiceInstanceId string
 	BindingId         string
+}
+
+func (sbc ServiceBindingCredentials) GetOtherDetails() map[string]string {
+	var creds map[string]string
+	if err := json.Unmarshal([]byte(sbc.OtherDetails), &creds); err != nil {
+		panic(err)
+	}
+	return creds
 }
 
 type ServiceInstanceDetails struct {
@@ -48,6 +57,18 @@ type ServiceInstanceDetails struct {
 	PlanId           string
 	SpaceGuid        string
 	OrganizationGuid string
+}
+
+func (si ServiceInstanceDetails) GetOtherDetails() map[string]string {
+	var instanceDetails map[string]string
+	// if the instance has access details saved
+	if si.OtherDetails != "" {
+		if err := json.Unmarshal([]byte(si.OtherDetails), &instanceDetails); err != nil {
+			panic(err)
+		}
+	}
+	return instanceDetails
+
 }
 
 type ProvisionRequestDetails struct {

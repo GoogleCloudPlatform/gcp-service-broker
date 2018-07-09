@@ -152,10 +152,14 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			bindDetails := models.BindDetails{
 				ServiceID: serviceNameToId[models.CloudsqlMySQLName],
 				PlanID:    serviceNameToPlanId[models.CloudsqlMySQLName],
+				Parameters: map[string]interface{}{
+					"role": "editor",
+				},
 			}
-			creds, err := gcpBroker.Bind("integration_test_instance", "binding_id", bindDetails)
+			creds, err := gcpBroker.Bind("integration_test_instance", "bind-id", bindDetails)
 			Expect(err).NotTo(HaveOccurred())
 			credsMap := creds.Credentials.(map[string]string)
+			Expect(credsMap["uri"]).To(ContainSubstring("mysql"))
 
 			// make sure we have a username and google has ssl certs
 			Expect(credsMap["Username"]).ToNot(Equal(""))
@@ -167,7 +171,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 				ServiceID: serviceNameToId[models.CloudsqlMySQLName],
 				PlanID:    serviceNameToPlanId[models.CloudsqlMySQLName],
 			}
-			err = gcpBroker.Unbind("integration_test_instance", "binding_id", unBindDetails)
+			err = gcpBroker.Unbind("integration_test_instance", "bind-id", unBindDetails)
 			Expect(err).NotTo(HaveOccurred())
 
 			// make sure google no longer has certs
@@ -199,6 +203,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 
 	Describe("Cloud SQL - PostgreSQL", func() {
 
+		var sqlService *googlecloudsql.Service
 		var dbService *googlecloudsql.InstancesService
 		var sslService *googlecloudsql.SslCertsService
 		BeforeEach(func() {
@@ -232,8 +237,11 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			bindDetails := models.BindDetails{
 				ServiceID: serviceNameToId[models.CloudsqlPostgresName],
 				PlanID:    serviceNameToPlanId[models.CloudsqlPostgresName],
+				Parameters: map[string]interface{}{
+					"role": "editor",
+				},
 			}
-			creds, err := gcpBroker.Bind("integration_test_instance", "binding_id", bindDetails)
+			creds, err := gcpBroker.Bind("integration_test_instance", "bind-id", bindDetails)
 			Expect(err).NotTo(HaveOccurred())
 			credsMap := creds.Credentials.(map[string]string)
 
@@ -241,16 +249,30 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			Expect(credsMap["Username"]).ToNot(Equal(""))
 			_, err = sslService.Get(brokerConfig.ProjectId, cloudsqlInstanceName, credsMap["Sha1Fingerprint"]).Do()
 			Expect(err).NotTo(HaveOccurred())
+			Expect(credsMap["uri"]).To(ContainSubstring("postgres"))
+
+			// The bind oepration finishes before the instance has finished updating
+			keepWaiting := true
+			for keepWaiting == true {
+				resp, err := sqlService.Operations.List(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName).Do()
+				Expect(err).NotTo(HaveOccurred())
+				keepWaiting = false
+				for _, op := range resp.Items {
+					if op.EndTime == "" {
+						keepWaiting = true
+					}
+				}
+				// sleep for 1 second between polling so we don't hit our rate limit
+				time.Sleep(time.Second)
+			}
 
 			// unbind the instance
 			unBindDetails := models.UnbindDetails{
 				ServiceID: serviceNameToId[models.CloudsqlPostgresName],
 				PlanID:    serviceNameToPlanId[models.CloudsqlPostgresName],
 			}
-			// I don't know what it is about postgres, but it pretty reliably claims that another operation is
-			// in progress here. So let's wait for 10 seconds before unbinding.
-			time.Sleep(10 * time.Second)
-			err = gcpBroker.Unbind("integration_test_instance", "binding_id", unBindDetails)
+
+			err = gcpBroker.Unbind("integration_test_instance", "bind-id", unBindDetails)
 			Expect(err).NotTo(HaveOccurred())
 
 			// make sure google no longer has certs

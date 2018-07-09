@@ -163,8 +163,10 @@ func (sam *ServiceAccountManager) DeleteCredentials(binding models.ServiceBindin
 	return nil
 }
 
-func (b *ServiceAccountManager) BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string {
-	return utils.MergeStringMaps(bindDetails, instanceDetails)
+func (b *ServiceAccountManager) BuildInstanceCredentials(bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error) {
+	bindDetails := bindRecord.GetOtherDetails()
+	instanceDetails := instanceRecord.GetOtherDetails()
+	return utils.MergeStringMaps(bindDetails, instanceDetails), nil
 }
 
 // XXX names are truncated to 20 characters because of a bug in the IAM service

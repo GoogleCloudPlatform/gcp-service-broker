@@ -47,7 +47,7 @@ will be disabled. e.g.,
     "test_plan": {
         "name": "test_plan",
         "description": "testplan",
-        "tier": "custom-db-4-4096",
+        "tier": "db-g1-small",
         "pricing_plan": "PER_USE",
         "max_disk_size": "15",
         "display_name": "FOOBAR",
