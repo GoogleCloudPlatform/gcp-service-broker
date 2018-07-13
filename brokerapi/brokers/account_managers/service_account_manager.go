@@ -21,8 +21,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"gcp-service-broker/utils"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/jwt"

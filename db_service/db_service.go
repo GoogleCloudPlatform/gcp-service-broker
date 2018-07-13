@@ -20,7 +20,7 @@ package db_service
 import (
 	"code.cloudfoundry.org/lager"
 	"fmt"
-	"gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/jinzhu/gorm"
 	"sync"
 )

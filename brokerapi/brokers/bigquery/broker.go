@@ -21,10 +21,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"gcp-service-broker/brokerapi/brokers/broker_base"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"gcp-service-broker/brokerapi/brokers/name_generator"
-	"gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	googlebigquery "google.golang.org/api/bigquery/v2"
 )
 

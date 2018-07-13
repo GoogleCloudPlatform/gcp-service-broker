@@ -18,8 +18,8 @@
 package stackdriver_debugger
 
 import (
-	"gcp-service-broker/brokerapi/brokers/broker_base"
-	"gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 )
 
 type StackdriverDebuggerBroker struct {

@@ -51,7 +51,7 @@ type ServiceBroker interface {
 type AccountManager interface {
 	CreateCredentials(instanceID string, bindingID string, details BindDetails, instance ServiceInstanceDetails) (ServiceBindingCredentials, error)
 	DeleteCredentials(creds ServiceBindingCredentials) error
-	BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string
+	BuildInstanceCredentials(bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
 }
 
 type GCPCredentials struct {

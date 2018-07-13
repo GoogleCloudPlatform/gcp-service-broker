@@ -19,7 +19,7 @@ package main
 
 import (
 	"code.cloudfoundry.org/lager"
-	"gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 )
 
 func main() {

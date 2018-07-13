@@ -1,7 +1,7 @@
 package name_generator_test
 
 import (
-	. "gcp-service-broker/brokerapi/brokers/name_generator"
+	. "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
