@@ -19,8 +19,7 @@ Package spanner provides a client for reading and writing to Cloud Spanner
 databases. See the packages under admin for clients that operate on databases
 and instances.
 
-Note: This package is in alpha. Backwards-incompatible changes may occur
-without notice.
+Note: This package is in beta. Some backwards-incompatible changes may occur.
 
 See https://cloud.google.com/spanner/docs/getting-started/go/ for an introduction
 to Cloud Spanner and additional help on using this API.
@@ -35,6 +34,10 @@ of interest:
     if err != nil {
         // TODO: Handle error.
     }
+    defer client.Close()
+
+Remember to close the client after use to free up the sessions in the session
+pool.
 
 
 Simple Reads and Writes
@@ -82,26 +85,14 @@ the Kind field to specify other boundary conditions:
 
 KeySets
 
-A KeySet represents a set of keys. AllKeys returns a KeySet that refers to all
-the keys in a table:
+A KeySet represents a set of keys. A single Key or KeyRange can act as a KeySet. Use
+the KeySets function to build the union of several KeySets:
 
-    ks1 := spanner.AllKeys()
+    ks1 := spanner.KeySets(key1, key2, kr1, kr2)
 
-To construct a set of specific keys, use the Keys function:
+AllKeys returns a KeySet that refers to all the keys in a table:
 
-    ks2 := spanner.Keys(key1, key2, key3)
-
-You can also build KeySets from ranges of keys:
-
-    ks3 := spanner.Range(kr1)
-
-Use UnionKeySets to build up more complex KeySets, or construct one directly
-using a KeySet literal:
-
-    ks4 := spanner.KeySet{
-        Keys: []spanner.Keys{key1, key2},
-        Ranges: []spanner.KeyRange{kr1, kr2},
-    }
+    ks2 := spanner.AllKeys()
 
 
 Transactions

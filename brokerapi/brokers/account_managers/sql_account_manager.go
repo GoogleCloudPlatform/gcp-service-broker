@@ -18,25 +18,26 @@
 package account_managers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/db_service"
 	"gcp-service-broker/utils"
+	"golang.org/x/oauth2/jwt"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
-	"net/http"
 	"net/url"
 	"time"
 )
 
 type SqlAccountManager struct {
-	GCPClient *http.Client
-	ProjectId string
+	HttpConfig *jwt.Config
+	ProjectId  string
 }
 
 // inserts a new user into the database and creates new ssl certs
-func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+func (sam *SqlAccountManager) CreateCredentials(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 	var err error
 	username, usernameOk := details.Parameters["username"].(string)
 	password, passwordOk := details.Parameters["password"].(string)
@@ -46,7 +47,7 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 	}
 
 	// create username, pw with grants
-	sqlService, err := googlecloudsql.New(sam.GCPClient)
+	sqlService, err := googlecloudsql.New(sam.HttpConfig.Client(context.Background()))
 	if err != nil {
 		return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating CloudSQL client: %s", err)
 	}
@@ -101,7 +102,7 @@ func (sam *SqlAccountManager) CreateAccountInGoogle(instanceID string, bindingID
 }
 
 // deletes the user from the database and invalidates the associated ssl certs
-func (sam *SqlAccountManager) DeleteAccountFromGoogle(binding models.ServiceBindingCredentials) error {
+func (sam *SqlAccountManager) DeleteCredentials(binding models.ServiceBindingCredentials) error {
 	var err error
 
 	var sqlCreds SqlAccountInfo
@@ -114,7 +115,7 @@ func (sam *SqlAccountManager) DeleteAccountFromGoogle(binding models.ServiceBind
 		return fmt.Errorf("Database error retrieving instance details: %s", err)
 	}
 
-	sqlService, err := googlecloudsql.New(sam.GCPClient)
+	sqlService, err := googlecloudsql.New(sam.HttpConfig.Client(context.Background()))
 	if err != nil {
 		return fmt.Errorf("Error creating CloudSQL client: %s", err)
 	}
@@ -149,7 +150,7 @@ func (sam *SqlAccountManager) DeleteAccountFromGoogle(binding models.ServiceBind
 // polls the cloud sql operations service once per second until the given operation is done
 // TODO(cbriant): ensure this stays under api call quota
 func (sam *SqlAccountManager) pollOperationUntilDone(op *googlecloudsql.Operation, projectId string) error {
-	sqlService, err := googlecloudsql.New(sam.GCPClient)
+	sqlService, err := googlecloudsql.New(sam.HttpConfig.Client(context.Background()))
 	if err != nil {
 		return fmt.Errorf("Error creating new cloudsql client: %s", err)
 	}

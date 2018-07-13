@@ -22,7 +22,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"reflect"
 	"testing"
 	"time"
 
@@ -123,7 +122,7 @@ func TestFromLogEntry(t *testing.T) {
 	logEntry := logpb.LogEntry{
 		LogName:   "projects/PROJECT_ID/logs/LOG_ID",
 		Resource:  res,
-		Payload:   &logpb.LogEntry_TextPayload{"hello"},
+		Payload:   &logpb.LogEntry_TextPayload{TextPayload: "hello"},
 		Timestamp: ts,
 		Severity:  logtypepb.LogSeverity_INFO,
 		InsertId:  "123",
@@ -184,16 +183,8 @@ func TestFromLogEntry(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Test sub-values separately because %+v and %#v do not follow pointers.
-	// TODO(jba): use a differ or pretty-printer.
-	if !reflect.DeepEqual(got.HTTPRequest.Request, want.HTTPRequest.Request) {
-		t.Fatalf("HTTPRequest.Request:\ngot  %+v\nwant %+v", got.HTTPRequest.Request, want.HTTPRequest.Request)
-	}
-	if !reflect.DeepEqual(got.HTTPRequest, want.HTTPRequest) {
-		t.Fatalf("HTTPRequest:\ngot  %+v\nwant %+v", got.HTTPRequest, want.HTTPRequest)
-	}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("FullEntry:\ngot  %+v\nwant %+v", got, want)
+	if diff := testutil.Diff(got, want, testutil.IgnoreUnexported(http.Request{})); diff != "" {
+		t.Errorf("FullEntry:\n%s", diff)
 	}
 
 	// Proto payload.
@@ -210,31 +201,31 @@ func TestFromLogEntry(t *testing.T) {
 		LogName:   "projects/PROJECT_ID/logs/LOG_ID",
 		Resource:  res,
 		Timestamp: ts,
-		Payload:   &logpb.LogEntry_ProtoPayload{any},
+		Payload:   &logpb.LogEntry_ProtoPayload{ProtoPayload: any},
 	}
 	got, err = fromLogEntry(&logEntry)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(got.Payload, alog) {
+	if !ltesting.PayloadEqual(got.Payload, alog) {
 		t.Errorf("got %+v, want %+v", got.Payload, alog)
 	}
 
 	// JSON payload.
-	jstruct := &structpb.Struct{map[string]*structpb.Value{
-		"f": &structpb.Value{&structpb.Value_NumberValue{3.1}},
+	jstruct := &structpb.Struct{Fields: map[string]*structpb.Value{
+		"f": &structpb.Value{Kind: &structpb.Value_NumberValue{NumberValue: 3.1}},
 	}}
 	logEntry = logpb.LogEntry{
 		LogName:   "projects/PROJECT_ID/logs/LOG_ID",
 		Resource:  res,
 		Timestamp: ts,
-		Payload:   &logpb.LogEntry_JsonPayload{jstruct},
+		Payload:   &logpb.LogEntry_JsonPayload{JsonPayload: jstruct},
 	}
 	got, err = fromLogEntry(&logEntry)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(got.Payload, jstruct) {
+	if !ltesting.PayloadEqual(got.Payload, jstruct) {
 		t.Errorf("got %+v, want %+v", got.Payload, jstruct)
 	}
 }
@@ -263,9 +254,9 @@ func TestListLogEntriesRequest(t *testing.T) {
 	} {
 		got := listLogEntriesRequest("PROJECT_ID", test.opts)
 		want := &logpb.ListLogEntriesRequest{
-			ProjectIds: test.projectIDs,
-			Filter:     test.filter,
-			OrderBy:    test.orderBy,
+			ResourceNames: []string{"projects/" + test.projectIDs[0]},
+			Filter:        test.filter,
+			OrderBy:       test.orderBy,
 		}
 		if !proto.Equal(got, want) {
 			t.Errorf("%v:\ngot  %v\nwant %v", test.opts, got, want)

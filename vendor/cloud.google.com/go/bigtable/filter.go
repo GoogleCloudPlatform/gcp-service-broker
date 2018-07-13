@@ -154,7 +154,7 @@ func (stripValueFilter) proto() *btpb.RowFilter {
 	return &btpb.RowFilter{Filter: &btpb.RowFilter_StripValueTransformer{true}}
 }
 
-// TimestampRangeFilter returns a filter that matches any rows whose timestamp is within the given time bounds.  A zero
+// TimestampRangeFilter returns a filter that matches any cells whose timestamp is within the given time bounds.  A zero
 // time means no bound.
 // The timestamp will be truncated to millisecond granularity.
 func TimestampRangeFilter(startTime time.Time, endTime time.Time) Filter {
@@ -168,7 +168,7 @@ func TimestampRangeFilter(startTime time.Time, endTime time.Time) Filter {
 	return trf
 }
 
-// TimestampRangeFilterMicros returns a filter that matches any rows whose timestamp is within the given time bounds,
+// TimestampRangeFilterMicros returns a filter that matches any cells whose timestamp is within the given time bounds,
 // specified in units of microseconds since 1 January 1970. A zero value for the end time is interpreted as no bound.
 // The timestamp will be truncated to millisecond granularity.
 func TimestampRangeFilterMicros(startTime Timestamp, endTime Timestamp) Filter {
@@ -283,6 +283,36 @@ func (cf conditionFilter) proto() *btpb.RowFilter {
 			tf,
 			ff,
 		}}}
+}
+
+// CellsPerRowOffsetFilter returns a filter that skips the first N cells of each row, matching all subsequent cells.
+func CellsPerRowOffsetFilter(n int) Filter {
+	return cellsPerRowOffsetFilter(n)
+}
+
+type cellsPerRowOffsetFilter int32
+
+func (cof cellsPerRowOffsetFilter) String() string {
+	return fmt.Sprintf("cells_per_row_offset(%d)", cof)
+}
+
+func (cof cellsPerRowOffsetFilter) proto() *btpb.RowFilter {
+	return &btpb.RowFilter{Filter: &btpb.RowFilter_CellsPerRowOffsetFilter{int32(cof)}}
+}
+
+// CellsPerRowLimitFilter returns a filter that matches only the first N cells of each row.
+func CellsPerRowLimitFilter(n int) Filter {
+	return cellsPerRowLimitFilter(n)
+}
+
+type cellsPerRowLimitFilter int32
+
+func (clf cellsPerRowLimitFilter) String() string {
+	return fmt.Sprintf("cells_per_row_limit(%d)", clf)
+}
+
+func (clf cellsPerRowLimitFilter) proto() *btpb.RowFilter {
+	return &btpb.RowFilter{Filter: &btpb.RowFilter_CellsPerRowLimitFilter{int32(clf)}}
 }
 
 // TODO(dsymonds): More filters: sampling

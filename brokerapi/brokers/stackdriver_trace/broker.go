@@ -18,19 +18,11 @@
 package stackdriver_trace
 
 import (
-	"gcp-service-broker/brokerapi/brokers/account_managers"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/models"
-	"net/http"
-
-	"code.cloudfoundry.org/lager"
 )
 
 type StackdriverTraceBroker struct {
-	Client                *http.Client
-	ProjectId             string
-	Logger                lager.Logger
-	ServiceAccountManager *account_managers.ServiceAccountManager
 	broker_base.BrokerBase
 }
 
@@ -38,7 +30,7 @@ type InstanceInformation struct {
 }
 
 // No-op, no serivce is required for Stackdriver Trace
-func (b *StackdriverTraceBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (b *StackdriverTraceBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	return models.ServiceInstanceDetails{}, nil
 }
 
@@ -56,7 +48,7 @@ func (b *StackdriverTraceBroker) Bind(instanceID, bindingID string, details mode
 	details.Parameters["role"] = "cloudtrace.agent"
 
 	// Create account
-	newBinding, err := b.ServiceAccountManager.CreateAccountInGoogle(instanceID, bindingID, details, models.ServiceInstanceDetails{})
+	newBinding, err := b.AccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
 
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err

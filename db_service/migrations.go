@@ -18,6 +18,7 @@
 package db_service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/models"
@@ -30,7 +31,7 @@ import (
 // runs schema migrations on the provided service broker database to get it up to date
 func RunMigrations(db *gorm.DB) error {
 
-	migrations := make([]func() error, 2)
+	migrations := make([]func() error, 3)
 
 	// initial migration - creates tables
 	migrations[0] = func() error {
@@ -131,7 +132,7 @@ func RunMigrations(db *gorm.DB) error {
 			return err
 		}
 
-		client, err := utils.GetAuthedClient()
+		cfg, err := utils.GetAuthedConfig()
 		if err != nil {
 			return fmt.Errorf("Error getting authorized http client: %s", err)
 		}
@@ -163,7 +164,7 @@ func RunMigrations(db *gorm.DB) error {
 				newOd["instance_name"] = od["instance_name"]
 				newOd["database_name"] = od["database_name"]
 
-				sqlService, err := googlecloudsql.New(client)
+				sqlService, err := googlecloudsql.New(cfg.Client(context.Background()))
 				if err != nil {
 					return fmt.Errorf("Error creating new CloudSQL Client: %s", err)
 				}
@@ -203,6 +204,14 @@ func RunMigrations(db *gorm.DB) error {
 			}
 		}
 
+		return nil
+	}
+
+	// drops plan details table
+	migrations[2] = func() error {
+		if err := db.Exec(`DROP TABLE plan_details`).Error; err != nil {
+			return err
+		}
 		return nil
 	}
 

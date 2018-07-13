@@ -19,7 +19,6 @@ package bigtable
 
 import (
 	googlebigtable "cloud.google.com/go/bigtable"
-	"code.cloudfoundry.org/lager"
 	"encoding/json"
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
@@ -28,16 +27,10 @@ import (
 	"gcp-service-broker/db_service"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
-	"net/http"
 	"strconv"
 )
 
 type BigTableBroker struct {
-	Client         *http.Client
-	ProjectId      string
-	Logger         lager.Logger
-	AccountManager models.AccountManager
-
 	broker_base.BrokerBase
 }
 
@@ -52,7 +45,7 @@ var StorageTypes = map[string]googlebigtable.StorageType{
 
 // Creates a new Bigtable Instance identified by the name provided in details.RawParameters.name and
 // optional cluster_id (a default will be supplied), display_name, and zone (defaults to us-east1-b)
-func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 	var params map[string]string
 
@@ -67,15 +60,11 @@ func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDe
 		params["name"] = name_generator.Basic.InstanceNameWithSeparator("-")
 	}
 
-	// get plan parameters
-	var planDetails map[string]string
-	if err = json.Unmarshal([]byte(plan.Features), &planDetails); err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling plan features: %s", err)
-	}
-
 	ctx := context.Background()
 	co := option.WithUserAgent(models.CustomUserAgent)
-	service, err := googlebigtable.NewInstanceAdminClient(ctx, b.ProjectId, co)
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
+
+	service, err := googlebigtable.NewInstanceAdminClient(ctx, b.ProjectId, co, ct)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating bigtable client: %s", err)
 	}
@@ -90,7 +79,7 @@ func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDe
 		clusterId = userClusterId
 	}
 
-	numNodes, err := strconv.Atoi(planDetails["num_nodes"])
+	numNodes, err := strconv.Atoi(plan.ServiceProperties["num_nodes"])
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error converting num_nodes to int: %s", err)
 	}
@@ -109,7 +98,7 @@ func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDe
 		InstanceId:  params["name"],
 		ClusterId:   clusterId,
 		NumNodes:    int32(numNodes),
-		StorageType: StorageTypes[planDetails["storage_type"]],
+		StorageType: StorageTypes[plan.ServiceProperties["storage_type"]],
 		Zone:        zone,
 		DisplayName: displayName,
 	}
@@ -142,7 +131,8 @@ func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDe
 func (b *BigTableBroker) Deprovision(instanceID string, details models.DeprovisionDetails) error {
 	var err error
 	ctx := context.Background()
-	service, err := googlebigtable.NewInstanceAdminClient(ctx, b.ProjectId)
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
+	service, err := googlebigtable.NewInstanceAdminClient(ctx, b.ProjectId, ct)
 	if err != nil {
 		return fmt.Errorf("Error creating BigQuery client: %s", err)
 	}
@@ -157,23 +147,4 @@ func (b *BigTableBroker) Deprovision(instanceID string, details models.Deprovisi
 	}
 
 	return nil
-}
-
-type BigtableDynamicPlan struct {
-	Guid        string `json:"guid"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	NumNodes    string `json:"num_nodes"`
-	StorageType string `json:"storage_type"`
-	DisplayName string `json:"display_name"`
-	ServiceId   string `json:"service"`
-}
-
-func MapPlan(details map[string]string) map[string]string {
-
-	features := map[string]string{
-		"num_nodes":    details["num_nodes"],
-		"storage_type": details["storage_type"],
-	}
-	return features
 }

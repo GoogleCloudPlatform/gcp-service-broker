@@ -18,10 +18,7 @@
 package storage
 
 import (
-	"net/http"
-
 	googlestorage "cloud.google.com/go/storage"
-	"code.cloudfoundry.org/lager"
 	"encoding/json"
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
@@ -33,10 +30,6 @@ import (
 )
 
 type StorageBroker struct {
-	Client    *http.Client
-	ProjectId string
-	Logger    lager.Logger
-
 	broker_base.BrokerBase
 }
 
@@ -46,14 +39,10 @@ type InstanceInformation struct {
 
 // creates a new bucket with the name given in provision details and optional location
 // (defaults to "US", for acceptable location values see: https://cloud.google.com/storage/docs/bucket-locations)
-func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 
-	var planDetails map[string]string
-	if err = json.Unmarshal([]byte(plan.Features), &planDetails); err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling plan features: %s", err)
-	}
-	storageClass := planDetails["storage_class"]
+	storageClass := plan.ServiceProperties["storage_class"]
 
 	var params map[string]string
 	if len(details.RawParameters) == 0 {
@@ -70,7 +59,8 @@ func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDet
 	// make a new bucket
 	ctx := context.Background()
 	co := option.WithUserAgent(models.CustomUserAgent)
-	storageService, err := googlestorage.NewClient(ctx, co)
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
+	storageService, err := googlestorage.NewClient(ctx, co, ct)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new storage client: %s", err)
 	}
@@ -123,7 +113,8 @@ func (b *StorageBroker) Deprovision(instanceID string, details models.Deprovisio
 	}
 
 	ctx := context.Background()
-	storageService, err := googlestorage.NewClient(ctx)
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
+	storageService, err := googlestorage.NewClient(ctx, ct)
 	if err != nil {
 		return fmt.Errorf("Error creating storage client: %s", err)
 	}

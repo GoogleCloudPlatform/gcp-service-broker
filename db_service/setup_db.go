@@ -35,6 +35,11 @@ func SetupDb(logger lager.Logger) *gorm.DB {
 	dbHost := os.Getenv("DB_HOST")
 	dbUsername := os.Getenv("DB_USERNAME")
 	dbPassword := os.Getenv("DB_PASSWORD")
+
+	if dbPassword == "" || dbHost == "" || dbUsername == "" {
+		panic("DB_HOST, DB_USERNAME and DB_PASSWORD are required environment variables.")
+	}
+
 	dbPort := os.Getenv("DB_PORT")
 	dbName := os.Getenv("DB_NAME")
 

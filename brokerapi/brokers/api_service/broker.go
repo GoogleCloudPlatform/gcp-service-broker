@@ -18,22 +18,15 @@
 package api_service
 
 import (
-	"code.cloudfoundry.org/lager"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/models"
-	"net/http"
 )
 
 type ApiServiceBroker struct {
-	Client         *http.Client
-	ProjectId      string
-	Logger         lager.Logger
-	AccountManager models.AccountManager
-
 	broker_base.BrokerBase
 }
 
-func (b *ApiServiceBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (b *ApiServiceBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 
 	return models.ServiceInstanceDetails{}, nil
 }

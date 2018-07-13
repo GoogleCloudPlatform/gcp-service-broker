@@ -128,6 +128,7 @@ any extra access details
 - added PostgreSQL support to CloudSQL (and migrated existing plans)
 - added Datastore support
 
+
 ## [3.5.2] - 2017-10-17
  
 - fixed Postgres connection uri
@@ -142,3 +143,13 @@ any extra access details
 - added optional parameter to cloudsql bind operation to pass back jdbc formatted `uri` field
 - removed waiting for ssl certs to finish being created in sql account manager
 - changed default number of spanner nodes to 1 in `tile.yml`
+
+## [Pending] - 2018-XX-XX
+
+- added command `get_plan_info` to dump plan information to the console. Advised to run before updating.
+- plan ids are now required and will not be generated if not supplied.
+- changed custom plan id field name from `guid` to `id`
+- modified `"features"` plan config field name to `"service_properties"`
+- modified the formatting of custom plans to be consistent with that of preconfigured plans
+- modified structure of all catalog-related environment variables - `plans` is now a sub-field of the Service object, 
+and Service objects are defined individually by setting env variables like `GOOGLE_<SERVICE_NAME>`

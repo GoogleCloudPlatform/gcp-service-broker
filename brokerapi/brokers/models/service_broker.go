@@ -23,7 +23,7 @@ import (
 )
 
 type ServiceBrokerHelper interface {
-	Provision(instanceId string, details ProvisionDetails, plan PlanDetails) (ServiceInstanceDetails, error)
+	Provision(instanceId string, details ProvisionDetails, plan ServicePlan) (ServiceInstanceDetails, error)
 	Bind(instanceID, bindingID string, details BindDetails) (ServiceBindingCredentials, error)
 	BuildInstanceCredentials(bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
 	Unbind(details ServiceBindingCredentials) error
@@ -49,9 +49,9 @@ type ServiceBroker interface {
 }
 
 type AccountManager interface {
-	CreateAccountInGoogle(instanceID string, bindingID string, details BindDetails, instance ServiceInstanceDetails) (ServiceBindingCredentials, error)
-	DeleteAccountFromGoogle(creds ServiceBindingCredentials) error
-	BuildInstanceCredentials(bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
+	CreateCredentials(instanceID string, bindingID string, details BindDetails, instance ServiceInstanceDetails) (ServiceBindingCredentials, error)
+	DeleteCredentials(creds ServiceBindingCredentials) error
+	BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string
 }
 
 type GCPCredentials struct {
@@ -173,6 +173,18 @@ const SpannerName = "google-spanner"
 const StackdriverTraceName = "google-stackdriver-trace"
 const StackdriverDebuggerName = "google-stackdriver-debugger"
 const DatastoreName = "google-datastore"
-const AppCredsEnvVar = "GOOGLE_APPLICATION_CREDENTIALS"
-const AppCredsFileName = "application-default-credentials.json"
 const RootSaEnvVar = "ROOT_SERVICE_ACCOUNT_JSON"
+
+var ServiceEnvVarNames = []string{
+	"GOOGLE_SPANNER",
+	"GOOGLE_BIGQUERY",
+	"GOOGLE_BIGTABLE",
+	"GOOGLE_STORAGE",
+	"GOOGLE_PUBSUB",
+	"GOOGLE_STACKDRIVER_DEBUGGER",
+	"GOOGLE_STACKDRIVER_TRACE",
+	"GOOGLE_ML_APIS",
+	"GOOGLE_CLOUDSQL_MYSQL",
+	"GOOGLE_CLOUDSQL_POSTGRES",
+	"GOOGLE_DATASTORE",
+}

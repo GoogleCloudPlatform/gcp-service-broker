@@ -61,10 +61,9 @@ func New(client *http.Client) (*Service, error) {
 }
 
 type Service struct {
-	client                    *http.Client
-	BasePath                  string // API endpoint base URL
-	UserAgent                 string // optional additional User-Agent fragment
-	GoogleClientHeaderElement string // client header fragment, for Google use only
+	client    *http.Client
+	BasePath  string // API endpoint base URL
+	UserAgent string // optional additional User-Agent fragment
 
 	Projects *ProjectsService
 }
@@ -74,10 +73,6 @@ func (s *Service) userAgent() string {
 		return googleapi.UserAgent
 	}
 	return googleapi.UserAgent + " " + s.UserAgent
-}
-
-func (s *Service) clientHeader() string {
-	return gensupport.GoogleClientHeader("20170210", s.GoogleClientHeaderElement)
 }
 
 func NewProjectsService(s *Service) *ProjectsService {
@@ -196,6 +191,12 @@ type ProjectsHistoriesExecutionsStepsThumbnailsService struct {
 // foo = Foo(...) any = Any() any.Pack(foo) ... if
 // any.Is(Foo.DESCRIPTOR): any.Unpack(foo) ...
 //
+// Example 4: Pack and unpack a message in Go
+//
+// foo := &pb.Foo{...} any, err := ptypes.MarshalAny(foo) ... foo :=
+// &pb.Foo{} if err := ptypes.UnmarshalAny(any, foo); err != nil { ...
+// }
+//
 // The pack methods provided by protobuf library will by default use
 // 'type.googleapis.com/full.type.name' as the type URL and the unpack
 // methods only use the fully qualified type name after the last '/' in
@@ -276,12 +277,16 @@ func (s *Any) MarshalJSON() ([]byte, error) {
 type BasicPerfSampleSeries struct {
 	// Possible values:
 	//   "cpu"
+	//   "graphics"
 	//   "memory"
 	//   "network"
 	//   "perfMetricTypeUnspecified"
 	PerfMetricType string `json:"perfMetricType,omitempty"`
 
 	// Possible values:
+	//   "byte"
+	//   "bytesPerSecond"
+	//   "framesPerSecond"
 	//   "kibibyte"
 	//   "percent"
 	//   "perfUnitUnspecified"
@@ -291,9 +296,13 @@ type BasicPerfSampleSeries struct {
 	//   "cpuKernel"
 	//   "cpuTotal"
 	//   "cpuUser"
+	//   "graphicsFrameRate"
 	//   "memoryRssPrivate"
 	//   "memoryRssShared"
 	//   "memoryRssTotal"
+	//   "memoryTotal"
+	//   "networkReceived"
+	//   "networkSent"
 	//   "ntBytesReceived"
 	//   "ntBytesTransferred"
 	//   "sampleSeriesTypeUnspecified"
@@ -492,7 +501,9 @@ type Duration struct {
 	Nanos int64 `json:"nanos,omitempty"`
 
 	// Seconds: Signed seconds of the span of time. Must be from
-	// -315,576,000,000 to +315,576,000,000 inclusive.
+	// -315,576,000,000 to +315,576,000,000 inclusive. Note: these bounds
+	// are computed from: 60 sec/min * 60 min/hr * 24 hr/day * 365.25
+	// days/year * 10000 years
 	Seconds int64 `json:"seconds,omitempty,string"`
 
 	// ForceSendFields is a list of field names (e.g. "Nanos") to
@@ -1228,6 +1239,7 @@ type PerfMetricsSummary struct {
 	//
 	// Possible values:
 	//   "cpu"
+	//   "graphics"
 	//   "memory"
 	//   "network"
 	//   "perfMetricTypeUnspecified"
@@ -1527,7 +1539,7 @@ func (s *StackTrace) MarshalJSON() ([]byte, error) {
 // message in the error details or localize it in the client. The
 // optional error details may contain arbitrary information about the
 // error. There is a predefined set of error detail types in the package
-// `google.rpc` which can be used for common error conditions.
+// `google.rpc` that can be used for common error conditions.
 //
 // # Language mapping
 //
@@ -1551,7 +1563,7 @@ func (s *StackTrace) MarshalJSON() ([]byte, error) {
 // the partial errors.
 //
 // - Workflow errors. A typical workflow has multiple steps. Each step
-// may have a `Status` message for error reporting purpose.
+// may have a `Status` message for error reporting.
 //
 // - Batch operations. If a client uses batch request and batch
 // response, the `Status` message should be used directly inside batch
@@ -2545,7 +2557,6 @@ func (c *ProjectsGetSettingsCall) doRequest(alt string) (*http.Response, error) 
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -2639,23 +2650,24 @@ type ProjectsInitializeSettingsCall struct {
 //
 // Currently, this creates a single resource: a Google Cloud Storage
 // bucket, to be used as the default bucket for this project. The bucket
-// is created in the name of the user calling. Except in rare cases,
+// is created in an FTL-own storage project. Except for in rare cases,
 // calling this method in parallel from multiple clients will only
 // create a single bucket. In order to avoid unnecessary storage
 // charges, the bucket is configured to automatically delete objects
 // older than 90 days.
 //
-// The bucket is created with the project-private ACL: All project team
-// members are given permissions to the bucket and objects created
-// within it according to their roles. Project owners have owners
-// rights, and so on. The default ACL on objects created in the bucket
-// is project-private as well. See Google Cloud Storage documentation
-// for more details.
+// The bucket is created with the following permissions: - Owner access
+// for owners of central storage project (FTL-owned) - Writer access for
+// owners/editors of customer project - Reader access for viewers of
+// customer project The default ACL on objects created in the bucket is:
+// - Owner access for owners of central storage project - Reader access
+// for owners/editors/viewers of customer project See Google Cloud
+// Storage documentation for more details.
 //
 // If there is already a default bucket set and the project can access
 // the bucket, this call does nothing. However, if the project doesn't
-// have the permission to access the bucket or the bucket is deteleted,
-// a new bucket will be created.
+// have the permission to access the bucket or the bucket is deleted, a
+// new bucket will be created.
 //
 // May return any canonical error codes, including the following:
 //
@@ -2698,7 +2710,6 @@ func (c *ProjectsInitializeSettingsCall) doRequest(alt string) (*http.Response, 
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "{projectId}:initializeSettings")
@@ -2749,7 +2760,7 @@ func (c *ProjectsInitializeSettingsCall) Do(opts ...googleapi.CallOption) (*Proj
 	}
 	return ret, nil
 	// {
-	//   "description": "Creates resources for settings which have not yet been set.\n\nCurrently, this creates a single resource: a Google Cloud Storage bucket, to be used as the default bucket for this project. The bucket is created in the name of the user calling. Except in rare cases, calling this method in parallel from multiple clients will only create a single bucket. In order to avoid unnecessary storage charges, the bucket is configured to automatically delete objects older than 90 days.\n\nThe bucket is created with the project-private ACL: All project team members are given permissions to the bucket and objects created within it according to their roles. Project owners have owners rights, and so on. The default ACL on objects created in the bucket is project-private as well. See Google Cloud Storage documentation for more details.\n\nIf there is already a default bucket set and the project can access the bucket, this call does nothing. However, if the project doesn't have the permission to access the bucket or the bucket is deteleted, a new bucket will be created.\n\nMay return any canonical error codes, including the following:\n\n- PERMISSION_DENIED - if the user is not authorized to write to project - Any error code raised by Google Cloud Storage",
+	//   "description": "Creates resources for settings which have not yet been set.\n\nCurrently, this creates a single resource: a Google Cloud Storage bucket, to be used as the default bucket for this project. The bucket is created in an FTL-own storage project. Except for in rare cases, calling this method in parallel from multiple clients will only create a single bucket. In order to avoid unnecessary storage charges, the bucket is configured to automatically delete objects older than 90 days.\n\nThe bucket is created with the following permissions: - Owner access for owners of central storage project (FTL-owned) - Writer access for owners/editors of customer project - Reader access for viewers of customer project The default ACL on objects created in the bucket is: - Owner access for owners of central storage project - Reader access for owners/editors/viewers of customer project See Google Cloud Storage documentation for more details.\n\nIf there is already a default bucket set and the project can access the bucket, this call does nothing. However, if the project doesn't have the permission to access the bucket or the bucket is deleted, a new bucket will be created.\n\nMay return any canonical error codes, including the following:\n\n- PERMISSION_DENIED - if the user is not authorized to write to project - Any error code raised by Google Cloud Storage",
 	//   "httpMethod": "POST",
 	//   "id": "toolresults.projects.initializeSettings",
 	//   "parameterOrder": [
@@ -2842,7 +2853,6 @@ func (c *ProjectsHistoriesCreateCall) doRequest(alt string) (*http.Response, err
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.history)
 	if err != nil {
@@ -2998,7 +3008,6 @@ func (c *ProjectsHistoriesGetCall) doRequest(alt string) (*http.Response, error)
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -3179,7 +3188,6 @@ func (c *ProjectsHistoriesListCall) doRequest(alt string) (*http.Response, error
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -3365,7 +3373,6 @@ func (c *ProjectsHistoriesExecutionsCreateCall) doRequest(alt string) (*http.Res
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.execution)
 	if err != nil {
@@ -3531,7 +3538,6 @@ func (c *ProjectsHistoriesExecutionsGetCall) doRequest(alt string) (*http.Respon
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -3714,7 +3720,6 @@ func (c *ProjectsHistoriesExecutionsListCall) doRequest(alt string) (*http.Respo
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -3905,7 +3910,6 @@ func (c *ProjectsHistoriesExecutionsPatchCall) doRequest(alt string) (*http.Resp
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.execution)
 	if err != nil {
@@ -4083,7 +4087,6 @@ func (c *ProjectsHistoriesExecutionsStepsCreateCall) doRequest(alt string) (*htt
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.step)
 	if err != nil {
@@ -4259,7 +4262,6 @@ func (c *ProjectsHistoriesExecutionsStepsGetCall) doRequest(alt string) (*http.R
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -4430,7 +4432,6 @@ func (c *ProjectsHistoriesExecutionsStepsGetPerfMetricsSummaryCall) doRequest(al
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -4625,7 +4626,6 @@ func (c *ProjectsHistoriesExecutionsStepsListCall) doRequest(alt string) (*http.
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -4828,7 +4828,6 @@ func (c *ProjectsHistoriesExecutionsStepsPatchCall) doRequest(alt string) (*http
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.step)
 	if err != nil {
@@ -5005,7 +5004,6 @@ func (c *ProjectsHistoriesExecutionsStepsPublishXunitXmlFilesCall) doRequest(alt
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.publishxunitxmlfilesrequest)
 	if err != nil {
@@ -5173,7 +5171,6 @@ func (c *ProjectsHistoriesExecutionsStepsPerfMetricsSummaryCreateCall) doRequest
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.perfmetricssummary)
 	if err != nil {
@@ -5341,7 +5338,6 @@ func (c *ProjectsHistoriesExecutionsStepsPerfSampleSeriesCreateCall) doRequest(a
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.perfsampleseries)
 	if err != nil {
@@ -5519,7 +5515,6 @@ func (c *ProjectsHistoriesExecutionsStepsPerfSampleSeriesGetCall) doRequest(alt 
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -5666,6 +5661,7 @@ func (r *ProjectsHistoriesExecutionsStepsPerfSampleSeriesService) List(projectId
 //
 // Possible values:
 //   "cpu"
+//   "graphics"
 //   "memory"
 //   "network"
 //   "perfMetricTypeUnspecified"
@@ -5715,7 +5711,6 @@ func (c *ProjectsHistoriesExecutionsStepsPerfSampleSeriesListCall) doRequest(alt
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -5792,11 +5787,13 @@ func (c *ProjectsHistoriesExecutionsStepsPerfSampleSeriesListCall) Do(opts ...go
 	//       "description": "Specify one or more PerfMetricType values such as CPU to filter the result",
 	//       "enum": [
 	//         "cpu",
+	//         "graphics",
 	//         "memory",
 	//         "network",
 	//         "perfMetricTypeUnspecified"
 	//       ],
 	//       "enumDescriptions": [
+	//         "",
 	//         "",
 	//         "",
 	//         "",
@@ -5903,7 +5900,6 @@ func (c *ProjectsHistoriesExecutionsStepsPerfSampleSeriesSamplesBatchCreateCall)
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.batchcreateperfsamplesrequest)
 	if err != nil {
@@ -6111,7 +6107,6 @@ func (c *ProjectsHistoriesExecutionsStepsPerfSampleSeriesSamplesListCall) doRequ
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -6342,7 +6337,6 @@ func (c *ProjectsHistoriesExecutionsStepsThumbnailsListCall) doRequest(alt strin
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}

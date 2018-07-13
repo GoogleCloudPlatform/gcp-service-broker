@@ -18,8 +18,8 @@
 package models
 
 type Service struct {
-	ID              string                  `json:"id"`
-	Name            string                  `json:"name"`
+	ID              string                  `json:"id" validate:"nonzero"`
+	Name            string                  `json:"name" validate:"nonzero"`
 	Description     string                  `json:"description"`
 	Bindable        bool                    `json:"bindable"`
 	Tags            []string                `json:"tags,omitempty"`
@@ -37,11 +37,12 @@ type ServiceDashboardClient struct {
 }
 
 type ServicePlan struct {
-	ID          string               `json:"id"`
-	Name        string               `json:"name"`
-	Description string               `json:"description"`
-	Free        *bool                `json:"free,omitempty"`
-	Metadata    *ServicePlanMetadata `json:"metadata,omitempty"`
+	ID                string               `json:"id" validate:"nonzero"`
+	Name              string               `json:"name" validate:"nonzero"`
+	Description       string               `json:"description"`
+	Free              *bool                `json:"free,omitempty"`
+	Metadata          *ServicePlanMetadata `json:"metadata,omitempty"`
+	ServiceProperties map[string]string    `json:"service_properties"`
 }
 
 type ServicePlanMetadata struct {
@@ -62,10 +63,6 @@ type ServiceMetadata struct {
 	ProviderDisplayName string `json:"providerDisplayName,omitempty"`
 	DocumentationUrl    string `json:"documentationUrl,omitempty"`
 	SupportUrl          string `json:"supportUrl,omitempty"`
-}
-
-func FreeValue(v bool) *bool {
-	return &v
 }
 
 type RequiredPermission string

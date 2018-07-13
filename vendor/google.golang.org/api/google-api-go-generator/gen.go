@@ -52,6 +52,8 @@ var (
 	contextPkg     = flag.String("context_pkg", "golang.org/x/net/context", "Go package path of the 'context' package.")
 	gensupportPkg  = flag.String("gensupport_pkg", "google.golang.org/api/gensupport", "Go package path of the 'api/gensupport' support package.")
 	googleapiPkg   = flag.String("googleapi_pkg", "google.golang.org/api/googleapi", "Go package path of the 'api/googleapi' support package.")
+
+	serviceTypes = []string{"Service", "APIService"}
 )
 
 // API represents an API to generate, as well as its state while it's
@@ -392,10 +394,15 @@ func (a *API) Target() string {
 // (typically "Service").
 func (a *API) ServiceType() string {
 	switch a.Name {
-	case "appengine", "content", "servicemanagement", "serviceuser":
+	case "appengine", "content": // retained for historical compatibility.
 		return "APIService"
 	default:
-		return "Service"
+		for _, t := range serviceTypes {
+			if _, ok := a.schemas[t]; !ok {
+				return t
+			}
+		}
+		panic("all service types are used, please consider introducing a new type to serviceTypes.")
 	}
 }
 
@@ -573,6 +580,7 @@ func (a *API) GenerateCode() ([]byte, error) {
 	pn("const basePath = %q", a.apiBaseURL())
 
 	a.generateScopeConstants()
+	a.PopulateSchemas()
 
 	service := a.ServiceType()
 
@@ -593,7 +601,6 @@ func (a *API) GenerateCode() ([]byte, error) {
 	pn(" client *http.Client")
 	pn(" BasePath string // API endpoint base URL")
 	pn(" UserAgent string // optional additional User-Agent fragment")
-	pn(" GoogleClientHeaderElement string // client header fragment, for Google use only")
 
 	for _, res := range a.doc.Resources {
 		pn("\n\t%s\t*%s", resourceGoField(res), resourceGoType(res))
@@ -603,15 +610,10 @@ func (a *API) GenerateCode() ([]byte, error) {
 	pn(` if s.UserAgent == "" { return googleapi.UserAgent }`)
 	pn(` return googleapi.UserAgent + " " + s.UserAgent`)
 	pn("}\n")
-	pn("\nfunc (s *%s) clientHeader() string {", service)
-	pn("  return gensupport.GoogleClientHeader(%q, s.GoogleClientHeaderElement)", generatorVersion)
-	pn("}\n")
 
 	for _, res := range a.doc.Resources {
 		a.generateResource(res)
 	}
-
-	a.PopulateSchemas()
 
 	a.responseTypes = make(map[string]bool)
 	for _, meth := range a.APIMethods() {
@@ -763,11 +765,17 @@ type fieldName struct {
 // This makes it possible to distinguish between a field being unset vs having
 // an empty value.
 var pointerFields = []fieldName{
+	{api: "androidpublisher:v2", schema: "SubscriptionPurchase", field: "CancelReason"},
+	{api: "androidpublisher:v2", schema: "SubscriptionPurchase", field: "PaymentState"},
 	{api: "cloudmonitoring:v2beta2", schema: "Point", field: "BoolValue"},
 	{api: "cloudmonitoring:v2beta2", schema: "Point", field: "DoubleValue"},
 	{api: "cloudmonitoring:v2beta2", schema: "Point", field: "Int64Value"},
 	{api: "cloudmonitoring:v2beta2", schema: "Point", field: "StringValue"},
+	{api: "compute:alpha", schema: "Scheduling", field: "AutomaticRestart"},
+	{api: "compute:beta", schema: "MetadataItems", field: "Value"},
+	{api: "compute:beta", schema: "Scheduling", field: "AutomaticRestart"},
 	{api: "compute:v1", schema: "MetadataItems", field: "Value"},
+	{api: "compute:v1", schema: "Scheduling", field: "AutomaticRestart"},
 	{api: "content:v2", schema: "AccountUser", field: "Admin"},
 	{api: "datastore:v1beta2", schema: "Property", field: "BlobKeyValue"},
 	{api: "datastore:v1beta2", schema: "Property", field: "BlobValue"},
@@ -792,6 +800,9 @@ var pointerFields = []fieldName{
 	{api: "servicecontrol:v1", schema: "MetricValue", field: "DoubleValue"},
 	{api: "servicecontrol:v1", schema: "MetricValue", field: "Int64Value"},
 	{api: "servicecontrol:v1", schema: "MetricValue", field: "StringValue"},
+	{api: "sqladmin:v1beta4", schema: "Settings", field: "StorageAutoResize"},
+	{api: "storage:v1", schema: "BucketLifecycleRuleCondition", field: "IsLive"},
+	{api: "storage:v1beta2", schema: "BucketLifecycleRuleCondition", field: "IsLive"},
 	{api: "tasks:v1", schema: "Task", field: "Completed"},
 	{api: "youtube:v3", schema: "ChannelSectionSnippet", field: "Position"},
 }
@@ -1792,7 +1803,6 @@ func (meth *Method) generateCode() {
 	pn(" reqHeaders[k] = v")
 	pn("}")
 	pn(`reqHeaders.Set("User-Agent",c.s.userAgent())`)
-	pn(`reqHeaders.Set("x-goog-api-client", c.s.clientHeader())`)
 	if httpMethod == "GET" {
 		pn(`if c.ifNoneMatch_ != "" {`)
 		pn(` reqHeaders.Set("If-None-Match",  c.ifNoneMatch_)`)

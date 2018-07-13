@@ -31,6 +31,8 @@ import:
   - storage
   - spanner/admin/instance/apiv1
   - spanner/...
+- package: github.com/kelseyhightower/envconfig
+- package: gopkg.in/validator.v2
 testImport:
 - package: github.com/onsi/ginkgo
   version: ~1.2.0

@@ -127,6 +127,8 @@ See the [examples](https://github.com/GoogleCloudPlatform/gcp-service-broker/blo
 The [cmd](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/cmd/) folder contains commands that can be run independent of the broker.
 
 * `migrate`: migrates the database to the latest schema
+* `get_plan_info`: dumps plan information stored in the database for versions < 4.0.0 to the command line. Advised to 
+run this command and copy plan guids into manifest.yml before upgrading between < 4 to >= 4.
 
 ## Testing
 

@@ -19,8 +19,7 @@ package spanner
 
 import (
 	googlespanner "cloud.google.com/go/spanner/admin/instance/apiv1"
-	"code.cloudfoundry.org/lager"
-	"golang.org/x/net/context"
+	"context"
 	"encoding/json"
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
@@ -29,16 +28,10 @@ import (
 	"gcp-service-broker/db_service"
 	"google.golang.org/api/option"
 	instancepb "google.golang.org/genproto/googleapis/spanner/admin/instance/v1"
-	"net/http"
 	"strconv"
 )
 
 type SpannerBroker struct {
-	Client         *http.Client
-	ProjectId      string
-	Logger         lager.Logger
-	AccountManager models.AccountManager
-
 	broker_base.BrokerBase
 }
 
@@ -48,7 +41,7 @@ type InstanceInformation struct {
 
 // Creates a new Spanner Instance identified by the name provided in details.RawParameters.name and
 // an optional region (defaults to regional-us-central1) and optional display_name
-func (s *SpannerBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (s *SpannerBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 	var params map[string]string
 
@@ -63,21 +56,17 @@ func (s *SpannerBroker) Provision(instanceId string, details models.ProvisionDet
 		params["name"] = name_generator.Basic.InstanceNameWithSeparator("-")
 	}
 
-	// get plan parameters
-	var planDetails map[string]string
-	if err = json.Unmarshal([]byte(plan.Features), &planDetails); err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling plan features: %s", err)
-	}
-
 	// set up client
 
-	client, err := googlespanner.NewInstanceAdminClient(context.Background(), option.WithUserAgent(models.CustomUserAgent))
+	co := option.WithUserAgent(models.CustomUserAgent)
+	ct := option.WithTokenSource(s.HttpConfig.TokenSource(context.Background()))
+	client, err := googlespanner.NewInstanceAdminClient(context.Background(), co, ct)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating client: %s", err)
 	}
 
 	// set up params
-	numNodes, err := strconv.Atoi(planDetails["num_nodes"])
+	numNodes, err := strconv.Atoi(plan.ServiceProperties["num_nodes"])
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error getting number of nodes: %s", err)
 	}
@@ -159,7 +148,8 @@ func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 		return true, nil
 	}
 
-	client, err := googlespanner.NewInstanceAdminClient(context.Background())
+	ct := option.WithTokenSource(s.HttpConfig.TokenSource(context.Background()))
+	client, err := googlespanner.NewInstanceAdminClient(context.Background(), ct)
 	if err != nil {
 		return false, fmt.Errorf("Error creating client: %s", err)
 	}
@@ -176,13 +166,13 @@ func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 		op.Status = "FAILED"
 		op.ErrorMessage = err.Error()
 
-		if err = db_service.DbConnection.Save(&op).Error; err != nil {
-			return false, fmt.Errorf(`Error saving operation details to database: %s.`, err)
+		if dberr := db_service.DbConnection.Save(&op).Error; dberr != nil {
+			return false, fmt.Errorf(`Error saving operation details to database: %s.`, dberr)
 		}
 
-		return true, fmt.Errorf("Error provisioning instance: %s", err)
+		return true, fmt.Errorf("Error provisioning instance: %v", err)
 	} else if spannerInstance == nil && err == nil && !done {
-		op.Status = spannerInstance.State.String()
+		op.Status = string(instancepb.Instance_STATE_UNSPECIFIED)
 
 		if err = db_service.DbConnection.Save(&op).Error; err != nil {
 			return false, fmt.Errorf(`Error saving operation details to database: %s.`, err)
@@ -245,7 +235,9 @@ func (s *SpannerBroker) Deprovision(instanceID string, details models.Deprovisio
 	}
 
 	// set up client
-	client, err := googlespanner.NewInstanceAdminClient(context.Background(), option.WithUserAgent(models.CustomUserAgent))
+	co := option.WithUserAgent(models.CustomUserAgent)
+	ct := option.WithTokenSource(s.HttpConfig.TokenSource(context.Background()))
+	client, err := googlespanner.NewInstanceAdminClient(context.Background(), co, ct)
 	if err != nil {
 		return fmt.Errorf("Error creating client: %s", err)
 	}
@@ -272,21 +264,4 @@ func (s *SpannerBroker) ProvisionsAsync() bool {
 // since spanner deprovisions synchronously, the last operation will never have been delete
 func (s *SpannerBroker) LastOperationWasDelete(instanceId string) (bool, error) {
 	return false, nil
-}
-
-type SpannerDynamicPlan struct {
-	Guid        string `json:"guid"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	NumNodes    string `json:"num_nodes"`
-	DisplayName string `json:"display_name"`
-	ServiceId   string `json:"service"`
-}
-
-func MapPlan(details map[string]string) map[string]string {
-
-	features := map[string]string{
-		"num_nodes": details["num_nodes"],
-	}
-	return features
 }

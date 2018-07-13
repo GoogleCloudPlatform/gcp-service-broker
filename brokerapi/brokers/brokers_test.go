@@ -1,7 +1,6 @@
 package brokers_test
 
 import (
-	"encoding/json"
 	"gcp-service-broker/brokerapi/brokers"
 	. "gcp-service-broker/brokerapi/brokers"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
@@ -12,21 +11,23 @@ import (
 	"gcp-service-broker/brokerapi/brokers/pubsub"
 	"gcp-service-broker/brokerapi/brokers/spanner"
 	"gcp-service-broker/db_service"
-	"net/http"
 	"os"
 
 	"code.cloudfoundry.org/lager"
 
 	"gcp-service-broker/fakes"
 
+	"gcp-service-broker/brokerapi/brokers/config"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"golang.org/x/oauth2/jwt"
 )
 
 var _ = Describe("Brokers", func() {
 	var (
 		gcpBroker                *GCPAsyncServiceBroker
+		brokerConfig             *config.BrokerConfig
 		err                      error
 		logger                   lager.Logger
 		serviceNameToId          map[string]string = make(map[string]string)
@@ -45,7 +46,6 @@ var _ = Describe("Brokers", func() {
 		testDb, _ := gorm.Open("sqlite3", "test.db")
 		testDb.CreateTable(models.ServiceInstanceDetails{})
 		testDb.CreateTable(models.ServiceBindingCredentials{})
-		testDb.CreateTable(models.PlanDetails{})
 		testDb.CreateTable(models.ProvisionRequestDetails{})
 
 		db_service.DbConnection = testDb
@@ -65,18 +65,18 @@ var _ = Describe("Brokers", func() {
 		      }`)
 		os.Setenv("SECURITY_USER_NAME", "username")
 		os.Setenv("SECURITY_USER_PASSWORD", "password")
-		os.Setenv("SERVICES", fakes.Services)
-		os.Setenv("PRECONFIGURED_PLANS", fakes.PreconfiguredPlans)
 
-		os.Setenv("CLOUDSQL_MYSQL_CUSTOM_PLANS", fakes.TestCloudSQLMySQLPlan)
-		os.Setenv("CLOUDSQL_POSTGRES_CUSTOM_PLANS", fakes.TestCloudSQLPostgresPlan)
-		os.Setenv("BIGTABLE_CUSTOM_PLANS", fakes.TestBigtablePlan)
-		os.Setenv("SPANNER_CUSTOM_PLANS", fakes.TestSpannerPlan)
+		fakes.SetUpTestServices()
+
+		brokerConfig, err = config.NewBrokerConfigFromEnv()
+		if err != nil {
+			logger.Error("error", err)
+		}
 
 		instanceId = "newid"
 		bindingId = "newbinding"
 
-		gcpBroker, err = brokers.New(logger)
+		gcpBroker, err = brokers.New(brokerConfig, logger)
 		if err != nil {
 			logger.Error("error", err)
 		}
@@ -84,7 +84,7 @@ var _ = Describe("Brokers", func() {
 		var someBigQueryPlanId string
 		var someCloudSQLPlanId string
 		var someStoragePlanId string
-		for _, service := range *gcpBroker.Catalog {
+		for _, service := range gcpBroker.Catalog {
 			serviceNameToId[service.Name] = service.ID
 			if service.Name == models.BigqueryName {
 				someBigQueryPlanId = service.Plans[0].ID
@@ -106,7 +106,7 @@ var _ = Describe("Brokers", func() {
 			gcpBroker.ServiceBrokerMap[k] = &modelsfakes.FakeServiceBrokerHelper{
 				ProvisionsAsyncStub:   func() bool { return async },
 				DeprovisionsAsyncStub: func() bool { return async },
-				ProvisionStub: func(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+				ProvisionStub: func(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 					return models.ServiceInstanceDetails{ID: instanceId, OtherDetails: "{\"mynameis\": \"instancename\"}"}, nil
 				},
 				BindStub: func(instanceID, bindingID string, details models.BindDetails) (models.ServiceBindingCredentials, error) {
@@ -143,17 +143,28 @@ var _ = Describe("Brokers", func() {
 		})
 
 		It("should have a default client", func() {
-			Expect(gcpBroker.GCPClient).NotTo(Equal(&http.Client{}))
+			Expect(brokerConfig.HttpConfig).NotTo(Equal(&jwt.Config{}))
 		})
 
 		It("should have loaded credentials correctly and have a project id", func() {
-			Expect(gcpBroker.RootGCPCredentials.ProjectId).To(Equal("foo"))
+			Expect(brokerConfig.ProjectId).To(Equal("foo"))
 		})
 	})
 
 	Describe("getting broker catalog", func() {
 		It("should have 11 services available", func() {
 			Expect(len(gcpBroker.Services())).To(Equal(11))
+		})
+
+		It("should record api fields in the catalog", func() {
+			serviceList := gcpBroker.Services()
+
+			for _, s := range serviceList {
+				if s.ID == serviceNameToId[models.StorageName] || s.ID == serviceNameToId[models.CloudsqlMySQLName] {
+					Expect(len(s.Plans[0].ServiceProperties)).ToNot(Equal(0))
+				}
+			}
+
 		})
 
 		It("should have 3 storage plans available", func() {
@@ -195,6 +206,12 @@ var _ = Describe("Brokers", func() {
 			}
 		})
 
+		It("should error if plan ids are not supplied", func() {
+			os.Setenv("GOOGLE_STACKDRIVER_TRACE", fakes.PlanNoId)
+			_, err := config.NewBrokerConfigFromEnv()
+			Expect(err).To(HaveOccurred())
+		})
+
 		It("should have 1 datastore plan available", func() {
 			serviceList := gcpBroker.Services()
 			for _, s := range serviceList {
@@ -207,75 +224,30 @@ var _ = Describe("Brokers", func() {
 
 	Describe("updating broker catalog", func() {
 
-		It("should update cloudsql custom plans with different names on startup", func() {
+		It("should update plans on startup", func() {
 
-			os.Setenv("CLOUDSQL_MYSQL_CUSTOM_PLANS", `{
-				"newPlan": {
-					"name": "newPlan",
-					"description": "testplan",
-					"tier": "D8",
-					"pricing_plan": "athing",
-					"max_disk_size": "15",
-					"display_name": "FOOBAR",
-					"service": "4bc59b9a-8520-409f-85da-1c7552315863"
-				}
-			}`)
+			os.Setenv("GOOGLE_CLOUDSQL_MYSQL", fakes.CloudSqlNewPlan)
 
-			newBroker, err := brokers.New(logger)
+			newcfg, err := config.NewBrokerConfigFromEnv()
+			Expect(err).ToNot(HaveOccurred())
+			newBroker, err := brokers.New(newcfg, logger)
+			Expect(err).ToNot(HaveOccurred())
 
 			serviceList := newBroker.Services()
 			for _, s := range serviceList {
 				if s.ID == serviceNameToId[models.CloudsqlMySQLName] {
 					Expect(s.Plans[0].Name).To(Equal("newPlan"))
 					Expect(len(s.Plans)).To(Equal(1))
-					plan := models.PlanDetails{}
-					if err := db_service.DbConnection.Where("service_id = ?", "4bc59b9a-8520-409f-85da-1c7552315863").First(&plan).Error; err != nil {
-						panic("The provided plan does not exist " + err.Error())
-					}
-					var planDetails map[string]string
-					if err = json.Unmarshal([]byte(plan.Features), &planDetails); err != nil {
-						panic("Error unmarshalling plan features: " + err.Error())
-					}
-					Expect(planDetails["tier"]).To(Equal("D8"))
-					Expect(planDetails["max_disk_size"]).To(Equal("15"))
+
+					Expect(err).ToNot(HaveOccurred())
+					Expect(s.Plans[0].ServiceProperties["tier"]).To(Equal("D8"))
+					Expect(s.Plans[0].ServiceProperties["max_disk_size"]).To(Equal("15"))
+
 				}
 			}
 
 		})
 
-		It("should update cloudsql custom plans with the same name on startup", func() {
-
-			os.Setenv("CLOUDSQL_MYSQL_CUSTOM_PLANS", `{
-				"test_plan": {
-					"name": "test_plan",
-					"description": "testplan",
-					"tier": "D8",
-					"pricing_plan": "athing",
-					"max_disk_size": "15",
-					"display_name": "FOOBAR",
-					"service": "4bc59b9a-8520-409f-85da-1c7552315863"
-				}
-			}`)
-
-			newBroker, err := brokers.New(logger)
-
-			serviceList := newBroker.Services()
-			for _, s := range serviceList {
-				if s.ID == serviceNameToId[models.CloudsqlMySQLName] {
-					Expect(len(s.Plans)).To(Equal(1))
-					plan := models.PlanDetails{}
-					if err := db_service.DbConnection.Where("service_id = ?", "4bc59b9a-8520-409f-85da-1c7552315863").First(&plan).Error; err != nil {
-						panic("The provided plan does not exist " + err.Error())
-					}
-					var planDetails map[string]string
-					if err = json.Unmarshal([]byte(plan.Features), &planDetails); err != nil {
-						panic("Error unmarshalling plan features: " + err.Error())
-					}
-					Expect(planDetails["tier"]).To(Equal("D8"))
-				}
-			}
-
-		})
 	})
 
 	Describe("provision", func() {
@@ -460,7 +432,6 @@ var _ = Describe("Brokers", func() {
 	})
 
 	AfterEach(func() {
-		os.Remove(models.AppCredsFileName)
 		os.Remove("test.db")
 	})
 })
@@ -484,7 +455,6 @@ var _ = Describe("AccountManagers", func() {
 		testDb, _ := gorm.Open("sqlite3", "test.db")
 		testDb.CreateTable(models.ServiceInstanceDetails{})
 		testDb.CreateTable(models.ServiceBindingCredentials{})
-		testDb.CreateTable(models.PlanDetails{})
 		testDb.CreateTable(models.ProvisionRequestDetails{})
 
 		db_service.DbConnection = testDb
@@ -502,7 +472,6 @@ var _ = Describe("AccountManagers", func() {
 		}
 
 		iamStyleBroker = &pubsub.PubSubBroker{
-			Logger: logger,
 			BrokerBase: broker_base.BrokerBase{
 				AccountManager: &accountManager,
 			},
@@ -515,8 +484,9 @@ var _ = Describe("AccountManagers", func() {
 		}
 
 		spannerBroker = &spanner.SpannerBroker{
-			Logger:         logger,
-			AccountManager: &accountManager,
+			BrokerBase: broker_base.BrokerBase{
+				AccountManager: &accountManager,
+			},
 		}
 	})
 
@@ -525,7 +495,7 @@ var _ = Describe("AccountManagers", func() {
 			It("should call the account manager create account in google method", func() {
 				_, err = iamStyleBroker.Bind("foo", "bar", models.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(accountManager.CreateAccountInGoogleCallCount()).To(Equal(1))
+				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 			})
 		})
 
@@ -534,7 +504,7 @@ var _ = Describe("AccountManagers", func() {
 				db_service.DbConnection.Save(&models.ServiceInstanceDetails{ID: "foo"})
 				_, err = iamStyleBroker.Bind("foo", "bar", models.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(accountManager.CreateAccountInGoogleCallCount()).To(Equal(1))
+				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 			})
 		})
 
@@ -552,9 +522,9 @@ var _ = Describe("AccountManagers", func() {
 				_, err := cloudsqlBroker.Bind("foo", "bar", models.BindDetails{})
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(accountManager.CreateAccountInGoogleCallCount()).To(Equal(1))
-				Expect(sqlAccountManager.CreateAccountInGoogleCallCount()).To(Equal(1))
-				_, _, details, _ := accountManager.CreateAccountInGoogleArgsForCall(0)
+				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
+				Expect(sqlAccountManager.CreateCredentialsCallCount()).To(Equal(1))
+				_, _, details, _ := accountManager.CreateCredentialsArgsForCall(0)
 				Expect(details.Parameters).NotTo(BeEmpty())
 
 				username, usernameOk := details.Parameters["username"].(string)
@@ -582,7 +552,7 @@ var _ = Describe("AccountManagers", func() {
 			It("it should call the account manager delete account from google method", func() {
 				err = iamStyleBroker.Unbind(models.ServiceBindingCredentials{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(accountManager.DeleteAccountFromGoogleCallCount()).To(Equal(1))
+				Expect(accountManager.DeleteCredentialsCallCount()).To(Equal(1))
 			})
 		})
 
@@ -590,8 +560,8 @@ var _ = Describe("AccountManagers", func() {
 			It("it should call the account manager delete account from google method", func() {
 				err = cloudsqlBroker.Unbind(models.ServiceBindingCredentials{})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(accountManager.DeleteAccountFromGoogleCallCount()).To(Equal(1))
-				Expect(sqlAccountManager.DeleteAccountFromGoogleCallCount()).To(Equal(1))
+				Expect(accountManager.DeleteCredentialsCallCount()).To(Equal(1))
+				Expect(sqlAccountManager.DeleteCredentialsCallCount()).To(Equal(1))
 			})
 		})
 	})
@@ -620,7 +590,6 @@ var _ = Describe("AccountManagers", func() {
 	})
 
 	AfterEach(func() {
-		os.Remove(models.AppCredsFileName)
 		os.Remove("test.db")
 	})
 

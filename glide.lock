@@ -1,8 +1,8 @@
-hash: 65bc06e5fe15156aa97a1826d7fc56f6fa1391b72ae0e5bc9a5687191ab00ddc
-updated: 2017-03-17T08:40:59.685549387-07:00
+hash: 63f234cdd2e0e3cb3fcc6c916abfea7c6508a350224f2644ecfc3f3a2fea5158
+updated: 2017-07-25T16:04:09.159654888-07:00
 imports:
 - name: cloud.google.com/go
-  version: dbe4740b523eecbc19b2050f0691772c312aa07b
+  version: c687e443ccef6592a33739e1d732a6c839e33845
   subpackages:
   - bigquery
   - bigtable
@@ -14,17 +14,18 @@ imports:
   - internal/optional
   - internal/version
   - longrunning
+  - longrunning/autogen
   - pubsub
   - pubsub/apiv1
   - spanner/...
   - spanner/admin/instance/apiv1
   - storage
 - name: code.cloudfoundry.org/lager
-  version: de8e9c6c6e474e5e3668aea1a9817bdb4ceeceb0
+  version: 438ab98cc3b9b81e97c2281422b2722cd8e80ed8
 - name: github.com/go-sql-driver/mysql
   version: a0583e0143b1624142adab07e0e97fe106d99561
 - name: github.com/golang/protobuf
-  version: c9c7427a2a70d2eb3bafa0ab2dc163e45f143317
+  version: 0a4f71a498b7c4812f64969510bcb4eca251e33a
   subpackages:
   - proto
   - protoc-gen-go/descriptor
@@ -35,7 +36,7 @@ imports:
   - ptypes/timestamp
   - ptypes/wrappers
 - name: github.com/googleapis/gax-go
-  version: 8c5154c0fe5bf18cf649634d4c6df50897a32751
+  version: 84ed26760e7f6f80887a2fbfb50db3cc415d2cea
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
@@ -46,14 +47,16 @@ imports:
   - dialects/sqlite
 - name: github.com/jinzhu/inflection
   version: 1c35d901db3da928c72a72d8458480cc9ade058f
+- name: github.com/kelseyhightower/envconfig
+  version: 70f0258d44cbaa3b6a2581d82f58da01a38e4de4
 - name: github.com/leonelquinteros/gorand
-  version: aac5da62f38c2d2b492bee83183ca80dd209b875
+  version: 6a4a9e984422d82c61b1b32ddfab3be310cba4a7
 - name: github.com/mattn/go-sqlite3
-  version: eac1dfa2a61ebccaa117538a5bb12044f6700cd0
+  version: 47fc4e5e9153645da45af6a86a5bce95e63a0f9e
 - name: github.com/pivotal-golang/lager
-  version: de8e9c6c6e474e5e3668aea1a9817bdb4ceeceb0
+  version: 438ab98cc3b9b81e97c2281422b2722cd8e80ed8
 - name: golang.org/x/net
-  version: a6577fac2d73be281a500b310739095313165611
+  version: ab5485076ff3407ad2d02db054635913f017b0ed
   subpackages:
   - context
   - context/ctxhttp
@@ -64,14 +67,26 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/oauth2
-  version: 30fcca6531eb4bb278493c9fb299295b3b145934
+  version: b53b38ad8a6435bd399ea76d0fa74f23149cca4e
   subpackages:
   - google
   - internal
   - jws
   - jwt
+- name: golang.org/x/sync
+  version: f52d1811a62927559de87708c8913c1650ce4f26
+  subpackages:
+  - errgroup
+  - semaphore
+- name: golang.org/x/text
+  version: 836efe42bb4aa16aaa17b9c155d8813d336ed720
+  subpackages:
+  - secure/bidirule
+  - transform
+  - unicode/bidi
+  - unicode/norm
 - name: google.golang.org/api
-  version: 650535c7d6201e8304c92f38c922a9a3a36c6877
+  version: 295e4bb0ade057ae2cfb9876ab0b54635dbfcea4
   subpackages:
   - bigquery/v2
   - cloudresourcemanager/v1
@@ -87,8 +102,10 @@ imports:
   - storage/v1
   - support/bundler
   - transport
+  - transport/grpc
+  - transport/http
 - name: google.golang.org/appengine
-  version: b79c28f0197795b4050bfcd7c4c2209136c594b1
+  version: ad2570cd3913654e00c5f0183b39d2f998e54046
   subpackages:
   - internal
   - internal/app_identity
@@ -102,7 +119,7 @@ imports:
   - socket
   - urlfetch
 - name: google.golang.org/genproto
-  version: de9f5e90fe9b278809363f08c2072d2f2a429de7
+  version: b0a3dcfcd1a9bd48e63634bd8802960804cf8315
   subpackages:
   - googleapis/api
   - googleapis/api/annotations
@@ -122,11 +139,12 @@ imports:
   - protobuf/ptype
   - protobuf/source_context
 - name: google.golang.org/grpc
-  version: cdee119ee21e61eef7093a41ba148fa83585e143
+  version: ca9e0c3458ef816b9f0ff97f29c6b1fed48d8f49
   subpackages:
   - codes
   - credentials
   - credentials/oauth
+  - grpclb/grpc_lb_v1
   - grpclog
   - internal
   - keepalive
@@ -134,8 +152,11 @@ imports:
   - naming
   - peer
   - stats
+  - status
   - tap
   - transport
+- name: gopkg.in/validator.v2
+  version: 07ffaad256c8e957050ad83d6472eb97d785013d
 testImports:
 - name: github.com/onsi/ginkgo
   version: 462326b1628e124b23f42e87a8f2750e3c4e2d24

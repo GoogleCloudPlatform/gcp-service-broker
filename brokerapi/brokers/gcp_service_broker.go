@@ -18,22 +18,20 @@
 package brokers
 
 import (
+	"code.cloudfoundry.org/lager"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
-	"net/http"
-	"os"
-
-	"code.cloudfoundry.org/lager"
-	"google.golang.org/api/googleapi"
-
 	"gcp-service-broker/brokerapi/brokers/account_managers"
 	"gcp-service-broker/brokerapi/brokers/api_service"
 	"gcp-service-broker/brokerapi/brokers/bigquery"
 	"gcp-service-broker/brokerapi/brokers/bigtable"
 	"gcp-service-broker/brokerapi/brokers/broker_base"
 	"gcp-service-broker/brokerapi/brokers/cloudsql"
+	"google.golang.org/api/googleapi"
+	"math"
+
+	"gcp-service-broker/brokerapi/brokers/config"
 	"gcp-service-broker/brokerapi/brokers/datastore"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"gcp-service-broker/brokerapi/brokers/pubsub"
@@ -42,14 +40,11 @@ import (
 	"gcp-service-broker/brokerapi/brokers/stackdriver_trace"
 	"gcp-service-broker/brokerapi/brokers/storage"
 	"gcp-service-broker/db_service"
-	"gcp-service-broker/utils"
 )
 
 type GCPServiceBroker struct {
-	RootGCPCredentials *models.GCPCredentials
-	GCPClient          *http.Client
-	Catalog            *[]models.Service
-	ServiceBrokerMap   map[string]models.ServiceBrokerHelper
+	Catalog          map[string]models.Service
+	ServiceBrokerMap map[string]models.ServiceBrokerHelper
 
 	InstanceLimit int
 
@@ -62,8 +57,7 @@ type GCPAsyncServiceBroker struct {
 }
 
 // returns a new service broker and nil if no errors occur else nil and the error
-func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
-	var err error
+func New(cfg *config.BrokerConfig, Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 
 	self := GCPAsyncServiceBroker{}
 	self.Logger = Logger
@@ -73,136 +67,72 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 	// handle that as a config option.
 	self.InstanceLimit = math.MaxInt32
 
-	// save credentials to broker object
-	rootCreds, err := GetCredentialsFromEnv()
-	if err != nil {
-		return nil, fmt.Errorf("Error initializing GCP credentials: %s", err)
-	}
-	self.RootGCPCredentials = &rootCreds
-
-	if err := utils.SetGCPCredsFromEnv(); err != nil {
-		return nil, fmt.Errorf("Error writing GCP credentials: %s", err)
-	}
-
-	// set up GCP client with root gcp credentials
-	client, err := utils.GetAuthedClient()
-	if err != nil {
-		return nil, fmt.Errorf("Error getting authorized http client: %s", err)
-	}
-	self.GCPClient = client
-
-	// save catalog to broker object
-
-	cat, err := InitCatalogFromEnv()
-	if err != nil {
-		return nil, fmt.Errorf("Error initializing catalog: %s", err)
-	}
-	self.Catalog = &cat
+	self.Catalog = cfg.Catalog
 
 	saManager := &account_managers.ServiceAccountManager{
-		GCPClient: self.GCPClient,
-		ProjectId: self.RootGCPCredentials.ProjectId,
+		HttpConfig: cfg.HttpConfig,
+		ProjectId:  cfg.ProjectId,
 	}
 
 	sqlManager := &account_managers.SqlAccountManager{
-		GCPClient: self.GCPClient,
-		ProjectId: self.RootGCPCredentials.ProjectId,
+		HttpConfig: cfg.HttpConfig,
+		ProjectId:  cfg.ProjectId,
+	}
+
+	bb := broker_base.BrokerBase{
+		AccountManager: saManager,
+		HttpConfig:     cfg.HttpConfig,
+		ProjectId:      cfg.ProjectId,
+		Logger:         self.Logger,
 	}
 
 	// map service specific brokers to general broker
 	self.ServiceBrokerMap = map[string]models.ServiceBrokerHelper{
 		models.StorageName: &storage.StorageBroker{
-			Client:    self.GCPClient,
-			ProjectId: self.RootGCPCredentials.ProjectId,
-			Logger:    self.Logger,
-			BrokerBase: broker_base.BrokerBase{
-				AccountManager: saManager,
-			},
+			BrokerBase: bb,
 		},
 		models.PubsubName: &pubsub.PubSubBroker{
-			Client:    self.GCPClient,
-			ProjectId: self.RootGCPCredentials.ProjectId,
-			Logger:    self.Logger,
-			BrokerBase: broker_base.BrokerBase{
-				AccountManager: saManager,
-			},
+			BrokerBase: bb,
 		},
 		models.StackdriverDebuggerName: &stackdriver_debugger.StackdriverDebuggerBroker{
-			Client:                self.GCPClient,
-			ProjectId:             self.RootGCPCredentials.ProjectId,
-			Logger:                self.Logger,
-			ServiceAccountManager: saManager,
-			BrokerBase: broker_base.BrokerBase{
-				AccountManager: saManager,
-			},
+			BrokerBase: bb,
 		},
 		models.StackdriverTraceName: &stackdriver_trace.StackdriverTraceBroker{
-			Client:                self.GCPClient,
-			ProjectId:             self.RootGCPCredentials.ProjectId,
-			Logger:                self.Logger,
-			ServiceAccountManager: saManager,
-			BrokerBase: broker_base.BrokerBase{
-				AccountManager: saManager,
-			},
+			BrokerBase: bb,
 		},
 		models.BigqueryName: &bigquery.BigQueryBroker{
-			Client:    self.GCPClient,
-			ProjectId: self.RootGCPCredentials.ProjectId,
-			Logger:    self.Logger,
-			BrokerBase: broker_base.BrokerBase{
-				AccountManager: saManager,
-			},
+			BrokerBase: bb,
 		},
 		models.MlName: &api_service.ApiServiceBroker{
-			Client:    self.GCPClient,
-			ProjectId: self.RootGCPCredentials.ProjectId,
-			Logger:    self.Logger,
-			BrokerBase: broker_base.BrokerBase{
-				AccountManager: saManager,
-			},
+			BrokerBase: bb,
 		},
 		models.CloudsqlMySQLName: &cloudsql.CloudSQLBroker{
-			Client:         self.GCPClient,
-			ProjectId:      self.RootGCPCredentials.ProjectId,
+			HttpConfig:     cfg.HttpConfig,
+			ProjectId:      cfg.ProjectId,
 			Logger:         self.Logger,
 			AccountManager: sqlManager,
 			SaAccountManager: saManager,
 		},
 		models.CloudsqlPostgresName: &cloudsql.CloudSQLBroker{
-			Client:         self.GCPClient,
-			ProjectId:      self.RootGCPCredentials.ProjectId,
+			HttpConfig:     cfg.HttpConfig,
+			ProjectId:      cfg.ProjectId,
 			Logger:         self.Logger,
 			AccountManager: sqlManager,
 			SaAccountManager: saManager,
 		},
 		models.BigtableName: &bigtable.BigTableBroker{
-			Client:    self.GCPClient,
-			ProjectId: self.RootGCPCredentials.ProjectId,
-			Logger:    self.Logger,
-			BrokerBase: broker_base.BrokerBase{
-				AccountManager: saManager,
-			},
+			BrokerBase: bb,
 		},
 		models.SpannerName: &spanner.SpannerBroker{
-			Client:    self.GCPClient,
-			ProjectId: self.RootGCPCredentials.ProjectId,
-			Logger:    self.Logger,
-			BrokerBase: broker_base.BrokerBase{
-				AccountManager: saManager,
-			},
+			BrokerBase: bb,
 		},
 		models.DatastoreName: &datastore.DatastoreBroker{
-			Client:                self.GCPClient,
-			ProjectId:             self.RootGCPCredentials.ProjectId,
-			Logger:                self.Logger,
-			ServiceAccountManager: saManager,
-			BrokerBase: broker_base.BrokerBase{
-				AccountManager: saManager,
-			},
+			BrokerBase: bb,
 		},
 	}
+
 	// replace the mapping from name to a mapping from id
-	for _, service := range *self.Catalog {
+	for _, service := range self.Catalog {
 		self.ServiceBrokerMap[service.ID] = self.ServiceBrokerMap[service.Name]
 		delete(self.ServiceBrokerMap, service.Name)
 	}
@@ -217,7 +147,28 @@ func New(Logger lager.Logger) (*GCPAsyncServiceBroker, error) {
 // lists services in the broker's catalog
 func (gcpBroker *GCPServiceBroker) Services() []models.Service {
 
-	return *gcpBroker.Catalog
+	svcs := []models.Service{}
+
+	for _, svc := range gcpBroker.Catalog {
+		svcs = append(svcs, svc)
+	}
+
+	return svcs
+
+}
+
+func (gcpBroker *GCPServiceBroker) GetPlanFromId(serviceId, planId string) (models.ServicePlan, error) {
+	if _, sidOk := gcpBroker.Catalog[serviceId]; !sidOk {
+		return models.ServicePlan{}, fmt.Errorf("serviceId %s not found", serviceId)
+	}
+
+	for _, plan := range gcpBroker.Catalog[serviceId].Plans {
+		if plan.ID == planId {
+			return plan, nil
+		}
+	}
+
+	return models.ServicePlan{}, fmt.Errorf("planId %s not found", planId)
 }
 
 // cf create-service
@@ -240,13 +191,6 @@ func (gcpBroker *GCPAsyncServiceBroker) Provision(instanceID string, details mod
 		}
 	}
 
-	// get service plan
-	plan := models.PlanDetails{}
-
-	if err := db_service.DbConnection.Where("id = ?", details.PlanID).First(&plan).Error; err != nil {
-		return models.ProvisionedServiceSpec{}, errors.New("The provided plan does not exist " + err.Error())
-	}
-
 	// make sure that instance hasn't already been provisioned
 	count, err := db_service.GetServiceInstanceCount(instanceID)
 	if err != nil {
@@ -257,6 +201,11 @@ func (gcpBroker *GCPAsyncServiceBroker) Provision(instanceID string, details mod
 	}
 
 	serviceId := details.ServiceID
+
+	plan, err := gcpBroker.GetPlanFromId(serviceId, details.PlanID)
+	if err != nil {
+		return models.ProvisionedServiceSpec{}, err
+	}
 
 	// verify async provisioning is allowed if it is required
 	gcpBroker.ShouldProvisionAsync = gcpBroker.ServiceBrokerMap[serviceId].ProvisionsAsync()
@@ -469,236 +418,4 @@ func (gcpBroker *GCPServiceBroker) lastOperationAsync(instanceId, serviceId stri
 // changes are not supported.
 func (gcpBroker *GCPServiceBroker) Update(instanceID string, details models.UpdateDetails, asyncAllowed bool) (models.IsAsync, error) {
 	return models.IsAsync(asyncAllowed), models.ErrPlanChangeNotSupported
-}
-
-// reads the service account json string from the environment variable ROOT_SERVICE_ACCOUNT_JSON, writes it to a file,
-// and then exports the file location to the environment variable GOOGLE_APPLICATION_CREDENTIALS, making it visible to
-// all google cloud apis
-func GetCredentialsFromEnv() (models.GCPCredentials, error) {
-	var err error
-	g := models.GCPCredentials{}
-
-	rootCreds := os.Getenv(models.RootSaEnvVar)
-	if err = json.Unmarshal([]byte(rootCreds), &g); err != nil {
-		return models.GCPCredentials{}, fmt.Errorf("Error unmarshalling service account json: %s", err)
-	}
-
-	return g, nil
-}
-
-func getStaticPlans() (map[string][]models.ServicePlan, error) {
-	servicePlans := make(map[string][]models.ServicePlan)
-
-	// get static plans
-	planJson := os.Getenv("PRECONFIGURED_PLANS")
-	var plans []map[string]interface{}
-
-	err := json.Unmarshal([]byte(planJson), &plans)
-	if err != nil {
-		return map[string][]models.ServicePlan{}, fmt.Errorf("Error unmarshalling preconfigured plan json %s", err)
-	}
-
-	// save plans to database and construct service id to plan list map
-	for _, p := range plans {
-		serviceId := p["service_id"].(string)
-		planName := p["name"].(string)
-
-		id, err := db_service.GetOrCreatePlanId(planName, serviceId)
-		if err != nil {
-			return map[string][]models.ServicePlan{}, err
-		}
-
-		plan := models.ServicePlan{
-			Name:        planName,
-			Description: p["description"].(string),
-			Metadata: &models.ServicePlanMetadata{
-				DisplayName: p["display_name"].(string),
-				Bullets:     []string{p["description"].(string), "For pricing information see https://cloud.google.com/pricing/#details"},
-			},
-			ID: id,
-		}
-
-		featureBytes, err := json.Marshal(p["features"])
-		if err != nil {
-			return map[string][]models.ServicePlan{}, fmt.Errorf("error marshalling features: %s", err)
-		}
-
-		exists, existingPlan, err := db_service.CheckAndGetPlan(planName, serviceId)
-		if err != nil {
-			return map[string][]models.ServicePlan{}, err
-		}
-
-		if exists {
-			existingPlan.Features = string(featureBytes)
-			db_service.DbConnection.Save(&existingPlan)
-		} else {
-			planDetails := models.PlanDetails{
-				ServiceId: serviceId,
-				Name:      p["name"].(string),
-				Features:  string(featureBytes),
-				ID:        id,
-			}
-			db_service.DbConnection.Create(&planDetails)
-		}
-
-		servicePlans[serviceId] = append(servicePlans[serviceId], plan)
-
-	}
-
-	return servicePlans, nil
-}
-
-func getDynamicPlans(envVarName string, translatePlanFunc func(details map[string]string) map[string]string) ([]models.ServicePlan, string, error) {
-	var err error
-	var serviceId string
-
-	var plansGenerated []models.ServicePlan
-	var dynamicPlans map[string]map[string]string
-	dynamicPlanJson := os.Getenv(envVarName)
-
-	if dynamicPlanJson != "" {
-		err = json.Unmarshal([]byte(dynamicPlanJson), &dynamicPlans)
-		if err != nil {
-			return []models.ServicePlan{}, "", fmt.Errorf("Error unmarshalling custom plan json %s", err)
-		}
-
-		// save custom plans to database and construct mapping
-		for planName, planDetails := range dynamicPlans {
-			serviceId = planDetails["service"]
-
-			id, err := db_service.GetOrCreatePlanId(planName, planDetails["service"])
-			if err != nil {
-				return []models.ServicePlan{}, "", err
-			}
-
-			// get service-specific plan features from plan interface
-			features := translatePlanFunc(planDetails)
-
-			featuresStr, err := json.Marshal(&features)
-			if err != nil {
-				return []models.ServicePlan{}, "", err
-			}
-
-			// check for an existing plan by name. If it exists, get it.
-			exists, existingPlan, err := db_service.CheckAndGetPlan(planName, planDetails["service"])
-
-			if err != nil {
-				return []models.ServicePlan{}, "", err
-			}
-
-			// update or make a new plan and save to the database
-			if exists {
-
-				existingPlan.Features = string(featuresStr)
-				db_service.DbConnection.Save(&existingPlan)
-			} else {
-				existingPlan = models.PlanDetails{
-					ServiceId: planDetails["service"],
-					Name:      planDetails["name"],
-					Features:  string(featuresStr),
-					ID:        id,
-				}
-				db_service.DbConnection.Create(&existingPlan)
-			}
-
-			plan := models.ServicePlan{
-				Name:        planDetails["name"],
-				Description: planDetails["description"],
-				Metadata: &models.ServicePlanMetadata{
-					DisplayName: planDetails["display_name"],
-					Bullets:     []string{planDetails["description"], "For pricing information see https://cloud.google.com/pricing/#details"},
-				},
-				ID: existingPlan.ID,
-			}
-
-			plansGenerated = append(plansGenerated, plan)
-		}
-
-	}
-	return plansGenerated, serviceId, nil
-}
-
-// pulls SERVICES, PLANS, and PRECONFIGURED_PLANS environment variables to construct catalog and save plans to db
-func InitCatalogFromEnv() ([]models.Service, error) {
-	var err error
-
-	// get static plans from catalog
-	servicePlans, err := getStaticPlans()
-	if err != nil {
-		return []models.Service{}, err
-	}
-
-	// set up cloudsql custom plans
-	cloudSQLMySQLPlans, CloudSQLMySQLServiceId, err := getDynamicPlans("CLOUDSQL_MYSQL_CUSTOM_PLANS", cloudsql.MapPlan)
-	if err != nil {
-		return []models.Service{}, err
-	}
-	servicePlans[CloudSQLMySQLServiceId] = append(servicePlans[CloudSQLMySQLServiceId], cloudSQLMySQLPlans...)
-
-	// set up cloudsql custom plans
-	cloudSQLPostgresPlans, CloudSQLPostgresServiceId, err := getDynamicPlans("CLOUDSQL_POSTGRES_CUSTOM_PLANS", cloudsql.MapPlan)
-	if err != nil {
-		return []models.Service{}, err
-	}
-	servicePlans[CloudSQLPostgresServiceId] = append(servicePlans[CloudSQLPostgresServiceId], cloudSQLPostgresPlans...)
-
-	// set up bigtable custom plans
-	bigtablePlans, bigtableServiceId, err := getDynamicPlans("BIGTABLE_CUSTOM_PLANS", bigtable.MapPlan)
-	if err != nil {
-		return []models.Service{}, err
-	}
-	servicePlans[bigtableServiceId] = append(servicePlans[bigtableServiceId], bigtablePlans...)
-
-	// set up spanner custom plans
-	spannerPlans, spannerServiceId, err := getDynamicPlans("SPANNER_CUSTOM_PLANS", spanner.MapPlan)
-	if err != nil {
-		return []models.Service{}, err
-	}
-	servicePlans[spannerServiceId] = append(servicePlans[spannerServiceId], spannerPlans...)
-
-	// get the ids of all plans in the current catalog
-	var currentPlanIds []string
-	for _, plans := range servicePlans {
-		for _, plan := range plans {
-			currentPlanIds = append(currentPlanIds, plan.ID)
-		}
-	}
-
-	// soft delete unusued plans
-	if err := db_service.DbConnection.Not("id in (?)", currentPlanIds).Delete(models.PlanDetails{}).Error; err != nil {
-		return []models.Service{}, err
-	}
-
-	// set up services
-	var serviceList []models.Service
-
-	catalogJson := os.Getenv("SERVICES")
-	var cat []models.Service
-
-	err = json.Unmarshal([]byte(catalogJson), &cat)
-	if err != nil {
-		return []models.Service{}, fmt.Errorf("Error unmarshalling service json %s", err)
-	}
-
-	// init catalog
-	// store plans
-	for _, s := range cat {
-
-		s.Plans = servicePlans[s.ID]
-
-		if len(s.Plans) > 0 {
-			serviceList = append(serviceList, s)
-		}
-	}
-
-	return serviceList, nil
-}
-
-func valInStringSlice(slice []string, val string) bool {
-	for _, elem := range slice {
-		if val == elem {
-			return true
-		}
-	}
-	return false
 }

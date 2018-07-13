@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"gcp-service-broker/brokerapi/brokers/models"
 	"github.com/jinzhu/gorm"
-	"github.com/leonelquinteros/gorand"
 	"sync"
 )
 
@@ -62,58 +61,6 @@ func SoftDeleteInstanceDetails(instanceID string) error {
 		return models.ErrInstanceDoesNotExist
 	}
 	return DbConnection.Delete(&instance).Error
-}
-
-// Searches the db by planName and serviceId (since plan names must be disctinct within services)
-// If an entry exists, returns its id. If not, constructs a new UUID and returns it.
-func GetOrCreatePlanId(planName string, serviceId string) (string, error) {
-	var count int
-	var existingPlan models.PlanDetails
-	var id string
-	var err error
-
-	if err = DbConnection.Model(&models.PlanDetails{}).Where("name = ? and service_id = ?", planName, serviceId).Count(&count).Error; err != nil {
-		return "", err
-	}
-	if count > 0 {
-		if err = DbConnection.Where("name = ? and service_id = ?", planName, serviceId).First(&existingPlan).Error; err != nil {
-			return "", err
-		}
-
-		id = existingPlan.ID
-	} else {
-
-		id, err = gorand.UUID()
-		if err != nil {
-			return "", err
-		}
-	}
-
-	return id, nil
-}
-
-// Searches the db by planName and serviceId (since plan names must be distinct within services)
-// If the plan is found, returns the count (should be 1, always) and the plan object. If not, returns 0 and an empty plan object
-func CheckAndGetPlan(planName string, serviceId string) (bool, models.PlanDetails, error) {
-	var count int
-	var existingPlan models.PlanDetails
-	var err error
-
-	if err = DbConnection.Model(&models.PlanDetails{}).Where("name = ? and service_id = ?", planName, serviceId).Count(&count).Error; err != nil {
-		return false, models.PlanDetails{}, err
-	}
-
-	if count > 0 {
-		if err = DbConnection.Where("name = ? and service_id = ?", planName, serviceId).First(&existingPlan).Error; err != nil {
-			return false, models.PlanDetails{}, err
-		}
-	}
-
-	if count > 1 {
-		return true, models.PlanDetails{}, fmt.Errorf("bad database state: found more than 1 plan named %s with service id %s", planName, serviceId)
-	}
-
-	return count > 0, existingPlan, nil
 }
 
 func GetLastOperation(instanceId string) (models.CloudOperation, error) {

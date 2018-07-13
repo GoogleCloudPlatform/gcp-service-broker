@@ -7,12 +7,12 @@ import (
 )
 
 type FakeServiceBrokerHelper struct {
-	ProvisionStub        func(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error)
+	ProvisionStub        func(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error)
 	provisionMutex       sync.RWMutex
 	provisionArgsForCall []struct {
 		instanceId string
 		details    models.ProvisionDetails
-		plan       models.PlanDetails
+		plan       models.ServicePlan
 	}
 	provisionReturns struct {
 		result1 models.ServiceInstanceDetails
@@ -90,12 +90,12 @@ type FakeServiceBrokerHelper struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeServiceBrokerHelper) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (fake *FakeServiceBrokerHelper) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	fake.provisionMutex.Lock()
 	fake.provisionArgsForCall = append(fake.provisionArgsForCall, struct {
 		instanceId string
 		details    models.ProvisionDetails
-		plan       models.PlanDetails
+		plan       models.ServicePlan
 	}{instanceId, details, plan})
 	fake.recordInvocation("Provision", []interface{}{instanceId, details, plan})
 	fake.provisionMutex.Unlock()
@@ -112,7 +112,7 @@ func (fake *FakeServiceBrokerHelper) ProvisionCallCount() int {
 	return len(fake.provisionArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) ProvisionArgsForCall(i int) (string, models.ProvisionDetails, models.PlanDetails) {
+func (fake *FakeServiceBrokerHelper) ProvisionArgsForCall(i int) (string, models.ProvisionDetails, models.ServicePlan) {
 	fake.provisionMutex.RLock()
 	defer fake.provisionMutex.RUnlock()
 	return fake.provisionArgsForCall[i].instanceId, fake.provisionArgsForCall[i].details, fake.provisionArgsForCall[i].plan
