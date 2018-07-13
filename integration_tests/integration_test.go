@@ -1,16 +1,16 @@
 package integration_tests
 
 import (
-	. "gcp-service-broker/brokerapi/brokers"
+	. "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
 
 	"golang.org/x/net/context"
 
 	"fmt"
-	"gcp-service-broker/brokerapi/brokers"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"gcp-service-broker/brokerapi/brokers/name_generator"
-	"gcp-service-broker/db_service"
-	"gcp-service-broker/fakes"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/fakes"
 	"hash/crc32"
 	"net/http"
 	"os"
@@ -22,7 +22,7 @@ import (
 	googlebigtable "cloud.google.com/go/bigtable"
 	googlestorage "cloud.google.com/go/storage"
 	"code.cloudfoundry.org/lager"
-	"gcp-service-broker/brokerapi/brokers/config"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/config"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

@@ -19,7 +19,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
 	"os"

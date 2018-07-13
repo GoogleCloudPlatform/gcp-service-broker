@@ -17,7 +17,7 @@
 
 package brokerapi
 
-import "gcp-service-broker/brokerapi/brokers/models"
+import "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 
 type EmptyResponse struct{}
 

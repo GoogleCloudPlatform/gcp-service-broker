@@ -20,8 +20,8 @@ package main
 import (
 	"code.cloudfoundry.org/lager"
 	"encoding/json"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 )
 
 func main() {

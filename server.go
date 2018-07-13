@@ -22,12 +22,12 @@ import (
 	"os"
 
 	"code.cloudfoundry.org/lager"
-	"gcp-service-broker/brokerapi"
-	"gcp-service-broker/brokerapi/brokers"
-	"gcp-service-broker/brokerapi/brokers/config"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"gcp-service-broker/brokerapi/brokers/name_generator"
-	"gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/config"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 )
 
 func main() {

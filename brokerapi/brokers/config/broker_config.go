@@ -20,8 +20,8 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"gcp-service-broker/utils"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"golang.org/x/oauth2/jwt"
 	"gopkg.in/validator.v2"
 	"os"

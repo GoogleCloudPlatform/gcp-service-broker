@@ -18,28 +18,28 @@
 package brokers
 
 import (
-	"code.cloudfoundry.org/lager"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"gcp-service-broker/brokerapi/brokers/account_managers"
-	"gcp-service-broker/brokerapi/brokers/api_service"
-	"gcp-service-broker/brokerapi/brokers/bigquery"
-	"gcp-service-broker/brokerapi/brokers/bigtable"
-	"gcp-service-broker/brokerapi/brokers/broker_base"
-	"gcp-service-broker/brokerapi/brokers/cloudsql"
-	"google.golang.org/api/googleapi"
 	"math"
 
-	"gcp-service-broker/brokerapi/brokers/config"
-	"gcp-service-broker/brokerapi/brokers/datastore"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"gcp-service-broker/brokerapi/brokers/pubsub"
-	"gcp-service-broker/brokerapi/brokers/spanner"
-	"gcp-service-broker/brokerapi/brokers/stackdriver_debugger"
-	"gcp-service-broker/brokerapi/brokers/stackdriver_trace"
-	"gcp-service-broker/brokerapi/brokers/storage"
-	"gcp-service-broker/db_service"
+	"code.cloudfoundry.org/lager"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/api_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigquery"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigtable"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/cloudsql"
+	"google.golang.org/api/googleapi"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/config"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/datastore"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver_debugger"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver_trace"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/storage"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 )
 
 type GCPServiceBroker struct {
@@ -107,17 +107,17 @@ func New(cfg *config.BrokerConfig, Logger lager.Logger) (*GCPAsyncServiceBroker,
 			BrokerBase: bb,
 		},
 		models.CloudsqlMySQLName: &cloudsql.CloudSQLBroker{
-			HttpConfig:     cfg.HttpConfig,
-			ProjectId:      cfg.ProjectId,
-			Logger:         self.Logger,
-			AccountManager: sqlManager,
+			HttpConfig:       cfg.HttpConfig,
+			ProjectId:        cfg.ProjectId,
+			Logger:           self.Logger,
+			AccountManager:   sqlManager,
 			SaAccountManager: saManager,
 		},
 		models.CloudsqlPostgresName: &cloudsql.CloudSQLBroker{
-			HttpConfig:     cfg.HttpConfig,
-			ProjectId:      cfg.ProjectId,
-			Logger:         self.Logger,
-			AccountManager: sqlManager,
+			HttpConfig:       cfg.HttpConfig,
+			ProjectId:        cfg.ProjectId,
+			Logger:           self.Logger,
+			AccountManager:   sqlManager,
 			SaAccountManager: saManager,
 		},
 		models.BigtableName: &bigtable.BigTableBroker{

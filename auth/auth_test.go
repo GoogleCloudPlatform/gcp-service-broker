@@ -24,7 +24,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"gcp-service-broker/auth"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/auth"
 )
 
 var _ = Describe("Auth Wrapper", func() {
