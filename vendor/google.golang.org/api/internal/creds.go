@@ -19,20 +19,24 @@ import (
 	"io/ioutil"
 
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
 
-// ServiceAcctTokenSource reads a JWT config from filename and returns
-// a TokenSource constructed from the config.
-func ServiceAcctTokenSource(ctx context.Context, filename string, scope ...string) (oauth2.TokenSource, error) {
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("cannot read service account file: %v", err)
+// Creds returns credential information obtained from DialSettings, or if none, then
+// it returns default credential information.
+func Creds(ctx context.Context, ds *DialSettings) (*google.DefaultCredentials, error) {
+	if ds.Credentials != nil {
+		return ds.Credentials, nil
 	}
-	cfg, err := google.JWTConfigFromJSON(data, scope...)
-	if err != nil {
-		return nil, fmt.Errorf("google.JWTConfigFromJSON: %v", err)
+	if ds.CredentialsFile != "" {
+		data, err := ioutil.ReadFile(ds.CredentialsFile)
+		if err != nil {
+			return nil, fmt.Errorf("cannot read credentials file: %v", err)
+		}
+		return google.CredentialsFromJSON(ctx, data, ds.Scopes...)
 	}
-	return cfg.TokenSource(ctx), nil
+	if ds.TokenSource != nil {
+		return &google.DefaultCredentials{TokenSource: ds.TokenSource}, nil
+	}
+	return google.FindDefaultCredentials(ctx, ds.Scopes...)
 }

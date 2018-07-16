@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -69,6 +69,9 @@ func (t Transport) base() http.RoundTripper {
 //
 // The span will be auto finished by the handler.
 func (c *Client) HTTPHandler(h http.Handler) http.Handler {
+	if c == nil {
+		return h
+	}
 	return &handler{traceClient: c, handler: h}
 }
 
@@ -101,5 +104,4 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(httpHeader, spanHeader(traceID, parentSpanID, span.trace.localOptions))
 	}
 	h.handler.ServeHTTP(w, r)
-
 }

@@ -65,6 +65,9 @@ const (
 
 	// View your Google Analytics data
 	AnalyticsReadonlyScope = "https://www.googleapis.com/auth/analytics.readonly"
+
+	// Manage Google Analytics user deletion requests
+	AnalyticsUserDeletionScope = "https://www.googleapis.com/auth/analytics.user.deletion"
 )
 
 func New(client *http.Client) (*Service, error) {
@@ -76,6 +79,7 @@ func New(client *http.Client) (*Service, error) {
 	s.Management = NewManagementService(s)
 	s.Metadata = NewMetadataService(s)
 	s.Provisioning = NewProvisioningService(s)
+	s.UserDeletion = NewUserDeletionService(s)
 	return s, nil
 }
 
@@ -91,6 +95,8 @@ type Service struct {
 	Metadata *MetadataService
 
 	Provisioning *ProvisioningService
+
+	UserDeletion *UserDeletionService
 }
 
 func (s *Service) userAgent() string {
@@ -412,6 +418,27 @@ type ProvisioningService struct {
 	s *Service
 }
 
+func NewUserDeletionService(s *Service) *UserDeletionService {
+	rs := &UserDeletionService{s: s}
+	rs.UserDeletionRequest = NewUserDeletionUserDeletionRequestService(s)
+	return rs
+}
+
+type UserDeletionService struct {
+	s *Service
+
+	UserDeletionRequest *UserDeletionUserDeletionRequestService
+}
+
+func NewUserDeletionUserDeletionRequestService(s *Service) *UserDeletionUserDeletionRequestService {
+	rs := &UserDeletionUserDeletionRequestService{s: s}
+	return rs
+}
+
+type UserDeletionUserDeletionRequestService struct {
+	s *Service
+}
+
 // Account: JSON template for Analytics account entry.
 type Account struct {
 	// ChildLink: Child link for an account entry. Points to the list of web
@@ -460,8 +487,8 @@ type Account struct {
 }
 
 func (s *Account) MarshalJSON() ([]byte, error) {
-	type noMethod Account
-	raw := noMethod(*s)
+	type NoMethod Account
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -492,8 +519,8 @@ type AccountChildLink struct {
 }
 
 func (s *AccountChildLink) MarshalJSON() ([]byte, error) {
-	type noMethod AccountChildLink
-	raw := noMethod(*s)
+	type NoMethod AccountChildLink
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -521,8 +548,8 @@ type AccountPermissions struct {
 }
 
 func (s *AccountPermissions) MarshalJSON() ([]byte, error) {
-	type noMethod AccountPermissions
-	raw := noMethod(*s)
+	type NoMethod AccountPermissions
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -558,8 +585,8 @@ type AccountRef struct {
 }
 
 func (s *AccountRef) MarshalJSON() ([]byte, error) {
-	type noMethod AccountRef
-	raw := noMethod(*s)
+	type NoMethod AccountRef
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -620,8 +647,8 @@ type AccountSummaries struct {
 }
 
 func (s *AccountSummaries) MarshalJSON() ([]byte, error) {
-	type noMethod AccountSummaries
-	raw := noMethod(*s)
+	type NoMethod AccountSummaries
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -662,8 +689,8 @@ type AccountSummary struct {
 }
 
 func (s *AccountSummary) MarshalJSON() ([]byte, error) {
-	type noMethod AccountSummary
-	raw := noMethod(*s)
+	type NoMethod AccountSummary
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -713,8 +740,165 @@ type AccountTicket struct {
 }
 
 func (s *AccountTicket) MarshalJSON() ([]byte, error) {
-	type noMethod AccountTicket
-	raw := noMethod(*s)
+	type NoMethod AccountTicket
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// AccountTreeRequest: JSON template for an Analytics account tree
+// requests. The account tree request is used in the provisioning api to
+// create an account, property, and view (profile). It contains the
+// basic information required to make these fields.
+type AccountTreeRequest struct {
+	AccountName string `json:"accountName,omitempty"`
+
+	AccountSettings *AccountTreeRequestAccountSettings `json:"accountSettings,omitempty"`
+
+	// Kind: Resource type for account ticket.
+	Kind string `json:"kind,omitempty"`
+
+	ProfileName string `json:"profileName,omitempty"`
+
+	Timezone string `json:"timezone,omitempty"`
+
+	WebpropertyName string `json:"webpropertyName,omitempty"`
+
+	WebsiteUrl string `json:"websiteUrl,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "AccountName") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AccountName") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *AccountTreeRequest) MarshalJSON() ([]byte, error) {
+	type NoMethod AccountTreeRequest
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+type AccountTreeRequestAccountSettings struct {
+	ShareAnonymouslyWithOthers bool `json:"shareAnonymouslyWithOthers,omitempty"`
+
+	ShareWithGoogleProducts bool `json:"shareWithGoogleProducts,omitempty"`
+
+	ShareWithSpecialists bool `json:"shareWithSpecialists,omitempty"`
+
+	ShareWithSupport bool `json:"shareWithSupport,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "ShareAnonymouslyWithOthers") to unconditionally include in API
+	// requests. By default, fields with empty values are omitted from API
+	// requests. However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g.
+	// "ShareAnonymouslyWithOthers") to include in API requests with the
+	// JSON null value. By default, fields with empty values are omitted
+	// from API requests. However, any field with an empty value appearing
+	// in NullFields will be sent to the server as null. It is an error if a
+	// field in this list has a non-empty value. This may be used to include
+	// null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *AccountTreeRequestAccountSettings) MarshalJSON() ([]byte, error) {
+	type NoMethod AccountTreeRequestAccountSettings
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// AccountTreeResponse: JSON template for an Analytics account tree
+// response. The account tree response is used in the provisioning api
+// to return the result of creating an account, property, and view
+// (profile).
+type AccountTreeResponse struct {
+	// Account: The account created.
+	Account *Account `json:"account,omitempty"`
+
+	AccountSettings *AccountTreeResponseAccountSettings `json:"accountSettings,omitempty"`
+
+	// Kind: Resource type for account ticket.
+	Kind string `json:"kind,omitempty"`
+
+	// Profile: View (Profile) for the account.
+	Profile *Profile `json:"profile,omitempty"`
+
+	// Webproperty: Web property for the account.
+	Webproperty *Webproperty `json:"webproperty,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "Account") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Account") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *AccountTreeResponse) MarshalJSON() ([]byte, error) {
+	type NoMethod AccountTreeResponse
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+type AccountTreeResponseAccountSettings struct {
+	ShareAnonymouslyWithOthers bool `json:"shareAnonymouslyWithOthers,omitempty"`
+
+	ShareWithGoogleProducts bool `json:"shareWithGoogleProducts,omitempty"`
+
+	ShareWithSpecialists bool `json:"shareWithSpecialists,omitempty"`
+
+	ShareWithSupport bool `json:"shareWithSupport,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "ShareAnonymouslyWithOthers") to unconditionally include in API
+	// requests. By default, fields with empty values are omitted from API
+	// requests. However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g.
+	// "ShareAnonymouslyWithOthers") to include in API requests with the
+	// JSON null value. By default, fields with empty values are omitted
+	// from API requests. However, any field with an empty value appearing
+	// in NullFields will be sent to the server as null. It is an error if a
+	// field in this list has a non-empty value. This may be used to include
+	// null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *AccountTreeResponseAccountSettings) MarshalJSON() ([]byte, error) {
+	type NoMethod AccountTreeResponseAccountSettings
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -774,8 +958,8 @@ type Accounts struct {
 }
 
 func (s *Accounts) MarshalJSON() ([]byte, error) {
-	type noMethod Accounts
-	raw := noMethod(*s)
+	type NoMethod Accounts
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -811,8 +995,8 @@ type AdWordsAccount struct {
 }
 
 func (s *AdWordsAccount) MarshalJSON() ([]byte, error) {
-	type noMethod AdWordsAccount
-	raw := noMethod(*s)
+	type NoMethod AdWordsAccount
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -842,8 +1026,8 @@ type AnalyticsDataimportDeleteUploadDataRequest struct {
 }
 
 func (s *AnalyticsDataimportDeleteUploadDataRequest) MarshalJSON() ([]byte, error) {
-	type noMethod AnalyticsDataimportDeleteUploadDataRequest
-	raw := noMethod(*s)
+	type NoMethod AnalyticsDataimportDeleteUploadDataRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -876,8 +1060,8 @@ type Column struct {
 }
 
 func (s *Column) MarshalJSON() ([]byte, error) {
-	type noMethod Column
-	raw := noMethod(*s)
+	type NoMethod Column
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -923,8 +1107,8 @@ type Columns struct {
 }
 
 func (s *Columns) MarshalJSON() ([]byte, error) {
-	type noMethod Columns
-	raw := noMethod(*s)
+	type NoMethod Columns
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -960,6 +1144,9 @@ type CustomDataSource struct {
 	// source.
 	ProfilesLinked []string `json:"profilesLinked,omitempty"`
 
+	// Schema: Collection of schema headers of the custom data source.
+	Schema []string `json:"schema,omitempty"`
+
 	// SelfLink: Link for this Analytics custom data source.
 	SelfLink string `json:"selfLink,omitempty"`
 
@@ -969,6 +1156,7 @@ type CustomDataSource struct {
 	// Updated: Time this custom data source was last modified.
 	Updated string `json:"updated,omitempty"`
 
+	// UploadType: Upload type of the custom data source.
 	UploadType string `json:"uploadType,omitempty"`
 
 	// WebPropertyId: Web property ID of the form UA-XXXXX-YY to which this
@@ -993,8 +1181,8 @@ type CustomDataSource struct {
 }
 
 func (s *CustomDataSource) MarshalJSON() ([]byte, error) {
-	type noMethod CustomDataSource
-	raw := noMethod(*s)
+	type NoMethod CustomDataSource
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1025,8 +1213,8 @@ type CustomDataSourceChildLink struct {
 }
 
 func (s *CustomDataSourceChildLink) MarshalJSON() ([]byte, error) {
-	type noMethod CustomDataSourceChildLink
-	raw := noMethod(*s)
+	type NoMethod CustomDataSourceChildLink
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1058,8 +1246,8 @@ type CustomDataSourceParentLink struct {
 }
 
 func (s *CustomDataSourceParentLink) MarshalJSON() ([]byte, error) {
-	type noMethod CustomDataSourceParentLink
-	raw := noMethod(*s)
+	type NoMethod CustomDataSourceParentLink
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1119,8 +1307,8 @@ type CustomDataSources struct {
 }
 
 func (s *CustomDataSources) MarshalJSON() ([]byte, error) {
-	type noMethod CustomDataSources
-	raw := noMethod(*s)
+	type NoMethod CustomDataSources
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1186,8 +1374,8 @@ type CustomDimension struct {
 }
 
 func (s *CustomDimension) MarshalJSON() ([]byte, error) {
-	type noMethod CustomDimension
-	raw := noMethod(*s)
+	type NoMethod CustomDimension
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1218,8 +1406,8 @@ type CustomDimensionParentLink struct {
 }
 
 func (s *CustomDimensionParentLink) MarshalJSON() ([]byte, error) {
-	type noMethod CustomDimensionParentLink
-	raw := noMethod(*s)
+	type NoMethod CustomDimensionParentLink
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1279,8 +1467,8 @@ type CustomDimensions struct {
 }
 
 func (s *CustomDimensions) MarshalJSON() ([]byte, error) {
-	type noMethod CustomDimensions
-	raw := noMethod(*s)
+	type NoMethod CustomDimensions
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1355,8 +1543,8 @@ type CustomMetric struct {
 }
 
 func (s *CustomMetric) MarshalJSON() ([]byte, error) {
-	type noMethod CustomMetric
-	raw := noMethod(*s)
+	type NoMethod CustomMetric
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1387,8 +1575,8 @@ type CustomMetricParentLink struct {
 }
 
 func (s *CustomMetricParentLink) MarshalJSON() ([]byte, error) {
-	type noMethod CustomMetricParentLink
-	raw := noMethod(*s)
+	type NoMethod CustomMetricParentLink
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1448,8 +1636,8 @@ type CustomMetrics struct {
 }
 
 func (s *CustomMetrics) MarshalJSON() ([]byte, error) {
-	type noMethod CustomMetrics
-	raw := noMethod(*s)
+	type NoMethod CustomMetrics
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1502,8 +1690,8 @@ type EntityAdWordsLink struct {
 }
 
 func (s *EntityAdWordsLink) MarshalJSON() ([]byte, error) {
-	type noMethod EntityAdWordsLink
-	raw := noMethod(*s)
+	type NoMethod EntityAdWordsLink
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1530,8 +1718,8 @@ type EntityAdWordsLinkEntity struct {
 }
 
 func (s *EntityAdWordsLinkEntity) MarshalJSON() ([]byte, error) {
-	type noMethod EntityAdWordsLinkEntity
-	raw := noMethod(*s)
+	type NoMethod EntityAdWordsLinkEntity
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1587,8 +1775,8 @@ type EntityAdWordsLinks struct {
 }
 
 func (s *EntityAdWordsLinks) MarshalJSON() ([]byte, error) {
-	type noMethod EntityAdWordsLinks
-	raw := noMethod(*s)
+	type NoMethod EntityAdWordsLinks
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1636,8 +1824,8 @@ type EntityUserLink struct {
 }
 
 func (s *EntityUserLink) MarshalJSON() ([]byte, error) {
-	type noMethod EntityUserLink
-	raw := noMethod(*s)
+	type NoMethod EntityUserLink
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1671,8 +1859,8 @@ type EntityUserLinkEntity struct {
 }
 
 func (s *EntityUserLinkEntity) MarshalJSON() ([]byte, error) {
-	type noMethod EntityUserLinkEntity
-	raw := noMethod(*s)
+	type NoMethod EntityUserLinkEntity
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1707,8 +1895,8 @@ type EntityUserLinkPermissions struct {
 }
 
 func (s *EntityUserLinkPermissions) MarshalJSON() ([]byte, error) {
-	type noMethod EntityUserLinkPermissions
-	raw := noMethod(*s)
+	type NoMethod EntityUserLinkPermissions
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1764,8 +1952,8 @@ type EntityUserLinks struct {
 }
 
 func (s *EntityUserLinks) MarshalJSON() ([]byte, error) {
-	type noMethod EntityUserLinks
-	raw := noMethod(*s)
+	type NoMethod EntityUserLinks
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1938,19 +2126,19 @@ type Experiment struct {
 }
 
 func (s *Experiment) MarshalJSON() ([]byte, error) {
-	type noMethod Experiment
-	raw := noMethod(*s)
+	type NoMethod Experiment
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *Experiment) UnmarshalJSON(data []byte) error {
-	type noMethod Experiment
+	type NoMethod Experiment
 	var s1 struct {
 		TrafficCoverage       gensupport.JSONFloat64 `json:"trafficCoverage"`
 		WinnerConfidenceLevel gensupport.JSONFloat64 `json:"winnerConfidenceLevel"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -1987,8 +2175,8 @@ type ExperimentParentLink struct {
 }
 
 func (s *ExperimentParentLink) MarshalJSON() ([]byte, error) {
-	type noMethod ExperimentParentLink
-	raw := noMethod(*s)
+	type NoMethod ExperimentParentLink
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2034,18 +2222,18 @@ type ExperimentVariations struct {
 }
 
 func (s *ExperimentVariations) MarshalJSON() ([]byte, error) {
-	type noMethod ExperimentVariations
-	raw := noMethod(*s)
+	type NoMethod ExperimentVariations
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *ExperimentVariations) UnmarshalJSON(data []byte) error {
-	type noMethod ExperimentVariations
+	type NoMethod ExperimentVariations
 	var s1 struct {
 		Weight gensupport.JSONFloat64 `json:"weight"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -2109,8 +2297,8 @@ type Experiments struct {
 }
 
 func (s *Experiments) MarshalJSON() ([]byte, error) {
-	type noMethod Experiments
-	raw := noMethod(*s)
+	type NoMethod Experiments
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2186,8 +2374,8 @@ type Filter struct {
 }
 
 func (s *Filter) MarshalJSON() ([]byte, error) {
-	type noMethod Filter
-	raw := noMethod(*s)
+	type NoMethod Filter
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2255,8 +2443,8 @@ type FilterAdvancedDetails struct {
 }
 
 func (s *FilterAdvancedDetails) MarshalJSON() ([]byte, error) {
-	type noMethod FilterAdvancedDetails
-	raw := noMethod(*s)
+	type NoMethod FilterAdvancedDetails
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2287,8 +2475,8 @@ type FilterLowercaseDetails struct {
 }
 
 func (s *FilterLowercaseDetails) MarshalJSON() ([]byte, error) {
-	type noMethod FilterLowercaseDetails
-	raw := noMethod(*s)
+	type NoMethod FilterLowercaseDetails
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2319,8 +2507,8 @@ type FilterParentLink struct {
 }
 
 func (s *FilterParentLink) MarshalJSON() ([]byte, error) {
-	type noMethod FilterParentLink
-	raw := noMethod(*s)
+	type NoMethod FilterParentLink
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2361,8 +2549,8 @@ type FilterSearchAndReplaceDetails struct {
 }
 
 func (s *FilterSearchAndReplaceDetails) MarshalJSON() ([]byte, error) {
-	type noMethod FilterSearchAndReplaceDetails
-	raw := noMethod(*s)
+	type NoMethod FilterSearchAndReplaceDetails
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2393,8 +2581,8 @@ type FilterUppercaseDetails struct {
 }
 
 func (s *FilterUppercaseDetails) MarshalJSON() ([]byte, error) {
-	type noMethod FilterUppercaseDetails
-	raw := noMethod(*s)
+	type NoMethod FilterUppercaseDetails
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2528,8 +2716,8 @@ type FilterExpression struct {
 }
 
 func (s *FilterExpression) MarshalJSON() ([]byte, error) {
-	type noMethod FilterExpression
-	raw := noMethod(*s)
+	type NoMethod FilterExpression
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2568,8 +2756,8 @@ type FilterRef struct {
 }
 
 func (s *FilterRef) MarshalJSON() ([]byte, error) {
-	type noMethod FilterRef
-	raw := noMethod(*s)
+	type NoMethod FilterRef
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2628,8 +2816,8 @@ type Filters struct {
 }
 
 func (s *Filters) MarshalJSON() ([]byte, error) {
-	type noMethod Filters
-	raw := noMethod(*s)
+	type NoMethod Filters
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2721,8 +2909,8 @@ type GaData struct {
 }
 
 func (s *GaData) MarshalJSON() ([]byte, error) {
-	type noMethod GaData
-	raw := noMethod(*s)
+	type NoMethod GaData
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2756,8 +2944,8 @@ type GaDataColumnHeaders struct {
 }
 
 func (s *GaDataColumnHeaders) MarshalJSON() ([]byte, error) {
-	type noMethod GaDataColumnHeaders
-	raw := noMethod(*s)
+	type NoMethod GaDataColumnHeaders
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2784,8 +2972,8 @@ type GaDataDataTable struct {
 }
 
 func (s *GaDataDataTable) MarshalJSON() ([]byte, error) {
-	type noMethod GaDataDataTable
-	raw := noMethod(*s)
+	type NoMethod GaDataDataTable
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2814,8 +3002,8 @@ type GaDataDataTableCols struct {
 }
 
 func (s *GaDataDataTableCols) MarshalJSON() ([]byte, error) {
-	type noMethod GaDataDataTableCols
-	raw := noMethod(*s)
+	type NoMethod GaDataDataTableCols
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2840,8 +3028,8 @@ type GaDataDataTableRows struct {
 }
 
 func (s *GaDataDataTableRows) MarshalJSON() ([]byte, error) {
-	type noMethod GaDataDataTableRows
-	raw := noMethod(*s)
+	type NoMethod GaDataDataTableRows
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2866,8 +3054,8 @@ type GaDataDataTableRowsC struct {
 }
 
 func (s *GaDataDataTableRowsC) MarshalJSON() ([]byte, error) {
-	type noMethod GaDataDataTableRowsC
-	raw := noMethod(*s)
+	type NoMethod GaDataDataTableRowsC
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2911,8 +3099,8 @@ type GaDataProfileInfo struct {
 }
 
 func (s *GaDataProfileInfo) MarshalJSON() ([]byte, error) {
-	type noMethod GaDataProfileInfo
-	raw := noMethod(*s)
+	type NoMethod GaDataProfileInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2970,8 +3158,8 @@ type GaDataQuery struct {
 }
 
 func (s *GaDataQuery) MarshalJSON() ([]byte, error) {
-	type noMethod GaDataQuery
-	raw := noMethod(*s)
+	type NoMethod GaDataQuery
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3060,18 +3248,18 @@ type Goal struct {
 }
 
 func (s *Goal) MarshalJSON() ([]byte, error) {
-	type noMethod Goal
-	raw := noMethod(*s)
+	type NoMethod Goal
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *Goal) UnmarshalJSON(data []byte) error {
-	type noMethod Goal
+	type NoMethod Goal
 	var s1 struct {
 		Value gensupport.JSONFloat64 `json:"value"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -3107,8 +3295,8 @@ type GoalEventDetails struct {
 }
 
 func (s *GoalEventDetails) MarshalJSON() ([]byte, error) {
-	type noMethod GoalEventDetails
-	raw := noMethod(*s)
+	type NoMethod GoalEventDetails
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3150,8 +3338,8 @@ type GoalEventDetailsEventConditions struct {
 }
 
 func (s *GoalEventDetailsEventConditions) MarshalJSON() ([]byte, error) {
-	type noMethod GoalEventDetailsEventConditions
-	raw := noMethod(*s)
+	type NoMethod GoalEventDetailsEventConditions
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3182,8 +3370,8 @@ type GoalParentLink struct {
 }
 
 func (s *GoalParentLink) MarshalJSON() ([]byte, error) {
-	type noMethod GoalParentLink
-	raw := noMethod(*s)
+	type NoMethod GoalParentLink
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3226,8 +3414,8 @@ type GoalUrlDestinationDetails struct {
 }
 
 func (s *GoalUrlDestinationDetails) MarshalJSON() ([]byte, error) {
-	type noMethod GoalUrlDestinationDetails
-	raw := noMethod(*s)
+	type NoMethod GoalUrlDestinationDetails
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3259,8 +3447,8 @@ type GoalUrlDestinationDetailsSteps struct {
 }
 
 func (s *GoalUrlDestinationDetailsSteps) MarshalJSON() ([]byte, error) {
-	type noMethod GoalUrlDestinationDetailsSteps
-	raw := noMethod(*s)
+	type NoMethod GoalUrlDestinationDetailsSteps
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3293,8 +3481,8 @@ type GoalVisitNumPagesDetails struct {
 }
 
 func (s *GoalVisitNumPagesDetails) MarshalJSON() ([]byte, error) {
-	type noMethod GoalVisitNumPagesDetails
-	raw := noMethod(*s)
+	type NoMethod GoalVisitNumPagesDetails
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3327,8 +3515,8 @@ type GoalVisitTimeOnSiteDetails struct {
 }
 
 func (s *GoalVisitTimeOnSiteDetails) MarshalJSON() ([]byte, error) {
-	type noMethod GoalVisitTimeOnSiteDetails
-	raw := noMethod(*s)
+	type NoMethod GoalVisitTimeOnSiteDetails
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3387,8 +3575,8 @@ type Goals struct {
 }
 
 func (s *Goals) MarshalJSON() ([]byte, error) {
-	type noMethod Goals
-	raw := noMethod(*s)
+	type NoMethod Goals
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3437,8 +3625,8 @@ type IncludeConditions struct {
 }
 
 func (s *IncludeConditions) MarshalJSON() ([]byte, error) {
-	type noMethod IncludeConditions
-	raw := noMethod(*s)
+	type NoMethod IncludeConditions
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3473,7 +3661,8 @@ type LinkedForeignAccount struct {
 	// Status: The status of this foreign account link.
 	Status string `json:"status,omitempty"`
 
-	// Type: The type of the foreign account. For example `ADWORDS_LINKS`.
+	// Type: The type of the foreign account. For example, `ADWORDS_LINKS`,
+	// `DBM_LINKS`, `MCC_LINKS` or `OPTIMIZE`.
 	Type string `json:"type,omitempty"`
 
 	// WebPropertyId: Web property ID of the form UA-XXXXX-YY to which this
@@ -3498,8 +3687,8 @@ type LinkedForeignAccount struct {
 }
 
 func (s *LinkedForeignAccount) MarshalJSON() ([]byte, error) {
-	type noMethod LinkedForeignAccount
-	raw := noMethod(*s)
+	type NoMethod LinkedForeignAccount
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3586,8 +3775,8 @@ type McfData struct {
 }
 
 func (s *McfData) MarshalJSON() ([]byte, error) {
-	type noMethod McfData
-	raw := noMethod(*s)
+	type NoMethod McfData
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3620,8 +3809,8 @@ type McfDataColumnHeaders struct {
 }
 
 func (s *McfDataColumnHeaders) MarshalJSON() ([]byte, error) {
-	type noMethod McfDataColumnHeaders
-	raw := noMethod(*s)
+	type NoMethod McfDataColumnHeaders
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3665,8 +3854,8 @@ type McfDataProfileInfo struct {
 }
 
 func (s *McfDataProfileInfo) MarshalJSON() ([]byte, error) {
-	type noMethod McfDataProfileInfo
-	raw := noMethod(*s)
+	type NoMethod McfDataProfileInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3724,8 +3913,8 @@ type McfDataQuery struct {
 }
 
 func (s *McfDataQuery) MarshalJSON() ([]byte, error) {
-	type noMethod McfDataQuery
-	raw := noMethod(*s)
+	type NoMethod McfDataQuery
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3760,8 +3949,8 @@ type McfDataRowsItem struct {
 }
 
 func (s *McfDataRowsItem) MarshalJSON() ([]byte, error) {
-	type noMethod McfDataRowsItem
-	raw := noMethod(*s)
+	type NoMethod McfDataRowsItem
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3793,8 +3982,8 @@ type McfDataRowsItemConversionPathValue struct {
 }
 
 func (s *McfDataRowsItemConversionPathValue) MarshalJSON() ([]byte, error) {
-	type noMethod McfDataRowsItemConversionPathValue
-	raw := noMethod(*s)
+	type NoMethod McfDataRowsItemConversionPathValue
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3920,8 +4109,8 @@ type Profile struct {
 }
 
 func (s *Profile) MarshalJSON() ([]byte, error) {
-	type noMethod Profile
-	raw := noMethod(*s)
+	type NoMethod Profile
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3952,8 +4141,8 @@ type ProfileChildLink struct {
 }
 
 func (s *ProfileChildLink) MarshalJSON() ([]byte, error) {
-	type noMethod ProfileChildLink
-	raw := noMethod(*s)
+	type NoMethod ProfileChildLink
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3984,8 +4173,8 @@ type ProfileParentLink struct {
 }
 
 func (s *ProfileParentLink) MarshalJSON() ([]byte, error) {
-	type noMethod ProfileParentLink
-	raw := noMethod(*s)
+	type NoMethod ProfileParentLink
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4014,8 +4203,8 @@ type ProfilePermissions struct {
 }
 
 func (s *ProfilePermissions) MarshalJSON() ([]byte, error) {
-	type noMethod ProfilePermissions
-	raw := noMethod(*s)
+	type NoMethod ProfilePermissions
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4074,8 +4263,8 @@ type ProfileFilterLink struct {
 }
 
 func (s *ProfileFilterLink) MarshalJSON() ([]byte, error) {
-	type noMethod ProfileFilterLink
-	raw := noMethod(*s)
+	type NoMethod ProfileFilterLink
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4135,8 +4324,8 @@ type ProfileFilterLinks struct {
 }
 
 func (s *ProfileFilterLinks) MarshalJSON() ([]byte, error) {
-	type noMethod ProfileFilterLinks
-	raw := noMethod(*s)
+	type NoMethod ProfileFilterLinks
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4183,8 +4372,8 @@ type ProfileRef struct {
 }
 
 func (s *ProfileRef) MarshalJSON() ([]byte, error) {
-	type noMethod ProfileRef
-	raw := noMethod(*s)
+	type NoMethod ProfileRef
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4225,8 +4414,8 @@ type ProfileSummary struct {
 }
 
 func (s *ProfileSummary) MarshalJSON() ([]byte, error) {
-	type noMethod ProfileSummary
-	raw := noMethod(*s)
+	type NoMethod ProfileSummary
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4286,8 +4475,8 @@ type Profiles struct {
 }
 
 func (s *Profiles) MarshalJSON() ([]byte, error) {
-	type noMethod Profiles
-	raw := noMethod(*s)
+	type NoMethod Profiles
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4351,8 +4540,8 @@ type RealtimeData struct {
 }
 
 func (s *RealtimeData) MarshalJSON() ([]byte, error) {
-	type noMethod RealtimeData
-	raw := noMethod(*s)
+	type NoMethod RealtimeData
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4386,8 +4575,8 @@ type RealtimeDataColumnHeaders struct {
 }
 
 func (s *RealtimeDataColumnHeaders) MarshalJSON() ([]byte, error) {
-	type noMethod RealtimeDataColumnHeaders
-	raw := noMethod(*s)
+	type NoMethod RealtimeDataColumnHeaders
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4431,8 +4620,8 @@ type RealtimeDataProfileInfo struct {
 }
 
 func (s *RealtimeDataProfileInfo) MarshalJSON() ([]byte, error) {
-	type noMethod RealtimeDataProfileInfo
-	raw := noMethod(*s)
+	type NoMethod RealtimeDataProfileInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4475,8 +4664,8 @@ type RealtimeDataQuery struct {
 }
 
 func (s *RealtimeDataQuery) MarshalJSON() ([]byte, error) {
-	type noMethod RealtimeDataQuery
-	raw := noMethod(*s)
+	type NoMethod RealtimeDataQuery
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4554,8 +4743,8 @@ type RemarketingAudience struct {
 }
 
 func (s *RemarketingAudience) MarshalJSON() ([]byte, error) {
-	type noMethod RemarketingAudience
-	raw := noMethod(*s)
+	type NoMethod RemarketingAudience
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4585,8 +4774,8 @@ type RemarketingAudienceAudienceDefinition struct {
 }
 
 func (s *RemarketingAudienceAudienceDefinition) MarshalJSON() ([]byte, error) {
-	type noMethod RemarketingAudienceAudienceDefinition
-	raw := noMethod(*s)
+	type NoMethod RemarketingAudienceAudienceDefinition
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4621,8 +4810,8 @@ type RemarketingAudienceStateBasedAudienceDefinition struct {
 }
 
 func (s *RemarketingAudienceStateBasedAudienceDefinition) MarshalJSON() ([]byte, error) {
-	type noMethod RemarketingAudienceStateBasedAudienceDefinition
-	raw := noMethod(*s)
+	type NoMethod RemarketingAudienceStateBasedAudienceDefinition
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4656,8 +4845,8 @@ type RemarketingAudienceStateBasedAudienceDefinitionExcludeConditions struct {
 }
 
 func (s *RemarketingAudienceStateBasedAudienceDefinitionExcludeConditions) MarshalJSON() ([]byte, error) {
-	type noMethod RemarketingAudienceStateBasedAudienceDefinitionExcludeConditions
-	raw := noMethod(*s)
+	type NoMethod RemarketingAudienceStateBasedAudienceDefinitionExcludeConditions
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4718,8 +4907,8 @@ type RemarketingAudiences struct {
 }
 
 func (s *RemarketingAudiences) MarshalJSON() ([]byte, error) {
-	type noMethod RemarketingAudiences
-	raw := noMethod(*s)
+	type NoMethod RemarketingAudiences
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4771,8 +4960,8 @@ type Segment struct {
 }
 
 func (s *Segment) MarshalJSON() ([]byte, error) {
-	type noMethod Segment
-	raw := noMethod(*s)
+	type NoMethod Segment
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4831,8 +5020,8 @@ type Segments struct {
 }
 
 func (s *Segments) MarshalJSON() ([]byte, error) {
-	type noMethod Segments
-	raw := noMethod(*s)
+	type NoMethod Segments
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4926,8 +5115,8 @@ type UnsampledReport struct {
 }
 
 func (s *UnsampledReport) MarshalJSON() ([]byte, error) {
-	type noMethod UnsampledReport
-	raw := noMethod(*s)
+	type NoMethod UnsampledReport
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4958,8 +5147,8 @@ type UnsampledReportCloudStorageDownloadDetails struct {
 }
 
 func (s *UnsampledReportCloudStorageDownloadDetails) MarshalJSON() ([]byte, error) {
-	type noMethod UnsampledReportCloudStorageDownloadDetails
-	raw := noMethod(*s)
+	type NoMethod UnsampledReportCloudStorageDownloadDetails
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -4987,8 +5176,8 @@ type UnsampledReportDriveDownloadDetails struct {
 }
 
 func (s *UnsampledReportDriveDownloadDetails) MarshalJSON() ([]byte, error) {
-	type noMethod UnsampledReportDriveDownloadDetails
-	raw := noMethod(*s)
+	type NoMethod UnsampledReportDriveDownloadDetails
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -5049,8 +5238,8 @@ type UnsampledReports struct {
 }
 
 func (s *UnsampledReports) MarshalJSON() ([]byte, error) {
-	type noMethod UnsampledReports
-	raw := noMethod(*s)
+	type NoMethod UnsampledReports
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -5076,6 +5265,9 @@ type Upload struct {
 	// DELETING, DELETED.
 	Status string `json:"status,omitempty"`
 
+	// UploadTime: Time this file is uploaded.
+	UploadTime string `json:"uploadTime,omitempty"`
+
 	// ServerResponse contains the HTTP response code and headers from the
 	// server.
 	googleapi.ServerResponse `json:"-"`
@@ -5098,8 +5290,8 @@ type Upload struct {
 }
 
 func (s *Upload) MarshalJSON() ([]byte, error) {
-	type noMethod Upload
-	raw := noMethod(*s)
+	type NoMethod Upload
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -5156,8 +5348,86 @@ type Uploads struct {
 }
 
 func (s *Uploads) MarshalJSON() ([]byte, error) {
-	type noMethod Uploads
-	raw := noMethod(*s)
+	type NoMethod Uploads
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// UserDeletionRequest: JSON template for a user deletion request
+// resource.
+type UserDeletionRequest struct {
+	// DeletionRequestTime: This marks the point in time for which all user
+	// data before should be deleted
+	DeletionRequestTime string `json:"deletionRequestTime,omitempty"`
+
+	// FirebaseProjectId: Firebase Project Id
+	FirebaseProjectId string `json:"firebaseProjectId,omitempty"`
+
+	// Id: User ID.
+	Id *UserDeletionRequestId `json:"id,omitempty"`
+
+	// Kind: Value is "analytics#userDeletionRequest".
+	Kind string `json:"kind,omitempty"`
+
+	// WebPropertyId: Web property ID of the form UA-XXXXX-YY.
+	WebPropertyId string `json:"webPropertyId,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "DeletionRequestTime")
+	// to unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DeletionRequestTime") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *UserDeletionRequest) MarshalJSON() ([]byte, error) {
+	type NoMethod UserDeletionRequest
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// UserDeletionRequestId: User ID.
+type UserDeletionRequestId struct {
+	// Type: Type of user
+	Type string `json:"type,omitempty"`
+
+	// UserId: The User's id
+	UserId string `json:"userId,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Type") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Type") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *UserDeletionRequestId) MarshalJSON() ([]byte, error) {
+	type NoMethod UserDeletionRequestId
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -5189,8 +5459,8 @@ type UserRef struct {
 }
 
 func (s *UserRef) MarshalJSON() ([]byte, error) {
-	type noMethod UserRef
-	raw := noMethod(*s)
+	type NoMethod UserRef
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -5232,8 +5502,8 @@ type WebPropertyRef struct {
 }
 
 func (s *WebPropertyRef) MarshalJSON() ([]byte, error) {
-	type noMethod WebPropertyRef
-	raw := noMethod(*s)
+	type NoMethod WebPropertyRef
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -5284,8 +5554,8 @@ type WebPropertySummary struct {
 }
 
 func (s *WebPropertySummary) MarshalJSON() ([]byte, error) {
-	type noMethod WebPropertySummary
-	raw := noMethod(*s)
+	type NoMethod WebPropertySummary
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -5344,8 +5614,8 @@ type Webproperties struct {
 }
 
 func (s *Webproperties) MarshalJSON() ([]byte, error) {
-	type noMethod Webproperties
-	raw := noMethod(*s)
+	type NoMethod Webproperties
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -5360,6 +5630,20 @@ type Webproperty struct {
 
 	// Created: Time this web property was created.
 	Created string `json:"created,omitempty"`
+
+	// DataRetentionResetOnNewActivity: Set to true to reset the retention
+	// period of the user identifier with each new event from that user
+	// (thus setting the expiration date to current time plus retention
+	// period).
+	// Set to false to delete data associated with the user identifer
+	// automatically after the rentention period.
+	// This property cannot be set on insert.
+	DataRetentionResetOnNewActivity bool `json:"dataRetentionResetOnNewActivity,omitempty"`
+
+	// DataRetentionTtl: The length of time for which user and event data is
+	// retained.
+	// This property cannot be set on insert.
+	DataRetentionTtl string `json:"dataRetentionTtl,omitempty"`
 
 	// DefaultProfileId: Default view (profile) ID.
 	DefaultProfileId int64 `json:"defaultProfileId,omitempty,string"`
@@ -5428,8 +5712,8 @@ type Webproperty struct {
 }
 
 func (s *Webproperty) MarshalJSON() ([]byte, error) {
-	type noMethod Webproperty
-	raw := noMethod(*s)
+	type NoMethod Webproperty
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -5460,8 +5744,8 @@ type WebpropertyChildLink struct {
 }
 
 func (s *WebpropertyChildLink) MarshalJSON() ([]byte, error) {
-	type noMethod WebpropertyChildLink
-	raw := noMethod(*s)
+	type NoMethod WebpropertyChildLink
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -5492,8 +5776,8 @@ type WebpropertyParentLink struct {
 }
 
 func (s *WebpropertyParentLink) MarshalJSON() ([]byte, error) {
-	type noMethod WebpropertyParentLink
-	raw := noMethod(*s)
+	type NoMethod WebpropertyParentLink
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -5523,8 +5807,8 @@ type WebpropertyPermissions struct {
 }
 
 func (s *WebpropertyPermissions) MarshalJSON() ([]byte, error) {
-	type noMethod WebpropertyPermissions
-	raw := noMethod(*s)
+	type NoMethod WebpropertyPermissions
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -5713,7 +5997,7 @@ func (c *DataGaGetCall) Do(opts ...googleapi.CallOption) (*GaData, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5997,7 +6281,7 @@ func (c *DataMcfGetCall) Do(opts ...googleapi.CallOption) (*McfData, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6233,7 +6517,7 @@ func (c *DataRealtimeGetCall) Do(opts ...googleapi.CallOption) (*RealtimeData, e
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6416,7 +6700,7 @@ func (c *ManagementAccountSummariesListCall) Do(opts ...googleapi.CallOption) (*
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6656,7 +6940,7 @@ func (c *ManagementAccountUserLinksInsertCall) Do(opts ...googleapi.CallOption) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6811,7 +7095,7 @@ func (c *ManagementAccountUserLinksListCall) Do(opts ...googleapi.CallOption) (*
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6959,7 +7243,7 @@ func (c *ManagementAccountUserLinksUpdateCall) Do(opts ...googleapi.CallOption) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7116,7 +7400,7 @@ func (c *ManagementAccountsListCall) Do(opts ...googleapi.CallOption) (*Accounts
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7277,7 +7561,7 @@ func (c *ManagementCustomDataSourcesListCall) Do(opts ...googleapi.CallOption) (
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7445,7 +7729,7 @@ func (c *ManagementCustomDimensionsGetCall) Do(opts ...googleapi.CallOption) (*C
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7593,7 +7877,7 @@ func (c *ManagementCustomDimensionsInsertCall) Do(opts ...googleapi.CallOption) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7758,7 +8042,7 @@ func (c *ManagementCustomDimensionsListCall) Do(opts ...googleapi.CallOption) (*
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7925,7 +8209,7 @@ func (c *ManagementCustomDimensionsPatchCall) Do(opts ...googleapi.CallOption) (
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8093,7 +8377,7 @@ func (c *ManagementCustomDimensionsUpdateCall) Do(opts ...googleapi.CallOption) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8259,7 +8543,7 @@ func (c *ManagementCustomMetricsGetCall) Do(opts ...googleapi.CallOption) (*Cust
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8407,7 +8691,7 @@ func (c *ManagementCustomMetricsInsertCall) Do(opts ...googleapi.CallOption) (*C
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8572,7 +8856,7 @@ func (c *ManagementCustomMetricsListCall) Do(opts ...googleapi.CallOption) (*Cus
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8739,7 +9023,7 @@ func (c *ManagementCustomMetricsPatchCall) Do(opts ...googleapi.CallOption) (*Cu
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8907,7 +9191,7 @@ func (c *ManagementCustomMetricsUpdateCall) Do(opts ...googleapi.CallOption) (*C
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -9202,7 +9486,7 @@ func (c *ManagementExperimentsGetCall) Do(opts ...googleapi.CallOption) (*Experi
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -9361,7 +9645,7 @@ func (c *ManagementExperimentsInsertCall) Do(opts ...googleapi.CallOption) (*Exp
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -9537,7 +9821,7 @@ func (c *ManagementExperimentsListCall) Do(opts ...googleapi.CallOption) (*Exper
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -9709,7 +9993,7 @@ func (c *ManagementExperimentsPatchCall) Do(opts ...googleapi.CallOption) (*Expe
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -9873,7 +10157,7 @@ func (c *ManagementExperimentsUpdateCall) Do(opts ...googleapi.CallOption) (*Exp
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -10024,7 +10308,7 @@ func (c *ManagementFiltersDeleteCall) Do(opts ...googleapi.CallOption) (*Filter,
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -10171,7 +10455,7 @@ func (c *ManagementFiltersGetCall) Do(opts ...googleapi.CallOption) (*Filter, er
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -10309,7 +10593,7 @@ func (c *ManagementFiltersInsertCall) Do(opts ...googleapi.CallOption) (*Filter,
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -10464,7 +10748,7 @@ func (c *ManagementFiltersListCall) Do(opts ...googleapi.CallOption) (*Filters, 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -10613,7 +10897,7 @@ func (c *ManagementFiltersPatchCall) Do(opts ...googleapi.CallOption) (*Filter, 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -10756,7 +11040,7 @@ func (c *ManagementFiltersUpdateCall) Do(opts ...googleapi.CallOption) (*Filter,
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -10912,7 +11196,7 @@ func (c *ManagementGoalsGetCall) Do(opts ...googleapi.CallOption) (*Goal, error)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -11070,7 +11354,7 @@ func (c *ManagementGoalsInsertCall) Do(opts ...googleapi.CallOption) (*Goal, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -11245,7 +11529,7 @@ func (c *ManagementGoalsListCall) Do(opts ...googleapi.CallOption) (*Goals, erro
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -11414,7 +11698,7 @@ func (c *ManagementGoalsPatchCall) Do(opts ...googleapi.CallOption) (*Goal, erro
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -11577,7 +11861,7 @@ func (c *ManagementGoalsUpdateCall) Do(opts ...googleapi.CallOption) (*Goal, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -11876,7 +12160,7 @@ func (c *ManagementProfileFilterLinksGetCall) Do(opts ...googleapi.CallOption) (
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -12038,7 +12322,7 @@ func (c *ManagementProfileFilterLinksInsertCall) Do(opts ...googleapi.CallOption
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -12216,7 +12500,7 @@ func (c *ManagementProfileFilterLinksListCall) Do(opts ...googleapi.CallOption) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -12385,7 +12669,7 @@ func (c *ManagementProfileFilterLinksPatchCall) Do(opts ...googleapi.CallOption)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -12552,7 +12836,7 @@ func (c *ManagementProfileFilterLinksUpdateCall) Do(opts ...googleapi.CallOption
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -12841,7 +13125,7 @@ func (c *ManagementProfileUserLinksInsertCall) Do(opts ...googleapi.CallOption) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -13016,7 +13300,7 @@ func (c *ManagementProfileUserLinksListCall) Do(opts ...googleapi.CallOption) (*
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -13184,7 +13468,7 @@ func (c *ManagementProfileUserLinksUpdateCall) Do(opts ...googleapi.CallOption) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -13466,7 +13750,7 @@ func (c *ManagementProfilesGetCall) Do(opts ...googleapi.CallOption) (*Profile, 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -13617,7 +13901,7 @@ func (c *ManagementProfilesInsertCall) Do(opts ...googleapi.CallOption) (*Profil
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -13782,7 +14066,7 @@ func (c *ManagementProfilesListCall) Do(opts ...googleapi.CallOption) (*Profiles
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -13941,7 +14225,7 @@ func (c *ManagementProfilesPatchCall) Do(opts ...googleapi.CallOption) (*Profile
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -14094,7 +14378,7 @@ func (c *ManagementProfilesUpdateCall) Do(opts ...googleapi.CallOption) (*Profil
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -14369,7 +14653,7 @@ func (c *ManagementRemarketingAudienceGetCall) Do(opts ...googleapi.CallOption) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -14517,7 +14801,7 @@ func (c *ManagementRemarketingAudienceInsertCall) Do(opts ...googleapi.CallOptio
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -14688,7 +14972,7 @@ func (c *ManagementRemarketingAudienceListCall) Do(opts ...googleapi.CallOption)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -14851,7 +15135,7 @@ func (c *ManagementRemarketingAudiencePatchCall) Do(opts ...googleapi.CallOption
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -15004,7 +15288,7 @@ func (c *ManagementRemarketingAudienceUpdateCall) Do(opts ...googleapi.CallOptio
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -15168,7 +15452,7 @@ func (c *ManagementSegmentsListCall) Do(opts ...googleapi.CallOption) (*Segments
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -15445,7 +15729,7 @@ func (c *ManagementUnsampledReportsGetCall) Do(opts ...googleapi.CallOption) (*U
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -15604,7 +15888,7 @@ func (c *ManagementUnsampledReportsInsertCall) Do(opts ...googleapi.CallOption) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -15780,7 +16064,7 @@ func (c *ManagementUnsampledReportsListCall) Do(opts ...googleapi.CallOption) (*
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -16084,7 +16368,7 @@ func (c *ManagementUploadsGetCall) Do(opts ...googleapi.CallOption) (*Upload, er
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -16269,7 +16553,7 @@ func (c *ManagementUploadsListCall) Do(opts ...googleapi.CallOption) (*Uploads, 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -16340,11 +16624,7 @@ type ManagementUploadsUploadDataCall struct {
 	webPropertyId      string
 	customDataSourceId string
 	urlParams_         gensupport.URLParams
-	media_             io.Reader
-	mediaBuffer_       *gensupport.MediaBuffer
-	mediaType_         string
-	mediaSize_         int64 // mediaSize, if known.  Used only for calls to progressUpdater_.
-	progressUpdater_   googleapi.ProgressUpdater
+	mediaInfo_         *gensupport.MediaInfo
 	ctx_               context.Context
 	header_            http.Header
 }
@@ -16367,12 +16647,7 @@ func (r *ManagementUploadsService) UploadData(accountId string, webPropertyId st
 // supplied.
 // At most one of Media and ResumableMedia may be set.
 func (c *ManagementUploadsUploadDataCall) Media(r io.Reader, options ...googleapi.MediaOption) *ManagementUploadsUploadDataCall {
-	opts := googleapi.ProcessMediaOptions(options)
-	chunkSize := opts.ChunkSize
-	if !opts.ForceEmptyContentType {
-		r, c.mediaType_ = gensupport.DetermineContentType(r, opts.ContentType)
-	}
-	c.media_, c.mediaBuffer_ = gensupport.PrepareUpload(r, chunkSize)
+	c.mediaInfo_ = gensupport.NewInfoFromMedia(r, options)
 	return c
 }
 
@@ -16387,11 +16662,7 @@ func (c *ManagementUploadsUploadDataCall) Media(r io.Reader, options ...googleap
 // supersede any context previously provided to the Context method.
 func (c *ManagementUploadsUploadDataCall) ResumableMedia(ctx context.Context, r io.ReaderAt, size int64, mediaType string) *ManagementUploadsUploadDataCall {
 	c.ctx_ = ctx
-	rdr := gensupport.ReaderAtToReader(r, size)
-	rdr, c.mediaType_ = gensupport.DetermineContentType(rdr, mediaType)
-	c.mediaBuffer_ = gensupport.NewMediaBuffer(rdr, googleapi.DefaultUploadChunkSize)
-	c.media_ = nil
-	c.mediaSize_ = size
+	c.mediaInfo_ = gensupport.NewInfoFromResumableMedia(r, size, mediaType)
 	return c
 }
 
@@ -16400,7 +16671,7 @@ func (c *ManagementUploadsUploadDataCall) ResumableMedia(ctx context.Context, r 
 // not slow down the upload operation. This should only be called when
 // using ResumableMedia (as opposed to Media).
 func (c *ManagementUploadsUploadDataCall) ProgressUpdater(pu googleapi.ProgressUpdater) *ManagementUploadsUploadDataCall {
-	c.progressUpdater_ = pu
+	c.mediaInfo_.SetProgressUpdater(pu)
 	return c
 }
 
@@ -16440,30 +16711,20 @@ func (c *ManagementUploadsUploadDataCall) doRequest(alt string) (*http.Response,
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "management/accounts/{accountId}/webproperties/{webPropertyId}/customDataSources/{customDataSourceId}/uploads")
-	if c.media_ != nil || c.mediaBuffer_ != nil {
+	if c.mediaInfo_ != nil {
 		urls = strings.Replace(urls, "https://www.googleapis.com/", "https://www.googleapis.com/upload/", 1)
-		protocol := "multipart"
-		if c.mediaBuffer_ != nil {
-			protocol = "resumable"
-		}
-		c.urlParams_.Set("uploadType", protocol)
+		c.urlParams_.Set("uploadType", c.mediaInfo_.UploadType())
 	}
 	if body == nil {
 		body = new(bytes.Buffer)
 		reqHeaders.Set("Content-Type", "application/json")
 	}
-	if c.media_ != nil {
-		combined, ctype := gensupport.CombineBodyMedia(body, "application/json", c.media_, c.mediaType_)
-		defer combined.Close()
-		reqHeaders.Set("Content-Type", ctype)
-		body = combined
-	}
-	if c.mediaBuffer_ != nil && c.mediaType_ != "" {
-		reqHeaders.Set("X-Upload-Content-Type", c.mediaType_)
-	}
+	body, getBody, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
+	defer cleanup()
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
 	req.Header = reqHeaders
+	gensupport.SetGetBody(req, getBody)
 	googleapi.Expand(req.URL, map[string]string{
 		"accountId":          c.accountId,
 		"webPropertyId":      c.webPropertyId,
@@ -16498,20 +16759,10 @@ func (c *ManagementUploadsUploadDataCall) Do(opts ...googleapi.CallOption) (*Upl
 	if err := googleapi.CheckResponse(res); err != nil {
 		return nil, err
 	}
-	if c.mediaBuffer_ != nil {
-		loc := res.Header.Get("Location")
-		rx := &gensupport.ResumableUpload{
-			Client:    c.s.client,
-			UserAgent: c.s.userAgent(),
-			URI:       loc,
-			Media:     c.mediaBuffer_,
-			MediaType: c.mediaType_,
-			Callback: func(curr int64) {
-				if c.progressUpdater_ != nil {
-					c.progressUpdater_(curr, c.mediaSize_)
-				}
-			},
-		}
+	rx := c.mediaInfo_.ResumableUpload(res.Header.Get("Location"))
+	if rx != nil {
+		rx.Client = c.s.client
+		rx.UserAgent = c.s.userAgent()
 		ctx := c.ctx_
 		if ctx == nil {
 			ctx = context.TODO()
@@ -16532,7 +16783,7 @@ func (c *ManagementUploadsUploadDataCall) Do(opts ...googleapi.CallOption) (*Upl
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -16825,7 +17076,7 @@ func (c *ManagementWebPropertyAdWordsLinksGetCall) Do(opts ...googleapi.CallOpti
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -16973,7 +17224,7 @@ func (c *ManagementWebPropertyAdWordsLinksInsertCall) Do(opts ...googleapi.CallO
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -17138,7 +17389,7 @@ func (c *ManagementWebPropertyAdWordsLinksListCall) Do(opts ...googleapi.CallOpt
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -17297,7 +17548,7 @@ func (c *ManagementWebPropertyAdWordsLinksPatchCall) Do(opts ...googleapi.CallOp
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -17450,7 +17701,7 @@ func (c *ManagementWebPropertyAdWordsLinksUpdateCall) Do(opts ...googleapi.CallO
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -17607,7 +17858,7 @@ func (c *ManagementWebpropertiesGetCall) Do(opts ...googleapi.CallOption) (*Webp
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -17749,7 +18000,7 @@ func (c *ManagementWebpropertiesInsertCall) Do(opts ...googleapi.CallOption) (*W
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -17904,7 +18155,7 @@ func (c *ManagementWebpropertiesListCall) Do(opts ...googleapi.CallOption) (*Web
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -18053,7 +18304,7 @@ func (c *ManagementWebpropertiesPatchCall) Do(opts ...googleapi.CallOption) (*We
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -18196,7 +18447,7 @@ func (c *ManagementWebpropertiesUpdateCall) Do(opts ...googleapi.CallOption) (*W
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -18454,7 +18705,7 @@ func (c *ManagementWebpropertyUserLinksInsertCall) Do(opts ...googleapi.CallOpti
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -18619,7 +18870,7 @@ func (c *ManagementWebpropertyUserLinksListCall) Do(opts ...googleapi.CallOption
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -18777,7 +19028,7 @@ func (c *ManagementWebpropertyUserLinksUpdateCall) Do(opts ...googleapi.CallOpti
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -18931,7 +19182,7 @@ func (c *MetadataColumnsListCall) Do(opts ...googleapi.CallOption) (*Columns, er
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -19059,7 +19310,7 @@ func (c *ProvisioningCreateAccountTicketCall) Do(opts ...googleapi.CallOption) (
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -19076,6 +19327,240 @@ func (c *ProvisioningCreateAccountTicketCall) Do(opts ...googleapi.CallOption) (
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/analytics.provision"
+	//   ]
+	// }
+
+}
+
+// method id "analytics.provisioning.createAccountTree":
+
+type ProvisioningCreateAccountTreeCall struct {
+	s                  *Service
+	accounttreerequest *AccountTreeRequest
+	urlParams_         gensupport.URLParams
+	ctx_               context.Context
+	header_            http.Header
+}
+
+// CreateAccountTree: Provision account.
+func (r *ProvisioningService) CreateAccountTree(accounttreerequest *AccountTreeRequest) *ProvisioningCreateAccountTreeCall {
+	c := &ProvisioningCreateAccountTreeCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.accounttreerequest = accounttreerequest
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *ProvisioningCreateAccountTreeCall) Fields(s ...googleapi.Field) *ProvisioningCreateAccountTreeCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *ProvisioningCreateAccountTreeCall) Context(ctx context.Context) *ProvisioningCreateAccountTreeCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *ProvisioningCreateAccountTreeCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *ProvisioningCreateAccountTreeCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.accounttreerequest)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "provisioning/createAccountTree")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("POST", urls, body)
+	req.Header = reqHeaders
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "analytics.provisioning.createAccountTree" call.
+// Exactly one of *AccountTreeResponse or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *AccountTreeResponse.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *ProvisioningCreateAccountTreeCall) Do(opts ...googleapi.CallOption) (*AccountTreeResponse, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &AccountTreeResponse{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Provision account.",
+	//   "httpMethod": "POST",
+	//   "id": "analytics.provisioning.createAccountTree",
+	//   "path": "provisioning/createAccountTree",
+	//   "request": {
+	//     "$ref": "AccountTreeRequest"
+	//   },
+	//   "response": {
+	//     "$ref": "AccountTreeResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/analytics.provision"
+	//   ]
+	// }
+
+}
+
+// method id "analytics.userDeletion.userDeletionRequest.upsert":
+
+type UserDeletionUserDeletionRequestUpsertCall struct {
+	s                   *Service
+	userdeletionrequest *UserDeletionRequest
+	urlParams_          gensupport.URLParams
+	ctx_                context.Context
+	header_             http.Header
+}
+
+// Upsert: Insert or update a user deletion requests.
+func (r *UserDeletionUserDeletionRequestService) Upsert(userdeletionrequest *UserDeletionRequest) *UserDeletionUserDeletionRequestUpsertCall {
+	c := &UserDeletionUserDeletionRequestUpsertCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.userdeletionrequest = userdeletionrequest
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *UserDeletionUserDeletionRequestUpsertCall) Fields(s ...googleapi.Field) *UserDeletionUserDeletionRequestUpsertCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *UserDeletionUserDeletionRequestUpsertCall) Context(ctx context.Context) *UserDeletionUserDeletionRequestUpsertCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *UserDeletionUserDeletionRequestUpsertCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *UserDeletionUserDeletionRequestUpsertCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.userdeletionrequest)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "userDeletion/userDeletionRequests:upsert")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("POST", urls, body)
+	req.Header = reqHeaders
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "analytics.userDeletion.userDeletionRequest.upsert" call.
+// Exactly one of *UserDeletionRequest or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *UserDeletionRequest.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *UserDeletionUserDeletionRequestUpsertCall) Do(opts ...googleapi.CallOption) (*UserDeletionRequest, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &UserDeletionRequest{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Insert or update a user deletion requests.",
+	//   "httpMethod": "POST",
+	//   "id": "analytics.userDeletion.userDeletionRequest.upsert",
+	//   "path": "userDeletion/userDeletionRequests:upsert",
+	//   "request": {
+	//     "$ref": "UserDeletionRequest"
+	//   },
+	//   "response": {
+	//     "$ref": "UserDeletionRequest"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/analytics.user.deletion"
 	//   ]
 	// }
 

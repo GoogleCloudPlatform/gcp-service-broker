@@ -1,3 +1,4 @@
+[![GitHub release](https://img.shields.io/github/release/leonelquinteros/gorand.svg)](https://github.com/leonelquinteros/gorand)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![GoDoc](https://godoc.org/github.com/leonelquinteros/gorand?status.svg)](https://godoc.org/github.com/leonelquinteros/gorand)
 [![Build Status](https://travis-ci.org/leonelquinteros/gorand.svg?branch=master)](https://travis-ci.org/leonelquinteros/gorand)
@@ -30,15 +31,28 @@ Below are some examples of functions inside this package, for the entire referen
 Generates a version 4 (randomly generated) UUID as defined in RFC 4122
 
 ```go
-import "github.com/leonelquinteros/gorand"
+package main 
+
+import (
+    "fmt"
+    "github.com/leonelquinteros/gorand"
+)
 
 func main() {
-    uuid, err := gorand.UUID()
+    // Get UUID value
+    uuid, err := gorand.UUIDv4()
     if err != nil {
         panic(err.Error())
     }
+
+    // Marshal to string
+    str, err := gorand.MarshalUUID(uuid)
+	if err != nil {
+		panic(err.Error())
+    }
     
-    println(uuid)
+    // Print UUID as its canonical representation
+    fmt.Println(str)
 }
 ```
 

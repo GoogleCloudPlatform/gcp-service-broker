@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,14 +19,7 @@ import (
 )
 
 func ExampleStart() {
-	// The caller should provide the target string in the config so Cloud
-	// Profiler knows how to group the profile data. Otherwise the target
-	// string is set to "unknown".
-	//
-	// Optionally DebugLogging can be set in the config to enable detailed
-	// logging from profiler.
-	err := profiler.Start(&profiler.Config{Target: "my-target"})
-	if err != nil {
+	if err := profiler.Start(profiler.Config{Service: "my-service", ServiceVersion: "v1"}); err != nil {
 		//TODO: Handle error.
 	}
 }

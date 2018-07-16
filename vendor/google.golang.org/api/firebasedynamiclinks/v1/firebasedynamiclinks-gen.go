@@ -56,6 +56,7 @@ func New(client *http.Client) (*Service, error) {
 		return nil, errors.New("client is nil")
 	}
 	s := &Service{client: client, BasePath: basePath}
+	s.ManagedShortLinks = NewManagedShortLinksService(s)
 	s.ShortLinks = NewShortLinksService(s)
 	s.V1 = NewV1Service(s)
 	return s, nil
@@ -65,6 +66,8 @@ type Service struct {
 	client    *http.Client
 	BasePath  string // API endpoint base URL
 	UserAgent string // optional additional User-Agent fragment
+
+	ManagedShortLinks *ManagedShortLinksService
 
 	ShortLinks *ShortLinksService
 
@@ -76,6 +79,15 @@ func (s *Service) userAgent() string {
 		return googleapi.UserAgent
 	}
 	return googleapi.UserAgent + " " + s.UserAgent
+}
+
+func NewManagedShortLinksService(s *Service) *ManagedShortLinksService {
+	rs := &ManagedShortLinksService{s: s}
+	return rs
+}
+
+type ManagedShortLinksService struct {
+	s *Service
 }
 
 func NewShortLinksService(s *Service) *ShortLinksService {
@@ -123,8 +135,8 @@ type AnalyticsInfo struct {
 }
 
 func (s *AnalyticsInfo) MarshalJSON() ([]byte, error) {
-	type noMethod AnalyticsInfo
-	raw := noMethod(*s)
+	type NoMethod AnalyticsInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -165,19 +177,19 @@ type AndroidInfo struct {
 }
 
 func (s *AndroidInfo) MarshalJSON() ([]byte, error) {
-	type noMethod AndroidInfo
-	raw := noMethod(*s)
+	type NoMethod AndroidInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// CreateShortDynamicLinkRequest: Request to create a short Dynamic
-// Link.
-type CreateShortDynamicLinkRequest struct {
+// CreateManagedShortLinkRequest: Request to create a managed Short
+// Dynamic Link.
+type CreateManagedShortLinkRequest struct {
 	// DynamicLinkInfo: Information about the Dynamic Link to be
 	// shortened.
 	// [Learn
-	// more](https://firebase.google.com/docs/dynamic-links/android#create-a-
-	// dynamic-link-programmatically).
+	// more](https://firebase.google.com/docs/reference/dynamic-links/link-sh
+	// ortener).
 	DynamicLinkInfo *DynamicLinkInfo `json:"dynamicLinkInfo,omitempty"`
 
 	// LongDynamicLink: Full long Dynamic Link URL with desired query
@@ -187,8 +199,105 @@ type CreateShortDynamicLinkRequest struct {
 	// "https://sample.app.goo.gl/?link=http://www.google.com&apn=co
 	// m.sample",
 	// [Learn
-	// more](https://firebase.google.com/docs/dynamic-links/android#create-a-
-	// dynamic-link-programmatically).
+	// more](https://firebase.google.com/docs/reference/dynamic-links/link-sh
+	// ortener).
+	LongDynamicLink string `json:"longDynamicLink,omitempty"`
+
+	// Name: Link name to associate with the link. It's used for marketer to
+	// identify
+	// manually-created links in the Firebase
+	// console
+	// (https://console.firebase.google.com/).
+	// Links must be named to be tracked.
+	Name string `json:"name,omitempty"`
+
+	// Suffix: Short Dynamic Link suffix. Optional.
+	Suffix *Suffix `json:"suffix,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "DynamicLinkInfo") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DynamicLinkInfo") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *CreateManagedShortLinkRequest) MarshalJSON() ([]byte, error) {
+	type NoMethod CreateManagedShortLinkRequest
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// CreateManagedShortLinkResponse: Response to create a short Dynamic
+// Link.
+type CreateManagedShortLinkResponse struct {
+	// ManagedShortLink: Short Dynamic Link value. e.g.
+	// https://abcd.app.goo.gl/wxyz
+	ManagedShortLink *ManagedShortLink `json:"managedShortLink,omitempty"`
+
+	// PreviewLink: Preview link to show the link flow chart. (debug info.)
+	PreviewLink string `json:"previewLink,omitempty"`
+
+	// Warning: Information about potential warnings on link creation.
+	Warning []*DynamicLinkWarning `json:"warning,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "ManagedShortLink") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ManagedShortLink") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *CreateManagedShortLinkResponse) MarshalJSON() ([]byte, error) {
+	type NoMethod CreateManagedShortLinkResponse
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// CreateShortDynamicLinkRequest: Request to create a short Dynamic
+// Link.
+type CreateShortDynamicLinkRequest struct {
+	// DynamicLinkInfo: Information about the Dynamic Link to be
+	// shortened.
+	// [Learn
+	// more](https://firebase.google.com/docs/reference/dynamic-links/link-sh
+	// ortener).
+	DynamicLinkInfo *DynamicLinkInfo `json:"dynamicLinkInfo,omitempty"`
+
+	// LongDynamicLink: Full long Dynamic Link URL with desired query
+	// parameters specified.
+	// For
+	// example,
+	// "https://sample.app.goo.gl/?link=http://www.google.com&apn=co
+	// m.sample",
+	// [Learn
+	// more](https://firebase.google.com/docs/reference/dynamic-links/link-sh
+	// ortener).
 	LongDynamicLink string `json:"longDynamicLink,omitempty"`
 
 	// Suffix: Short Dynamic Link suffix. Optional.
@@ -213,15 +322,15 @@ type CreateShortDynamicLinkRequest struct {
 }
 
 func (s *CreateShortDynamicLinkRequest) MarshalJSON() ([]byte, error) {
-	type noMethod CreateShortDynamicLinkRequest
-	raw := noMethod(*s)
+	type NoMethod CreateShortDynamicLinkRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // CreateShortDynamicLinkResponse: Response to create a short Dynamic
 // Link.
 type CreateShortDynamicLinkResponse struct {
-	// PreviewLink: Preivew link to show the link flow chart.
+	// PreviewLink: Preview link to show the link flow chart. (debug info.)
 	PreviewLink string `json:"previewLink,omitempty"`
 
 	// ShortLink: Short Dynamic Link value. e.g.
@@ -253,8 +362,90 @@ type CreateShortDynamicLinkResponse struct {
 }
 
 func (s *CreateShortDynamicLinkResponse) MarshalJSON() ([]byte, error) {
-	type noMethod CreateShortDynamicLinkResponse
-	raw := noMethod(*s)
+	type NoMethod CreateShortDynamicLinkResponse
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// DesktopInfo: Desktop related attributes to the Dynamic Link.
+type DesktopInfo struct {
+	// DesktopFallbackLink: Link to open on desktop.
+	DesktopFallbackLink string `json:"desktopFallbackLink,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "DesktopFallbackLink")
+	// to unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DesktopFallbackLink") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *DesktopInfo) MarshalJSON() ([]byte, error) {
+	type NoMethod DesktopInfo
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// DeviceInfo: Signals associated with the device making the request.
+type DeviceInfo struct {
+	// DeviceModelName: Device model name.
+	DeviceModelName string `json:"deviceModelName,omitempty"`
+
+	// LanguageCode: Device language code setting.
+	LanguageCode string `json:"languageCode,omitempty"`
+
+	// LanguageCodeFromWebview: Device language code setting obtained by
+	// executing JavaScript code in
+	// WebView.
+	LanguageCodeFromWebview string `json:"languageCodeFromWebview,omitempty"`
+
+	// LanguageCodeRaw: Device language code raw setting.
+	// iOS does returns language code in different format than iOS
+	// WebView.
+	// For example WebView returns en_US, but iOS returns en-US.
+	// Field below will return raw value returned by iOS.
+	LanguageCodeRaw string `json:"languageCodeRaw,omitempty"`
+
+	// ScreenResolutionHeight: Device display resolution height.
+	ScreenResolutionHeight int64 `json:"screenResolutionHeight,omitempty,string"`
+
+	// ScreenResolutionWidth: Device display resolution width.
+	ScreenResolutionWidth int64 `json:"screenResolutionWidth,omitempty,string"`
+
+	// Timezone: Device timezone setting.
+	Timezone string `json:"timezone,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "DeviceModelName") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DeviceModelName") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *DeviceInfo) MarshalJSON() ([]byte, error) {
+	type NoMethod DeviceInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -289,9 +480,8 @@ type DynamicLinkEventStat struct {
 	//   "IOS" - Represents iOS platform.
 	// All apps and browsers on iOS are classfied in this category.
 	//   "DESKTOP" - Represents desktop.
-	// Note: other platforms like Windows, Blackberry, Amazon fall into
-	// this
-	// category.
+	//   "OTHER" - Platforms are not categorized as Android/iOS/Destop fall
+	// into here.
 	Platform string `json:"platform,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Count") to
@@ -312,8 +502,8 @@ type DynamicLinkEventStat struct {
 }
 
 func (s *DynamicLinkEventStat) MarshalJSON() ([]byte, error) {
-	type noMethod DynamicLinkEventStat
-	raw := noMethod(*s)
+	type NoMethod DynamicLinkEventStat
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -332,6 +522,20 @@ type DynamicLinkInfo struct {
 	// [documentation](https://firebase.google.com/docs/dynamic-links/cre
 	// ate-manually).
 	AndroidInfo *AndroidInfo `json:"androidInfo,omitempty"`
+
+	// DesktopInfo: Desktop related information. See desktop related
+	// parameters in
+	// the
+	// [documentation](https://firebase.google.com/docs/dynamic-links/cre
+	// ate-manually).
+	DesktopInfo *DesktopInfo `json:"desktopInfo,omitempty"`
+
+	// DomainUriPrefix: E.g. https://maps.app.goo.gl,
+	// https://maps.page.link, https://g.co/maps
+	// More examples can be found in description of getNormalizedUriPrefix
+	// in
+	// j/c/g/firebase/dynamiclinks/uri/DdlDomain.java
+	DomainUriPrefix string `json:"domainUriPrefix,omitempty"`
 
 	// DynamicLinkDomain: Dynamic Links domain that the project owns, e.g.
 	// abcd.app.goo.gl
@@ -388,8 +592,8 @@ type DynamicLinkInfo struct {
 }
 
 func (s *DynamicLinkInfo) MarshalJSON() ([]byte, error) {
-	type noMethod DynamicLinkInfo
-	raw := noMethod(*s)
+	type NoMethod DynamicLinkInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -422,8 +626,8 @@ type DynamicLinkStats struct {
 }
 
 func (s *DynamicLinkStats) MarshalJSON() ([]byte, error) {
-	type noMethod DynamicLinkStats
-	raw := noMethod(*s)
+	type NoMethod DynamicLinkStats
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -482,6 +686,10 @@ type DynamicLinkWarning struct {
 	// not match with the given iOS store ID.
 	WarningCode string `json:"warningCode,omitempty"`
 
+	// WarningDocumentLink: The document describing the warning, and helps
+	// resolve.
+	WarningDocumentLink string `json:"warningDocumentLink,omitempty"`
+
 	// WarningMessage: The warning message to help developers improve their
 	// requests.
 	WarningMessage string `json:"warningMessage,omitempty"`
@@ -504,8 +712,218 @@ type DynamicLinkWarning struct {
 }
 
 func (s *DynamicLinkWarning) MarshalJSON() ([]byte, error) {
-	type noMethod DynamicLinkWarning
-	raw := noMethod(*s)
+	type NoMethod DynamicLinkWarning
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// GetIosPostInstallAttributionRequest: Request for iSDK to execute
+// strong match flow for post-install attribution.
+// This is meant for iOS requests only. Requests from other platforms
+// will
+// not be honored.
+type GetIosPostInstallAttributionRequest struct {
+	// AppInstallationTime: App installation epoch time
+	// (https://en.wikipedia.org/wiki/Unix_time).
+	// This is a client signal for a more accurate weak match.
+	AppInstallationTime int64 `json:"appInstallationTime,omitempty,string"`
+
+	// BundleId: APP bundle ID.
+	BundleId string `json:"bundleId,omitempty"`
+
+	// Device: Device information.
+	Device *DeviceInfo `json:"device,omitempty"`
+
+	// IosVersion: iOS version, ie: 9.3.5.
+	// Consider adding "build".
+	IosVersion string `json:"iosVersion,omitempty"`
+
+	// RetrievalMethod: App post install attribution retrieval information.
+	// Disambiguates
+	// mechanism (iSDK or developer invoked) to retrieve payload
+	// from
+	// clicked link.
+	//
+	// Possible values:
+	//   "UNKNOWN_PAYLOAD_RETRIEVAL_METHOD" - Unknown method.
+	//   "IMPLICIT_WEAK_MATCH" - iSDK performs a server lookup by device
+	// fingerprint in the background
+	// when app is first-opened; no API called by developer.
+	//   "EXPLICIT_WEAK_MATCH" - iSDK performs a server lookup by device
+	// fingerprint upon a dev API call.
+	//   "EXPLICIT_STRONG_AFTER_WEAK_MATCH" - iSDK performs a strong match
+	// only if weak match is found upon a dev
+	// API call.
+	RetrievalMethod string `json:"retrievalMethod,omitempty"`
+
+	// SdkVersion: Google SDK version.
+	SdkVersion string `json:"sdkVersion,omitempty"`
+
+	// UniqueMatchLinkToCheck: Possible unique matched link that server need
+	// to check before performing
+	// fingerprint match. If passed link is short server need to expand the
+	// link.
+	// If link is long server need to vslidate the link.
+	UniqueMatchLinkToCheck string `json:"uniqueMatchLinkToCheck,omitempty"`
+
+	// VisualStyle: Strong match page information. Disambiguates between
+	// default UI and
+	// custom page to present when strong match succeeds/fails to find
+	// cookie.
+	//
+	// Possible values:
+	//   "UNKNOWN_VISUAL_STYLE" - Unknown style.
+	//   "DEFAULT_STYLE" - Default style.
+	//   "CUSTOM_STYLE" - Custom style.
+	VisualStyle string `json:"visualStyle,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "AppInstallationTime")
+	// to unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AppInstallationTime") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *GetIosPostInstallAttributionRequest) MarshalJSON() ([]byte, error) {
+	type NoMethod GetIosPostInstallAttributionRequest
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// GetIosPostInstallAttributionResponse: Response for iSDK to execute
+// strong match flow for post-install attribution.
+type GetIosPostInstallAttributionResponse struct {
+	// AppMinimumVersion: The minimum version for app, specified by dev
+	// through ?imv= parameter.
+	// Return to iSDK to allow app to evaluate if current version meets
+	// this.
+	AppMinimumVersion string `json:"appMinimumVersion,omitempty"`
+
+	// AttributionConfidence: The confidence of the returned attribution.
+	//
+	// Possible values:
+	//   "UNKNOWN_ATTRIBUTION_CONFIDENCE" - Unset.
+	//   "WEAK" - Weak confidence, more than one matching link found or link
+	// suspected to
+	// be false positive
+	//   "DEFAULT" - Default confidence, match based on fingerprint
+	//   "UNIQUE" - Unique confidence, match based on "unique match link to
+	// check" or other
+	// means
+	AttributionConfidence string `json:"attributionConfidence,omitempty"`
+
+	// DeepLink: The deep-link attributed post-install via one of several
+	// techniques
+	// (fingerprint, copy unique).
+	DeepLink string `json:"deepLink,omitempty"`
+
+	// ExternalBrowserDestinationLink: User-agent specific custom-scheme
+	// URIs for iSDK to open. This will be set
+	// according to the user-agent tha the click was originally made in.
+	// There is
+	// no Safari-equivalent custom-scheme open URLs.
+	// ie: googlechrome://www.example.com
+	// ie: firefox://open-url?url=http://www.example.com
+	// ie: opera-http://example.com
+	ExternalBrowserDestinationLink string `json:"externalBrowserDestinationLink,omitempty"`
+
+	// FallbackLink: The link to navigate to update the app if min version
+	// is not met.
+	// This is either (in order): 1) fallback link (from ?ifl= parameter,
+	// if
+	// specified by developer) or 2) AppStore URL (from ?isi= parameter,
+	// if
+	// specified), or 3) the payload link (from required link= parameter).
+	FallbackLink string `json:"fallbackLink,omitempty"`
+
+	// InvitationId: Invitation ID attributed post-install via one of
+	// several techniques
+	// (fingerprint, copy unique).
+	InvitationId string `json:"invitationId,omitempty"`
+
+	// IsStrongMatchExecutable: Instruction for iSDK to attemmpt to perform
+	// strong match. For instance,
+	// if browser does not support/allow cookie or outside of support
+	// browsers,
+	// this will be false.
+	IsStrongMatchExecutable bool `json:"isStrongMatchExecutable,omitempty"`
+
+	// MatchMessage: Describes why match failed, ie: "discarded due to low
+	// confidence".
+	// This message will be publicly visible.
+	MatchMessage string `json:"matchMessage,omitempty"`
+
+	// RequestIpVersion: Which IP version the request was made from.
+	//
+	// Possible values:
+	//   "UNKNOWN_IP_VERSION" - Unset.
+	//   "IP_V4" - Request made from an IPv4 IP address.
+	//   "IP_V6" - Request made from an IPv6 IP address.
+	RequestIpVersion string `json:"requestIpVersion,omitempty"`
+
+	// RequestedLink: Entire FDL (short or long) attributed post-install via
+	// one of several
+	// techniques (fingerprint, copy unique).
+	RequestedLink string `json:"requestedLink,omitempty"`
+
+	// ResolvedLink: The entire FDL, expanded from a short link. It is the
+	// same as the
+	// requested_link, if it is long. Parameters from this should not
+	// be
+	// used directly (ie: server can default utm_[campaign|medium|source]
+	// to a value when requested_link lack them, server determine the
+	// best
+	// fallback_link when requested_link specifies >1 fallback links).
+	ResolvedLink string `json:"resolvedLink,omitempty"`
+
+	// UtmCampaign: Scion campaign value to be propagated by iSDK to Scion
+	// at post-install.
+	UtmCampaign string `json:"utmCampaign,omitempty"`
+
+	// UtmMedium: Scion medium value to be propagated by iSDK to Scion at
+	// post-install.
+	UtmMedium string `json:"utmMedium,omitempty"`
+
+	// UtmSource: Scion source value to be propagated by iSDK to Scion at
+	// post-install.
+	UtmSource string `json:"utmSource,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "AppMinimumVersion")
+	// to unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AppMinimumVersion") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *GetIosPostInstallAttributionResponse) MarshalJSON() ([]byte, error) {
+	type NoMethod GetIosPostInstallAttributionResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -564,8 +982,8 @@ type GooglePlayAnalytics struct {
 }
 
 func (s *GooglePlayAnalytics) MarshalJSON() ([]byte, error) {
-	type noMethod GooglePlayAnalytics
-	raw := noMethod(*s)
+	type NoMethod GooglePlayAnalytics
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -606,8 +1024,8 @@ type ITunesConnectAnalytics struct {
 }
 
 func (s *ITunesConnectAnalytics) MarshalJSON() ([]byte, error) {
-	type noMethod ITunesConnectAnalytics
-	raw := noMethod(*s)
+	type NoMethod ITunesConnectAnalytics
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -654,8 +1072,73 @@ type IosInfo struct {
 }
 
 func (s *IosInfo) MarshalJSON() ([]byte, error) {
-	type noMethod IosInfo
-	raw := noMethod(*s)
+	type NoMethod IosInfo
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ManagedShortLink: Managed Short Link.
+type ManagedShortLink struct {
+	// CreationTime: Creation timestamp of the short link.
+	CreationTime string `json:"creationTime,omitempty"`
+
+	// FlaggedAttribute: Attributes that have been flagged about this short
+	// url.
+	//
+	// Possible values:
+	//   "UNSPECIFIED_ATTRIBUTE" - Indicates that no attributes were found
+	// for this short url.
+	//   "SPAM" - Indicates that short url has been flagged by AbuseIAm team
+	// as spam.
+	FlaggedAttribute []string `json:"flaggedAttribute,omitempty"`
+
+	// Info: Full Dyamic Link info
+	Info *DynamicLinkInfo `json:"info,omitempty"`
+
+	// Link: Short durable link url, for example,
+	// "https://sample.app.goo.gl/xyz123".
+	//
+	// Required.
+	Link string `json:"link,omitempty"`
+
+	// LinkName: Link name defined by the creator.
+	//
+	// Required.
+	LinkName string `json:"linkName,omitempty"`
+
+	// Visibility: Visibility status of link.
+	//
+	// Possible values:
+	//   "UNSPECIFIED_VISIBILITY" - Visibility of the link is not specified.
+	//   "UNARCHIVED" - Link created in console and should be shown in
+	// console.
+	//   "ARCHIVED" - Link created in console and should not be shown in
+	// console (but can
+	// be shown in the console again if it is unarchived).
+	//   "NEVER_SHOWN" - Link created outside of console and should never be
+	// shown in console.
+	Visibility string `json:"visibility,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "CreationTime") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "CreationTime") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ManagedShortLink) MarshalJSON() ([]byte, error) {
+	type NoMethod ManagedShortLink
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -686,8 +1169,8 @@ type NavigationInfo struct {
 }
 
 func (s *NavigationInfo) MarshalJSON() ([]byte, error) {
-	type noMethod NavigationInfo
-	raw := noMethod(*s)
+	type NoMethod NavigationInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -722,18 +1205,21 @@ type SocialMetaTagInfo struct {
 }
 
 func (s *SocialMetaTagInfo) MarshalJSON() ([]byte, error) {
-	type noMethod SocialMetaTagInfo
-	raw := noMethod(*s)
+	type NoMethod SocialMetaTagInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // Suffix: Short Dynamic Link suffix.
 type Suffix struct {
+	// CustomSuffix: Only applies to Option.CUSTOM.
+	CustomSuffix string `json:"customSuffix,omitempty"`
+
 	// Option: Suffix option.
 	//
 	// Possible values:
 	//   "OPTION_UNSPECIFIED" - The suffix option is not specified, performs
-	// as NOT_GUESSABLE .
+	// as UNGUESSABLE .
 	//   "UNGUESSABLE" - Short Dynamic Link suffix is a base62 [0-9A-Za-z]
 	// encoded string of
 	// a random generated 96 bit random number, which has a length of 17
@@ -747,9 +1233,15 @@ type Suffix struct {
 	// length of 4 chars. the length will increase when all the space
 	// is
 	// occupied.
+	//   "CUSTOM" - Custom DDL suffix is a client specified string, for
+	// example,
+	// "buy2get1free".
+	// NOTE: custom suffix should only be available to managed short
+	// link
+	// creation
 	Option string `json:"option,omitempty"`
 
-	// ForceSendFields is a list of field names (e.g. "Option") to
+	// ForceSendFields is a list of field names (e.g. "CustomSuffix") to
 	// unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
 	// non-interface field appearing in ForceSendFields will be sent to the
@@ -757,19 +1249,157 @@ type Suffix struct {
 	// used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
-	// NullFields is a list of field names (e.g. "Option") to include in API
-	// requests with the JSON null value. By default, fields with empty
-	// values are omitted from API requests. However, any field with an
-	// empty value appearing in NullFields will be sent to the server as
+	// NullFields is a list of field names (e.g. "CustomSuffix") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
 	// null. It is an error if a field in this list has a non-empty value.
 	// This may be used to include null fields in Patch requests.
 	NullFields []string `json:"-"`
 }
 
 func (s *Suffix) MarshalJSON() ([]byte, error) {
-	type noMethod Suffix
-	raw := noMethod(*s)
+	type NoMethod Suffix
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// method id "firebasedynamiclinks.managedShortLinks.create":
+
+type ManagedShortLinksCreateCall struct {
+	s                             *Service
+	createmanagedshortlinkrequest *CreateManagedShortLinkRequest
+	urlParams_                    gensupport.URLParams
+	ctx_                          context.Context
+	header_                       http.Header
+}
+
+// Create: Creates a managed short Dynamic Link given either a valid
+// long Dynamic Link
+// or details such as Dynamic Link domain, Android and iOS app
+// information.
+// The created short Dynamic Link will not expire.
+//
+// This differs from CreateShortDynamicLink in the following ways:
+//   - The request will also contain a name for the link (non unique
+// name
+//     for the front end).
+//   - The response must be authenticated with an auth token (generated
+// with
+//     the admin service account).
+//   - The link will appear in the FDL list of links in the console
+// front end.
+//
+// The Dynamic Link domain in the request must be owned by
+// requester's
+// Firebase project.
+func (r *ManagedShortLinksService) Create(createmanagedshortlinkrequest *CreateManagedShortLinkRequest) *ManagedShortLinksCreateCall {
+	c := &ManagedShortLinksCreateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.createmanagedshortlinkrequest = createmanagedshortlinkrequest
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *ManagedShortLinksCreateCall) Fields(s ...googleapi.Field) *ManagedShortLinksCreateCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *ManagedShortLinksCreateCall) Context(ctx context.Context) *ManagedShortLinksCreateCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *ManagedShortLinksCreateCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *ManagedShortLinksCreateCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.createmanagedshortlinkrequest)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/managedShortLinks:create")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("POST", urls, body)
+	req.Header = reqHeaders
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "firebasedynamiclinks.managedShortLinks.create" call.
+// Exactly one of *CreateManagedShortLinkResponse or error will be
+// non-nil. Any non-2xx status code is an error. Response headers are in
+// either *CreateManagedShortLinkResponse.ServerResponse.Header or (if a
+// response was returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *ManagedShortLinksCreateCall) Do(opts ...googleapi.CallOption) (*CreateManagedShortLinkResponse, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &CreateManagedShortLinkResponse{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Creates a managed short Dynamic Link given either a valid long Dynamic Link\nor details such as Dynamic Link domain, Android and iOS app information.\nThe created short Dynamic Link will not expire.\n\nThis differs from CreateShortDynamicLink in the following ways:\n  - The request will also contain a name for the link (non unique name\n    for the front end).\n  - The response must be authenticated with an auth token (generated with\n    the admin service account).\n  - The link will appear in the FDL list of links in the console front end.\n\nThe Dynamic Link domain in the request must be owned by requester's\nFirebase project.",
+	//   "flatPath": "v1/managedShortLinks:create",
+	//   "httpMethod": "POST",
+	//   "id": "firebasedynamiclinks.managedShortLinks.create",
+	//   "parameterOrder": [],
+	//   "parameters": {},
+	//   "path": "v1/managedShortLinks:create",
+	//   "request": {
+	//     "$ref": "CreateManagedShortLinkRequest"
+	//   },
+	//   "response": {
+	//     "$ref": "CreateManagedShortLinkResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/firebase"
+	//   ]
+	// }
+
 }
 
 // method id "firebasedynamiclinks.shortLinks.create":
@@ -879,7 +1509,7 @@ func (c *ShortLinksCreateCall) Do(opts ...googleapi.CallOption) (*CreateShortDyn
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1021,7 +1651,7 @@ func (c *V1GetLinkStatsCall) Do(opts ...googleapi.CallOption) (*DynamicLinkStats
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1050,6 +1680,128 @@ func (c *V1GetLinkStatsCall) Do(opts ...googleapi.CallOption) (*DynamicLinkStats
 	//   "path": "v1/{dynamicLink}/linkStats",
 	//   "response": {
 	//     "$ref": "DynamicLinkStats"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/firebase"
+	//   ]
+	// }
+
+}
+
+// method id "firebasedynamiclinks.installAttribution":
+
+type V1InstallAttributionCall struct {
+	s                                   *Service
+	getiospostinstallattributionrequest *GetIosPostInstallAttributionRequest
+	urlParams_                          gensupport.URLParams
+	ctx_                                context.Context
+	header_                             http.Header
+}
+
+// InstallAttribution: Get iOS strong/weak-match info for post-install
+// attribution.
+func (r *V1Service) InstallAttribution(getiospostinstallattributionrequest *GetIosPostInstallAttributionRequest) *V1InstallAttributionCall {
+	c := &V1InstallAttributionCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.getiospostinstallattributionrequest = getiospostinstallattributionrequest
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *V1InstallAttributionCall) Fields(s ...googleapi.Field) *V1InstallAttributionCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *V1InstallAttributionCall) Context(ctx context.Context) *V1InstallAttributionCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *V1InstallAttributionCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *V1InstallAttributionCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.getiospostinstallattributionrequest)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/installAttribution")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("POST", urls, body)
+	req.Header = reqHeaders
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "firebasedynamiclinks.installAttribution" call.
+// Exactly one of *GetIosPostInstallAttributionResponse or error will be
+// non-nil. Any non-2xx status code is an error. Response headers are in
+// either *GetIosPostInstallAttributionResponse.ServerResponse.Header or
+// (if a response was returned at all) in
+// error.(*googleapi.Error).Header. Use googleapi.IsNotModified to check
+// whether the returned error was because http.StatusNotModified was
+// returned.
+func (c *V1InstallAttributionCall) Do(opts ...googleapi.CallOption) (*GetIosPostInstallAttributionResponse, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &GetIosPostInstallAttributionResponse{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Get iOS strong/weak-match info for post-install attribution.",
+	//   "flatPath": "v1/installAttribution",
+	//   "httpMethod": "POST",
+	//   "id": "firebasedynamiclinks.installAttribution",
+	//   "parameterOrder": [],
+	//   "parameters": {},
+	//   "path": "v1/installAttribution",
+	//   "request": {
+	//     "$ref": "GetIosPostInstallAttributionRequest"
+	//   },
+	//   "response": {
+	//     "$ref": "GetIosPostInstallAttributionResponse"
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/firebase"

@@ -6,21 +6,22 @@
 package sqlite3
 
 import (
+	"bytes"
 	"database/sql"
 	"database/sql/driver"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/url"
 	"os"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
 	"time"
-
-	"github.com/mattn/go-sqlite3/sqlite3_test"
 )
 
 func TempFilename(t *testing.T) string {
@@ -228,6 +229,55 @@ func TestInsert(t *testing.T) {
 	if result != 123 {
 		t.Errorf("Expected %d for fetched result, but %d:", 123, result)
 	}
+}
+
+func TestUpsert(t *testing.T) {
+	_, n, _ := Version()
+	if !(n >= 3024000) {
+		t.Skip("UPSERT requires sqlite3 => 3.24.0")
+	}
+	tempFilename := TempFilename(t)
+	defer os.Remove(tempFilename)
+	db, err := sql.Open("sqlite3", tempFilename)
+	if err != nil {
+		t.Fatal("Failed to open database:", err)
+	}
+	defer db.Close()
+
+	_, err = db.Exec("drop table foo")
+	_, err = db.Exec("create table foo (name string primary key, counter integer)")
+	if err != nil {
+		t.Fatal("Failed to create table:", err)
+	}
+
+	for i := 0; i < 10; i++ {
+		res, err := db.Exec("insert into foo(name, counter) values('key', 1) on conflict (name) do update set counter=counter+1")
+		if err != nil {
+			t.Fatal("Failed to upsert record:", err)
+		}
+		affected, _ := res.RowsAffected()
+		if affected != 1 {
+			t.Fatalf("Expected %d for affected rows, but %d:", 1, affected)
+		}
+	}
+	rows, err := db.Query("select name, counter from foo")
+	if err != nil {
+		t.Fatal("Failed to select records:", err)
+	}
+	defer rows.Close()
+
+	rows.Next()
+
+	var resultName string
+	var resultCounter int
+	rows.Scan(&resultName, &resultCounter)
+	if resultName != "key" {
+		t.Errorf("Expected %s for fetched result, but %s:", "key", resultName)
+	}
+	if resultCounter != 10 {
+		t.Errorf("Expected %d for fetched result, but %d:", 10, resultCounter)
+	}
+
 }
 
 func TestUpdate(t *testing.T) {
@@ -562,7 +612,7 @@ func TestBoolean(t *testing.T) {
 		t.Fatalf("Expected 1 row but %v", counter)
 	}
 
-	if id != 1 && fbool != true {
+	if id != 1 && !fbool {
 		t.Fatalf("Value for id 1 should be %v, not %v", bool1, fbool)
 	}
 
@@ -584,7 +634,7 @@ func TestBoolean(t *testing.T) {
 		t.Fatalf("Expected 1 row but %v", counter)
 	}
 
-	if id != 2 && fbool != false {
+	if id != 2 && fbool {
 		t.Fatalf("Value for id 2 should be %v, not %v", bool2, fbool)
 	}
 
@@ -868,18 +918,6 @@ func TestTimezoneConversion(t *testing.T) {
 			t.Errorf("Expected to see %d rows", len(tests))
 		}
 	}
-}
-
-func TestSuite(t *testing.T) {
-	tempFilename := TempFilename(t)
-	defer os.Remove(tempFilename)
-	db, err := sql.Open("sqlite3", tempFilename+"?_busy_timeout=99999")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer db.Close()
-
-	sqlite3_test.RunTests(t, db, sqlite3_test.SQLITE)
 }
 
 // TODO: Execer & Queryer currently disabled
@@ -1243,6 +1281,187 @@ func TestFunctionRegistration(t *testing.T) {
 	}
 }
 
+type sumAggregator int64
+
+func (s *sumAggregator) Step(x int64) {
+	*s += sumAggregator(x)
+}
+
+func (s *sumAggregator) Done() int64 {
+	return int64(*s)
+}
+
+func TestAggregatorRegistration(t *testing.T) {
+	customSum := func() *sumAggregator {
+		var ret sumAggregator
+		return &ret
+	}
+
+	sql.Register("sqlite3_AggregatorRegistration", &SQLiteDriver{
+		ConnectHook: func(conn *SQLiteConn) error {
+			if err := conn.RegisterAggregator("customSum", customSum, true); err != nil {
+				return err
+			}
+			return nil
+		},
+	})
+	db, err := sql.Open("sqlite3_AggregatorRegistration", ":memory:")
+	if err != nil {
+		t.Fatal("Failed to open database:", err)
+	}
+	defer db.Close()
+
+	_, err = db.Exec("create table foo (department integer, profits integer)")
+	if err != nil {
+		// trace feature is not implemented
+		t.Skip("Failed to create table:", err)
+	}
+
+	_, err = db.Exec("insert into foo values (1, 10), (1, 20), (2, 42)")
+	if err != nil {
+		t.Fatal("Failed to insert records:", err)
+	}
+
+	tests := []struct {
+		dept, sum int64
+	}{
+		{1, 30},
+		{2, 42},
+	}
+
+	for _, test := range tests {
+		var ret int64
+		err = db.QueryRow("select customSum(profits) from foo where department = $1 group by department", test.dept).Scan(&ret)
+		if err != nil {
+			t.Fatal("Query failed:", err)
+		}
+		if ret != test.sum {
+			t.Fatalf("Custom sum returned wrong value, got %d, want %d", ret, test.sum)
+		}
+	}
+}
+
+func rot13(r rune) rune {
+	switch {
+	case r >= 'A' && r <= 'Z':
+		return 'A' + (r-'A'+13)%26
+	case r >= 'a' && r <= 'z':
+		return 'a' + (r-'a'+13)%26
+	}
+	return r
+}
+
+func TestCollationRegistration(t *testing.T) {
+	collateRot13 := func(a, b string) int {
+		ra, rb := strings.Map(rot13, a), strings.Map(rot13, b)
+		return strings.Compare(ra, rb)
+	}
+	collateRot13Reverse := func(a, b string) int {
+		return collateRot13(b, a)
+	}
+
+	sql.Register("sqlite3_CollationRegistration", &SQLiteDriver{
+		ConnectHook: func(conn *SQLiteConn) error {
+			if err := conn.RegisterCollation("rot13", collateRot13); err != nil {
+				return err
+			}
+			if err := conn.RegisterCollation("rot13reverse", collateRot13Reverse); err != nil {
+				return err
+			}
+			return nil
+		},
+	})
+
+	db, err := sql.Open("sqlite3_CollationRegistration", ":memory:")
+	if err != nil {
+		t.Fatal("Failed to open database:", err)
+	}
+	defer db.Close()
+
+	populate := []string{
+		`CREATE TABLE test (s TEXT)`,
+		`INSERT INTO test VALUES ("aaaa")`,
+		`INSERT INTO test VALUES ("ffff")`,
+		`INSERT INTO test VALUES ("qqqq")`,
+		`INSERT INTO test VALUES ("tttt")`,
+		`INSERT INTO test VALUES ("zzzz")`,
+	}
+	for _, stmt := range populate {
+		if _, err := db.Exec(stmt); err != nil {
+			t.Fatal("Failed to populate test DB:", err)
+		}
+	}
+
+	ops := []struct {
+		query string
+		want  []string
+	}{
+		{
+			"SELECT * FROM test ORDER BY s COLLATE rot13 ASC",
+			[]string{
+				"qqqq",
+				"tttt",
+				"zzzz",
+				"aaaa",
+				"ffff",
+			},
+		},
+		{
+			"SELECT * FROM test ORDER BY s COLLATE rot13 DESC",
+			[]string{
+				"ffff",
+				"aaaa",
+				"zzzz",
+				"tttt",
+				"qqqq",
+			},
+		},
+		{
+			"SELECT * FROM test ORDER BY s COLLATE rot13reverse ASC",
+			[]string{
+				"ffff",
+				"aaaa",
+				"zzzz",
+				"tttt",
+				"qqqq",
+			},
+		},
+		{
+			"SELECT * FROM test ORDER BY s COLLATE rot13reverse DESC",
+			[]string{
+				"qqqq",
+				"tttt",
+				"zzzz",
+				"aaaa",
+				"ffff",
+			},
+		},
+	}
+
+	for _, op := range ops {
+		rows, err := db.Query(op.query)
+		if err != nil {
+			t.Fatalf("Query %q failed: %s", op.query, err)
+		}
+		got := []string{}
+		defer rows.Close()
+		for rows.Next() {
+			var s string
+			if err = rows.Scan(&s); err != nil {
+				t.Fatalf("Reading row for %q: %s", op.query, err)
+			}
+			got = append(got, s)
+		}
+		if err = rows.Err(); err != nil {
+			t.Fatalf("Reading rows for %q: %s", op.query, err)
+		}
+
+		if !reflect.DeepEqual(got, op.want) {
+			t.Fatalf("Unexpected output from %q\ngot:\n%s\n\nwant:\n%s", op.query, strings.Join(got, "\n"), strings.Join(op.want, "\n"))
+		}
+	}
+}
+
 func TestDeclTypes(t *testing.T) {
 
 	d := SQLiteDriver{}
@@ -1355,6 +1574,80 @@ func TestUpdateAndTransactionHooks(t *testing.T) {
 	}
 }
 
+func TestNilAndEmptyBytes(t *testing.T) {
+	db, err := sql.Open("sqlite3", ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	actualNil := []byte("use this to use an actual nil not a reference to nil")
+	emptyBytes := []byte{}
+	for tsti, tst := range []struct {
+		name          string
+		columnType    string
+		insertBytes   []byte
+		expectedBytes []byte
+	}{
+		{"actual nil blob", "blob", actualNil, nil},
+		{"referenced nil blob", "blob", nil, nil},
+		{"empty blob", "blob", emptyBytes, emptyBytes},
+		{"actual nil text", "text", actualNil, nil},
+		{"referenced nil text", "text", nil, nil},
+		{"empty text", "text", emptyBytes, emptyBytes},
+	} {
+		if _, err = db.Exec(fmt.Sprintf("create table tbl%d (txt %s)", tsti, tst.columnType)); err != nil {
+			t.Fatal(tst.name, err)
+		}
+		if bytes.Equal(tst.insertBytes, actualNil) {
+			if _, err = db.Exec(fmt.Sprintf("insert into tbl%d (txt) values (?)", tsti), nil); err != nil {
+				t.Fatal(tst.name, err)
+			}
+		} else {
+			if _, err = db.Exec(fmt.Sprintf("insert into tbl%d (txt) values (?)", tsti), &tst.insertBytes); err != nil {
+				t.Fatal(tst.name, err)
+			}
+		}
+		rows, err := db.Query(fmt.Sprintf("select txt from tbl%d", tsti))
+		if err != nil {
+			t.Fatal(tst.name, err)
+		}
+		if !rows.Next() {
+			t.Fatal(tst.name, "no rows")
+		}
+		var scanBytes []byte
+		if err = rows.Scan(&scanBytes); err != nil {
+			t.Fatal(tst.name, err)
+		}
+		if err = rows.Err(); err != nil {
+			t.Fatal(tst.name, err)
+		}
+		if tst.expectedBytes == nil && scanBytes != nil {
+			t.Errorf("%s: %#v != %#v", tst.name, scanBytes, tst.expectedBytes)
+		} else if !bytes.Equal(scanBytes, tst.expectedBytes) {
+			t.Errorf("%s: %#v != %#v", tst.name, scanBytes, tst.expectedBytes)
+		}
+	}
+}
+
+func TestInsertNilByteSlice(t *testing.T) {
+	db, err := sql.Open("sqlite3", ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	if _, err := db.Exec("create table blob_not_null (b blob not null)"); err != nil {
+		t.Fatal(err)
+	}
+	var nilSlice []byte
+	if _, err := db.Exec("insert into blob_not_null (b) values (?)", nilSlice); err == nil {
+		t.Fatal("didn't expect INSERT to 'not null' column with a nil []byte slice to work")
+	}
+	zeroLenSlice := []byte{}
+	if _, err := db.Exec("insert into blob_not_null (b) values (?)", zeroLenSlice); err != nil {
+		t.Fatal("failed to insert zero-length slice")
+	}
+}
+
 var customFunctionOnce sync.Once
 
 func BenchmarkCustomFunctions(b *testing.B) {
@@ -1366,10 +1659,7 @@ func BenchmarkCustomFunctions(b *testing.B) {
 		sql.Register("sqlite3_BenchmarkCustomFunctions", &SQLiteDriver{
 			ConnectHook: func(conn *SQLiteConn) error {
 				// Impure function to force sqlite to reexecute it each time.
-				if err := conn.RegisterFunc("custom_add", customAdd, false); err != nil {
-					return err
-				}
-				return nil
+				return conn.RegisterFunc("custom_add", customAdd, false)
 			},
 		})
 	})
@@ -1386,6 +1676,476 @@ func BenchmarkCustomFunctions(b *testing.B) {
 		err = db.QueryRow("SELECT custom_add(1,2)").Scan(&i)
 		if err != nil {
 			b.Fatal("Failed to run custom add:", err)
+		}
+	}
+}
+
+func TestSuite(t *testing.T) {
+	tempFilename := TempFilename(t)
+	defer os.Remove(tempFilename)
+	d, err := sql.Open("sqlite3", tempFilename+"?_busy_timeout=99999")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Close()
+
+	db = &TestDB{t, d, SQLITE, sync.Once{}}
+	testing.RunTests(func(string, string) (bool, error) { return true, nil }, tests)
+
+	if !testing.Short() {
+		for _, b := range benchmarks {
+			fmt.Printf("%-20s", b.Name)
+			r := testing.Benchmark(b.F)
+			fmt.Printf("%10d %10.0f req/s\n", r.N, float64(r.N)/r.T.Seconds())
+		}
+	}
+	db.tearDown()
+}
+
+// Dialect is a type of dialect of databases.
+type Dialect int
+
+// Dialects for databases.
+const (
+	SQLITE     Dialect = iota // SQLITE mean SQLite3 dialect
+	POSTGRESQL                // POSTGRESQL mean PostgreSQL dialect
+	MYSQL                     // MYSQL mean MySQL dialect
+)
+
+// DB provide context for the tests
+type TestDB struct {
+	*testing.T
+	*sql.DB
+	dialect Dialect
+	once    sync.Once
+}
+
+var db *TestDB
+
+// the following tables will be created and dropped during the test
+var testTables = []string{"foo", "bar", "t", "bench"}
+
+var tests = []testing.InternalTest{
+	{Name: "TestResult", F: testResult},
+	{Name: "TestBlobs", F: testBlobs},
+	{Name: "TestMultiBlobs", F: testMultiBlobs},
+	{Name: "TestManyQueryRow", F: testManyQueryRow},
+	{Name: "TestTxQuery", F: testTxQuery},
+	{Name: "TestPreparedStmt", F: testPreparedStmt},
+}
+
+var benchmarks = []testing.InternalBenchmark{
+	{Name: "BenchmarkExec", F: benchmarkExec},
+	{Name: "BenchmarkQuery", F: benchmarkQuery},
+	{Name: "BenchmarkParams", F: benchmarkParams},
+	{Name: "BenchmarkStmt", F: benchmarkStmt},
+	{Name: "BenchmarkRows", F: benchmarkRows},
+	{Name: "BenchmarkStmtRows", F: benchmarkStmtRows},
+}
+
+func (db *TestDB) mustExec(sql string, args ...interface{}) sql.Result {
+	res, err := db.Exec(sql, args...)
+	if err != nil {
+		db.Fatalf("Error running %q: %v", sql, err)
+	}
+	return res
+}
+
+func (db *TestDB) tearDown() {
+	for _, tbl := range testTables {
+		switch db.dialect {
+		case SQLITE:
+			db.mustExec("drop table if exists " + tbl)
+		case MYSQL, POSTGRESQL:
+			db.mustExec("drop table if exists " + tbl)
+		default:
+			db.Fatal("unknown dialect")
+		}
+	}
+}
+
+// q replaces ? parameters if needed
+func (db *TestDB) q(sql string) string {
+	switch db.dialect {
+	case POSTGRESQL: // replace with $1, $2, ..
+		qrx := regexp.MustCompile(`\?`)
+		n := 0
+		return qrx.ReplaceAllStringFunc(sql, func(string) string {
+			n++
+			return "$" + strconv.Itoa(n)
+		})
+	}
+	return sql
+}
+
+func (db *TestDB) blobType(size int) string {
+	switch db.dialect {
+	case SQLITE:
+		return fmt.Sprintf("blob[%d]", size)
+	case POSTGRESQL:
+		return "bytea"
+	case MYSQL:
+		return fmt.Sprintf("VARBINARY(%d)", size)
+	}
+	panic("unknown dialect")
+}
+
+func (db *TestDB) serialPK() string {
+	switch db.dialect {
+	case SQLITE:
+		return "integer primary key autoincrement"
+	case POSTGRESQL:
+		return "serial primary key"
+	case MYSQL:
+		return "integer primary key auto_increment"
+	}
+	panic("unknown dialect")
+}
+
+func (db *TestDB) now() string {
+	switch db.dialect {
+	case SQLITE:
+		return "datetime('now')"
+	case POSTGRESQL:
+		return "now()"
+	case MYSQL:
+		return "now()"
+	}
+	panic("unknown dialect")
+}
+
+func makeBench() {
+	if _, err := db.Exec("create table bench (n varchar(32), i integer, d double, s varchar(32), t datetime)"); err != nil {
+		panic(err)
+	}
+	st, err := db.Prepare("insert into bench values (?, ?, ?, ?, ?)")
+	if err != nil {
+		panic(err)
+	}
+	defer st.Close()
+	for i := 0; i < 100; i++ {
+		if _, err = st.Exec(nil, i, float64(i), fmt.Sprintf("%d", i), time.Now()); err != nil {
+			panic(err)
+		}
+	}
+}
+
+// testResult is test for result
+func testResult(t *testing.T) {
+	db.tearDown()
+	db.mustExec("create temporary table test (id " + db.serialPK() + ", name varchar(10))")
+
+	for i := 1; i < 3; i++ {
+		r := db.mustExec(db.q("insert into test (name) values (?)"), fmt.Sprintf("row %d", i))
+		n, err := r.RowsAffected()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if n != 1 {
+			t.Errorf("got %v, want %v", n, 1)
+		}
+		n, err = r.LastInsertId()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if n != int64(i) {
+			t.Errorf("got %v, want %v", n, i)
+		}
+	}
+	if _, err := db.Exec("error!"); err == nil {
+		t.Fatalf("expected error")
+	}
+}
+
+// testBlobs is test for blobs
+func testBlobs(t *testing.T) {
+	db.tearDown()
+	var blob = []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+	db.mustExec("create table foo (id integer primary key, bar " + db.blobType(16) + ")")
+	db.mustExec(db.q("insert into foo (id, bar) values(?,?)"), 0, blob)
+
+	want := fmt.Sprintf("%x", blob)
+
+	b := make([]byte, 16)
+	err := db.QueryRow(db.q("select bar from foo where id = ?"), 0).Scan(&b)
+	got := fmt.Sprintf("%x", b)
+	if err != nil {
+		t.Errorf("[]byte scan: %v", err)
+	} else if got != want {
+		t.Errorf("for []byte, got %q; want %q", got, want)
+	}
+
+	err = db.QueryRow(db.q("select bar from foo where id = ?"), 0).Scan(&got)
+	want = string(blob)
+	if err != nil {
+		t.Errorf("string scan: %v", err)
+	} else if got != want {
+		t.Errorf("for string, got %q; want %q", got, want)
+	}
+}
+
+func testMultiBlobs(t *testing.T) {
+	db.tearDown()
+	db.mustExec("create table foo (id integer primary key, bar " + db.blobType(16) + ")")
+	var blob0 = []byte{0, 1, 2, 3, 4, 5, 6, 7}
+	db.mustExec(db.q("insert into foo (id, bar) values(?,?)"), 0, blob0)
+	var blob1 = []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+	db.mustExec(db.q("insert into foo (id, bar) values(?,?)"), 1, blob1)
+
+	r, err := db.Query(db.q("select bar from foo order by id"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	if !r.Next() {
+		if r.Err() != nil {
+			t.Fatal(err)
+		}
+		t.Fatal("expected one rows")
+	}
+
+	want0 := fmt.Sprintf("%x", blob0)
+	b0 := make([]byte, 8)
+	err = r.Scan(&b0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got0 := fmt.Sprintf("%x", b0)
+
+	if !r.Next() {
+		if r.Err() != nil {
+			t.Fatal(err)
+		}
+		t.Fatal("expected one rows")
+	}
+
+	want1 := fmt.Sprintf("%x", blob1)
+	b1 := make([]byte, 16)
+	err = r.Scan(&b1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got1 := fmt.Sprintf("%x", b1)
+	if got0 != want0 {
+		t.Errorf("for []byte, got %q; want %q", got0, want0)
+	}
+	if got1 != want1 {
+		t.Errorf("for []byte, got %q; want %q", got1, want1)
+	}
+}
+
+// testManyQueryRow is test for many query row
+func testManyQueryRow(t *testing.T) {
+	if testing.Short() {
+		t.Log("skipping in short mode")
+		return
+	}
+	db.tearDown()
+	db.mustExec("create table foo (id integer primary key, name varchar(50))")
+	db.mustExec(db.q("insert into foo (id, name) values(?,?)"), 1, "bob")
+	var name string
+	for i := 0; i < 10000; i++ {
+		err := db.QueryRow(db.q("select name from foo where id = ?"), 1).Scan(&name)
+		if err != nil || name != "bob" {
+			t.Fatalf("on query %d: err=%v, name=%q", i, err, name)
+		}
+	}
+}
+
+// testTxQuery is test for transactional query
+func testTxQuery(t *testing.T) {
+	db.tearDown()
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+
+	_, err = tx.Exec("create table foo (id integer primary key, name varchar(50))")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = tx.Exec(db.q("insert into foo (id, name) values(?,?)"), 1, "bob")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r, err := tx.Query(db.q("select name from foo where id = ?"), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+
+	if !r.Next() {
+		if r.Err() != nil {
+			t.Fatal(err)
+		}
+		t.Fatal("expected one rows")
+	}
+
+	var name string
+	err = r.Scan(&name)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+// testPreparedStmt is test for prepared statement
+func testPreparedStmt(t *testing.T) {
+	db.tearDown()
+	db.mustExec("CREATE TABLE t (count INT)")
+	sel, err := db.Prepare("SELECT count FROM t ORDER BY count DESC")
+	if err != nil {
+		t.Fatalf("prepare 1: %v", err)
+	}
+	ins, err := db.Prepare(db.q("INSERT INTO t (count) VALUES (?)"))
+	if err != nil {
+		t.Fatalf("prepare 2: %v", err)
+	}
+
+	for n := 1; n <= 3; n++ {
+		if _, err := ins.Exec(n); err != nil {
+			t.Fatalf("insert(%d) = %v", n, err)
+		}
+	}
+
+	const nRuns = 10
+	var wg sync.WaitGroup
+	for i := 0; i < nRuns; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 10; j++ {
+				count := 0
+				if err := sel.QueryRow().Scan(&count); err != nil && err != sql.ErrNoRows {
+					t.Errorf("Query: %v", err)
+					return
+				}
+				if _, err := ins.Exec(rand.Intn(100)); err != nil {
+					t.Errorf("Insert: %v", err)
+					return
+				}
+			}
+		}()
+	}
+	wg.Wait()
+}
+
+// Benchmarks need to use panic() since b.Error errors are lost when
+// running via testing.Benchmark() I would like to run these via go
+// test -bench but calling Benchmark() from a benchmark test
+// currently hangs go.
+
+// benchmarkExec is benchmark for exec
+func benchmarkExec(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		if _, err := db.Exec("select 1"); err != nil {
+			panic(err)
+		}
+	}
+}
+
+// benchmarkQuery is benchmark for query
+func benchmarkQuery(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		var n sql.NullString
+		var i int
+		var f float64
+		var s string
+		//		var t time.Time
+		if err := db.QueryRow("select null, 1, 1.1, 'foo'").Scan(&n, &i, &f, &s); err != nil {
+			panic(err)
+		}
+	}
+}
+
+// benchmarkParams is benchmark for params
+func benchmarkParams(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		var n sql.NullString
+		var i int
+		var f float64
+		var s string
+		//		var t time.Time
+		if err := db.QueryRow("select ?, ?, ?, ?", nil, 1, 1.1, "foo").Scan(&n, &i, &f, &s); err != nil {
+			panic(err)
+		}
+	}
+}
+
+// benchmarkStmt is benchmark for statement
+func benchmarkStmt(b *testing.B) {
+	st, err := db.Prepare("select ?, ?, ?, ?")
+	if err != nil {
+		panic(err)
+	}
+	defer st.Close()
+
+	for n := 0; n < b.N; n++ {
+		var n sql.NullString
+		var i int
+		var f float64
+		var s string
+		//		var t time.Time
+		if err := st.QueryRow(nil, 1, 1.1, "foo").Scan(&n, &i, &f, &s); err != nil {
+			panic(err)
+		}
+	}
+}
+
+// benchmarkRows is benchmark for rows
+func benchmarkRows(b *testing.B) {
+	db.once.Do(makeBench)
+
+	for n := 0; n < b.N; n++ {
+		var n sql.NullString
+		var i int
+		var f float64
+		var s string
+		var t time.Time
+		r, err := db.Query("select * from bench")
+		if err != nil {
+			panic(err)
+		}
+		for r.Next() {
+			if err = r.Scan(&n, &i, &f, &s, &t); err != nil {
+				panic(err)
+			}
+		}
+		if err = r.Err(); err != nil {
+			panic(err)
+		}
+	}
+}
+
+// benchmarkStmtRows is benchmark for statement rows
+func benchmarkStmtRows(b *testing.B) {
+	db.once.Do(makeBench)
+
+	st, err := db.Prepare("select * from bench")
+	if err != nil {
+		panic(err)
+	}
+	defer st.Close()
+
+	for n := 0; n < b.N; n++ {
+		var n sql.NullString
+		var i int
+		var f float64
+		var s string
+		var t time.Time
+		r, err := st.Query()
+		if err != nil {
+			panic(err)
+		}
+		for r.Next() {
+			if err = r.Scan(&n, &i, &f, &s, &t); err != nil {
+				panic(err)
+			}
+		}
+		if err = r.Err(); err != nil {
+			panic(err)
 		}
 	}
 }
