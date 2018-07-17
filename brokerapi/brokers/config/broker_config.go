@@ -20,11 +20,12 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"github.com/spf13/viper"
 	"golang.org/x/oauth2/jwt"
 	"gopkg.in/validator.v2"
-	"os"
 )
 
 type BrokerConfig struct {
@@ -62,7 +63,7 @@ func (bc *BrokerConfig) GetCredentialsFromEnv() (models.GCPCredentials, error) {
 	var err error
 	g := models.GCPCredentials{}
 
-	rootCreds := os.Getenv(models.RootSaEnvVar)
+	rootCreds := models.GetServiceAccountJson()
 	if err = json.Unmarshal([]byte(rootCreds), &g); err != nil {
 		return models.GCPCredentials{}, fmt.Errorf("Error unmarshalling service account json: %s", err)
 	}
@@ -70,16 +71,16 @@ func (bc *BrokerConfig) GetCredentialsFromEnv() (models.GCPCredentials, error) {
 	return g, nil
 }
 
-// pulls SERVICES, PLANS, and PRECONFIGURED_PLANS environment variables to construct catalog
+// pulls SERVICES, PLANS, and environment variables to construct catalog
 func (bc *BrokerConfig) InitCatalogFromEnv() (map[string]models.Service, error) {
 
 	// set up services
 	serviceMap := make(map[string]models.Service)
 
-	for _, varname := range models.ServiceEnvVarNames {
+	for _, varname := range models.ServiceNameList {
 
 		var svc models.Service
-		if err := json.Unmarshal([]byte(os.Getenv(varname)), &svc); err != nil {
+		if err := json.Unmarshal([]byte(viper.GetString(varname)), &svc); err != nil {
 			return map[string]models.Service{}, err
 		} else {
 			if errs := validator.Validate(svc); errs != nil {

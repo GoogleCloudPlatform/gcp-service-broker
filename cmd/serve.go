@@ -29,10 +29,15 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func init() {
 	rootCmd.AddCommand(versionCmd)
+
+	viper.BindEnv("api.user", "SECURITY_USER_NAME")
+	viper.BindEnv("api.password", "SECURITY_USER_PASSWORD")
+	viper.BindEnv("api.port", "PORT")
 }
 
 var versionCmd = &cobra.Command{
@@ -65,8 +70,8 @@ func serve() {
 		logger.Fatal("Error initializing service broker: %s", err)
 	}
 
-	username := os.Getenv("SECURITY_USER_NAME")
-	password := os.Getenv("SECURITY_USER_PASSWORD")
+	username := viper.GetString("api.user")
+	password := viper.GetString("api.password")
 
 	credentials := brokerapi.BrokerCredentials{
 		Username: username,
@@ -76,5 +81,5 @@ func serve() {
 	// init api
 	brokerAPI := brokerapi.New(serviceBroker, logger, credentials)
 	http.Handle("/", brokerAPI)
-	http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	http.ListenAndServe(":"+viper.GetString("api.port"), nil)
 }
