@@ -32,8 +32,8 @@ func MapServiceIdToName() (map[string]string, error) {
 	for _, varname := range models.ServiceNameList {
 
 		var svc models.Service
-		if err := json.Unmarshal([]byte(viper.GetString(varname)), &svc); err != nil {
-			return map[string]string{}, err
+		if err := json.Unmarshal([]byte(viper.GetString("service."+varname)), &svc); err != nil {
+			return map[string]string{}, fmt.Errorf("Error getting catalog info for %q: %v (var is %q)", varname, err, viper.GetString(varname))
 		} else {
 			idToNameMap[svc.ID] = svc.Name
 		}

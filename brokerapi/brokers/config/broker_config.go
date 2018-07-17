@@ -80,8 +80,8 @@ func (bc *BrokerConfig) InitCatalogFromEnv() (map[string]models.Service, error) 
 	for _, varname := range models.ServiceNameList {
 
 		var svc models.Service
-		if err := json.Unmarshal([]byte(viper.GetString(varname)), &svc); err != nil {
-			return map[string]models.Service{}, err
+		if err := json.Unmarshal([]byte(viper.GetString("service."+varname)), &svc); err != nil {
+			return map[string]models.Service{}, fmt.Errorf("Error getting catalog info for %q: %v (var is %q)", varname, err, viper.GetString(varname))
 		} else {
 			if errs := validator.Validate(svc); errs != nil {
 				return map[string]models.Service{}, errs

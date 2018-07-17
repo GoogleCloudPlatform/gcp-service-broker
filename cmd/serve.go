@@ -52,7 +52,7 @@ PORT environment variable.`,
 
 func serve() {
 
-	logger := lager.NewLogger("my-service-broker")
+	logger := lager.NewLogger("gcp-service-broker")
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
 
 	models.ProductionizeUserAgent()
@@ -79,6 +79,11 @@ func serve() {
 	}
 
 	// init api
+	logger.Info("Serving", lager.Data{
+		"port":     viper.GetString("api.port"),
+		"username": username,
+	})
+
 	brokerAPI := brokerapi.New(serviceBroker, logger, credentials)
 	http.Handle("/", brokerAPI)
 	http.ListenAndServe(":"+viper.GetString("api.port"), nil)
