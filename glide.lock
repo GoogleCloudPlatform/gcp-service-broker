@@ -1,8 +1,8 @@
-hash: 7c20d666d3ce2e7e94e248c5163895e5194fdcb3a91f45fb67b091e273287350
-updated: 2018-07-16T17:31:04.343357481-07:00
+hash: 824b733a4adf226ccec042e19496c699635dc20bc3f1fd5269be6264298bef65
+updated: 2018-07-17T15:35:26.575371775-07:00
 imports:
 - name: cloud.google.com/go
-  version: b96b91e99e21ce6cd7cb9b7890ef347cc4849ea2
+  version: a55dfc0b29d5e9df654f451579bb012d9417b14b
   subpackages:
   - bigquery
   - bigtable
@@ -81,6 +81,8 @@ imports:
   version: f15292f7a699fcc1a38a80977f80a046874ba8ac
 - name: github.com/pelletier/go-toml
   version: 603baefff989777996bf283da430d693e78eba3a
+- name: github.com/pivotal-cf/brokerapi
+  version: d1fcddd951a6776bc01659143dda6aca057e98b7
 - name: github.com/pivotal-golang/lager
   version: b60e04e119450552243196105bae0d42179ee0ca
 - name: github.com/spf13/afero
@@ -98,7 +100,7 @@ imports:
 - name: github.com/spf13/viper
   version: b5e8006cbee93ec955a89ab31e0e3ce3204f3736
 - name: go.opencensus.io
-  version: e1698d7839a5fe8c0e23dd35ca940e6014617dbc
+  version: 824f6a62b825d737557c28c68ab9a05310341cd2
   subpackages:
   - exporter/stackdriver/propagation
   - internal
@@ -194,7 +196,7 @@ imports:
   - googleapis/spanner/admin/instance/v1
   - protobuf/field_mask
 - name: google.golang.org/grpc
-  version: 7273294e1a2c4daaa5a48b5a92c06ceb8a8ccb58
+  version: b534d2d20e596ca053e3070dc1745432d0cc91a6
   subpackages:
   - balancer
   - balancer/base
