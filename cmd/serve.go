@@ -39,14 +39,14 @@ const (
 )
 
 func init() {
-	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(serveCmd)
 
 	viper.BindEnv(apiUserProp, "SECURITY_USER_NAME")
 	viper.BindEnv(apiPasswordProp, "SECURITY_USER_PASSWORD")
 	viper.BindEnv(apiPortProp, "PORT")
 }
 
-var versionCmd = &cobra.Command{
+var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start the service broker",
 	Long: `Starts the service broker listening on a port defined by the

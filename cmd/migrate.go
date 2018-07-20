@@ -18,6 +18,8 @@
 package cmd
 
 import (
+	"log"
+
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/spf13/cobra"
@@ -35,7 +37,7 @@ var migrateCmd = &cobra.Command{
 		logger := lager.NewLogger("migrations-cmd")
 		db := db_service.SetupDb(logger)
 		if err := db_service.RunMigrations(db); err != nil {
-			panic("Error running migrations")
+			log.Fatalf("Error running migrations: %v\n", err)
 		}
 	},
 }
