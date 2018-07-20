@@ -32,10 +32,10 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(serveCmd)
 }
 
-var versionCmd = &cobra.Command{
+var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start the service broker",
 	Long: `Starts the service broker listening on a port defined by the
