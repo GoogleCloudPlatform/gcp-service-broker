@@ -19,6 +19,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -63,12 +64,13 @@ func init() {
 }
 
 func initConfig() {
-	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
+	if cfgFile == "" {
+		return
+	}
 
-		if err := viper.ReadInConfig(); err != nil {
-			fmt.Println("Can't read config:", err)
-			os.Exit(1)
-		}
+	viper.SetConfigFile(cfgFile)
+
+	if err := viper.ReadInConfig(); err != nil {
+		log.Fatalf("Can't read config: %v\n", err)
 	}
 }
