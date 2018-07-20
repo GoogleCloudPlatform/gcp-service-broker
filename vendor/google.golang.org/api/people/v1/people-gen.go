@@ -1,4 +1,4 @@
-// Package people provides access to the Google People API.
+// Package people provides access to the People API.
 //
 // See https://developers.google.com/people/
 //
@@ -189,9 +189,9 @@ type Address struct {
 	// StreetAddress: The street address.
 	StreetAddress string `json:"streetAddress,omitempty"`
 
-	// Type: The type of the address. The type can be custom or
-	// predefined.
-	// Possible values include, but are not limited to, the following:
+	// Type: The type of the address. The type can be custom or one of these
+	// predefined
+	// values:
 	//
 	// * `home`
 	// * `work`
@@ -216,8 +216,8 @@ type Address struct {
 }
 
 func (s *Address) MarshalJSON() ([]byte, error) {
-	type noMethod Address
-	raw := noMethod(*s)
+	type NoMethod Address
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -253,8 +253,8 @@ type AgeRangeType struct {
 }
 
 func (s *AgeRangeType) MarshalJSON() ([]byte, error) {
-	type noMethod AgeRangeType
-	raw := noMethod(*s)
+	type NoMethod AgeRangeType
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -287,8 +287,8 @@ type BatchGetContactGroupsResponse struct {
 }
 
 func (s *BatchGetContactGroupsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod BatchGetContactGroupsResponse
-	raw := noMethod(*s)
+	type NoMethod BatchGetContactGroupsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -326,8 +326,8 @@ type Biography struct {
 }
 
 func (s *Biography) MarshalJSON() ([]byte, error) {
-	type noMethod Biography
-	raw := noMethod(*s)
+	type NoMethod Biography
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -364,8 +364,8 @@ type Birthday struct {
 }
 
 func (s *Birthday) MarshalJSON() ([]byte, error) {
-	type noMethod Birthday
-	raw := noMethod(*s)
+	type NoMethod Birthday
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -395,8 +395,8 @@ type BraggingRights struct {
 }
 
 func (s *BraggingRights) MarshalJSON() ([]byte, error) {
-	type noMethod BraggingRights
-	raw := noMethod(*s)
+	type NoMethod BraggingRights
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -447,7 +447,7 @@ type ContactGroup struct {
 
 	// ResourceName: The resource name for the contact group, assigned by
 	// the server. An ASCII
-	// string, in the form of `contactGroups/<contact_group_id>`.
+	// string, in the form of `contactGroups/`<var>contact_group_id</var>.
 	ResourceName string `json:"resourceName,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
@@ -472,8 +472,8 @@ type ContactGroup struct {
 }
 
 func (s *ContactGroup) MarshalJSON() ([]byte, error) {
-	type noMethod ContactGroup
-	raw := noMethod(*s)
+	type NoMethod ContactGroup
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -481,9 +481,7 @@ func (s *ContactGroup) MarshalJSON() ([]byte, error) {
 type ContactGroupMembership struct {
 	// ContactGroupId: The contact group ID for the contact group
 	// membership. The contact group
-	// ID can be custom or predefined. Possible values include, but are
-	// not
-	// limited to, the following:
+	// ID can be custom or one of these predefined values:
 	//
 	// *  `myContacts`
 	// *  `starred`
@@ -509,8 +507,8 @@ type ContactGroupMembership struct {
 }
 
 func (s *ContactGroupMembership) MarshalJSON() ([]byte, error) {
-	type noMethod ContactGroupMembership
-	raw := noMethod(*s)
+	type NoMethod ContactGroupMembership
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -545,8 +543,8 @@ type ContactGroupMetadata struct {
 }
 
 func (s *ContactGroupMetadata) MarshalJSON() ([]byte, error) {
-	type noMethod ContactGroupMetadata
-	raw := noMethod(*s)
+	type NoMethod ContactGroupMetadata
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -579,8 +577,8 @@ type ContactGroupResponse struct {
 }
 
 func (s *ContactGroupResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ContactGroupResponse
-	raw := noMethod(*s)
+	type NoMethod ContactGroupResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -616,8 +614,8 @@ type CoverPhoto struct {
 }
 
 func (s *CoverPhoto) MarshalJSON() ([]byte, error) {
-	type noMethod CoverPhoto
-	raw := noMethod(*s)
+	type NoMethod CoverPhoto
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -644,8 +642,8 @@ type CreateContactGroupRequest struct {
 }
 
 func (s *CreateContactGroupRequest) MarshalJSON() ([]byte, error) {
-	type noMethod CreateContactGroupRequest
-	raw := noMethod(*s)
+	type NoMethod CreateContactGroupRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -668,7 +666,9 @@ type Date struct {
 	// if specifying a year/month where the day is not significant.
 	Day int64 `json:"day,omitempty"`
 
-	// Month: Month of year. Must be from 1 to 12.
+	// Month: Month of year. Must be from 1 to 12, or 0 if specifying a date
+	// without a
+	// month.
 	Month int64 `json:"month,omitempty"`
 
 	// Year: Year of date. Must be from 1 to 9999, or 0 if specifying a date
@@ -694,8 +694,8 @@ type Date struct {
 }
 
 func (s *Date) MarshalJSON() ([]byte, error) {
-	type noMethod Date
-	raw := noMethod(*s)
+	type NoMethod Date
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -724,8 +724,8 @@ type DomainMembership struct {
 }
 
 func (s *DomainMembership) MarshalJSON() ([]byte, error) {
-	type noMethod DomainMembership
-	raw := noMethod(*s)
+	type NoMethod DomainMembership
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -742,9 +742,9 @@ type EmailAddress struct {
 	// Metadata: Metadata about the email address.
 	Metadata *FieldMetadata `json:"metadata,omitempty"`
 
-	// Type: The type of the email address. The type can be custom or
-	// predefined.
-	// Possible values include, but are not limited to, the following:
+	// Type: The type of the email address. The type can be custom or one of
+	// these
+	// predefined values:
 	//
 	// * `home`
 	// * `work`
@@ -772,8 +772,8 @@ type EmailAddress struct {
 }
 
 func (s *EmailAddress) MarshalJSON() ([]byte, error) {
-	type noMethod EmailAddress
-	raw := noMethod(*s)
+	type NoMethod EmailAddress
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -808,9 +808,9 @@ type Event struct {
 	// Metadata: Metadata about the event.
 	Metadata *FieldMetadata `json:"metadata,omitempty"`
 
-	// Type: The type of the event. The type can be custom or
-	// predefined.
-	// Possible values include, but are not limited to, the following:
+	// Type: The type of the event. The type can be custom or one of these
+	// predefined
+	// values:
 	//
 	// * `anniversary`
 	// * `other`
@@ -834,8 +834,8 @@ type Event struct {
 }
 
 func (s *Event) MarshalJSON() ([]byte, error) {
-	type noMethod Event
-	raw := noMethod(*s)
+	type NoMethod Event
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -874,8 +874,8 @@ type FieldMetadata struct {
 }
 
 func (s *FieldMetadata) MarshalJSON() ([]byte, error) {
-	type noMethod FieldMetadata
-	raw := noMethod(*s)
+	type NoMethod FieldMetadata
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -889,10 +889,9 @@ type Gender struct {
 	// Metadata: Metadata about the gender.
 	Metadata *FieldMetadata `json:"metadata,omitempty"`
 
-	// Value: The gender for the person. The gender can be custom or
-	// predefined.
-	// Possible values include, but are not limited to, the
-	// following:
+	// Value: The gender for the person. The gender can be custom or one of
+	// these
+	// predefined values:
 	//
 	// * `male`
 	// * `female`
@@ -919,8 +918,8 @@ type Gender struct {
 }
 
 func (s *Gender) MarshalJSON() ([]byte, error) {
-	type noMethod Gender
-	raw := noMethod(*s)
+	type NoMethod Gender
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -950,8 +949,8 @@ type GetPeopleResponse struct {
 }
 
 func (s *GetPeopleResponse) MarshalJSON() ([]byte, error) {
-	type noMethod GetPeopleResponse
-	raw := noMethod(*s)
+	type NoMethod GetPeopleResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -971,8 +970,8 @@ type ImClient struct {
 	Metadata *FieldMetadata `json:"metadata,omitempty"`
 
 	// Protocol: The protocol of the IM client. The protocol can be custom
-	// or predefined.
-	// Possible values include, but are not limited to, the following:
+	// or one of these
+	// predefined values:
 	//
 	// * `aim`
 	// * `msn`
@@ -985,9 +984,9 @@ type ImClient struct {
 	// * `netMeeting`
 	Protocol string `json:"protocol,omitempty"`
 
-	// Type: The type of the IM client. The type can be custom or
-	// predefined.
-	// Possible values include, but are not limited to, the following:
+	// Type: The type of the IM client. The type can be custom or one of
+	// these
+	// predefined values:
 	//
 	// * `home`
 	// * `work`
@@ -1016,8 +1015,8 @@ type ImClient struct {
 }
 
 func (s *ImClient) MarshalJSON() ([]byte, error) {
-	type noMethod ImClient
-	raw := noMethod(*s)
+	type NoMethod ImClient
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1047,8 +1046,8 @@ type Interest struct {
 }
 
 func (s *Interest) MarshalJSON() ([]byte, error) {
-	type noMethod Interest
-	raw := noMethod(*s)
+	type NoMethod Interest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1093,8 +1092,8 @@ type ListConnectionsResponse struct {
 }
 
 func (s *ListConnectionsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListConnectionsResponse
-	raw := noMethod(*s)
+	type NoMethod ListConnectionsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1139,8 +1138,8 @@ type ListContactGroupsResponse struct {
 }
 
 func (s *ListContactGroupsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListContactGroupsResponse
-	raw := noMethod(*s)
+	type NoMethod ListContactGroupsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1172,8 +1171,8 @@ type Locale struct {
 }
 
 func (s *Locale) MarshalJSON() ([]byte, error) {
-	type noMethod Locale
-	raw := noMethod(*s)
+	type NoMethod Locale
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1208,22 +1207,25 @@ type Membership struct {
 }
 
 func (s *Membership) MarshalJSON() ([]byte, error) {
-	type noMethod Membership
-	raw := noMethod(*s)
+	type NoMethod Membership
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // ModifyContactGroupMembersRequest: A request to modify an existing
-// contact group's members.
+// contact group's members. Contacts can be
+// removed from any group but they can only be added to a user group
+// or
+// myContacts or starred system groups.
 type ModifyContactGroupMembersRequest struct {
 	// ResourceNamesToAdd: The resource names of the contact people to add
 	// in the form of in the form
-	// `people/<person_id>`.
+	// `people/`<var>person_id</var>.
 	ResourceNamesToAdd []string `json:"resourceNamesToAdd,omitempty"`
 
 	// ResourceNamesToRemove: The resource names of the contact people to
 	// remove in the form of in the
-	// form of `people/<person_id>`.
+	// form of `people/`<var>person_id</var>.
 	ResourceNamesToRemove []string `json:"resourceNamesToRemove,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "ResourceNamesToAdd")
@@ -1245,8 +1247,8 @@ type ModifyContactGroupMembersRequest struct {
 }
 
 func (s *ModifyContactGroupMembersRequest) MarshalJSON() ([]byte, error) {
-	type noMethod ModifyContactGroupMembersRequest
-	raw := noMethod(*s)
+	type NoMethod ModifyContactGroupMembersRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1281,8 +1283,8 @@ type ModifyContactGroupMembersResponse struct {
 }
 
 func (s *ModifyContactGroupMembersResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ModifyContactGroupMembersResponse
-	raw := noMethod(*s)
+	type NoMethod ModifyContactGroupMembersResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1291,14 +1293,13 @@ func (s *ModifyContactGroupMembersResponse) MarshalJSON() ([]byte, error) {
 type Name struct {
 	// DisplayName: The read-only display name formatted according to the
 	// locale specified by
-	// the viewer's account or the <code>Accept-Language</code> HTTP header.
+	// the viewer's account or the `Accept-Language` HTTP header.
 	DisplayName string `json:"displayName,omitempty"`
 
 	// DisplayNameLastFirst: The read-only display name with the last name
 	// first formatted according to
-	// the locale specified by the viewer's account or
-	// the
-	// <code>Accept-Language</code> HTTP header.
+	// the locale specified by the viewer's account or the
+	// `Accept-Language` HTTP header.
 	DisplayNameLastFirst string `json:"displayNameLastFirst,omitempty"`
 
 	// FamilyName: The family name.
@@ -1357,8 +1358,8 @@ type Name struct {
 }
 
 func (s *Name) MarshalJSON() ([]byte, error) {
-	type noMethod Name
-	raw := noMethod(*s)
+	type NoMethod Name
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1401,8 +1402,8 @@ type Nickname struct {
 }
 
 func (s *Nickname) MarshalJSON() ([]byte, error) {
-	type noMethod Nickname
-	raw := noMethod(*s)
+	type NoMethod Nickname
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1432,8 +1433,8 @@ type Occupation struct {
 }
 
 func (s *Occupation) MarshalJSON() ([]byte, error) {
-	type noMethod Occupation
-	raw := noMethod(*s)
+	type NoMethod Occupation
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1488,9 +1489,9 @@ type Organization struct {
 	// Title: The person's job title at the organization.
 	Title string `json:"title,omitempty"`
 
-	// Type: The type of the organization. The type can be custom or
-	// predefined.
-	// Possible values include, but are not limited to, the following:
+	// Type: The type of the organization. The type can be custom or  one of
+	// these
+	// predefined values:
 	//
 	// * `work`
 	// * `school`
@@ -1514,8 +1515,8 @@ type Organization struct {
 }
 
 func (s *Organization) MarshalJSON() ([]byte, error) {
-	type noMethod Organization
-	raw := noMethod(*s)
+	type NoMethod Organization
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1620,9 +1621,13 @@ type Person struct {
 
 	// ResourceName: The resource name for the person, assigned by the
 	// server. An ASCII string
-	// with a max length of 27 characters, in the form of
-	// `people/<person_id>`.
+	// with a max length of 27 characters, in the form
+	// of
+	// `people/`<var>person_id</var>.
 	ResourceName string `json:"resourceName,omitempty"`
+
+	// SipAddresses: The person's SIP addresses.
+	SipAddresses []*SipAddress `json:"sipAddresses,omitempty"`
 
 	// Skills: The person's skills.
 	Skills []*Skill `json:"skills,omitempty"`
@@ -1632,6 +1637,9 @@ type Person struct {
 
 	// Urls: The person's associated URLs.
 	Urls []*Url `json:"urls,omitempty"`
+
+	// UserDefined: The person's user defined data.
+	UserDefined []*UserDefined `json:"userDefined,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
 	// server.
@@ -1655,8 +1663,8 @@ type Person struct {
 }
 
 func (s *Person) MarshalJSON() ([]byte, error) {
-	type noMethod Person
-	raw := noMethod(*s)
+	type NoMethod Person
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1720,8 +1728,8 @@ type PersonMetadata struct {
 }
 
 func (s *PersonMetadata) MarshalJSON() ([]byte, error) {
-	type noMethod PersonMetadata
-	raw := noMethod(*s)
+	type NoMethod PersonMetadata
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1770,8 +1778,8 @@ type PersonResponse struct {
 }
 
 func (s *PersonResponse) MarshalJSON() ([]byte, error) {
-	type noMethod PersonResponse
-	raw := noMethod(*s)
+	type NoMethod PersonResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1791,9 +1799,9 @@ type PhoneNumber struct {
 	// Metadata: Metadata about the phone number.
 	Metadata *FieldMetadata `json:"metadata,omitempty"`
 
-	// Type: The type of the phone number. The type can be custom or
-	// predefined.
-	// Possible values include, but are not limited to, the following:
+	// Type: The type of the phone number. The type can be custom or one of
+	// these
+	// predefined values:
 	//
 	// * `home`
 	// * `work`
@@ -1830,8 +1838,8 @@ type PhoneNumber struct {
 }
 
 func (s *PhoneNumber) MarshalJSON() ([]byte, error) {
-	type noMethod PhoneNumber
-	raw := noMethod(*s)
+	type NoMethod PhoneNumber
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1839,18 +1847,22 @@ func (s *PhoneNumber) MarshalJSON() ([]byte, error) {
 // person's name to
 // help others recognize the person.
 type Photo struct {
+	// Default: True if the photo is a default photo;
+	// false if the photo is a user-provided photo.
+	Default bool `json:"default,omitempty"`
+
 	// Metadata: Metadata about the photo.
 	Metadata *FieldMetadata `json:"metadata,omitempty"`
 
 	// Url: The URL of the photo. You can change the desired size by
 	// appending a query
-	// parameter `sz=<size>` at the end of the url.
+	// parameter `sz=`<var>size</var> at the end of the url.
 	// Example:
 	// `https://lh3.googleusercontent.com/-T_wVWLlmg7w/AAAAAAAAAAI/A
 	// AAAAAAABa8/00gzXvDBYqw/s100/photo.jpg?sz=50`
 	Url string `json:"url,omitempty"`
 
-	// ForceSendFields is a list of field names (e.g. "Metadata") to
+	// ForceSendFields is a list of field names (e.g. "Default") to
 	// unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
 	// non-interface field appearing in ForceSendFields will be sent to the
@@ -1858,7 +1870,7 @@ type Photo struct {
 	// used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
-	// NullFields is a list of field names (e.g. "Metadata") to include in
+	// NullFields is a list of field names (e.g. "Default") to include in
 	// API requests with the JSON null value. By default, fields with empty
 	// values are omitted from API requests. However, any field with an
 	// empty value appearing in NullFields will be sent to the server as
@@ -1868,8 +1880,8 @@ type Photo struct {
 }
 
 func (s *Photo) MarshalJSON() ([]byte, error) {
-	type noMethod Photo
-	raw := noMethod(*s)
+	type NoMethod Photo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1882,6 +1894,15 @@ type ProfileMetadata struct {
 	//   "PERSON" - Person.
 	//   "PAGE" - [Google+ Page.](http://www.google.com/+/brands/)
 	ObjectType string `json:"objectType,omitempty"`
+
+	// UserTypes: The user types.
+	//
+	// Possible values:
+	//   "USER_TYPE_UNKNOWN" - The user type is not known.
+	//   "GOOGLE_USER" - The user is a Google user.
+	//   "GPLUS_USER" - The user is a Google+ user.
+	//   "GOOGLE_APPS_USER" - The user is a Google Apps for Work user.
+	UserTypes []string `json:"userTypes,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "ObjectType") to
 	// unconditionally include in API requests. By default, fields with
@@ -1901,8 +1922,8 @@ type ProfileMetadata struct {
 }
 
 func (s *ProfileMetadata) MarshalJSON() ([]byte, error) {
-	type noMethod ProfileMetadata
-	raw := noMethod(*s)
+	type NoMethod ProfileMetadata
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1920,9 +1941,8 @@ type Relation struct {
 	Person string `json:"person,omitempty"`
 
 	// Type: The person's relation to the other person. The type can be
-	// custom or predefined.
-	// Possible values include, but are not limited to, the following
-	// values:
+	// custom or one of
+	// these predefined values:
 	//
 	// * `spouse`
 	// * `child`
@@ -1958,8 +1978,8 @@ type Relation struct {
 }
 
 func (s *Relation) MarshalJSON() ([]byte, error) {
-	type noMethod Relation
-	raw := noMethod(*s)
+	type NoMethod Relation
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1977,9 +1997,7 @@ type RelationshipInterest struct {
 
 	// Value: The kind of relationship the person is looking for. The value
 	// can be custom
-	// or predefined. Possible values include, but are not limited to,
-	// the
-	// following values:
+	// or one of these predefined values:
 	//
 	// * `friend`
 	// * `date`
@@ -2006,8 +2024,8 @@ type RelationshipInterest struct {
 }
 
 func (s *RelationshipInterest) MarshalJSON() ([]byte, error) {
-	type noMethod RelationshipInterest
-	raw := noMethod(*s)
+	type NoMethod RelationshipInterest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2022,9 +2040,9 @@ type RelationshipStatus struct {
 	// Metadata: Metadata about the relationship status.
 	Metadata *FieldMetadata `json:"metadata,omitempty"`
 
-	// Value: The relationship status. The value can be custom or
-	// predefined.
-	// Possible values include, but are not limited to, the following:
+	// Value: The relationship status. The value can be custom or one of
+	// these
+	// predefined values:
 	//
 	// * `single`
 	// * `inARelationship`
@@ -2056,8 +2074,8 @@ type RelationshipStatus struct {
 }
 
 func (s *RelationshipStatus) MarshalJSON() ([]byte, error) {
-	type noMethod RelationshipStatus
-	raw := noMethod(*s)
+	type NoMethod RelationshipStatus
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2092,8 +2110,59 @@ type Residence struct {
 }
 
 func (s *Residence) MarshalJSON() ([]byte, error) {
-	type noMethod Residence
-	raw := noMethod(*s)
+	type NoMethod Residence
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// SipAddress: A person's SIP address. Session Initial Protocol
+// addresses are used for VoIP
+// communications to make voice or video calls over the internet.
+type SipAddress struct {
+	// FormattedType: The read-only type of the SIP address translated and
+	// formatted in the
+	// viewer's account locale or the `Accept-Language` HTTP header locale.
+	FormattedType string `json:"formattedType,omitempty"`
+
+	// Metadata: Metadata about the SIP address.
+	Metadata *FieldMetadata `json:"metadata,omitempty"`
+
+	// Type: The type of the SIP address. The type can be custom or or one
+	// of these
+	// predefined values:
+	//
+	// * `home`
+	// * `work`
+	// * `mobile`
+	// * `other`
+	Type string `json:"type,omitempty"`
+
+	// Value: The SIP address in the
+	// [RFC 3261 19.1](https://tools.ietf.org/html/rfc3261#section-19.1) SIP
+	// URI
+	// format.
+	Value string `json:"value,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "FormattedType") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "FormattedType") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *SipAddress) MarshalJSON() ([]byte, error) {
+	type NoMethod SipAddress
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2123,25 +2192,28 @@ type Skill struct {
 }
 
 func (s *Skill) MarshalJSON() ([]byte, error) {
-	type noMethod Skill
-	raw := noMethod(*s)
+	type NoMethod Skill
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // Source: The source of a field.
 type Source struct {
-	// Etag: The [HTTP entity tag](https://en.wikipedia.org/wiki/HTTP_ETag)
-	// of the
-	// source. Used for web cache validation. Only populated
-	// in
-	// person.metadata.sources.
+	// Etag: **Only populated in `person.metadata.sources`.**
+	//
+	// The [HTTP entity tag](https://en.wikipedia.org/wiki/HTTP_ETag) of
+	// the
+	// source. Used for web cache validation.
 	Etag string `json:"etag,omitempty"`
 
 	// Id: The unique identifier within the source type generated by the
 	// server.
 	Id string `json:"id,omitempty"`
 
-	// ProfileMetadata: Metadata about a source of type PROFILE.
+	// ProfileMetadata: **Only populated in
+	// `person.metadata.sources`.**
+	//
+	// Metadata about a source of type PROFILE.
 	ProfileMetadata *ProfileMetadata `json:"profileMetadata,omitempty"`
 
 	// Type: The source type.
@@ -2163,7 +2235,9 @@ type Source struct {
 	// is the source id.
 	Type string `json:"type,omitempty"`
 
-	// UpdateTime: Last update timestamp of this source.
+	// UpdateTime: **Only populated in `person.metadata.sources`.**
+	//
+	// Last update timestamp of this source.
 	UpdateTime string `json:"updateTime,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Etag") to
@@ -2184,8 +2258,8 @@ type Source struct {
 }
 
 func (s *Source) MarshalJSON() ([]byte, error) {
-	type noMethod Source
-	raw := noMethod(*s)
+	type NoMethod Source
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2273,9 +2347,9 @@ type Status struct {
 	// google.rpc.Code.
 	Code int64 `json:"code,omitempty"`
 
-	// Details: A list of messages that carry the error details.  There will
-	// be a
-	// common set of message types for APIs to use.
+	// Details: A list of messages that carry the error details.  There is a
+	// common set of
+	// message types for APIs to use.
 	Details []googleapi.RawMessage `json:"details,omitempty"`
 
 	// Message: A developer-facing error message, which should be in
@@ -2303,8 +2377,8 @@ type Status struct {
 }
 
 func (s *Status) MarshalJSON() ([]byte, error) {
-	type noMethod Status
-	raw := noMethod(*s)
+	type NoMethod Status
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2334,13 +2408,14 @@ type Tagline struct {
 }
 
 func (s *Tagline) MarshalJSON() ([]byte, error) {
-	type noMethod Tagline
-	raw := noMethod(*s)
+	type NoMethod Tagline
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// UpdateContactGroupRequest: A request to update an existing contact
-// group. Only the name can be updated.
+// UpdateContactGroupRequest: A request to update an existing user
+// contact group. All updated fields will
+// be replaced.
 type UpdateContactGroupRequest struct {
 	// ContactGroup: The contact group to update.
 	ContactGroup *ContactGroup `json:"contactGroup,omitempty"`
@@ -2363,8 +2438,8 @@ type UpdateContactGroupRequest struct {
 }
 
 func (s *UpdateContactGroupRequest) MarshalJSON() ([]byte, error) {
-	type noMethod UpdateContactGroupRequest
-	raw := noMethod(*s)
+	type NoMethod UpdateContactGroupRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2378,9 +2453,9 @@ type Url struct {
 	// Metadata: Metadata about the URL.
 	Metadata *FieldMetadata `json:"metadata,omitempty"`
 
-	// Type: The type of the URL. The type can be custom or
-	// predefined.
-	// Possible values include, but are not limited to, the following:
+	// Type: The type of the URL. The type can be custom or one of these
+	// predefined
+	// values:
 	//
 	// * `home`
 	// * `work`
@@ -2414,8 +2489,42 @@ type Url struct {
 }
 
 func (s *Url) MarshalJSON() ([]byte, error) {
-	type noMethod Url
-	raw := noMethod(*s)
+	type NoMethod Url
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// UserDefined: Arbitrary user data that is populated by the end users.
+type UserDefined struct {
+	// Key: The end user specified key of the user defined data.
+	Key string `json:"key,omitempty"`
+
+	// Metadata: Metadata about the user defined data.
+	Metadata *FieldMetadata `json:"metadata,omitempty"`
+
+	// Value: The end user specified value of the user defined data.
+	Value string `json:"value,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Key") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Key") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *UserDefined) MarshalJSON() ([]byte, error) {
+	type NoMethod UserDefined
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2537,7 +2646,7 @@ func (c *ContactGroupsBatchGetCall) Do(opts ...googleapi.CallOption) (*BatchGetC
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2668,7 +2777,7 @@ func (c *ContactGroupsCreateCall) Do(opts ...googleapi.CallOption) (*ContactGrou
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2795,7 +2904,7 @@ func (c *ContactGroupsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, erro
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2948,7 +3057,7 @@ func (c *ContactGroupsGetCall) Do(opts ...googleapi.CallOption) (*ContactGroup, 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3118,7 +3227,7 @@ func (c *ContactGroupsListCall) Do(opts ...googleapi.CallOption) (*ListContactGr
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3281,7 +3390,7 @@ func (c *ContactGroupsUpdateCall) Do(opts ...googleapi.CallOption) (*ContactGrou
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3295,7 +3404,7 @@ func (c *ContactGroupsUpdateCall) Do(opts ...googleapi.CallOption) (*ContactGrou
 	//   ],
 	//   "parameters": {
 	//     "resourceName": {
-	//       "description": "The resource name for the contact group, assigned by the server. An ASCII\nstring, in the form of `contactGroups/\u003ccontact_group_id\u003e`.",
+	//       "description": "The resource name for the contact group, assigned by the server. An ASCII\nstring, in the form of `contactGroups/`\u003cvar\u003econtact_group_id\u003c/var\u003e.",
 	//       "location": "path",
 	//       "pattern": "^contactGroups/[^/]+$",
 	//       "required": true,
@@ -3418,7 +3527,7 @@ func (c *ContactGroupsMembersModifyCall) Do(opts ...googleapi.CallOption) (*Modi
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3556,7 +3665,7 @@ func (c *PeopleCreateContactCall) Do(opts ...googleapi.CallOption) (*Person, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3681,7 +3790,7 @@ func (c *PeopleDeleteContactCall) Do(opts ...googleapi.CallOption) (*Empty, erro
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3738,7 +3847,9 @@ func (r *PeopleService) Get(resourceName string) *PeopleGetCall {
 // PersonFields sets the optional parameter "personFields":
 // **Required.** A field mask to restrict which fields on the person
 // are
-// returned. Valid values are:
+// returned. Multiple fields can be specified by separating them with
+// commas.
+// Valid values are:
 //
 // * addresses
 // * ageRanges
@@ -3764,9 +3875,11 @@ func (r *PeopleService) Get(resourceName string) *PeopleGetCall {
 // * relationshipInterests
 // * relationshipStatuses
 // * residences
+// * sipAddresses
 // * skills
 // * taglines
 // * urls
+// * userDefined
 func (c *PeopleGetCall) PersonFields(personFields string) *PeopleGetCall {
 	c.urlParams_.Set("personFields", personFields)
 	return c
@@ -3872,7 +3985,7 @@ func (c *PeopleGetCall) Do(opts ...googleapi.CallOption) (*Person, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3886,7 +3999,7 @@ func (c *PeopleGetCall) Do(opts ...googleapi.CallOption) (*Person, error) {
 	//   ],
 	//   "parameters": {
 	//     "personFields": {
-	//       "description": "**Required.** A field mask to restrict which fields on the person are\nreturned. Valid values are:\n\n* addresses\n* ageRanges\n* biographies\n* birthdays\n* braggingRights\n* coverPhotos\n* emailAddresses\n* events\n* genders\n* imClients\n* interests\n* locales\n* memberships\n* metadata\n* names\n* nicknames\n* occupations\n* organizations\n* phoneNumbers\n* photos\n* relations\n* relationshipInterests\n* relationshipStatuses\n* residences\n* skills\n* taglines\n* urls",
+	//       "description": "**Required.** A field mask to restrict which fields on the person are\nreturned. Multiple fields can be specified by separating them with commas.\nValid values are:\n\n* addresses\n* ageRanges\n* biographies\n* birthdays\n* braggingRights\n* coverPhotos\n* emailAddresses\n* events\n* genders\n* imClients\n* interests\n* locales\n* memberships\n* metadata\n* names\n* nicknames\n* occupations\n* organizations\n* phoneNumbers\n* photos\n* relations\n* relationshipInterests\n* relationshipStatuses\n* residences\n* sipAddresses\n* skills\n* taglines\n* urls\n* userDefined",
 	//       "format": "google-fieldmask",
 	//       "location": "query",
 	//       "type": "string"
@@ -3898,7 +4011,7 @@ func (c *PeopleGetCall) Do(opts ...googleapi.CallOption) (*Person, error) {
 	//       "type": "string"
 	//     },
 	//     "resourceName": {
-	//       "description": "The resource name of the person to provide information about.\n\n- To get information about the authenticated user, specify `people/me`.\n- To get information about a google account, specify `people/\u003caccount_id\u003e`.\n- To get information about a contact, specify the resource name that\n  identifies the contact as returned by\n[`people.connections.list`](/people/api/rest/v1/people.connections/list).",
+	//       "description": "The resource name of the person to provide information about.\n\n- To get information about the authenticated user, specify `people/me`.\n- To get information about a google account, specify\n `people/`\u003cvar\u003eaccount_id\u003c/var\u003e.\n- To get information about a contact, specify the resource name that\n  identifies the contact as returned by\n[`people.connections.list`](/people/api/rest/v1/people.connections/list).",
 	//       "location": "path",
 	//       "pattern": "^people/[^/]+$",
 	//       "required": true,
@@ -3949,7 +4062,9 @@ func (r *PeopleService) GetBatchGet() *PeopleGetBatchGetCall {
 // PersonFields sets the optional parameter "personFields":
 // **Required.** A field mask to restrict which fields on each person
 // are
-// returned. Valid values are:
+// returned. Multiple fields can be specified by separating them with
+// commas.
+// Valid values are:
 //
 // * addresses
 // * ageRanges
@@ -3975,9 +4090,11 @@ func (r *PeopleService) GetBatchGet() *PeopleGetBatchGetCall {
 // * relationshipInterests
 // * relationshipStatuses
 // * residences
+// * sipAddresses
 // * skills
 // * taglines
 // * urls
+// * userDefined
 func (c *PeopleGetBatchGetCall) PersonFields(personFields string) *PeopleGetBatchGetCall {
 	c.urlParams_.Set("personFields", personFields)
 	return c
@@ -3995,13 +4112,19 @@ func (c *PeopleGetBatchGetCall) RequestMaskIncludeField(requestMaskIncludeField 
 }
 
 // ResourceNames sets the optional parameter "resourceNames": The
-// resource name, such as one returned
+// resource names of the people to provide information about.
+//
+// - To get information about the authenticated user, specify
+// `people/me`.
+// - To get information about a google account, specify
+//   `people/`<var>account_id</var>.
+// - To get information about a contact, specify the resource name that
+//   identifies the contact as returned
 // by
 // [`people.connections.list`](/people/api/rest/v1/people.connections/
-// list),
-// of one of the people to provide information about. You can include
-// this
-// parameter up to 50 times in one request.
+// list).
+//
+// You can include up to 50 resource names in one request.
 func (c *PeopleGetBatchGetCall) ResourceNames(resourceNames ...string) *PeopleGetBatchGetCall {
 	c.urlParams_.SetMulti("resourceNames", append([]string{}, resourceNames...))
 	return c
@@ -4093,7 +4216,7 @@ func (c *PeopleGetBatchGetCall) Do(opts ...googleapi.CallOption) (*GetPeopleResp
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4105,7 +4228,7 @@ func (c *PeopleGetBatchGetCall) Do(opts ...googleapi.CallOption) (*GetPeopleResp
 	//   "parameterOrder": [],
 	//   "parameters": {
 	//     "personFields": {
-	//       "description": "**Required.** A field mask to restrict which fields on each person are\nreturned. Valid values are:\n\n* addresses\n* ageRanges\n* biographies\n* birthdays\n* braggingRights\n* coverPhotos\n* emailAddresses\n* events\n* genders\n* imClients\n* interests\n* locales\n* memberships\n* metadata\n* names\n* nicknames\n* occupations\n* organizations\n* phoneNumbers\n* photos\n* relations\n* relationshipInterests\n* relationshipStatuses\n* residences\n* skills\n* taglines\n* urls",
+	//       "description": "**Required.** A field mask to restrict which fields on each person are\nreturned. Multiple fields can be specified by separating them with commas.\nValid values are:\n\n* addresses\n* ageRanges\n* biographies\n* birthdays\n* braggingRights\n* coverPhotos\n* emailAddresses\n* events\n* genders\n* imClients\n* interests\n* locales\n* memberships\n* metadata\n* names\n* nicknames\n* occupations\n* organizations\n* phoneNumbers\n* photos\n* relations\n* relationshipInterests\n* relationshipStatuses\n* residences\n* sipAddresses\n* skills\n* taglines\n* urls\n* userDefined",
 	//       "format": "google-fieldmask",
 	//       "location": "query",
 	//       "type": "string"
@@ -4117,7 +4240,7 @@ func (c *PeopleGetBatchGetCall) Do(opts ...googleapi.CallOption) (*GetPeopleResp
 	//       "type": "string"
 	//     },
 	//     "resourceNames": {
-	//       "description": "The resource name, such as one returned by\n[`people.connections.list`](/people/api/rest/v1/people.connections/list),\nof one of the people to provide information about. You can include this\nparameter up to 50 times in one request.",
+	//       "description": "The resource names of the people to provide information about.\n\n- To get information about the authenticated user, specify `people/me`.\n- To get information about a google account, specify\n  `people/`\u003cvar\u003eaccount_id\u003c/var\u003e.\n- To get information about a contact, specify the resource name that\n  identifies the contact as returned by\n[`people.connections.list`](/people/api/rest/v1/people.connections/list).\n\nYou can include up to 50 resource names in one request.",
 	//       "location": "query",
 	//       "repeated": true,
 	//       "type": "string"
@@ -4181,12 +4304,13 @@ func (r *PeopleService) UpdateContact(resourceName string, person *Person) *Peop
 // UpdatePersonFields sets the optional parameter "updatePersonFields":
 // **Required.** A field mask to restrict which fields on the person
 // are
-// updated. Valid values are:
+// updated. Multiple fields can be specified by separating them with
+// commas.
+// All updated fields will be replaced. Valid values are:
 //
 // * addresses
 // * biographies
 // * birthdays
-// * braggingRights
 // * emailAddresses
 // * events
 // * genders
@@ -4200,8 +4324,9 @@ func (r *PeopleService) UpdateContact(resourceName string, person *Person) *Peop
 // * phoneNumbers
 // * relations
 // * residences
-// * skills
+// * sipAddresses
 // * urls
+// * userDefined
 func (c *PeopleUpdateContactCall) UpdatePersonFields(updatePersonFields string) *PeopleUpdateContactCall {
 	c.urlParams_.Set("updatePersonFields", updatePersonFields)
 	return c
@@ -4288,7 +4413,7 @@ func (c *PeopleUpdateContactCall) Do(opts ...googleapi.CallOption) (*Person, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4302,14 +4427,14 @@ func (c *PeopleUpdateContactCall) Do(opts ...googleapi.CallOption) (*Person, err
 	//   ],
 	//   "parameters": {
 	//     "resourceName": {
-	//       "description": "The resource name for the person, assigned by the server. An ASCII string\nwith a max length of 27 characters, in the form of `people/\u003cperson_id\u003e`.",
+	//       "description": "The resource name for the person, assigned by the server. An ASCII string\nwith a max length of 27 characters, in the form of\n`people/`\u003cvar\u003eperson_id\u003c/var\u003e.",
 	//       "location": "path",
 	//       "pattern": "^people/[^/]+$",
 	//       "required": true,
 	//       "type": "string"
 	//     },
 	//     "updatePersonFields": {
-	//       "description": "**Required.** A field mask to restrict which fields on the person are\nupdated. Valid values are:\n\n* addresses\n* biographies\n* birthdays\n* braggingRights\n* emailAddresses\n* events\n* genders\n* imClients\n* interests\n* locales\n* names\n* nicknames\n* occupations\n* organizations\n* phoneNumbers\n* relations\n* residences\n* skills\n* urls",
+	//       "description": "**Required.** A field mask to restrict which fields on the person are\nupdated. Multiple fields can be specified by separating them with commas.\nAll updated fields will be replaced. Valid values are:\n\n* addresses\n* biographies\n* birthdays\n* emailAddresses\n* events\n* genders\n* imClients\n* interests\n* locales\n* names\n* nicknames\n* occupations\n* organizations\n* phoneNumbers\n* relations\n* residences\n* sipAddresses\n* urls\n* userDefined",
 	//       "format": "google-fieldmask",
 	//       "location": "query",
 	//       "type": "string"
@@ -4369,7 +4494,9 @@ func (c *PeopleConnectionsListCall) PageToken(pageToken string) *PeopleConnectio
 // PersonFields sets the optional parameter "personFields":
 // **Required.** A field mask to restrict which fields on each person
 // are
-// returned. Valid values are:
+// returned. Multiple fields can be specified by separating them with
+// commas.
+// Valid values are:
 //
 // * addresses
 // * ageRanges
@@ -4395,9 +4522,11 @@ func (c *PeopleConnectionsListCall) PageToken(pageToken string) *PeopleConnectio
 // * relationshipInterests
 // * relationshipStatuses
 // * residences
+// * sipAddresses
 // * skills
 // * taglines
 // * urls
+// * userDefined
 func (c *PeopleConnectionsListCall) PersonFields(personFields string) *PeopleConnectionsListCall {
 	c.urlParams_.Set("personFields", personFields)
 	return c
@@ -4417,7 +4546,11 @@ func (c *PeopleConnectionsListCall) RequestMaskIncludeField(requestMaskIncludeFi
 // RequestSyncToken sets the optional parameter "requestSyncToken":
 // Whether the response should include a sync token, which can be used
 // to get
-// all changes since the last request.
+// all changes since the last request. For subsequent sync requests use
+// the
+// `sync_token` param instead. Initial sync requests that
+// specify
+// `request_sync_token` have an additional rate limit.
 func (c *PeopleConnectionsListCall) RequestSyncToken(requestSyncToken bool) *PeopleConnectionsListCall {
 	c.urlParams_.Set("requestSyncToken", fmt.Sprint(requestSyncToken))
 	return c
@@ -4437,10 +4570,12 @@ func (c *PeopleConnectionsListCall) SortOrder(sortOrder string) *PeopleConnectio
 	return c
 }
 
-// SyncToken sets the optional parameter "syncToken": A sync token,
+// SyncToken sets the optional parameter "syncToken": A sync token
 // returned by a previous call to `people.connections.list`.
 // Only resources changed since the sync token was created will be
 // returned.
+// Sync requests that specify `sync_token` have an additional rate
+// limit.
 func (c *PeopleConnectionsListCall) SyncToken(syncToken string) *PeopleConnectionsListCall {
 	c.urlParams_.Set("syncToken", syncToken)
 	return c
@@ -4535,7 +4670,7 @@ func (c *PeopleConnectionsListCall) Do(opts ...googleapi.CallOption) (*ListConne
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4560,7 +4695,7 @@ func (c *PeopleConnectionsListCall) Do(opts ...googleapi.CallOption) (*ListConne
 	//       "type": "string"
 	//     },
 	//     "personFields": {
-	//       "description": "**Required.** A field mask to restrict which fields on each person are\nreturned. Valid values are:\n\n* addresses\n* ageRanges\n* biographies\n* birthdays\n* braggingRights\n* coverPhotos\n* emailAddresses\n* events\n* genders\n* imClients\n* interests\n* locales\n* memberships\n* metadata\n* names\n* nicknames\n* occupations\n* organizations\n* phoneNumbers\n* photos\n* relations\n* relationshipInterests\n* relationshipStatuses\n* residences\n* skills\n* taglines\n* urls",
+	//       "description": "**Required.** A field mask to restrict which fields on each person are\nreturned. Multiple fields can be specified by separating them with commas.\nValid values are:\n\n* addresses\n* ageRanges\n* biographies\n* birthdays\n* braggingRights\n* coverPhotos\n* emailAddresses\n* events\n* genders\n* imClients\n* interests\n* locales\n* memberships\n* metadata\n* names\n* nicknames\n* occupations\n* organizations\n* phoneNumbers\n* photos\n* relations\n* relationshipInterests\n* relationshipStatuses\n* residences\n* sipAddresses\n* skills\n* taglines\n* urls\n* userDefined",
 	//       "format": "google-fieldmask",
 	//       "location": "query",
 	//       "type": "string"
@@ -4572,7 +4707,7 @@ func (c *PeopleConnectionsListCall) Do(opts ...googleapi.CallOption) (*ListConne
 	//       "type": "string"
 	//     },
 	//     "requestSyncToken": {
-	//       "description": "Whether the response should include a sync token, which can be used to get\nall changes since the last request.",
+	//       "description": "Whether the response should include a sync token, which can be used to get\nall changes since the last request. For subsequent sync requests use the\n`sync_token` param instead. Initial sync requests that specify\n`request_sync_token` have an additional rate limit.",
 	//       "location": "query",
 	//       "type": "boolean"
 	//     },
@@ -4594,7 +4729,7 @@ func (c *PeopleConnectionsListCall) Do(opts ...googleapi.CallOption) (*ListConne
 	//       "type": "string"
 	//     },
 	//     "syncToken": {
-	//       "description": "A sync token, returned by a previous call to `people.connections.list`.\nOnly resources changed since the sync token was created will be returned.",
+	//       "description": "A sync token returned by a previous call to `people.connections.list`.\nOnly resources changed since the sync token was created will be returned.\nSync requests that specify `sync_token` have an additional rate limit.",
 	//       "location": "query",
 	//       "type": "string"
 	//     }

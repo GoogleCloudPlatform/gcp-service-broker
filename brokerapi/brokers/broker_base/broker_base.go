@@ -19,7 +19,7 @@ package broker_base
 
 import (
 	"code.cloudfoundry.org/lager"
-	"gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"golang.org/x/oauth2/jwt"
 )
 

@@ -151,8 +151,8 @@ type Availability struct {
 }
 
 func (s *Availability) MarshalJSON() ([]byte, error) {
-	type noMethod Availability
-	raw := noMethod(*s)
+	type NoMethod Availability
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -309,8 +309,8 @@ type Conversion struct {
 }
 
 func (s *Conversion) MarshalJSON() ([]byte, error) {
-	type noMethod Conversion
-	raw := noMethod(*s)
+	type NoMethod Conversion
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -345,8 +345,8 @@ type ConversionList struct {
 }
 
 func (s *ConversionList) MarshalJSON() ([]byte, error) {
-	type noMethod ConversionList
-	raw := noMethod(*s)
+	type NoMethod ConversionList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -376,8 +376,8 @@ type CustomDimension struct {
 }
 
 func (s *CustomDimension) MarshalJSON() ([]byte, error) {
-	type noMethod CustomDimension
-	raw := noMethod(*s)
+	type NoMethod CustomDimension
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -407,18 +407,18 @@ type CustomMetric struct {
 }
 
 func (s *CustomMetric) MarshalJSON() ([]byte, error) {
-	type noMethod CustomMetric
-	raw := noMethod(*s)
+	type NoMethod CustomMetric
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *CustomMetric) UnmarshalJSON(data []byte) error {
-	type noMethod CustomMetric
+	type NoMethod CustomMetric
 	var s1 struct {
 		Value gensupport.JSONFloat64 `json:"value"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -490,8 +490,8 @@ type Report struct {
 }
 
 func (s *Report) MarshalJSON() ([]byte, error) {
-	type noMethod Report
-	raw := noMethod(*s)
+	type NoMethod Report
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -520,8 +520,8 @@ type ReportFiles struct {
 }
 
 func (s *ReportFiles) MarshalJSON() ([]byte, error) {
-	type noMethod ReportFiles
-	raw := noMethod(*s)
+	type NoMethod ReportFiles
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -603,8 +603,8 @@ type ReportApiColumnSpec struct {
 }
 
 func (s *ReportApiColumnSpec) MarshalJSON() ([]byte, error) {
-	type noMethod ReportApiColumnSpec
-	raw := noMethod(*s)
+	type NoMethod ReportApiColumnSpec
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -616,6 +616,7 @@ type ReportRequest struct {
 	// columns, only the columnName parameter is required. For saved columns
 	// only the savedColumnName parameter is required. Both columnName and
 	// savedColumnName cannot be set in the same stanza.
+	// The maximum number of columns per request is 300.
 	Columns []*ReportApiColumnSpec `json:"columns,omitempty"`
 
 	// DownloadFormat: Format that the report should be returned in.
@@ -623,6 +624,7 @@ type ReportRequest struct {
 	DownloadFormat string `json:"downloadFormat,omitempty"`
 
 	// Filters: A list of filters to be applied to the report.
+	// The maximum number of filters per request is 300.
 	Filters []*ReportRequestFilters `json:"filters,omitempty"`
 
 	// IncludeDeletedEntities: Determines if removed entities should be
@@ -641,6 +643,7 @@ type ReportRequest struct {
 
 	// OrderBy: Synchronous report only. A list of columns and directions
 	// defining sorting to be performed on the report rows.
+	// The maximum number of orderings per request is 300.
 	OrderBy []*ReportRequestOrderBy `json:"orderBy,omitempty"`
 
 	// ReportScope: The reportScope is a set of IDs that are used to
@@ -701,8 +704,8 @@ type ReportRequest struct {
 }
 
 func (s *ReportRequest) MarshalJSON() ([]byte, error) {
-	type noMethod ReportRequest
-	raw := noMethod(*s)
+	type NoMethod ReportRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -716,6 +719,7 @@ type ReportRequestFilters struct {
 	Operator string `json:"operator,omitempty"`
 
 	// Values: A list of values to filter the column value against.
+	// The maximum number of filter values per request is 300.
 	Values []interface{} `json:"values,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Column") to
@@ -736,8 +740,8 @@ type ReportRequestFilters struct {
 }
 
 func (s *ReportRequestFilters) MarshalJSON() ([]byte, error) {
-	type noMethod ReportRequestFilters
-	raw := noMethod(*s)
+	type NoMethod ReportRequestFilters
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -768,8 +772,8 @@ type ReportRequestOrderBy struct {
 }
 
 func (s *ReportRequestOrderBy) MarshalJSON() ([]byte, error) {
-	type noMethod ReportRequestOrderBy
-	raw := noMethod(*s)
+	type NoMethod ReportRequestOrderBy
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -817,8 +821,8 @@ type ReportRequestReportScope struct {
 }
 
 func (s *ReportRequestReportScope) MarshalJSON() ([]byte, error) {
-	type noMethod ReportRequestReportScope
-	raw := noMethod(*s)
+	type NoMethod ReportRequestReportScope
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -862,8 +866,8 @@ type ReportRequestTimeRange struct {
 }
 
 func (s *ReportRequestTimeRange) MarshalJSON() ([]byte, error) {
-	type noMethod ReportRequestTimeRange
-	raw := noMethod(*s)
+	type NoMethod ReportRequestTimeRange
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -897,8 +901,8 @@ type SavedColumn struct {
 }
 
 func (s *SavedColumn) MarshalJSON() ([]byte, error) {
-	type noMethod SavedColumn
-	raw := noMethod(*s)
+	type NoMethod SavedColumn
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -936,8 +940,8 @@ type SavedColumnList struct {
 }
 
 func (s *SavedColumnList) MarshalJSON() ([]byte, error) {
-	type noMethod SavedColumnList
-	raw := noMethod(*s)
+	type NoMethod SavedColumnList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -965,8 +969,8 @@ type UpdateAvailabilityRequest struct {
 }
 
 func (s *UpdateAvailabilityRequest) MarshalJSON() ([]byte, error) {
-	type noMethod UpdateAvailabilityRequest
-	raw := noMethod(*s)
+	type NoMethod UpdateAvailabilityRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -999,8 +1003,8 @@ type UpdateAvailabilityResponse struct {
 }
 
 func (s *UpdateAvailabilityResponse) MarshalJSON() ([]byte, error) {
-	type noMethod UpdateAvailabilityResponse
-	raw := noMethod(*s)
+	type NoMethod UpdateAvailabilityResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1149,7 +1153,7 @@ func (c *ConversionGetCall) Do(opts ...googleapi.CallOption) (*ConversionList, e
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1353,7 +1357,7 @@ func (c *ConversionInsertCall) Do(opts ...googleapi.CallOption) (*ConversionList
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1478,7 +1482,7 @@ func (c *ConversionPatchCall) Do(opts ...googleapi.CallOption) (*ConversionList,
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1661,7 +1665,7 @@ func (c *ConversionUpdateCall) Do(opts ...googleapi.CallOption) (*ConversionList
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1779,7 +1783,7 @@ func (c *ConversionUpdateAvailabilityCall) Do(opts ...googleapi.CallOption) (*Up
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1897,7 +1901,7 @@ func (c *ReportsGenerateCall) Do(opts ...googleapi.CallOption) (*Report, error) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2027,7 +2031,7 @@ func (c *ReportsGetCall) Do(opts ...googleapi.CallOption) (*Report, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2291,7 +2295,7 @@ func (c *ReportsRequestCall) Do(opts ...googleapi.CallOption) (*Report, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2424,7 +2428,7 @@ func (c *SavedColumnsListCall) Do(opts ...googleapi.CallOption) (*SavedColumnLis
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

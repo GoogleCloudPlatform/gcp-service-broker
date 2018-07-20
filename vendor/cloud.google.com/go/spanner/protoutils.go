@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Google Inc. All Rights Reserved.
+Copyright 2017 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -101,7 +101,7 @@ func listType(t *sppb.Type) *sppb.Type {
 }
 
 func mkField(n string, t *sppb.Type) *sppb.StructType_Field {
-	return &sppb.StructType_Field{n, t}
+	return &sppb.StructType_Field{Name: n, Type: t}
 }
 
 func structType(fields ...*sppb.StructType_Field) *sppb.Type {

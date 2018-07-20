@@ -19,20 +19,21 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"gcp-service-broker/brokerapi/brokers/models"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/spf13/viper"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
-	"os"
 )
 
 func MapServiceIdToName() (map[string]string, error) {
 	idToNameMap := make(map[string]string)
 
-	for _, varname := range models.ServiceEnvVarNames {
+	for _, varname := range models.ServiceNameList {
 
 		var svc models.Service
-		if err := json.Unmarshal([]byte(os.Getenv(varname)), &svc); err != nil {
-			return map[string]string{}, err
+		if err := json.Unmarshal([]byte(viper.GetString("service."+varname)), &svc); err != nil {
+			return map[string]string{}, fmt.Errorf("Error getting catalog info for %q: %v (var is %q)", varname, err, viper.GetString(varname))
 		} else {
 			idToNameMap[svc.ID] = svc.Name
 		}
@@ -42,7 +43,7 @@ func MapServiceIdToName() (map[string]string, error) {
 }
 
 func GetAuthedConfig() (*jwt.Config, error) {
-	rootCreds := os.Getenv(models.RootSaEnvVar)
+	rootCreds := models.GetServiceAccountJson()
 	conf, err := google.JWTConfigFromJSON([]byte(rootCreds), models.CloudPlatformScope)
 	if err != nil {
 		return nil, fmt.Errorf("Error initializing config from credentials: %s", err)

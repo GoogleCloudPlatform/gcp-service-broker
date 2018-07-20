@@ -20,6 +20,9 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	"strings"
+
+	"github.com/spf13/viper"
 )
 
 type ServiceBrokerHelper interface {
@@ -51,7 +54,7 @@ type ServiceBroker interface {
 type AccountManager interface {
 	CreateCredentials(instanceID string, bindingID string, details BindDetails, instance ServiceInstanceDetails) (ServiceBindingCredentials, error)
 	DeleteCredentials(creds ServiceBindingCredentials) error
-	BuildInstanceCredentials(bindDetails map[string]string, instanceDetails map[string]string) map[string]string
+	BuildInstanceCredentials(bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
 }
 
 type GCPCredentials struct {
@@ -173,18 +176,34 @@ const SpannerName = "google-spanner"
 const StackdriverTraceName = "google-stackdriver-trace"
 const StackdriverDebuggerName = "google-stackdriver-debugger"
 const DatastoreName = "google-datastore"
-const RootSaEnvVar = "ROOT_SERVICE_ACCOUNT_JSON"
+const rootSaEnvVar = "ROOT_SERVICE_ACCOUNT_JSON"
 
-var ServiceEnvVarNames = []string{
-	"GOOGLE_SPANNER",
-	"GOOGLE_BIGQUERY",
-	"GOOGLE_BIGTABLE",
-	"GOOGLE_STORAGE",
-	"GOOGLE_PUBSUB",
-	"GOOGLE_STACKDRIVER_DEBUGGER",
-	"GOOGLE_STACKDRIVER_TRACE",
-	"GOOGLE_ML_APIS",
-	"GOOGLE_CLOUDSQL_MYSQL",
-	"GOOGLE_CLOUDSQL_POSTGRES",
-	"GOOGLE_DATASTORE",
+var ServiceNameList = []string{
+	StorageName,
+	BigqueryName,
+	BigtableName,
+	CloudsqlMySQLName,
+	CloudsqlPostgresName,
+	PubsubName,
+	MlName,
+	SpannerName,
+	StackdriverTraceName,
+	StackdriverDebuggerName,
+	DatastoreName,
+}
+
+func init() {
+	viper.BindEnv("google.account", rootSaEnvVar)
+
+	// Bind a name of a service like google-datastore to an environment variable
+	// GOOGLE_DATASTORE and a property service.google-datastore
+	replacer := strings.NewReplacer("-", "_")
+	for _, service := range ServiceNameList {
+		env := replacer.Replace(strings.ToUpper(service))
+		viper.BindEnv("service."+service, env)
+	}
+}
+
+func GetServiceAccountJson() string {
+	return viper.GetString("google.account")
 }

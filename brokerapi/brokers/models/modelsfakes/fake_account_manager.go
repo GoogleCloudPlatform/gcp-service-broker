@@ -2,7 +2,7 @@
 package modelsfakes
 
 import (
-	"gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"sync"
 )
 

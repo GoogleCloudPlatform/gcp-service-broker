@@ -1,4 +1,4 @@
-package: gcp-service-broker
+package: github.com/GoogleCloudPlatform/gcp-service-broker
 import:
 - package: code.cloudfoundry.org/lager
 - package: github.com/go-sql-driver/mysql
@@ -33,6 +33,12 @@ import:
   - spanner/...
 - package: github.com/kelseyhightower/envconfig
 - package: gopkg.in/validator.v2
+- package: github.com/spf13/cobra
+  version: ^0.0.3
+- package: github.com/spf13/viper
+  version: ^1.0.2
+- package: github.com/pivotal-cf/brokerapi
+  version: ^2.0.4
 testImport:
 - package: github.com/onsi/ginkgo
   version: ~1.2.0

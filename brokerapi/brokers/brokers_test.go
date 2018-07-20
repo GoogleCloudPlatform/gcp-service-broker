@@ -1,23 +1,24 @@
 package brokers_test
 
 import (
-	"gcp-service-broker/brokerapi/brokers"
-	. "gcp-service-broker/brokerapi/brokers"
-	"gcp-service-broker/brokerapi/brokers/broker_base"
-	"gcp-service-broker/brokerapi/brokers/cloudsql"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"gcp-service-broker/brokerapi/brokers/models/modelsfakes"
-	"gcp-service-broker/brokerapi/brokers/name_generator"
-	"gcp-service-broker/brokerapi/brokers/pubsub"
-	"gcp-service-broker/brokerapi/brokers/spanner"
-	"gcp-service-broker/db_service"
 	"os"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
+	. "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/cloudsql"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models/modelsfakes"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 
 	"code.cloudfoundry.org/lager"
 
-	"gcp-service-broker/fakes"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/fakes"
 
-	"gcp-service-broker/brokerapi/brokers/config"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/config"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -461,12 +462,12 @@ var _ = Describe("AccountManagers", func() {
 		name_generator.New()
 
 		accountManager = modelsfakes.FakeAccountManager{
-			CreateAccountInGoogleStub: func(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+			CreateCredentialsStub: func(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 				return models.ServiceBindingCredentials{OtherDetails: "{}"}, nil
 			},
 		}
 		sqlAccountManager = modelsfakes.FakeAccountManager{
-			CreateAccountInGoogleStub: func(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+			CreateCredentialsStub: func(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 				return models.ServiceBindingCredentials{OtherDetails: "{}"}, nil
 			},
 		}
@@ -529,7 +530,7 @@ var _ = Describe("AccountManagers", func() {
 
 				username, usernameOk := details.Parameters["username"].(string)
 				password, passwordOk := details.Parameters["password"].(string)
-				
+
 				Expect(usernameOk).To(BeTrue())
 				Expect(passwordOk).To(BeTrue())
 				Expect(username).NotTo(BeEmpty())

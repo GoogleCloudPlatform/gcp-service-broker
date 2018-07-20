@@ -18,28 +18,28 @@
 package brokers
 
 import (
-	"code.cloudfoundry.org/lager"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"gcp-service-broker/brokerapi/brokers/account_managers"
-	"gcp-service-broker/brokerapi/brokers/api_service"
-	"gcp-service-broker/brokerapi/brokers/bigquery"
-	"gcp-service-broker/brokerapi/brokers/bigtable"
-	"gcp-service-broker/brokerapi/brokers/broker_base"
-	"gcp-service-broker/brokerapi/brokers/cloudsql"
-	"google.golang.org/api/googleapi"
 	"math"
 
-	"gcp-service-broker/brokerapi/brokers/config"
-	"gcp-service-broker/brokerapi/brokers/datastore"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"gcp-service-broker/brokerapi/brokers/pubsub"
-	"gcp-service-broker/brokerapi/brokers/spanner"
-	"gcp-service-broker/brokerapi/brokers/stackdriver_debugger"
-	"gcp-service-broker/brokerapi/brokers/stackdriver_trace"
-	"gcp-service-broker/brokerapi/brokers/storage"
-	"gcp-service-broker/db_service"
+	"code.cloudfoundry.org/lager"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/api_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigquery"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigtable"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/cloudsql"
+	"google.golang.org/api/googleapi"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/config"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/datastore"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver_debugger"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver_trace"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/storage"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 )
 
 type GCPServiceBroker struct {
@@ -107,17 +107,17 @@ func New(cfg *config.BrokerConfig, Logger lager.Logger) (*GCPAsyncServiceBroker,
 			BrokerBase: bb,
 		},
 		models.CloudsqlMySQLName: &cloudsql.CloudSQLBroker{
-			HttpConfig:     cfg.HttpConfig,
-			ProjectId:      cfg.ProjectId,
-			Logger:         self.Logger,
-			AccountManager: sqlManager,
+			HttpConfig:       cfg.HttpConfig,
+			ProjectId:        cfg.ProjectId,
+			Logger:           self.Logger,
+			AccountManager:   sqlManager,
 			SaAccountManager: saManager,
 		},
 		models.CloudsqlPostgresName: &cloudsql.CloudSQLBroker{
-			HttpConfig:     cfg.HttpConfig,
-			ProjectId:      cfg.ProjectId,
-			Logger:         self.Logger,
-			AccountManager: sqlManager,
+			HttpConfig:       cfg.HttpConfig,
+			ProjectId:        cfg.ProjectId,
+			Logger:           self.Logger,
+			AccountManager:   sqlManager,
 			SaAccountManager: saManager,
 		},
 		models.BigtableName: &bigtable.BigTableBroker{
@@ -179,6 +179,12 @@ func (gcpBroker *GCPServiceBroker) GetPlanFromId(serviceId, planId string) (mode
 // PubSub: a new topic
 // Bigtable: a new instance
 func (gcpBroker *GCPAsyncServiceBroker) Provision(instanceID string, details models.ProvisionDetails, asyncAllowed bool) (models.ProvisionedServiceSpec, error) {
+	gcpBroker.Logger.Info("Provisioning", lager.Data{
+		"instance_id":  instanceID,
+		"asyncAllowed": asyncAllowed,
+		"details":      details,
+	})
+
 	var err error
 
 	// first make sure we're not over quota
@@ -246,6 +252,11 @@ func (gcpBroker *GCPAsyncServiceBroker) Provision(instanceID string, details mod
 // cf delete-service
 // Deletes the given instance
 func (gcpBroker *GCPAsyncServiceBroker) Deprovision(instanceID string, details models.DeprovisionDetails, asyncAllowed bool) (models.IsAsync, error) {
+	gcpBroker.Logger.Info("Deprovisioning", lager.Data{
+		"instance_id":  instanceID,
+		"asyncAllowed": asyncAllowed,
+		"details":      details,
+	})
 
 	gcpBroker.ShouldProvisionAsync = gcpBroker.ServiceBrokerMap[details.ServiceID].DeprovisionsAsync()
 
@@ -287,6 +298,11 @@ func (gcpBroker *GCPAsyncServiceBroker) Deprovision(instanceID string, details m
 // for all other services, Bind creates a new service account with the IAM role listed in details.Parameters["permissions"]
 // a complete list of IAM roles is available here: https://cloud.google.com/iam/docs/understanding-roles
 func (gcpBroker *GCPServiceBroker) Bind(instanceID string, bindingID string, details models.BindDetails) (models.Binding, error) {
+	gcpBroker.Logger.Info("Binding", lager.Data{
+		"instance_id": instanceID,
+		"binding_id":  bindingID,
+		"details":     details,
+	})
 
 	serviceId := details.ServiceID
 
@@ -340,6 +356,11 @@ func (gcpBroker *GCPServiceBroker) Bind(instanceID string, bindingID string, det
 // for cloudSql instances, Unbind deletes the associated user and ssl certs
 // for all other services, Unbind deletes the associated service account
 func (gcpBroker *GCPServiceBroker) Unbind(instanceID, bindingID string, details models.UnbindDetails) error {
+	gcpBroker.Logger.Info("Unbinding", lager.Data{
+		"instance_id": instanceID,
+		"binding_id":  bindingID,
+		"details":     details,
+	})
 
 	// validate existence of binding
 	var count int

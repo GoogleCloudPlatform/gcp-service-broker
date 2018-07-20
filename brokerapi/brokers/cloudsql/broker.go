@@ -21,25 +21,28 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"gcp-service-broker/brokerapi/brokers/name_generator"
-	"gcp-service-broker/db_service"
 	"strconv"
 	"strings"
 	"time"
 
-	"code.cloudfoundry.org/lager"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+
 	"context"
-	"gcp-service-broker/utils"
+
+	"code.cloudfoundry.org/lager"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"golang.org/x/oauth2/jwt"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 )
 
 type CloudSQLBroker struct {
-	HttpConfig     *jwt.Config
-	ProjectId      string
-	Logger         lager.Logger
-	AccountManager models.AccountManager
+	HttpConfig       *jwt.Config
+	ProjectId        string
+	Logger           lager.Logger
+	AccountManager   models.AccountManager
+	SaAccountManager models.AccountManager
 }
 
 type InstanceInformation struct {
@@ -143,14 +146,13 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 	aclsParamDetails, aclsParamOk := params["authorized_networks"]
 	if aclsParamOk && aclsParamDetails != "" {
 		authorizedNetworks := strings.Split(aclsParamDetails, ",")
-	 	for _, v := range authorizedNetworks {
+		for _, v := range authorizedNetworks {
 			openAcl := googlecloudsql.AclEntry{
 				Value: v,
 			}
 			openAcls = append(openAcls, &openAcl)
 		}
 	}
-	
 
 	backupsEnabled := true
 	if params["backups_enabled"] == "false" {
@@ -450,7 +452,7 @@ func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details models.BindD
 		return models.ServiceBindingCredentials{}, err
 	}
 
-	saCredBytes, err := b.SaAccountManager.CreateAccountInGoogle(instanceID, bindingID, details, models.ServiceInstanceDetails{})
+	saCredBytes, err := b.SaAccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
 
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
@@ -469,11 +471,11 @@ func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details models.BindD
 	}
 
 	credBytes, err := json.Marshal(&credsJSON)
-	
+
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}
-	
+
 	newBinding := models.ServiceBindingCredentials{
 		OtherDetails: string(credBytes),
 	}
@@ -517,7 +519,7 @@ func (b *CloudSQLBroker) Unbind(creds models.ServiceBindingCredentials) error {
 		return err
 	}
 
-	err = b.SaAccountManager.DeleteAccountFromGoogle(creds)
+	err = b.SaAccountManager.DeleteCredentials(creds)
 
 	if err != nil {
 		return err
