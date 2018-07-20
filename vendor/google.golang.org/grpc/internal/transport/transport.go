@@ -261,7 +261,7 @@ func (s *Stream) SetSendCompress(str string) {
 	s.sendCompress = str
 }
 
-// Done returns a chanel which is closed when it receives the final status
+// Done returns a channel which is closed when it receives the final status
 // from the server.
 func (s *Stream) Done() <-chan struct{} {
 	return s.done
@@ -305,12 +305,6 @@ func (s *Stream) TrailersOnly() (bool, error) {
 func (s *Stream) Trailer() metadata.MD {
 	c := s.trailer.Copy()
 	return c
-}
-
-// ServerTransport returns the underlying ServerTransport for the stream.
-// The client side stream always returns nil.
-func (s *Stream) ServerTransport() ServerTransport {
-	return s.st
 }
 
 // ContentSubtype returns the content-subtype for a request. For example, a
@@ -359,8 +353,7 @@ func (s *Stream) SetHeader(md metadata.MD) error {
 // combined with any metadata set by previous calls to SetHeader and
 // then written to the transport stream.
 func (s *Stream) SendHeader(md metadata.MD) error {
-	t := s.ServerTransport()
-	return t.WriteHeader(s, md)
+	return s.st.WriteHeader(s, md)
 }
 
 // SetTrailer sets the trailer metadata which will be sent with the RPC status

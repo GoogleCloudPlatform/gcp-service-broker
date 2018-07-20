@@ -29,10 +29,21 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+)
+
+const (
+	apiUserProp     = "api.user"
+	apiPasswordProp = "api.password"
+	apiPortProp     = "api.port"
 )
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
+
+	viper.BindEnv(apiUserProp, "SECURITY_USER_NAME")
+	viper.BindEnv(apiPasswordProp, "SECURITY_USER_PASSWORD")
+	viper.BindEnv(apiPortProp, "PORT")
 }
 
 var serveCmd = &cobra.Command{
@@ -47,7 +58,7 @@ PORT environment variable.`,
 
 func serve() {
 
-	logger := lager.NewLogger("my-service-broker")
+	logger := lager.NewLogger("gcp-service-broker")
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
 
 	models.ProductionizeUserAgent()
@@ -65,8 +76,9 @@ func serve() {
 		logger.Fatal("Error initializing service broker: %s", err)
 	}
 
-	username := os.Getenv("SECURITY_USER_NAME")
-	password := os.Getenv("SECURITY_USER_PASSWORD")
+	username := viper.GetString(apiUserProp)
+	password := viper.GetString(apiPasswordProp)
+	port := viper.GetString(apiPortProp)
 
 	credentials := brokerapi.BrokerCredentials{
 		Username: username,
@@ -74,7 +86,12 @@ func serve() {
 	}
 
 	// init api
+	logger.Info("Serving", lager.Data{
+		"port":     port,
+		"username": username,
+	})
+
 	brokerAPI := brokerapi.New(serviceBroker, logger, credentials)
 	http.Handle("/", brokerAPI)
-	http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	http.ListenAndServe(":"+port, nil)
 }

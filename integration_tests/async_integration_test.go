@@ -18,9 +18,12 @@
 package integration_tests
 
 import (
+	"fmt"
+	"os"
+	"time"
+
 	googlespanner "cloud.google.com/go/spanner/admin/instance/apiv1"
 	"code.cloudfoundry.org/lager"
-	"fmt"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
 	. "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/config"
@@ -36,8 +39,6 @@ import (
 	"google.golang.org/api/option"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 	instancepb "google.golang.org/genproto/googleapis/spanner/admin/instance/v1"
-	"os"
-	"time"
 )
 
 func pollForMaxFiveMins(gcpb *GCPAsyncServiceBroker, instanceId string) error {
@@ -251,10 +252,10 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(credsMap["uri"]).To(ContainSubstring("postgres"))
 
-			// The bind oepration finishes before the instance has finished updating
+			// The bind operation finishes before the instance has finished updating
 			keepWaiting := true
 			for keepWaiting == true {
-				resp, err := sqlService.Operations.List(gcpBroker.RootGCPCredentials.ProjectId, cloudsqlInstanceName).Do()
+				resp, err := sqlService.Operations.List(brokerConfig.ProjectId, cloudsqlInstanceName).Do()
 				Expect(err).NotTo(HaveOccurred())
 				keepWaiting = false
 				for _, op := range resp.Items {

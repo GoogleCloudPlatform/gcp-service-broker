@@ -1,8 +1,8 @@
-hash: 5df83cb2708c52447de10e6f72d1571560b7f2bc9c539199e4ba7ae72d5b0826
-updated: 2018-07-16T09:58:21.172917068-07:00
+hash: 824b733a4adf226ccec042e19496c699635dc20bc3f1fd5269be6264298bef65
+updated: 2018-07-17T15:35:26.575371775-07:00
 imports:
 - name: cloud.google.com/go
-  version: 24ff62bdf36b8c3c10021d8ffb46ef6f2d82da9c
+  version: a55dfc0b29d5e9df654f451579bb012d9417b14b
   subpackages:
   - bigquery
   - bigtable
@@ -24,6 +24,8 @@ imports:
   - storage
 - name: code.cloudfoundry.org/lager
   version: b60e04e119450552243196105bae0d42179ee0ca
+- name: github.com/fsnotify/fsnotify
+  version: c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9
 - name: github.com/go-sql-driver/mysql
   version: a0583e0143b1624142adab07e0e97fe106d99561
 - name: github.com/golang/protobuf
@@ -43,6 +45,18 @@ imports:
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
   version: 0eeaf8392f5b04950925b8a69fe70f110fa7cbfc
+- name: github.com/hashicorp/hcl
+  version: ef8a98b0bbce4a65b5aa4c368430a80ddc533168
+  subpackages:
+  - hcl/ast
+  - hcl/parser
+  - hcl/printer
+  - hcl/scanner
+  - hcl/strconv
+  - hcl/token
+  - json/parser
+  - json/scanner
+  - json/token
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jinzhu/gorm
@@ -59,16 +73,34 @@ imports:
   version: 90697d60dd844d5ef6ff15135d0203f65d2f53b8
   subpackages:
   - oid
+- name: github.com/magiconair/properties
+  version: c2353362d570a7bfa228149c62842019201cfb71
 - name: github.com/mattn/go-sqlite3
   version: 3aefd9f0a162514f66d0e4ceda3edc44e66b502e
+- name: github.com/mitchellh/mapstructure
+  version: f15292f7a699fcc1a38a80977f80a046874ba8ac
+- name: github.com/pelletier/go-toml
+  version: 603baefff989777996bf283da430d693e78eba3a
+- name: github.com/pivotal-cf/brokerapi
+  version: d1fcddd951a6776bc01659143dda6aca057e98b7
 - name: github.com/pivotal-golang/lager
   version: b60e04e119450552243196105bae0d42179ee0ca
+- name: github.com/spf13/afero
+  version: 787d034dfe70e44075ccc060d346146ef53270ad
+  subpackages:
+  - mem
+- name: github.com/spf13/cast
+  version: 8965335b8c7107321228e3e3702cab9832751bac
 - name: github.com/spf13/cobra
   version: ef82de70bb3f60c65fb8eebacbb2d122ef517385
+- name: github.com/spf13/jwalterweatherman
+  version: 7c0cea34c8ece3fbeb2b27ab9b59511d360fb394
 - name: github.com/spf13/pflag
   version: 3ebe029320b2676d667ae88da602a5f854788a8a
+- name: github.com/spf13/viper
+  version: b5e8006cbee93ec955a89ab31e0e3ce3204f3736
 - name: go.opencensus.io
-  version: e1698d7839a5fe8c0e23dd35ca940e6014617dbc
+  version: 824f6a62b825d737557c28c68ab9a05310341cd2
   subpackages:
   - exporter/stackdriver/propagation
   - internal
@@ -118,7 +150,7 @@ imports:
   - unicode/bidi
   - unicode/norm
 - name: google.golang.org/api
-  version: 28dc565badee2b2dc1169cda0938e2eb1d295ba2
+  version: 0025a57598c017c1b9f7bc916c4fb8ae77315f9c
   subpackages:
   - bigquery/v2
   - cloudresourcemanager/v1
@@ -151,7 +183,7 @@ imports:
   - socket
   - urlfetch
 - name: google.golang.org/genproto
-  version: c19ce6109657698453207a91afbb7b97035b5546
+  version: 2731d4fa720b67f9fe38e9051a2a9b38e4609260
   subpackages:
   - googleapis/api/annotations
   - googleapis/bigtable/admin/v2
@@ -164,7 +196,7 @@ imports:
   - googleapis/spanner/admin/instance/v1
   - protobuf/field_mask
 - name: google.golang.org/grpc
-  version: 1dab6d184d5729d962ccec88ede29d7bce6dad4d
+  version: b534d2d20e596ca053e3070dc1745432d0cc91a6
   subpackages:
   - balancer
   - balancer/base
@@ -194,6 +226,8 @@ imports:
   - tap
 - name: gopkg.in/validator.v2
   version: 135c24b11c19e52befcae2ec3fca5d9b78c4e98e
+- name: gopkg.in/yaml.v2
+  version: 5420a8b6744d3b0345ab293f6fcba19c978f1183
 testImports:
 - name: github.com/onsi/ginkgo
   version: 462326b1628e124b23f42e87a8f2750e3c4e2d24
