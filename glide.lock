@@ -1,8 +1,8 @@
-hash: 63f234cdd2e0e3cb3fcc6c916abfea7c6508a350224f2644ecfc3f3a2fea5158
-updated: 2017-07-25T16:04:09.159654888-07:00
+hash: 824b733a4adf226ccec042e19496c699635dc20bc3f1fd5269be6264298bef65
+updated: 2018-07-17T15:35:26.575371775-07:00
 imports:
 - name: cloud.google.com/go
-  version: c687e443ccef6592a33739e1d732a6c839e33845
+  version: a55dfc0b29d5e9df654f451579bb012d9417b14b
   subpackages:
   - bigquery
   - bigtable
@@ -12,20 +12,24 @@ imports:
   - iam
   - internal
   - internal/optional
+  - internal/trace
   - internal/version
   - longrunning
   - longrunning/autogen
   - pubsub
   - pubsub/apiv1
+  - pubsub/internal/distribution
   - spanner/...
   - spanner/admin/instance/apiv1
   - storage
 - name: code.cloudfoundry.org/lager
-  version: 438ab98cc3b9b81e97c2281422b2722cd8e80ed8
+  version: b60e04e119450552243196105bae0d42179ee0ca
+- name: github.com/fsnotify/fsnotify
+  version: c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9
 - name: github.com/go-sql-driver/mysql
   version: a0583e0143b1624142adab07e0e97fe106d99561
 - name: github.com/golang/protobuf
-  version: 0a4f71a498b7c4812f64969510bcb4eca251e33a
+  version: 14aad3d5ea4c323bcd7a2137e735da24a76e814c
   subpackages:
   - proto
   - protoc-gen-go/descriptor
@@ -36,57 +40,117 @@ imports:
   - ptypes/timestamp
   - ptypes/wrappers
 - name: github.com/googleapis/gax-go
-  version: 84ed26760e7f6f80887a2fbfb50db3cc415d2cea
+  version: 1ef592c90f479e3ab30c6c2312e20e13881b7ea6
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
   version: 0eeaf8392f5b04950925b8a69fe70f110fa7cbfc
+- name: github.com/hashicorp/hcl
+  version: ef8a98b0bbce4a65b5aa4c368430a80ddc533168
+  subpackages:
+  - hcl/ast
+  - hcl/parser
+  - hcl/printer
+  - hcl/scanner
+  - hcl/strconv
+  - hcl/token
+  - json/parser
+  - json/scanner
+  - json/token
+- name: github.com/inconshreveable/mousetrap
+  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jinzhu/gorm
   version: 5174cc5c242a728b435ea2be8a2f7f998e15429b
   subpackages:
   - dialects/sqlite
 - name: github.com/jinzhu/inflection
-  version: 1c35d901db3da928c72a72d8458480cc9ade058f
+  version: 04140366298a54a039076d798123ffa108fff46c
 - name: github.com/kelseyhightower/envconfig
-  version: 70f0258d44cbaa3b6a2581d82f58da01a38e4de4
+  version: dd1402a4d99de9ac2f396cd6fcb957bc2c695ec1
 - name: github.com/leonelquinteros/gorand
-  version: 6a4a9e984422d82c61b1b32ddfab3be310cba4a7
+  version: c6864945f54c4dc60dd5d399c0390e85da44a8a8
+- name: github.com/lib/pq
+  version: 90697d60dd844d5ef6ff15135d0203f65d2f53b8
+  subpackages:
+  - oid
+- name: github.com/magiconair/properties
+  version: c2353362d570a7bfa228149c62842019201cfb71
 - name: github.com/mattn/go-sqlite3
-  version: 47fc4e5e9153645da45af6a86a5bce95e63a0f9e
+  version: 3aefd9f0a162514f66d0e4ceda3edc44e66b502e
+- name: github.com/mitchellh/mapstructure
+  version: f15292f7a699fcc1a38a80977f80a046874ba8ac
+- name: github.com/pelletier/go-toml
+  version: 603baefff989777996bf283da430d693e78eba3a
+- name: github.com/pivotal-cf/brokerapi
+  version: d1fcddd951a6776bc01659143dda6aca057e98b7
 - name: github.com/pivotal-golang/lager
-  version: 438ab98cc3b9b81e97c2281422b2722cd8e80ed8
+  version: b60e04e119450552243196105bae0d42179ee0ca
+- name: github.com/spf13/afero
+  version: 787d034dfe70e44075ccc060d346146ef53270ad
+  subpackages:
+  - mem
+- name: github.com/spf13/cast
+  version: 8965335b8c7107321228e3e3702cab9832751bac
+- name: github.com/spf13/cobra
+  version: ef82de70bb3f60c65fb8eebacbb2d122ef517385
+- name: github.com/spf13/jwalterweatherman
+  version: 7c0cea34c8ece3fbeb2b27ab9b59511d360fb394
+- name: github.com/spf13/pflag
+  version: 3ebe029320b2676d667ae88da602a5f854788a8a
+- name: github.com/spf13/viper
+  version: b5e8006cbee93ec955a89ab31e0e3ce3204f3736
+- name: go.opencensus.io
+  version: 824f6a62b825d737557c28c68ab9a05310341cd2
+  subpackages:
+  - exporter/stackdriver/propagation
+  - internal
+  - internal/tagencoding
+  - plugin/ocgrpc
+  - plugin/ochttp
+  - plugin/ochttp/propagation/b3
+  - stats
+  - stats/internal
+  - stats/view
+  - tag
+  - trace
+  - trace/internal
+  - trace/propagation
 - name: golang.org/x/net
-  version: ab5485076ff3407ad2d02db054635913f017b0ed
+  version: d0887baf81f4598189d4e12a37c6da86f0bba4d0
   subpackages:
   - context
   - context/ctxhttp
+  - http/httpguts
   - http2
   - http2/hpack
   - idna
   - internal/timeseries
-  - lex/httplex
   - trace
 - name: golang.org/x/oauth2
-  version: b53b38ad8a6435bd399ea76d0fa74f23149cca4e
+  version: ef147856a6ddbb60760db74283d2424e98c87bff
   subpackages:
   - google
   - internal
   - jws
   - jwt
 - name: golang.org/x/sync
-  version: f52d1811a62927559de87708c8913c1650ce4f26
+  version: 1d60e4601c6fd243af51cc01ddf169918a5407ca
   subpackages:
   - errgroup
   - semaphore
+- name: golang.org/x/sys
+  version: ac767d655b305d4e9612f5f6e33120b9176c4ad4
+  subpackages:
+  - unix
 - name: golang.org/x/text
-  version: 836efe42bb4aa16aaa17b9c155d8813d336ed720
+  version: 0605a8320aceb4207a5fb3521281e17ec2075476
   subpackages:
   - secure/bidirule
   - transform
   - unicode/bidi
   - unicode/norm
 - name: google.golang.org/api
-  version: 295e4bb0ade057ae2cfb9876ab0b54635dbfcea4
+  version: 0025a57598c017c1b9f7bc916c4fb8ae77315f9c
   subpackages:
   - bigquery/v2
   - cloudresourcemanager/v1
@@ -105,7 +169,7 @@ imports:
   - transport/grpc
   - transport/http
 - name: google.golang.org/appengine
-  version: ad2570cd3913654e00c5f0183b39d2f998e54046
+  version: b1f26356af11148e710935ed1ac8a7f5702c7612
   subpackages:
   - internal
   - internal/app_identity
@@ -119,44 +183,51 @@ imports:
   - socket
   - urlfetch
 - name: google.golang.org/genproto
-  version: b0a3dcfcd1a9bd48e63634bd8802960804cf8315
+  version: 2731d4fa720b67f9fe38e9051a2a9b38e4609260
   subpackages:
-  - googleapis/api
   - googleapis/api/annotations
-  - googleapis/api/label
-  - googleapis/api/metric
-  - googleapis/api/monitoredres
-  - googleapis/api/serviceconfig
   - googleapis/bigtable/admin/v2
   - googleapis/bigtable/v2
   - googleapis/iam/v1
   - googleapis/longrunning
   - googleapis/pubsub/v1
+  - googleapis/rpc/code
   - googleapis/rpc/status
   - googleapis/spanner/admin/instance/v1
-  - protobuf/api
   - protobuf/field_mask
-  - protobuf/ptype
-  - protobuf/source_context
 - name: google.golang.org/grpc
-  version: ca9e0c3458ef816b9f0ff97f29c6b1fed48d8f49
+  version: b534d2d20e596ca053e3070dc1745432d0cc91a6
   subpackages:
+  - balancer
+  - balancer/base
+  - balancer/roundrobin
   - codes
+  - connectivity
   - credentials
   - credentials/oauth
-  - grpclb/grpc_lb_v1
+  - encoding
+  - encoding/proto
   - grpclog
   - internal
+  - internal/backoff
+  - internal/channelz
+  - internal/envconfig
+  - internal/grpcrand
+  - internal/transport
   - keepalive
   - metadata
   - naming
   - peer
+  - resolver
+  - resolver/dns
+  - resolver/passthrough
   - stats
   - status
   - tap
-  - transport
 - name: gopkg.in/validator.v2
-  version: 07ffaad256c8e957050ad83d6472eb97d785013d
+  version: 135c24b11c19e52befcae2ec3fca5d9b78c4e98e
+- name: gopkg.in/yaml.v2
+  version: 5420a8b6744d3b0345ab293f6fcba19c978f1183
 testImports:
 - name: github.com/onsi/ginkgo
   version: 462326b1628e124b23f42e87a8f2750e3c4e2d24

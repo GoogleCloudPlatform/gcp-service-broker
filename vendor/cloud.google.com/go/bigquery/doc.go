@@ -1,4 +1,4 @@
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2015 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,9 @@ Note: This package is in beta.  Some backwards-incompatible changes may occur.
 
 The following assumes a basic familiarity with BigQuery concepts.
 See https://cloud.google.com/bigquery/docs.
+
+See https://godoc.org/cloud.google.com/go for authentication, timeouts,
+connection pooling and similar aspects of this package.
 
 
 Creating a Client
@@ -83,7 +86,7 @@ You can also use a struct whose exported fields match the query:
 
 You can also start the query running and get the results later.
 Create the query as above, but call Run instead of Read. This returns a Job,
-which represents an asychronous operation.
+which represents an asynchronous operation.
 
     job, err := q.Run(ctx)
     if err != nil {
@@ -124,7 +127,7 @@ These methods create references to datasets, not the datasets themselves. You ca
 a dataset reference even if the dataset doesn't exist yet. Use Dataset.Create to
 create a dataset from a reference:
 
-    if err := myDataset.Create(ctx); err != nil {
+    if err := myDataset.Create(ctx, nil); err != nil {
         // TODO: Handle error.
     }
 
@@ -134,9 +137,10 @@ to an object in BigQuery that may or may not exist.
     table := myDataset.Table("my_table")
 
 You can create, delete and update the metadata of tables with methods on Table.
-Table.Create supports a few options. For instance, you could create a temporary table with:
+For instance, you could create a temporary table with:
 
-    err = myDataset.Table("temp").Create(ctx, bigquery.TableExpiration(time.Now().Add(1*time.Hour)))
+    err = myDataset.Table("temp").Create(ctx, &bigquery.TableMetadata{
+        ExpirationTime: time.Now().Add(1*time.Hour)})
     if err != nil {
         // TODO: Handle error.
     }
@@ -149,8 +153,9 @@ There are two ways to construct schemas with this package.
 You can build a schema by hand, like so:
 
     schema1 := bigquery.Schema{
-        &bigquery.FieldSchema{Name: "Name", Required: true, Type: bigquery.StringFieldType},
-        &bigquery.FieldSchema{Name: "Grades", Repeated: true, Type: bigquery.IntegerFieldType},
+        {Name: "Name", Required: true, Type: bigquery.StringFieldType},
+        {Name: "Grades", Repeated: true, Type: bigquery.IntegerFieldType},
+        {Name: "Optional", Required: false, Type: bigquery.IntegerFieldType},
     }
 
 Or you can infer the schema from a struct:
@@ -158,6 +163,7 @@ Or you can infer the schema from a struct:
     type student struct {
         Name   string
         Grades []int
+        Optional bigquery.NullInt64
     }
     schema2, err := bigquery.InferSchema(student{})
     if err != nil {
@@ -165,23 +171,28 @@ Or you can infer the schema from a struct:
     }
     // schema1 and schema2 are identical.
 
-Struct inference supports tags like those of the encoding/json package,
-so you can change names or ignore fields:
+Struct inference supports tags like those of the encoding/json package, so you can
+change names, ignore fields, or mark a field as nullable (non-required). Fields
+declared as one of the Null types (NullInt64, NullFloat64, NullString, NullBool,
+NullTimestamp, NullDate, NullTime and NullDateTime) are automatically inferred as
+nullable, so the "nullable" tag is only needed for []byte, *big.Rat and
+pointer-to-struct fields.
 
     type student2 struct {
-        Name   string `bigquery:"full_name"`
-        Grades []int
-        Secret string `bigquery:"-"`
+        Name     string `bigquery:"full_name"`
+        Grades   []int
+        Secret   string `bigquery:"-"`
+        Optional []byte `bigquery:",nullable"
     }
     schema3, err := bigquery.InferSchema(student2{})
     if err != nil {
         // TODO: Handle error.
     }
-    // schema3 has fields "full_name" and "Grade".
+    // schema3 has required fields "full_name" and "Grade", and nullable BYTES field "Optional".
 
-Having constructed a schema, you can pass it to Table.Create as an option:
+Having constructed a schema, you can create a table with it like so:
 
-    if err := table.Create(ctx, schema1); err != nil {
+    if err := table.Create(ctx, &bigquery.TableMetadata{Schema: schema1}); err != nil {
         // TODO: Handle error.
     }
 
@@ -286,10 +297,5 @@ Extractor, then optionally configure it, and lastly call its Run method.
     extractor.DisableHeader = true
     job, err = extractor.Run(ctx)
     // Poll the job for completion if desired, as above.
-
-Authentication
-
-See examples of authorization and authentication at
-https://godoc.org/cloud.google.com/go#pkg-examples.
 */
 package bigquery // import "cloud.google.com/go/bigquery"

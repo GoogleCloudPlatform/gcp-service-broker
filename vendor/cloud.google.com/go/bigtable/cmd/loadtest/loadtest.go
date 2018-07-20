@@ -1,5 +1,5 @@
 /*
-Copyright 2015 Google Inc. All Rights Reserved.
+Copyright 2015 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import (
 	"cloud.google.com/go/bigtable/internal/stat"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -74,7 +75,12 @@ func main() {
 
 	var options []option.ClientOption
 	if *poolSize > 1 {
-		options = append(options, option.WithGRPCConnectionPool(*poolSize))
+		options = append(options,
+			option.WithGRPCConnectionPool(*poolSize),
+
+			// TODO(grpc/grpc-go#1388) using connection pool without WithBlock
+			// can cause RPCs to fail randomly. We can delete this after the issue is fixed.
+			option.WithGRPCDialOption(grpc.WithBlock()))
 	}
 
 	var csvFile *os.File
@@ -101,11 +107,12 @@ func main() {
 
 	// Create a scratch table.
 	log.Printf("Setting up scratch table...")
-	if err := adminClient.CreateTable(context.Background(), *scratchTable); err != nil {
-		log.Fatalf("Making scratch table %q: %v", *scratchTable, err)
+	tblConf := bigtable.TableConf{
+		TableID:  *scratchTable,
+		Families: map[string]bigtable.GCPolicy{"f": bigtable.MaxVersionsPolicy(1)},
 	}
-	if err := adminClient.CreateColumnFamily(context.Background(), *scratchTable, "f"); err != nil {
-		log.Fatalf("Making scratch table column family: %v", err)
+	if err := adminClient.CreateTableFromConf(context.Background(), &tblConf); err != nil {
+		log.Fatalf("Making scratch table %q: %v", *scratchTable, err)
 	}
 	// Upon a successful run, delete the table. Don't bother checking for errors.
 	defer adminClient.DeleteTable(context.Background(), *scratchTable)
@@ -116,7 +123,7 @@ func main() {
 	go func() {
 		s := <-c
 		log.Printf("Caught %v, cleaning scratch table.", s)
-		adminClient.DeleteTable(context.Background(), *scratchTable)
+		_ = adminClient.DeleteTable(context.Background(), *scratchTable)
 		os.Exit(1)
 	}()
 

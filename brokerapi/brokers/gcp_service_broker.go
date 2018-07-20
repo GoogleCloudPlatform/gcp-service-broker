@@ -179,6 +179,12 @@ func (gcpBroker *GCPServiceBroker) GetPlanFromId(serviceId, planId string) (mode
 // PubSub: a new topic
 // Bigtable: a new instance
 func (gcpBroker *GCPAsyncServiceBroker) Provision(instanceID string, details models.ProvisionDetails, asyncAllowed bool) (models.ProvisionedServiceSpec, error) {
+	gcpBroker.Logger.Info("Provisioning", lager.Data{
+		"instance_id":  instanceID,
+		"asyncAllowed": asyncAllowed,
+		"details":      details,
+	})
+
 	var err error
 
 	// first make sure we're not over quota
@@ -246,6 +252,11 @@ func (gcpBroker *GCPAsyncServiceBroker) Provision(instanceID string, details mod
 // cf delete-service
 // Deletes the given instance
 func (gcpBroker *GCPAsyncServiceBroker) Deprovision(instanceID string, details models.DeprovisionDetails, asyncAllowed bool) (models.IsAsync, error) {
+	gcpBroker.Logger.Info("Deprovisioning", lager.Data{
+		"instance_id":  instanceID,
+		"asyncAllowed": asyncAllowed,
+		"details":      details,
+	})
 
 	gcpBroker.ShouldProvisionAsync = gcpBroker.ServiceBrokerMap[details.ServiceID].DeprovisionsAsync()
 
@@ -287,6 +298,11 @@ func (gcpBroker *GCPAsyncServiceBroker) Deprovision(instanceID string, details m
 // for all other services, Bind creates a new service account with the IAM role listed in details.Parameters["permissions"]
 // a complete list of IAM roles is available here: https://cloud.google.com/iam/docs/understanding-roles
 func (gcpBroker *GCPServiceBroker) Bind(instanceID string, bindingID string, details models.BindDetails) (models.Binding, error) {
+	gcpBroker.Logger.Info("Binding", lager.Data{
+		"instance_id": instanceID,
+		"binding_id":  bindingID,
+		"details":     details,
+	})
 
 	serviceId := details.ServiceID
 
@@ -340,6 +356,11 @@ func (gcpBroker *GCPServiceBroker) Bind(instanceID string, bindingID string, det
 // for cloudSql instances, Unbind deletes the associated user and ssl certs
 // for all other services, Unbind deletes the associated service account
 func (gcpBroker *GCPServiceBroker) Unbind(instanceID, bindingID string, details models.UnbindDetails) error {
+	gcpBroker.Logger.Info("Unbinding", lager.Data{
+		"instance_id": instanceID,
+		"binding_id":  bindingID,
+		"details":     details,
+	})
 
 	// validate existence of binding
 	var count int

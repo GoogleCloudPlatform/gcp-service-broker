@@ -1,6 +1,7 @@
 package lagerflags
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -15,17 +16,71 @@ const (
 	FATAL = "fatal"
 )
 
+type TimeFormat int
+
+const (
+	FormatUnixEpoch TimeFormat = iota
+	FormatRFC3339
+)
+
+func (t TimeFormat) MarshalJSON() ([]byte, error) {
+	if FormatUnixEpoch <= t && t <= FormatRFC3339 {
+		return []byte(`"` + t.String() + `"`), nil
+	}
+	return nil, fmt.Errorf("invalid TimeFormat: %d", t)
+}
+
+// Set implements the flag.Getter interface
+func (t TimeFormat) Get(s string) interface{} { return t }
+
+// Set implements the flag.Value interface
+func (t *TimeFormat) Set(s string) error {
+	switch s {
+	case "unix-epoch", "0":
+		*t = FormatUnixEpoch
+	case "rfc3339", "1":
+		*t = FormatRFC3339
+	default:
+		return errors.New(`invalid TimeFormat: "` + s + `"`)
+	}
+	return nil
+}
+
+func (t *TimeFormat) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		return nil
+	}
+	// unqote
+	if len(data) >= 2 && data[0] == '"' && data[len(data)-1] == '"' {
+		data = data[1 : len(data)-1]
+	}
+	return t.Set(string(data))
+}
+
+func (t TimeFormat) String() string {
+	switch t {
+	case FormatUnixEpoch:
+		return "unix-epoch"
+	case FormatRFC3339:
+		return "rfc3339"
+	}
+	return "invalid"
+}
+
 type LagerConfig struct {
-	LogLevel string `json:"log_level,omitempty"`
+	LogLevel   string     `json:"log_level,omitempty"`
+	TimeFormat TimeFormat `json:"time_format"`
 }
 
 func DefaultLagerConfig() LagerConfig {
 	return LagerConfig{
-		LogLevel: string(INFO),
+		LogLevel:   string(INFO),
+		TimeFormat: FormatUnixEpoch,
 	}
 }
 
 var minLogLevel string
+var timeFormat TimeFormat
 
 func AddFlags(flagSet *flag.FlagSet) {
 	flagSet.StringVar(
@@ -33,6 +88,11 @@ func AddFlags(flagSet *flag.FlagSet) {
 		"logLevel",
 		string(INFO),
 		"log level: debug, info, error or fatal",
+	)
+	flagSet.Var(
+		&timeFormat,
+		"timeFormat",
+		`Format for timestamp in component logs. Valid values are "unix-epoch" and "rfc3339".`,
 	)
 }
 
@@ -45,7 +105,14 @@ func NewFromSink(component string, sink lager.Sink) (lager.Logger, *lager.Reconf
 }
 
 func NewFromConfig(component string, config LagerConfig) (lager.Logger, *lager.ReconfigurableSink) {
-	return newLogger(component, config.LogLevel, lager.NewWriterSink(os.Stdout, lager.DEBUG))
+	var sink lager.Sink
+	switch config.TimeFormat {
+	case FormatRFC3339:
+		sink = lager.NewPrettySink(os.Stdout, lager.DEBUG)
+	default:
+		sink = lager.NewWriterSink(os.Stdout, lager.DEBUG)
+	}
+	return newLogger(component, config.LogLevel, sink)
 }
 
 func newLogger(component, minLogLevel string, inSink lager.Sink) (lager.Logger, *lager.ReconfigurableSink) {

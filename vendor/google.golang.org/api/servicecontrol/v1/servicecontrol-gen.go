@@ -1,4 +1,4 @@
-// Package servicecontrol provides access to the Google Service Control API.
+// Package servicecontrol provides access to the Service Control API.
 //
 // See https://cloud.google.com/service-control/
 //
@@ -87,34 +87,44 @@ type ServicesService struct {
 	s *Service
 }
 
+type AllocateInfo struct {
+	// UnusedArguments: A list of label keys that were unused by the server
+	// in processing the
+	// request. Thus, for similar requests repeated in a certain future
+	// time
+	// window, the caller can choose to ignore these labels in the
+	// requests
+	// to achieve better client-side cache hits and quota aggregation.
+	UnusedArguments []string `json:"unusedArguments,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "UnusedArguments") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "UnusedArguments") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *AllocateInfo) MarshalJSON() ([]byte, error) {
+	type NoMethod AllocateInfo
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // AllocateQuotaRequest: Request message for the AllocateQuota method.
 type AllocateQuotaRequest struct {
 	// AllocateOperation: Operation that describes the quota allocation.
 	AllocateOperation *QuotaOperation `json:"allocateOperation,omitempty"`
-
-	// AllocationMode: Allocation mode for this operation.
-	// Deprecated: use QuotaMode inside the QuotaOperation.
-	//
-	// Possible values:
-	//   "UNSPECIFIED"
-	//   "NORMAL" - Allocates quota for the amount specified in the service
-	// configuration or
-	// specified using the quota_metrics. If the amount is higher than
-	// the
-	// available quota, allocation error will be returned and no quota will
-	// be
-	// allocated.
-	//   "BEST_EFFORT" - Allocates quota for the amount specified in the
-	// service configuration or
-	// specified using the quota_metrics. If the amount is higher than
-	// the
-	// available quota, request does not fail but all available quota will
-	// be
-	// allocated.
-	//   "CHECK_ONLY" - Only checks if there is enough quota available and
-	// does not change the
-	// available quota. No lock is placed on the available quota either.
-	AllocationMode string `json:"allocationMode,omitempty"`
 
 	// ServiceConfigId: Specifies which version of service configuration
 	// should be used to process
@@ -142,8 +152,8 @@ type AllocateQuotaRequest struct {
 }
 
 func (s *AllocateQuotaRequest) MarshalJSON() ([]byte, error) {
-	type noMethod AllocateQuotaRequest
-	raw := noMethod(*s)
+	type NoMethod AllocateQuotaRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -151,6 +161,10 @@ func (s *AllocateQuotaRequest) MarshalJSON() ([]byte, error) {
 type AllocateQuotaResponse struct {
 	// AllocateErrors: Indicates the decision of the allocate.
 	AllocateErrors []*QuotaError `json:"allocateErrors,omitempty"`
+
+	// AllocateInfo: WARNING: DO NOT use this field until this warning
+	// message is removed.
+	AllocateInfo *AllocateInfo `json:"allocateInfo,omitempty"`
 
 	// OperationId: The same operation_id value used in the
 	// AllocateQuotaRequest. Used for
@@ -161,27 +175,15 @@ type AllocateQuotaResponse struct {
 	// Depending on the
 	// request, one or more of the following metrics will be included:
 	//
-	// 1. For rate quota, per quota group or per quota metric incremental
-	// usage
-	// will be specified using the following delta metric:
+	// 1. Per quota group or per quota metric incremental usage will be
+	// specified
+	// using the following delta metric :
 	//   "serviceruntime.googleapis.com/api/consumer/quota_used_count"
 	//
-	// 2. For allocation quota, per quota metric total usage will be
-	// specified
-	// using the following gauge metric:
-	//
-	// "serviceruntime.googleapis.com/allocation/consumer/quota_used_count"
-	//
-	//
-	// 3. For both rate quota and allocation quota, the quota limit
-	// reached
-	// condition will be specified using the following boolean metric:
+	// 2. The quota limit reached condition will be specified using the
+	// following
+	// boolean metric :
 	//   "serviceruntime.googleapis.com/quota/exceeded"
-	//
-	// 4. For allocation quota, value for each quota limit associated
-	// with
-	// the metrics will be specified using the following gauge metric:
-	//   "serviceruntime.googleapis.com/quota/limit"
 	QuotaMetrics []*MetricValueSet `json:"quotaMetrics,omitempty"`
 
 	// ServiceConfigId: ID of the actual config used to process the request.
@@ -210,8 +212,8 @@ type AllocateQuotaResponse struct {
 }
 
 func (s *AllocateQuotaResponse) MarshalJSON() ([]byte, error) {
-	type noMethod AllocateQuotaResponse
-	raw := noMethod(*s)
+	type NoMethod AllocateQuotaResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -228,6 +230,11 @@ type AuditLog struct {
 	// resources or permissions involved, then there is
 	// one AuthorizationInfo element for each {resource, permission} tuple.
 	AuthorizationInfo []*AuthorizationInfo `json:"authorizationInfo,omitempty"`
+
+	// Metadata: Other service-specific data about the request, response,
+	// and other
+	// information associated with the current audited event.
+	Metadata googleapi.RawMessage `json:"metadata,omitempty"`
 
 	// MethodName: The name of the service method or operation.
 	// For API calls, this should be the name of the API method.
@@ -257,6 +264,9 @@ type AuditLog struct {
 	// RequestMetadata: Metadata about the operation.
 	RequestMetadata *RequestMetadata `json:"requestMetadata,omitempty"`
 
+	// ResourceLocation: The resource location information.
+	ResourceLocation *ResourceLocation `json:"resourceLocation,omitempty"`
+
 	// ResourceName: The resource or collection that is the target of the
 	// operation.
 	// The name is a scheme-less URI, not including the API service
@@ -279,8 +289,9 @@ type AuditLog struct {
 	// name will be indicated in the `@type` property.
 	Response googleapi.RawMessage `json:"response,omitempty"`
 
-	// ServiceData: Other service-specific data about the request, response,
-	// and other
+	// ServiceData: Deprecated, use `metadata` field instead.
+	// Other service-specific data about the request, response, and
+	// other
 	// activities.
 	ServiceData googleapi.RawMessage `json:"serviceData,omitempty"`
 
@@ -311,8 +322,110 @@ type AuditLog struct {
 }
 
 func (s *AuditLog) MarshalJSON() ([]byte, error) {
-	type noMethod AuditLog
-	raw := noMethod(*s)
+	type NoMethod AuditLog
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// Auth: This message defines request authentication attributes.
+// Terminology is
+// based on the JSON Web Token (JWT) standard, but the terms
+// also
+// correlate to concepts in other standards.
+type Auth struct {
+	// AccessLevels: A list of access level resource names that allow
+	// resources to be
+	// accessed by authenticated requester. It is part of Secure GCP
+	// processing
+	// for the incoming request. An access level string has the
+	// format:
+	// "//{api_service_name}/accessPolicies/{policy_id}/accessLevels/
+	// {short_name}"
+	//
+	// Example:
+	// "//accesscontextmanager.googleapis.com/accessP
+	// olicies/MY_POLICY_ID/accessLevels/MY_LEVEL"
+	AccessLevels []string `json:"accessLevels,omitempty"`
+
+	// Audiences: The intended audience(s) for this authentication
+	// information. Reflects
+	// the audience (`aud`) claim within a JWT. The audience
+	// value(s) depends on the `issuer`, but typically include one or more
+	// of
+	// the following pieces of information:
+	//
+	// *  The services intended to receive the credential such as
+	//    ["pubsub.googleapis.com", "storage.googleapis.com"]
+	// *  A set of service-based scopes. For example,
+	//    ["https://www.googleapis.com/auth/cloud-platform"]
+	// *  The client id of an app, such as the Firebase project id for JWTs
+	//    from Firebase Auth.
+	//
+	// Consult the documentation for the credential issuer to determine
+	// the
+	// information provided.
+	Audiences []string `json:"audiences,omitempty"`
+
+	// Claims: Structured claims presented with the credential. JWTs
+	// include
+	// `{key: value}` pairs for standard and private claims. The
+	// following
+	// is a subset of the standard required and optional claims that
+	// would
+	// typically be presented for a Google-based JWT:
+	//
+	//    {'iss': 'accounts.google.com',
+	//     'sub': '113289723416554971153',
+	//     'aud': ['123456789012', 'pubsub.googleapis.com'],
+	//     'azp': '123456789012.apps.googleusercontent.com',
+	//     'email': 'jsmith@example.com',
+	//     'iat': 1353601026,
+	//     'exp': 1353604926}
+	//
+	// SAML assertions are similarly specified, but with an identity
+	// provider
+	// dependent structure.
+	Claims googleapi.RawMessage `json:"claims,omitempty"`
+
+	// Presenter: The authorized presenter of the credential. Reflects the
+	// optional
+	// Authorized Presenter (`azp`) claim within a JWT or the
+	// OAuth client id. For example, a Google Cloud Platform client id
+	// looks
+	// as follows: "123456789012.apps.googleusercontent.com".
+	Presenter string `json:"presenter,omitempty"`
+
+	// Principal: The authenticated principal. Reflects the issuer (`iss`)
+	// and subject
+	// (`sub`) claims within a JWT. The issuer and subject should be
+	// `/`
+	// delimited, with `/` percent-encoded within the subject fragment.
+	// For
+	// Google accounts, the principal format
+	// is:
+	// "https://accounts.google.com/{id}"
+	Principal string `json:"principal,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "AccessLevels") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AccessLevels") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *Auth) MarshalJSON() ([]byte, error) {
+	type NoMethod Auth
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -324,9 +437,22 @@ type AuthenticationInfo struct {
 	// authority.
 	AuthoritySelector string `json:"authoritySelector,omitempty"`
 
-	// PrincipalEmail: The email address of the authenticated user making
-	// the request.
+	// PrincipalEmail: The email address of the authenticated user (or
+	// service account on behalf
+	// of third party principal) making the request. For privacy reasons,
+	// the
+	// principal email address is redacted for all read-only operations that
+	// fail
+	// with a "permission denied" error.
 	PrincipalEmail string `json:"principalEmail,omitempty"`
+
+	// ThirdPartyPrincipal: The third party identification (if any) of the
+	// authenticated user making
+	// the request.
+	// When the JSON object represented here has a proto equivalent, the
+	// proto
+	// name will be indicated in the `@type` property.
+	ThirdPartyPrincipal googleapi.RawMessage `json:"thirdPartyPrincipal,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "AuthoritySelector")
 	// to unconditionally include in API requests. By default, fields with
@@ -347,8 +473,8 @@ type AuthenticationInfo struct {
 }
 
 func (s *AuthenticationInfo) MarshalJSON() ([]byte, error) {
-	type noMethod AuthenticationInfo
-	raw := noMethod(*s)
+	type NoMethod AuthenticationInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -365,8 +491,18 @@ type AuthorizationInfo struct {
 	// Resource: The resource being accessed, as a REST-style string. For
 	// example:
 	//
-	//     bigquery.googlapis.com/projects/PROJECTID/datasets/DATASETID
+	//     bigquery.googleapis.com/projects/PROJECTID/datasets/DATASETID
 	Resource string `json:"resource,omitempty"`
+
+	// ResourceAttributes: Resource attributes used in IAM condition
+	// evaluation. This field contains
+	// resource attributes like resource type and resource name.
+	//
+	// To get the whole view of the attributes used in IAM
+	// condition evaluation, the user must also look
+	// into
+	// `AuditLog.request_metadata.request_attributes`.
+	ResourceAttributes *Resource `json:"resourceAttributes,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Granted") to
 	// unconditionally include in API requests. By default, fields with
@@ -386,8 +522,8 @@ type AuthorizationInfo struct {
 }
 
 func (s *AuthorizationInfo) MarshalJSON() ([]byte, error) {
-	type noMethod AuthorizationInfo
-	raw := noMethod(*s)
+	type NoMethod AuthorizationInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -399,8 +535,9 @@ type CheckError struct {
 	//
 	// Possible values:
 	//   "ERROR_CODE_UNSPECIFIED" - This is never used in `CheckResponse`.
-	//   "NOT_FOUND" - The consumer's project id was not found.
-	// Same as google.rpc.Code.NOT_FOUND.
+	//   "NOT_FOUND" - The consumer's project id, network container, or
+	// resource container was
+	// not found. Same as google.rpc.Code.NOT_FOUND.
 	//   "PERMISSION_DENIED" - The consumer doesn't have access to the
 	// specified resource.
 	// Same as google.rpc.Code.PERMISSION_DENIED.
@@ -448,6 +585,8 @@ type CheckError struct {
 	// `ACTIVE` in LoquatV2.
 	//   "SECURITY_POLICY_VIOLATED" - Request is not allowed as per security
 	// policies defined in Org Policy.
+	//   "INVALID_CREDENTIAL" - The credential in the request can not be
+	// verified.
 	//   "NAMESPACE_LOOKUP_UNAVAILABLE" - The backend server for looking up
 	// project id/number is unavailable.
 	//   "SERVICE_STATUS_UNAVAILABLE" - The backend server for checking
@@ -468,6 +607,14 @@ type CheckError struct {
 	// error.
 	Detail string `json:"detail,omitempty"`
 
+	// Subject: Subject to whom this error applies. See the specific code
+	// enum for more
+	// details on this field. For example:
+	//     - “project:<project-id or project-number>”
+	//     - “folder:<folder-id>”
+	//     - “organization:<organization-id>”
+	Subject string `json:"subject,omitempty"`
+
 	// ForceSendFields is a list of field names (e.g. "Code") to
 	// unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
@@ -486,12 +633,16 @@ type CheckError struct {
 }
 
 func (s *CheckError) MarshalJSON() ([]byte, error) {
-	type noMethod CheckError
-	raw := noMethod(*s)
+	type NoMethod CheckError
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// CheckInfo: Contains additional information about the check operation.
 type CheckInfo struct {
+	// ConsumerInfo: Consumer info of this check.
+	ConsumerInfo *ConsumerInfo `json:"consumerInfo,omitempty"`
+
 	// UnusedArguments: A list of fields and label keys that are ignored by
 	// the server.
 	// The client doesn't need to send them for following requests to
@@ -499,7 +650,7 @@ type CheckInfo struct {
 	// performance and allow better aggregation.
 	UnusedArguments []string `json:"unusedArguments,omitempty"`
 
-	// ForceSendFields is a list of field names (e.g. "UnusedArguments") to
+	// ForceSendFields is a list of field names (e.g. "ConsumerInfo") to
 	// unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
 	// non-interface field appearing in ForceSendFields will be sent to the
@@ -507,19 +658,18 @@ type CheckInfo struct {
 	// used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
-	// NullFields is a list of field names (e.g. "UnusedArguments") to
-	// include in API requests with the JSON null value. By default, fields
-	// with empty values are omitted from API requests. However, any field
-	// with an empty value appearing in NullFields will be sent to the
-	// server as null. It is an error if a field in this list has a
-	// non-empty value. This may be used to include null fields in Patch
-	// requests.
+	// NullFields is a list of field names (e.g. "ConsumerInfo") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
 	NullFields []string `json:"-"`
 }
 
 func (s *CheckInfo) MarshalJSON() ([]byte, error) {
-	type noMethod CheckInfo
-	raw := noMethod(*s)
+	type NoMethod CheckInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -563,8 +713,8 @@ type CheckRequest struct {
 }
 
 func (s *CheckRequest) MarshalJSON() ([]byte, error) {
-	type noMethod CheckRequest
-	raw := noMethod(*s)
+	type NoMethod CheckRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -618,8 +768,39 @@ type CheckResponse struct {
 }
 
 func (s *CheckResponse) MarshalJSON() ([]byte, error) {
-	type noMethod CheckResponse
-	raw := noMethod(*s)
+	type NoMethod CheckResponse
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ConsumerInfo: `ConsumerInfo` provides information about the consumer
+// project.
+type ConsumerInfo struct {
+	// ProjectNumber: The Google cloud project number, e.g. 1234567890. A
+	// value of 0 indicates
+	// no project number is found.
+	ProjectNumber int64 `json:"projectNumber,omitempty,string"`
+
+	// ForceSendFields is a list of field names (e.g. "ProjectNumber") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ProjectNumber") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ConsumerInfo) MarshalJSON() ([]byte, error) {
+	type NoMethod ConsumerInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -703,21 +884,21 @@ type Distribution struct {
 }
 
 func (s *Distribution) MarshalJSON() ([]byte, error) {
-	type noMethod Distribution
-	raw := noMethod(*s)
+	type NoMethod Distribution
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *Distribution) UnmarshalJSON(data []byte) error {
-	type noMethod Distribution
+	type NoMethod Distribution
 	var s1 struct {
 		Maximum               gensupport.JSONFloat64 `json:"maximum"`
 		Mean                  gensupport.JSONFloat64 `json:"mean"`
 		Minimum               gensupport.JSONFloat64 `json:"minimum"`
 		SumOfSquaredDeviation gensupport.JSONFloat64 `json:"sumOfSquaredDeviation"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -728,6 +909,8 @@ func (s *Distribution) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// EndReconciliationRequest: Request message for
+// QuotaController.EndReconciliation.
 type EndReconciliationRequest struct {
 	// ReconciliationOperation: Operation that describes the quota
 	// reconciliation.
@@ -760,11 +943,13 @@ type EndReconciliationRequest struct {
 }
 
 func (s *EndReconciliationRequest) MarshalJSON() ([]byte, error) {
-	type noMethod EndReconciliationRequest
-	raw := noMethod(*s)
+	type NoMethod EndReconciliationRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// EndReconciliationResponse: Response message for
+// QuotaController.EndReconciliation.
 type EndReconciliationResponse struct {
 	// OperationId: The same operation_id value used in the
 	// EndReconciliationRequest. Used for
@@ -831,8 +1016,8 @@ type EndReconciliationResponse struct {
 }
 
 func (s *EndReconciliationResponse) MarshalJSON() ([]byte, error) {
-	type noMethod EndReconciliationResponse
-	raw := noMethod(*s)
+	type NoMethod EndReconciliationResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -878,8 +1063,8 @@ type ExplicitBuckets struct {
 }
 
 func (s *ExplicitBuckets) MarshalJSON() ([]byte, error) {
-	type noMethod ExplicitBuckets
-	raw := noMethod(*s)
+	type NoMethod ExplicitBuckets
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -922,19 +1107,19 @@ type ExponentialBuckets struct {
 }
 
 func (s *ExponentialBuckets) MarshalJSON() ([]byte, error) {
-	type noMethod ExponentialBuckets
-	raw := noMethod(*s)
+	type NoMethod ExponentialBuckets
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *ExponentialBuckets) UnmarshalJSON(data []byte) error {
-	type noMethod ExponentialBuckets
+	type NoMethod ExponentialBuckets
 	var s1 struct {
 		GrowthFactor gensupport.JSONFloat64 `json:"growthFactor"`
 		Scale        gensupport.JSONFloat64 `json:"scale"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -981,19 +1166,19 @@ type LinearBuckets struct {
 }
 
 func (s *LinearBuckets) MarshalJSON() ([]byte, error) {
-	type noMethod LinearBuckets
-	raw := noMethod(*s)
+	type NoMethod LinearBuckets
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *LinearBuckets) UnmarshalJSON(data []byte) error {
-	type noMethod LinearBuckets
+	type NoMethod LinearBuckets
 	var s1 struct {
 		Offset gensupport.JSONFloat64 `json:"offset"`
 		Width  gensupport.JSONFloat64 `json:"width"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -1021,8 +1206,9 @@ type LogEntry struct {
 
 	// ProtoPayload: The log entry payload, represented as a protocol buffer
 	// that is
-	// expressed as a JSON object. You can only pass `protoPayload`
-	// values that belong to a set of approved types.
+	// expressed as a JSON object. The only accepted type currently
+	// is
+	// AuditLog.
 	ProtoPayload googleapi.RawMessage `json:"protoPayload,omitempty"`
 
 	// Severity: The severity of the log entry. The default value
@@ -1077,8 +1263,8 @@ type LogEntry struct {
 }
 
 func (s *LogEntry) MarshalJSON() ([]byte, error) {
-	type noMethod LogEntry
-	raw := noMethod(*s)
+	type NoMethod LogEntry
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1139,18 +1325,18 @@ type MetricValue struct {
 }
 
 func (s *MetricValue) MarshalJSON() ([]byte, error) {
-	type noMethod MetricValue
-	raw := noMethod(*s)
+	type NoMethod MetricValue
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *MetricValue) UnmarshalJSON(data []byte) error {
-	type noMethod MetricValue
+	type NoMethod MetricValue
 	var s1 struct {
 		DoubleValue *gensupport.JSONFloat64 `json:"doubleValue"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -1190,8 +1376,8 @@ type MetricValueSet struct {
 }
 
 func (s *MetricValueSet) MarshalJSON() ([]byte, error) {
-	type noMethod MetricValueSet
-	raw := noMethod(*s)
+	type NoMethod MetricValueSet
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1232,8 +1418,8 @@ type Money struct {
 }
 
 func (s *Money) MarshalJSON() ([]byte, error) {
-	type noMethod Money
-	raw := noMethod(*s)
+	type NoMethod Money
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1296,7 +1482,9 @@ type Operation struct {
 	//        used to handle the API request (e.g. ESP),
 	//     - `servicecontrol.googleapis.com/platform` describing the
 	// platform
-	//        where the API is served (e.g. GAE, GCE, GKE).
+	//        where the API is served, such as App Engine, Compute Engine,
+	// or
+	//        Kubernetes Engine.
 	Labels map[string]string `json:"labels,omitempty"`
 
 	// LogEntries: Represents information to be logged.
@@ -1339,11 +1527,15 @@ type Operation struct {
 
 	// QuotaProperties: Represents the properties needed for quota check.
 	// Applicable only if this
-	// operation is for a quota check request.
+	// operation is for a quota check request. If this is not specified, no
+	// quota
+	// check will be performed.
 	QuotaProperties *QuotaProperties `json:"quotaProperties,omitempty"`
 
-	// ResourceContainer: The resource name of the parent of a resource in
-	// the resource hierarchy.
+	// ResourceContainer: DO NOT USE. This field is deprecated, use
+	// "resources" field instead.
+	// The resource name of the parent of a resource in the resource
+	// hierarchy.
 	//
 	// This can be in one of the following formats:
 	//     - “projects/<project-id or project-number>”
@@ -1351,12 +1543,18 @@ type Operation struct {
 	//     - “organizations/<organization-id>”
 	ResourceContainer string `json:"resourceContainer,omitempty"`
 
+	// Resources: The resources that are involved in the operation.
+	// The maximum supported number of entries in this field is 100.
+	Resources []*ResourceInfo `json:"resources,omitempty"`
+
 	// StartTime: Required. Start time of the operation.
 	StartTime string `json:"startTime,omitempty"`
 
 	// UserLabels: User defined labels for the resource that this operation
 	// is associated
-	// with.
+	// with. Only a combination of 1000 user labels per consumer project
+	// are
+	// allowed.
 	UserLabels map[string]string `json:"userLabels,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "ConsumerId") to
@@ -1377,11 +1575,12 @@ type Operation struct {
 }
 
 func (s *Operation) MarshalJSON() ([]byte, error) {
-	type noMethod Operation
-	raw := noMethod(*s)
+	type NoMethod Operation
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// QuotaError: Represents error information for QuotaOperation.
 type QuotaError struct {
 	// Code: Error code.
 	//
@@ -1389,6 +1588,17 @@ type QuotaError struct {
 	//   "UNSPECIFIED" - This is never used.
 	//   "RESOURCE_EXHAUSTED" - Quota allocation failed.
 	// Same as google.rpc.Code.RESOURCE_EXHAUSTED.
+	//   "OUT_OF_RANGE" - Quota release failed.  This error is ONLY returned
+	// on a NORMAL release.
+	// More formally:  if a user requests a release of 10 tokens, but only
+	// 5 tokens were previously allocated, in a BEST_EFFORT release, this
+	// will
+	// be considered a success, 5 tokens will be released, and the result
+	// will
+	// be "Ok".  If this is done in NORMAL mode, no tokens will be
+	// released,
+	// and an OUT_OF_RANGE error will be returned.
+	// Same as google.rpc.Code.OUT_OF_RANGE.
 	//   "BILLING_NOT_ACTIVE" - Consumer cannot access the service because
 	// the service requires active
 	// billing.
@@ -1439,8 +1649,8 @@ type QuotaError struct {
 }
 
 func (s *QuotaError) MarshalJSON() ([]byte, error) {
-	type noMethod QuotaError
-	raw := noMethod(*s)
+	type NoMethod QuotaError
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1459,7 +1669,15 @@ type QuotaInfo struct {
 	// quota check was not successful, then this will not be populated due
 	// to no
 	// quota consumption.
-	// Deprecated: Use quota_metrics to get per quota group usage.
+	//
+	// We are not merging this field with 'quota_metrics' field because of
+	// the
+	// complexity of scaling in Chemist client code base. For simplicity, we
+	// will
+	// keep this field for Castor (that scales quota usage) and
+	// 'quota_metrics'
+	// for SuperQuota (that doesn't scale quota usage).
+	//
 	QuotaConsumed map[string]int64 `json:"quotaConsumed,omitempty"`
 
 	// QuotaMetrics: Quota metrics to indicate the usage. Depending on the
@@ -1502,8 +1720,8 @@ type QuotaInfo struct {
 }
 
 func (s *QuotaInfo) MarshalJSON() ([]byte, error) {
-	type noMethod QuotaInfo
-	raw := noMethod(*s)
+	type NoMethod QuotaInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1525,22 +1743,22 @@ type QuotaOperation struct {
 	// quota operation is
 	// requested. This name is used for matching quota rules or metric rules
 	// and
-	// billing status rules defined in service configuration. This field is
-	// not
-	// required if the quota operation is performed on non-API
-	// resources.
+	// billing status rules defined in service configuration.
+	//
+	// This field should not be set if any of the following is true:
+	// (1) the quota operation is performed on non-API resources.
+	// (2) quota_metrics is set because the caller is doing quota
+	// override.
 	//
 	// Example of an RPC method name:
 	//     google.example.library.v1.LibraryService.CreateShelf
 	MethodName string `json:"methodName,omitempty"`
 
-	// OperationId: Identity of the operation. This must be unique within
-	// the scope of the
-	// service that generated the operation. If the service calls
-	// AllocateQuota
-	// and ReleaseQuota on the same operation, the two calls should carry
-	// the
-	// same ID.
+	// OperationId: Identity of the operation. This is expected to be unique
+	// within the scope
+	// of the service that generated the operation, and guarantees
+	// idempotency in
+	// case of retries.
 	//
 	// UUID version 4 is recommended, though not required. In scenarios
 	// where an
@@ -1565,12 +1783,14 @@ type QuotaOperation struct {
 	// MetricValue
 	// instances, the entire request is rejected with
 	// an invalid argument error.
+	//
+	// This field is mutually exclusive with method_name.
 	QuotaMetrics []*MetricValueSet `json:"quotaMetrics,omitempty"`
 
 	// QuotaMode: Quota mode for this operation.
 	//
 	// Possible values:
-	//   "UNSPECIFIED"
+	//   "UNSPECIFIED" - Guard against implicit default. Must not be used.
 	//   "NORMAL" - For AllocateQuota request, allocates quota for the
 	// amount specified in
 	// the service configuration or specified using the quota metrics. If
@@ -1578,41 +1798,18 @@ type QuotaOperation struct {
 	// amount is higher than the available quota, allocation error will
 	// be
 	// returned and no quota will be allocated.
-	// For ReleaseQuota request, this mode is supported only for precise
-	// quota
-	// limits. In this case, this operation releases quota for the
-	// amount
-	// specified in the service configuration or specified using the
-	// quota
-	// metrics. If the release can make used quota negative, release
-	// error
-	// will be returned and no quota will be released.
-	//   "BEST_EFFORT" - For AllocateQuota request, this mode is supported
-	// only for imprecise
-	// quota limits. In this case, the operation allocates quota for the
-	// amount
-	// specified in the service configuration or specified using the
-	// quota
-	// metrics. If the amount is higher than the available quota, request
-	// does
-	// not fail but all available quota will be allocated.
-	// For ReleaseQuota request, this mode is supported for both precise
-	// quota
-	// limits and imprecise quota limits. In this case, this operation
-	// releases
-	// quota for the amount specified in the service configuration or
-	// specified
-	// using the quota metrics. If the release can make used quota
-	// negative, request does not fail but only the used quota will
-	// be
-	// released. After the ReleaseQuota request completes, the used
-	// quota
-	// will be 0, and never goes to negative.
+	//   "BEST_EFFORT" - The operation allocates quota for the amount
+	// specified in the service
+	// configuration or specified using the quota metrics. If the amount
+	// is
+	// higher than the available quota, request does not fail but all
+	// available
+	// quota will be allocated.
 	//   "CHECK_ONLY" - For AllocateQuota request, only checks if there is
 	// enough quota
 	// available and does not change the available quota. No lock is placed
 	// on
-	// the available quota either. Not supported for ReleaseQuota request.
+	// the available quota either.
 	QuotaMode string `json:"quotaMode,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "ConsumerId") to
@@ -1633,36 +1830,14 @@ type QuotaOperation struct {
 }
 
 func (s *QuotaOperation) MarshalJSON() ([]byte, error) {
-	type noMethod QuotaOperation
-	raw := noMethod(*s)
+	type NoMethod QuotaOperation
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // QuotaProperties: Represents the properties needed for quota
 // operations.
 type QuotaProperties struct {
-	// LimitByIds: LimitType IDs that should be used for checking quota. Key
-	// in this map
-	// should be a valid LimitType string, and the value is the ID to be
-	// used. For
-	// example, an entry <USER, 123> will cause all user quota limits to use
-	// 123
-	// as the user ID. See google/api/quota.proto for the definition of
-	// LimitType.
-	// CLIENT_PROJECT: Not supported.
-	// USER: Value of this entry will be used for enforcing user-level
-	// quota
-	//       limits. If none specified, caller IP passed in the
-	//       servicecontrol.googleapis.com/caller_ip label will be used
-	// instead.
-	//       If the server cannot resolve a value for this LimitType, an
-	// error
-	//       will be thrown. No validation will be performed on this
-	// ID.
-	// Deprecated: use servicecontrol.googleapis.com/user label to send user
-	// ID.
-	LimitByIds map[string]string `json:"limitByIds,omitempty"`
-
 	// QuotaMode: Quota mode for this operation.
 	//
 	// Possible values:
@@ -1685,7 +1860,7 @@ type QuotaProperties struct {
 	// operation.
 	QuotaMode string `json:"quotaMode,omitempty"`
 
-	// ForceSendFields is a list of field names (e.g. "LimitByIds") to
+	// ForceSendFields is a list of field names (e.g. "QuotaMode") to
 	// unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
 	// non-interface field appearing in ForceSendFields will be sent to the
@@ -1693,7 +1868,7 @@ type QuotaProperties struct {
 	// used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
-	// NullFields is a list of field names (e.g. "LimitByIds") to include in
+	// NullFields is a list of field names (e.g. "QuotaMode") to include in
 	// API requests with the JSON null value. By default, fields with empty
 	// values are omitted from API requests. However, any field with an
 	// empty value appearing in NullFields will be sent to the server as
@@ -1703,8 +1878,8 @@ type QuotaProperties struct {
 }
 
 func (s *QuotaProperties) MarshalJSON() ([]byte, error) {
-	type noMethod QuotaProperties
-	raw := noMethod(*s)
+	type NoMethod QuotaProperties
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1739,8 +1914,8 @@ type ReleaseQuotaRequest struct {
 }
 
 func (s *ReleaseQuotaRequest) MarshalJSON() ([]byte, error) {
-	type noMethod ReleaseQuotaRequest
-	raw := noMethod(*s)
+	type NoMethod ReleaseQuotaRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1801,18 +1976,18 @@ type ReleaseQuotaResponse struct {
 }
 
 func (s *ReleaseQuotaResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ReleaseQuotaResponse
-	raw := noMethod(*s)
+	type NoMethod ReleaseQuotaResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// ReportError: Represents the processing error of one `Operation` in
-// the request.
+// ReportError: Represents the processing error of one Operation in the
+// request.
 type ReportError struct {
 	// OperationId: The Operation.operation_id value from the request.
 	OperationId string `json:"operationId,omitempty"`
 
-	// Status: Details of the error when processing the `Operation`.
+	// Status: Details of the error when processing the Operation.
 	Status *Status `json:"status,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "OperationId") to
@@ -1833,11 +2008,12 @@ type ReportError struct {
 }
 
 func (s *ReportError) MarshalJSON() ([]byte, error) {
-	type noMethod ReportError
-	raw := noMethod(*s)
+	type NoMethod ReportError
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// ReportInfo: Contains additional info about the report operation.
 type ReportInfo struct {
 	// OperationId: The Operation.operation_id value from the request.
 	OperationId string `json:"operationId,omitempty"`
@@ -1863,8 +2039,8 @@ type ReportInfo struct {
 }
 
 func (s *ReportInfo) MarshalJSON() ([]byte, error) {
-	type noMethod ReportInfo
-	raw := noMethod(*s)
+	type NoMethod ReportInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1913,8 +2089,8 @@ type ReportRequest struct {
 }
 
 func (s *ReportRequest) MarshalJSON() ([]byte, error) {
-	type noMethod ReportRequest
-	raw := noMethod(*s)
+	type NoMethod ReportRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1982,15 +2158,132 @@ type ReportResponse struct {
 }
 
 func (s *ReportResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ReportResponse
-	raw := noMethod(*s)
+	type NoMethod ReportResponse
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// Request: This message defines attributes for an HTTP request. If the
+// actual
+// request is not an HTTP request, the runtime system should try to
+// map
+// the actual request to an equivalent HTTP request.
+type Request struct {
+	// Auth: The request authentication. May be absent for unauthenticated
+	// requests.
+	// Derived from the HTTP request `Authorization` header or equivalent.
+	Auth *Auth `json:"auth,omitempty"`
+
+	// Fragment: The HTTP URL fragment. No URL decoding is performed.
+	Fragment string `json:"fragment,omitempty"`
+
+	// Headers: The HTTP request headers. If multiple headers share the same
+	// key, they
+	// must be merged according to the HTTP spec. All header keys must
+	// be
+	// lowercased, because HTTP header keys are case-insensitive.
+	Headers map[string]string `json:"headers,omitempty"`
+
+	// Host: The HTTP request `Host` header value.
+	Host string `json:"host,omitempty"`
+
+	// Id: The unique ID for a request, which can be propagated to
+	// downstream
+	// systems. The ID should have low probability of collision
+	// within a single day for a specific service.
+	Id string `json:"id,omitempty"`
+
+	// Method: The HTTP request method, such as `GET`, `POST`.
+	Method string `json:"method,omitempty"`
+
+	// Path: The HTTP URL path.
+	Path string `json:"path,omitempty"`
+
+	// Protocol: The network protocol used with the request, such as
+	// "http/1.1",
+	// "spdy/3", "h2", "h2c", "webrtc", "tcp", "udp", "quic".
+	// See
+	// https://www.iana.org/assignments/tls-extensiontype-values/tls-exte
+	// nsiontype-values.xhtml#alpn-protocol-ids
+	// for details.
+	Protocol string `json:"protocol,omitempty"`
+
+	// Query: The HTTP URL query in the format of
+	// `name1=value`&name2=value2`, as it
+	// appears in the first line of the HTTP request. No decoding is
+	// performed.
+	Query string `json:"query,omitempty"`
+
+	// Reason: A special parameter for request reason. It is used by
+	// security systems
+	// to associate auditing information with a request.
+	Reason string `json:"reason,omitempty"`
+
+	// Scheme: The HTTP URL scheme, such as `http` and `https`.
+	Scheme string `json:"scheme,omitempty"`
+
+	// Size: The HTTP request size in bytes. If unknown, it must be -1.
+	Size int64 `json:"size,omitempty,string"`
+
+	// Time: The timestamp when the `destination` service receives the first
+	// byte of
+	// the request.
+	Time string `json:"time,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Auth") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Auth") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *Request) MarshalJSON() ([]byte, error) {
+	type NoMethod Request
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // RequestMetadata: Metadata about the request.
 type RequestMetadata struct {
 	// CallerIp: The IP address of the caller.
+	// For caller from internet, this will be public IPv4 or IPv6
+	// address.
+	// For caller from a Compute Engine VM with external IP address,
+	// this
+	// will be the VM's external IP address. For caller from a
+	// Compute
+	// Engine VM without external IP address, if the VM is in the
+	// same
+	// organization (or project) as the accessed resource, `caller_ip`
+	// will
+	// be the VM's internal IPv4 address, otherwise the `caller_ip` will
+	// be
+	// redacted to "gce-internal-ip".
+	// See https://cloud.google.com/compute/docs/vpc/ for more information.
 	CallerIp string `json:"callerIp,omitempty"`
+
+	// CallerNetwork: The network of the caller.
+	// Set only if the network host project is part of the same GCP
+	// organization
+	// (or project) as the accessed resource.
+	// See https://cloud.google.com/compute/docs/vpc/ for more
+	// information.
+	// This is a scheme-less URI full resource name. For example:
+	//
+	//
+	// "//compute.googleapis.com/projects/PROJECT_ID/global/networks/NETWORK_
+	// ID"
+	CallerNetwork string `json:"callerNetwork,omitempty"`
 
 	// CallerSuppliedUserAgent: The user agent of the caller.
 	// This information is not authenticated and should be treated
@@ -2003,11 +2296,21 @@ type RequestMetadata struct {
 	//     The request was made by the Google Cloud SDK CLI (gcloud).
 	// +   `AppEngine-Google; (+http://code.google.com/appengine; appid:
 	// s~my-project`:
-	//     The request was made from the `my-project` App Engine
-	// app.
-	//
+	//     The request was made from the `my-project` App Engine app.
 	// NOLINT
 	CallerSuppliedUserAgent string `json:"callerSuppliedUserAgent,omitempty"`
+
+	// RequestAttributes: Request attributes used in IAM condition
+	// evaluation. This field contains
+	// request attributes like request time and access levels associated
+	// with
+	// the request.
+	//
+	// To get the whole view of the attributes used in IAM
+	// condition evaluation, the user must also look
+	// into
+	// `AuditLog.authentication_info.resource_attributes`.
+	RequestAttributes *Request `json:"requestAttributes,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "CallerIp") to
 	// unconditionally include in API requests. By default, fields with
@@ -2027,11 +2330,158 @@ type RequestMetadata struct {
 }
 
 func (s *RequestMetadata) MarshalJSON() ([]byte, error) {
-	type noMethod RequestMetadata
-	raw := noMethod(*s)
+	type NoMethod RequestMetadata
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// Resource: This message defines core attributes for a resource. A
+// resource is an
+// addressable (named) entity provided by the destination service.
+// For
+// example, a file stored on a network storage service.
+type Resource struct {
+	// Labels: The labels or tags on the resource, such as AWS resource tags
+	// and
+	// Kubernetes resource labels.
+	Labels map[string]string `json:"labels,omitempty"`
+
+	// Name: The stable identifier (name) of a resource on the `service`. A
+	// resource
+	// can be logically identified as
+	// "//{resource.service}/{resource.name}".
+	// The differences between a resource name and a URI are:
+	//
+	// *   Resource name is a logical identifier, independent of network
+	//     protocol and API version. For example,
+	//     `//pubsub.googleapis.com/projects/123/topics/news-feed`.
+	// *   URI often includes protocol and version information, so it can
+	//     be used directly by applications. For example,
+	//
+	// `https://pubsub.googleapis.com/v1/projects/123/topics/news-feed`.
+	//
+	// See
+	//  https://cloud.google.com/apis/design/resource_names for details.
+	Name string `json:"name,omitempty"`
+
+	// Service: The name of the service that this resource belongs to, such
+	// as
+	// `pubsub.googleapis.com`. The service may be different from the
+	// DNS
+	// hostname that actually serves the request.
+	Service string `json:"service,omitempty"`
+
+	// Type: The type of the resource. The scheme is platform-specific
+	// because
+	// different platforms define their resources differently.
+	Type string `json:"type,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Labels") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Labels") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *Resource) MarshalJSON() ([]byte, error) {
+	type NoMethod Resource
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ResourceInfo: Describes a resource associated with this operation.
+type ResourceInfo struct {
+	// ResourceContainer: The identifier of the parent of this resource
+	// instance.
+	// Must be in one of the following formats:
+	//     - “projects/<project-id or project-number>”
+	//     - “folders/<folder-id>”
+	//     - “organizations/<organization-id>”
+	ResourceContainer string `json:"resourceContainer,omitempty"`
+
+	// ResourceLocation: The location of the resource. If not empty, the
+	// resource will be checked
+	// against location policy. The value must be a valid zone, region
+	// or
+	// multiregion. For example: "europe-west4" or
+	// "northamerica-northeast1-a"
+	ResourceLocation string `json:"resourceLocation,omitempty"`
+
+	// ResourceName: Name of the resource. This is used for auditing
+	// purposes.
+	ResourceName string `json:"resourceName,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "ResourceContainer")
+	// to unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ResourceContainer") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ResourceInfo) MarshalJSON() ([]byte, error) {
+	type NoMethod ResourceInfo
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ResourceLocation: Location information about a resource.
+type ResourceLocation struct {
+	// CurrentLocations: The locations of a resource after the execution of
+	// the operation.
+	// For example:
+	//
+	//     "europe-west1-a"
+	//     "us-east1"
+	//     "nam3"
+	CurrentLocations []string `json:"currentLocations,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "CurrentLocations") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "CurrentLocations") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ResourceLocation) MarshalJSON() ([]byte, error) {
+	type NoMethod ResourceLocation
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// StartReconciliationRequest: Request message for
+// QuotaController.StartReconciliation.
 type StartReconciliationRequest struct {
 	// ReconciliationOperation: Operation that describes the quota
 	// reconciliation.
@@ -2064,11 +2514,13 @@ type StartReconciliationRequest struct {
 }
 
 func (s *StartReconciliationRequest) MarshalJSON() ([]byte, error) {
-	type noMethod StartReconciliationRequest
-	raw := noMethod(*s)
+	type NoMethod StartReconciliationRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// StartReconciliationResponse: Response message for
+// QuotaController.StartReconciliation.
 type StartReconciliationResponse struct {
 	// OperationId: The same operation_id value used in the
 	// StartReconciliationRequest. Used
@@ -2121,8 +2573,8 @@ type StartReconciliationResponse struct {
 }
 
 func (s *StartReconciliationResponse) MarshalJSON() ([]byte, error) {
-	type noMethod StartReconciliationResponse
-	raw := noMethod(*s)
+	type NoMethod StartReconciliationResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2210,9 +2662,9 @@ type Status struct {
 	// google.rpc.Code.
 	Code int64 `json:"code,omitempty"`
 
-	// Details: A list of messages that carry the error details.  There will
-	// be a
-	// common set of message types for APIs to use.
+	// Details: A list of messages that carry the error details.  There is a
+	// common set of
+	// message types for APIs to use.
 	Details []googleapi.RawMessage `json:"details,omitempty"`
 
 	// Message: A developer-facing error message, which should be in
@@ -2240,8 +2692,8 @@ type Status struct {
 }
 
 func (s *Status) MarshalJSON() ([]byte, error) {
-	type noMethod Status
-	raw := noMethod(*s)
+	type NoMethod Status
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2262,20 +2714,16 @@ type ServicesAllocateQuotaCall struct {
 //
 // This method requires the
 // `servicemanagement.services.quota`
-// permission on the specified service. For more information,
-// see
-// [Google Cloud IAM](https://cloud.google.com/iam).
+// permission on the specified service. For more information, see
+// [Cloud IAM](https://cloud.google.com/iam).
 //
-// **NOTE:** the client code **must** fail-open if the server returns
-// one
-// of the following quota errors:
-// -   `PROJECT_STATUS_UNAVAILABLE`
-// -   `SERVICE_STATUS_UNAVAILABLE`
-// -   `BILLING_STATUS_UNAVAILABLE`
-// -   `QUOTA_SYSTEM_UNAVAILABLE`
-//
-// The server may inject above errors to prohibit any hard dependency
-// on the quota system.
+// **NOTE:** The client **must** fail-open on server errors
+// `INTERNAL`,
+// `UNKNOWN`, `DEADLINE_EXCEEDED`, and `UNAVAILABLE`. To ensure
+// system
+// reliability, the server may inject these errors to prohibit any
+// hard
+// dependency on the quota functionality.
 func (r *ServicesService) AllocateQuota(serviceName string, allocatequotarequest *AllocateQuotaRequest) *ServicesAllocateQuotaCall {
 	c := &ServicesAllocateQuotaCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.serviceName = serviceName
@@ -2364,12 +2812,12 @@ func (c *ServicesAllocateQuotaCall) Do(opts ...googleapi.CallOption) (*AllocateQ
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Attempts to allocate quota for the specified consumer. It should be called\nbefore the operation is executed.\n\nThis method requires the `servicemanagement.services.quota`\npermission on the specified service. For more information, see\n[Google Cloud IAM](https://cloud.google.com/iam).\n\n**NOTE:** the client code **must** fail-open if the server returns one\nof the following quota errors:\n-   `PROJECT_STATUS_UNAVAILABLE`\n-   `SERVICE_STATUS_UNAVAILABLE`\n-   `BILLING_STATUS_UNAVAILABLE`\n-   `QUOTA_SYSTEM_UNAVAILABLE`\n\nThe server may inject above errors to prohibit any hard dependency\non the quota system.",
+	//   "description": "Attempts to allocate quota for the specified consumer. It should be called\nbefore the operation is executed.\n\nThis method requires the `servicemanagement.services.quota`\npermission on the specified service. For more information, see\n[Cloud IAM](https://cloud.google.com/iam).\n\n**NOTE:** The client **must** fail-open on server errors `INTERNAL`,\n`UNKNOWN`, `DEADLINE_EXCEEDED`, and `UNAVAILABLE`. To ensure system\nreliability, the server may inject these errors to prohibit any hard\ndependency on the quota functionality.",
 	//   "flatPath": "v1/services/{serviceName}:allocateQuota",
 	//   "httpMethod": "POST",
 	//   "id": "servicecontrol.services.allocateQuota",
@@ -2410,24 +2858,29 @@ type ServicesCheckCall struct {
 	header_      http.Header
 }
 
-// Check: Checks an operation with Google Service Control to decide
-// whether
-// the given operation should proceed. It should be called before
-// the
-// operation is executed.
+// Check: Checks whether an operation on a service should be allowed to
+// proceed
+// based on the configuration of the service and related policies. It
+// must be
+// called before the operation is executed.
 //
 // If feasible, the client should cache the check results and reuse them
 // for
-// 60 seconds. In case of server errors, the client can rely on the
-// cached
-// results for longer time.
+// 60 seconds. In case of any server errors, the client should rely on
+// the
+// cached results for much longer time to avoid outage.
+// WARNING: There is general 60s delay for the configuration and
+// policy
+// propagation, therefore callers MUST NOT depend on the `Check` method
+// having
+// the latest policy information.
 //
-// NOTE: the `CheckRequest` has the size limit of 64KB.
+// NOTE: the CheckRequest has the size limit of 64KB.
 //
 // This method requires the `servicemanagement.services.check`
 // permission
 // on the specified service. For more information, see
-// [Google Cloud IAM](https://cloud.google.com/iam).
+// [Cloud IAM](https://cloud.google.com/iam).
 func (r *ServicesService) Check(serviceName string, checkrequest *CheckRequest) *ServicesCheckCall {
 	c := &ServicesCheckCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.serviceName = serviceName
@@ -2516,12 +2969,12 @@ func (c *ServicesCheckCall) Do(opts ...googleapi.CallOption) (*CheckResponse, er
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Checks an operation with Google Service Control to decide whether\nthe given operation should proceed. It should be called before the\noperation is executed.\n\nIf feasible, the client should cache the check results and reuse them for\n60 seconds. In case of server errors, the client can rely on the cached\nresults for longer time.\n\nNOTE: the `CheckRequest` has the size limit of 64KB.\n\nThis method requires the `servicemanagement.services.check` permission\non the specified service. For more information, see\n[Google Cloud IAM](https://cloud.google.com/iam).",
+	//   "description": "Checks whether an operation on a service should be allowed to proceed\nbased on the configuration of the service and related policies. It must be\ncalled before the operation is executed.\n\nIf feasible, the client should cache the check results and reuse them for\n60 seconds. In case of any server errors, the client should rely on the\ncached results for much longer time to avoid outage.\nWARNING: There is general 60s delay for the configuration and policy\npropagation, therefore callers MUST NOT depend on the `Check` method having\nthe latest policy information.\n\nNOTE: the CheckRequest has the size limit of 64KB.\n\nThis method requires the `servicemanagement.services.check` permission\non the specified service. For more information, see\n[Cloud IAM](https://cloud.google.com/iam).",
 	//   "flatPath": "v1/services/{serviceName}:check",
 	//   "httpMethod": "POST",
 	//   "id": "servicecontrol.services.check",
@@ -2530,7 +2983,7 @@ func (c *ServicesCheckCall) Do(opts ...googleapi.CallOption) (*CheckResponse, er
 	//   ],
 	//   "parameters": {
 	//     "serviceName": {
-	//       "description": "The service name as specified in its service configuration. For example,\n`\"pubsub.googleapis.com\"`.\n\nSee google.api.Service for the definition of a service name.",
+	//       "description": "The service name as specified in its service configuration. For example,\n`\"pubsub.googleapis.com\"`.\n\nSee\n[google.api.Service](https://cloud.google.com/service-management/reference/rpc/google.api#google.api.Service)\nfor the definition of a service name.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -2659,7 +3112,7 @@ func (c *ServicesEndReconciliationCall) Do(opts ...googleapi.CallOption) (*EndRe
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2710,20 +3163,17 @@ type ServicesReleaseQuotaCall struct {
 //
 // This method requires the
 // `servicemanagement.services.quota`
-// permission on the specified service. For more information,
-// see
-// [Google Cloud IAM](https://cloud.google.com/iam).
+// permission on the specified service. For more information, see
+// [Cloud IAM](https://cloud.google.com/iam).
 //
-// **NOTE:** the client code **must** fail-open if the server returns
-// one
-// of the following quota errors:
-// -   `PROJECT_STATUS_UNAVAILABLE`
-// -   `SERVICE_STATUS_UNAVAILABLE`
-// -   `BILLING_STATUS_UNAVAILABLE`
-// -   `QUOTA_SYSTEM_UNAVAILABLE`
 //
-// The server may inject above errors to prohibit any hard dependency
-// on the quota system.
+// **NOTE:** The client **must** fail-open on server errors
+// `INTERNAL`,
+// `UNKNOWN`, `DEADLINE_EXCEEDED`, and `UNAVAILABLE`. To ensure
+// system
+// reliability, the server may inject these errors to prohibit any
+// hard
+// dependency on the quota functionality.
 func (r *ServicesService) ReleaseQuota(serviceName string, releasequotarequest *ReleaseQuotaRequest) *ServicesReleaseQuotaCall {
 	c := &ServicesReleaseQuotaCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.serviceName = serviceName
@@ -2812,12 +3262,12 @@ func (c *ServicesReleaseQuotaCall) Do(opts ...googleapi.CallOption) (*ReleaseQuo
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Releases previously allocated quota done through AllocateQuota method.\n\nThis method requires the `servicemanagement.services.quota`\npermission on the specified service. For more information, see\n[Google Cloud IAM](https://cloud.google.com/iam).\n\n**NOTE:** the client code **must** fail-open if the server returns one\nof the following quota errors:\n-   `PROJECT_STATUS_UNAVAILABLE`\n-   `SERVICE_STATUS_UNAVAILABLE`\n-   `BILLING_STATUS_UNAVAILABLE`\n-   `QUOTA_SYSTEM_UNAVAILABLE`\n\nThe server may inject above errors to prohibit any hard dependency\non the quota system.",
+	//   "description": "Releases previously allocated quota done through AllocateQuota method.\n\nThis method requires the `servicemanagement.services.quota`\npermission on the specified service. For more information, see\n[Cloud IAM](https://cloud.google.com/iam).\n\n\n**NOTE:** The client **must** fail-open on server errors `INTERNAL`,\n`UNKNOWN`, `DEADLINE_EXCEEDED`, and `UNAVAILABLE`. To ensure system\nreliability, the server may inject these errors to prohibit any hard\ndependency on the quota functionality.",
 	//   "flatPath": "v1/services/{serviceName}:releaseQuota",
 	//   "httpMethod": "POST",
 	//   "id": "servicecontrol.services.releaseQuota",
@@ -2872,7 +3322,7 @@ type ServicesReportCall struct {
 // 0.01%
 // for business and compliance reasons.
 //
-// NOTE: the `ReportRequest` has the size limit of 1MB.
+// NOTE: the ReportRequest has the size limit of 1MB.
 //
 // This method requires the `servicemanagement.services.report`
 // permission
@@ -2966,12 +3416,12 @@ func (c *ServicesReportCall) Do(opts ...googleapi.CallOption) (*ReportResponse, 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Reports operation results to Google Service Control, such as logs and\nmetrics. It should be called after an operation is completed.\n\nIf feasible, the client should aggregate reporting data for up to 5\nseconds to reduce API traffic. Limiting aggregation to 5 seconds is to\nreduce data loss during client crashes. Clients should carefully choose\nthe aggregation time window to avoid data loss risk more than 0.01%\nfor business and compliance reasons.\n\nNOTE: the `ReportRequest` has the size limit of 1MB.\n\nThis method requires the `servicemanagement.services.report` permission\non the specified service. For more information, see\n[Google Cloud IAM](https://cloud.google.com/iam).",
+	//   "description": "Reports operation results to Google Service Control, such as logs and\nmetrics. It should be called after an operation is completed.\n\nIf feasible, the client should aggregate reporting data for up to 5\nseconds to reduce API traffic. Limiting aggregation to 5 seconds is to\nreduce data loss during client crashes. Clients should carefully choose\nthe aggregation time window to avoid data loss risk more than 0.01%\nfor business and compliance reasons.\n\nNOTE: the ReportRequest has the size limit of 1MB.\n\nThis method requires the `servicemanagement.services.report` permission\non the specified service. For more information, see\n[Google Cloud IAM](https://cloud.google.com/iam).",
 	//   "flatPath": "v1/services/{serviceName}:report",
 	//   "httpMethod": "POST",
 	//   "id": "servicecontrol.services.report",
@@ -2980,7 +3430,7 @@ func (c *ServicesReportCall) Do(opts ...googleapi.CallOption) (*ReportResponse, 
 	//   ],
 	//   "parameters": {
 	//     "serviceName": {
-	//       "description": "The service name as specified in its service configuration. For example,\n`\"pubsub.googleapis.com\"`.\n\nSee google.api.Service for the definition of a service name.",
+	//       "description": "The service name as specified in its service configuration. For example,\n`\"pubsub.googleapis.com\"`.\n\nSee\n[google.api.Service](https://cloud.google.com/service-management/reference/rpc/google.api#google.api.Service)\nfor the definition of a service name.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -3142,7 +3592,7 @@ func (c *ServicesStartReconciliationCall) Do(opts ...googleapi.CallOption) (*Sta
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
