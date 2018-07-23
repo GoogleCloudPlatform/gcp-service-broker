@@ -33,7 +33,7 @@ var (
 
 func init() {
 	rootCmd.AddCommand(clientCmd)
-	clientCmd.AddCommand(clientCatalogCmd, provisionCmd, deprovisionCmd, bindCmd, unbindCmd)
+	clientCmd.AddCommand(clientCatalogCmd, provisionCmd, deprovisionCmd, bindCmd, unbindCmd, lastCmd)
 
 	resourceSubcommands := []*cobra.Command{provisionCmd, deprovisionCmd, bindCmd, unbindCmd}
 	creationSubcommands := []*cobra.Command{provisionCmd, bindCmd}
@@ -56,6 +56,9 @@ func init() {
 		sc.Flags().StringVarP(&bindingId, "bindingid", "", "", "GUID of the binding to work on (user defined)")
 		sc.MarkFlagRequired("bindingid")
 	}
+
+	lastCmd.Flags().StringVarP(&instanceId, "instanceid", "", "", "id of the service instance to operate on (user defined)")
+	lastCmd.MarkFlagRequired("instanceid")
 }
 
 var clientCmd = &cobra.Command{
@@ -117,6 +120,10 @@ var bindCmd = newClientCommand("bind", "Bind to a service", func(client *client.
 
 var unbindCmd = newClientCommand("unbind", "Unbind a service", func(client *client.Client) *client.BrokerResponse {
 	return client.Unbind(instanceId, bindingId, serviceId, planId)
+})
+
+var lastCmd = newClientCommand("last", "Get the status of the last operation", func(client *client.Client) *client.BrokerResponse {
+	return client.LastOperation(instanceId)
 })
 
 func newClientCommand(use, short string, run func(*client.Client) *client.BrokerResponse) *cobra.Command {

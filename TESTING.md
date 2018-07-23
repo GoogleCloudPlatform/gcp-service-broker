@@ -153,7 +153,20 @@ service:
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
         },
         "tags": ["gcp", "cloudsql", "mysql"],
-        "plans": []
+        "plans": [
+          {
+              "id": "test-cloudsql-plan",
+              "name": "test_plan",
+              "description": "testplan",
+              "service_properties": {
+                "tier": "D8",
+                "pricing_plan": "PER_USE",
+                "max_disk_size": "15"
+              },
+              "display_name": "FOOBAR",
+              "service_id": "4bc59b9a-8520-409f-85da-1c7552315863"
+            }
+        ]
     }
   google-cloudsql-postgres: |-
     {
@@ -170,7 +183,20 @@ service:
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
           },
           "tags": ["gcp", "cloudsql", "postgres"],
-        "plans": []
+        "plans": [
+          {
+            "id": "test_cloudsql_postgres_plan",
+            "name": "test_cloudsql_postgres_plan",
+            "description": "test-postgres-plan",
+            "service_properties": {
+              "tier": "db-custom-2-4096",
+              "pricing_plan": "PER_USE",
+              "max_disk_size": "20"
+            },
+            "display_name": "test_cloudsql_postgres_plan",
+            "service_id": "cbad6d78-a73c-432d-b8ff-b219a17a803a"
+          }
+        ]
     }
   google-ml-apis: |-
     {
@@ -265,7 +291,18 @@ service:
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg"
       },
       "tags": ["gcp", "spanner"],
-      "plans": []
+      "plans": [
+        {
+            "id": "test-spanner-plan",
+            "name": "spannerplan",
+            "description": "Basic Spanner plan",
+            "service_properties": {
+                "num_nodes": "3"
+            },
+            "display_name": "Spanner Plan",
+            "service_id": "51b3e27e-d323-49ce-8c5f-1211e6409e82"
+        }
+      ]
     }
   google-bigtable: |-
     {
@@ -282,7 +319,19 @@ service:
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigtable.svg"
       },
       "tags": ["gcp", "bigtable"],
-      "plans": []
+      "plans": [
+        {
+          "id": "test-bigtable-plan",
+          "name": "bt_plan",
+          "description": "Bigtable basic plan",
+          "service_properties": {
+            "storage_type": "HDD",
+            "num_nodes": "5"
+          },
+          "display_name": "Bigtable Plan",
+          "service_id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
+        }
+      ]
     }
   google-datastore: |-
     {

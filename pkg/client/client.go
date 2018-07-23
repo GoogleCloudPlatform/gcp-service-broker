@@ -82,6 +82,13 @@ func (client *Client) Unbind(instanceId, bindingId, serviceId, planId string) *B
 	return client.makeRequest(http.MethodDelete, url, nil)
 }
 
+// LastOperation looks for the last operation for every
+func (client *Client) LastOperation(instanceId string) *BrokerResponse {
+	url := fmt.Sprintf("service_instances/%s/last_operation", instanceId)
+
+	return client.makeRequest(http.MethodGet, url, nil)
+}
+
 func (client *Client) makeRequest(method, path string, body interface{}) *BrokerResponse {
 	br := BrokerResponse{}
 
