@@ -370,3 +370,14 @@ api:
   password: pass
   port: 8000
 ```
+
+
+## Useful commands
+
+Create unbind commands for all bindings:
+
+  ./gcp-service-broker show bindings | jq --raw-output '.[] | "gcp-service-broker client unbind --bindingid \(.BindingId) --instanceid \(.ServiceInstanceId) --planid \(.PlanId) --serviceid \(.ServiceId)"'
+
+Create deprovision commands for all bindings:
+
+  ./gcp-service-broker show instances | jq --raw-output '.[] | "./gcp-service-broker client deprovision --instanceid \(.ID) --serviceid \(.ServiceId) --planid \(.PlanId)"'

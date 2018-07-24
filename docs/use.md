@@ -216,11 +216,11 @@ Notes:
              "UniqueId": "12345",
         }
         ```
-	
+
 * [google-datastore](https://cloud.google.com/datastore/)
     * Provison (none)
     * Bind (none)
-	* provided credentials will have the role of `datastore.user`	
+	* provided credentials will have the role of `datastore.user`
 
         **Example Binding credentials**
 
@@ -233,3 +233,65 @@ Notes:
              "UniqueId": "12345",
         }
         ```
+
+------------------------------
+
+# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/storage.svg) Google Cloud Storage
+
+A Powerful, Simple and Cost Effective Object Storage Service
+
+ * [Documentation](https://cloud.google.com/storage/docs/overview)
+ * [Support](https://cloud.google.com/support/)
+ * Catalog Metadata ID: `b9e4332e-b42b-4680-bda5-ea1506797474`
+ * Tags: gcp, storage
+
+## Provisioning
+
+* Request Parameters
+    * `name` _string_ - The name of the bucket. There is a single global namespace shared by all buckets so it MUST be unique. Default: `a generated value`
+    * `location` _string_ - The location of the bucket. Object data for objects in the bucket resides in physical storage within this region. See https://cloud.google.com/storage/docs/bucket-locations Default: `us`
+
+
+## Binding
+
+ * Request Parameters
+    * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for available roles.
+
+ * Response Parameters
+    * `Email` _string_ - Email address of the service account
+    * `Name` _string_ - The name of the service account
+    * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
+    * `ProjectId` _string_ - ID of the project that owns the service account
+    * `UniqueId` _string_ - Unique and stable id of the service account
+    * `bucket_name` _string_ - Name of the bucket this binding is for
+
+
+## Plans
+
+  * **standard**: Standard storage class - Plan ID: `e1d11f65-da66-46ad-977c-6d56513baf43`
+  * **nearline**: Nearline storage class - Plan ID: `a42c1182-d1a0-4d40-82c1-28220518b360`
+  * **reduced_availability**: Durable Reduced Availability storage class - Plan ID: `1a1f4fe6-1904-44d0-838c-4c87a9490a6b`
+
+
+## Examples
+
+### Basic Configuration
+
+Create a nearline bucket with a service account that can create/read/delete the objects in it.
+Uses plan: `a42c1182-d1a0-4d40-82c1-28220518b360`
+
+**Provision**
+```.json
+{
+    "location": "us"
+}
+```
+
+
+**Bind**
+
+```.json
+{
+    "role": "storage.objectAdmin"
+}
+```
