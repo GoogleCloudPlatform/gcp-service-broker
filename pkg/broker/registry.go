@@ -40,6 +40,8 @@ func Register(service *BrokerService) {
 	}
 }
 
+// GetEnabledServices returns a list of all registered brokers that the user
+// has enabled the use of.
 func GetEnabledServices() []*BrokerService {
 	var out []*BrokerService
 
@@ -52,6 +54,8 @@ func GetEnabledServices() []*BrokerService {
 	return out
 }
 
+// GetAllServices returns a list of all registered brokers whether or not the
+// user has enabled them.
 func GetAllServices() []*BrokerService {
 	var out []*BrokerService
 
@@ -61,8 +65,6 @@ func GetAllServices() []*BrokerService {
 
 	return out
 }
-
-// Get service plans
 
 type BrokerService struct {
 	Name                     string
@@ -80,8 +82,6 @@ type BrokerService struct {
 	userDefinedPlansProperty string
 	definitionProperty       string
 }
-
-// CLOUDSQL_MYSQL_CUSTOM_PLANS -> GSB_SERVICE_CLOUDSQL_MYSQL(|_PLANS|_ENABLED)
 
 func (svc *BrokerService) init() error {
 	// create properties

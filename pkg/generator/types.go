@@ -12,7 +12,8 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
-// Generate documentation
+// CatalogDocumentation generates markdown documentation for an entire service
+// catalog.
 func CatalogDocumentation() string {
 	out := ""
 
@@ -27,6 +28,7 @@ func CatalogDocumentation() string {
 	return out
 }
 
+// generateServiceDocumentation creates documentation for a single catalog entry
 func generateServiceDocumentation(svc *broker.BrokerService) string {
 	catalog := svc.CatalogEntry()
 
@@ -151,6 +153,8 @@ func cleanLines(text string) string {
 	return strings.Join(lines, " ")
 }
 
+// jsonCodeBlock formats the value as pretty JSON and wraps it in a Github style
+// hilighted block.
 func jsonCodeBlock(value interface{}) string {
 	block, _ := json.MarshalIndent(value, "", "    ")
 	return fmt.Sprintf("```javascript\n%s\n```", block)
