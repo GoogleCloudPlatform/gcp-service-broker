@@ -20,18 +20,23 @@ import (
 	"log"
 	"strings"
 
-	osbapi "github.com/pivotal-cf/brokerapi"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/spf13/viper"
 )
 
 var brokerRegistry = make(map[string]*BrokerService)
 
 func Register(service *BrokerService) {
-	brokerRegistry[service.Name] = service
+	name := service.Name
 
-	err := service.init()
-	if err != nil {
-		log.Fatalf("Error registering service %q, %s", service.Name, err)
+	if _, ok := brokerRegistry[name]; ok {
+		log.Fatalf("Tried to register multiple instances of: %q", name)
+	}
+
+	brokerRegistry[name] = service
+
+	if err := service.init(); err != nil {
+		log.Fatalf("Error registering service %q, %s", name, err)
 	}
 }
 
@@ -72,8 +77,8 @@ type BrokerService struct {
 	Examples                 []ServiceExample
 
 	// Not modifiable
-	serviceDefinition osbapi.Service
-	userDefinedPlans  []osbapi.ServicePlan
+	serviceDefinition models.Service
+	userDefinedPlans  []models.ServicePlan
 
 	enabledProperty            string
 	userDefinedPlansProperty   string
@@ -105,7 +110,7 @@ func (svc *BrokerService) init() error {
 	// Parse the service definition from the properties
 	rawDefinition := []byte(viper.GetString(svc.definitionProperty))
 
-	var defn osbapi.Service
+	var defn models.Service
 	if err := json.Unmarshal(rawDefinition, &defn); err != nil {
 		return fmt.Errorf("Error getting catalog info for service %q: %v", svc.Name, err)
 	}
@@ -124,7 +129,7 @@ func (svc *BrokerService) AreDefaultPlansEnabled() bool {
 	return viper.GetBool(svc.enableDefaultPlansProperty)
 }
 
-func (svc *BrokerService) CatalogEntry() osbapi.Service {
+func (svc *BrokerService) CatalogEntry() models.Service {
 	metadata := svc.serviceDefinition
 	// TODO User defined plans and schemas
 	// If default plans are not enabled, remove them from the service
@@ -137,20 +142,3 @@ func (svc *BrokerService) CatalogEntry() osbapi.Service {
 func (svc *BrokerService) DefaultPlans() interface{} {
 	return nil
 }
-
-// DefaultPlans() []osbapi.ServicePlan
-// HelpUrl() string
-
-// service.{name}.plans
-// service.{name}.service
-
-// ProvisionExample() string
-// BindExample() string
-
-// - name: service
-// 	label: Service
-// 	type: dropdown_select
-// 	description: "The service this plan is associated with"
-// 	options:
-// 		- name: '51b3e27e-d323-49ce-8c5f-1211e6409e82'
-// 			label: 'Spanner'

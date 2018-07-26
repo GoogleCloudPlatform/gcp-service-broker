@@ -21,7 +21,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 
 	"golang.org/x/net/context"
@@ -188,4 +190,46 @@ type ServiceAccountInfo struct {
 
 	// the bit to return
 	PrivateKeyData string
+}
+
+func ServiceAccountBindInputVariables() []broker.BrokerVariable {
+	return []broker.BrokerVariable{
+		broker.BrokerVariable{
+			Required:  true,
+			FieldName: "role",
+			Type:      broker.JsonTypeString,
+			Details:   `The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for available roles.`,
+		},
+	}
+}
+
+// Variables output by all brokers that return service account info
+func ServiceAccountBindOutputVariables() []broker.BrokerVariable {
+	return []broker.BrokerVariable{
+		broker.BrokerVariable{
+			FieldName: "Email",
+			Type:      broker.JsonTypeString,
+			Details:   "Email address of the service account",
+		},
+		broker.BrokerVariable{
+			FieldName: "Name",
+			Type:      broker.JsonTypeString,
+			Details:   "The name of the service account",
+		},
+		broker.BrokerVariable{
+			FieldName: "PrivateKeyData",
+			Type:      broker.JsonTypeString,
+			Details:   "Service account private key data. Base-64 encoded JSON.",
+		},
+		broker.BrokerVariable{
+			FieldName: "ProjectId",
+			Type:      broker.JsonTypeString,
+			Details:   "ID of the project that owns the service account",
+		},
+		broker.BrokerVariable{
+			FieldName: "UniqueId",
+			Type:      broker.JsonTypeString,
+			Details:   "Unique and stable id of the service account",
+		},
+	}
 }

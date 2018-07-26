@@ -22,13 +22,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
+	"time"
+
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"golang.org/x/oauth2/jwt"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
-	"net/url"
-	"time"
 )
 
 type SqlAccountManager struct {
@@ -69,9 +70,9 @@ func (sam *SqlAccountManager) CreateCredentials(instanceID string, bindingID str
 
 	var creds SqlAccountInfo
 	// create ssl certs
-        certname := bindingID + "cert"
+	certname := bindingID + "cert"
 	if len(bindingID) >= 10 {
- 		certname = bindingID[:10] + "cert"
+		certname = bindingID[:10] + "cert"
 	}
 	newCert, err := sqlService.SslCerts.Insert(sam.ProjectId, instance.Name, &googlecloudsql.SslCertsInsertRequest{
 		CommonName: certname,

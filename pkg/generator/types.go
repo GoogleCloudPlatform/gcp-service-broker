@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -15,7 +16,10 @@ import (
 func CatalogDocumentation() string {
 	out := ""
 
-	for _, svc := range broker.GetAllServices() {
+	services := broker.GetAllServices()
+	sort.Slice(services, func(i int, j int) bool { return services[i].Name < services[j].Name })
+
+	for _, svc := range services {
 		out += generateServiceDocumentation(svc)
 		out += "\n"
 	}
@@ -45,6 +49,8 @@ func generateServiceDocumentation(svc *broker.BrokerService) string {
 	}
 
 	templateText := `
+--------------------------------------------------------------------------------
+
 # {{ image .metadata.ImageUrl }} {{ .metadata.DisplayName }}
 
 {{ .metadata.LongDescription }}
@@ -56,25 +62,33 @@ func generateServiceDocumentation(svc *broker.BrokerService) string {
 
 ## Provisioning
 
-* Request Parameters
-{{ range $i, $var := .provisionInputVars }}    * {{ varNotes $var }}
+**Request Parameters**
+
+{{ if eq (len .provisionInputVars) 0 }}_No parameters supported._{{ end }}
+{{ range $i, $var := .provisionInputVars }} * {{ varNotes $var }}
 {{ end }}
 
 ## Binding
 
- * Request Parameters
-{{ range $i, $var := .bindIn }}    * {{ varNotes $var }}
-{{ end }}
- * Response Parameters
-{{ range $i, $var := .bindOut }}    * {{ varNotes $var }}
-{{ end }}
+**Request Parameters**
 
+{{ if eq (len .bindIn) 0 }}_No parameters supported._{{ end }}
+{{ range $i, $var := .bindIn }} * {{ varNotes $var }}
+{{ end }}
+**Response Parameters**
+
+{{ range $i, $var := .bindOut }} * {{ varNotes $var }}
+{{ end }}
 ## Plans
 
+{{ if eq (len .catalog.Plans) 0 }}_No plans available_{{ end }}
 {{ range $i, $plan := .catalog.Plans }}  * **{{ $plan.Name }}**: {{ $plan.Description }} - Plan ID: {{code $plan.ID}}
 {{ end }}
 
 ## Examples
+
+{{ if eq (len .examples) 0 }}_No examples_{{ end }}
+
 {{ range $i, $example := .examples}}
 ### {{ $example.Name }}
 
@@ -83,17 +97,13 @@ func generateServiceDocumentation(svc *broker.BrokerService) string {
 Uses plan: {{ code $example.PlanId }}
 
 **Provision**
+
 {{ jsonCodeBlock $example.ProvisionParams }}
 
-{{ if $example.BindParams }}
 **Bind**
 
 {{ jsonCodeBlock $example.BindParams }}
-{{end}}
-
 {{ end }}
-
-
 `
 
 	tmpl, err := template.New("titleTest").Funcs(funcMap).Parse(templateText)
@@ -131,16 +141,27 @@ func varNotes(variable broker.BrokerVariable) string {
 		out += "**Required** "
 	}
 
-	out += variable.Details
+	out += cleanLines(variable.Details)
 
 	if variable.Default != nil {
-		out += fmt.Sprintf(" Default: `%s`", variable.Default)
+		out += fmt.Sprintf(" Default: `%v`", variable.Default)
 	}
 
 	return out
 }
 
+// cleanLines concatenates multiple lines of text, trimming any leading/trailing
+// whitespace
+func cleanLines(text string) string {
+	lines := strings.Split(text, "\n")
+	for i, l := range lines {
+		lines[i] = strings.TrimSpace(l)
+	}
+
+	return strings.Join(lines, " ")
+}
+
 func jsonCodeBlock(value interface{}) string {
 	block, _ := json.MarshalIndent(value, "", "    ")
-	return fmt.Sprintf("```.json\n%s\n```", block)
+	return fmt.Sprintf("```javascript\n%s\n```", block)
 }
