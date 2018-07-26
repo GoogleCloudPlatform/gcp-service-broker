@@ -32,15 +32,21 @@ import (
 	"github.com/spf13/viper"
 )
 
-func init() {
-	rootCmd.AddCommand(versionCmd)
+const (
+	apiUserProp     = "api.user"
+	apiPasswordProp = "api.password"
+	apiPortProp     = "api.port"
+)
 
-	viper.BindEnv("api.user", "SECURITY_USER_NAME")
-	viper.BindEnv("api.password", "SECURITY_USER_PASSWORD")
-	viper.BindEnv("api.port", "PORT")
+func init() {
+	rootCmd.AddCommand(serveCmd)
+
+	viper.BindEnv(apiUserProp, "SECURITY_USER_NAME")
+	viper.BindEnv(apiPasswordProp, "SECURITY_USER_PASSWORD")
+	viper.BindEnv(apiPortProp, "PORT")
 }
 
-var versionCmd = &cobra.Command{
+var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start the service broker",
 	Long: `Starts the service broker listening on a port defined by the
@@ -70,8 +76,9 @@ func serve() {
 		logger.Fatal("Error initializing service broker: %s", err)
 	}
 
-	username := viper.GetString("api.user")
-	password := viper.GetString("api.password")
+	username := viper.GetString(apiUserProp)
+	password := viper.GetString(apiPasswordProp)
+	port := viper.GetString(apiPortProp)
 
 	credentials := brokerapi.BrokerCredentials{
 		Username: username,
@@ -80,11 +87,11 @@ func serve() {
 
 	// init api
 	logger.Info("Serving", lager.Data{
-		"port":     viper.GetString("api.port"),
+		"port":     port,
 		"username": username,
 	})
 
 	brokerAPI := brokerapi.New(serviceBroker, logger, credentials)
 	http.Handle("/", brokerAPI)
-	http.ListenAndServe(":"+viper.GetString("api.port"), nil)
+	http.ListenAndServe(":"+port, nil)
 }

@@ -25,6 +25,15 @@ import (
 	"github.com/pivotal-cf/brokerapi"
 )
 
+const (
+	// ClientsBrokerApiVersion is the minimum supported version of the client.
+	// Note: This may need to be changed in the future as we use newer versions
+	// of the OSB API, but should be kept near the lower end of the systems we
+	// expect to be compatible with to ensure any reverse-compatibility measures
+	// put in place work.
+	ClientsBrokerApiVersion = "2.13"
+)
+
 // New creates a new OSB Client connected to the given resource.
 func New(username, password, hostname string, port int) (*Client, error) {
 	base := fmt.Sprintf("http://%s:%s@%s:%d/v2/", username, password, hostname, port)
@@ -129,7 +138,7 @@ func (client *Client) newRequest(method, path string, body interface{}) (*http.R
 		return nil, err
 	}
 
-	request.Header.Set("X-Broker-Api-Version", "2.13")
+	request.Header.Set("X-Broker-Api-Version", ClientsBrokerApiVersion)
 	if body != nil {
 		request.Header.Set("Content-Type", "application/json")
 	}
