@@ -40,10 +40,6 @@ func Register(service *BrokerService) {
 	}
 }
 
-func GetServiceById(id string) {
-
-}
-
 func GetEnabledServices() []*BrokerService {
 	var out []*BrokerService
 
@@ -80,10 +76,9 @@ type BrokerService struct {
 	serviceDefinition models.Service
 	userDefinedPlans  []models.ServicePlan
 
-	enabledProperty            string
-	userDefinedPlansProperty   string
-	enableDefaultPlansProperty string
-	definitionProperty         string
+	enabledProperty          string
+	userDefinedPlansProperty string
+	definitionProperty       string
 }
 
 // CLOUDSQL_MYSQL_CUSTOM_PLANS -> GSB_SERVICE_CLOUDSQL_MYSQL(|_PLANS|_ENABLED)
@@ -93,7 +88,6 @@ func (svc *BrokerService) init() error {
 	svc.definitionProperty = fmt.Sprintf("service.%s.definition", svc.Name)
 	svc.enabledProperty = fmt.Sprintf("service.%s.enabled", svc.Name)
 	svc.userDefinedPlansProperty = fmt.Sprintf("service.%s.plans", svc.Name)
-	svc.enableDefaultPlansProperty = fmt.Sprintf("service.%s.enable_default_plans", svc.Name)
 
 	// Set up environment variables to be compatible with legacy tile.yml configurations.
 	// Bind a name of a service like google-datastore to an environment variable GOOGLE_DATASTORE
@@ -104,7 +98,6 @@ func (svc *BrokerService) init() error {
 	// set defaults
 	viper.SetDefault(svc.definitionProperty, svc.DefaultServiceDefinition)
 	viper.SetDefault(svc.enabledProperty, true)
-	viper.SetDefault(svc.enableDefaultPlansProperty, true)
 	viper.SetDefault(svc.userDefinedPlansProperty, "[]")
 
 	// Parse the service definition from the properties
@@ -112,11 +105,11 @@ func (svc *BrokerService) init() error {
 
 	var defn models.Service
 	if err := json.Unmarshal(rawDefinition, &defn); err != nil {
-		return fmt.Errorf("Error getting catalog info for service %q: %v", svc.Name, err)
+		return err
 	}
 	svc.serviceDefinition = defn
 
-	// TODO Parse the user-defined plans
+	// TODO Parse any user-defined plans and include them
 
 	return nil
 }
@@ -125,20 +118,6 @@ func (svc *BrokerService) IsEnabled() bool {
 	return viper.GetBool(svc.enabledProperty)
 }
 
-func (svc *BrokerService) AreDefaultPlansEnabled() bool {
-	return viper.GetBool(svc.enableDefaultPlansProperty)
-}
-
 func (svc *BrokerService) CatalogEntry() models.Service {
-	metadata := svc.serviceDefinition
-	// TODO User defined plans and schemas
-	// If default plans are not enabled, remove them from the service
-	// If user defined plans are present, add them to the service
-	// Generate the schemas based on provision/bind input variables
-
-	return metadata
-}
-
-func (svc *BrokerService) DefaultPlans() interface{} {
-	return nil
+	return svc.serviceDefinition
 }

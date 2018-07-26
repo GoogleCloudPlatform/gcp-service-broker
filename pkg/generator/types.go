@@ -41,8 +41,6 @@ func generateServiceDocumentation(svc *broker.BrokerService) string {
 
 	funcMap := template.FuncMap{
 		"code":          mdCode,
-		"image":         mdIcon,
-		"link":          mdLink,
 		"join":          strings.Join,
 		"varNotes":      varNotes,
 		"jsonCodeBlock": jsonCodeBlock,
@@ -51,12 +49,12 @@ func generateServiceDocumentation(svc *broker.BrokerService) string {
 	templateText := `
 --------------------------------------------------------------------------------
 
-# {{ image .metadata.ImageUrl }} {{ .metadata.DisplayName }}
+# ![]({{ .metadata.ImageUrl }}) {{ .metadata.DisplayName }}
 
 {{ .metadata.LongDescription }}
 
- * {{ link "Documentation" .metadata.DocumentationUrl }}
- * {{ link "Support" .metadata.SupportUrl }}
+ * [Documentation]({{.metadata.DocumentationUrl }})
+ * [Support]({{ .metadata.SupportUrl }})
  * Catalog Metadata ID: {{code .catalog.ID}}
  * Tags: {{ join .catalog.Tags ", " }}
 
@@ -122,16 +120,8 @@ Uses plan: {{ code $example.PlanId }}
 
 }
 
-func mdIcon(url string) string {
-	return fmt.Sprintf("![](%s)", url)
-}
-
 func mdCode(text string) string {
 	return fmt.Sprintf("`%s`", text)
-}
-
-func mdLink(text, url string) string {
-	return fmt.Sprintf("[%s](%s)", text, url)
 }
 
 func varNotes(variable broker.BrokerVariable) string {
