@@ -40,54 +40,60 @@ func RunExamplesForService(client *Client, serviceName string) error {
 }
 
 func RunExample(client *Client, example broker.ServiceExample, service *broker.BrokerService) error {
-	log.Printf("Running Example: %s/%s\n", service.Name, example.Name)
-	catalogEntry := service.CatalogEntry()
-
-	serviceId := catalogEntry.ID
-	planId := example.PlanId
-
-	testid := rand.Uint32()
-	instanceId := fmt.Sprintf("ex%d", testid)
-	bindingId := fmt.Sprintf("ex%d", testid)
-
-	provisioningDetails, err := json.Marshal(example.ProvisionParams)
+	executor, err := newExampleExecutor(client, example, service)
 	if err != nil {
 		return err
 	}
 
-	bindParams, err := json.Marshal(example.BindParams)
+	executor.LogTestInfo()
+
+	// Cleanup the test if it fails partway through
+	defer func() {
+		log.Println("Cleaning up the environment")
+		executor.Unbind()
+		executor.Deprovision()
+	}()
+
+	if err := executor.Provision(); err != nil {
+		return err
+	}
+
+	bindResponse, err := executor.Bind()
 	if err != nil {
 		return err
 	}
 
-	log.Printf("gcp-service-broker client provision --instanceid %q --planid %q --serviceid %q --params %q\n", instanceId, planId, serviceId, provisioningDetails)
-	log.Printf("gcp-service-broker client bind --instanceid %q --planid %q --serviceid %q --bindingid %q --params %q\n", instanceId, planId, serviceId, bindingId, bindParams)
-	log.Printf("gcp-service-broker client unbind --instanceid %q --planid %q --serviceid %q --bindingid %q \n", instanceId, planId, serviceId, bindingId)
-	log.Printf("gcp-service-broker client deprovision --instanceid %q --planid %q --serviceid %q\n", instanceId, planId, serviceId)
-
-	log.Println("Provisioning")
-	resp := client.Provision(instanceId, serviceId, planId, provisioningDetails)
-	if err := handleProvisionResponse(client, instanceId, resp); err != nil {
+	if err := executor.Unbind(); err != nil {
 		return err
 	}
 
-	log.Println("Binding")
-	resp = client.Bind(instanceId, bindingId, serviceId, planId, bindParams)
-	bindErr := handleBindResponse(resp, service)
-
-	if bindErr == nil {
-		log.Println("Unbinding")
-		resp := client.Unbind(instanceId, bindingId, serviceId, planId)
-		bindErr = handleUnbindResponse(resp)
-	}
-
-	log.Println("Deprovisioning")
-	resp = client.Deprovision(instanceId, serviceId, planId)
-	if err := handleDeprovisionResponse(client, instanceId, resp); err != nil {
+	if err := executor.Deprovision(); err != nil {
 		return err
 	}
 
-	return bindErr
+	// Check that the binding response has the same fields as expected
+	var binding brokerapi.Binding
+	err = json.Unmarshal(bindResponse, &binding)
+	if err != nil {
+		return err
+	}
+
+	credentialsEntry := binding.Credentials.(map[string]interface{})
+
+	allContained := true
+	for _, v := range service.BindOutputVariables {
+		_, ok := credentialsEntry[v.FieldName]
+		if !ok {
+			allContained = false
+			log.Printf("Error: credentials were missing property: %q", v.FieldName)
+		}
+	}
+
+	if !allContained {
+		return errors.New("Not all properties were found in the bound credentials")
+	}
+
+	return nil
 }
 
 func pollUntilFinished(client *Client, instanceId string) error {
@@ -128,24 +134,94 @@ func pollUntilFinished(client *Client, instanceId string) error {
 	}
 }
 
-func handleProvisionResponse(client *Client, instanceId string, resp *BrokerResponse) error {
+func newExampleExecutor(client *Client, example broker.ServiceExample, service *broker.BrokerService) (*exampleExecutor, error) {
+	provisionParams, err := json.Marshal(example.ProvisionParams)
+	if err != nil {
+		return nil, err
+	}
+
+	bindParams, err := json.Marshal(example.BindParams)
+	if err != nil {
+		return nil, err
+	}
+
+	testid := rand.Uint32()
+
+	return &exampleExecutor{
+		Name:       fmt.Sprintf("%s/%s", service.Name, example.Name),
+		ServiceId:  service.CatalogEntry().ID,
+		PlanId:     example.PlanId,
+		InstanceId: fmt.Sprintf("ex%d", testid),
+		BindingId:  fmt.Sprintf("ex%d", testid),
+
+		ProvisionParams: provisionParams,
+		BindParams:      bindParams,
+
+		client: client,
+	}, nil
+}
+
+type exampleExecutor struct {
+	Name string
+
+	ServiceId  string
+	PlanId     string
+	InstanceId string
+	BindingId  string
+
+	ProvisionParams json.RawMessage
+	BindParams      json.RawMessage
+
+	client *Client
+}
+
+func (ee *exampleExecutor) Provision() error {
+	log.Printf("Provisioning %s\n", ee.Name)
+
+	resp := ee.client.Provision(ee.InstanceId, ee.ServiceId, ee.PlanId, ee.ProvisionParams)
+
 	log.Println(resp.String())
 	if resp.InError() {
 		return resp.Error
 	}
 
-	if resp.StatusCode == 201 {
+	switch resp.StatusCode {
+	case 201:
 		return nil
+	case 202:
+		return ee.pollUntilFinished()
+	default:
+		return errors.New(fmt.Sprintf("Unexpected response code %d", resp.StatusCode))
 	}
-
-	if resp.StatusCode == 202 {
-		return pollUntilFinished(client, instanceId)
-	}
-
-	return errors.New(fmt.Sprintf("Unexpected response code %d", resp.StatusCode))
 }
 
-func handleDeprovisionResponse(client *Client, instanceId string, resp *BrokerResponse) error {
+func (ee *exampleExecutor) pollUntilFinished() error {
+	return pollUntilFinished(ee.client, ee.InstanceId)
+}
+
+func (ee *exampleExecutor) Deprovision() error {
+	log.Printf("Deprovisioning %s\n", ee.Name)
+	resp := ee.client.Deprovision(ee.InstanceId, ee.ServiceId, ee.PlanId)
+
+	log.Println(resp.String())
+	if resp.InError() {
+		return resp.Error
+	}
+
+	switch resp.StatusCode {
+	case 200:
+		return nil
+	case 202:
+		return ee.pollUntilFinished()
+	default:
+		return errors.New(fmt.Sprintf("Unexpected response code %d", resp.StatusCode))
+	}
+}
+
+func (ee *exampleExecutor) Unbind() error {
+	log.Printf("Unbinding %s\n", ee.Name)
+	resp := ee.client.Unbind(ee.InstanceId, ee.BindingId, ee.ServiceId, ee.PlanId)
+
 	log.Println(resp.String())
 	if resp.InError() {
 		return resp.Error
@@ -155,57 +231,31 @@ func handleDeprovisionResponse(client *Client, instanceId string, resp *BrokerRe
 		return nil
 	}
 
-	if resp.StatusCode == 202 {
-		return pollUntilFinished(client, instanceId)
-	}
-
 	return errors.New(fmt.Sprintf("Unexpected response code %d", resp.StatusCode))
 }
 
-func handleBindResponse(resp *BrokerResponse, service *broker.BrokerService) error {
+func (ee *exampleExecutor) Bind() (json.RawMessage, error) {
+	log.Printf("Binding %s\n", ee.Name)
+	resp := ee.client.Bind(ee.InstanceId, ee.BindingId, ee.ServiceId, ee.PlanId, ee.BindParams)
+
 	log.Println(resp.String())
 	if resp.InError() {
-		return resp.Error
-	}
-
-	if resp.StatusCode != 201 {
-		return errors.New(fmt.Sprintf("Unexpected response code %d", resp.StatusCode))
-	}
-
-	// Check all the response variables
-	var binding brokerapi.Binding
-	err := json.Unmarshal(resp.ResponseBody, &binding)
-	if err != nil {
-		return err
-	}
-
-	credentialsEntry := binding.Credentials.(map[string]interface{})
-
-	allContained := true
-	for _, v := range service.BindOutputVariables {
-		_, ok := credentialsEntry[v.FieldName]
-		if !ok {
-			allContained = false
-			log.Printf("Error: credentials were missing property: %q", v.FieldName)
-		}
-	}
-
-	if !allContained {
-		return errors.New("Not all properties were found in the bound credentials")
-	}
-
-	return nil
-}
-
-func handleUnbindResponse(resp *BrokerResponse) error {
-	log.Println(resp.String())
-	if resp.InError() {
-		return resp.Error
+		return nil, resp.Error
 	}
 
 	if resp.StatusCode == 201 {
-		return nil
+		return resp.ResponseBody, nil
 	}
 
-	return errors.New(fmt.Sprintf("Unexpected response code %d", resp.StatusCode))
+	return nil, errors.New(fmt.Sprintf("Unexpected response code %d", resp.StatusCode))
+}
+
+func (ee *exampleExecutor) LogTestInfo() {
+	log.Printf("Running Example: %s\n", ee.Name)
+
+	ips := fmt.Sprintf("--instanceid %q --planid %q --serviceid %q", ee.InstanceId, ee.PlanId, ee.ServiceId)
+	log.Printf("gcp-service-broker client provision %s --params %q\n", ips, ee.ProvisionParams)
+	log.Printf("gcp-service-broker client bind %s --bindingid %q --params %q\n", ips, ee.BindingId, ee.BindParams)
+	log.Printf("gcp-service-broker client unbind %s --bindingid %q\n", ips, ee.BindingId)
+	log.Printf("gcp-service-broker client deprovision %s\n", ips)
 }
