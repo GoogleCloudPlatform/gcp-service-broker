@@ -65,7 +65,7 @@ func init() {
 			broker.BrokerVariable{
 				FieldName: "name",
 				Type:      broker.JsonTypeString,
-				Details:   "The name of the dataset.",
+				Details:   "The name of the dataset. Should match [a-z][a-z0-9\\-]+[a-z0-9]",
 				Default:   "a generated value",
 			},
 			broker.BrokerVariable{
@@ -103,7 +103,7 @@ func init() {
 			broker.ServiceExample{
 				Name:        "Basic Production Configuration",
 				Description: "Create an HDD production table and account that can manage and query the data.",
-				PlanId:      "b8e19880-ac58-42ef-b033-f7cd9c94d1fe",
+				PlanId:      "65a49268-2c73-481e-80f3-9fde5bd5a654",
 				ProvisionParams: map[string]interface{}{
 					"name": "orders-table",
 				},

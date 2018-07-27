@@ -137,9 +137,9 @@ func init() {
 				Description: "An inexpensive PostgreSQL sandbox for developing with no backups.",
 				PlanId:      "2513d4d9-684b-4c3c-add4-6404969006de",
 				ProvisionParams: map[string]interface{}{
-					"backups_enabled": false,
-					"binlog":          false,
-					"disk_size":       5,
+					"backups_enabled": "false",
+					"binlog":          "false",
+					"disk_size":       "10",
 				},
 				BindParams: map[string]interface{}{
 					"role": "cloudsql.editor",

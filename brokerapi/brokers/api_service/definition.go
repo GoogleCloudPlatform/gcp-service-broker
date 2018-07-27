@@ -55,11 +55,11 @@ func init() {
 		Examples: []broker.ServiceExample{
 			broker.ServiceExample{
 				Name:            "Basic Configuration",
-				Description:     "Create an account with access to your ML models.",
+				Description:     "Create an account with developer access to your ML models.",
 				PlanId:          "be7954e1-ecfb-4936-a0b6-db35e6424c7a",
 				ProvisionParams: map[string]interface{}{},
 				BindParams: map[string]interface{}{
-					"role": "ml.modelUser",
+					"role": "ml.developer",
 				},
 			},
 		},

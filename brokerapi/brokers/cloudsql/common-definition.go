@@ -60,9 +60,9 @@ var commonProvisionVariables = []broker.BrokerVariable{
 	},
 	broker.BrokerVariable{
 		FieldName: "disk_size",
-		Type:      broker.JsonTypeInteger,
+		Type:      broker.JsonTypeString,
 		Details:   "in GB (only for 2nd generation instances).",
-		Default:   10,
+		Default:   "10",
 	},
 	broker.BrokerVariable{
 		FieldName: "region",
@@ -101,9 +101,9 @@ var commonProvisionVariables = []broker.BrokerVariable{
 	},
 	broker.BrokerVariable{
 		FieldName: "backups_enabled",
-		Type:      broker.JsonTypeBoolean,
+		Type:      broker.JsonTypeString,
 		Details:   "Should daily backups be enabled for the service?",
-		Default:   true,
+		Default:   "true",
 	},
 	broker.BrokerVariable{
 		FieldName: "backup_start_time",
@@ -113,7 +113,7 @@ var commonProvisionVariables = []broker.BrokerVariable{
 	},
 	broker.BrokerVariable{
 		FieldName: "binlog",
-		Type:      broker.JsonTypeBoolean,
+		Type:      broker.JsonTypeString,
 		Details:   "Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use",
 	},
 	broker.BrokerVariable{
@@ -142,7 +142,14 @@ var commonProvisionVariables = []broker.BrokerVariable{
 	},
 }
 
-var commonBindOutputVariables = append(accountmanagers.ServiceAccountBindOutputVariables(),
+var commonBindOutputVariables = []broker.BrokerVariable{
+	// Service account credentials (Note: they're a subset of the service account fields returned in a normal request)
+	broker.BrokerVariable{FieldName: "Email", Type: broker.JsonTypeString, Details: "Email address of the service account"},
+	broker.BrokerVariable{FieldName: "PrivateKeyData", Type: broker.JsonTypeString, Details: "Service account private key data. Base-64 encoded JSON."},
+	broker.BrokerVariable{FieldName: "ProjectId", Type: broker.JsonTypeString, Details: "ID of the project that owns the service account"},
+	broker.BrokerVariable{FieldName: "UniqueId", Type: broker.JsonTypeString, Details: "Unique and stable id of the service account"},
+
+	// Certificate
 	broker.BrokerVariable{FieldName: "CaCert", Type: broker.JsonTypeString, Details: "The server Certificate Authority's certificate."},
 	broker.BrokerVariable{FieldName: "ClientCert", Type: broker.JsonTypeString, Details: "The client certificate. For First Generation instances, the new certificate does not take effect until the instance is restarted."},
 	broker.BrokerVariable{FieldName: "ClientKey", Type: broker.JsonTypeString, Details: "The client certificate key."},
@@ -158,4 +165,4 @@ var commonBindOutputVariables = append(accountmanagers.ServiceAccountBindOutputV
 
 	broker.BrokerVariable{FieldName: "last_master_operation_id", Type: broker.JsonTypeString, Details: "(GCP internals) The id of the last operation on the database."},
 	broker.BrokerVariable{FieldName: "region", Type: broker.JsonTypeString, Details: "The region the database is in."},
-)
+}

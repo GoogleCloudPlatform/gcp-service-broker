@@ -121,3 +121,13 @@ func (svc *BrokerService) IsEnabled() bool {
 func (svc *BrokerService) CatalogEntry() models.Service {
 	return svc.serviceDefinition
 }
+
+func (svc *BrokerService) GetPlanById(planId string) *models.ServicePlan {
+	for _, plan := range svc.CatalogEntry().Plans {
+		if plan.ID == planId {
+			return &plan
+		}
+	}
+
+	return nil
+}

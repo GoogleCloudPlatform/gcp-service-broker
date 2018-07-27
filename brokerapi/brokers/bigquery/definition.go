@@ -51,7 +51,7 @@ func init() {
 			broker.BrokerVariable{
 				FieldName: "name",
 				Type:      broker.JsonTypeString,
-				Details:   "The name of the BigQuery dataset.",
+				Details:   "The name of the BigQuery dataset. Must be alphanumeric (plus underscores) and must be at most 1024 characters long.",
 				Default:   "a generated value",
 			},
 		},
@@ -60,7 +60,7 @@ func init() {
 			broker.BrokerVariable{
 				FieldName: "dataset_id",
 				Type:      broker.JsonTypeString,
-				Details:   "The name of the BigQuery dataset",
+				Details:   "The name of the BigQuery dataset.",
 			},
 		),
 		Examples: []broker.ServiceExample{
@@ -69,7 +69,7 @@ func init() {
 				Description: "Create a dataset and account that can manage and query the data.",
 				PlanId:      "10ff4e72-6e84-44eb-851f-bdb38a791914",
 				ProvisionParams: map[string]interface{}{
-					"name": "orders-1997",
+					"name": "orders_1997",
 				},
 				BindParams: map[string]interface{}{
 					"role": "bigquery.user",

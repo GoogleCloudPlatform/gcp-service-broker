@@ -15,7 +15,7 @@ A fast, economical and fully managed data warehouse for large-scale data analyti
 **Request Parameters**
 
 
- * `name` _string_ - The name of the BigQuery dataset. Default: `a generated value`
+ * `name` _string_ - The name of the BigQuery dataset. Must be alphanumeric (plus underscores) and must be at most 1024 characters long. Default: `a generated value`
 
 
 ## Binding
@@ -32,7 +32,7 @@ A fast, economical and fully managed data warehouse for large-scale data analyti
  * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
  * `ProjectId` _string_ - ID of the project that owns the service account
  * `UniqueId` _string_ - Unique and stable id of the service account
- * `dataset_id` _string_ - The name of the BigQuery dataset
+ * `dataset_id` _string_ - The name of the BigQuery dataset.
 
 ## Plans
 
@@ -55,7 +55,7 @@ Uses plan: `10ff4e72-6e84-44eb-851f-bdb38a791914`
 
 ```javascript
 {
-    "name": "orders-1997"
+    "name": "orders_1997"
 }
 ```
 
@@ -85,7 +85,7 @@ A high performance NoSQL database service for large analytical and operational w
 **Request Parameters**
 
 
- * `name` _string_ - The name of the dataset. Default: `a generated value`
+ * `name` _string_ - The name of the dataset. Should match [a-z][a-z0-9\-]+[a-z0-9] Default: `a generated value`
  * `cluster_id` _string_ - The name of the cluster. Default: `a generated value`
  * `display_name` _string_ - The human-readable name of the dataset. Default: `a generated value`
  * `zone` _string_ - The zone the data will reside in. Default: `us-east1-b`
@@ -123,7 +123,7 @@ A high performance NoSQL database service for large analytical and operational w
 
 
 Create an HDD production table and account that can manage and query the data.
-Uses plan: `b8e19880-ac58-42ef-b033-f7cd9c94d1fe`
+Uses plan: `65a49268-2c73-481e-80f3-9fde5bd5a654`
 
 **Provision**
 
@@ -162,16 +162,16 @@ Google Cloud SQL is a fully-managed MySQL database service
  * `instance_name` _string_ - Name of the Cloud SQL instance. Default: `a generated value`
  * `database_name` _string_ - Name of the database inside of the instance. Default: `a generated value`
  * `version` _string_ - The database engine type and version. Defaults to `MYSQL_5_6` for 1st gen MySQL instances, `MYSQL_5_7` for 2nd gen MySQL instances, or `POSTGRES_9_6` for PostgreSQL instances.
- * `disk_size` _integer_ - in GB (only for 2nd generation instances). Default: `10`
+ * `disk_size` _string_ - in GB (only for 2nd generation instances). Default: `10`
  * `region` _string_ - The geographical region. Default: `us-central`
  * `zone` _string_ - (only for 2nd generation instances)
  * `disk_type` _string_ - (only for 2nd generation instances) Default: `ssd`
  * `failover_replica_name` _string_ - (only for 2nd generation instances) if specified creates a failover replica Default: ``
  * `maintenance_window_day` _integer_ - (only for 2nd generation instances) The day when disruptive updates (updates that require an instance restart) to this Cloud SQL instance can be made. Day of week (1-7), starting on Monday Default: `1`
  * `maintenance_window_hour` _integer_ - (only for 2nd generation instances) The hour of the day when disruptive updates (updates that require an instance restart) to this Cloud SQL instance can be made. Hour of day 0-23 Default: `0`
- * `backups_enabled` _boolean_ - Should daily backups be enabled for the service? Default: `true`
+ * `backups_enabled` _string_ - Should daily backups be enabled for the service? Default: `true`
  * `backup_start_time` _string_ - Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM Default: `06:00`
- * `binlog` _boolean_ - Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use
+ * `binlog` _string_ - Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use
  * `activation_policy` _string_ - The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE. Default: `ON_DEMAND`
  * `authorized_networks` _string_ - A comma separated list without spaces Default: `none`
  * `replication_type` _string_ - The type of replication this instance uses. This can be either ASYNCHRONOUS or SYNCHRONOUS. Default: `SYNCHRONOUS`
@@ -191,7 +191,6 @@ Google Cloud SQL is a fully-managed MySQL database service
 **Response Parameters**
 
  * `Email` _string_ - Email address of the service account
- * `Name` _string_ - The name of the service account
  * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
  * `ProjectId` _string_ - ID of the project that owns the service account
  * `UniqueId` _string_ - Unique and stable id of the service account
@@ -243,9 +242,9 @@ Uses plan: `7d8f9ade-30c1-4c96-b622-ea0205cc5f0b`
 
 ```javascript
 {
-    "backups_enabled": false,
-    "binlog": false,
-    "disk_size": 5
+    "backups_enabled": "false",
+    "binlog": "false",
+    "disk_size": "10"
 }
 ```
 
@@ -278,16 +277,16 @@ Google Cloud SQL is a fully-managed MySQL database service
  * `instance_name` _string_ - Name of the Cloud SQL instance. Default: `a generated value`
  * `database_name` _string_ - Name of the database inside of the instance. Default: `a generated value`
  * `version` _string_ - The database engine type and version. Defaults to `MYSQL_5_6` for 1st gen MySQL instances, `MYSQL_5_7` for 2nd gen MySQL instances, or `POSTGRES_9_6` for PostgreSQL instances.
- * `disk_size` _integer_ - in GB (only for 2nd generation instances). Default: `10`
+ * `disk_size` _string_ - in GB (only for 2nd generation instances). Default: `10`
  * `region` _string_ - The geographical region. Default: `us-central`
  * `zone` _string_ - (only for 2nd generation instances)
  * `disk_type` _string_ - (only for 2nd generation instances) Default: `ssd`
  * `failover_replica_name` _string_ - (only for 2nd generation instances) if specified creates a failover replica Default: ``
  * `maintenance_window_day` _integer_ - (only for 2nd generation instances) The day when disruptive updates (updates that require an instance restart) to this Cloud SQL instance can be made. Day of week (1-7), starting on Monday Default: `1`
  * `maintenance_window_hour` _integer_ - (only for 2nd generation instances) The hour of the day when disruptive updates (updates that require an instance restart) to this Cloud SQL instance can be made. Hour of day 0-23 Default: `0`
- * `backups_enabled` _boolean_ - Should daily backups be enabled for the service? Default: `true`
+ * `backups_enabled` _string_ - Should daily backups be enabled for the service? Default: `true`
  * `backup_start_time` _string_ - Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM Default: `06:00`
- * `binlog` _boolean_ - Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use
+ * `binlog` _string_ - Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use
  * `activation_policy` _string_ - The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE. Default: `ON_DEMAND`
  * `authorized_networks` _string_ - A comma separated list without spaces Default: `none`
  * `replication_type` _string_ - The type of replication this instance uses. This can be either ASYNCHRONOUS or SYNCHRONOUS. Default: `SYNCHRONOUS`
@@ -307,7 +306,6 @@ Google Cloud SQL is a fully-managed MySQL database service
 **Response Parameters**
 
  * `Email` _string_ - Email address of the service account
- * `Name` _string_ - The name of the service account
  * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
  * `ProjectId` _string_ - ID of the project that owns the service account
  * `UniqueId` _string_ - Unique and stable id of the service account
@@ -359,9 +357,9 @@ Uses plan: `2513d4d9-684b-4c3c-add4-6404969006de`
 
 ```javascript
 {
-    "backups_enabled": false,
-    "binlog": false,
-    "disk_size": 5
+    "backups_enabled": "false",
+    "binlog": "false",
+    "disk_size": "10"
 }
 ```
 
@@ -485,7 +483,7 @@ _No parameters supported._
 ### Basic Configuration
 
 
-Create an account with access to your ML models.
+Create an account with developer access to your ML models.
 Uses plan: `be7954e1-ecfb-4936-a0b6-db35e6424c7a`
 
 **Provision**
@@ -498,7 +496,7 @@ Uses plan: `be7954e1-ecfb-4936-a0b6-db35e6424c7a`
 
 ```javascript
 {
-    "role": "ml.modelUser"
+    "role": "ml.developer"
 }
 ```
 
@@ -522,9 +520,9 @@ A global service for real-time and reliable messaging and streaming data
 
  * `topic_name` _string_ - Name of the topic. Default: `a generated value`
  * `subscription_name` _string_ - **Required** Name of the subscription.
- * `is_push` _boolean_ - Are events handled by POSTing to a URL? Default: `false`
+ * `is_push` _string_ - Are events handled by POSTing to a URL? Default: `false`
  * `endpoint` _string_ - If `is_push` == 'true', then this is the URL that will be pused to. Default: ``
- * `ack_deadline` _integer_ - Value is in seconds. Max: 600 This is the maximum time after a subscriber receives a message before the subscriber should acknowledge the message. After message delivery but before the ack deadline expires and before the message is acknowledged, it is an outstanding message and will not be delivered again during that time (on a best-effort basis).  Default: `10`
+ * `ack_deadline` _string_ - Value is in seconds. Max: 600 This is the maximum time after a subscriber receives a message before the subscriber should acknowledge the message. After message delivery but before the ack deadline expires and before the message is acknowledged, it is an outstanding message and will not be delivered again during that time (on a best-effort basis).  Default: `10`
 
 
 ## Binding
@@ -567,32 +565,6 @@ Uses plan: `622f4da3-8731-492a-af29-66a9146f8333`
 {
     "subscription_name": "example_topic_subscription",
     "topic_name": "example_topic"
-}
-```
-
-**Bind**
-
-```javascript
-{
-    "role": "pubsub.publisher"
-}
-```
-
-### Calling a Webhook
-
-
-Call a webhook with the results and increase timeout for latency.
-Uses plan: `622f4da3-8731-492a-af29-66a9146f8333`
-
-**Provision**
-
-```javascript
-{
-    "ack_deadline": 120,
-    "endpoint": "https://web.hook/destination",
-    "is_push": true,
-    "subscription_name": "pusher-subscription",
-    "topic_name": "pusher"
 }
 ```
 

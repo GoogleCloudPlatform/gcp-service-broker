@@ -200,7 +200,7 @@ func init() {
 	replacer := strings.NewReplacer("-", "_")
 	for _, service := range ServiceNameList {
 		env := replacer.Replace(strings.ToUpper(service))
-		viper.BindEnv("service."+service, env)
+		viper.BindEnv("service."+service+".definition", env)
 	}
 }
 

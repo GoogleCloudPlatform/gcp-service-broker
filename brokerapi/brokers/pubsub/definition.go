@@ -60,9 +60,9 @@ func init() {
 			},
 			broker.BrokerVariable{
 				FieldName: "is_push",
-				Type:      broker.JsonTypeBoolean,
+				Type:      broker.JsonTypeString,
 				Details:   `Are events handled by POSTing to a URL?`,
-				Default:   false,
+				Default:   "false",
 			},
 			broker.BrokerVariable{
 				FieldName: "endpoint",
@@ -72,7 +72,7 @@ func init() {
 			},
 			broker.BrokerVariable{
 				FieldName: "ack_deadline",
-				Type:      broker.JsonTypeInteger,
+				Type:      broker.JsonTypeString,
 				Details: `Value is in seconds. Max: 600
 This is the maximum time after a subscriber receives a message
 before the subscriber should acknowledge the message. After message
@@ -80,7 +80,7 @@ delivery but before the ack deadline expires and before the message is
 acknowledged, it is an outstanding message and will not be delivered
 again during that time (on a best-effort basis).
         `,
-				Default: 10,
+				Default: "10",
 			},
 		},
 		BindInputVariables: accountmanagers.ServiceAccountBindInputVariables(),
@@ -105,22 +105,6 @@ again during that time (on a best-effort basis).
 				ProvisionParams: map[string]interface{}{
 					"topic_name":        "example_topic",
 					"subscription_name": "example_topic_subscription",
-				},
-				BindParams: map[string]interface{}{
-					"role": "pubsub.publisher",
-				},
-			},
-
-			broker.ServiceExample{
-				Name:        "Calling a Webhook",
-				Description: "Call a webhook with the results and increase timeout for latency.",
-				PlanId:      "622f4da3-8731-492a-af29-66a9146f8333",
-				ProvisionParams: map[string]interface{}{
-					"topic_name":        "pusher",
-					"subscription_name": "pusher-subscription",
-					"is_push":           true,
-					"endpoint":          "https://web.hook/destination",
-					"ack_deadline":      120,
 				},
 				BindParams: map[string]interface{}{
 					"role": "pubsub.publisher",

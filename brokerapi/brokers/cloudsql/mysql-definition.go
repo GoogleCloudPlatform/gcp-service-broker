@@ -182,9 +182,9 @@ func init() {
 				Description: "An inexpensive MySQL sandbox for developing with no backups.",
 				PlanId:      "7d8f9ade-30c1-4c96-b622-ea0205cc5f0b",
 				ProvisionParams: map[string]interface{}{
-					"backups_enabled": false,
-					"binlog":          false,
-					"disk_size":       5,
+					"backups_enabled": "false",
+					"binlog":          "false",
+					"disk_size":       "10",
 				},
 				BindParams: map[string]interface{}{
 					"role": "cloudsql.editor",

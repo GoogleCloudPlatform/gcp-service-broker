@@ -16,6 +16,7 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -65,4 +66,12 @@ func (br *BrokerResponse) UpdateResponse(res *http.Response) {
 
 func (br *BrokerResponse) InError() bool {
 	return br.Error != nil
+}
+
+func (br *BrokerResponse) String() string {
+	if br.InError() {
+		return fmt.Sprintf("%s %s -> %d, Error: %q)", br.Method, br.Url, br.StatusCode, br.Error)
+	}
+
+	return fmt.Sprintf("%s %s -> %d, %q", br.Method, br.Url, br.StatusCode, br.ResponseBody)
 }
