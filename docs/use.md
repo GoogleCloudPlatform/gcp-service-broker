@@ -167,8 +167,8 @@ Google Cloud SQL is a fully-managed MySQL database service
  * `zone` _string_ - (only for 2nd generation instances)
  * `disk_type` _string_ - (only for 2nd generation instances) Default: `ssd`
  * `failover_replica_name` _string_ - (only for 2nd generation instances) if specified creates a failover replica Default: ``
- * `maintenance_window_day` _integer_ - (only for 2nd generation instances) The day when disruptive updates (updates that require an instance restart) to this Cloud SQL instance can be made. Day of week (1-7), starting on Monday Default: `1`
- * `maintenance_window_hour` _integer_ - (only for 2nd generation instances) The hour of the day when disruptive updates (updates that require an instance restart) to this Cloud SQL instance can be made. Hour of day 0-23 Default: `0`
+ * `maintenance_window_day` _string_ - (only for 2nd generation instances) The day when disruptive updates (updates that require an instance restart) to this Cloud SQL instance can be made. Day of week (1-7), starting on Monday Default: `1`
+ * `maintenance_window_hour` _string_ - (only for 2nd generation instances) The hour of the day when disruptive updates (updates that require an instance restart) to this Cloud SQL instance can be made. Hour of day 0-23 Default: `0`
  * `backups_enabled` _string_ - Should daily backups be enabled for the service? Default: `true`
  * `backup_start_time` _string_ - Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM Default: `06:00`
  * `binlog` _string_ - Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use
@@ -184,7 +184,7 @@ Google Cloud SQL is a fully-managed MySQL database service
 
 
  * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for available roles.
- * `jdbc_uri_format` _boolean_ - if `true`, `uri` field will contain a JDBC formatted URI Default: `false`
+ * `jdbc_uri_format` _string_ - if `true`, `uri` field will contain a JDBC formatted URI Default: `false`
  * `username` _string_ - The SQL username for the account Default: `a generated value`
  * `password` _string_ - The SQL password for the account Default: `a generated value`
 
@@ -282,8 +282,8 @@ Google Cloud SQL is a fully-managed MySQL database service
  * `zone` _string_ - (only for 2nd generation instances)
  * `disk_type` _string_ - (only for 2nd generation instances) Default: `ssd`
  * `failover_replica_name` _string_ - (only for 2nd generation instances) if specified creates a failover replica Default: ``
- * `maintenance_window_day` _integer_ - (only for 2nd generation instances) The day when disruptive updates (updates that require an instance restart) to this Cloud SQL instance can be made. Day of week (1-7), starting on Monday Default: `1`
- * `maintenance_window_hour` _integer_ - (only for 2nd generation instances) The hour of the day when disruptive updates (updates that require an instance restart) to this Cloud SQL instance can be made. Hour of day 0-23 Default: `0`
+ * `maintenance_window_day` _string_ - (only for 2nd generation instances) The day when disruptive updates (updates that require an instance restart) to this Cloud SQL instance can be made. Day of week (1-7), starting on Monday Default: `1`
+ * `maintenance_window_hour` _string_ - (only for 2nd generation instances) The hour of the day when disruptive updates (updates that require an instance restart) to this Cloud SQL instance can be made. Hour of day 0-23 Default: `0`
  * `backups_enabled` _string_ - Should daily backups be enabled for the service? Default: `true`
  * `backup_start_time` _string_ - Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM Default: `06:00`
  * `binlog` _string_ - Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use
@@ -299,7 +299,7 @@ Google Cloud SQL is a fully-managed MySQL database service
 
 
  * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for available roles.
- * `jdbc_uri_format` _boolean_ - if `true`, `uri` field will contain a JDBC formatted URI Default: `false`
+ * `jdbc_uri_format` _string_ - if `true`, `uri` field will contain a JDBC formatted URI Default: `false`
  * `username` _string_ - The SQL username for the account Default: `a generated value`
  * `password` _string_ - The SQL password for the account Default: `a generated value`
 

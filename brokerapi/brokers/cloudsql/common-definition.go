@@ -22,9 +22,9 @@ import (
 var commonBindVariables = append(accountmanagers.ServiceAccountBindInputVariables(),
 	broker.BrokerVariable{
 		FieldName: "jdbc_uri_format",
-		Type:      broker.JsonTypeBoolean,
+		Type:      broker.JsonTypeString,
 		Details:   "if `true`, `uri` field will contain a JDBC formatted URI",
-		Default:   false,
+		Default:   "false",
 	},
 	broker.BrokerVariable{
 		FieldName: "username",
@@ -89,15 +89,15 @@ var commonProvisionVariables = []broker.BrokerVariable{
 	},
 	broker.BrokerVariable{
 		FieldName: "maintenance_window_day",
-		Type:      broker.JsonTypeInteger,
+		Type:      broker.JsonTypeString,
 		Details:   "(only for 2nd generation instances) The day when disruptive updates (updates that require an instance restart) to this Cloud SQL instance can be made. Day of week (1-7), starting on Monday",
-		Default:   1,
+		Default:   "1",
 	},
 	broker.BrokerVariable{
 		FieldName: "maintenance_window_hour",
-		Type:      broker.JsonTypeInteger,
+		Type:      broker.JsonTypeString,
 		Details:   "(only for 2nd generation instances) The hour of the day when disruptive updates (updates that require an instance restart) to this Cloud SQL instance can be made. Hour of day 0-23",
-		Default:   0,
+		Default:   "0",
 	},
 	broker.BrokerVariable{
 		FieldName: "backups_enabled",
