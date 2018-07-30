@@ -96,42 +96,56 @@ func RunExample(client *Client, example broker.ServiceExample, service *broker.B
 	return nil
 }
 
-func pollUntilFinished(client *Client, instanceId string) error {
-	timeout := time.After(15 * time.Minute)
-	tick := time.Tick(15 * time.Second)
+func retry(timeout, period time.Duration, function func() (tryAgain bool, err error)) error {
+	to := time.After(timeout)
+	tick := time.Tick(period)
+
+	if tryAgain, err := function(); !tryAgain {
+		return err
+	}
 
 	// Keep trying until we're timed out or got a result or got an error
 	for {
 		select {
-		case <-timeout:
+		case <-to:
 			return errors.New("Timeout while waiting for result")
 		case <-tick:
-			log.Println("Polling for async job")
-			resp := client.LastOperation(instanceId)
-			if resp.InError() {
-				return resp.Error
-			}
+			tryAgain, err := function()
 
-			if resp.StatusCode != 200 {
-				log.Printf("Bad status code %d, needed 200", resp.StatusCode)
-				continue
-			}
-
-			var responseBody map[string]string
-			err := json.Unmarshal(resp.ResponseBody, &responseBody)
-			if err != nil {
+			if !tryAgain {
 				return err
-			}
-
-			state := responseBody["state"]
-			eq := state == string(brokerapi.Succeeded)
-			log.Printf("Last operation for %q was %q\n", instanceId, state)
-
-			if eq {
-				return nil
 			}
 		}
 	}
+}
+
+func pollUntilFinished(client *Client, instanceId string) error {
+	return retry(15*time.Minute, 15*time.Second, func() (bool, error) {
+		log.Println("Polling for async job")
+
+		resp := client.LastOperation(instanceId)
+		if resp.InError() {
+			return false, resp.Error
+		}
+
+		if resp.StatusCode != 200 {
+			log.Printf("Bad status code %d, needed 200", resp.StatusCode)
+			return true, nil
+		}
+
+		var responseBody map[string]string
+		err := json.Unmarshal(resp.ResponseBody, &responseBody)
+		if err != nil {
+			return false, err
+		}
+
+		state := responseBody["state"]
+		eq := state == string(brokerapi.Succeeded)
+		log.Printf("Last operation for %q was %q\n", instanceId, state)
+
+		return !eq, nil
+
+	})
 }
 
 func newExampleExecutor(client *Client, example broker.ServiceExample, service *broker.BrokerService) (*exampleExecutor, error) {
@@ -219,19 +233,31 @@ func (ee *exampleExecutor) Deprovision() error {
 }
 
 func (ee *exampleExecutor) Unbind() error {
-	log.Printf("Unbinding %s\n", ee.Name)
-	resp := ee.client.Unbind(ee.InstanceId, ee.BindingId, ee.ServiceId, ee.PlanId)
+	// XXX(josephlewis42) Due to some unknown reason, binding Postgres and MySQL
+	// don't wait for all operations to finish before returning even though it
+	// looks like they do so we can get 500 errors back the first few times we try
+	// to unbind. Issue #222 was opened to address this. In the meantime this
+	// is a hack to get around it that will still fail if the 500 errors truly
+	// occur because of a real, unrecoverable, server error.
+	return retry(5*time.Minute, 15*time.Second, func() (bool, error) {
+		log.Printf("Unbinding %s\n", ee.Name)
+		resp := ee.client.Unbind(ee.InstanceId, ee.BindingId, ee.ServiceId, ee.PlanId)
 
-	log.Println(resp.String())
-	if resp.InError() {
-		return resp.Error
-	}
+		log.Println(resp.String())
+		if resp.InError() {
+			return false, resp.Error
+		}
 
-	if resp.StatusCode == 200 {
-		return nil
-	}
+		if resp.StatusCode == 200 {
+			return false, nil
+		}
 
-	return errors.New(fmt.Sprintf("Unexpected response code %d", resp.StatusCode))
+		if resp.StatusCode == 500 {
+			return true, nil
+		}
+
+		return false, errors.New(fmt.Sprintf("Unexpected response code %d", resp.StatusCode))
+	})
 }
 
 func (ee *exampleExecutor) Bind() (json.RawMessage, error) {
