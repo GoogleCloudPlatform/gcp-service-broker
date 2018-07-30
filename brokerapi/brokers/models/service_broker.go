@@ -20,7 +20,6 @@ package models
 import (
 	"encoding/json"
 	"errors"
-	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -178,30 +177,8 @@ const StackdriverDebuggerName = "google-stackdriver-debugger"
 const DatastoreName = "google-datastore"
 const rootSaEnvVar = "ROOT_SERVICE_ACCOUNT_JSON"
 
-var ServiceNameList = []string{
-	StorageName,
-	BigqueryName,
-	BigtableName,
-	CloudsqlMySQLName,
-	CloudsqlPostgresName,
-	PubsubName,
-	MlName,
-	SpannerName,
-	StackdriverTraceName,
-	StackdriverDebuggerName,
-	DatastoreName,
-}
-
 func init() {
 	viper.BindEnv("google.account", rootSaEnvVar)
-
-	// Bind a name of a service like google-datastore to an environment variable
-	// GOOGLE_DATASTORE and a property service.google-datastore
-	replacer := strings.NewReplacer("-", "_")
-	for _, service := range ServiceNameList {
-		env := replacer.Replace(strings.ToUpper(service))
-		viper.BindEnv("service."+service+".definition", env)
-	}
 }
 
 func GetServiceAccountJson() string {

@@ -66,6 +66,16 @@ func GetAllServices() []*BrokerService {
 	return out
 }
 
+func MapServiceIdToName() map[string]string {
+	out := map[string]string{}
+
+	for _, svc := range brokerRegistry {
+		out[svc.CatalogEntry().ID] = svc.Name
+	}
+
+	return out
+}
+
 type BrokerService struct {
 	Name                     string
 	DefaultServiceDefinition string

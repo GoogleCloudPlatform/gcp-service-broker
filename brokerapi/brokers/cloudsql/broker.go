@@ -28,11 +28,11 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 
 	"context"
 
 	"code.cloudfoundry.org/lager"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"golang.org/x/oauth2/jwt"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 )
@@ -86,10 +86,7 @@ func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDe
 	var params map[string]string
 	var err error
 
-	idToNameMap, err := utils.MapServiceIdToName()
-	if err != nil {
-		return models.ServiceInstanceDetails{}, err
-	}
+	idToNameMap := broker.MapServiceIdToName()
 
 	// validate parameters
 

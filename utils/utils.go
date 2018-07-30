@@ -17,30 +17,12 @@
 package utils
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/spf13/viper"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
 )
-
-func MapServiceIdToName() (map[string]string, error) {
-	idToNameMap := make(map[string]string)
-
-	for _, varname := range models.ServiceNameList {
-
-		var svc models.Service
-		if err := json.Unmarshal([]byte(viper.GetString("service."+varname+".definition")), &svc); err != nil {
-			return map[string]string{}, fmt.Errorf("Error getting catalog info for %q: %v (var is %q)", varname, err, viper.GetString(varname))
-		} else {
-			idToNameMap[svc.ID] = svc.Name
-		}
-	}
-
-	return idToNameMap, nil
-}
 
 func GetAuthedConfig() (*jwt.Config, error) {
 	rootCreds := models.GetServiceAccountJson()

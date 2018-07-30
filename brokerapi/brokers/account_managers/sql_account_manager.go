@@ -27,6 +27,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"golang.org/x/oauth2/jwt"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
@@ -178,10 +179,7 @@ func (b *SqlAccountManager) BuildInstanceCredentials(bindRecord models.ServiceBi
 	instanceDetails := instanceRecord.GetOtherDetails()
 	bindDetails := bindRecord.GetOtherDetails()
 
-	service_to_name, err := utils.MapServiceIdToName()
-	if err != nil {
-		return map[string]string{}, err
-	}
+	service_to_name := broker.MapServiceIdToName()
 
 	sid := instanceRecord.ServiceId
 
