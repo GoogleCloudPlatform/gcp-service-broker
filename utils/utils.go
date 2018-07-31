@@ -17,6 +17,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
@@ -42,4 +43,21 @@ func MergeStringMaps(map1 map[string]string, map2 map[string]string) map[string]
 		combined[key] = val
 	}
 	return combined
+}
+
+// Setparameter sets a value on a JSON raw message and returns a modified
+// version with the value set
+func SetParameter(input json.RawMessage, key string, value interface{}) (json.RawMessage, error) {
+	params := make(map[string]interface{})
+
+	if input != nil && len(input) == 0 {
+		err := json.Unmarshal(input, &params)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	params[key] = value
+
+	return json.Marshal(params)
 }

@@ -24,6 +24,20 @@ type Service struct {
 	Plans []ServicePlan `json:"plans"`
 }
 
+// Converts this service to a plain PCF Service definition.
+func (s Service) ToPlain() pcfosb.Service {
+	plain := s.Service
+	plainPlans := []pcfosb.ServicePlan{}
+
+	for _, plan := range s.Plans {
+		plainPlans = append(plainPlans, plan.ServicePlan)
+	}
+
+	plain.Plans = plainPlans
+
+	return plain
+}
+
 // ServicePlan extends the OSB ServicePlan by including a map of key/value
 // pairs that can be used to pass additional information to the back-end.
 type ServicePlan struct {

@@ -22,12 +22,12 @@ import (
 	"os"
 
 	"code.cloudfoundry.org/lager"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/config"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

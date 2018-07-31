@@ -24,6 +24,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/jinzhu/gorm"
+	"github.com/pivotal-cf/brokerapi"
 )
 
 var DbConnection *gorm.DB
@@ -59,7 +60,7 @@ func SoftDeleteInstanceDetails(instanceID string) error {
 	// TODO(cbriant): how do I know if this is a connection error or a does not exist error
 	instance := models.ServiceInstanceDetails{}
 	if err := DbConnection.Where("ID = ?", instanceID).First(&instance).Error; err != nil {
-		return models.ErrInstanceDoesNotExist
+		return brokerapi.ErrInstanceDoesNotExist
 	}
 	return DbConnection.Delete(&instance).Error
 }

@@ -1,4 +1,4 @@
-// Copyright the Service Broker Project Authors.
+// Copyright 2018 the Service Broker Project Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,20 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
-////////////////////////////////////////////////////////////////////////////////
-//
 
-package auth_test
+package utils
 
-import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+import "fmt"
 
-	"testing"
-)
+func ExampleSetParameter() {
+	// Creates an object if none is input
+	out, err := SetParameter(nil, "foo", 42)
+	fmt.Printf("%s, %v\n", string(out), err)
 
-func TestAuth(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Auth Suite")
+	// Replaces existing values
+	out, err = SetParameter([]byte(`{"replace": "old"}`), "replace", "new")
+	fmt.Printf("%s, %v\n", string(out), err)
+
+	// Output: {"foo":42}, <nil>
+	// {"replace":"new"}, <nil>
 }

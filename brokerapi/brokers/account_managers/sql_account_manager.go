@@ -29,6 +29,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 )
@@ -39,10 +40,16 @@ type SqlAccountManager struct {
 }
 
 // inserts a new user into the database and creates new ssl certs
-func (sam *SqlAccountManager) CreateCredentials(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+func (sam *SqlAccountManager) CreateCredentials(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+
+	bindParameters := map[string]interface{}{}
+	if err := json.Unmarshal(details.RawParameters, &bindParameters); err != nil {
+		return models.ServiceBindingCredentials{}, err
+	}
+
 	var err error
-	username, usernameOk := details.Parameters["username"].(string)
-	password, passwordOk := details.Parameters["password"].(string)
+	username, usernameOk := bindParameters["username"].(string)
+	password, passwordOk := bindParameters["password"].(string)
 
 	if !passwordOk || !usernameOk {
 		return models.ServiceBindingCredentials{}, errors.New("Error binding, missing parameters. Required parameters are username and password")

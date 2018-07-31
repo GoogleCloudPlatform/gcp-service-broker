@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"github.com/pivotal-cf/brokerapi"
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/jwt"
@@ -43,10 +44,15 @@ type ServiceAccountManager struct {
 }
 
 // creates a new service account for the given binding id with the role listed in details.Parameters["role"]
-func (sam *ServiceAccountManager) CreateCredentials(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+func (sam *ServiceAccountManager) CreateCredentials(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 	client := sam.HttpConfig.Client(context.Background())
 
-	role, ok := details.Parameters["role"].(string)
+	bindParameters := map[string]interface{}{}
+	if err := json.Unmarshal(details.RawParameters, &bindParameters); err != nil {
+		return models.ServiceBindingCredentials{}, err
+	}
+
+	role, ok := bindParameters["role"].(string)
 	if !ok {
 		return models.ServiceBindingCredentials{}, errors.New("Error getting role as string from request")
 	}

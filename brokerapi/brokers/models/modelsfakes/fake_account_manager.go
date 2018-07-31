@@ -2,17 +2,19 @@
 package modelsfakes
 
 import (
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"sync"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/pivotal-cf/brokerapi"
 )
 
 type FakeAccountManager struct {
-	CreateCredentialsStub        func(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error)
+	CreateCredentialsStub        func(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error)
 	createCredentialsMutex       sync.RWMutex
 	createCredentialsArgsForCall []struct {
 		instanceID string
 		bindingID  string
-		details    models.BindDetails
+		details    brokerapi.BindDetails
 		instance   models.ServiceInstanceDetails
 	}
 	createCredentialsReturns struct {
@@ -41,12 +43,12 @@ type FakeAccountManager struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeAccountManager) CreateCredentials(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+func (fake *FakeAccountManager) CreateCredentials(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 	fake.createCredentialsMutex.Lock()
 	fake.createCredentialsArgsForCall = append(fake.createCredentialsArgsForCall, struct {
 		instanceID string
 		bindingID  string
-		details    models.BindDetails
+		details    brokerapi.BindDetails
 		instance   models.ServiceInstanceDetails
 	}{instanceID, bindingID, details, instance})
 	fake.recordInvocation("CreateCredentials", []interface{}{instanceID, bindingID, details, instance})
@@ -64,7 +66,7 @@ func (fake *FakeAccountManager) CreateCredentialsCallCount() int {
 	return len(fake.createCredentialsArgsForCall)
 }
 
-func (fake *FakeAccountManager) CreateCredentialsArgsForCall(i int) (string, string, models.BindDetails, models.ServiceInstanceDetails) {
+func (fake *FakeAccountManager) CreateCredentialsArgsForCall(i int) (string, string, brokerapi.BindDetails, models.ServiceInstanceDetails) {
 	fake.createCredentialsMutex.RLock()
 	defer fake.createCredentialsMutex.RUnlock()
 	return fake.createCredentialsArgsForCall[i].instanceID, fake.createCredentialsArgsForCall[i].bindingID, fake.createCredentialsArgsForCall[i].details, fake.createCredentialsArgsForCall[i].instance
