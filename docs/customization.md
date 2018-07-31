@@ -15,8 +15,8 @@ Optionally add these to the env section of `manifest.yml`
 update the following variables in `manifest.yml` if you wish to enable these services
 
 * `GOOGLE_CLOUDSQL_MYSQL.plans` (A list of json objects with fields `id`, `name`, `description`, `
-service_properties` (containing `tier`, `pricing_plan`, `max_disk_size`), `display_name`, and `service_id` 
-(Cloud SQL's service id)) - if unset, the service will be disabled. 
+service_properties` (containing `tier`, `pricing_plan`, `max_disk_size`), `display_name`, and `service_id`
+(Cloud SQL's service id)) - if unset, the service will be disabled.
 
 e.g.,
 
@@ -58,8 +58,8 @@ will be disabled. e.g.,
 
 
 * `GOOGLE_BIGTABLE.plans` (A list of json objects with fields `id`, `name`, `description`,
-`service_properties` (containing `storage_type`, `num_nodes`), `display_name`, and `service_id` (Bigtable's service id)) 
-- if unset, the service will be disabled. 
+`service_properties` (containing `storage_type`, `num_nodes`), `display_name`, and `service_id` (Bigtable's service id))
+- if unset, the service will be disabled.
 
 e.g.,
 
@@ -78,8 +78,8 @@ e.g.,
     }
 ]
 ```
-* `GOOGLE_SPANNER.plans` (A list of json objects with fields `id`, `name`, `description`, `service_properties` (containing 
-`num_nodes`), `display_name`, and `service_id` (Spanner's service id)) - if unset, the service will be disabled. 
+* `GOOGLE_SPANNER.plans` (A list of json objects with fields `id`, `name`, `description`, `service_properties` (containing
+`num_nodes`), `display_name`, and `service_id` (Spanner's service id)) - if unset, the service will be disabled.
 
 e.g.,
 
@@ -97,3 +97,19 @@ e.g.,
     }
 ]
 ```
+
+## [Disabling Services Vars](#disable-service)
+
+You can disable services by setting their associated enabled flag to be `false`:
+
+* `GSB_SERVICE_GOOGLE_BIGQUERY_ENABLED`
+* `GSB_SERVICE_GOOGLE_BIGTABLE_ENABLED`
+* `GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_ENABLED`
+* `GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_ENABLED`
+* `GSB_SERVICE_GOOGLE_DATASTORE_ENABLED`
+* `GSB_SERVICE_GOOGLE_ML_APIS_ENABLED`
+* `GSB_SERVICE_GOOGLE_PUBSUB_ENABLED`
+* `GSB_SERVICE_GOOGLE_SPANNER_ENABLED`
+* `GSB_SERVICE_GOOGLE_STACKDRIVER_DEBUGGER_ENABLED`
+* `GSB_SERVICE_GOOGLE_STACKDRIVER_TRACE_ENABLED`
+* `GSB_SERVICE_GOOGLE_STORAGE_ENABLED`
