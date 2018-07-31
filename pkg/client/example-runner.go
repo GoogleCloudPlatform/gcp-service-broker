@@ -12,10 +12,14 @@ import (
 	"github.com/pivotal-cf/brokerapi"
 )
 
+// RunExamples runs all examples against the service broker pointed to by client.
 func RunExamples(client *Client) error {
 	return RunExamplesForService(client, "")
 }
 
+// RunExamplesForService runs all the exmaples for a given service name against
+// the service broker pointed to by client. All examples get run if serviceName
+// is blank.
 func RunExamplesForService(client *Client, serviceName string) error {
 	rand.Seed(time.Now().UTC().UnixNano())
 
@@ -39,6 +43,8 @@ func RunExamplesForService(client *Client, serviceName string) error {
 
 }
 
+// RunExample runs a single example against the given service on the broker
+// pointed to by client.
 func RunExample(client *Client, example broker.ServiceExample, service *broker.BrokerService) error {
 	executor, err := newExampleExecutor(client, example, service)
 	if err != nil {
@@ -189,6 +195,11 @@ type exampleExecutor struct {
 	client *Client
 }
 
+// Provision attempts to create a service instance from the example.
+// Multiple calls to provision will attempt to create a resource with the same
+// ServiceId and details.
+// If the response is an async result, Provision will attempt to wait until
+// the Provision is complete.
 func (ee *exampleExecutor) Provision() error {
 	log.Printf("Provisioning %s\n", ee.Name)
 
@@ -205,7 +216,7 @@ func (ee *exampleExecutor) Provision() error {
 	case 202:
 		return ee.pollUntilFinished()
 	default:
-		return errors.New(fmt.Sprintf("Unexpected response code %d", resp.StatusCode))
+		return fmt.Errorf("Unexpected response code %d", resp.StatusCode)
 	}
 }
 
@@ -213,6 +224,7 @@ func (ee *exampleExecutor) pollUntilFinished() error {
 	return pollUntilFinished(ee.client, ee.InstanceId)
 }
 
+// Deprovision destroys the instance created by a call to Provision.
 func (ee *exampleExecutor) Deprovision() error {
 	log.Printf("Deprovisioning %s\n", ee.Name)
 	resp := ee.client.Deprovision(ee.InstanceId, ee.ServiceId, ee.PlanId)
@@ -228,10 +240,11 @@ func (ee *exampleExecutor) Deprovision() error {
 	case 202:
 		return ee.pollUntilFinished()
 	default:
-		return errors.New(fmt.Sprintf("Unexpected response code %d", resp.StatusCode))
+		return fmt.Errorf("Unexpected response code %d", resp.StatusCode)
 	}
 }
 
+// Unbind unbinds the exact binding created by a call to Bind.
 func (ee *exampleExecutor) Unbind() error {
 	// XXX(josephlewis42) Due to some unknown reason, binding Postgres and MySQL
 	// don't wait for all operations to finish before returning even though it
@@ -256,10 +269,13 @@ func (ee *exampleExecutor) Unbind() error {
 			return true, nil
 		}
 
-		return false, errors.New(fmt.Sprintf("Unexpected response code %d", resp.StatusCode))
+		return false, fmt.Errorf("Unexpected response code %d", resp.StatusCode)
 	})
 }
 
+// Bind executes the bind portion of the create, this can only be called
+// once successfully as subsequent binds will attempt to create bindings with
+// the same ID.
 func (ee *exampleExecutor) Bind() (json.RawMessage, error) {
 	log.Printf("Binding %s\n", ee.Name)
 	resp := ee.client.Bind(ee.InstanceId, ee.BindingId, ee.ServiceId, ee.PlanId, ee.BindParams)
@@ -273,9 +289,11 @@ func (ee *exampleExecutor) Bind() (json.RawMessage, error) {
 		return resp.ResponseBody, nil
 	}
 
-	return nil, errors.New(fmt.Sprintf("Unexpected response code %d", resp.StatusCode))
+	return nil, fmt.Errorf("Unexpected response code %d", resp.StatusCode)
 }
 
+// LogTestInfo writes information about the running example and a manual backout
+// strategy if the test dies part of the way through.
 func (ee *exampleExecutor) LogTestInfo() {
 	log.Printf("Running Example: %s\n", ee.Name)
 
