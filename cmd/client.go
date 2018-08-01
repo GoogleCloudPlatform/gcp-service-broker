@@ -146,7 +146,7 @@ func newClientCommand(use, short string, run func(*client.Client) *client.Broker
 	return &cobra.Command{
 		Use:   use,
 		Short: short,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			apiClient, err := createClient()
 			if err != nil {
 				log.Fatalf("Could not create API client: %s", err)
@@ -160,7 +160,6 @@ func newClientCommand(use, short string, run func(*client.Client) *client.Broker
 			}
 
 			fmt.Println(string(prettyResults))
-			return nil
 		},
 	}
 }
