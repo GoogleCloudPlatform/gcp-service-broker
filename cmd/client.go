@@ -16,10 +16,10 @@ package cmd
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -153,13 +153,7 @@ func newClientCommand(use, short string, run func(*client.Client) *client.Broker
 			}
 
 			results := run(apiClient)
-
-			prettyResults, err := json.MarshalIndent(results, "", "    ")
-			if err != nil {
-				log.Fatalf("Could not format results: %s", err)
-			}
-
-			fmt.Println(string(prettyResults))
+			utils.PrettyPrintOrExit(results)
 		},
 	}
 }

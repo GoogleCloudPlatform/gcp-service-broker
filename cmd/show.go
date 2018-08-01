@@ -15,12 +15,13 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
+	"log"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -47,29 +48,21 @@ func addDumpTableCommand(parent *cobra.Command, name string, value interface{}) 
 	tmp := &cobra.Command{
 		Use:   name,
 		Short: fmt.Sprintf("Show the %s table as JSON", name),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return tableToJson(value)
+		Run: func(cmd *cobra.Command, args []string) {
+			tableToJson(value)
 		},
 	}
 
 	parent.AddCommand(tmp)
 }
 
-func tableToJson(results interface{}) error {
+func tableToJson(results interface{}) {
 	logger := lager.NewLogger("show-command")
 	db := db_service.SetupDb(logger)
 
-	err := db.Find(results).Error
-
-	if err != nil {
-		return err
+	if err := db.Find(results).Error; err != nil {
+		log.Fatal(err)
 	}
 
-	res, err := json.MarshalIndent(results, "", "    ")
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(res))
-	return nil
+	utils.PrettyPrintOrExit(results)
 }
