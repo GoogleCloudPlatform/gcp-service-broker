@@ -15,9 +15,9 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -65,13 +65,8 @@ You can show the known coonfiguration values using:
 		Use:   "show",
 		Short: "Show the config",
 		Long:  `Show the current configuration settings.`,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			pretty, err := json.MarshalIndent(viper.AllSettings(), "", "    ")
-			if err == nil {
-				fmt.Println(string(pretty))
-			}
-
-			return err
+		Run: func(cmd *cobra.Command, args []string) {
+			utils.PrettyPrintOrExit(viper.AllSettings())
 		},
 	})
 

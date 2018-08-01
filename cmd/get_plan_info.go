@@ -18,12 +18,12 @@
 package cmd
 
 import (
-	"encoding/json"
-	"errors"
+	"fmt"
 	"time"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -32,21 +32,16 @@ func init() {
 		Use:   "plan-info",
 		Short: "Dump plan information from the database",
 		Long:  `Dump plan information from the database.`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			logger := lager.NewLogger("get_plan_info_cmd")
 			db := db_service.SetupDb(logger)
 
 			var pds []*PlanDetails
 			if err := db.Find(&pds).Error; err != nil {
-				return errors.New("Could not retrieve plan details rows from db")
+				fmt.Errorf("Could not retrieve plan details rows from db: %s", err)
 			}
 
-			prettybytes, err := json.MarshalIndent(&pds, "", "    ")
-			if err != nil {
-				return errors.New("Could not marshal plan details to json string")
-			}
-			println(string(prettybytes))
-			return nil
+			utils.PrettyPrintOrExit(pds)
 		},
 	})
 }

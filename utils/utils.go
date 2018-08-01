@@ -67,10 +67,31 @@ func MergeStringMaps(map1 map[string]string, map2 map[string]string) map[string]
 // If a failure occurs during marshaling, the error is logged along with a
 // formatted version of the object and the program exits with a failure status.
 func PrettyPrintOrExit(content interface{}) {
-	prettyResults, err := json.MarshalIndent(content, "", "    ")
+	err := prettyPrint(content)
+
 	if err != nil {
 		log.Fatalf("Could not format results: %s, results were: %+v", err, content)
 	}
+}
 
-	fmt.Println(string(prettyResults))
+// PrettyPrintOrErr writes a JSON serialized version of the content to stdout.
+// If a failure occurs during marshaling, the error is logged along with a
+// formatted version of the object and the function will return the error.
+func PrettyPrintOrErr(content interface{}) error {
+	err := prettyPrint(content)
+
+	if err != nil {
+		log.Printf("Could not format results: %s, results were: %+v", err, content)
+	}
+
+	return err
+}
+
+func prettyPrint(content interface{}) error {
+	prettyResults, err := json.MarshalIndent(content, "", "    ")
+	if err == nil {
+		fmt.Println(string(prettyResults))
+	}
+
+	return err
 }
