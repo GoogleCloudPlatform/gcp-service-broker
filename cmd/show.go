@@ -25,56 +25,34 @@ import (
 )
 
 func init() {
+	showCmd := &cobra.Command{
+		Use:   "show",
+		Short: "Show info about the provisioned resources",
+		Long:  `Show info about the provisioned resources`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cmd.Help()
+		},
+	}
+
 	rootCmd.AddCommand(showCmd)
-	showCmd.AddCommand(showMigrationsCmd)
-	showCmd.AddCommand(showBindingsCmd)
-	showCmd.AddCommand(showInstancesCmd)
-	showCmd.AddCommand(showProvisionsCmd)
+
+	addDumpTableCommand(showCmd, "bindings", &[]models.ServiceBindingCredentials{})
+	addDumpTableCommand(showCmd, "instances", &[]models.ServiceInstanceDetails{})
+	addDumpTableCommand(showCmd, "migrations", &[]models.Migration{})
+	addDumpTableCommand(showCmd, "operations", &[]models.CloudOperation{})
+	addDumpTableCommand(showCmd, "provisions", &[]models.ProvisionRequestDetails{})
 }
 
-var showCmd = &cobra.Command{
-	Use:   "show",
-	Short: "Show info about the provisioned resources",
-	Long:  `Show info about the provisioned resources`,
-	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
-	},
-}
+func addDumpTableCommand(parent *cobra.Command, name string, value interface{}) {
+	tmp := &cobra.Command{
+		Use:   name,
+		Short: fmt.Sprintf("Show the %s table as JSON", name),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return tableToJson(value)
+		},
+	}
 
-var showMigrationsCmd = &cobra.Command{
-	Use:   "migrations",
-	Short: "Show info about the migrations",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		var results []models.Migration
-		return tableToJson(&results)
-	},
-}
-
-var showBindingsCmd = &cobra.Command{
-	Use:   "bindings",
-	Short: "Show info about the bindings",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		var results []models.ServiceBindingCredentials
-		return tableToJson(&results)
-	},
-}
-
-var showInstancesCmd = &cobra.Command{
-	Use:   "instances",
-	Short: "Show info about the service instances",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		var results []models.ServiceInstanceDetails
-		return tableToJson(&results)
-	},
-}
-
-var showProvisionsCmd = &cobra.Command{
-	Use:   "provisions",
-	Short: "Show info about the service provision requests",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		var results []models.ProvisionRequestDetails
-		return tableToJson(&results)
-	},
+	parent.AddCommand(tmp)
 }
 
 func tableToJson(results interface{}) error {

@@ -28,29 +28,27 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(planInfoCmd)
-}
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "plan-info",
+		Short: "Dump plan information from the database",
+		Long:  `Dump plan information from the database.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			logger := lager.NewLogger("get_plan_info_cmd")
+			db := db_service.SetupDb(logger)
 
-var planInfoCmd = &cobra.Command{
-	Use:   "plan-info",
-	Short: "Dump plan information from the database",
-	Long:  `Dump plan information from the database.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := lager.NewLogger("get_plan_info_cmd")
-		db := db_service.SetupDb(logger)
+			var pds []*PlanDetails
+			if err := db.Find(&pds).Error; err != nil {
+				return errors.New("Could not retrieve plan details rows from db")
+			}
 
-		var pds []*PlanDetails
-		if err := db.Find(&pds).Error; err != nil {
-			return errors.New("Could not retrieve plan details rows from db")
-		}
-
-		prettybytes, err := json.MarshalIndent(&pds, "", "    ")
-		if err != nil {
-			return errors.New("Could not marshal plan details to json string")
-		}
-		println(string(prettybytes))
-		return nil
-	},
+			prettybytes, err := json.MarshalIndent(&pds, "", "    ")
+			if err != nil {
+				return errors.New("Could not marshal plan details to json string")
+			}
+			println(string(prettybytes))
+			return nil
+		},
+	})
 }
 
 type PlanDetails struct {
