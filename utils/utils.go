@@ -19,6 +19,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/spf13/viper"
@@ -60,4 +61,37 @@ func MergeStringMaps(map1 map[string]string, map2 map[string]string) map[string]
 		combined[key] = val
 	}
 	return combined
+}
+
+// PrettyPrintOrExit writes a JSON serialized version of the content to stdout.
+// If a failure occurs during marshaling, the error is logged along with a
+// formatted version of the object and the program exits with a failure status.
+func PrettyPrintOrExit(content interface{}) {
+	err := prettyPrint(content)
+
+	if err != nil {
+		log.Fatalf("Could not format results: %s, results were: %+v", err, content)
+	}
+}
+
+// PrettyPrintOrErr writes a JSON serialized version of the content to stdout.
+// If a failure occurs during marshaling, the error is logged along with a
+// formatted version of the object and the function will return the error.
+func PrettyPrintOrErr(content interface{}) error {
+	err := prettyPrint(content)
+
+	if err != nil {
+		log.Printf("Could not format results: %s, results were: %+v", err, content)
+	}
+
+	return err
+}
+
+func prettyPrint(content interface{}) error {
+	prettyResults, err := json.MarshalIndent(content, "", "    ")
+	if err == nil {
+		fmt.Println(string(prettyResults))
+	}
+
+	return err
 }

@@ -16,10 +16,10 @@ package cmd
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -35,41 +35,11 @@ var (
 )
 
 func init() {
-	rootCmd.AddCommand(clientCmd)
-	clientCmd.AddCommand(clientCatalogCmd, provisionCmd, deprovisionCmd, bindCmd, unbindCmd, lastCmd, runExamplesCmd)
 
-	resourceSubcommands := []*cobra.Command{provisionCmd, deprovisionCmd, bindCmd, unbindCmd}
-	creationSubcommands := []*cobra.Command{provisionCmd, bindCmd}
-	bindingSubcommands := []*cobra.Command{bindCmd, unbindCmd}
-
-	for _, sc := range resourceSubcommands {
-		sc.Flags().StringVarP(&instanceId, "instanceid", "", "", "id of the service instance to operate on (user defined)")
-		sc.MarkFlagRequired("instanceid")
-		sc.Flags().StringVarP(&serviceId, "serviceid", "", "", "GUID of the service instanceid references (see catalog)")
-		sc.MarkFlagRequired("serviceid")
-		sc.Flags().StringVarP(&planId, "planid", "", "", "GUID of the service instanceid references (see catalog entry for the associated serviceid)")
-		sc.MarkFlagRequired("planid")
-	}
-
-	for _, sc := range creationSubcommands {
-		sc.Flags().StringVarP(&parametersJson, "params", "", "{}", "JSON string of user-defined paramaters to pass to the request")
-	}
-
-	for _, sc := range bindingSubcommands {
-		sc.Flags().StringVarP(&bindingId, "bindingid", "", "", "GUID of the binding to work on (user defined)")
-		sc.MarkFlagRequired("bindingid")
-	}
-
-	lastCmd.Flags().StringVarP(&instanceId, "instanceid", "", "", "id of the service instance to operate on (user defined)")
-	lastCmd.MarkFlagRequired("instanceid")
-
-	runExamplesCmd.Flags().StringVarP(&serviceName, "service-name", "", "", "name of the service to run tests for")
-}
-
-var clientCmd = &cobra.Command{
-	Use:   "client",
-	Short: "A CLI client for the service broker",
-	Long: `A CLI client for the service broker.
+	clientCmd := &cobra.Command{
+		Use:   "client",
+		Short: "A CLI client for the service broker",
+		Long: `A CLI client for the service broker.
 
 The client commands use the same configuration values as the server and operate
 on localhost using the HTTP protocol.
@@ -102,67 +72,88 @@ Non-zero exit codes indicate a failure in the executable.
 Because of the format, you can use the client to do automated testing of your
 user-defined plans.
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
-	},
-}
+		Run: func(cmd *cobra.Command, args []string) {
+			cmd.Help()
+		},
+	}
+	rootCmd.AddCommand(clientCmd)
 
-var clientCatalogCmd = newClientCommand("catalog", "Show the service catalog", func(client *client.Client) *client.BrokerResponse {
-	return client.Catalog()
-})
+	clientCatalogCmd := newClientCommand("catalog", "Show the service catalog", func(client *client.Client) *client.BrokerResponse {
+		return client.Catalog()
+	})
 
-var provisionCmd = newClientCommand("provision", "Provision a service", func(client *client.Client) *client.BrokerResponse {
-	return client.Provision(instanceId, serviceId, planId, json.RawMessage(parametersJson))
-})
+	provisionCmd := newClientCommand("provision", "Provision a service", func(client *client.Client) *client.BrokerResponse {
+		return client.Provision(instanceId, serviceId, planId, json.RawMessage(parametersJson))
+	})
 
-var deprovisionCmd = newClientCommand("deprovision", "Derovision a service", func(client *client.Client) *client.BrokerResponse {
-	return client.Deprovision(instanceId, serviceId, planId)
-})
+	deprovisionCmd := newClientCommand("deprovision", "Derovision a service", func(client *client.Client) *client.BrokerResponse {
+		return client.Deprovision(instanceId, serviceId, planId)
+	})
 
-var bindCmd = newClientCommand("bind", "Bind to a service", func(client *client.Client) *client.BrokerResponse {
-	return client.Bind(instanceId, bindingId, serviceId, planId, json.RawMessage(parametersJson))
-})
+	bindCmd := newClientCommand("bind", "Bind to a service", func(client *client.Client) *client.BrokerResponse {
+		return client.Bind(instanceId, bindingId, serviceId, planId, json.RawMessage(parametersJson))
+	})
 
-var unbindCmd = newClientCommand("unbind", "Unbind a service", func(client *client.Client) *client.BrokerResponse {
-	return client.Unbind(instanceId, bindingId, serviceId, planId)
-})
+	unbindCmd := newClientCommand("unbind", "Unbind a service", func(client *client.Client) *client.BrokerResponse {
+		return client.Unbind(instanceId, bindingId, serviceId, planId)
+	})
 
-var lastCmd = newClientCommand("last", "Get the status of the last operation", func(client *client.Client) *client.BrokerResponse {
-	return client.LastOperation(instanceId)
-})
+	lastCmd := newClientCommand("last", "Get the status of the last operation", func(client *client.Client) *client.BrokerResponse {
+		return client.LastOperation(instanceId)
+	})
 
-var runExamplesCmd = &cobra.Command{
-	Use:   "run-examples",
-	Short: "Run all examples in the use command.",
-	Long: `Run all examples generated by the use command through a
+	runExamplesCmd := &cobra.Command{
+		Use:   "run-examples",
+		Short: "Run all examples in the use command.",
+		Long: `Run all examples generated by the use command through a
 	provision/bind/unbind/deprovision cycle.
 
 	Exits with a 0 if all examples were successful, 1 otherwise.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		apiClient, err := createClient()
-		if err != nil {
-			return err
-		}
+		Run: func(cmd *cobra.Command, args []string) {
+			apiClient, err := createClient()
+			if err != nil {
+				log.Fatalf("Error creating client: %v", err)
+			}
 
-		err = client.RunExamplesForService(apiClient, serviceName)
-		if err != nil {
-			log.Fatalf("Error executing examples: %v", err)
+			if err := client.RunExamplesForService(apiClient, serviceName); err != nil {
+				log.Fatalf("Error executing examples: %v", err)
+			}
+		},
+	}
+
+	clientCmd.AddCommand(clientCatalogCmd, provisionCmd, deprovisionCmd, bindCmd, unbindCmd, lastCmd, runExamplesCmd)
+
+	bindFlag := func(dest *string, name, description string, commands ...*cobra.Command) {
+		for _, sc := range commands {
+			sc.Flags().StringVarP(dest, name, "", "", description)
+			sc.MarkFlagRequired(name)
 		}
-		return nil
-	},
+	}
+
+	bindFlag(&instanceId, "instanceid", "id of the service instance to operate on (user defined)", provisionCmd, deprovisionCmd, bindCmd, unbindCmd, lastCmd)
+	bindFlag(&serviceId, "serviceid", "GUID of the service instanceid references (see catalog)", provisionCmd, deprovisionCmd, bindCmd, unbindCmd)
+	bindFlag(&planId, "planid", "GUID of the service instanceid references (see catalog entry for the associated serviceid)", provisionCmd, deprovisionCmd, bindCmd, unbindCmd)
+	bindFlag(&bindingId, "bindingid", "GUID of the binding to work on (user defined)", bindCmd, unbindCmd)
+
+	for _, sc := range []*cobra.Command{provisionCmd, bindCmd} {
+		sc.Flags().StringVarP(&parametersJson, "params", "", "{}", "JSON string of user-defined paramaters to pass to the request")
+	}
+
+	runExamplesCmd.Flags().StringVarP(&serviceName, "service-name", "", "", "name of the service to run tests for")
 }
 
 func newClientCommand(use, short string, run func(*client.Client) *client.BrokerResponse) *cobra.Command {
 	return &cobra.Command{
 		Use:   use,
 		Short: short,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			apiClient, err := createClient()
 			if err != nil {
-				return err
+				log.Fatalf("Could not create API client: %s", err)
 			}
 
-			return printJsonResults(run(apiClient))
+			results := run(apiClient)
+			utils.PrettyPrintOrExit(results)
 		},
 	}
 }
@@ -173,14 +164,4 @@ func createClient() (*client.Client, error) {
 	port := viper.GetInt("api.port")
 
 	return client.New(user, pass, "localhost", port)
-}
-
-func printJsonResults(results interface{}) error {
-	prettyResults, err := json.MarshalIndent(results, "", "    ")
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(prettyResults))
-	return nil
 }

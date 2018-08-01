@@ -26,18 +26,16 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(migrateCmd)
-}
-
-var migrateCmd = &cobra.Command{
-	Use:   "migrate",
-	Short: "Upgrade your database",
-	Long:  `Upgrade your database to be compatible with this service broker.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		logger := lager.NewLogger("migrations-cmd")
-		db := db_service.SetupDb(logger)
-		if err := db_service.RunMigrations(db); err != nil {
-			log.Fatalf("Error running migrations: %v\n", err)
-		}
-	},
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "migrate",
+		Short: "Upgrade your database",
+		Long:  `Upgrade your database to be compatible with this service broker.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			logger := lager.NewLogger("migrations-cmd")
+			db := db_service.SetupDb(logger)
+			if err := db_service.RunMigrations(db); err != nil {
+				log.Fatalf("Error running migrations: %v\n", err)
+			}
+		},
+	})
 }

@@ -15,24 +15,18 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 func init() {
-	rootCmd.AddCommand(configCmd)
-	configCmd.AddCommand(showConfigCmd)
-	configCmd.AddCommand(showKeysCmd)
-	configCmd.AddCommand(writeConfigCmd)
-}
-
-var configCmd = &cobra.Command{
-	Use:   "config",
-	Short: "Show system configuration",
-	Long: `
+	configCmd := &cobra.Command{
+		Use:   "config",
+		Short: "Show system configuration",
+		Long: `
 The GCP Service Broker can be configured using both environment variables and
 configuration files.
 
@@ -61,40 +55,36 @@ You can show the known coonfiguration values using:
 
   ./gcp-service-broker config show
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
-	},
-}
+		Run: func(cmd *cobra.Command, args []string) {
+			cmd.Help()
+		},
+	}
+	rootCmd.AddCommand(configCmd)
 
-var showConfigCmd = &cobra.Command{
-	Use:   "show",
-	Short: "Show the config",
-	Long:  `Show the current configuration settings.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		pretty, err := json.MarshalIndent(viper.AllSettings(), "", "    ")
-		if err == nil {
-			fmt.Println(string(pretty))
-		}
+	configCmd.AddCommand(&cobra.Command{
+		Use:   "show",
+		Short: "Show the config",
+		Long:  `Show the current configuration settings.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			utils.PrettyPrintOrExit(viper.AllSettings())
+		},
+	})
 
-		return err
-	},
-}
+	configCmd.AddCommand(&cobra.Command{
+		Use:   "keys",
+		Short: "Show all configuration keys",
+		Long:  `Show all the known configuration keys.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			for _, key := range viper.AllKeys() {
+				fmt.Println(key)
+			}
+		},
+	})
 
-var showKeysCmd = &cobra.Command{
-	Use:   "keys",
-	Short: "Show all configuration keys",
-	Long:  `Show all the known configuration keys.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		for _, key := range viper.AllKeys() {
-			fmt.Println(key)
-		}
-	},
-}
-
-var writeConfigCmd = &cobra.Command{
-	Use:   "write",
-	Short: "Write configuration to a file",
-	Long: `Write configuration to a file in a specified format. Valid extensions are:
+	configCmd.AddCommand(&cobra.Command{
+		Use:   "write",
+		Short: "Write configuration to a file",
+		Long: `Write configuration to a file in a specified format. Valid extensions are:
 
  * .json
  * .yml
@@ -115,8 +105,9 @@ out.toml:
     password = "pass"
     port = "3306"
 `,
-	Args: cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return viper.WriteConfigAs(args[0])
-	},
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return viper.WriteConfigAs(args[0])
+		},
+	})
 }

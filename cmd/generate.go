@@ -22,29 +22,29 @@ import (
 )
 
 func init() {
+	generateCmd := &cobra.Command{
+		Use:   "generate",
+		Short: "Generate documentation and tiles",
+		Long:  `Generate documentation and tiles`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cmd.Help()
+		},
+	}
+
+	generateUseCmd := &cobra.Command{
+		Use:   "use",
+		Short: "Generate use markdown file",
+		Long: `Generates the use.md file with:
+
+	 * details about what each service is
+	 * available parameters
+
+	`,
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(generator.CatalogDocumentation())
+		},
+	}
+
 	rootCmd.AddCommand(generateCmd)
 	generateCmd.AddCommand(generateUseCmd)
-}
-
-var generateCmd = &cobra.Command{
-	Use:   "generate",
-	Short: "Generate documentation and tiles",
-	Long:  `Generate documentation and tiles`,
-	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
-	},
-}
-
-var generateUseCmd = &cobra.Command{
-	Use:   "use",
-	Short: "Generate use markdown file",
-	Long: `Generates the use.md file with:
-
- * details about what each service is
- * available parameters
-
-`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(generator.CatalogDocumentation())
-	},
 }
