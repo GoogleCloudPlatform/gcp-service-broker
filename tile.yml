@@ -71,7 +71,120 @@ forms:
     type: text
     label: Client key
     optional: true
-
+- name: enable_disable
+  label: Enable Services
+  description: Enable or Disable Services
+  properties:
+    - name: gsb_service_google_bigquery_enabled
+      label: Let end-users create plans for google_bigquery
+      type: dropdown_select
+      configurable: true
+      default: 'true'
+      options:
+        - name: 'true'
+          label: 'Enable'
+        - name: 'false'
+          label: 'Disable'
+    - name: gsb_service_google_bigtable_enabled
+      label: Let end-users create plans for google_bigtable
+      type: dropdown_select
+      configurable: true
+      default: 'true'
+      options:
+        - name: 'true'
+          label: 'Enable'
+        - name: 'false'
+          label: 'Disable'
+    - name: gsb_service_google_cloudsql_mysql_enabled
+      label: Let end-users create plans for google_cloudsql_mysql
+      type: dropdown_select
+      configurable: true
+      default: 'true'
+      options:
+        - name: 'true'
+          label: 'Enable'
+        - name: 'false'
+          label: 'Disable'
+    - name: gsb_service_google_cloudsql_postgres_enabled
+      label: Let end-users create plans for google_cloudsql_postgres
+      type: dropdown_select
+      configurable: true
+      default: 'true'
+      options:
+        - name: 'true'
+          label: 'Enable'
+        - name: 'false'
+          label: 'Disable'
+    - name: gsb_service_google_datastore_enabled
+      label: Let end-users create plans for google_datastore
+      type: dropdown_select
+      configurable: true
+      default: 'true'
+      options:
+        - name: 'true'
+          label: 'Enable'
+        - name: 'false'
+          label: 'Disable'
+    - name: gsb_service_google_ml_apis_enabled
+      label: Let end-users create plans for google_ml_apis
+      type: dropdown_select
+      configurable: true
+      default: 'true'
+      options:
+        - name: 'true'
+          label: 'Enable'
+        - name: 'false'
+          label: 'Disable'
+    - name: gsb_service_google_pubsub_enabled
+      label: Let end-users create plans for google_pubsub
+      type: dropdown_select
+      configurable: true
+      default: 'true'
+      options:
+        - name: 'true'
+          label: 'Enable'
+        - name: 'false'
+          label: 'Disable'
+    - name: gsb_service_google_spanner_enabled
+      label: Let end-users create plans for google_spanner
+      type: dropdown_select
+      configurable: true
+      default: 'true'
+      options:
+        - name: 'true'
+          label: 'Enable'
+        - name: 'false'
+          label: 'Disable'
+    - name: gsb_service_google_stackdriver_debugger_enabled
+      label: Let end-users create plans for google_stackdriver_debugger
+      type: dropdown_select
+      configurable: true
+      default: 'true'
+      options:
+        - name: 'true'
+          label: 'Enable'
+        - name: 'false'
+          label: 'Disable'
+    - name: gsb_service_google_stackdriver_trace_enabled
+      label: Let end-users create plans for google_stackdriver_trace
+      type: dropdown_select
+      configurable: true
+      default: 'true'
+      options:
+        - name: 'true'
+          label: 'Enable'
+        - name: 'false'
+          label: 'Disable'
+    - name: gsb_service_google_storage_enabled
+      label: Let end-users create plans for google_storage
+      type: dropdown_select
+      configurable: true
+      default: 'true'
+      options:
+        - name: 'true'
+          label: 'Enable'
+        - name: 'false'
+          label: 'Disable'
 
 service_plan_forms:
 - name: cloudsql_mysql_custom_plans
