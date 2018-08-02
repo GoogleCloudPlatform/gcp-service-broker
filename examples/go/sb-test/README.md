@@ -18,7 +18,7 @@ This is not an official Google product.
 
 - Bind the bucket to your app and give the service account storage object admin permissions:
     ```
-    cf bind-service sb-test practice-storage -c '{"role":"storage.objectAdmin"}'
+    cf bind-service sb-test practice-storage -c '{"role":"storage.admin"}'
     ```
 
 - Restage the app so the new environment variables take effect:

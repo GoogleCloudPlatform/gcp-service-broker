@@ -15,83 +15,54 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
+	"log"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/cobra"
 )
 
 func init() {
+	showCmd := &cobra.Command{
+		Use:   "show",
+		Short: "Show info about the provisioned resources",
+		Long:  `Show info about the provisioned resources`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cmd.Help()
+		},
+	}
+
 	rootCmd.AddCommand(showCmd)
-	showCmd.AddCommand(showMigrationsCmd)
-	showCmd.AddCommand(showBindingsCmd)
-	showCmd.AddCommand(showInstancesCmd)
-	showCmd.AddCommand(showProvisionsCmd)
+
+	addDumpTableCommand(showCmd, "bindings", &[]models.ServiceBindingCredentials{})
+	addDumpTableCommand(showCmd, "instances", &[]models.ServiceInstanceDetails{})
+	addDumpTableCommand(showCmd, "migrations", &[]models.Migration{})
+	addDumpTableCommand(showCmd, "operations", &[]models.CloudOperation{})
+	addDumpTableCommand(showCmd, "provisions", &[]models.ProvisionRequestDetails{})
 }
 
-var showCmd = &cobra.Command{
-	Use:   "show",
-	Short: "Show info about the provisioned resources",
-	Long:  `Show info about the provisioned resources`,
-	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
-	},
+func addDumpTableCommand(parent *cobra.Command, name string, value interface{}) {
+	tmp := &cobra.Command{
+		Use:   name,
+		Short: fmt.Sprintf("Show the %s table as JSON", name),
+		Run: func(cmd *cobra.Command, args []string) {
+			tableToJson(value)
+		},
+	}
+
+	parent.AddCommand(tmp)
 }
 
-var showMigrationsCmd = &cobra.Command{
-	Use:   "migrations",
-	Short: "Show info about the migrations",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		var results []models.Migration
-		return tableToJson(&results)
-	},
-}
-
-var showBindingsCmd = &cobra.Command{
-	Use:   "bindings",
-	Short: "Show info about the bindings",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		var results []models.ServiceBindingCredentials
-		return tableToJson(&results)
-	},
-}
-
-var showInstancesCmd = &cobra.Command{
-	Use:   "instances",
-	Short: "Show info about the service instances",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		var results []models.ServiceInstanceDetails
-		return tableToJson(&results)
-	},
-}
-
-var showProvisionsCmd = &cobra.Command{
-	Use:   "provisions",
-	Short: "Show info about the service provision requests",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		var results []models.ProvisionRequestDetails
-		return tableToJson(&results)
-	},
-}
-
-func tableToJson(results interface{}) error {
+func tableToJson(results interface{}) {
 	logger := lager.NewLogger("show-command")
 	db := db_service.SetupDb(logger)
 
-	err := db.Find(results).Error
-
-	if err != nil {
-		return err
+	if err := db.Find(results).Error; err != nil {
+		log.Fatal(err)
 	}
 
-	res, err := json.MarshalIndent(results, "", "    ")
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(res))
-	return nil
+	utils.PrettyPrintOrExit(results)
 }

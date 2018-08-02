@@ -477,7 +477,7 @@ func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details brokerapi.Bi
 	jdbcUriFormat, jdbcUriFormatOk := params["jdbc_uri_format"].(string)
 	credsJSON["UriPrefix"] = ""
 	if jdbcUriFormatOk && jdbcUriFormat == "true" {
-		credsJSON["UriPrefix"] = "jbdc:"
+		credsJSON["UriPrefix"] = "jdbc:"
 	}
 
 	credBytes, err := json.Marshal(&credsJSON)

@@ -26,6 +26,8 @@ import (
 
 var brokerRegistry = make(map[string]*BrokerService)
 
+// Registers a BrokerService with the service registry that various commands
+// poll to create the catalog, documentation, etc.
 func Register(service *BrokerService) {
 	name := service.Name
 
@@ -84,7 +86,7 @@ type BrokerService struct {
 	BindOutputVariables      []BrokerVariable
 	Examples                 []ServiceExample
 
-	// Not modifiable
+	// Not modifiable.
 	serviceDefinition models.Service
 	userDefinedPlans  []models.ServicePlan
 
@@ -124,14 +126,20 @@ func (svc *BrokerService) init() error {
 	return nil
 }
 
+// IsEnabled returns false if the operator has explicitly disabled this service
+// or true otherwise.
 func (svc *BrokerService) IsEnabled() bool {
 	return viper.GetBool(svc.enabledProperty)
 }
 
+// CatalogEntry returns the service broker catalog entry for this service, it
+// has metadata about the service so operators and programmers know which
+// service and plan will work best for their purposes.
 func (svc *BrokerService) CatalogEntry() models.Service {
 	return svc.serviceDefinition
 }
 
+// GetPlanById finds a plan in this service by its UUID.
 func (svc *BrokerService) GetPlanById(planId string) *models.ServicePlan {
 	for _, plan := range svc.CatalogEntry().Plans {
 		if plan.ID == planId {
