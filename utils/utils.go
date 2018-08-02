@@ -79,7 +79,7 @@ func prettyPrint(content interface{}) error {
 	return err
 }
 
-// Setparameter sets a value on a JSON raw message and returns a modified
+// SetParameter sets a value on a JSON raw message and returns a modified
 // version with the value set
 func SetParameter(input json.RawMessage, key string, value interface{}) (json.RawMessage, error) {
 	params := make(map[string]interface{})
