@@ -1,20 +1,23 @@
 package integration_tests
 
 import (
+	"time"
+
 	. "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
 	"github.com/pivotal-cf/brokerapi"
 
 	"golang.org/x/net/context"
 
 	"fmt"
+	"hash/crc32"
+	"net/http"
+	"os"
+
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/fakes"
-	"hash/crc32"
-	"net/http"
-	"os"
 
 	googlepubsub "cloud.google.com/go/pubsub"
 
@@ -122,8 +125,10 @@ func testGenericService(brokerConfig *config.BrokerConfig, gcpBroker *GCPAsyncSe
 	}
 	Expect(binding.DeletedAt).NotTo(BeNil())
 
+	// wait because services don't always show as deleted right away
+	time.Sleep(5 * time.Second)
 	_, err = saService.Get(resourceName).Do()
-	Expect(err).To(HaveOccurred())
+	Expect(err).NotTo(BeNil())
 
 	//
 	// Deprovision

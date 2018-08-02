@@ -42,9 +42,9 @@ import (
 	instancepb "google.golang.org/genproto/googleapis/spanner/admin/instance/v1"
 )
 
-func pollForMaxFiveMins(gcpb *GCPAsyncServiceBroker, instanceId string) error {
+func pollLastOrTimeout(gcpb *GCPAsyncServiceBroker, instanceId string) error {
 	var err error
-	timeout := time.After(5 * time.Minute)
+	timeout := time.After(10 * time.Minute)
 	tick := time.Tick(30 * time.Second)
 
 	// Keep trying until we're timed out or got a result or got an error
@@ -138,7 +138,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			}
 			_, err = gcpBroker.Provision(context.Background(), "integration_test_instance", provisionDetails, true)
 			Expect(err).NotTo(HaveOccurred())
-			pollForMaxFiveMins(gcpBroker, "integration_test_instance")
+			pollLastOrTimeout(gcpBroker, "integration_test_instance")
 
 			// make sure it's in the database
 			var count int
@@ -185,7 +185,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			}
 			_, err = gcpBroker.Deprovision(context.Background(), "integration_test_instance", deprovisionDetails, true)
 			Expect(err).NotTo(HaveOccurred())
-			pollForMaxFiveMins(gcpBroker, "integration_test_instance")
+			pollLastOrTimeout(gcpBroker, "integration_test_instance")
 
 			// make sure the instance is deleted from the db
 			instance := models.ServiceInstanceDetails{}
@@ -221,7 +221,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			}
 			_, err = gcpBroker.Provision(context.Background(), "integration_test_instance", provisionDetails, true)
 			Expect(err).NotTo(HaveOccurred())
-			pollForMaxFiveMins(gcpBroker, "integration_test_instance")
+			pollLastOrTimeout(gcpBroker, "integration_test_instance")
 
 			// make sure it's in the database
 			var count int
@@ -285,7 +285,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 
 			_, err = gcpBroker.Deprovision(context.Background(), "integration_test_instance", deprovisionDetails, true)
 			Expect(err).NotTo(HaveOccurred())
-			pollForMaxFiveMins(gcpBroker, "integration_test_instance")
+			pollLastOrTimeout(gcpBroker, "integration_test_instance")
 
 			// make sure the instance is deleted from the db
 			instance := models.ServiceInstanceDetails{}
@@ -318,7 +318,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			}
 			_, err = gcpBroker.Provision(context.Background(), "integration_test_instance", provisionDetails, true)
 			Expect(err).NotTo(HaveOccurred())
-			err = pollForMaxFiveMins(gcpBroker, "integration_test_instance")
+			err = pollLastOrTimeout(gcpBroker, "integration_test_instance")
 			Expect(err).NotTo(HaveOccurred())
 
 			var count int
