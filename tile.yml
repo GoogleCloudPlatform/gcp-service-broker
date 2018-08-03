@@ -42,97 +42,97 @@ forms:
     service account with owner credentials
   properties:
   - name: root_service_account_json
-    label: Root Service Account JSON
     type: text
+    label: Root Service Account JSON
 - name: database_properties
   label: Database Properties
   description: Connection details for the backing database for the service broker
   properties:
   - name: db_host
+    type: string
     label: Database host
-    type: string
   - name: db_username
-    label: Database username
     type: string
+    label: Database username
     optional: true
   - name: db_password
-    label: Database password
     type: secret
+    label: Database password
     optional: true
   - name: db_port
-    label: Database port (defaults to 3306)
     type: string
     default: "3306"
+    label: Database port (defaults to 3306)
   - name: ca_cert
-    label: Server CA cert
     type: text
+    label: Server CA cert
     optional: true
   - name: client_cert
-    label: Client cert
     type: text
+    label: Client cert
     optional: true
   - name: client_key
-    label: Client key
     type: text
+    label: Client key
     optional: true
 - name: enable_disable
   label: Enable Services
   description: Enable or disable services
   properties:
   - name: gsb_service_google_bigquery_enabled
-    label: Let the broker create and bind Google BigQuery instances
     type: boolean
     default: true
+    label: Let the broker create and bind Google BigQuery instances
     configurable: true
   - name: gsb_service_google_bigtable_enabled
-    label: Let the broker create and bind Google Bigtable instances
     type: boolean
     default: true
+    label: Let the broker create and bind Google Bigtable instances
     configurable: true
   - name: gsb_service_google_cloudsql_mysql_enabled
-    label: Let the broker create and bind Google CloudSQL MySQL instances
     type: boolean
     default: true
+    label: Let the broker create and bind Google CloudSQL MySQL instances
     configurable: true
   - name: gsb_service_google_cloudsql_postgres_enabled
-    label: Let the broker create and bind Google CloudSQL PostgreSQL instances
     type: boolean
     default: true
+    label: Let the broker create and bind Google CloudSQL PostgreSQL instances
     configurable: true
   - name: gsb_service_google_datastore_enabled
-    label: Let the broker create and bind Google Cloud Datastore instances
     type: boolean
     default: true
+    label: Let the broker create and bind Google Cloud Datastore instances
     configurable: true
   - name: gsb_service_google_ml_apis_enabled
-    label: Let the broker create and bind Google Machine Learning APIs instances
     type: boolean
     default: true
+    label: Let the broker create and bind Google Machine Learning APIs instances
     configurable: true
   - name: gsb_service_google_pubsub_enabled
-    label: Let the broker create and bind Google PubSub instances
     type: boolean
     default: true
+    label: Let the broker create and bind Google PubSub instances
     configurable: true
   - name: gsb_service_google_spanner_enabled
-    label: Let the broker create and bind Google Spanner instances
     type: boolean
     default: true
+    label: Let the broker create and bind Google Spanner instances
     configurable: true
   - name: gsb_service_google_stackdriver_debugger_enabled
-    label: Let the broker create and bind Stackdriver Debugger instances
     type: boolean
     default: true
+    label: Let the broker create and bind Stackdriver Debugger instances
     configurable: true
   - name: gsb_service_google_stackdriver_trace_enabled
-    label: Let the broker create and bind Stackdriver Trace instances
     type: boolean
     default: true
+    label: Let the broker create and bind Stackdriver Trace instances
     configurable: true
   - name: gsb_service_google_storage_enabled
-    label: Let the broker create and bind Google Cloud Storage instances
     type: boolean
     default: true
+    label: Let the broker create and bind Google Cloud Storage instances
     configurable: true
 
 service_plan_forms:

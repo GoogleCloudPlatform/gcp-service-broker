@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"log"
 	"sort"
-	"strings"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/viper"
 )
 
@@ -102,8 +102,7 @@ func (svc *BrokerService) init() error {
 
 	// Set up environment variables to be compatible with legacy tile.yml configurations.
 	// Bind a name of a service like google-datastore to an environment variable GOOGLE_DATASTORE
-	replacer := strings.NewReplacer("-", "_")
-	env := replacer.Replace(strings.ToUpper(svc.Name))
+	env := utils.PropertyToEnvUnprefixed(svc.Name)
 	viper.BindEnv(definitionProperty, env)
 
 	// set defaults

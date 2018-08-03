@@ -22,13 +22,17 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 )
 
+// TileFormsSections holds the top level fields in tile.yml responsible for
+// the forms.
 // https://docs.pivotal.io/tiledev/2-2/tile-structure.html
-
 type TileFormsSections struct {
 	Forms            []Form `yaml:"forms"`
 	ServicePlanForms []Form `yaml:"service_plan_forms,omitempty"`
 }
 
+// Form is a PCF Ops Manager compatible form definition used to generate forms.
+// See https://docs.pivotal.io/tiledev/2-2/product-template-reference.html#form-properties
+// for details about the fields.
 type Form struct {
 	Name        string         `yaml:"name"`
 	Label       string         `yaml:"label"`
@@ -36,16 +40,19 @@ type Form struct {
 	Properties  []FormProperty `yaml:"properties"`
 }
 
+// FormOption is an enumerated element for FormProperties that can be selected
+// from. Name is the value and label is the human-readable display name.
 type FormOption struct {
 	Name  string `yaml:"name"`
 	Label string `yaml:"label"`
 }
 
+// FormProperty holds a single form element in a PCF Ops manager form.
 type FormProperty struct {
 	Name         string       `yaml:"name"`
-	Label        string       `yaml:"label,omitempty"`
 	Type         string       `yaml:"type,omitempty"`
 	Default      interface{}  `yaml:"default,omitempty"`
+	Label        string       `yaml:"label,omitempty"`
 	Configurable bool         `yaml:"configurable,omitempty"`
 	Options      []FormOption `yaml:"options,omitempty"`
 	Optional     bool         `yaml:"optional,omitempty"`
