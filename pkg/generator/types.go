@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"sort"
 	"strings"
 	"text/template"
 
@@ -18,8 +17,6 @@ func CatalogDocumentation() string {
 	out := ""
 
 	services := broker.GetAllServices()
-	sort.Slice(services, func(i int, j int) bool { return services[i].Name < services[j].Name })
-
 	for _, svc := range services {
 		out += generateServiceDocumentation(svc)
 		out += "\n"
