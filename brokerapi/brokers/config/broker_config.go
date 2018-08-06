@@ -47,7 +47,11 @@ func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
 		return &BrokerConfig{}, err
 	}
 	bc.HttpConfig = conf
-	bc.Catalog = bc.InitCatalogFromEnv()
+	bc.Catalog, err = bc.InitCatalogFromEnv()
+	if err != nil {
+		return &BrokerConfig{}, err
+	}
+
 	return &bc, nil
 }
 
@@ -67,12 +71,16 @@ func (bc *BrokerConfig) GetCredentialsFromEnv() (models.GCPCredentials, error) {
 }
 
 // pulls SERVICES, PLANS, and environment variables to construct catalog
-func (bc *BrokerConfig) InitCatalogFromEnv() map[string]models.Service {
+func (bc *BrokerConfig) InitCatalogFromEnv() (map[string]models.Service, error) {
 	serviceMap := make(map[string]models.Service)
 
 	for _, service := range broker.GetEnabledServices() {
-		serviceMap[service.CatalogEntry().ID] = service.CatalogEntry()
+		entry, err := service.CatalogEntry()
+		if err != nil {
+			return serviceMap, err
+		}
+		serviceMap[entry.ID] = *entry
 	}
 
-	return serviceMap
+	return serviceMap, nil
 }
