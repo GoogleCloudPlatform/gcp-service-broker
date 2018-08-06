@@ -20,6 +20,8 @@ package datastore
 import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"github.com/pivotal-cf/brokerapi"
 )
 
 type DatastoreBroker struct {
@@ -30,22 +32,22 @@ type InstanceInformation struct {
 }
 
 // No-op, no service is required for Datastore
-func (b *DatastoreBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+func (b *DatastoreBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	return models.ServiceInstanceDetails{}, nil
 }
 
 // No-op, no service is required for Datastore
-func (b *DatastoreBroker) Deprovision(instanceID string, details models.DeprovisionDetails) error {
+func (b *DatastoreBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
 	return nil
 }
 
 // Creates a service account with access to Datastore
-func (b *DatastoreBroker) Bind(instanceID, bindingID string, details models.BindDetails) (models.ServiceBindingCredentials, error) {
-	if details.Parameters == nil {
-		b.Logger.Info("the parameters are nil!")
-		details.Parameters = make(map[string]interface{})
+func (b *DatastoreBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
+	out, err := utils.SetParameter(details.RawParameters, "role", "datastore.user")
+	if err != nil {
+		return models.ServiceBindingCredentials{}, err
 	}
-	details.Parameters["role"] = "datastore.user"
+	details.RawParameters = out
 
 	// Create account
 	newBinding, err := b.AccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
