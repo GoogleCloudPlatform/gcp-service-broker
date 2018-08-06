@@ -21,8 +21,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"github.com/pivotal-cf/brokerapi"
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/jwt"
@@ -41,10 +44,15 @@ type ServiceAccountManager struct {
 }
 
 // creates a new service account for the given binding id with the role listed in details.Parameters["role"]
-func (sam *ServiceAccountManager) CreateCredentials(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+func (sam *ServiceAccountManager) CreateCredentials(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 	client := sam.HttpConfig.Client(context.Background())
 
-	role, ok := details.Parameters["role"].(string)
+	bindParameters := map[string]interface{}{}
+	if err := json.Unmarshal(details.RawParameters, &bindParameters); err != nil {
+		return models.ServiceBindingCredentials{}, err
+	}
+
+	role, ok := bindParameters["role"].(string)
 	if !ok {
 		return models.ServiceBindingCredentials{}, errors.New("Error getting role as string from request")
 	}
@@ -188,4 +196,46 @@ type ServiceAccountInfo struct {
 
 	// the bit to return
 	PrivateKeyData string
+}
+
+func ServiceAccountBindInputVariables() []broker.BrokerVariable {
+	return []broker.BrokerVariable{
+		broker.BrokerVariable{
+			Required:  true,
+			FieldName: "role",
+			Type:      broker.JsonTypeString,
+			Details:   `The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for available roles.`,
+		},
+	}
+}
+
+// Variables output by all brokers that return service account info
+func ServiceAccountBindOutputVariables() []broker.BrokerVariable {
+	return []broker.BrokerVariable{
+		broker.BrokerVariable{
+			FieldName: "Email",
+			Type:      broker.JsonTypeString,
+			Details:   "Email address of the service account",
+		},
+		broker.BrokerVariable{
+			FieldName: "Name",
+			Type:      broker.JsonTypeString,
+			Details:   "The name of the service account",
+		},
+		broker.BrokerVariable{
+			FieldName: "PrivateKeyData",
+			Type:      broker.JsonTypeString,
+			Details:   "Service account private key data. Base-64 encoded JSON.",
+		},
+		broker.BrokerVariable{
+			FieldName: "ProjectId",
+			Type:      broker.JsonTypeString,
+			Details:   "ID of the project that owns the service account",
+		},
+		broker.BrokerVariable{
+			FieldName: "UniqueId",
+			Type:      broker.JsonTypeString,
+			Details:   "Unique and stable id of the service account",
+		},
+	}
 }

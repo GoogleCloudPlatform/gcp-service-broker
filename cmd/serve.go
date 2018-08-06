@@ -22,12 +22,12 @@ import (
 	"os"
 
 	"code.cloudfoundry.org/lager"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/config"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -39,21 +39,19 @@ const (
 )
 
 func init() {
-	rootCmd.AddCommand(serveCmd)
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "serve",
+		Short: "Start the service broker",
+		Long: `Starts the service broker listening on a port defined by the
+	PORT environment variable.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			serve()
+		},
+	})
 
 	viper.BindEnv(apiUserProp, "SECURITY_USER_NAME")
 	viper.BindEnv(apiPasswordProp, "SECURITY_USER_PASSWORD")
 	viper.BindEnv(apiPortProp, "PORT")
-}
-
-var serveCmd = &cobra.Command{
-	Use:   "serve",
-	Short: "Start the service broker",
-	Long: `Starts the service broker listening on a port defined by the
-PORT environment variable.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		serve()
-	},
 }
 
 func serve() {

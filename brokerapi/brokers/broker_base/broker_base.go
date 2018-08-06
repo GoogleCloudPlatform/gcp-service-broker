@@ -20,6 +20,7 @@ package broker_base
 import (
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
 )
 
@@ -30,7 +31,7 @@ type BrokerBase struct {
 	Logger         lager.Logger
 }
 
-func (b *BrokerBase) Bind(instanceID, bindingID string, details models.BindDetails) (models.ServiceBindingCredentials, error) {
+func (b *BrokerBase) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 
 	// Create account
 	newBinding, err := b.AccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
@@ -58,7 +59,7 @@ func (b *BrokerBase) Unbind(creds models.ServiceBindingCredentials) error {
 
 // Does nothing but return an error because Base services are provisioned synchronously so this method should not be called
 func (b *BrokerBase) PollInstance(instanceID string) (bool, error) {
-	return true, models.ErrServiceIsNotAsync
+	return true, brokerapi.ErrAsyncRequired
 }
 
 // Indicates provisioning is done synchronously

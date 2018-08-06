@@ -23,6 +23,7 @@ import (
 	"fmt"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/jinzhu/gorm"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
@@ -136,10 +137,7 @@ func RunMigrations(db *gorm.DB) error {
 			return fmt.Errorf("Error getting authorized http client: %s", err)
 		}
 
-		idToNameMap, err := utils.MapServiceIdToName()
-		if err != nil {
-			return err
-		}
+		idToNameMap := broker.MapServiceIdToName()
 
 		var prs []models.ProvisionRequestDetails
 		if err := DbConnection.Find(&prs).Error; err != nil {

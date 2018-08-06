@@ -28,11 +28,12 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/pivotal-cf/brokerapi"
 
 	"context"
 
 	"code.cloudfoundry.org/lager"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"golang.org/x/oauth2/jwt"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 )
@@ -81,15 +82,12 @@ const MySqlSecondGenDefaultVersion string = "MYSQL_5_7"
 //   - auto_resize (2nd gen only, defaults to false)
 //
 // for more information, see: https://cloud.google.com/sql/docs/admin-api/v1beta4/instances/insert
-func (b *CloudSQLBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+func (b *CloudSQLBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	// validate parameters
 	var params map[string]string
 	var err error
 
-	idToNameMap, err := utils.MapServiceIdToName()
-	if err != nil {
-		return models.ServiceInstanceDetails{}, err
-	}
+	idToNameMap := broker.MapServiceIdToName()
 
 	// validate parameters
 
@@ -335,7 +333,7 @@ func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string
 
 	instance := models.ServiceInstanceDetails{}
 	if err = db_service.DbConnection.Where("ID = ?", instanceId).First(&instance).Error; err != nil {
-		return models.ErrInstanceDoesNotExist
+		return brokerapi.ErrInstanceDoesNotExist
 	}
 
 	sqlService, err := googlecloudsql.New(b.HttpConfig.Client(context.Background()))
@@ -411,36 +409,43 @@ func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string
 }
 
 // generate a new username, password if not provided
-func (b *CloudSQLBroker) ensureUsernamePassword(instanceID, bindingID string, details *models.BindDetails) error {
-	if details.Parameters == nil {
-		details.Parameters = map[string]interface{}{}
+func (b *CloudSQLBroker) ensureUsernamePassword(instanceID, bindingID string, details *brokerapi.BindDetails) error {
+	if details.RawParameters == nil {
+		details.RawParameters = []byte("{}")
 	}
 
-	if v, ok := details.Parameters["username"].(string); !ok || v == "" {
+	tempParams := map[string]interface{}{}
+	err := json.Unmarshal(details.RawParameters, &tempParams)
+	if err != nil {
+		return err
+	}
+
+	if v, ok := tempParams["username"].(string); !ok || v == "" {
 		username, err := name_generator.Sql.GenerateUsername(instanceID, bindingID)
 		if err != nil {
 			return err
 		}
-		details.Parameters["username"] = username
+		tempParams["username"] = username
 	}
-	if v, ok := details.Parameters["password"].(string); !ok || v == "" {
+	if v, ok := tempParams["password"].(string); !ok || v == "" {
 		password, err := name_generator.Sql.GeneratePassword()
 		if err != nil {
 			return err
 		}
-		details.Parameters["password"] = password
+		tempParams["password"] = password
 	}
 
-	return nil
+	details.RawParameters, err = json.Marshal(tempParams)
+	return err
 }
 
 // creates a new username, password, and set of ssl certs for the given instance
 // may be slow to return because CloudSQL operations are async. Timeout may need to be raised to 90 or 120 seconds
-func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details models.BindDetails) (models.ServiceBindingCredentials, error) {
+func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 
 	cloudDb := models.ServiceInstanceDetails{}
 	if err := db_service.DbConnection.Where("ID = ?", instanceID).First(&cloudDb).Error; err != nil {
-		return models.ServiceBindingCredentials{}, models.ErrInstanceDoesNotExist
+		return models.ServiceBindingCredentials{}, brokerapi.ErrInstanceDoesNotExist
 	}
 
 	if err := b.ensureUsernamePassword(instanceID, bindingID, &details); err != nil {
@@ -464,10 +469,15 @@ func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details models.BindD
 		return models.ServiceBindingCredentials{}, err
 	}
 
-	jdbcUriFormat, jdbcUriFormatOk := details.Parameters["jdbc_uri_format"].(string)
+	params := make(map[string]interface{})
+	if err := json.Unmarshal(details.RawParameters, &params); err != nil {
+		return models.ServiceBindingCredentials{}, fmt.Errorf("Error unmarshalling parameters: %s", err)
+	}
+
+	jdbcUriFormat, jdbcUriFormatOk := params["jdbc_uri_format"].(string)
 	credsJSON["UriPrefix"] = ""
 	if jdbcUriFormatOk && jdbcUriFormat == "true" {
-		credsJSON["UriPrefix"] = "jbdc:"
+		credsJSON["UriPrefix"] = "jdbc:"
 	}
 
 	credBytes, err := json.Marshal(&credsJSON)
@@ -533,7 +543,7 @@ func (b *CloudSQLBroker) PollInstance(instanceId string) (bool, error) {
 	var instance models.ServiceInstanceDetails
 
 	if err := db_service.DbConnection.Where("id = ?", instanceId).First(&instance).Error; err != nil {
-		return false, models.ErrInstanceDoesNotExist
+		return false, brokerapi.ErrInstanceDoesNotExist
 	}
 
 	op, err := db_service.GetLastOperation(instanceId)
@@ -585,7 +595,7 @@ func (b *CloudSQLBroker) PollOperation(instance models.ServiceInstanceDetails, o
 	if opStatus.Status == "DONE" && op.OperationType == "CREATE" {
 		pr := models.ProvisionRequestDetails{}
 		if err = db_service.DbConnection.Where("service_instance_id = ?", instance.ID).First(&pr).Error; err != nil {
-			return false, models.ErrInstanceDoesNotExist
+			return false, brokerapi.ErrInstanceDoesNotExist
 		}
 
 		var pd map[string]string
@@ -630,13 +640,13 @@ func (b *CloudSQLBroker) pollOperationUntilDone(op *googlecloudsql.Operation, pr
 }
 
 // issue a delete call on the database instance
-func (b *CloudSQLBroker) Deprovision(instanceId string, details models.DeprovisionDetails) error {
+func (b *CloudSQLBroker) Deprovision(instanceId string, details brokerapi.DeprovisionDetails) error {
 	var err error
 
 	// get the service instnace object
 	instance := models.ServiceInstanceDetails{}
 	if err = db_service.DbConnection.Where("ID = ?", instanceId).First(&instance).Error; err != nil {
-		return models.ErrInstanceDoesNotExist
+		return brokerapi.ErrInstanceDoesNotExist
 	}
 
 	sqlService, err := googlecloudsql.New(b.HttpConfig.Client(context.Background()))

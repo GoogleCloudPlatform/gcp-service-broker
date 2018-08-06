@@ -1,6 +1,8 @@
 package brokers_test
 
 import (
+	"context"
+	"encoding/json"
 	"os"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
@@ -13,6 +15,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/pivotal-cf/brokerapi"
 
 	"code.cloudfoundry.org/lager"
 
@@ -32,10 +35,10 @@ var _ = Describe("Brokers", func() {
 		err                      error
 		logger                   lager.Logger
 		serviceNameToId          map[string]string = make(map[string]string)
-		bqProvisionDetails       models.ProvisionDetails
-		cloudSqlProvisionDetails models.ProvisionDetails
-		storageBindDetails       models.BindDetails
-		storageUnbindDetails     models.UnbindDetails
+		bqProvisionDetails       brokerapi.ProvisionDetails
+		cloudSqlProvisionDetails brokerapi.ProvisionDetails
+		storageBindDetails       brokerapi.BindDetails
+		storageUnbindDetails     brokerapi.UnbindDetails
 		instanceId               string
 		bindingId                string
 	)
@@ -107,31 +110,31 @@ var _ = Describe("Brokers", func() {
 			gcpBroker.ServiceBrokerMap[k] = &modelsfakes.FakeServiceBrokerHelper{
 				ProvisionsAsyncStub:   func() bool { return async },
 				DeprovisionsAsyncStub: func() bool { return async },
-				ProvisionStub: func(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+				ProvisionStub: func(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 					return models.ServiceInstanceDetails{ID: instanceId, OtherDetails: "{\"mynameis\": \"instancename\"}"}, nil
 				},
-				BindStub: func(instanceID, bindingID string, details models.BindDetails) (models.ServiceBindingCredentials, error) {
+				BindStub: func(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 					return models.ServiceBindingCredentials{OtherDetails: "{\"foo\": \"bar\"}"}, nil
 				},
 			}
 		}
 
-		bqProvisionDetails = models.ProvisionDetails{
+		bqProvisionDetails = brokerapi.ProvisionDetails{
 			ServiceID: serviceNameToId[models.BigqueryName],
 			PlanID:    someBigQueryPlanId,
 		}
 
-		cloudSqlProvisionDetails = models.ProvisionDetails{
+		cloudSqlProvisionDetails = brokerapi.ProvisionDetails{
 			ServiceID: serviceNameToId[models.CloudsqlMySQLName],
 			PlanID:    someCloudSQLPlanId,
 		}
 
-		storageBindDetails = models.BindDetails{
+		storageBindDetails = brokerapi.BindDetails{
 			ServiceID: serviceNameToId[models.StorageName],
 			PlanID:    someStoragePlanId,
 		}
 
-		storageUnbindDetails = models.UnbindDetails{
+		storageUnbindDetails = brokerapi.UnbindDetails{
 			ServiceID: serviceNameToId[models.StorageName],
 			PlanID:    someStoragePlanId,
 		}
@@ -154,22 +157,15 @@ var _ = Describe("Brokers", func() {
 
 	Describe("getting broker catalog", func() {
 		It("should have 11 services available", func() {
-			Expect(len(gcpBroker.Services())).To(Equal(11))
-		})
+			serviceList, err := gcpBroker.Services(context.Background())
+			Expect(err).ToNot(HaveOccurred())
 
-		It("should record api fields in the catalog", func() {
-			serviceList := gcpBroker.Services()
-
-			for _, s := range serviceList {
-				if s.ID == serviceNameToId[models.StorageName] || s.ID == serviceNameToId[models.CloudsqlMySQLName] {
-					Expect(len(s.Plans[0].ServiceProperties)).ToNot(Equal(0))
-				}
-			}
-
+			Expect(len(serviceList)).To(Equal(11))
 		})
 
 		It("should have 3 storage plans available", func() {
-			serviceList := gcpBroker.Services()
+			serviceList, err := gcpBroker.Services(context.Background())
+			Expect(err).ToNot(HaveOccurred())
 			for _, s := range serviceList {
 				if s.ID == serviceNameToId[models.StorageName] {
 					Expect(len(s.Plans)).To(Equal(3))
@@ -178,28 +174,31 @@ var _ = Describe("Brokers", func() {
 
 		})
 
-		It("should have 1 cloudsql plan available", func() {
-			serviceList := gcpBroker.Services()
+		It("should have 15 cloudsql plans available", func() {
+			serviceList, err := gcpBroker.Services(context.Background())
+			Expect(err).ToNot(HaveOccurred())
 			for _, s := range serviceList {
 				if s.ID == serviceNameToId[models.CloudsqlMySQLName] {
-					Expect(len(s.Plans)).To(Equal(1))
+					Expect(len(s.Plans)).To(Equal(15))
 				}
 			}
 
 		})
 
-		It("should have 1 bigtable plan available", func() {
-			serviceList := gcpBroker.Services()
+		It("should have 2 bigtable plans available", func() {
+			serviceList, err := gcpBroker.Services(context.Background())
+			Expect(err).ToNot(HaveOccurred())
 			for _, s := range serviceList {
 				if s.ID == serviceNameToId[models.BigtableName] {
-					Expect(len(s.Plans)).To(Equal(1))
+					Expect(len(s.Plans)).To(Equal(2))
 				}
 			}
 
 		})
 
 		It("should have 1 debugger plan available", func() {
-			serviceList := gcpBroker.Services()
+			serviceList, err := gcpBroker.Services(context.Background())
+			Expect(err).ToNot(HaveOccurred())
 			for _, s := range serviceList {
 				if s.ID == serviceNameToId[models.StackdriverDebuggerName] {
 					Expect(len(s.Plans)).To(Equal(1))
@@ -207,14 +206,9 @@ var _ = Describe("Brokers", func() {
 			}
 		})
 
-		It("should error if plan ids are not supplied", func() {
-			os.Setenv("GOOGLE_STACKDRIVER_TRACE", fakes.PlanNoId)
-			_, err := config.NewBrokerConfigFromEnv()
-			Expect(err).To(HaveOccurred())
-		})
-
 		It("should have 1 datastore plan available", func() {
-			serviceList := gcpBroker.Services()
+			serviceList, err := gcpBroker.Services(context.Background())
+			Expect(err).ToNot(HaveOccurred())
 			for _, s := range serviceList {
 				if s.ID == serviceNameToId[models.DatastoreName] {
 					Expect(len(s.Plans)).To(Equal(1))
@@ -223,39 +217,11 @@ var _ = Describe("Brokers", func() {
 		})
 	})
 
-	Describe("updating broker catalog", func() {
-
-		It("should update plans on startup", func() {
-
-			os.Setenv("GOOGLE_CLOUDSQL_MYSQL", fakes.CloudSqlNewPlan)
-
-			newcfg, err := config.NewBrokerConfigFromEnv()
-			Expect(err).ToNot(HaveOccurred())
-			newBroker, err := brokers.New(newcfg, logger)
-			Expect(err).ToNot(HaveOccurred())
-
-			serviceList := newBroker.Services()
-			for _, s := range serviceList {
-				if s.ID == serviceNameToId[models.CloudsqlMySQLName] {
-					Expect(s.Plans[0].Name).To(Equal("newPlan"))
-					Expect(len(s.Plans)).To(Equal(1))
-
-					Expect(err).ToNot(HaveOccurred())
-					Expect(s.Plans[0].ServiceProperties["tier"]).To(Equal("D8"))
-					Expect(s.Plans[0].ServiceProperties["max_disk_size"]).To(Equal("15"))
-
-				}
-			}
-
-		})
-
-	})
-
 	Describe("provision", func() {
 		Context("when the bigquery service id is provided", func() {
 			It("should call bigquery provisioning", func() {
 				bqId := serviceNameToId[models.BigqueryName]
-				_, err := gcpBroker.Provision(instanceId, bqProvisionDetails, true)
+				_, err := gcpBroker.Provision(context.Background(), instanceId, bqProvisionDetails, true)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(gcpBroker.ServiceBrokerMap[bqId].(*modelsfakes.FakeServiceBrokerHelper).ProvisionCallCount()).To(Equal(1))
 			})
@@ -265,15 +231,15 @@ var _ = Describe("Brokers", func() {
 		Context("when too many services are provisioned", func() {
 			It("should return an error", func() {
 				gcpBroker.InstanceLimit = 0
-				_, err := gcpBroker.Provision(instanceId, bqProvisionDetails, true)
+				_, err := gcpBroker.Provision(context.Background(), instanceId, bqProvisionDetails, true)
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(Equal(models.ErrInstanceLimitMet))
+				Expect(err).To(Equal(brokerapi.ErrInstanceLimitMet))
 			})
 		})
 
 		Context("when an unrecognized service is provisioned", func() {
 			It("should return an error", func() {
-				_, err = gcpBroker.Provision(instanceId, models.ProvisionDetails{
+				_, err = gcpBroker.Provision(context.Background(), instanceId, brokerapi.ProvisionDetails{
 					ServiceID: "nope",
 					PlanID:    "nope",
 				}, true)
@@ -283,7 +249,7 @@ var _ = Describe("Brokers", func() {
 
 		Context("when an unrecognized plan is provisioned", func() {
 			It("should return an error", func() {
-				_, err = gcpBroker.Provision(instanceId, models.ProvisionDetails{
+				_, err = gcpBroker.Provision(context.Background(), instanceId, brokerapi.ProvisionDetails{
 					ServiceID: serviceNameToId[models.BigqueryName],
 					PlanID:    "nope",
 				}, true)
@@ -293,16 +259,16 @@ var _ = Describe("Brokers", func() {
 
 		Context("when duplicate services are provisioned", func() {
 			It("should return an error", func() {
-				_, err = gcpBroker.Provision(instanceId, bqProvisionDetails, true)
+				_, err = gcpBroker.Provision(context.Background(), instanceId, bqProvisionDetails, true)
 				Expect(err).NotTo(HaveOccurred())
-				_, err := gcpBroker.Provision(instanceId, bqProvisionDetails, true)
+				_, err := gcpBroker.Provision(context.Background(), instanceId, bqProvisionDetails, true)
 				Expect(err).To(HaveOccurred())
 			})
 		})
 
 		Context("when async provisioning isn't allowed but the service requested requires it", func() {
 			It("should return an error", func() {
-				_, err := gcpBroker.Provision(instanceId, cloudSqlProvisionDetails, false)
+				_, err := gcpBroker.Provision(context.Background(), instanceId, cloudSqlProvisionDetails, false)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -313,9 +279,9 @@ var _ = Describe("Brokers", func() {
 		Context("when the bigquery service id is provided", func() {
 			It("should call bigquery deprovisioning", func() {
 				bqId := serviceNameToId[models.BigqueryName]
-				_, err := gcpBroker.Provision(instanceId, bqProvisionDetails, true)
+				_, err := gcpBroker.Provision(context.Background(), instanceId, bqProvisionDetails, true)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = gcpBroker.Deprovision(instanceId, models.DeprovisionDetails{
+				_, err = gcpBroker.Deprovision(context.Background(), instanceId, brokerapi.DeprovisionDetails{
 					ServiceID: bqId,
 				}, true)
 				Expect(err).NotTo(HaveOccurred())
@@ -325,7 +291,7 @@ var _ = Describe("Brokers", func() {
 
 		Context("when the service doesn't exist", func() {
 			It("should return an error", func() {
-				_, err := gcpBroker.Deprovision(instanceId, models.DeprovisionDetails{
+				_, err := gcpBroker.Deprovision(context.Background(), instanceId, brokerapi.DeprovisionDetails{
 					ServiceID: serviceNameToId[models.BigqueryName],
 				}, true)
 				Expect(err).To(HaveOccurred())
@@ -334,7 +300,7 @@ var _ = Describe("Brokers", func() {
 
 		Context("when async provisioning isn't allowed but the service requested requires it", func() {
 			It("should return an error", func() {
-				_, err := gcpBroker.Deprovision(instanceId, models.DeprovisionDetails{
+				_, err := gcpBroker.Deprovision(context.Background(), instanceId, brokerapi.DeprovisionDetails{
 					ServiceID: serviceNameToId[models.CloudsqlMySQLName],
 				}, false)
 				Expect(err).To(HaveOccurred())
@@ -345,9 +311,9 @@ var _ = Describe("Brokers", func() {
 	Describe("bind", func() {
 		Context("when bind is called on storage", func() {
 			It("it should call storage bind", func() {
-				_, err = gcpBroker.Provision(instanceId, bqProvisionDetails, true)
+				_, err = gcpBroker.Provision(context.Background(), instanceId, bqProvisionDetails, true)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				_, err = gcpBroker.Bind(context.Background(), instanceId, bindingId, storageBindDetails)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*modelsfakes.FakeServiceBrokerHelper).BindCallCount()).To(Equal(1))
 			})
@@ -355,20 +321,20 @@ var _ = Describe("Brokers", func() {
 
 		Context("when bind is called more than once on the same id", func() {
 			It("it should throw an error", func() {
-				_, err = gcpBroker.Provision(instanceId, bqProvisionDetails, true)
+				_, err = gcpBroker.Provision(context.Background(), instanceId, bqProvisionDetails, true)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				_, err = gcpBroker.Bind(context.Background(), instanceId, bindingId, storageBindDetails)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				_, err = gcpBroker.Bind(context.Background(), instanceId, bindingId, storageBindDetails)
 				Expect(err).To(HaveOccurred())
 			})
 		})
 
 		Context("when bind is called", func() {
 			It("it should update credentials with instance information", func() {
-				_, err = gcpBroker.Provision(instanceId, bqProvisionDetails, true)
+				_, err = gcpBroker.Provision(context.Background(), instanceId, bqProvisionDetails, true)
 				Expect(err).NotTo(HaveOccurred())
-				_, err := gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				_, err := gcpBroker.Bind(context.Background(), instanceId, bindingId, storageBindDetails)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*modelsfakes.FakeServiceBrokerHelper).BuildInstanceCredentialsCallCount()).To(Equal(1))
 			})
@@ -379,11 +345,11 @@ var _ = Describe("Brokers", func() {
 	Describe("unbind", func() {
 		Context("when unbind is called on storage", func() {
 			It("it should call storage unbind", func() {
-				_, err = gcpBroker.Provision(instanceId, bqProvisionDetails, true)
+				_, err = gcpBroker.Provision(context.Background(), instanceId, bqProvisionDetails, true)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				_, err = gcpBroker.Bind(context.Background(), instanceId, bindingId, storageBindDetails)
 				Expect(err).NotTo(HaveOccurred())
-				err = gcpBroker.Unbind(instanceId, bindingId, storageUnbindDetails)
+				err = gcpBroker.Unbind(context.Background(), instanceId, bindingId, storageUnbindDetails)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*modelsfakes.FakeServiceBrokerHelper).UnbindCallCount()).To(Equal(1))
 			})
@@ -391,13 +357,13 @@ var _ = Describe("Brokers", func() {
 
 		Context("when unbind is called more than once on the same id", func() {
 			It("it should throw an error", func() {
-				_, err = gcpBroker.Provision(instanceId, bqProvisionDetails, true)
+				_, err = gcpBroker.Provision(context.Background(), instanceId, bqProvisionDetails, true)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = gcpBroker.Bind(instanceId, bindingId, storageBindDetails)
+				_, err = gcpBroker.Bind(context.Background(), instanceId, bindingId, storageBindDetails)
 				Expect(err).NotTo(HaveOccurred())
-				err = gcpBroker.Unbind(instanceId, bindingId, storageUnbindDetails)
+				err = gcpBroker.Unbind(context.Background(), instanceId, bindingId, storageUnbindDetails)
 				Expect(err).NotTo(HaveOccurred())
-				err = gcpBroker.Unbind(instanceId, bindingId, storageUnbindDetails)
+				err = gcpBroker.Unbind(context.Background(), instanceId, bindingId, storageUnbindDetails)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -406,25 +372,25 @@ var _ = Describe("Brokers", func() {
 	Describe("lastOperation", func() {
 		Context("when last operation is called on a service that doesn't exist", func() {
 			It("should throw an error", func() {
-				_, err = gcpBroker.LastOperation("somethingnonexistant")
+				_, err = gcpBroker.LastOperation(context.Background(), "somethingnonexistant", "operationtoken")
 				Expect(err).To(HaveOccurred())
 			})
 		})
 
 		Context("when last operation is called on a service that is provisioned synchronously", func() {
 			It("should throw an error", func() {
-				_, err = gcpBroker.Provision(instanceId, bqProvisionDetails, true)
+				_, err = gcpBroker.Provision(context.Background(), instanceId, bqProvisionDetails, true)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = gcpBroker.LastOperation(instanceId)
+				_, err = gcpBroker.LastOperation(context.Background(), instanceId, "operationtoken")
 				Expect(err).To(HaveOccurred())
 			})
 		})
 
 		Context("when last operation is called on an asynchronous service", func() {
 			It("should call PollInstance", func() {
-				_, err = gcpBroker.Provision(instanceId, cloudSqlProvisionDetails, true)
+				_, err = gcpBroker.Provision(context.Background(), instanceId, cloudSqlProvisionDetails, true)
 				Expect(err).NotTo(HaveOccurred())
-				_, err = gcpBroker.LastOperation(instanceId)
+				_, err = gcpBroker.LastOperation(context.Background(), instanceId, "operationtoken")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.CloudsqlMySQLName]].(*modelsfakes.FakeServiceBrokerHelper).PollInstanceCallCount()).To(Equal(1))
 			})
@@ -462,12 +428,12 @@ var _ = Describe("AccountManagers", func() {
 		name_generator.New()
 
 		accountManager = modelsfakes.FakeAccountManager{
-			CreateCredentialsStub: func(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+			CreateCredentialsStub: func(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 				return models.ServiceBindingCredentials{OtherDetails: "{}"}, nil
 			},
 		}
 		sqlAccountManager = modelsfakes.FakeAccountManager{
-			CreateCredentialsStub: func(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+			CreateCredentialsStub: func(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 				return models.ServiceBindingCredentials{OtherDetails: "{}"}, nil
 			},
 		}
@@ -494,7 +460,7 @@ var _ = Describe("AccountManagers", func() {
 	Describe("bind", func() {
 		Context("when bind is called on an iam-style broker", func() {
 			It("should call the account manager create account in google method", func() {
-				_, err = iamStyleBroker.Bind("foo", "bar", models.BindDetails{})
+				_, err = iamStyleBroker.Bind("foo", "bar", brokerapi.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 			})
@@ -503,7 +469,7 @@ var _ = Describe("AccountManagers", func() {
 		Context("when bind is called on a cloudsql broker after provision", func() {
 			It("should call the account manager create account in google method", func() {
 				db_service.DbConnection.Save(&models.ServiceInstanceDetails{ID: "foo"})
-				_, err = iamStyleBroker.Bind("foo", "bar", models.BindDetails{})
+				_, err = iamStyleBroker.Bind("foo", "bar", brokerapi.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 			})
@@ -511,7 +477,7 @@ var _ = Describe("AccountManagers", func() {
 
 		Context("when bind is called on a cloudsql broker on a missing service instance", func() {
 			It("should throw an error", func() {
-				_, err = cloudsqlBroker.Bind("foo", "bar", models.BindDetails{})
+				_, err = cloudsqlBroker.Bind("foo", "bar", brokerapi.BindDetails{})
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -520,16 +486,22 @@ var _ = Describe("AccountManagers", func() {
 			It("should return a generated username and password", func() {
 				db_service.DbConnection.Create(&models.ServiceInstanceDetails{ID: "foo"})
 
-				_, err := cloudsqlBroker.Bind("foo", "bar", models.BindDetails{})
+				_, err := cloudsqlBroker.Bind("foo", "bar", brokerapi.BindDetails{})
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 				Expect(sqlAccountManager.CreateCredentialsCallCount()).To(Equal(1))
 				_, _, details, _ := accountManager.CreateCredentialsArgsForCall(0)
-				Expect(details.Parameters).NotTo(BeEmpty())
 
-				username, usernameOk := details.Parameters["username"].(string)
-				password, passwordOk := details.Parameters["password"].(string)
+				rawparams := details.GetRawParameters()
+				params := make(map[string]interface{})
+				err = json.Unmarshal(rawparams, &params)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(params).NotTo(BeEmpty())
+
+				username, usernameOk := params["username"].(string)
+				password, passwordOk := params["password"].(string)
 
 				Expect(usernameOk).To(BeTrue())
 				Expect(passwordOk).To(BeTrue())

@@ -22,13 +22,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
-	"golang.org/x/oauth2/jwt"
-	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 	"net/url"
 	"time"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"github.com/pivotal-cf/brokerapi"
+	"golang.org/x/oauth2/jwt"
+	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 )
 
 type SqlAccountManager struct {
@@ -37,10 +40,16 @@ type SqlAccountManager struct {
 }
 
 // inserts a new user into the database and creates new ssl certs
-func (sam *SqlAccountManager) CreateCredentials(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+func (sam *SqlAccountManager) CreateCredentials(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+
+	bindParameters := map[string]interface{}{}
+	if err := json.Unmarshal(details.RawParameters, &bindParameters); err != nil {
+		return models.ServiceBindingCredentials{}, err
+	}
+
 	var err error
-	username, usernameOk := details.Parameters["username"].(string)
-	password, passwordOk := details.Parameters["password"].(string)
+	username, usernameOk := bindParameters["username"].(string)
+	password, passwordOk := bindParameters["password"].(string)
 
 	if !passwordOk || !usernameOk {
 		return models.ServiceBindingCredentials{}, errors.New("Error binding, missing parameters. Required parameters are username and password")
@@ -69,9 +78,9 @@ func (sam *SqlAccountManager) CreateCredentials(instanceID string, bindingID str
 
 	var creds SqlAccountInfo
 	// create ssl certs
-        certname := bindingID + "cert"
+	certname := bindingID + "cert"
 	if len(bindingID) >= 10 {
- 		certname = bindingID[:10] + "cert"
+		certname = bindingID[:10] + "cert"
 	}
 	newCert, err := sqlService.SslCerts.Insert(sam.ProjectId, instance.Name, &googlecloudsql.SslCertsInsertRequest{
 		CommonName: certname,
@@ -177,10 +186,7 @@ func (b *SqlAccountManager) BuildInstanceCredentials(bindRecord models.ServiceBi
 	instanceDetails := instanceRecord.GetOtherDetails()
 	bindDetails := bindRecord.GetOtherDetails()
 
-	service_to_name, err := utils.MapServiceIdToName()
-	if err != nil {
-		return map[string]string{}, err
-	}
+	service_to_name := broker.MapServiceIdToName()
 
 	sid := instanceRecord.ServiceId
 

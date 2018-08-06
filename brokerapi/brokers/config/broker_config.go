@@ -22,10 +22,9 @@ import (
 	"fmt"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
-	"github.com/spf13/viper"
 	"golang.org/x/oauth2/jwt"
-	"gopkg.in/validator.v2"
 )
 
 type BrokerConfig struct {
@@ -48,11 +47,7 @@ func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
 		return &BrokerConfig{}, err
 	}
 	bc.HttpConfig = conf
-	cat, err := bc.InitCatalogFromEnv()
-	if err != nil {
-		return &BrokerConfig{}, err
-	}
-	bc.Catalog = cat
+	bc.Catalog = bc.InitCatalogFromEnv()
 	return &bc, nil
 }
 
@@ -72,25 +67,12 @@ func (bc *BrokerConfig) GetCredentialsFromEnv() (models.GCPCredentials, error) {
 }
 
 // pulls SERVICES, PLANS, and environment variables to construct catalog
-func (bc *BrokerConfig) InitCatalogFromEnv() (map[string]models.Service, error) {
-
-	// set up services
+func (bc *BrokerConfig) InitCatalogFromEnv() map[string]models.Service {
 	serviceMap := make(map[string]models.Service)
 
-	for _, varname := range models.ServiceNameList {
-
-		var svc models.Service
-		if err := json.Unmarshal([]byte(viper.GetString("service."+varname)), &svc); err != nil {
-			return map[string]models.Service{}, fmt.Errorf("Error getting catalog info for %q: %v (var is %q)", varname, err, viper.GetString(varname))
-		} else {
-			if errs := validator.Validate(svc); errs != nil {
-				return map[string]models.Service{}, errs
-			} else {
-				serviceMap[svc.ID] = svc
-			}
-		}
-
+	for _, service := range broker.GetEnabledServices() {
+		serviceMap[service.CatalogEntry().ID] = service.CatalogEntry()
 	}
 
-	return serviceMap, nil
+	return serviceMap
 }

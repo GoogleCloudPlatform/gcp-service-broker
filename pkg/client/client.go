@@ -91,6 +91,13 @@ func (client *Client) Unbind(instanceId, bindingId, serviceId, planId string) *B
 	return client.makeRequest(http.MethodDelete, url, nil)
 }
 
+// LastOperation queries the status of a long-running job on the server
+func (client *Client) LastOperation(instanceId string) *BrokerResponse {
+	url := fmt.Sprintf("service_instances/%s/last_operation", instanceId)
+
+	return client.makeRequest(http.MethodGet, url, nil)
+}
+
 func (client *Client) makeRequest(method, path string, body interface{}) *BrokerResponse {
 	br := BrokerResponse{}
 

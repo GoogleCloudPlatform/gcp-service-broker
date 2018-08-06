@@ -11,20 +11,27 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
-////////////////////////////////////////////////////////////////////////////////
-//
 
-package auth_test
+package broker
 
-import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
-	"testing"
+const (
+	JsonTypeString  JsonType = "string"
+	JsonTypeNumeric JsonType = "number"
+	JsonTypeInteger JsonType = "integer"
+	JsonTypeBoolean JsonType = "boolean"
 )
 
-func TestAuth(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Auth Suite")
+type JsonType string
+
+type BrokerVariable struct {
+	// Is this variable required?
+	Required bool
+	// The name of the JSON field this variable serializes/deserializes to
+	FieldName string
+	// The JSONSchema type of the field
+	Type JsonType
+	// Human readable info about the field.
+	Details string
+	// The default value of the field.
+	Default interface{}
 }

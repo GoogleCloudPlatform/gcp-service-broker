@@ -18,16 +18,18 @@
 package bigtable
 
 import (
-	googlebigtable "cloud.google.com/go/bigtable"
 	"encoding/json"
 	"fmt"
+	"strconv"
+
+	googlebigtable "cloud.google.com/go/bigtable"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
-	"strconv"
 )
 
 type BigTableBroker struct {
@@ -45,7 +47,7 @@ var StorageTypes = map[string]googlebigtable.StorageType{
 
 // Creates a new Bigtable Instance identified by the name provided in details.RawParameters.name and
 // optional cluster_id (a default will be supplied), display_name, and zone (defaults to us-east1-b)
-func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+func (b *BigTableBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 	var params map[string]string
 
@@ -128,7 +130,7 @@ func (b *BigTableBroker) Provision(instanceId string, details models.ProvisionDe
 }
 
 // deletes the instance associated with the given instanceID string
-func (b *BigTableBroker) Deprovision(instanceID string, details models.DeprovisionDetails) error {
+func (b *BigTableBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
 	var err error
 	ctx := context.Background()
 	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
@@ -139,7 +141,7 @@ func (b *BigTableBroker) Deprovision(instanceID string, details models.Deprovisi
 
 	instance := models.ServiceInstanceDetails{}
 	if err = db_service.DbConnection.Where("ID = ?", instanceID).First(&instance).Error; err != nil {
-		return models.ErrInstanceDoesNotExist
+		return brokerapi.ErrInstanceDoesNotExist
 	}
 
 	if err = service.DeleteInstance(ctx, instance.Name); err != nil {

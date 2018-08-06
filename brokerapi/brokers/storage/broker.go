@@ -18,13 +18,15 @@
 package storage
 
 import (
-	googlestorage "cloud.google.com/go/storage"
 	"encoding/json"
 	"fmt"
+
+	googlestorage "cloud.google.com/go/storage"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
 )
@@ -39,7 +41,7 @@ type InstanceInformation struct {
 
 // creates a new bucket with the name given in provision details and optional location
 // (defaults to "US", for acceptable location values see: https://cloud.google.com/storage/docs/bucket-locations)
-func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+func (b *StorageBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 
 	storageClass := plan.ServiceProperties["storage_class"]
@@ -106,10 +108,10 @@ func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDet
 
 // Deletes the bucket associated with the given instance id
 // Note that all objects within the bucket must be deleted first
-func (b *StorageBroker) Deprovision(instanceID string, details models.DeprovisionDetails) error {
+func (b *StorageBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
 	bucket := models.ServiceInstanceDetails{}
 	if err := db_service.DbConnection.Where("ID = ?", instanceID).First(&bucket).Error; err != nil {
-		return models.ErrInstanceDoesNotExist
+		return brokerapi.ErrInstanceDoesNotExist
 	}
 
 	ctx := context.Background()

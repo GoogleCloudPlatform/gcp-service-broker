@@ -19,28 +19,21 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"strings"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/spf13/viper"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
 )
 
-func MapServiceIdToName() (map[string]string, error) {
-	idToNameMap := make(map[string]string)
+const (
+	EnvironmentVarPrefix = "gsb"
+)
 
-	for _, varname := range models.ServiceNameList {
-
-		var svc models.Service
-		if err := json.Unmarshal([]byte(viper.GetString("service."+varname)), &svc); err != nil {
-			return map[string]string{}, fmt.Errorf("Error getting catalog info for %q: %v (var is %q)", varname, err, viper.GetString(varname))
-		} else {
-			idToNameMap[svc.ID] = svc.Name
-		}
-	}
-
-	return idToNameMap, nil
-}
+var (
+	PropertyToEnvReplacer = strings.NewReplacer(".", "_", "-", "_")
+)
 
 func GetAuthedConfig() (*jwt.Config, error) {
 	rootCreds := models.GetServiceAccountJson()
@@ -60,4 +53,65 @@ func MergeStringMaps(map1 map[string]string, map2 map[string]string) map[string]
 		combined[key] = val
 	}
 	return combined
+}
+
+// PrettyPrintOrExit writes a JSON serialized version of the content to stdout.
+// If a failure occurs during marshaling, the error is logged along with a
+// formatted version of the object and the program exits with a failure status.
+func PrettyPrintOrExit(content interface{}) {
+	err := prettyPrint(content)
+
+	if err != nil {
+		log.Fatalf("Could not format results: %s, results were: %+v", err, content)
+	}
+}
+
+// PrettyPrintOrErr writes a JSON serialized version of the content to stdout.
+// If a failure occurs during marshaling, the error is logged along with a
+// formatted version of the object and the function will return the error.
+func PrettyPrintOrErr(content interface{}) error {
+	err := prettyPrint(content)
+
+	if err != nil {
+		log.Printf("Could not format results: %s, results were: %+v", err, content)
+	}
+
+	return err
+}
+
+func prettyPrint(content interface{}) error {
+	prettyResults, err := json.MarshalIndent(content, "", "    ")
+	if err == nil {
+		fmt.Println(string(prettyResults))
+	}
+
+	return err
+}
+
+// PropertyToEnv converts a Viper configuration property name into an
+// environment variable prefixed with EnvironmentVarPrefix
+func PropertyToEnv(propertyName string) string {
+	return PropertyToEnvUnprefixed(EnvironmentVarPrefix + "." + propertyName)
+}
+
+// PropertyToEnvUnprefixed converts a Viper configuration property name into an
+// environment variable using PropertyToEnvReplacer
+func PropertyToEnvUnprefixed(propertyName string) string {
+	return PropertyToEnvReplacer.Replace(strings.ToUpper(propertyName))
+
+// SetParameter sets a value on a JSON raw message and returns a modified
+// version with the value set
+func SetParameter(input json.RawMessage, key string, value interface{}) (json.RawMessage, error) {
+	params := make(map[string]interface{})
+
+	if input != nil && len(input) != 0 {
+		err := json.Unmarshal(input, &params)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	params[key] = value
+
+	return json.Marshal(params)
 }
