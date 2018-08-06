@@ -16,6 +16,20 @@ package utils
 
 import "fmt"
 
+func ExamplePropertyToEnv() {
+	env := PropertyToEnv("my.property.key-value")
+	fmt.Println(env)
+
+	// Output: GSB_MY_PROPERTY_KEY_VALUE
+}
+
+func ExamplePropertyToEnvUnprefixed() {
+	env := PropertyToEnvUnprefixed("my.property.key-value")
+	fmt.Println(env)
+
+	// Output: MY_PROPERTY_KEY_VALUE
+}
+
 func ExampleSetParameter() {
 	// Creates an object if none is input
 	out, err := SetParameter(nil, "foo", 42)

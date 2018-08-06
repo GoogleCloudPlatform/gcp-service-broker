@@ -18,9 +18,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strings"
+	"sort"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/viper"
 )
 
@@ -47,7 +48,7 @@ func Register(service *BrokerService) {
 func GetEnabledServices() []*BrokerService {
 	var out []*BrokerService
 
-	for _, svc := range brokerRegistry {
+	for _, svc := range GetAllServices() {
 		if svc.IsEnabled() {
 			out = append(out, svc)
 		}
@@ -57,13 +58,17 @@ func GetEnabledServices() []*BrokerService {
 }
 
 // GetAllServices returns a list of all registered brokers whether or not the
-// user has enabled them.
+// user has enabled them. The brokers are sorted in lexocographic order based
+// on name.
 func GetAllServices() []*BrokerService {
 	var out []*BrokerService
 
 	for _, svc := range brokerRegistry {
 		out = append(out, svc)
 	}
+
+	// Sort by name so there's a consistent order in the UI and tests.
+	sort.Slice(out, func(i int, j int) bool { return out[i].Name < out[j].Name })
 
 	return out
 }
@@ -89,31 +94,24 @@ type BrokerService struct {
 	// Not modifiable.
 	serviceDefinition models.Service
 	userDefinedPlans  []models.ServicePlan
-
-	enabledProperty          string
-	userDefinedPlansProperty string
-	definitionProperty       string
 }
 
 func (svc *BrokerService) init() error {
-	// create properties
-	svc.definitionProperty = fmt.Sprintf("service.%s.definition", svc.Name)
-	svc.enabledProperty = fmt.Sprintf("service.%s.enabled", svc.Name)
-	svc.userDefinedPlansProperty = fmt.Sprintf("service.%s.plans", svc.Name)
+
+	definitionProperty := svc.DefinitionProperty()
 
 	// Set up environment variables to be compatible with legacy tile.yml configurations.
 	// Bind a name of a service like google-datastore to an environment variable GOOGLE_DATASTORE
-	replacer := strings.NewReplacer("-", "_")
-	env := replacer.Replace(strings.ToUpper(svc.Name))
-	viper.BindEnv(svc.definitionProperty, env)
+	env := utils.PropertyToEnvUnprefixed(svc.Name)
+	viper.BindEnv(definitionProperty, env)
 
 	// set defaults
-	viper.SetDefault(svc.definitionProperty, svc.DefaultServiceDefinition)
-	viper.SetDefault(svc.enabledProperty, true)
-	viper.SetDefault(svc.userDefinedPlansProperty, "[]")
+	viper.SetDefault(definitionProperty, svc.DefaultServiceDefinition)
+	viper.SetDefault(svc.EnabledProperty(), true)
+	viper.SetDefault(svc.UserDefinedPlansProperty(), "[]")
 
 	// Parse the service definition from the properties
-	rawDefinition := []byte(viper.GetString(svc.definitionProperty))
+	rawDefinition := []byte(viper.GetString(definitionProperty))
 
 	var defn models.Service
 	if err := json.Unmarshal(rawDefinition, &defn); err != nil {
@@ -126,10 +124,28 @@ func (svc *BrokerService) init() error {
 	return nil
 }
 
+// EnabledProperty computes the Viper property name for the boolean the user
+// can set to disable or enable this service.
+func (svc *BrokerService) EnabledProperty() string {
+	return fmt.Sprintf("service.%s.enabled", svc.Name)
+}
+
+// DefinitionProperty computes the Viper property name for the JSON service
+// definition.
+func (svc *BrokerService) DefinitionProperty() string {
+	return fmt.Sprintf("service.%s.definition", svc.Name)
+}
+
+// UserDefinedPlansProperty computes the Viper property name for the JSON list
+// of user-defined service plans.
+func (svc *BrokerService) UserDefinedPlansProperty() string {
+	return fmt.Sprintf("service.%s.plans", svc.Name)
+}
+
 // IsEnabled returns false if the operator has explicitly disabled this service
 // or true otherwise.
 func (svc *BrokerService) IsEnabled() bool {
-	return viper.GetBool(svc.enabledProperty)
+	return viper.GetBool(svc.EnabledProperty())
 }
 
 // CatalogEntry returns the service broker catalog entry for this service, it

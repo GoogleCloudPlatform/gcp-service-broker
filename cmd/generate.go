@@ -16,9 +16,11 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/generator"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 )
 
 func init() {
@@ -45,6 +47,19 @@ func init() {
 		},
 	}
 
+	generateFormsCmd := &cobra.Command{
+		Use:   "forms",
+		Short: "Generate PCF Tile Forms",
+		Run: func(cmd *cobra.Command, args []string) {
+			response, err := yaml.Marshal(generator.GenerateForms())
+			if err != nil {
+				log.Fatalf("Error marshaling YAML: %s", err)
+			}
+
+			fmt.Println(string(response))
+		},
+	}
+
 	rootCmd.AddCommand(generateCmd)
-	generateCmd.AddCommand(generateUseCmd)
+	generateCmd.AddCommand(generateUseCmd, generateFormsCmd)
 }

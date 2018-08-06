@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -58,8 +58,8 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "Configuration file to be read")
-	viper.SetEnvPrefix("gsb")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
+	viper.SetEnvPrefix(utils.EnvironmentVarPrefix)
+	viper.SetEnvKeyReplacer(utils.PropertyToEnvReplacer)
 	viper.AutomaticEnv()
 }
 

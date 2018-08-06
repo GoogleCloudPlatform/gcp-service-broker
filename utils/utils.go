@@ -20,10 +20,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
+)
+
+const (
+	EnvironmentVarPrefix = "gsb"
+)
+
+var (
+	PropertyToEnvReplacer = strings.NewReplacer(".", "_", "-", "_")
 )
 
 func GetAuthedConfig() (*jwt.Config, error) {
@@ -78,6 +87,17 @@ func prettyPrint(content interface{}) error {
 
 	return err
 }
+
+// PropertyToEnv converts a Viper configuration property name into an
+// environment variable prefixed with EnvironmentVarPrefix
+func PropertyToEnv(propertyName string) string {
+	return PropertyToEnvUnprefixed(EnvironmentVarPrefix + "." + propertyName)
+}
+
+// PropertyToEnvUnprefixed converts a Viper configuration property name into an
+// environment variable using PropertyToEnvReplacer
+func PropertyToEnvUnprefixed(propertyName string) string {
+	return PropertyToEnvReplacer.Replace(strings.ToUpper(propertyName))
 
 // SetParameter sets a value on a JSON raw message and returns a modified
 // version with the value set

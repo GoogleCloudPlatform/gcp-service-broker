@@ -32,14 +32,18 @@ packages:
 # elsewhere in this template by using:
 #     (( .properties.<property-name> ))
 #
+# The forms in this section are auto-generated. DO NOT edit them, instead change
+# pkg/generator/forms.go to add/change properties and run:
+# > gcp-service-broker generate forms
 forms:
 - name: root_service_account
   label: Root Service Account
-  description: Please paste in the contents of the json keyfile (un-encoded) for your service account with owner credentials
+  description: Please paste in the contents of the json keyfile (un-encoded) for your
+    service account with owner credentials
   properties:
   - name: root_service_account_json
-    label: Root Service Account JSON
     type: text
+    label: Root Service Account JSON
 - name: database_properties
   label: Database Properties
   description: Connection details for the backing database for the service broker
@@ -57,7 +61,7 @@ forms:
     optional: true
   - name: db_port
     type: string
-    default: '3306'
+    default: "3306"
     label: Database port (defaults to 3306)
   - name: ca_cert
     type: text
@@ -73,118 +77,63 @@ forms:
     optional: true
 - name: enable_disable
   label: Enable Services
-  description: Enable or Disable Services
+  description: Enable or disable services
   properties:
-    - name: gsb_service_google_bigquery_enabled
-      label: Let end-users create plans for google_bigquery
-      type: dropdown_select
-      configurable: true
-      default: 'true'
-      options:
-        - name: 'true'
-          label: 'Enable'
-        - name: 'false'
-          label: 'Disable'
-    - name: gsb_service_google_bigtable_enabled
-      label: Let end-users create plans for google_bigtable
-      type: dropdown_select
-      configurable: true
-      default: 'true'
-      options:
-        - name: 'true'
-          label: 'Enable'
-        - name: 'false'
-          label: 'Disable'
-    - name: gsb_service_google_cloudsql_mysql_enabled
-      label: Let end-users create plans for google_cloudsql_mysql
-      type: dropdown_select
-      configurable: true
-      default: 'true'
-      options:
-        - name: 'true'
-          label: 'Enable'
-        - name: 'false'
-          label: 'Disable'
-    - name: gsb_service_google_cloudsql_postgres_enabled
-      label: Let end-users create plans for google_cloudsql_postgres
-      type: dropdown_select
-      configurable: true
-      default: 'true'
-      options:
-        - name: 'true'
-          label: 'Enable'
-        - name: 'false'
-          label: 'Disable'
-    - name: gsb_service_google_datastore_enabled
-      label: Let end-users create plans for google_datastore
-      type: dropdown_select
-      configurable: true
-      default: 'true'
-      options:
-        - name: 'true'
-          label: 'Enable'
-        - name: 'false'
-          label: 'Disable'
-    - name: gsb_service_google_ml_apis_enabled
-      label: Let end-users create plans for google_ml_apis
-      type: dropdown_select
-      configurable: true
-      default: 'true'
-      options:
-        - name: 'true'
-          label: 'Enable'
-        - name: 'false'
-          label: 'Disable'
-    - name: gsb_service_google_pubsub_enabled
-      label: Let end-users create plans for google_pubsub
-      type: dropdown_select
-      configurable: true
-      default: 'true'
-      options:
-        - name: 'true'
-          label: 'Enable'
-        - name: 'false'
-          label: 'Disable'
-    - name: gsb_service_google_spanner_enabled
-      label: Let end-users create plans for google_spanner
-      type: dropdown_select
-      configurable: true
-      default: 'true'
-      options:
-        - name: 'true'
-          label: 'Enable'
-        - name: 'false'
-          label: 'Disable'
-    - name: gsb_service_google_stackdriver_debugger_enabled
-      label: Let end-users create plans for google_stackdriver_debugger
-      type: dropdown_select
-      configurable: true
-      default: 'true'
-      options:
-        - name: 'true'
-          label: 'Enable'
-        - name: 'false'
-          label: 'Disable'
-    - name: gsb_service_google_stackdriver_trace_enabled
-      label: Let end-users create plans for google_stackdriver_trace
-      type: dropdown_select
-      configurable: true
-      default: 'true'
-      options:
-        - name: 'true'
-          label: 'Enable'
-        - name: 'false'
-          label: 'Disable'
-    - name: gsb_service_google_storage_enabled
-      label: Let end-users create plans for google_storage
-      type: dropdown_select
-      configurable: true
-      default: 'true'
-      options:
-        - name: 'true'
-          label: 'Enable'
-        - name: 'false'
-          label: 'Disable'
+  - name: gsb_service_google_bigquery_enabled
+    type: boolean
+    default: true
+    label: Let the broker create and bind Google BigQuery instances
+    configurable: true
+  - name: gsb_service_google_bigtable_enabled
+    type: boolean
+    default: true
+    label: Let the broker create and bind Google Bigtable instances
+    configurable: true
+  - name: gsb_service_google_cloudsql_mysql_enabled
+    type: boolean
+    default: true
+    label: Let the broker create and bind Google CloudSQL MySQL instances
+    configurable: true
+  - name: gsb_service_google_cloudsql_postgres_enabled
+    type: boolean
+    default: true
+    label: Let the broker create and bind Google CloudSQL PostgreSQL instances
+    configurable: true
+  - name: gsb_service_google_datastore_enabled
+    type: boolean
+    default: true
+    label: Let the broker create and bind Google Cloud Datastore instances
+    configurable: true
+  - name: gsb_service_google_ml_apis_enabled
+    type: boolean
+    default: true
+    label: Let the broker create and bind Google Machine Learning APIs instances
+    configurable: true
+  - name: gsb_service_google_pubsub_enabled
+    type: boolean
+    default: true
+    label: Let the broker create and bind Google PubSub instances
+    configurable: true
+  - name: gsb_service_google_spanner_enabled
+    type: boolean
+    default: true
+    label: Let the broker create and bind Google Spanner instances
+    configurable: true
+  - name: gsb_service_google_stackdriver_debugger_enabled
+    type: boolean
+    default: true
+    label: Let the broker create and bind Stackdriver Debugger instances
+    configurable: true
+  - name: gsb_service_google_stackdriver_trace_enabled
+    type: boolean
+    default: true
+    label: Let the broker create and bind Stackdriver Trace instances
+    configurable: true
+  - name: gsb_service_google_storage_enabled
+    type: boolean
+    default: true
+    label: Let the broker create and bind Google Cloud Storage instances
+    configurable: true
 
 service_plan_forms:
 - name: cloudsql_mysql_custom_plans
