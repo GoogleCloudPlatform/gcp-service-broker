@@ -18,17 +18,19 @@
 package spanner
 
 import (
-	googlespanner "cloud.google.com/go/spanner/admin/instance/apiv1"
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
+
+	googlespanner "cloud.google.com/go/spanner/admin/instance/apiv1"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/pivotal-cf/brokerapi"
 	"google.golang.org/api/option"
 	instancepb "google.golang.org/genproto/googleapis/spanner/admin/instance/v1"
-	"strconv"
 )
 
 type SpannerBroker struct {
@@ -41,7 +43,7 @@ type InstanceInformation struct {
 
 // Creates a new Spanner Instance identified by the name provided in details.RawParameters.name and
 // an optional region (defaults to regional-us-central1) and optional display_name
-func (s *SpannerBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+func (s *SpannerBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 	var params map[string]string
 
@@ -135,7 +137,7 @@ func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 	var instance models.ServiceInstanceDetails
 
 	if err := db_service.DbConnection.Where("id = ?", instanceId).First(&instance).Error; err != nil {
-		return false, models.ErrInstanceDoesNotExist
+		return false, brokerapi.ErrInstanceDoesNotExist
 	}
 
 	// we're polling on instance deletion, which is synchronous, unlike creation. Exit early if the instance has been deleted
@@ -226,12 +228,12 @@ func createCloudOperation(op *googlespanner.CreateInstanceOperation, instanceId 
 }
 
 // deletes the instance associated with the given instanceID string
-func (s *SpannerBroker) Deprovision(instanceID string, details models.DeprovisionDetails) error {
+func (s *SpannerBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
 	var err error
 
 	instance := models.ServiceInstanceDetails{}
 	if err = db_service.DbConnection.Where("ID = ?", instanceID).First(&instance).Error; err != nil {
-		return models.ErrInstanceDoesNotExist
+		return brokerapi.ErrInstanceDoesNotExist
 	}
 
 	// set up client

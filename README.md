@@ -8,7 +8,7 @@ see [here](https://www.youtube.com/watch?v=8nc4624K91A&list=PLIivdWyY5sqKJ48ycao
 ### Service Brokers
 
 This product is a [Cloud Foundry Service Broker](https://docs.cloudfoundry.org/services/overview.html). It adheres
-to [v2.8](https://docs.pivotal.io/pivotalcf/1-7/services/api.html) of the Service Broker API.
+to [v2.13](https://github.com/openservicebrokerapi/servicebroker/blob/v2.13/spec.md) of the Service Broker API.
 
 ### Google Cloud Platform (GCP)
 

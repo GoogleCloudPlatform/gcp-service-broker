@@ -98,4 +98,20 @@ func PropertyToEnv(propertyName string) string {
 // environment variable using PropertyToEnvReplacer
 func PropertyToEnvUnprefixed(propertyName string) string {
 	return PropertyToEnvReplacer.Replace(strings.ToUpper(propertyName))
+
+// SetParameter sets a value on a JSON raw message and returns a modified
+// version with the value set
+func SetParameter(input json.RawMessage, key string, value interface{}) (json.RawMessage, error) {
+	params := make(map[string]interface{})
+
+	if input != nil && len(input) != 0 {
+		err := json.Unmarshal(input, &params)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	params[key] = value
+
+	return json.Marshal(params)
 }

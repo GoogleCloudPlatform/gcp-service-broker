@@ -1,19 +1,23 @@
 package integration_tests
 
 import (
+	"time"
+
 	. "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
+	"github.com/pivotal-cf/brokerapi"
 
 	"golang.org/x/net/context"
 
 	"fmt"
+	"hash/crc32"
+	"net/http"
+	"os"
+
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/fakes"
-	"hash/crc32"
-	"net/http"
-	"os"
 
 	googlepubsub "cloud.google.com/go/pubsub"
 
@@ -37,7 +41,7 @@ type genericService struct {
 	serviceId              string
 	planId                 string
 	bindingId              string
-	rawBindingParams       map[string]interface{}
+	rawBindingParams       json.RawMessage
 	instanceId             string
 	serviceExistsFn        func(bool) bool
 	cleanupFn              func()
@@ -66,12 +70,12 @@ func testGenericService(brokerConfig *config.BrokerConfig, gcpBroker *GCPAsyncSe
 	//
 	// Provision
 	//
-	provisionDetails := models.ProvisionDetails{
+	provisionDetails := brokerapi.ProvisionDetails{
 		ServiceID: params.serviceId,
 		PlanID:    params.planId,
 	}
 
-	_, err := gcpBroker.Provision(params.instanceId, provisionDetails, true)
+	_, err := gcpBroker.Provision(context.Background(), params.instanceId, provisionDetails, true)
 	Expect(err).ToNot(HaveOccurred())
 
 	// Provision is registered in the database
@@ -87,12 +91,12 @@ func testGenericService(brokerConfig *config.BrokerConfig, gcpBroker *GCPAsyncSe
 	//
 	// Bind
 	//
-	bindDetails := models.BindDetails{
-		ServiceID:  params.serviceId,
-		PlanID:     params.planId,
-		Parameters: params.rawBindingParams,
+	bindDetails := brokerapi.BindDetails{
+		ServiceID:     params.serviceId,
+		PlanID:        params.planId,
+		RawParameters: params.rawBindingParams,
 	}
-	creds, err := gcpBroker.Bind(params.instanceId, params.bindingId, bindDetails)
+	creds, err := gcpBroker.Bind(context.Background(), params.instanceId, params.bindingId, bindDetails)
 	Expect(err).ToNot(HaveOccurred())
 
 	db_service.DbConnection.Model(&models.ServiceBindingCredentials{}).Where("binding_id = ?", params.bindingId).Count(&count)
@@ -108,11 +112,11 @@ func testGenericService(brokerConfig *config.BrokerConfig, gcpBroker *GCPAsyncSe
 	//
 	// Unbind
 	//
-	unbindDetails := models.UnbindDetails{
+	unbindDetails := brokerapi.UnbindDetails{
 		ServiceID: params.serviceId,
 		PlanID:    params.planId,
 	}
-	err = gcpBroker.Unbind(params.instanceId, params.bindingId, unbindDetails)
+	err = gcpBroker.Unbind(context.Background(), params.instanceId, params.bindingId, unbindDetails)
 	Expect(err).ToNot(HaveOccurred())
 
 	binding := models.ServiceBindingCredentials{}
@@ -121,17 +125,19 @@ func testGenericService(brokerConfig *config.BrokerConfig, gcpBroker *GCPAsyncSe
 	}
 	Expect(binding.DeletedAt).NotTo(BeNil())
 
+	// wait because services don't always show as deleted right away
+	time.Sleep(5 * time.Second)
 	_, err = saService.Get(resourceName).Do()
-	Expect(err).To(HaveOccurred())
+	Expect(err).NotTo(BeNil())
 
 	//
 	// Deprovision
 
-	deprovisionDetails := models.DeprovisionDetails{
+	deprovisionDetails := brokerapi.DeprovisionDetails{
 		ServiceID: params.serviceId,
 		PlanID:    params.planId,
 	}
-	_, err = gcpBroker.Deprovision(params.instanceId, deprovisionDetails, true)
+	_, err = gcpBroker.Deprovision(context.Background(), params.instanceId, deprovisionDetails, true)
 	Expect(err).ToNot(HaveOccurred())
 	instance := models.ServiceInstanceDetails{}
 	if err := db_service.DbConnection.Unscoped().Where("ID = ?", params.instanceId).First(&instance).Error; err != nil {
@@ -151,7 +157,7 @@ func testIamBasedService(brokerConfig *config.BrokerConfig, gcpBroker *GCPAsyncS
 		planId:           params.planId,
 		instanceId:       "iam-instance",
 		bindingId:        "iam-instance",
-		rawBindingParams: map[string]interface{}{},
+		rawBindingParams: json.RawMessage{},
 		serviceMetadataSavedFn: func(instanceId string) bool {
 			// Metadata should be empty, there is no additional information required
 			instanceDetails := getAndUnmarshalInstanceDetails(instanceId)
@@ -241,17 +247,21 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 	Describe("getting broker catalog", func() {
 		It("should have 11 services available", func() {
-			Expect(len(gcpBroker.Services())).To(Equal(11))
+			serviceList, err := gcpBroker.Services(context.Background())
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(len(serviceList)).To(Equal(11))
 		})
 
 		It("should have 3 storage plans available", func() {
-			serviceList := gcpBroker.Services()
+			serviceList, err := gcpBroker.Services(context.Background())
+			Expect(err).ToNot(HaveOccurred())
+
 			for _, s := range serviceList {
 				if s.ID == serviceNameToId[models.StorageName] {
 					Expect(len(s.Plans)).To(Equal(3))
 				}
 			}
-
 		})
 	})
 
@@ -261,13 +271,11 @@ var _ = Describe("LiveIntegrationTests", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			params := &genericService{
-				serviceId:  serviceNameToId[models.BigqueryName],
-				planId:     serviceNameToPlanId[models.BigqueryName],
-				bindingId:  "integration_test_bind",
-				instanceId: "integration_test_dataset",
-				rawBindingParams: map[string]interface{}{
-					"role": "bigquery.admin",
-				},
+				serviceId:        serviceNameToId[models.BigqueryName],
+				planId:           serviceNameToPlanId[models.BigqueryName],
+				bindingId:        "integration_test_bind",
+				instanceId:       "integration_test_dataset",
+				rawBindingParams: []byte(`{"role": "bigquery.admin"}`),
 				serviceExistsFn: func(expected bool) bool {
 					_, err = service.Datasets.Get(brokerConfig.ProjectId, instance_name).Do()
 
@@ -306,13 +314,11 @@ var _ = Describe("LiveIntegrationTests", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			params := &genericService{
-				serviceId:  serviceNameToId[models.BigtableName],
-				planId:     serviceNameToPlanId[models.BigtableName],
-				bindingId:  "integration_test_bind",
-				instanceId: "integration_test_instance",
-				rawBindingParams: map[string]interface{}{
-					"role": "editor",
-				},
+				serviceId:        serviceNameToId[models.BigtableName],
+				planId:           serviceNameToPlanId[models.BigtableName],
+				bindingId:        "integration_test_bind",
+				instanceId:       "integration_test_instance",
+				rawBindingParams: []byte(`{"role": "editor"}`),
 				serviceExistsFn: func(expected bool) bool {
 					instances, err := service.Instances(ctx)
 
@@ -339,13 +345,11 @@ var _ = Describe("LiveIntegrationTests", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			params := &genericService{
-				serviceId:  serviceNameToId[models.StorageName],
-				planId:     serviceNameToPlanId[models.StorageName],
-				instanceId: "integration_test_bucket",
-				bindingId:  "integration_test_bucket_binding",
-				rawBindingParams: map[string]interface{}{
-					"role": "storage.admin",
-				},
+				serviceId:        serviceNameToId[models.StorageName],
+				planId:           serviceNameToPlanId[models.StorageName],
+				instanceId:       "integration_test_bucket",
+				bindingId:        "integration_test_bucket_binding",
+				rawBindingParams: []byte(`{"role": "storage.admin"}`),
 				serviceExistsFn: func(bool) bool {
 					bucket := service.Bucket(instance_name)
 					_, err = bucket.Attrs(context.Background())
@@ -376,13 +380,11 @@ var _ = Describe("LiveIntegrationTests", func() {
 			topic := service.Topic(instance_name)
 
 			params := &genericService{
-				serviceId:  serviceNameToId[models.PubsubName],
-				planId:     serviceNameToPlanId[models.PubsubName],
-				instanceId: "integration_test_topic",
-				bindingId:  "integration_test_topic_bindingId",
-				rawBindingParams: map[string]interface{}{
-					"role": "pubsub.admin",
-				},
+				serviceId:        serviceNameToId[models.PubsubName],
+				planId:           serviceNameToPlanId[models.PubsubName],
+				instanceId:       "integration_test_topic",
+				bindingId:        "integration_test_topic_bindingId",
+				rawBindingParams: []byte(`{"role": "pubsub.admin"}`),
 				serviceExistsFn: func(bool) bool {
 					exists, err := topic.Exists(context.Background())
 					return exists && err == nil

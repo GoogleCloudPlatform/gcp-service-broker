@@ -18,6 +18,7 @@
 package brokers
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -29,6 +30,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigtable"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/cloudsql"
+	"github.com/pivotal-cf/brokerapi"
 	"google.golang.org/api/googleapi"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/config"
@@ -53,7 +55,6 @@ type GCPServiceBroker struct {
 
 type GCPAsyncServiceBroker struct {
 	GCPServiceBroker
-	ShouldProvisionAsync bool
 }
 
 // returns a new service broker and nil if no errors occur else nil and the error
@@ -61,7 +62,6 @@ func New(cfg *config.BrokerConfig, Logger lager.Logger) (*GCPAsyncServiceBroker,
 
 	self := GCPAsyncServiceBroker{}
 	self.Logger = Logger
-	self.ShouldProvisionAsync = false
 
 	// hardcoding this for now so we don't have to delete the nice built-in quota code, but also don't have to
 	// handle that as a config option.
@@ -138,23 +138,20 @@ func New(cfg *config.BrokerConfig, Logger lager.Logger) (*GCPAsyncServiceBroker,
 	}
 
 	return &self, nil
-
 }
 
 // CORE SERVICE BROKER API METHODS
 
 // cf marketplace
 // lists services in the broker's catalog
-func (gcpBroker *GCPServiceBroker) Services() []models.Service {
-
-	svcs := []models.Service{}
+func (gcpBroker *GCPServiceBroker) Services(ctx context.Context) ([]brokerapi.Service, error) {
+	svcs := []brokerapi.Service{}
 
 	for _, svc := range gcpBroker.Catalog {
-		svcs = append(svcs, svc)
+		svcs = append(svcs, svc.ToPlain())
 	}
 
-	return svcs
-
+	return svcs, nil
 }
 
 func (gcpBroker *GCPServiceBroker) GetPlanFromId(serviceId, planId string) (models.ServicePlan, error) {
@@ -178,7 +175,8 @@ func (gcpBroker *GCPServiceBroker) GetPlanFromId(serviceId, planId string) (mode
 // Storage: a new bucket
 // PubSub: a new topic
 // Bigtable: a new instance
-func (gcpBroker *GCPAsyncServiceBroker) Provision(instanceID string, details models.ProvisionDetails, asyncAllowed bool) (models.ProvisionedServiceSpec, error) {
+//
+func (gcpBroker *GCPAsyncServiceBroker) Provision(ctx context.Context, instanceID string, details brokerapi.ProvisionDetails, asyncAllowed bool) (brokerapi.ProvisionedServiceSpec, error) {
 	gcpBroker.Logger.Info("Provisioning", lager.Data{
 		"instance_id":  instanceID,
 		"asyncAllowed": asyncAllowed,
@@ -190,39 +188,39 @@ func (gcpBroker *GCPAsyncServiceBroker) Provision(instanceID string, details mod
 	// first make sure we're not over quota
 	provisionedInstancesCount, err := db_service.GetServiceInstanceTotal()
 	if err != nil {
-		return models.ProvisionedServiceSpec{}, fmt.Errorf("Database error checking for instance count: %s", err)
+		return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("Database error checking for instance count: %s", err)
 	} else {
 		if provisionedInstancesCount >= gcpBroker.InstanceLimit {
-			return models.ProvisionedServiceSpec{}, models.ErrInstanceLimitMet
+			return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrInstanceLimitMet
 		}
 	}
 
 	// make sure that instance hasn't already been provisioned
 	count, err := db_service.GetServiceInstanceCount(instanceID)
 	if err != nil {
-		return models.ProvisionedServiceSpec{}, fmt.Errorf("Database error checking for existing instance: %s", err)
+		return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("Database error checking for existing instance: %s", err)
 	}
 	if count > 0 {
-		return models.ProvisionedServiceSpec{}, models.ErrInstanceAlreadyExists
+		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrInstanceAlreadyExists
 	}
 
 	serviceId := details.ServiceID
 
 	plan, err := gcpBroker.GetPlanFromId(serviceId, details.PlanID)
 	if err != nil {
-		return models.ProvisionedServiceSpec{}, err
+		return brokerapi.ProvisionedServiceSpec{}, err
 	}
 
 	// verify async provisioning is allowed if it is required
-	gcpBroker.ShouldProvisionAsync = gcpBroker.ServiceBrokerMap[serviceId].ProvisionsAsync()
-	if gcpBroker.ShouldProvisionAsync && !asyncAllowed {
-		return models.ProvisionedServiceSpec{}, models.ErrAsyncRequired
+	shouldProvisionAsync := gcpBroker.ServiceBrokerMap[serviceId].ProvisionsAsync()
+	if shouldProvisionAsync && !asyncAllowed {
+		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrAsyncRequired
 	}
 
 	// get instance details
 	instanceDetails, err := gcpBroker.ServiceBrokerMap[serviceId].Provision(instanceID, details, plan)
 	if err != nil {
-		return models.ProvisionedServiceSpec{}, err
+		return brokerapi.ProvisionedServiceSpec{}, err
 	}
 
 	// save instance details
@@ -234,7 +232,7 @@ func (gcpBroker *GCPAsyncServiceBroker) Provision(instanceID string, details mod
 
 	err = db_service.DbConnection.Create(&instanceDetails).Error
 	if err != nil {
-		return models.ProvisionedServiceSpec{}, fmt.Errorf("Error saving instance details to database: %s. WARNING: this instance cannot be deprovisioned through cf. Contact your operator for cleanup", err)
+		return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("Error saving instance details to database: %s. WARNING: this instance cannot be deprovisioned through cf. Contact your operator for cleanup", err)
 	}
 
 	// save provision request details
@@ -243,61 +241,62 @@ func (gcpBroker *GCPAsyncServiceBroker) Provision(instanceID string, details mod
 		RequestDetails:    string(details.RawParameters),
 	}
 	if err = db_service.DbConnection.Create(&pr).Error; err != nil {
-		return models.ProvisionedServiceSpec{}, fmt.Errorf("Error saving provision request details to database: %s. Services relying on async provisioning will not be able to complete provisioning", err)
+		return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("Error saving provision request details to database: %s. Services relying on async provisioning will not be able to complete provisioning", err)
 	}
 
-	return models.ProvisionedServiceSpec{IsAsync: gcpBroker.ShouldProvisionAsync, DashboardURL: ""}, nil
+	return brokerapi.ProvisionedServiceSpec{IsAsync: shouldProvisionAsync, DashboardURL: ""}, nil
 }
 
 // cf delete-service
 // Deletes the given instance
-func (gcpBroker *GCPAsyncServiceBroker) Deprovision(instanceID string, details models.DeprovisionDetails, asyncAllowed bool) (models.IsAsync, error) {
+func (gcpBroker *GCPAsyncServiceBroker) Deprovision(ctx context.Context, instanceID string, details brokerapi.DeprovisionDetails, asyncAllowed bool) (brokerapi.DeprovisionServiceSpec, error) {
 	gcpBroker.Logger.Info("Deprovisioning", lager.Data{
 		"instance_id":  instanceID,
 		"asyncAllowed": asyncAllowed,
 		"details":      details,
 	})
 
-	gcpBroker.ShouldProvisionAsync = gcpBroker.ServiceBrokerMap[details.ServiceID].DeprovisionsAsync()
+	shouldProvisionAsync := gcpBroker.ServiceBrokerMap[details.ServiceID].DeprovisionsAsync()
+	response := brokerapi.DeprovisionServiceSpec{IsAsync: shouldProvisionAsync}
 
 	// make sure that instance actually exists
 	count, err := db_service.GetServiceInstanceCount(instanceID)
 	if err != nil {
-		return models.IsAsync(gcpBroker.ShouldProvisionAsync), fmt.Errorf("Database error checking for existing instance: %s", err)
+		return response, fmt.Errorf("Database error checking for existing instance: %s", err)
 	}
 	if count == 0 {
-		return models.IsAsync(gcpBroker.ShouldProvisionAsync), models.ErrInstanceDoesNotExist
+		return response, brokerapi.ErrInstanceDoesNotExist
 	}
 
 	// if async provisioning isn't allowed but this service needs it, throw an error
-	if gcpBroker.ShouldProvisionAsync && !asyncAllowed {
-		return models.IsAsync(asyncAllowed), models.ErrAsyncRequired
+	if shouldProvisionAsync && !asyncAllowed {
+		return brokerapi.DeprovisionServiceSpec{IsAsync: asyncAllowed}, brokerapi.ErrAsyncRequired
 	}
 
 	// deprovision
 	err = gcpBroker.ServiceBrokerMap[details.ServiceID].Deprovision(instanceID, details)
 	if err != nil {
-		return models.IsAsync(gcpBroker.ShouldProvisionAsync), err
+		return response, err
 	}
 
 	// soft-delete instance details from the db if this is a synchronous operation
 	// if it's an async operation we can't delete from the db until we're sure delete succeeded, so this is
 	// handled internally to LastOperation
-	if !gcpBroker.ShouldProvisionAsync {
+	if !shouldProvisionAsync {
 		err = db_service.SoftDeleteInstanceDetails(instanceID)
 		if err != nil {
-			return models.IsAsync(gcpBroker.ShouldProvisionAsync), fmt.Errorf("Error deleting instance details from database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup", err)
+			return response, fmt.Errorf("Error deleting instance details from database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup", err)
 		}
 	}
 
-	return models.IsAsync(gcpBroker.ShouldProvisionAsync), nil
+	return response, nil
 }
 
 // cf bind-service
 // for cloudSql instances, Bind creates a new user and ssl cert
 // for all other services, Bind creates a new service account with the IAM role listed in details.Parameters["permissions"]
 // a complete list of IAM roles is available here: https://cloud.google.com/iam/docs/understanding-roles
-func (gcpBroker *GCPServiceBroker) Bind(instanceID string, bindingID string, details models.BindDetails) (models.Binding, error) {
+func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (brokerapi.Binding, error) {
 	gcpBroker.Logger.Info("Binding", lager.Data{
 		"instance_id": instanceID,
 		"binding_id":  bindingID,
@@ -312,16 +311,16 @@ func (gcpBroker *GCPServiceBroker) Bind(instanceID string, bindingID string, det
 	var err error
 
 	if err = db_service.DbConnection.Model(&models.ServiceBindingCredentials{}).Where("service_instance_id = ? and binding_id = ?", instanceID, bindingID).Count(&count).Error; err != nil {
-		return models.Binding{}, fmt.Errorf("Error checking for existing binding: %s", err)
+		return brokerapi.Binding{}, fmt.Errorf("Error checking for existing binding: %s", err)
 	}
 	if count > 0 {
-		return models.Binding{}, models.ErrBindingAlreadyExists
+		return brokerapi.Binding{}, brokerapi.ErrBindingAlreadyExists
 	}
 
 	// create binding
 	newCreds, err := gcpBroker.ServiceBrokerMap[serviceId].Bind(instanceID, bindingID, details)
 	if err != nil {
-		return models.Binding{}, err
+		return brokerapi.Binding{}, err
 	}
 
 	// save binding to database
@@ -330,22 +329,22 @@ func (gcpBroker *GCPServiceBroker) Bind(instanceID string, bindingID string, det
 	newCreds.ServiceId = details.ServiceID
 
 	if err := db_service.DbConnection.Create(&newCreds).Error; err != nil {
-		return models.Binding{}, fmt.Errorf("Error saving credentials to database: %s. WARNING: these credentials cannot be unbound through cf. Please contact your operator for cleanup",
+		return brokerapi.Binding{}, fmt.Errorf("Error saving credentials to database: %s. WARNING: these credentials cannot be unbound through cf. Please contact your operator for cleanup",
 			err)
 	}
 
 	// get existing service instance details
 	var instanceRecord models.ServiceInstanceDetails
 	if err = db_service.DbConnection.Where("id = ?", instanceID).First(&instanceRecord).Error; err != nil {
-		return models.Binding{}, fmt.Errorf("Error retrieving service instance details: %s", err)
+		return brokerapi.Binding{}, fmt.Errorf("Error retrieving service instance details: %s", err)
 	}
 
 	updatedCreds, err := gcpBroker.ServiceBrokerMap[serviceId].BuildInstanceCredentials(newCreds, instanceRecord)
 	if err != nil {
-		return models.Binding{}, err
+		return brokerapi.Binding{}, err
 	}
 
-	return models.Binding{
+	return brokerapi.Binding{
 		Credentials:     updatedCreds,
 		SyslogDrainURL:  "",
 		RouteServiceURL: "",
@@ -355,7 +354,7 @@ func (gcpBroker *GCPServiceBroker) Bind(instanceID string, bindingID string, det
 // cf unbind-service
 // for cloudSql instances, Unbind deletes the associated user and ssl certs
 // for all other services, Unbind deletes the associated service account
-func (gcpBroker *GCPServiceBroker) Unbind(instanceID, bindingID string, details models.UnbindDetails) error {
+func (gcpBroker *GCPServiceBroker) Unbind(ctx context.Context, instanceID, bindingID string, details brokerapi.UnbindDetails) error {
 	gcpBroker.Logger.Info("Unbinding", lager.Data{
 		"instance_id": instanceID,
 		"binding_id":  bindingID,
@@ -367,7 +366,7 @@ func (gcpBroker *GCPServiceBroker) Unbind(instanceID, bindingID string, details 
 	existingBinding := models.ServiceBindingCredentials{}
 
 	if err := db_service.DbConnection.Where("service_instance_id = ? and binding_id = ?", instanceID, bindingID).Find(&existingBinding).Count(&count).Error; err != nil {
-		return models.ErrBindingDoesNotExist
+		return brokerapi.ErrBindingDoesNotExist
 	}
 
 	// remove binding from google
@@ -387,56 +386,53 @@ func (gcpBroker *GCPServiceBroker) Unbind(instanceID, bindingID string, details 
 
 // if a service is provisioned asynchronously, LastOperation is called until the provisioning attempt times out
 // or success or failure is returned
-func (gcpBroker *GCPServiceBroker) LastOperation(instanceID string) (models.LastOperation, error) {
+func (gcpBroker *GCPServiceBroker) LastOperation(ctx context.Context, instanceID, operationData string) (brokerapi.LastOperation, error) {
 
 	instance := models.ServiceInstanceDetails{}
 	if err := db_service.DbConnection.Where("id = ?", instanceID).First(&instance).Error; err != nil {
-		return models.LastOperation{}, models.ErrInstanceDoesNotExist
+		return brokerapi.LastOperation{}, brokerapi.ErrInstanceDoesNotExist
 	}
 
 	if gcpBroker.ServiceBrokerMap[instance.ServiceId].ProvisionsAsync() || gcpBroker.ServiceBrokerMap[instance.ServiceId].DeprovisionsAsync() {
 		return gcpBroker.lastOperationAsync(instanceID, instance.ServiceId)
 
 	} else {
-		return models.LastOperation{State: models.Succeeded, Description: ""}, errors.New("Can't call LastOperation on a synchronous service")
-
+		return brokerapi.LastOperation{State: brokerapi.Succeeded, Description: ""}, errors.New("Can't call LastOperation on a synchronous service")
 	}
-
 }
 
-func (gcpBroker *GCPServiceBroker) lastOperationAsync(instanceId, serviceId string) (models.LastOperation, error) {
+func (gcpBroker *GCPServiceBroker) lastOperationAsync(instanceId, serviceId string) (brokerapi.LastOperation, error) {
 	done, err := gcpBroker.ServiceBrokerMap[serviceId].PollInstance(instanceId)
 	if err != nil {
 		// this is a retryable error
 		if gerr, ok := err.(*googleapi.Error); ok {
 			if gerr.Code == 503 {
-				return models.LastOperation{State: models.InProgress, Description: ""}, err
+				return brokerapi.LastOperation{State: brokerapi.InProgress, Description: ""}, err
 			}
 		}
 		// This is not a retryable error. Return fail
-		return models.LastOperation{State: models.Failed, Description: ""}, err
+		return brokerapi.LastOperation{State: brokerapi.Failed, Description: ""}, err
 	}
 
 	if done {
 		// no error and we're done! Delete from the SB database if this was a delete flow and return success
 		deleteFlow, err := gcpBroker.ServiceBrokerMap[serviceId].LastOperationWasDelete(instanceId)
 		if err != nil {
-			return models.LastOperation{State: models.Succeeded, Description: ""}, fmt.Errorf("Couldn't determine if provision or deprovision flow, this may leave orphaned resources, contact your operator for cleanup")
+			return brokerapi.LastOperation{State: brokerapi.Succeeded, Description: ""}, fmt.Errorf("Couldn't determine if provision or deprovision flow, this may leave orphaned resources, contact your operator for cleanup")
 		}
 		if deleteFlow {
 			err = db_service.SoftDeleteInstanceDetails(instanceId)
 			if err != nil {
-				return models.LastOperation{State: models.Succeeded, Description: ""}, fmt.Errorf("Error deleting instance details from database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup", err)
+				return brokerapi.LastOperation{State: brokerapi.Succeeded, Description: ""}, fmt.Errorf("Error deleting instance details from database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup", err)
 			}
 		}
-		return models.LastOperation{State: models.Succeeded, Description: ""}, nil
+		return brokerapi.LastOperation{State: brokerapi.Succeeded, Description: ""}, nil
 	} else {
-		return models.LastOperation{State: models.InProgress, Description: ""}, nil
+		return brokerapi.LastOperation{State: brokerapi.InProgress, Description: ""}, nil
 	}
 }
 
-// updates a service instance plan. This functionality is not implemented and will return an error indicating that plan
-// changes are not supported.
-func (gcpBroker *GCPServiceBroker) Update(instanceID string, details models.UpdateDetails, asyncAllowed bool) (models.IsAsync, error) {
-	return models.IsAsync(asyncAllowed), models.ErrPlanChangeNotSupported
+// Update a service instance plan. This functionality is not implemented and will return an error indicating that plan changes are not supported.
+func (gcpBroker *GCPServiceBroker) Update(ctx context.Context, instanceID string, details brokerapi.UpdateDetails, asyncAllowed bool) (brokerapi.UpdateServiceSpec, error) {
+	return brokerapi.UpdateServiceSpec{}, brokerapi.ErrPlanChangeNotSupported
 }
