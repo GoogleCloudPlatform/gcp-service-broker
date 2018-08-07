@@ -137,8 +137,6 @@ func RunMigrations(db *gorm.DB) error {
 			return fmt.Errorf("Error getting authorized http client: %s", err)
 		}
 
-		idToNameMap := broker.MapServiceIdToName()
-
 		var prs []models.ProvisionRequestDetails
 		if err := DbConnection.Find(&prs).Error; err != nil {
 			return err
@@ -156,7 +154,12 @@ func RunMigrations(db *gorm.DB) error {
 			newOd := make(map[string]string)
 
 			// cloudsql
-			switch serviceName := idToNameMap[si.ServiceId]; serviceName {
+			svc, err := broker.GetServiceById(si.ServiceId)
+			if err != nil {
+				return err
+			}
+
+			switch svc.Name {
 			case models.CloudsqlMySQLName:
 				newOd["instance_name"] = od["instance_name"]
 				newOd["database_name"] = od["database_name"]
@@ -187,7 +190,6 @@ func RunMigrations(db *gorm.DB) error {
 				newOd["topic_name"] = od["topic_name"]
 				newOd["subscription_name"] = od["subscription_name"]
 			default:
-				println(fmt.Sprintf("%v", idToNameMap))
 				return fmt.Errorf("unrecognized service: %s", si.ServiceId)
 			}
 

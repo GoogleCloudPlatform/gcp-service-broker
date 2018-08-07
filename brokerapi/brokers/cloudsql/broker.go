@@ -87,8 +87,6 @@ func (b *CloudSQLBroker) Provision(instanceId string, details brokerapi.Provisio
 	var params map[string]string
 	var err error
 
-	idToNameMap := broker.MapServiceIdToName()
-
 	// validate parameters
 
 	if len(details.RawParameters) == 0 {
@@ -114,9 +112,14 @@ func (b *CloudSQLBroker) Provision(instanceId string, details brokerapi.Provisio
 
 	var binlogEnabled = false
 
+	svc, err := broker.GetServiceById(details.ServiceID)
+	if err != nil {
+		return models.ServiceInstanceDetails{}, err
+	}
+
 	_, versionOk := params["version"]
 	// set default parameters or cast strings to proper values
-	if idToNameMap[details.ServiceID] == models.CloudsqlPostgresName {
+	if svc.Name == models.CloudsqlPostgresName {
 		if !versionOk {
 			params["version"] = PostgresDefaultVersion
 		}
