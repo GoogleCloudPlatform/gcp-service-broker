@@ -84,14 +84,14 @@ func ExampleBrokerService_ServiceDefinition() {
 	// Bad Value
 	viper.Set(service.DefinitionProperty(), "nil")
 	_, err = service.ServiceDefinition()
-	fmt.Printf("%v\n", err == nil)
+	fmt.Printf("%v\n", err)
 
 	// Cleanup
 	viper.Set(service.DefinitionProperty(), nil)
 
 	// Output: "abcd-efgh-ijkl" <nil>
 	// "override-id" <nil>
-	// false
+	// Error parsing service definition for "left-handed-smoke-sifter": invalid character 'i' in literal null (expecting 'u')
 }
 
 func ExampleBrokerService_GetPlanById() {
@@ -104,43 +104,43 @@ func ExampleBrokerService_GetPlanById() {
 	defer viper.Set(service.UserDefinedPlansProperty(), nil)
 
 	plan, err := service.GetPlanById("builtin-plan")
-	fmt.Printf("%q %v\n", plan.Name, err)
+	fmt.Printf("builtin-plan: %q %v\n", plan.Name, err)
 
 	plan, err = service.GetPlanById("custom-plan")
-	fmt.Printf("%q %v\n", plan.Name, err)
+	fmt.Printf("custom-plan: %q %v\n", plan.Name, err)
 
 	_, err = service.GetPlanById("missing-plan")
-	fmt.Printf("%s\n", err)
+	fmt.Printf("missing-plan: %s\n", err)
 
-	// Output: "Builtin!" <nil>
-	// "Custom!" <nil>
-	// Plan ID "missing-plan" could not be found
+	// Output: builtin-plan: "Builtin!" <nil>
+	// custom-plan: "Custom!" <nil>
+	// missing-plan: Plan ID "missing-plan" could not be found
 }
 
 func TestBrokerService_UserDefinedPlans(t *testing.T) {
 	cases := map[string]struct {
 		Value       interface{}
-		PlanCount   int
+		PlanIds     map[string]bool
 		ExpectError bool
 	}{
 		"default-no-plans": {
 			Value:       nil,
-			PlanCount:   0,
+			PlanIds:     map[string]bool{},
 			ExpectError: false,
 		},
 		"single-plan": {
 			Value:       `[{"id":"aaa"}]`,
-			PlanCount:   1,
+			PlanIds:     map[string]bool{"aaa": true},
 			ExpectError: false,
 		},
 		"bad-json": {
 			Value:       `42`,
-			PlanCount:   0,
+			PlanIds:     map[string]bool{},
 			ExpectError: true,
 		},
 		"multiple-plans": {
 			Value:       `[{"id":"aaa"},{"id":"bbb"}]`,
-			PlanCount:   2,
+			PlanIds:     map[string]bool{"aaa": true, "bbb": true},
 			ExpectError: false,
 		},
 	}
@@ -161,8 +161,14 @@ func TestBrokerService_UserDefinedPlans(t *testing.T) {
 		}
 
 		// Check IDs
-		if len(plans) != tc.PlanCount {
-			t.Errorf("%s) Expected %d plans, but got %d (%v)", tn, tc.PlanCount, len(plans), plans)
+		if len(plans) != len(tc.PlanIds) {
+			t.Errorf("%s) Expected %d plans, but got %d (%v)", tn, len(tc.PlanIds), len(plans), plans)
+		}
+
+		for _, plan := range plans {
+			if _, ok := tc.PlanIds[plan.ID]; !ok {
+				t.Errorf("%s) Got unexpected plan id %s, expected %+v", tn, plan.ID, tc.PlanIds)
+			}
 		}
 
 		// Reset Environment
@@ -174,43 +180,43 @@ func TestBrokerService_CatalogEntry(t *testing.T) {
 	cases := map[string]struct {
 		UserDefinition interface{}
 		UserPlans      interface{}
-		PlanCount      int
+		PlanIds        map[string]bool
 		ExpectError    bool
 	}{
 		"no-customization": {
 			UserDefinition: nil,
 			UserPlans:      nil,
-			PlanCount:      0,
+			PlanIds:        map[string]bool{},
 			ExpectError:    false,
 		},
 		"custom-definition": {
 			UserDefinition: `{"id":"abcd-efgh-ijkl", "plans":[{"id":"zzz"}]}`,
 			UserPlans:      nil,
-			PlanCount:      1,
+			PlanIds:        map[string]bool{"zzz": true},
 			ExpectError:    false,
 		},
 		"custom-plans": {
 			UserDefinition: nil,
 			UserPlans:      `[{"id":"aaa"},{"id":"bbb"}]`,
-			PlanCount:      2,
+			PlanIds:        map[string]bool{"aaa": true, "bbb": true},
 			ExpectError:    false,
 		},
 		"custom-plans-and-definition": {
 			UserDefinition: `{"id":"abcd-efgh-ijkl", "plans":[{"id":"zzz"}]}`,
 			UserPlans:      `[{"id":"aaa"},{"id":"bbb"}]`,
-			PlanCount:      3,
+			PlanIds:        map[string]bool{"aaa": true, "bbb": true, "zzz": true},
 			ExpectError:    false,
 		},
 		"bad-definition-json": {
 			UserDefinition: `333`,
 			UserPlans:      nil,
-			PlanCount:      0,
+			PlanIds:        map[string]bool{},
 			ExpectError:    true,
 		},
 		"bad-plan-json": {
 			UserDefinition: nil,
 			UserPlans:      `333`,
-			PlanCount:      0,
+			PlanIds:        map[string]bool{},
 			ExpectError:    true,
 		},
 	}
@@ -230,8 +236,14 @@ func TestBrokerService_CatalogEntry(t *testing.T) {
 			t.Errorf("%s) Expected Error? %v, got error: %v", tn, tc.ExpectError, err)
 		}
 
-		if err == nil && len(srvc.Plans) != tc.PlanCount {
-			t.Errorf("%s) Expected %d plans, but got %d (%+v)", tn, tc.PlanCount, len(srvc.Plans), srvc.Plans)
+		if err == nil && len(srvc.Plans) != len(tc.PlanIds) {
+			t.Errorf("%s) Expected %d plans, but got %d (%+v)", tn, len(tc.PlanIds), len(srvc.Plans), srvc.Plans)
+
+			for _, plan := range srvc.Plans {
+				if _, ok := tc.PlanIds[plan.ID]; !ok {
+					t.Errorf("%s) Got unexpected plan id %s, expected %+v", tn, plan.ID, tc.PlanIds)
+				}
+			}
 		}
 	}
 

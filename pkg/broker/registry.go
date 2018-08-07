@@ -82,16 +82,20 @@ func GetAllServices() []*BrokerService {
 	return out
 }
 
-func MapServiceIdToName() map[string]string {
-	out := map[string]string{}
-
+// GetServiceById returns the service with the given ID, if it does not exist
+// or one of the services has a parse error then an error is returned.
+func GetServiceById(id string) (*BrokerService, error) {
 	for _, svc := range brokerRegistry {
-		if entry, err := svc.CatalogEntry(); err == nil {
-			out[entry.ID] = svc.Name
+		if entry, err := svc.CatalogEntry(); err != nil {
+			return nil, err
+		} else {
+			if entry.ID == id {
+				return svc, nil
+			}
 		}
 	}
 
-	return out
+	return nil, fmt.Errorf("Unknown service ID: %q", id)
 }
 
 type BrokerService struct {
@@ -186,5 +190,8 @@ func (svc *BrokerService) ServiceDefinition() (*models.Service, error) {
 
 	var defn models.Service
 	err := json.Unmarshal([]byte(jsonDefinition), &defn)
+	if err != nil {
+		return nil, fmt.Errorf("Error parsing service definition for %q: %s", svc.Name, err)
+	}
 	return &defn, err
 }
