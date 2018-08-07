@@ -165,11 +165,16 @@ func newExampleExecutor(client *Client, example broker.ServiceExample, service *
 		return nil, err
 	}
 
+	catalog, err := service.CatalogEntry()
+	if err != nil {
+		return nil, err
+	}
+
 	testid := rand.Uint32()
 
 	return &exampleExecutor{
 		Name:       fmt.Sprintf("%s/%s", service.Name, example.Name),
-		ServiceId:  service.CatalogEntry().ID,
+		ServiceId:  catalog.ID,
 		PlanId:     example.PlanId,
 		InstanceId: fmt.Sprintf("ex%d", testid),
 		BindingId:  fmt.Sprintf("ex%d", testid),

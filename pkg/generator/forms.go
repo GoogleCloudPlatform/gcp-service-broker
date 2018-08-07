@@ -16,6 +16,7 @@ package generator
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
@@ -75,9 +76,14 @@ func GenerateForms() TileFormsSections {
 func GenerateEnableDisableForm() Form {
 	enablers := []FormProperty{}
 	for _, svc := range broker.GetAllServices() {
+		entry, err := svc.CatalogEntry()
+		if err != nil {
+			log.Fatalf("Error getting catalog entry for service %s, %v", svc.Name, err)
+		}
+
 		enableForm := FormProperty{
 			Name:         strings.ToLower(utils.PropertyToEnv(svc.EnabledProperty())),
-			Label:        fmt.Sprintf("Let the broker create and bind %s instances", svc.CatalogEntry().Metadata.DisplayName),
+			Label:        fmt.Sprintf("Let the broker create and bind %s instances", entry.Metadata.DisplayName),
 			Type:         "boolean",
 			Default:      true,
 			Configurable: true,

@@ -36,11 +36,20 @@ func Register(service *BrokerService) {
 		log.Fatalf("Tried to register multiple instances of: %q", name)
 	}
 
-	brokerRegistry[name] = service
+	// Set up environment variables to be compatible with legacy tile.yml configurations.
+	// Bind a name of a service like google-datastore to an environment variable GOOGLE_DATASTORE
+	env := utils.PropertyToEnvUnprefixed(service.Name)
+	viper.BindEnv(service.DefinitionProperty(), env)
 
-	if err := service.init(); err != nil {
+	// set defaults
+	viper.SetDefault(service.EnabledProperty(), true)
+
+	// Test deserializing the user defined plans and service definition
+	if _, err := service.CatalogEntry(); err != nil {
 		log.Fatalf("Error registering service %q, %s", name, err)
 	}
+
+	brokerRegistry[name] = service
 }
 
 // GetEnabledServices returns a list of all registered brokers that the user
@@ -73,14 +82,20 @@ func GetAllServices() []*BrokerService {
 	return out
 }
 
-func MapServiceIdToName() map[string]string {
-	out := map[string]string{}
-
+// GetServiceById returns the service with the given ID, if it does not exist
+// or one of the services has a parse error then an error is returned.
+func GetServiceById(id string) (*BrokerService, error) {
 	for _, svc := range brokerRegistry {
-		out[svc.CatalogEntry().ID] = svc.Name
+		if entry, err := svc.CatalogEntry(); err != nil {
+			return nil, err
+		} else {
+			if entry.ID == id {
+				return svc, nil
+			}
+		}
 	}
 
-	return out
+	return nil, fmt.Errorf("Unknown service ID: %q", id)
 }
 
 type BrokerService struct {
@@ -90,38 +105,6 @@ type BrokerService struct {
 	BindInputVariables       []BrokerVariable
 	BindOutputVariables      []BrokerVariable
 	Examples                 []ServiceExample
-
-	// Not modifiable.
-	serviceDefinition models.Service
-	userDefinedPlans  []models.ServicePlan
-}
-
-func (svc *BrokerService) init() error {
-
-	definitionProperty := svc.DefinitionProperty()
-
-	// Set up environment variables to be compatible with legacy tile.yml configurations.
-	// Bind a name of a service like google-datastore to an environment variable GOOGLE_DATASTORE
-	env := utils.PropertyToEnvUnprefixed(svc.Name)
-	viper.BindEnv(definitionProperty, env)
-
-	// set defaults
-	viper.SetDefault(definitionProperty, svc.DefaultServiceDefinition)
-	viper.SetDefault(svc.EnabledProperty(), true)
-	viper.SetDefault(svc.UserDefinedPlansProperty(), "[]")
-
-	// Parse the service definition from the properties
-	rawDefinition := []byte(viper.GetString(definitionProperty))
-
-	var defn models.Service
-	if err := json.Unmarshal(rawDefinition, &defn); err != nil {
-		return err
-	}
-	svc.serviceDefinition = defn
-
-	// TODO Parse any user-defined plans and include them
-
-	return nil
 }
 
 // EnabledProperty computes the Viper property name for the boolean the user
@@ -151,17 +134,64 @@ func (svc *BrokerService) IsEnabled() bool {
 // CatalogEntry returns the service broker catalog entry for this service, it
 // has metadata about the service so operators and programmers know which
 // service and plan will work best for their purposes.
-func (svc *BrokerService) CatalogEntry() models.Service {
-	return svc.serviceDefinition
+func (svc *BrokerService) CatalogEntry() (*models.Service, error) {
+	sd, err := svc.ServiceDefinition()
+	if err != nil {
+		return nil, err
+	}
+
+	plans, err := svc.UserDefinedPlans()
+	if err != nil {
+		return nil, err
+	}
+
+	sd.Plans = append(sd.Plans, plans...)
+
+	return sd, nil
 }
 
 // GetPlanById finds a plan in this service by its UUID.
-func (svc *BrokerService) GetPlanById(planId string) *models.ServicePlan {
-	for _, plan := range svc.CatalogEntry().Plans {
+func (svc *BrokerService) GetPlanById(planId string) (*models.ServicePlan, error) {
+	catalogEntry, err := svc.CatalogEntry()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, plan := range catalogEntry.Plans {
 		if plan.ID == planId {
-			return &plan
+			return &plan, nil
 		}
 	}
 
-	return nil
+	return nil, fmt.Errorf("Plan ID %q could not be found", planId)
+}
+
+// UserDefinedPlans extracts user defined plans from the environment, failing if
+// the plans were not valid JSON.
+func (svc *BrokerService) UserDefinedPlans() ([]models.ServicePlan, error) {
+	plans := []models.ServicePlan{}
+
+	userPlanJson := viper.GetString(svc.UserDefinedPlansProperty())
+	if userPlanJson == "" {
+		return plans, nil
+	}
+
+	err := json.Unmarshal([]byte(userPlanJson), &plans)
+	return plans, err
+}
+
+// ServiceDefinition extracts service definition from the environment, failing
+// if the definition was not valid JSON.
+func (svc *BrokerService) ServiceDefinition() (*models.Service, error) {
+	jsonDefinition := viper.GetString(svc.DefinitionProperty())
+	if jsonDefinition == "" {
+		jsonDefinition = svc.DefaultServiceDefinition
+	}
+
+	var defn models.Service
+	err := json.Unmarshal([]byte(jsonDefinition), &defn)
+	if err != nil {
+		return nil, fmt.Errorf("Error parsing service definition for %q: %s", svc.Name, err)
+	}
+	return &defn, err
 }
