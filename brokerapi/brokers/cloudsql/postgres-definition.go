@@ -131,6 +131,30 @@ func init() {
 		ProvisionInputVariables: commonProvisionVariables,
 		BindInputVariables:      commonBindVariables,
 		BindOutputVariables:     commonBindOutputVariables,
+		PlanVariables: []broker.BrokerVariable{
+			broker.BrokerVariable{
+				FieldName: "tier",
+				Type:      broker.JsonTypeString,
+				Details:   "a string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840",
+				Required:  true,
+			},
+			broker.BrokerVariable{
+				FieldName: "pricing_plan",
+				Type:      broker.JsonTypeString,
+				Details:   "The pricing plan",
+				Enum: map[interface{}]string{
+					"PER_USE": "Per-Use",
+				},
+				Required: true,
+			},
+			broker.BrokerVariable{
+				FieldName: "max_disk_size",
+				Type:      broker.JsonTypeString,
+				Details:   "Maximum disk size in GB (10 minimum/default)",
+				Default:   "10",
+				Required:  true,
+			},
+		},
 		Examples: []broker.ServiceExample{
 			broker.ServiceExample{
 				Name:        "Development Sandbox",

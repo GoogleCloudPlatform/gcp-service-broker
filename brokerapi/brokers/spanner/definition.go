@@ -80,6 +80,15 @@ func init() {
 				Details:   "Name of the spanner instance the account can connect to.",
 			},
 		),
+		PlanVariables: []broker.BrokerVariable{
+			broker.BrokerVariable{
+				FieldName: "num_nodes",
+				Type:      broker.JsonTypeString,
+				Details:   "Number of Nodes, A minimum of 3 nodes is recommended for production environments. (see https://cloud.google.com/spanner/pricing for more information)",
+				Default:   "1",
+				Required:  true,
+			},
+		},
 		Examples: []broker.ServiceExample{
 			broker.ServiceExample{
 				Name:            "Basic Configuration",

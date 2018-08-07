@@ -38,6 +38,7 @@ type Form struct {
 	Name        string         `yaml:"name"`
 	Label       string         `yaml:"label"`
 	Description string         `yaml:"description"`
+	Optional    bool           `yaml:"optional"`
 	Properties  []FormProperty `yaml:"properties"`
 }
 
@@ -54,9 +55,10 @@ type FormProperty struct {
 	Type         string       `yaml:"type,omitempty"`
 	Default      interface{}  `yaml:"default,omitempty"`
 	Label        string       `yaml:"label,omitempty"`
-	Configurable bool         `yaml:"configurable,omitempty"`
+	Description  string       `yaml:"description,omitempty"`
+	Configurable bool         `yaml:"configurable"`
 	Options      []FormOption `yaml:"options,omitempty"`
-	Optional     bool         `yaml:"optional,omitempty"`
+	Optional     bool         `yaml:"optional"`
 }
 
 // GenerateForms creates all the forms for the user to fill out in the PCF tile.
@@ -69,6 +71,8 @@ func GenerateForms() TileFormsSections {
 			GenerateDatabaseForm(),
 			GenerateEnableDisableForm(),
 		},
+
+		ServicePlanForms: GenerateServicePlanForms(),
 	}
 }
 
@@ -87,6 +91,7 @@ func GenerateEnableDisableForm() Form {
 			Type:         "boolean",
 			Default:      true,
 			Configurable: true,
+			Optional:     true,
 		}
 
 		enablers = append(enablers, enableForm)
@@ -129,4 +134,112 @@ func GenerateServiceAccountForm() Form {
 			FormProperty{Name: "root_service_account_json", Type: "text", Label: "Root Service Account JSON"},
 		},
 	}
+}
+
+func GenerateServicePlanForms() []Form {
+	out := []Form{}
+
+	for _, svc := range broker.GetAllServices() {
+		planVars := svc.PlanVariables
+
+		if planVars == nil || len(planVars) == 0 {
+			continue
+		}
+
+		form, err := GenerateServicePlanForm(svc)
+		if err != nil {
+			log.Fatalf("Error generating form for %+v, %s", form, err)
+		}
+
+		out = append(out, form)
+	}
+
+	return out
+}
+
+func GenerateServicePlanForm(svc *broker.BrokerService) (Form, error) {
+	entry, err := svc.CatalogEntry()
+	if err != nil {
+		return Form{}, err
+	}
+
+	displayName := entry.Metadata.DisplayName
+	planForm := Form{
+		Name:        strings.ToLower(svc.TileUserDefinedPlansVariable()),
+		Description: fmt.Sprintf("Generate custom plans for %s", displayName),
+		Label:       fmt.Sprintf("%s Custom Plans", displayName),
+		Optional:    true,
+		Properties: []FormProperty{
+			FormProperty{
+				Name:         "display_name",
+				Label:        "Display Name",
+				Type:         "string",
+				Description:  "Display name",
+				Configurable: true,
+			},
+			FormProperty{
+				Name:         "description",
+				Label:        "Plan description",
+				Type:         "string",
+				Description:  "Plan description",
+				Configurable: true,
+			},
+			FormProperty{
+				Name:        "service",
+				Label:       "Service",
+				Type:        "dropdown_select",
+				Description: "The service this plan is associated with",
+				Options: []FormOption{
+					FormOption{
+						Name:  entry.ID,
+						Label: displayName,
+					},
+				},
+			},
+		},
+	}
+
+	// Along with the above three fixed properties, each plan has optional
+	// additional properties.
+
+	for _, v := range svc.PlanVariables {
+		prop := brokerVariableToFormProperty(v)
+		planForm.Properties = append(planForm.Properties, prop)
+	}
+
+	return planForm, nil
+}
+
+func brokerVariableToFormProperty(v broker.BrokerVariable) FormProperty {
+	formInput := FormProperty{
+		Name:         v.FieldName,
+		Label:        propertyToLabel(v.FieldName),
+		Type:         string(v.Type),
+		Description:  v.Details,
+		Configurable: true,
+		Optional:     !v.Required,
+		Default:      v.Default,
+	}
+
+	if v.Enum != nil {
+		formInput.Type = "dropdown_select"
+
+		opts := []FormOption{}
+		for name, label := range v.Enum {
+			opts = append(opts, FormOption{Name: fmt.Sprintf("%v", name), Label: label})
+		}
+
+		formInput.Options = opts
+
+		if len(opts) == 1 {
+			formInput.Configurable = false
+			formInput.Default = opts[0].Name
+		}
+	}
+
+	return formInput
+}
+
+func propertyToLabel(property string) string {
+	return strings.Title(strings.NewReplacer("_", " ").Replace(property))
 }
