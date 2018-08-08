@@ -135,6 +135,8 @@ func GenerateServiceAccountForm() Form {
 	}
 }
 
+// GenerateServicePlanForms generates customized service plan forms for all
+// registered services that have the ability to customize their variables.
 func GenerateServicePlanForms() []Form {
 	out := []Form{}
 
@@ -156,6 +158,8 @@ func GenerateServicePlanForms() []Form {
 	return out
 }
 
+// GenerateServicePlanForm creates a form for adding additional service plans
+// to the broker for an existing service.
 func GenerateServicePlanForm(svc *broker.BrokerService) (Form, error) {
 	entry, err := svc.CatalogEntry()
 	if err != nil {
@@ -239,6 +243,8 @@ func brokerVariableToFormProperty(v broker.BrokerVariable) FormProperty {
 	return formInput
 }
 
+// propertyToLabel converts a JSON snake-case property into a title case
+// human-readable alternative.
 func propertyToLabel(property string) string {
 	return strings.Title(strings.NewReplacer("_", " ").Replace(property))
 }
