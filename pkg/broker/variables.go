@@ -34,4 +34,7 @@ type BrokerVariable struct {
 	Details string
 	// The default value of the field.
 	Default interface{}
+	// If there are a limited number of valid values for this field then
+	// Enum will hold them in value:friendly name pairs
+	Enum map[interface{}]string
 }

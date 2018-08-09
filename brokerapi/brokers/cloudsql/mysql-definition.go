@@ -176,6 +176,30 @@ func init() {
 		ProvisionInputVariables: commonProvisionVariables,
 		BindInputVariables:      commonBindVariables,
 		BindOutputVariables:     commonBindOutputVariables,
+		PlanVariables: []broker.BrokerVariable{
+			broker.BrokerVariable{
+				FieldName: "tier",
+				Type:      broker.JsonTypeString,
+				Details:   "Case-sensitive tier/machine type name (see https://cloud.google.com/sql/pricing for more information)",
+				Required:  true,
+			},
+			broker.BrokerVariable{
+				FieldName: "pricing_plan",
+				Type:      broker.JsonTypeString,
+				Details:   "Select a pricing plan (only for 1st generation instances)",
+				Default:   "PER_USE",
+				Enum: map[interface{}]string{
+					"PER_USE": "Per-Use",
+					"PACKAGE": "Package",
+				},
+			},
+			broker.BrokerVariable{
+				FieldName: "max_disk_size",
+				Type:      broker.JsonTypeString,
+				Details:   "Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default)",
+				Default:   "10",
+			},
+		},
 		Examples: []broker.ServiceExample{
 			broker.ServiceExample{
 				Name:        "Development Sandbox",

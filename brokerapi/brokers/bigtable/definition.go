@@ -99,6 +99,26 @@ func init() {
 				Details:   "The name of the BigTable dataset",
 			},
 		),
+		PlanVariables: []broker.BrokerVariable{
+			broker.BrokerVariable{
+				FieldName: "storage_type",
+				Type:      broker.JsonTypeString,
+				Details:   "Either HDD or SSD (see https://cloud.google.com/bigtable/pricing for more information)",
+				Default:   "SSD",
+				Required:  true,
+				Enum: map[interface{}]string{
+					"SSD": "SSD - Solid-state Drive",
+					"HDD": "HDD - Hard Disk Drive",
+				},
+			},
+			broker.BrokerVariable{
+				FieldName: "num_nodes",
+				Type:      broker.JsonTypeString,
+				Details:   "Number of Nodes, Between 3 and 30 (see https://cloud.google.com/bigtable/pricing for more information)",
+				Default:   "3",
+				Required:  true,
+			},
+		},
 		Examples: []broker.ServiceExample{
 			broker.ServiceExample{
 				Name:        "Basic Production Configuration",

@@ -66,6 +66,16 @@ func ExampleBrokerService_IsEnabled() {
 	// false
 }
 
+func ExampleBrokerService_TileUserDefinedPlansVariable() {
+	service := BrokerService{
+		Name: "google-spanner",
+	}
+
+	fmt.Println(service.TileUserDefinedPlansVariable())
+
+	// Output: SPANNER_CUSTOM_PLANS
+}
+
 func ExampleBrokerService_ServiceDefinition() {
 	service := BrokerService{
 		Name: "left-handed-smoke-sifter",

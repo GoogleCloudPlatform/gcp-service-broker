@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strings"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
@@ -104,6 +105,7 @@ type BrokerService struct {
 	ProvisionInputVariables  []BrokerVariable
 	BindInputVariables       []BrokerVariable
 	BindOutputVariables      []BrokerVariable
+	PlanVariables            []BrokerVariable
 	Examples                 []ServiceExample
 }
 
@@ -123,6 +125,19 @@ func (svc *BrokerService) DefinitionProperty() string {
 // of user-defined service plans.
 func (svc *BrokerService) UserDefinedPlansProperty() string {
 	return fmt.Sprintf("service.%s.plans", svc.Name)
+}
+
+// TileUserDefinedPlansVariable returns the name of the user defined plans
+// variable for the broker tile.
+func (svc *BrokerService) TileUserDefinedPlansVariable() string {
+	prefix := "GOOGLE_"
+
+	v := utils.PropertyToEnvUnprefixed(svc.Name)
+	if strings.HasPrefix(v, prefix) {
+		v = v[len(prefix):]
+	}
+
+	return v + "_CUSTOM_PLANS"
 }
 
 // IsEnabled returns false if the operator has explicitly disabled this service

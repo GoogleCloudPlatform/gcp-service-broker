@@ -38,6 +38,7 @@ type Form struct {
 	Name        string         `yaml:"name"`
 	Label       string         `yaml:"label"`
 	Description string         `yaml:"description"`
+	Optional    bool           `yaml:"optional,omitempty"` // optional, default false
 	Properties  []FormProperty `yaml:"properties"`
 }
 
@@ -51,12 +52,13 @@ type FormOption struct {
 // FormProperty holds a single form element in a PCF Ops manager form.
 type FormProperty struct {
 	Name         string       `yaml:"name"`
-	Type         string       `yaml:"type,omitempty"`
+	Type         string       `yaml:"type"`
 	Default      interface{}  `yaml:"default,omitempty"`
 	Label        string       `yaml:"label,omitempty"`
-	Configurable bool         `yaml:"configurable,omitempty"`
+	Description  string       `yaml:"description,omitempty"`
+	Configurable bool         `yaml:"configurable,omitempty"` // optional, default false
 	Options      []FormOption `yaml:"options,omitempty"`
-	Optional     bool         `yaml:"optional,omitempty"`
+	Optional     bool         `yaml:"optional,omitempty"` // optional, default false
 }
 
 // GenerateForms creates all the forms for the user to fill out in the PCF tile.
@@ -69,6 +71,8 @@ func GenerateForms() TileFormsSections {
 			GenerateDatabaseForm(),
 			GenerateEnableDisableForm(),
 		},
+
+		ServicePlanForms: GenerateServicePlanForms(),
 	}
 }
 
@@ -107,13 +111,13 @@ func GenerateDatabaseForm() Form {
 		Label:       "Database Properties",
 		Description: "Connection details for the backing database for the service broker",
 		Properties: []FormProperty{
-			FormProperty{Name: "db_host", Type: "string", Label: "Database host"},
-			FormProperty{Name: "db_username", Type: "string", Label: "Database username", Optional: true},
-			FormProperty{Name: "db_password", Type: "secret", Label: "Database password", Optional: true},
-			FormProperty{Name: "db_port", Type: "string", Label: "Database port (defaults to 3306)", Default: "3306"},
-			FormProperty{Name: "ca_cert", Type: "text", Label: "Server CA cert", Optional: true},
-			FormProperty{Name: "client_cert", Type: "text", Label: "Client cert", Optional: true},
-			FormProperty{Name: "client_key", Type: "text", Label: "Client key", Optional: true},
+			FormProperty{Name: "db_host", Type: "string", Label: "Database host", Configurable: true},
+			FormProperty{Name: "db_username", Type: "string", Label: "Database username", Optional: true, Configurable: true},
+			FormProperty{Name: "db_password", Type: "secret", Label: "Database password", Optional: true, Configurable: true},
+			FormProperty{Name: "db_port", Type: "string", Label: "Database port (defaults to 3306)", Default: "3306", Configurable: true},
+			FormProperty{Name: "ca_cert", Type: "text", Label: "Server CA cert", Optional: true, Configurable: true},
+			FormProperty{Name: "client_cert", Type: "text", Label: "Client cert", Optional: true, Configurable: true},
+			FormProperty{Name: "client_key", Type: "text", Label: "Client key", Optional: true, Configurable: true},
 		},
 	}
 }
@@ -126,7 +130,121 @@ func GenerateServiceAccountForm() Form {
 		Label:       "Root Service Account",
 		Description: "Please paste in the contents of the json keyfile (un-encoded) for your service account with owner credentials",
 		Properties: []FormProperty{
-			FormProperty{Name: "root_service_account_json", Type: "text", Label: "Root Service Account JSON"},
+			FormProperty{Name: "root_service_account_json", Type: "text", Label: "Root Service Account JSON", Configurable: true},
 		},
 	}
+}
+
+// GenerateServicePlanForms generates customized service plan forms for all
+// registered services that have the ability to customize their variables.
+func GenerateServicePlanForms() []Form {
+	out := []Form{}
+
+	for _, svc := range broker.GetAllServices() {
+		planVars := svc.PlanVariables
+
+		if planVars == nil || len(planVars) == 0 {
+			continue
+		}
+
+		form, err := GenerateServicePlanForm(svc)
+		if err != nil {
+			log.Fatalf("Error generating form for %+v, %s", form, err)
+		}
+
+		out = append(out, form)
+	}
+
+	return out
+}
+
+// GenerateServicePlanForm creates a form for adding additional service plans
+// to the broker for an existing service.
+func GenerateServicePlanForm(svc *broker.BrokerService) (Form, error) {
+	entry, err := svc.CatalogEntry()
+	if err != nil {
+		return Form{}, err
+	}
+
+	displayName := entry.Metadata.DisplayName
+	planForm := Form{
+		Name:        strings.ToLower(svc.TileUserDefinedPlansVariable()),
+		Description: fmt.Sprintf("Generate custom plans for %s", displayName),
+		Label:       fmt.Sprintf("%s Custom Plans", displayName),
+		Optional:    true,
+		Properties: []FormProperty{
+			FormProperty{
+				Name:         "display_name",
+				Label:        "Display Name",
+				Type:         "string",
+				Description:  "Display name",
+				Configurable: true,
+			},
+			FormProperty{
+				Name:         "description",
+				Label:        "Plan description",
+				Type:         "string",
+				Description:  "Plan description",
+				Configurable: true,
+			},
+			FormProperty{
+				Name:        "service",
+				Label:       "Service",
+				Type:        "dropdown_select",
+				Description: "The service this plan is associated with",
+				Options: []FormOption{
+					FormOption{
+						Name:  entry.ID,
+						Label: displayName,
+					},
+				},
+			},
+		},
+	}
+
+	// Along with the above three fixed properties, each plan has optional
+	// additional properties.
+
+	for _, v := range svc.PlanVariables {
+		prop := brokerVariableToFormProperty(v)
+		planForm.Properties = append(planForm.Properties, prop)
+	}
+
+	return planForm, nil
+}
+
+func brokerVariableToFormProperty(v broker.BrokerVariable) FormProperty {
+	formInput := FormProperty{
+		Name:         v.FieldName,
+		Label:        propertyToLabel(v.FieldName),
+		Type:         string(v.Type),
+		Description:  v.Details,
+		Configurable: true,
+		Optional:     !v.Required,
+		Default:      v.Default,
+	}
+
+	if v.Enum != nil {
+		formInput.Type = "dropdown_select"
+
+		opts := []FormOption{}
+		for name, label := range v.Enum {
+			opts = append(opts, FormOption{Name: fmt.Sprintf("%v", name), Label: label})
+		}
+
+		formInput.Options = opts
+
+		if len(opts) == 1 {
+			formInput.Configurable = false
+			formInput.Default = opts[0].Name
+		}
+	}
+
+	return formInput
+}
+
+// propertyToLabel converts a JSON snake-case property into a title case
+// human-readable alternative.
+func propertyToLabel(property string) string {
+	return strings.Title(strings.NewReplacer("_", " ").Replace(property))
 }
