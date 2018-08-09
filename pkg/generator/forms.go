@@ -115,6 +115,7 @@ func GenerateDatabaseForm() Form {
 			FormProperty{Name: "db_username", Type: "string", Label: "Database username", Optional: true, Configurable: true},
 			FormProperty{Name: "db_password", Type: "secret", Label: "Database password", Optional: true, Configurable: true},
 			FormProperty{Name: "db_port", Type: "string", Label: "Database port (defaults to 3306)", Default: "3306", Configurable: true},
+			FormProperty{Name: "db_name", Type: "string", Label: "Database name", Default: "servicebroker", Configurable: true},
 			FormProperty{Name: "ca_cert", Type: "text", Label: "Server CA cert", Optional: true, Configurable: true},
 			FormProperty{Name: "client_cert", Type: "text", Label: "Client cert", Optional: true, Configurable: true},
 			FormProperty{Name: "client_key", Type: "text", Label: "Client key", Optional: true, Configurable: true},
@@ -192,6 +193,7 @@ func GenerateServicePlanForm(svc *broker.BrokerService) (Form, error) {
 				Label:       "Service",
 				Type:        "dropdown_select",
 				Description: "The service this plan is associated with",
+				Default:     entry.ID,
 				Options: []FormOption{
 					FormOption{
 						Name:  entry.ID,

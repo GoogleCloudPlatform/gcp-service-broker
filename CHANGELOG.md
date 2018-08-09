@@ -5,16 +5,16 @@ this file. This project adheres to [Semantic Versioning](http://semver.org/).
 ## [1.0.0] - 2016-10-03
 
 ### Fixed
-- Switched from using PLANS environment variable to using CLOUDSQL_CUSTOM_PLANS 
+- Switched from using PLANS environment variable to using CLOUDSQL_CUSTOM_PLANS
 to generate CloudSQL plans. Fixed bug where at least one CloudSQL plan was required
 and changed DB password type in tile config from string to secret. Note that due to
-a migration issue in Ops Manager, you'll need to delete and re-install the broker 
+a migration issue in Ops Manager, you'll need to delete and re-install the broker
 if you are using it as a tile.
 
 ## [1.0.1] - 2016-10-07
 
 ### Fixed
-- Removed specified stemcell version from tile.yml so that most recent stemcell is 
+- Removed specified stemcell version from tile.yml so that most recent stemcell is
 used by default.
 
 ## [2.0.0] - 2016-10-10
@@ -130,12 +130,12 @@ any extra access details
 
 
 ## [3.5.2] - 2017-10-17
- 
+
 - fixed Postgres connection uri
 - added wait for ssl certs to finish being created in sql account manager
 
 ## [3.6.0] - 2017-01-03
- 
+
 - changed default authorized networks for cloudsql instances from `0.0.0.0/0` to none
 - added optional parameter to cloudsql provision operation to specify authorized networks
 - added service account and key provisioning on cloudsql bind operations
@@ -151,5 +151,6 @@ any extra access details
 - changed custom plan id field name from `guid` to `id`
 - modified `"features"` plan config field name to `"service_properties"`
 - modified the formatting of custom plans to be consistent with that of preconfigured plans
-- modified structure of all catalog-related environment variables - `plans` is now a sub-field of the Service object, 
+- modified structure of all catalog-related environment variables - `plans` is now a sub-field of the Service object,
 and Service objects are defined individually by setting env variables like `GOOGLE_<SERVICE_NAME>`
+- added ability to customize database name in the Tile

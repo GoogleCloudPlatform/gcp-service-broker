@@ -32,8 +32,9 @@ func init() {
 			cmd.Help()
 		},
 	}
+	rootCmd.AddCommand(generateCmd)
 
-	generateUseCmd := &cobra.Command{
+	generateCmd.AddCommand(&cobra.Command{
 		Use:   "use",
 		Short: "Generate use markdown file",
 		Long: `Generates the use.md file with:
@@ -45,9 +46,9 @@ func init() {
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(generator.CatalogDocumentation())
 		},
-	}
+	})
 
-	generateFormsCmd := &cobra.Command{
+	generateCmd.AddCommand(&cobra.Command{
 		Use:   "forms",
 		Short: "Generate PCF Tile Forms",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -58,8 +59,14 @@ func init() {
 
 			fmt.Println(string(response))
 		},
-	}
+	})
 
-	rootCmd.AddCommand(generateCmd)
-	generateCmd.AddCommand(generateUseCmd, generateFormsCmd)
+	generateCmd.AddCommand(&cobra.Command{
+		Use:   "customization",
+		Short: "Generate customization documentation",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(generator.GenerateCustomizationMd())
+		},
+	})
+
 }

@@ -1,115 +1,891 @@
+
 # Installation Customization
 
-Optionally add these to the env section of `manifest.yml`
-
-## [Optional db vars](#optional-db)
-
-* `DB_PORT` (defaults to 3306)
-* `DB_NAME` (defaults to "servicebroker")
-* `CA_CERT`
-* `CLIENT_CERT`
-* `CLIENT_KEY`
-
-## [Optional service vars](#optional-plan)
-
-update the following variables in `manifest.yml` if you wish to enable these services
-
-* `GOOGLE_CLOUDSQL_MYSQL.plans` (A list of json objects with fields `id`, `name`, `description`, `
-service_properties` (containing `tier`, `pricing_plan`, `max_disk_size`), `display_name`, and `service_id`
-(Cloud SQL's service id)) - if unset, the service will be disabled.
-
-e.g.,
-
-```json
-[
-    {
-        "id": "test-cloudsql-plan",
-        "name": "test_plan",
-        "description": "testplan",
-        "service_properties": {
-            "tier": "D8",
-            "pricing_plan": "PER_USE",
-            "max_disk_size": "15"
-        },
-        "display_name": "FOOBAR",
-        "service_id": "4bc59b9a-8520-409f-85da-1c7552315863"
-    }
-]
-```
+This file documents the various environment variables you can set to change the functionality of the service broker.
+If you are using the PCF Tile deployment, then you can manage all of these options through the operator forms.
+If you are running your own, then you can set them in the application manifest of a PCF deployment, or in your pod configuration for Kubernetes.
 
 
-* `GOOGLE_CLOUDSQL_MYSQL.plans` (A list of json objects with fields `id`, `name`, `description`, `tier`,
-`pricing_plan`, `max_disk_size`, `display_name`, and `service` (CloudSQL PostgreSQL's service id)) - if unset, the service
-will be disabled. e.g.,
+## Root Service Account
 
-```json
-{
-    "test_plan": {
-        "name": "test_plan",
-        "description": "testplan",
-        "tier": "db-g1-small",
-        "pricing_plan": "PER_USE",
-        "max_disk_size": "15",
-        "display_name": "FOOBAR",
-        "service": "cbad6d78-a73c-432d-b8ff-b219a17a803a"
-    }
-}
-```
+Please paste in the contents of the json keyfile (un-encoded) for your service account with owner credentials
+
+You can configure the following environment variables:
+
+**<tt>ROOT_SERVICE_ACCOUNT_JSON</tt>** - _text_ - Root Service Account JSON
 
 
-* `GOOGLE_BIGTABLE.plans` (A list of json objects with fields `id`, `name`, `description`,
-`service_properties` (containing `storage_type`, `num_nodes`), `display_name`, and `service_id` (Bigtable's service id))
-- if unset, the service will be disabled.
 
-e.g.,
 
-```json
-[
-    {
-        "id": "test-bigtable-plan",
-        "name": "bt_plan",
-        "description": "Bigtable basic plan",
-        "service_properties": {
-            "storage_type": "HDD",
-            "num_nodes": "5"
-        },
-        "display_name": "Bigtable Plan",
-        "service_id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
-    }
-]
-```
-* `GOOGLE_SPANNER.plans` (A list of json objects with fields `id`, `name`, `description`, `service_properties` (containing
-`num_nodes`), `display_name`, and `service_id` (Spanner's service id)) - if unset, the service will be disabled.
 
-e.g.,
+<ul>
+	<li> **Required** </li>
 
-```json
-[
-    {
-        "id": "test-spanner-plan",
-        "name": "spannerplan",
-        "description": "Basic Spanner plan",
-        "service_properties": {
-            "num_nodes": "15"
-        },
-        "display_name": "Spanner Plan",
-        "service_id": "51b3e27e-d323-49ce-8c5f-1211e6409e82"
-    }
-]
-```
 
-## [Disabling Services Vars](#disable-service)
+</ul>
 
-You can disable services by setting their associated enabled flag to be `false`:
 
-* `GSB_SERVICE_GOOGLE_BIGQUERY_ENABLED`
-* `GSB_SERVICE_GOOGLE_BIGTABLE_ENABLED`
-* `GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_ENABLED`
-* `GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_ENABLED`
-* `GSB_SERVICE_GOOGLE_DATASTORE_ENABLED`
-* `GSB_SERVICE_GOOGLE_ML_APIS_ENABLED`
-* `GSB_SERVICE_GOOGLE_PUBSUB_ENABLED`
-* `GSB_SERVICE_GOOGLE_SPANNER_ENABLED`
-* `GSB_SERVICE_GOOGLE_STACKDRIVER_DEBUGGER_ENABLED`
-* `GSB_SERVICE_GOOGLE_STACKDRIVER_TRACE_ENABLED`
-* `GSB_SERVICE_GOOGLE_STORAGE_ENABLED`
+
+## Database Properties
+
+Connection details for the backing database for the service broker
+
+You can configure the following environment variables:
+
+**<tt>DB_HOST</tt>** - _string_ - Database host
+
+
+
+
+
+<ul>
+	<li> **Required** </li>
+
+
+</ul>
+
+**<tt>DB_USERNAME</tt>** - _string_ - Database username
+
+
+
+
+
+<ul>
+	<li> _Optional_ </li>
+
+
+</ul>
+
+**<tt>DB_PASSWORD</tt>** - _secret_ - Database password
+
+
+
+
+
+<ul>
+	<li> _Optional_ </li>
+
+
+</ul>
+
+**<tt>DB_PORT</tt>** - _string_ - Database port (defaults to 3306)
+
+
+
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>3306</code></li>
+</ul>
+
+**<tt>DB_NAME</tt>** - _string_ - Database name
+
+
+
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>servicebroker</code></li>
+</ul>
+
+**<tt>CA_CERT</tt>** - _text_ - Server CA cert
+
+
+
+
+
+<ul>
+	<li> _Optional_ </li>
+
+
+</ul>
+
+**<tt>CLIENT_CERT</tt>** - _text_ - Client cert
+
+
+
+
+
+<ul>
+	<li> _Optional_ </li>
+
+
+</ul>
+
+**<tt>CLIENT_KEY</tt>** - _text_ - Client key
+
+
+
+
+
+<ul>
+	<li> _Optional_ </li>
+
+
+</ul>
+
+
+
+## Enable Services
+
+Enable or disable services
+
+You can configure the following environment variables:
+
+**<tt>GSB_SERVICE_GOOGLE_BIGQUERY_ENABLED</tt>** - _boolean_ - Let the broker create and bind Google BigQuery instances
+
+
+
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>true</code></li>
+</ul>
+
+**<tt>GSB_SERVICE_GOOGLE_BIGTABLE_ENABLED</tt>** - _boolean_ - Let the broker create and bind Google Bigtable instances
+
+
+
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>true</code></li>
+</ul>
+
+**<tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_ENABLED</tt>** - _boolean_ - Let the broker create and bind Google CloudSQL MySQL instances
+
+
+
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>true</code></li>
+</ul>
+
+**<tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_ENABLED</tt>** - _boolean_ - Let the broker create and bind Google CloudSQL PostgreSQL instances
+
+
+
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>true</code></li>
+</ul>
+
+**<tt>GSB_SERVICE_GOOGLE_DATASTORE_ENABLED</tt>** - _boolean_ - Let the broker create and bind Google Cloud Datastore instances
+
+
+
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>true</code></li>
+</ul>
+
+**<tt>GSB_SERVICE_GOOGLE_ML_APIS_ENABLED</tt>** - _boolean_ - Let the broker create and bind Google Machine Learning APIs instances
+
+
+
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>true</code></li>
+</ul>
+
+**<tt>GSB_SERVICE_GOOGLE_PUBSUB_ENABLED</tt>** - _boolean_ - Let the broker create and bind Google PubSub instances
+
+
+
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>true</code></li>
+</ul>
+
+**<tt>GSB_SERVICE_GOOGLE_SPANNER_ENABLED</tt>** - _boolean_ - Let the broker create and bind Google Spanner instances
+
+
+
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>true</code></li>
+</ul>
+
+**<tt>GSB_SERVICE_GOOGLE_STACKDRIVER_DEBUGGER_ENABLED</tt>** - _boolean_ - Let the broker create and bind Stackdriver Debugger instances
+
+
+
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>true</code></li>
+</ul>
+
+**<tt>GSB_SERVICE_GOOGLE_STACKDRIVER_TRACE_ENABLED</tt>** - _boolean_ - Let the broker create and bind Stackdriver Trace instances
+
+
+
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>true</code></li>
+</ul>
+
+**<tt>GSB_SERVICE_GOOGLE_STORAGE_ENABLED</tt>** - _boolean_ - Let the broker create and bind Google Cloud Storage instances
+
+
+
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>true</code></li>
+</ul>
+
+
+
+
+## Custom Plans
+
+You can specify custom plans for the following services.
+The plans MUST be an array of flat JSON objects stored in their associated environment variable e.g. <code>[{...}, {...},...]</code>.
+Each plan MUST have a unique UUID, if you modify the plan the UUID should stay the same to ensure previously provisioned services continue to work.
+If you are using the PCF tile, it will generate the UUIDs for you.
+DO NOT delete plans, instead you should change their labels to mark them as deprecated.
+
+### Google Bigtable Custom Plans
+
+Generate custom plans for Google Bigtable.
+To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>BIGTABLE_CUSTOM_PLANS</tt>.
+
+For example:
+<code>
+[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "display_name": setme, "description": setme, "service": setme, "storage_type": setme, "num_nodes": setme},...]
+</code>
+
+<table>
+<tr>
+	<th>JSON Property</th>
+	<th>Type</th>
+	<th>Label</th>
+	<th>Details</th>
+</tr>
+<tr>
+	<td><tt>id</tt></td>
+	<td><i>string</i></td>
+	<td>Plan UUID</td>
+	<td>
+		The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
+		<ul><li>**Required**</li></ul>
+	</td>
+</tr>
+<tr>
+	<td><tt>name</tt></td>
+	<td><i>string</i></td>
+	<td>Plan CLI Name</td>
+	<td>
+		The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
+		<ul><li>**Required**</li></ul>
+	</td>
+</tr>
+
+
+	<tr>
+		<td><tt>display_name</tt></td>
+		<td><i>string</i></td>
+		<td>Display Name</td>
+		<td>
+		Display name
+
+
+<ul>
+	<li> **Required** </li>
+
+
+</ul>
+
+
+		</td>
+	</tr>
+
+	<tr>
+		<td><tt>description</tt></td>
+		<td><i>string</i></td>
+		<td>Plan description</td>
+		<td>
+		Plan description
+
+
+<ul>
+	<li> **Required** </li>
+
+
+</ul>
+
+
+		</td>
+	</tr>
+
+	<tr>
+		<td><tt>service</tt></td>
+		<td><i>dropdown_select</i></td>
+		<td>Service</td>
+		<td>
+		The service this plan is associated with
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>b8e19880-ac58-42ef-b033-f7cd9c94d1fe</code></li>
+	<li>This option _is not_ user configurable. It must be set to the default.</li>
+	<li>Valid Values:
+	<ul>
+		<li><tt>b8e19880-ac58-42ef-b033-f7cd9c94d1fe</tt> - Google Bigtable</li>
+	</ul>
+	</li>
+
+</ul>
+
+
+		</td>
+	</tr>
+
+	<tr>
+		<td><tt>storage_type</tt></td>
+		<td><i>dropdown_select</i></td>
+		<td>Storage Type</td>
+		<td>
+		Either HDD or SSD (see https://cloud.google.com/bigtable/pricing for more information)
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>SSD</code></li>
+	<li>Valid Values:
+	<ul>
+		<li><tt>SSD</tt> - SSD - Solid-state Drive</li><li><tt>HDD</tt> - HDD - Hard Disk Drive</li>
+	</ul>
+	</li>
+
+</ul>
+
+
+		</td>
+	</tr>
+
+	<tr>
+		<td><tt>num_nodes</tt></td>
+		<td><i>string</i></td>
+		<td>Num Nodes</td>
+		<td>
+		Number of Nodes, Between 3 and 30 (see https://cloud.google.com/bigtable/pricing for more information)
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>3</code></li>
+</ul>
+
+
+		</td>
+	</tr>
+
+</table>
+
+### Google CloudSQL MySQL Custom Plans
+
+Generate custom plans for Google CloudSQL MySQL.
+To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>CLOUDSQL_MYSQL_CUSTOM_PLANS</tt>.
+
+For example:
+<code>
+[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "display_name": setme, "description": setme, "service": setme, "tier": setme, "pricing_plan": setme, "max_disk_size": setme},...]
+</code>
+
+<table>
+<tr>
+	<th>JSON Property</th>
+	<th>Type</th>
+	<th>Label</th>
+	<th>Details</th>
+</tr>
+<tr>
+	<td><tt>id</tt></td>
+	<td><i>string</i></td>
+	<td>Plan UUID</td>
+	<td>
+		The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
+		<ul><li>**Required**</li></ul>
+	</td>
+</tr>
+<tr>
+	<td><tt>name</tt></td>
+	<td><i>string</i></td>
+	<td>Plan CLI Name</td>
+	<td>
+		The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
+		<ul><li>**Required**</li></ul>
+	</td>
+</tr>
+
+
+	<tr>
+		<td><tt>display_name</tt></td>
+		<td><i>string</i></td>
+		<td>Display Name</td>
+		<td>
+		Display name
+
+
+<ul>
+	<li> **Required** </li>
+
+
+</ul>
+
+
+		</td>
+	</tr>
+
+	<tr>
+		<td><tt>description</tt></td>
+		<td><i>string</i></td>
+		<td>Plan description</td>
+		<td>
+		Plan description
+
+
+<ul>
+	<li> **Required** </li>
+
+
+</ul>
+
+
+		</td>
+	</tr>
+
+	<tr>
+		<td><tt>service</tt></td>
+		<td><i>dropdown_select</i></td>
+		<td>Service</td>
+		<td>
+		The service this plan is associated with
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>4bc59b9a-8520-409f-85da-1c7552315863</code></li>
+	<li>This option _is not_ user configurable. It must be set to the default.</li>
+	<li>Valid Values:
+	<ul>
+		<li><tt>4bc59b9a-8520-409f-85da-1c7552315863</tt> - Google CloudSQL MySQL</li>
+	</ul>
+	</li>
+
+</ul>
+
+
+		</td>
+	</tr>
+
+	<tr>
+		<td><tt>tier</tt></td>
+		<td><i>string</i></td>
+		<td>Tier</td>
+		<td>
+		Case-sensitive tier/machine type name (see https://cloud.google.com/sql/pricing for more information)
+
+
+<ul>
+	<li> **Required** </li>
+
+
+</ul>
+
+
+		</td>
+	</tr>
+
+	<tr>
+		<td><tt>pricing_plan</tt></td>
+		<td><i>dropdown_select</i></td>
+		<td>Pricing Plan</td>
+		<td>
+		Select a pricing plan (only for 1st generation instances)
+
+
+<ul>
+	<li> _Optional_ </li>
+
+
+	<li>Default: <code>PER_USE</code></li>
+	<li>Valid Values:
+	<ul>
+		<li><tt>PACKAGE</tt> - Package</li><li><tt>PER_USE</tt> - Per-Use</li>
+	</ul>
+	</li>
+
+</ul>
+
+
+		</td>
+	</tr>
+
+	<tr>
+		<td><tt>max_disk_size</tt></td>
+		<td><i>string</i></td>
+		<td>Max Disk Size</td>
+		<td>
+		Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default)
+
+
+<ul>
+	<li> _Optional_ </li>
+
+
+	<li>Default: <code>10</code></li>
+</ul>
+
+
+		</td>
+	</tr>
+
+</table>
+
+### Google CloudSQL PostgreSQL Custom Plans
+
+Generate custom plans for Google CloudSQL PostgreSQL.
+To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>CLOUDSQL_POSTGRES_CUSTOM_PLANS</tt>.
+
+For example:
+<code>
+[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "display_name": setme, "description": setme, "service": setme, "tier": setme, "pricing_plan": setme, "max_disk_size": setme},...]
+</code>
+
+<table>
+<tr>
+	<th>JSON Property</th>
+	<th>Type</th>
+	<th>Label</th>
+	<th>Details</th>
+</tr>
+<tr>
+	<td><tt>id</tt></td>
+	<td><i>string</i></td>
+	<td>Plan UUID</td>
+	<td>
+		The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
+		<ul><li>**Required**</li></ul>
+	</td>
+</tr>
+<tr>
+	<td><tt>name</tt></td>
+	<td><i>string</i></td>
+	<td>Plan CLI Name</td>
+	<td>
+		The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
+		<ul><li>**Required**</li></ul>
+	</td>
+</tr>
+
+
+	<tr>
+		<td><tt>display_name</tt></td>
+		<td><i>string</i></td>
+		<td>Display Name</td>
+		<td>
+		Display name
+
+
+<ul>
+	<li> **Required** </li>
+
+
+</ul>
+
+
+		</td>
+	</tr>
+
+	<tr>
+		<td><tt>description</tt></td>
+		<td><i>string</i></td>
+		<td>Plan description</td>
+		<td>
+		Plan description
+
+
+<ul>
+	<li> **Required** </li>
+
+
+</ul>
+
+
+		</td>
+	</tr>
+
+	<tr>
+		<td><tt>service</tt></td>
+		<td><i>dropdown_select</i></td>
+		<td>Service</td>
+		<td>
+		The service this plan is associated with
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>cbad6d78-a73c-432d-b8ff-b219a17a803a</code></li>
+	<li>This option _is not_ user configurable. It must be set to the default.</li>
+	<li>Valid Values:
+	<ul>
+		<li><tt>cbad6d78-a73c-432d-b8ff-b219a17a803a</tt> - Google CloudSQL PostgreSQL</li>
+	</ul>
+	</li>
+
+</ul>
+
+
+		</td>
+	</tr>
+
+	<tr>
+		<td><tt>tier</tt></td>
+		<td><i>string</i></td>
+		<td>Tier</td>
+		<td>
+		a string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840
+
+
+<ul>
+	<li> **Required** </li>
+
+
+</ul>
+
+
+		</td>
+	</tr>
+
+	<tr>
+		<td><tt>pricing_plan</tt></td>
+		<td><i>dropdown_select</i></td>
+		<td>Pricing Plan</td>
+		<td>
+		The pricing plan
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>PER_USE</code></li>
+	<li>This option _is not_ user configurable. It must be set to the default.</li>
+	<li>Valid Values:
+	<ul>
+		<li><tt>PER_USE</tt> - Per-Use</li>
+	</ul>
+	</li>
+
+</ul>
+
+
+		</td>
+	</tr>
+
+	<tr>
+		<td><tt>max_disk_size</tt></td>
+		<td><i>string</i></td>
+		<td>Max Disk Size</td>
+		<td>
+		Maximum disk size in GB (10 minimum/default)
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>10</code></li>
+</ul>
+
+
+		</td>
+	</tr>
+
+</table>
+
+### Google Spanner Custom Plans
+
+Generate custom plans for Google Spanner.
+To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>SPANNER_CUSTOM_PLANS</tt>.
+
+For example:
+<code>
+[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "display_name": setme, "description": setme, "service": setme, "num_nodes": setme},...]
+</code>
+
+<table>
+<tr>
+	<th>JSON Property</th>
+	<th>Type</th>
+	<th>Label</th>
+	<th>Details</th>
+</tr>
+<tr>
+	<td><tt>id</tt></td>
+	<td><i>string</i></td>
+	<td>Plan UUID</td>
+	<td>
+		The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
+		<ul><li>**Required**</li></ul>
+	</td>
+</tr>
+<tr>
+	<td><tt>name</tt></td>
+	<td><i>string</i></td>
+	<td>Plan CLI Name</td>
+	<td>
+		The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
+		<ul><li>**Required**</li></ul>
+	</td>
+</tr>
+
+
+	<tr>
+		<td><tt>display_name</tt></td>
+		<td><i>string</i></td>
+		<td>Display Name</td>
+		<td>
+		Display name
+
+
+<ul>
+	<li> **Required** </li>
+
+
+</ul>
+
+
+		</td>
+	</tr>
+
+	<tr>
+		<td><tt>description</tt></td>
+		<td><i>string</i></td>
+		<td>Plan description</td>
+		<td>
+		Plan description
+
+
+<ul>
+	<li> **Required** </li>
+
+
+</ul>
+
+
+		</td>
+	</tr>
+
+	<tr>
+		<td><tt>service</tt></td>
+		<td><i>dropdown_select</i></td>
+		<td>Service</td>
+		<td>
+		The service this plan is associated with
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>51b3e27e-d323-49ce-8c5f-1211e6409e82</code></li>
+	<li>This option _is not_ user configurable. It must be set to the default.</li>
+	<li>Valid Values:
+	<ul>
+		<li><tt>51b3e27e-d323-49ce-8c5f-1211e6409e82</tt> - Google Spanner</li>
+	</ul>
+	</li>
+
+</ul>
+
+
+		</td>
+	</tr>
+
+	<tr>
+		<td><tt>num_nodes</tt></td>
+		<td><i>string</i></td>
+		<td>Num Nodes</td>
+		<td>
+		Number of Nodes, A minimum of 3 nodes is recommended for production environments. (see https://cloud.google.com/spanner/pricing for more information)
+
+
+<ul>
+	<li> **Required** </li>
+
+
+	<li>Default: <code>1</code></li>
+</ul>
+
+
+		</td>
+	</tr>
+
+</table>
+
+
+
+---------------------------------------
+
+_Note: **Do not edit this file**, it was auto-generated by running <code>gcp-service-broker generate customization</code>. If you find an error, change the source code in <tt>customization-md.go</tt> or file a bug._
