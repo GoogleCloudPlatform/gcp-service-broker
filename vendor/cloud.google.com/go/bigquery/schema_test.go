@@ -1,4 +1,4 @@
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2015 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,12 +16,14 @@ package bigquery
 
 import (
 	"fmt"
+	"math/big"
 	"reflect"
 	"testing"
 	"time"
 
 	"cloud.google.com/go/civil"
 	"cloud.google.com/go/internal/pretty"
+	"cloud.google.com/go/internal/testutil"
 
 	bq "google.golang.org/api/bigquery/v2"
 )
@@ -158,6 +160,17 @@ func TestSchemaConversion(t *testing.T) {
 			},
 		},
 		{
+			// numeric
+			bqSchema: &bq.TableSchema{
+				Fields: []*bq.TableFieldSchema{
+					bqTableFieldSchema("desc", "n", "NUMERIC", ""),
+				},
+			},
+			schema: Schema{
+				fieldSchema("desc", "n", "NUMERIC", false, false),
+			},
+		},
+		{
 			// nested
 			bqSchema: &bq.TableSchema{
 				Fields: []*bq.TableFieldSchema{
@@ -178,7 +191,7 @@ func TestSchemaConversion(t *testing.T) {
 					Name:        "outer",
 					Required:    true,
 					Type:        "RECORD",
-					Schema: []*FieldSchema{
+					Schema: Schema{
 						{
 							Description: "inner field",
 							Name:        "inner",
@@ -189,15 +202,14 @@ func TestSchemaConversion(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tc := range testCases {
-		bqSchema := tc.schema.asTableSchema()
-		if !reflect.DeepEqual(bqSchema, tc.bqSchema) {
+		bqSchema := tc.schema.toBQ()
+		if !testutil.Equal(bqSchema, tc.bqSchema) {
 			t.Errorf("converting to TableSchema: got:\n%v\nwant:\n%v",
 				pretty.Value(bqSchema), pretty.Value(tc.bqSchema))
 		}
-		schema := convertTableSchema(tc.bqSchema)
-		if !reflect.DeepEqual(schema, tc.schema) {
+		schema := bqToSchema(tc.bqSchema)
+		if !testutil.Equal(schema, tc.schema) {
 			t.Errorf("converting to Schema: got:\n%v\nwant:\n%v", schema, tc.schema)
 		}
 	}
@@ -239,11 +251,23 @@ type allTime struct {
 	DateTime  civil.DateTime
 }
 
+type allNumeric struct {
+	Numeric *big.Rat
+}
+
 func reqField(name, typ string) *FieldSchema {
 	return &FieldSchema{
 		Name:     name,
 		Type:     FieldType(typ),
 		Required: true,
+	}
+}
+
+func optField(name, typ string) *FieldSchema {
+	return &FieldSchema{
+		Name:     name,
+		Type:     FieldType(typ),
+		Required: false,
 	}
 }
 
@@ -299,6 +323,12 @@ func TestSimpleInference(t *testing.T) {
 			},
 		},
 		{
+			in: &allNumeric{},
+			want: Schema{
+				reqField("Numeric", "NUMERIC"),
+			},
+		},
+		{
 			in: allStrings{},
 			want: Schema{
 				reqField("String", "STRING"),
@@ -311,7 +341,7 @@ func TestSimpleInference(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%T: error inferring TableSchema: %v", tc.in, err)
 		}
-		if !reflect.DeepEqual(got, tc.want) {
+		if !testutil.Equal(got, tc.want) {
 			t.Errorf("%T: inferring TableSchema: got:\n%#v\nwant:\n%#v", tc.in,
 				pretty.Value(got), pretty.Value(tc.want))
 		}
@@ -414,7 +444,7 @@ func TestNestedInference(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%T: error inferring TableSchema: %v", tc.in, err)
 		}
-		if !reflect.DeepEqual(got, tc.want) {
+		if !testutil.Equal(got, tc.want) {
 			t.Errorf("%T: inferring TableSchema: got:\n%#v\nwant:\n%#v", tc.in,
 				pretty.Value(got), pretty.Value(tc.want))
 		}
@@ -483,10 +513,41 @@ func TestRepeatedInference(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%d: error inferring TableSchema: %v", i, err)
 		}
-		if !reflect.DeepEqual(got, tc.want) {
+		if !testutil.Equal(got, tc.want) {
 			t.Errorf("%d: inferring TableSchema: got:\n%#v\nwant:\n%#v", i,
 				pretty.Value(got), pretty.Value(tc.want))
 		}
+	}
+}
+
+type allNulls struct {
+	A NullInt64
+	B NullFloat64
+	C NullBool
+	D NullString
+	E NullTimestamp
+	F NullTime
+	G NullDate
+	H NullDateTime
+}
+
+func TestNullInference(t *testing.T) {
+	got, err := InferSchema(allNulls{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := Schema{
+		optField("A", "INTEGER"),
+		optField("B", "FLOAT"),
+		optField("C", "BOOLEAN"),
+		optField("D", "STRING"),
+		optField("E", "TIMESTAMP"),
+		optField("F", "TIME"),
+		optField("G", "DATE"),
+		optField("H", "DATETIME"),
+	}
+	if diff := testutil.Diff(got, want); diff != "" {
+		t.Error(diff)
 	}
 }
 
@@ -512,7 +573,7 @@ func TestEmbeddedInference(t *testing.T) {
 		reqField("Embedded", "INTEGER"),
 		reqField("Embedded2", "INTEGER"),
 	}
-	if !reflect.DeepEqual(got, want) {
+	if !testutil.Equal(got, want) {
 		t.Errorf("got %v, want %v", pretty.Value(got), pretty.Value(want))
 	}
 }
@@ -531,10 +592,12 @@ func TestRecursiveInference(t *testing.T) {
 
 type withTags struct {
 	NoTag         int
-	ExcludeTag    int `bigquery:"-"`
-	SimpleTag     int `bigquery:"simple_tag"`
-	UnderscoreTag int `bigquery:"_id"`
-	MixedCase     int `bigquery:"MIXEDcase"`
+	ExcludeTag    int      `bigquery:"-"`
+	SimpleTag     int      `bigquery:"simple_tag"`
+	UnderscoreTag int      `bigquery:"_id"`
+	MixedCase     int      `bigquery:"MIXEDcase"`
+	Nullable      []byte   `bigquery:",nullable"`
+	NullNumeric   *big.Rat `bigquery:",nullable"`
 }
 
 type withTagsNested struct {
@@ -543,6 +606,8 @@ type withTagsNested struct {
 		ExcludeTag int `bigquery:"-"`
 		Inside     int `bigquery:"inside"`
 	} `bigquery:"anon"`
+	PNested         *struct{ X int } // not nullable, for backwards compatibility
+	PNestedNullable *struct{ X int } `bigquery:",nullable"`
 }
 
 type withTagsRepeated struct {
@@ -562,6 +627,8 @@ var withTagsSchema = Schema{
 	reqField("simple_tag", "INTEGER"),
 	reqField("_id", "INTEGER"),
 	reqField("MIXEDcase", "INTEGER"),
+	optField("Nullable", "BYTES"),
+	optField("NullNumeric", "NUMERIC"),
 }
 
 func TestTagInference(t *testing.T) {
@@ -587,6 +654,18 @@ func TestTagInference(t *testing.T) {
 					Required: true,
 					Type:     "RECORD",
 					Schema:   Schema{reqField("inside", "INTEGER")},
+				},
+				&FieldSchema{
+					Name:     "PNested",
+					Required: true,
+					Type:     "RECORD",
+					Schema:   Schema{reqField("X", "INTEGER")},
+				},
+				&FieldSchema{
+					Name:     "PNestedNullable",
+					Required: false,
+					Type:     "RECORD",
+					Schema:   Schema{reqField("X", "INTEGER")},
 				},
 			},
 		},
@@ -617,7 +696,7 @@ func TestTagInference(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%d: error inferring TableSchema: %v", i, err)
 		}
-		if !reflect.DeepEqual(got, tc.want) {
+		if !testutil.Equal(got, tc.want) {
 			t.Errorf("%d: inferring TableSchema: got:\n%#v\nwant:\n%#v", i,
 				pretty.Value(got), pretty.Value(tc.want))
 		}
@@ -665,19 +744,20 @@ func TestTagInferenceErrors(t *testing.T) {
 			}{},
 			err: errInvalidFieldName,
 		},
-		{
-			in: struct {
-				OmitEmpty int `bigquery:"abc,omitempty"`
-			}{},
-			err: errInvalidFieldName,
-		},
 	}
 	for i, tc := range testCases {
 		want := tc.err
 		_, got := InferSchema(tc.in)
-		if !reflect.DeepEqual(got, want) {
+		if got != want {
 			t.Errorf("%d: inferring TableSchema: got:\n%#v\nwant:\n%#v", i, got, want)
 		}
+	}
+
+	_, err := InferSchema(struct {
+		X int `bigquery:",optional"`
+	}{})
+	if err == nil {
+		t.Error("got nil, want error")
 	}
 }
 
@@ -720,7 +800,7 @@ func TestSchemaErrors(t *testing.T) {
 		},
 		{
 			in:  struct{ Ptr *int }{},
-			err: errNoStruct,
+			err: errUnsupportedFieldType,
 		},
 		{
 			in:  struct{ Interface interface{} }{},
@@ -735,6 +815,14 @@ func TestSchemaErrors(t *testing.T) {
 			err: errUnsupportedFieldType,
 		},
 		{
+			in:  struct{ SliceOfPointer []*int }{},
+			err: errUnsupportedFieldType,
+		},
+		{
+			in:  struct{ SliceOfNull []NullInt64 }{},
+			err: errUnsupportedFieldType,
+		},
+		{
 			in:  struct{ ChanSlice []chan bool }{},
 			err: errUnsupportedFieldType,
 		},
@@ -742,11 +830,47 @@ func TestSchemaErrors(t *testing.T) {
 			in:  struct{ NestedChan struct{ Chan []chan bool } }{},
 			err: errUnsupportedFieldType,
 		},
+		{
+			in: struct {
+				X int `bigquery:",nullable"`
+			}{},
+			err: errBadNullable,
+		},
+		{
+			in: struct {
+				X bool `bigquery:",nullable"`
+			}{},
+			err: errBadNullable,
+		},
+		{
+			in: struct {
+				X struct{ N int } `bigquery:",nullable"`
+			}{},
+			err: errBadNullable,
+		},
+		{
+			in: struct {
+				X []int `bigquery:",nullable"`
+			}{},
+			err: errBadNullable,
+		},
+		{
+			in:  struct{ X *[]byte }{},
+			err: errUnsupportedFieldType,
+		},
+		{
+			in:  struct{ X *[]int }{},
+			err: errUnsupportedFieldType,
+		},
+		{
+			in:  struct{ X *int }{},
+			err: errUnsupportedFieldType,
+		},
 	}
 	for _, tc := range testCases {
 		want := tc.err
 		_, got := InferSchema(tc.in)
-		if !reflect.DeepEqual(got, want) {
+		if got != want {
 			t.Errorf("%#v: got:\n%#v\nwant:\n%#v", tc.in, got, want)
 		}
 	}
@@ -769,6 +893,9 @@ func TestHasRecursiveType(t *testing.T) {
 			A int
 			R *rec
 		}
+		recSlicePointer struct {
+			A []*recSlicePointer
+		}
 	)
 	for _, test := range []struct {
 		in   interface{}
@@ -780,6 +907,7 @@ func TestHasRecursiveType(t *testing.T) {
 		{rec{}, true},
 		{recUnexported{}, false},
 		{hasRec{}, true},
+		{&recSlicePointer{}, true},
 	} {
 		got, err := hasRecursiveType(reflect.TypeOf(test.in), nil)
 		if err != nil {

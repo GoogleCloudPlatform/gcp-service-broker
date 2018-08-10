@@ -1,4 +1,4 @@
-// Copyright 2016 Google Inc. All Rights Reserved.
+// Copyright 2016 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,9 +19,12 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strings"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
+
+	"cloud.google.com/go/internal/testutil"
 )
 
 type embed1 struct {
@@ -71,9 +74,10 @@ var intType = reflect.TypeOf(int(0))
 
 func field(name string, tval interface{}, index ...int) *Field {
 	return &Field{
-		Name:  name,
-		Type:  reflect.TypeOf(tval),
-		Index: index,
+		Name:      name,
+		Type:      reflect.TypeOf(tval),
+		Index:     index,
+		ParsedTag: []string(nil),
 	}
 }
 
@@ -83,6 +87,7 @@ func tfield(name string, tval interface{}, index ...int) *Field {
 		Type:        reflect.TypeOf(tval),
 		Index:       index,
 		NameFromTag: true,
+		ParsedTag:   []string(nil),
 	}
 }
 
@@ -98,6 +103,9 @@ func TestFieldsNoTags(t *testing.T) {
 		field("Em1", int(0), 3, 0),
 		field("Em4", int(0), 4, 2, 0),
 		field("Anonymous", Anonymous(0), 5),
+	}
+	for _, f := range want {
+		f.ParsedTag = nil
 	}
 	if msg, ok := compareFields(got, want); !ok {
 		t.Error(msg)
@@ -134,15 +142,17 @@ func TestAgainstJSONEncodingNoTags(t *testing.T) {
 		Anonymous: Anonymous(15),
 	}
 	var want S1
+	want.embed2 = &embed2{} // need this because reflection won't create it
 	jsonRoundTrip(t, s1, &want)
 	var got S1
-	got.embed2 = &embed2{} // need this because reflection won't create it
+	got.embed2 = &embed2{}
 	fields, err := NewCache(nil, nil, nil).Fields(reflect.TypeOf(got))
 	if err != nil {
 		t.Fatal(err)
 	}
 	setFields(fields, &got, s1)
-	if !reflect.DeepEqual(got, want) {
+	if !testutil.Equal(got, want,
+		cmp.AllowUnexported(S1{}, embed1{}, embed2{}, embed3{}, embed4{}, embed5{})) {
 		t.Errorf("got\n%+v\nwant\n%+v", got, want)
 	}
 }
@@ -166,7 +176,7 @@ func TestAgainstJSONEncodingEmbeddedTime(t *testing.T) {
 		t.Fatal(err)
 	}
 	setFields(fields, &got, myt)
-	if !reflect.DeepEqual(got, want) {
+	if !testutil.Equal(got, want) {
 		t.Errorf("got\n%+v\nwant\n%+v", got, want)
 	}
 }
@@ -199,15 +209,7 @@ type tEmbed2 struct {
 }
 
 func jsonTagParser(t reflect.StructTag) (name string, keep bool, other interface{}, err error) {
-	s := t.Get("json")
-	parts := strings.Split(s, ",")
-	if parts[0] == "-" {
-		return "", false, nil, nil
-	}
-	if len(parts) > 1 {
-		other = parts[1:]
-	}
-	return parts[0], true, other, nil
+	return ParseStandardTag("json", t)
 }
 
 func validateFunc(t reflect.Type) (err error) {
@@ -269,7 +271,7 @@ func TestAgainstJSONEncodingWithTags(t *testing.T) {
 		t.Fatal(err)
 	}
 	setFields(fields, &got, s2)
-	if !reflect.DeepEqual(got, want) {
+	if !testutil.Equal(got, want, cmp.AllowUnexported(S2{})) {
 		t.Errorf("got\n%+v\nwant\n%+v", got, want)
 	}
 }
@@ -403,14 +405,14 @@ func compareFields(got []Field, want []*Field) (msg string, ok bool) {
 	for i, g := range got {
 		w := *want[i]
 		if !fieldsEqual(&g, &w) {
-			return fmt.Sprintf("got %+v, want %+v", g, w), false
+			return fmt.Sprintf("got\n%+v\nwant\n%+v", g, w), false
 		}
 	}
 	return "", true
 }
 
 // Need this because Field contains a function, which cannot be compared even
-// by reflect.DeepEqual.
+// by testutil.Equal.
 func fieldsEqual(f1, f2 *Field) bool {
 	if f1 == nil || f2 == nil {
 		return f1 == f2
@@ -418,7 +420,7 @@ func fieldsEqual(f1, f2 *Field) bool {
 	return f1.Name == f2.Name &&
 		f1.NameFromTag == f2.NameFromTag &&
 		f1.Type == f2.Type &&
-		reflect.DeepEqual(f1.ParsedTag, f2.ParsedTag)
+		testutil.Equal(f1.ParsedTag, f2.ParsedTag)
 }
 
 // Set the fields of dst from those of src.

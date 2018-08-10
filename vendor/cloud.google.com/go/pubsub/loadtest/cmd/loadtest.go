@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,16 +30,25 @@ import (
 
 func main() {
 	port := flag.Uint("worker_port", 6000, "port to bind worker to")
+	role := flag.String("r", "", "role: pub/sub")
 	flag.Parse()
+
+	var lts pb.LoadtestWorkerServer
+	switch *role {
+	case "pub":
+		lts = &loadtest.PubServer{ID: strconv.Itoa(rand.Int())}
+	case "sub":
+		lts = &loadtest.SubServer{}
+	default:
+		log.Fatalf("unknown role: %q", *role)
+	}
+
+	serv := grpc.NewServer()
+	pb.RegisterLoadtestWorkerServer(serv, lts)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-
-	serv := grpc.NewServer()
-	pb.RegisterLoadtestWorkerServer(serv, &loadtest.Server{
-		ID: strconv.Itoa(rand.Int()),
-	})
 	serv.Serve(lis)
 }

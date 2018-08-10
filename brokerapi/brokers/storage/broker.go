@@ -18,25 +18,20 @@
 package storage
 
 import (
-	"net/http"
-
-	googlestorage "cloud.google.com/go/storage"
-	"code.cloudfoundry.org/lager"
 	"encoding/json"
 	"fmt"
-	"gcp-service-broker/brokerapi/brokers/broker_base"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"gcp-service-broker/brokerapi/brokers/name_generator"
-	"gcp-service-broker/db_service"
+
+	googlestorage "cloud.google.com/go/storage"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
 )
 
 type StorageBroker struct {
-	Client    *http.Client
-	ProjectId string
-	Logger    lager.Logger
-
 	broker_base.BrokerBase
 }
 
@@ -46,14 +41,10 @@ type InstanceInformation struct {
 
 // creates a new bucket with the name given in provision details and optional location
 // (defaults to "US", for acceptable location values see: https://cloud.google.com/storage/docs/bucket-locations)
-func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (b *StorageBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 
-	var planDetails map[string]string
-	if err = json.Unmarshal([]byte(plan.Features), &planDetails); err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling plan features: %s", err)
-	}
-	storageClass := planDetails["storage_class"]
+	storageClass := plan.ServiceProperties["storage_class"]
 
 	var params map[string]string
 	if len(details.RawParameters) == 0 {
@@ -70,7 +61,8 @@ func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDet
 	// make a new bucket
 	ctx := context.Background()
 	co := option.WithUserAgent(models.CustomUserAgent)
-	storageService, err := googlestorage.NewClient(ctx, co)
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
+	storageService, err := googlestorage.NewClient(ctx, co, ct)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new storage client: %s", err)
 	}
@@ -116,14 +108,15 @@ func (b *StorageBroker) Provision(instanceId string, details models.ProvisionDet
 
 // Deletes the bucket associated with the given instance id
 // Note that all objects within the bucket must be deleted first
-func (b *StorageBroker) Deprovision(instanceID string, details models.DeprovisionDetails) error {
+func (b *StorageBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
 	bucket := models.ServiceInstanceDetails{}
 	if err := db_service.DbConnection.Where("ID = ?", instanceID).First(&bucket).Error; err != nil {
-		return models.ErrInstanceDoesNotExist
+		return brokerapi.ErrInstanceDoesNotExist
 	}
 
 	ctx := context.Background()
-	storageService, err := googlestorage.NewClient(ctx)
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
+	storageService, err := googlestorage.NewClient(ctx, ct)
 	if err != nil {
 		return fmt.Errorf("Error creating storage client: %s", err)
 	}

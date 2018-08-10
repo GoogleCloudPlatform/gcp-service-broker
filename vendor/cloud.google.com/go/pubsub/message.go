@@ -1,4 +1,4 @@
-// Copyright 2016 Google Inc. All Rights Reserved.
+// Copyright 2016 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,10 +43,16 @@ type Message struct {
 	// This field is read-only.
 	PublishTime time.Time
 
+	// receiveTime is the time the message was received by the client.
+	receiveTime time.Time
+
+	// size is the approximate size of the message's data and attributes.
+	size int
+
 	calledDone bool
 
 	// The done method of the iterator that created this Message.
-	done func(string, bool)
+	doneFunc func(string, bool, time.Time)
 }
 
 func toMessage(resp *pb.ReceivedMessage) (*Message, error) {
@@ -67,18 +73,28 @@ func toMessage(resp *pb.ReceivedMessage) (*Message, error) {
 	}, nil
 }
 
-// Done completes the processing of a Message that was returned from a MessageIterator.
-// ack indicates whether the message should be acknowledged.
-// Client code must call Done when finished for each Message returned by an iterator.
-// Done may only be called on Messages returned by a MessageIterator.
+// Ack indicates successful processing of a Message passed to the Subscriber.Receive callback.
+// It should not be called on any other Message value.
 // If message acknowledgement fails, the Message will be redelivered.
-// Calls to Done have no effect after the first call.
-//
-// See MessageIterator.Next for an example.
-func (m *Message) Done(ack bool) {
+// Client code must call Ack or Nack when finished for each received Message.
+// Calls to Ack or Nack have no effect after the first call.
+func (m *Message) Ack() {
+	m.done(true)
+}
+
+// Nack indicates that the client will not or cannot process a Message passed to the Subscriber.Receive callback.
+// It should not be called on any other Message value.
+// Nack will result in the Message being redelivered more quickly than if it were allowed to expire.
+// Client code must call Ack or Nack when finished for each received Message.
+// Calls to Ack or Nack have no effect after the first call.
+func (m *Message) Nack() {
+	m.done(false)
+}
+
+func (m *Message) done(ack bool) {
 	if m.calledDone {
 		return
 	}
 	m.calledDone = true
-	m.done(m.ackID, ack)
+	m.doneFunc(m.ackID, ack, m.receiveTime)
 }

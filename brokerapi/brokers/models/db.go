@@ -79,17 +79,6 @@ type ProvisionRequestDetails struct {
 	RequestDetails string
 }
 
-type PlanDetails struct {
-	ID        string `gorm:"primary_key"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time
-
-	ServiceId string
-	Name      string
-	Features  string `sql:"type:text"`
-}
-
 type Migration struct {
 	gorm.Model
 

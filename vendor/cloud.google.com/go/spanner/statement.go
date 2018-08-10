@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Google Inc. All Rights Reserved.
+Copyright 2017 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ limitations under the License.
 package spanner
 
 import (
+	"errors"
 	"fmt"
 
 	proto3 "github.com/golang/protobuf/ptypes/struct"
@@ -54,25 +55,47 @@ func errBindParam(k string, v interface{}, err error) error {
 	}
 	se, ok := toSpannerError(err).(*Error)
 	if !ok {
-		return spannerErrorf(codes.InvalidArgument, "failed to bind query parameter(name: %q, value: %q), error = <%v>", k, v, err)
+		return spannerErrorf(codes.InvalidArgument, "failed to bind query parameter(name: %q, value: %v), error = <%v>", k, v, err)
 	}
-	se.decorate(fmt.Sprintf("failed to bind query parameter(name: %q, value: %q)", k, v))
+	se.decorate(fmt.Sprintf("failed to bind query parameter(name: %q, value: %v)", k, v))
 	return se
 }
 
-// bindParams binds parameters in a Statement to a sppb.ExecuteSqlRequest.
-func (s *Statement) bindParams(r *sppb.ExecuteSqlRequest) error {
-	r.Params = &proto3.Struct{
+var (
+	errNilParam = errors.New("use T(nil), not nil")
+	errNoType   = errors.New("no type information")
+)
+
+// bindParams binds parameters in a Statement to a sppb.ExecuteSqlRequest or sppb.PartitionQueryRequest.
+func (s *Statement) bindParams(i interface{}) error {
+	params := &proto3.Struct{
 		Fields: map[string]*proto3.Value{},
 	}
-	r.ParamTypes = map[string]*sppb.Type{}
+	paramTypes := map[string]*sppb.Type{}
 	for k, v := range s.Params {
+		if v == nil {
+			return errBindParam(k, v, errNilParam)
+		}
 		val, t, err := encodeValue(v)
 		if err != nil {
 			return errBindParam(k, v, err)
 		}
-		r.Params.Fields[k] = val
-		r.ParamTypes[k] = t
+		if t == nil { // should not happen, because of nil check above
+			return errBindParam(k, v, errNoType)
+		}
+		params.Fields[k] = val
+		paramTypes[k] = t
+	}
+
+	switch r := i.(type) {
+	default:
+		return fmt.Errorf("failed to bind query parameter, unexpected request type: %v", r)
+	case *sppb.ExecuteSqlRequest:
+		r.Params = params
+		r.ParamTypes = paramTypes
+	case *sppb.PartitionQueryRequest:
+		r.Params = params
+		r.ParamTypes = paramTypes
 	}
 	return nil
 }

@@ -1,4 +1,4 @@
-// Copyright 2016 Google Inc. All Rights Reserved.
+// Copyright 2016 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,11 +17,13 @@
 package logging
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
-	"reflect"
 	"testing"
 	"time"
+
+	"cloud.google.com/go/internal/testutil"
 
 	"github.com/golang/protobuf/proto"
 	durpb "github.com/golang/protobuf/ptypes/duration"
@@ -33,8 +35,13 @@ import (
 
 func TestLoggerCreation(t *testing.T) {
 	const logID = "testing"
-	c := &Client{projectID: "PROJECT_ID"}
-	defaultResource := &mrpb.MonitoredResource{Type: "global"}
+	c := &Client{parent: "projects/PROJECT_ID"}
+	customResource := &mrpb.MonitoredResource{
+		Type: "global",
+		Labels: map[string]string{
+			"project_id": "ANOTHER_PROJECT",
+		},
+	}
 	defaultBundler := &bundler.Bundler{
 		DelayThreshold:       DefaultDelayThreshold,
 		BundleCountThreshold: DefaultEntryCountThreshold,
@@ -43,21 +50,44 @@ func TestLoggerCreation(t *testing.T) {
 		BufferedByteLimit:    DefaultBufferedByteLimit,
 	}
 	for _, test := range []struct {
-		options     []LoggerOption
-		wantLogger  *Logger
-		wantBundler *bundler.Bundler
+		options         []LoggerOption
+		wantLogger      *Logger
+		defaultResource bool
+		wantBundler     *bundler.Bundler
 	}{
-		{nil, &Logger{commonResource: defaultResource}, defaultBundler},
 		{
-			[]LoggerOption{CommonResource(nil), CommonLabels(map[string]string{"a": "1"})},
-			&Logger{commonResource: nil, commonLabels: map[string]string{"a": "1"}},
-			defaultBundler,
+			options:         nil,
+			wantLogger:      &Logger{},
+			defaultResource: true,
+			wantBundler:     defaultBundler,
 		},
 		{
-			[]LoggerOption{DelayThreshold(time.Minute), EntryCountThreshold(99),
-				EntryByteThreshold(17), EntryByteLimit(18), BufferedByteLimit(19)},
-			&Logger{commonResource: defaultResource},
-			&bundler.Bundler{
+			options: []LoggerOption{
+				CommonResource(nil),
+				CommonLabels(map[string]string{"a": "1"}),
+			},
+			wantLogger: &Logger{
+				commonResource: nil,
+				commonLabels:   map[string]string{"a": "1"},
+			},
+			wantBundler: defaultBundler,
+		},
+		{
+			options:     []LoggerOption{CommonResource(customResource)},
+			wantLogger:  &Logger{commonResource: customResource},
+			wantBundler: defaultBundler,
+		},
+		{
+			options: []LoggerOption{
+				DelayThreshold(time.Minute),
+				EntryCountThreshold(99),
+				EntryByteThreshold(17),
+				EntryByteLimit(18),
+				BufferedByteLimit(19),
+			},
+			wantLogger:      &Logger{},
+			defaultResource: true,
+			wantBundler: &bundler.Bundler{
 				DelayThreshold:       time.Minute,
 				BundleCountThreshold: 99,
 				BundleByteThreshold:  17,
@@ -67,10 +97,10 @@ func TestLoggerCreation(t *testing.T) {
 		},
 	} {
 		gotLogger := c.Logger(logID, test.options...)
-		if got, want := gotLogger.commonResource, test.wantLogger.commonResource; !reflect.DeepEqual(got, want) {
+		if got, want := gotLogger.commonResource, test.wantLogger.commonResource; !test.defaultResource && !proto.Equal(got, want) {
 			t.Errorf("%v: resource: got %v, want %v", test.options, got, want)
 		}
-		if got, want := gotLogger.commonLabels, test.wantLogger.commonLabels; !reflect.DeepEqual(got, want) {
+		if got, want := gotLogger.commonLabels, test.wantLogger.commonLabels; !testutil.Equal(got, want) {
 			t.Errorf("%v: commonLabels: got %v, want %v", test.options, got, want)
 		}
 		if got, want := gotLogger.bundler.DelayThreshold, test.wantBundler.DelayThreshold; got != want {
@@ -113,15 +143,16 @@ func TestToProtoStruct(t *testing.T) {
 	}
 	want := &structpb.Struct{
 		Fields: map[string]*structpb.Value{
-			"foo": {Kind: &structpb.Value_StringValue{v.Foo}},
-			"baz": {Kind: &structpb.Value_ListValue{&structpb.ListValue{
-				[]*structpb.Value{{Kind: &structpb.Value_NumberValue{1.1}}}}}},
+			"foo": {Kind: &structpb.Value_StringValue{StringValue: v.Foo}},
+			"baz": {Kind: &structpb.Value_ListValue{ListValue: &structpb.ListValue{Values: []*structpb.Value{
+				{Kind: &structpb.Value_NumberValue{NumberValue: 1.1}},
+			}}}},
 			"moo": {Kind: &structpb.Value_StructValue{
-				&structpb.Struct{
+				StructValue: &structpb.Struct{
 					Fields: map[string]*structpb.Value{
-						"a": {Kind: &structpb.Value_NumberValue{1}},
-						"b": {Kind: &structpb.Value_StringValue{"two"}},
-						"c": {Kind: &structpb.Value_BoolValue{true}},
+						"a": {Kind: &structpb.Value_NumberValue{NumberValue: 1}},
+						"b": {Kind: &structpb.Value_StringValue{StringValue: "two"}},
+						"c": {Kind: &structpb.Value_BoolValue{BoolValue: true}},
 					},
 				},
 			}},
@@ -149,6 +180,53 @@ func TestToProtoStruct(t *testing.T) {
 	}
 }
 
+func TestToLogEntryPayload(t *testing.T) {
+	for _, test := range []struct {
+		in         interface{}
+		wantText   string
+		wantStruct *structpb.Struct
+	}{
+		{
+			in:       "string",
+			wantText: "string",
+		},
+		{
+			in: map[string]interface{}{"a": 1, "b": true},
+			wantStruct: &structpb.Struct{
+				Fields: map[string]*structpb.Value{
+					"a": {Kind: &structpb.Value_NumberValue{NumberValue: 1}},
+					"b": {Kind: &structpb.Value_BoolValue{BoolValue: true}},
+				},
+			},
+		},
+		{
+			in: json.RawMessage([]byte(`{"a": 1, "b": true}`)),
+			wantStruct: &structpb.Struct{
+				Fields: map[string]*structpb.Value{
+					"a": {Kind: &structpb.Value_NumberValue{NumberValue: 1}},
+					"b": {Kind: &structpb.Value_BoolValue{BoolValue: true}},
+				},
+			},
+		},
+	} {
+		e, err := toLogEntry(Entry{Payload: test.in})
+		if err != nil {
+			t.Fatalf("%+v: %v", test.in, err)
+		}
+		if test.wantStruct != nil {
+			got := e.GetJsonPayload()
+			if !proto.Equal(got, test.wantStruct) {
+				t.Errorf("%+v: got %s, want %s", test.in, got, test.wantStruct)
+			}
+		} else {
+			got := e.GetTextPayload()
+			if got != test.wantText {
+				t.Errorf("%+v: got %s, want %s", test.in, got, test.wantText)
+			}
+		}
+	}
+}
+
 func TestFromHTTPRequest(t *testing.T) {
 	const testURL = "http:://example.com/path?q=1"
 	u, err := url.Parse(testURL)
@@ -160,15 +238,16 @@ func TestFromHTTPRequest(t *testing.T) {
 			Method: "GET",
 			URL:    u,
 			Header: map[string][]string{
-				"User-Agent": []string{"user-agent"},
-				"Referer":    []string{"referer"},
+				"User-Agent": {"user-agent"},
+				"Referer":    {"referer"},
 			},
 		},
 		RequestSize:                    100,
 		Status:                         200,
 		ResponseSize:                   25,
 		Latency:                        100 * time.Second,
-		RemoteIP:                       "127.0.0.1",
+		LocalIP:                        "127.0.0.1",
+		RemoteIP:                       "10.0.1.1",
 		CacheHit:                       true,
 		CacheValidatedWithOriginServer: true,
 	}
@@ -181,13 +260,70 @@ func TestFromHTTPRequest(t *testing.T) {
 		ResponseSize:                   25,
 		Latency:                        &durpb.Duration{Seconds: 100},
 		UserAgent:                      "user-agent",
-		RemoteIp:                       "127.0.0.1",
+		ServerIp:                       "127.0.0.1",
+		RemoteIp:                       "10.0.1.1",
 		Referer:                        "referer",
 		CacheHit:                       true,
 		CacheValidatedWithOriginServer: true,
 	}
-	if !reflect.DeepEqual(got, want) {
+	if !proto.Equal(got, want) {
 		t.Errorf("got  %+v\nwant %+v", got, want)
+	}
+}
+
+func TestMonitoredResource(t *testing.T) {
+	for _, test := range []struct {
+		parent string
+		want   *mrpb.MonitoredResource
+	}{
+		{
+			"projects/P",
+			&mrpb.MonitoredResource{
+				Type:   "project",
+				Labels: map[string]string{"project_id": "P"},
+			},
+		},
+
+		{
+			"folders/F",
+			&mrpb.MonitoredResource{
+				Type:   "folder",
+				Labels: map[string]string{"folder_id": "F"},
+			},
+		},
+		{
+			"billingAccounts/B",
+			&mrpb.MonitoredResource{
+				Type:   "billing_account",
+				Labels: map[string]string{"account_id": "B"},
+			},
+		},
+		{
+			"organizations/123",
+			&mrpb.MonitoredResource{
+				Type:   "organization",
+				Labels: map[string]string{"organization_id": "123"},
+			},
+		},
+		{
+			"unknown/X",
+			&mrpb.MonitoredResource{
+				Type:   "global",
+				Labels: map[string]string{"project_id": "X"},
+			},
+		},
+		{
+			"whatever",
+			&mrpb.MonitoredResource{
+				Type:   "global",
+				Labels: map[string]string{"project_id": "whatever"},
+			},
+		},
+	} {
+		got := monitoredResource(test.parent)
+		if !testutil.Equal(got, test.want) {
+			t.Errorf("%q: got %+v, want %+v", test.parent, got, test.want)
+		}
 	}
 }
 

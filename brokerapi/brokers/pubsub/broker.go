@@ -18,27 +18,24 @@
 package pubsub
 
 import (
-	googlepubsub "cloud.google.com/go/pubsub"
 	"encoding/json"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"gcp-service-broker/brokerapi/brokers/name_generator"
-	"golang.org/x/net/context"
-	"net/http"
 
-	"code.cloudfoundry.org/lager"
+	googlepubsub "cloud.google.com/go/pubsub"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
+	"github.com/pivotal-cf/brokerapi"
+	"golang.org/x/net/context"
+
 	"fmt"
-	"gcp-service-broker/brokerapi/brokers/broker_base"
-	"gcp-service-broker/db_service"
-	"google.golang.org/api/option"
 	"strconv"
 	"time"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"google.golang.org/api/option"
 )
 
 type PubSubBroker struct {
-	Client    *http.Client
-	ProjectId string
-	Logger    lager.Logger
-
 	broker_base.BrokerBase
 }
 
@@ -50,7 +47,7 @@ type InstanceInformation struct {
 // Creates a new PubSub topic with the name given in details.topic_name
 // if subscription_name is supplied, will also create a subscription for this topic with optional config parameters
 // is_push (defaults to "false"; i.e. pull), endpoint (defaults to nil), ack_deadline (seconds, defaults to 10, 600 max)
-func (b *PubSubBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (b *PubSubBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 
 	var err error
 	var params map[string]string
@@ -67,7 +64,8 @@ func (b *PubSubBroker) Provision(instanceId string, details models.ProvisionDeta
 
 	ctx := context.Background()
 	co := option.WithUserAgent(models.CustomUserAgent)
-	pubsubClient, err := googlepubsub.NewClient(ctx, b.ProjectId, co)
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
+	pubsubClient, err := googlepubsub.NewClient(ctx, b.ProjectId, co, ct)
 
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new pubsub client: %s", err)
@@ -89,7 +87,7 @@ func (b *PubSubBroker) Provision(instanceId string, details models.ProvisionDeta
 	}
 
 	if sub_name, ok := params["subscription_name"]; ok {
-		var pushConfig *googlepubsub.PushConfig
+		var pushConfig googlepubsub.PushConfig
 		var ackDeadline = 10
 
 		if ackd, ok := params["ack_deadline"]; ok {
@@ -101,13 +99,19 @@ func (b *PubSubBroker) Provision(instanceId string, details models.ProvisionDeta
 
 		if isPush, ok := params["is_push"]; ok {
 			if isPush == "true" {
-				pushConfig = &googlepubsub.PushConfig{
+				pushConfig = googlepubsub.PushConfig{
 					Endpoint: params["endpoint"],
 				}
 			}
 		}
 
-		_, err = pubsubClient.CreateSubscription(ctx, sub_name, t, time.Duration(ackDeadline)*time.Second, pushConfig)
+		subsConfig := googlepubsub.SubscriptionConfig{
+			PushConfig:  pushConfig,
+			Topic:       t,
+			AckDeadline: time.Duration(ackDeadline) * time.Second,
+		}
+
+		_, err = pubsubClient.CreateSubscription(ctx, sub_name, subsConfig)
 		if err != nil {
 			return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating subscription: %s", err)
 		}
@@ -125,15 +129,15 @@ func (b *PubSubBroker) Provision(instanceId string, details models.ProvisionDeta
 }
 
 // Deletes the topic associated with the given instanceID
-func (b *PubSubBroker) Deprovision(instanceID string, details models.DeprovisionDetails) error {
+func (b *PubSubBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
 	topic := models.ServiceInstanceDetails{}
 	if err := db_service.DbConnection.Where("ID = ?", instanceID).First(&topic).Error; err != nil {
-		return models.ErrInstanceDoesNotExist
+		return brokerapi.ErrInstanceDoesNotExist
 	}
 
 	ctx := context.Background()
-
-	service, err := googlepubsub.NewClient(ctx, b.ProjectId)
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
+	service, err := googlepubsub.NewClient(ctx, b.ProjectId, ct)
 	if err != nil {
 		return fmt.Errorf("Error creating new pubsub client: %s", err)
 	}

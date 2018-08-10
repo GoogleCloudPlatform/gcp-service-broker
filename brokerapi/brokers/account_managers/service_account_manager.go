@@ -21,10 +21,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"gcp-service-broker/utils"
-	"net/http"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"github.com/pivotal-cf/brokerapi"
+
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2/jwt"
 	cloudres "google.golang.org/api/cloudresourcemanager/v1"
 	iam "google.golang.org/api/iam/v1"
 )
@@ -35,13 +39,20 @@ const saPrefix = "pcf-binding-"
 const projectResourcePrefix = "projects/"
 
 type ServiceAccountManager struct {
-	ProjectId string
-	GCPClient *http.Client
+	ProjectId  string
+	HttpConfig *jwt.Config
 }
 
 // creates a new service account for the given binding id with the role listed in details.Parameters["role"]
-func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindingID string, details models.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
-	role, ok := details.Parameters["role"].(string)
+func (sam *ServiceAccountManager) CreateCredentials(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+	client := sam.HttpConfig.Client(context.Background())
+
+	bindParameters := map[string]interface{}{}
+	if err := json.Unmarshal(details.RawParameters, &bindParameters); err != nil {
+		return models.ServiceBindingCredentials{}, err
+	}
+
+	role, ok := bindParameters["role"].(string)
 	if !ok {
 		return models.ServiceBindingCredentials{}, errors.New("Error getting role as string from request")
 	}
@@ -50,7 +61,7 @@ func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindi
 	var resourceName = projectResourcePrefix + sam.ProjectId
 	var err error
 
-	iamService, err := iam.New(sam.GCPClient)
+	iamService, err := iam.New(client)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating new iam service: %s", err)
 	}
@@ -71,7 +82,7 @@ func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindi
 
 	// adjust account permissions
 	// roles defined here: https://cloud.google.com/iam/docs/understanding-roles?hl=en_US#curated_roles
-	cloudresService, err := cloudres.New(sam.GCPClient)
+	cloudresService, err := cloudres.New(client)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating new cloud resource management service: %s", err)
 	}
@@ -138,14 +149,14 @@ func (sam *ServiceAccountManager) CreateAccountInGoogle(instanceID string, bindi
 }
 
 // deletes the given service account from Google
-func (sam *ServiceAccountManager) DeleteAccountFromGoogle(binding models.ServiceBindingCredentials) error {
+func (sam *ServiceAccountManager) DeleteCredentials(binding models.ServiceBindingCredentials) error {
 
 	var saCreds ServiceAccountInfo
 	if err := json.Unmarshal([]byte(binding.OtherDetails), &saCreds); err != nil {
 		return fmt.Errorf("Error unmarshalling credentials: %s", err)
 	}
 
-	iamService, err := iam.New(sam.GCPClient)
+	iamService, err := iam.New(sam.HttpConfig.Client(context.Background()))
 	if err != nil {
 		return fmt.Errorf("Error creating IAM service: %s", err)
 	}
@@ -185,4 +196,46 @@ type ServiceAccountInfo struct {
 
 	// the bit to return
 	PrivateKeyData string
+}
+
+func ServiceAccountBindInputVariables() []broker.BrokerVariable {
+	return []broker.BrokerVariable{
+		broker.BrokerVariable{
+			Required:  true,
+			FieldName: "role",
+			Type:      broker.JsonTypeString,
+			Details:   `The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for available roles.`,
+		},
+	}
+}
+
+// Variables output by all brokers that return service account info
+func ServiceAccountBindOutputVariables() []broker.BrokerVariable {
+	return []broker.BrokerVariable{
+		broker.BrokerVariable{
+			FieldName: "Email",
+			Type:      broker.JsonTypeString,
+			Details:   "Email address of the service account",
+		},
+		broker.BrokerVariable{
+			FieldName: "Name",
+			Type:      broker.JsonTypeString,
+			Details:   "The name of the service account",
+		},
+		broker.BrokerVariable{
+			FieldName: "PrivateKeyData",
+			Type:      broker.JsonTypeString,
+			Details:   "Service account private key data. Base-64 encoded JSON.",
+		},
+		broker.BrokerVariable{
+			FieldName: "ProjectId",
+			Type:      broker.JsonTypeString,
+			Details:   "ID of the project that owns the service account",
+		},
+		broker.BrokerVariable{
+			FieldName: "UniqueId",
+			Type:      broker.JsonTypeString,
+			Details:   "Unique and stable id of the service account",
+		},
+	}
 }

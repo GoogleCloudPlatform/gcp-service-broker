@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Google Inc. All Rights Reserved.
+Copyright 2016 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,10 +20,10 @@ limitations under the License.
 package testing
 
 import (
-	"reflect"
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	tspb "github.com/golang/protobuf/ptypes/timestamp"
 	logpb "google.golang.org/genproto/googleapis/logging/v2"
 	grpc "google.golang.org/grpc"
@@ -103,8 +103,20 @@ func TestSortEntries(t *testing.T) {
 		for i, j := range test.want {
 			want[i] = entries[j]
 		}
-		if !reflect.DeepEqual(got, want) {
+		if !logEntriesEqual(got, want) {
 			t.Errorf("%q: got %v, want %v", test.orderBy, got, want)
 		}
 	}
+}
+
+func logEntriesEqual(a, b []*logpb.LogEntry) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, aa := range a {
+		if !proto.Equal(aa, b[i]) {
+			return false
+		}
+	}
+	return true
 }

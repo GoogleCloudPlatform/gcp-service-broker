@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Google Inc. All Rights Reserved.
+Copyright 2017 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,31 +18,30 @@ package spanner
 
 import (
 	"fmt"
+	"log"
 	"regexp"
-	"runtime"
 	"sync/atomic"
 	"time"
 
 	"cloud.google.com/go/internal/version"
-
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
-	"google.golang.org/api/transport"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
-
+	gtransport "google.golang.org/api/transport/grpc"
 	sppb "google.golang.org/genproto/googleapis/spanner/v1"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 )
 
 const (
-	prodAddr = "spanner.googleapis.com:443"
+	endpoint = "spanner.googleapis.com:443"
 
 	// resourcePrefixHeader is the name of the metadata header used to indicate
 	// the resource being operated on.
 	resourcePrefixHeader = "google-cloud-resource-prefix"
-	// apiClientHeader is the name of the metadata header used to indicate client
+	// xGoogHeaderKey is the name of the metadata header used to indicate client
 	// information.
-	apiClientHeader = "x-goog-api-client"
+	xGoogHeaderKey = "x-goog-api-client"
 )
 
 const (
@@ -54,8 +53,8 @@ const (
 )
 
 var (
-	validDBPattern  = regexp.MustCompile("^projects/[^/]+/instances/[^/]+/databases/[^/]+$")
-	clientUserAgent = fmt.Sprintf("cloudspanner go/%s", runtime.Version())
+	validDBPattern = regexp.MustCompile("^projects/[^/]+/instances/[^/]+/databases/[^/]+$")
+	xGoogHeaderVal = fmt.Sprintf("gl-go/%s gccl/%s grpc/%s", version.Go(), version.Repo, grpc.Version)
 )
 
 func validDatabaseName(db string) error {
@@ -77,15 +76,21 @@ type Client struct {
 	// Metadata to be sent with each request.
 	md           metadata.MD
 	idleSessions *sessionPool
+	// sessionLabels for the sessions created by this client.
+	sessionLabels map[string]string
 }
 
 // ClientConfig has configurations for the client.
 type ClientConfig struct {
-	// NumChannels is the number of GRPC channels.
+	// NumChannels is the number of gRPC channels.
+	// If zero, a reasonable default is used based on the execution environment.
 	NumChannels int
 	co          []option.ClientOption
 	// SessionPoolConfig is the configuration for session pool.
 	SessionPoolConfig
+	// SessionLabels for the sessions created by this client.
+	// See https://cloud.google.com/spanner/docs/reference/rpc/google.spanner.v1#session for more info.
+	SessionLabels map[string]string
 }
 
 // errDial returns error for dialing to Cloud Spanner.
@@ -95,12 +100,12 @@ func errDial(ci int, err error) error {
 	return e
 }
 
-func contextWithMetadata(ctx context.Context, md metadata.MD) context.Context {
-	existing, ok := metadata.FromContext(ctx)
+func contextWithOutgoingMetadata(ctx context.Context, md metadata.MD) context.Context {
+	existing, ok := metadata.FromOutgoingContext(ctx)
 	if ok {
 		md = metadata.Join(existing, md)
 	}
-	return metadata.NewContext(ctx, md)
+	return metadata.NewOutgoingContext(ctx, md)
 }
 
 // NewClient creates a client to a database. A valid database name has the
@@ -112,26 +117,50 @@ func NewClient(ctx context.Context, database string, opts ...option.ClientOption
 
 // NewClientWithConfig creates a client to a database. A valid database name has the
 // form projects/PROJECT_ID/instances/INSTANCE_ID/databases/DATABASE_ID.
-func NewClientWithConfig(ctx context.Context, database string, config ClientConfig, opts ...option.ClientOption) (*Client, error) {
+func NewClientWithConfig(ctx context.Context, database string, config ClientConfig, opts ...option.ClientOption) (c *Client, err error) {
+	ctx = traceStartSpan(ctx, "cloud.google.com/go/spanner.NewClient")
+	defer func() { traceEndSpan(ctx, err) }()
+
 	// Validate database path.
 	if err := validDatabaseName(database); err != nil {
 		return nil, err
 	}
-	c := &Client{
+	c = &Client{
 		database: database,
 		md: metadata.Pairs(
 			resourcePrefixHeader, database,
-			apiClientHeader, clientUserAgent,
-			"x-goog-api-client", fmt.Sprintf("gl-go/%s gccl/%s grpc/", version.Go(), version.Repo)),
+			xGoogHeaderKey, xGoogHeaderVal),
 	}
-	allOpts := []option.ClientOption{option.WithEndpoint(prodAddr), option.WithScopes(Scope), option.WithUserAgent(clientUserAgent)}
+	// Make a copy of labels.
+	c.sessionLabels = make(map[string]string)
+	for k, v := range config.SessionLabels {
+		c.sessionLabels[k] = v
+	}
+	// gRPC options
+	allOpts := []option.ClientOption{
+		option.WithEndpoint(endpoint),
+		option.WithScopes(Scope),
+		option.WithGRPCDialOption(
+			grpc.WithDefaultCallOptions(
+				grpc.MaxCallSendMsgSize(100<<20),
+				grpc.MaxCallRecvMsgSize(100<<20),
+			),
+		),
+	}
 	allOpts = append(allOpts, opts...)
 	// Prepare gRPC channels.
 	if config.NumChannels == 0 {
-		config.NumChannels = 4
+		config.NumChannels = numChannels
+	}
+	// Default configs for session pool.
+	if config.MaxOpened == 0 {
+		config.MaxOpened = uint64(config.NumChannels * 100)
+	}
+	if config.MaxBurst == 0 {
+		config.MaxBurst = 10
 	}
 	for i := 0; i < config.NumChannels; i++ {
-		conn, err := transport.DialGRPC(ctx, allOpts...)
+		conn, err := gtransport.Dial(ctx, allOpts...)
 		if err != nil {
 			return nil, errDial(i, err)
 		}
@@ -143,6 +172,7 @@ func NewClientWithConfig(ctx context.Context, database string, config ClientConf
 		// TODO: support more loadbalancing options.
 		return c.rrNext(), nil
 	}
+	config.SessionPoolConfig.sessionLabels = c.sessionLabels
 	sp, err := newSessionPool(database, config.SessionPoolConfig, c.md)
 	if err != nil {
 		c.Close()
@@ -201,6 +231,121 @@ func (c *Client) ReadOnlyTransaction() *ReadOnlyTransaction {
 	return t
 }
 
+// BatchReadOnlyTransaction returns a BatchReadOnlyTransaction that can be used
+// for partitioned reads or queries from a snapshot of the database. This is
+// useful in batch processing pipelines where one wants to divide the work of
+// reading from the database across multiple machines.
+//
+// Note: This transaction does not use the underlying session pool but creates a
+// new session each time, and the session is reused across clients.
+//
+// You should call Close() after the txn is no longer needed on local
+// client, and call Cleanup() when the txn is finished for all clients, to free
+// the session.
+func (c *Client) BatchReadOnlyTransaction(ctx context.Context, tb TimestampBound) (*BatchReadOnlyTransaction, error) {
+	var (
+		tx  transactionID
+		rts time.Time
+		s   *session
+		sh  *sessionHandle
+		err error
+	)
+	defer func() {
+		if err != nil && sh != nil {
+			e := runRetryable(ctx, func(ctx context.Context) error {
+				_, e := s.client.DeleteSession(ctx, &sppb.DeleteSessionRequest{Name: s.getID()})
+				return e
+			})
+			if e != nil {
+				log.Printf("Failed to delete session %v. Error: %v", s.getID(), e)
+			}
+		}
+	}()
+	// create session
+	sc := c.rrNext()
+	err = runRetryable(ctx, func(ctx context.Context) error {
+		sid, e := sc.CreateSession(ctx, &sppb.CreateSessionRequest{Database: c.database, Session: &sppb.Session{Labels: c.sessionLabels}})
+		if e != nil {
+			return e
+		}
+		// If no error, construct the new session.
+		s = &session{valid: true, client: sc, id: sid.Name, createTime: time.Now(), md: c.md}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	sh = &sessionHandle{session: s}
+	// begin transaction
+	err = runRetryable(contextWithOutgoingMetadata(ctx, sh.getMetadata()), func(ctx context.Context) error {
+		res, e := sh.getClient().BeginTransaction(ctx, &sppb.BeginTransactionRequest{
+			Session: sh.getID(),
+			Options: &sppb.TransactionOptions{
+				Mode: &sppb.TransactionOptions_ReadOnly_{
+					ReadOnly: buildTransactionOptionsReadOnly(tb, true),
+				},
+			},
+		})
+		if e != nil {
+			return e
+		}
+		tx = res.Id
+		if res.ReadTimestamp != nil {
+			rts = time.Unix(res.ReadTimestamp.Seconds, int64(res.ReadTimestamp.Nanos))
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	t := &BatchReadOnlyTransaction{
+		ReadOnlyTransaction: ReadOnlyTransaction{
+			tx:              tx,
+			txReadyOrClosed: make(chan struct{}),
+			state:           txActive,
+			sh:              sh,
+			rts:             rts,
+		},
+		ID: BatchReadOnlyTransactionID{
+			tid: tx,
+			sid: sh.getID(),
+			rts: rts,
+		},
+	}
+	t.txReadOnly.txReadEnv = t
+	return t, nil
+}
+
+// BatchReadOnlyTransactionFromID reconstruct a BatchReadOnlyTransaction from BatchReadOnlyTransactionID
+func (c *Client) BatchReadOnlyTransactionFromID(tid BatchReadOnlyTransactionID) *BatchReadOnlyTransaction {
+	sc := c.rrNext()
+	s := &session{valid: true, client: sc, id: tid.sid, createTime: time.Now(), md: c.md}
+	sh := &sessionHandle{session: s}
+
+	t := &BatchReadOnlyTransaction{
+		ReadOnlyTransaction: ReadOnlyTransaction{
+			tx:              tid.tid,
+			txReadyOrClosed: make(chan struct{}),
+			state:           txActive,
+			sh:              sh,
+			rts:             tid.rts,
+		},
+		ID: tid,
+	}
+	t.txReadOnly.txReadEnv = t
+	return t
+}
+
+type transactionInProgressKey struct{}
+
+func checkNestedTxn(ctx context.Context) error {
+	if ctx.Value(transactionInProgressKey{}) != nil {
+		return spannerErrorf(codes.FailedPrecondition, "Cloud Spanner does not support nested transactions")
+	}
+	return nil
+}
+
 // ReadWriteTransaction executes a read-write transaction, with retries as
 // necessary.
 //
@@ -216,12 +361,17 @@ func (c *Client) ReadOnlyTransaction() *ReadOnlyTransaction {
 // To limit the number of retries, set a deadline on the Context rather than
 // using a fixed limit on the number of attempts. ReadWriteTransaction will
 // retry as needed until that deadline is met.
-func (c *Client) ReadWriteTransaction(ctx context.Context, f func(t *ReadWriteTransaction) error) (time.Time, error) {
+func (c *Client) ReadWriteTransaction(ctx context.Context, f func(context.Context, *ReadWriteTransaction) error) (commitTimestamp time.Time, err error) {
+	ctx = traceStartSpan(ctx, "cloud.google.com/go/spanner.ReadWriteTransaction")
+	defer func() { traceEndSpan(ctx, err) }()
+	if err := checkNestedTxn(ctx); err != nil {
+		return time.Time{}, err
+	}
 	var (
 		ts time.Time
 		sh *sessionHandle
 	)
-	err := runRetryable(ctx, func(ctx context.Context) error {
+	err = runRetryableNoWrap(ctx, func(ctx context.Context) error {
 		var (
 			err error
 			t   *ReadWriteTransaction
@@ -243,15 +393,14 @@ func (c *Client) ReadWriteTransaction(ctx context.Context, f func(t *ReadWriteTr
 			}
 		}
 		t.txReadOnly.txReadEnv = t
+		tracePrintf(ctx, map[string]interface{}{"transactionID": string(sh.getTransactionID())},
+			"Starting transaction attempt")
 		if err = t.begin(ctx); err != nil {
 			// Mask error from begin operation as retryable error.
 			return errRetry(err)
 		}
 		ts, err = t.runInTransaction(ctx, f)
-		if err != nil {
-			return err
-		}
-		return nil
+		return err
 	})
 	if sh != nil {
 		sh.recycle()
@@ -286,17 +435,19 @@ func ApplyAtLeastOnce() ApplyOption {
 }
 
 // Apply applies a list of mutations atomically to the database.
-func (c *Client) Apply(ctx context.Context, ms []*Mutation, opts ...ApplyOption) (time.Time, error) {
+func (c *Client) Apply(ctx context.Context, ms []*Mutation, opts ...ApplyOption) (commitTimestamp time.Time, err error) {
 	ao := &applyOption{}
 	for _, opt := range opts {
 		opt(ao)
 	}
 	if !ao.atLeastOnce {
-		return c.ReadWriteTransaction(ctx, func(t *ReadWriteTransaction) error {
-			t.BufferWrite(ms)
-			return nil
+		return c.ReadWriteTransaction(ctx, func(ctx context.Context, t *ReadWriteTransaction) error {
+			return t.BufferWrite(ms)
 		})
 	}
+
+	ctx = traceStartSpan(ctx, "cloud.google.com/go/spanner.Apply")
+	defer func() { traceEndSpan(ctx, err) }()
 	t := &writeOnlyTransaction{c.idleSessions}
 	return t.applyAtLeastOnce(ctx, ms...)
 }

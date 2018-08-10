@@ -1,4 +1,4 @@
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2015 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,10 +15,13 @@
 package bigquery
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 
+	"cloud.google.com/go/internal/trace"
 	"golang.org/x/net/context"
+	bq "google.golang.org/api/bigquery/v2"
 )
 
 // An Uploader does streaming inserts into a BigQuery table.
@@ -52,6 +55,9 @@ type Uploader struct {
 
 // Uploader returns an Uploader that can be used to append rows to t.
 // The returned Uploader may optionally be further configured before its Put method is called.
+//
+// To stream rows into a date-partitioned table at a particular date, add the
+// $yyyymmdd suffix to the table name when constructing the Table.
 func (t *Table) Uploader() *Uploader {
 	return &Uploader{t: t}
 }
@@ -75,7 +81,10 @@ func (t *Table) Uploader() *Uploader {
 // in duplicate rows if you do not use insert IDs. Also, if the error persists,
 // the call will run indefinitely. Pass a context with a timeout to prevent
 // hanging calls.
-func (u *Uploader) Put(ctx context.Context, src interface{}) error {
+func (u *Uploader) Put(ctx context.Context, src interface{}) (err error) {
+	ctx = trace.StartSpan(ctx, "cloud.google.com/go/bigquery.Uploader.Put")
+	defer func() { trace.EndSpan(ctx, err) }()
+
 	savers, err := valueSavers(src)
 	if err != nil {
 		return err
@@ -114,6 +123,16 @@ func valueSavers(src interface{}) ([]ValueSaver, error) {
 // Make a ValueSaver from x, which must implement ValueSaver already
 // or be a struct or pointer to struct.
 func toValueSaver(x interface{}) (ValueSaver, bool, error) {
+	if _, ok := x.(StructSaver); ok {
+		return nil, false, errors.New("bigquery: use &StructSaver, not StructSaver")
+	}
+	var insertID string
+	// Handle StructSavers specially so we can infer the schema if necessary.
+	if ss, ok := x.(*StructSaver); ok && ss.Schema == nil {
+		x = ss.Struct
+		insertID = ss.InsertID
+		// Fall through so we can infer the schema.
+	}
 	if saver, ok := x.(ValueSaver); ok {
 		return saver, ok, nil
 	}
@@ -128,35 +147,85 @@ func toValueSaver(x interface{}) (ValueSaver, bool, error) {
 	if v.Kind() != reflect.Struct {
 		return nil, false, nil
 	}
-	schema, err := inferSchemaReflect(v.Type())
+	schema, err := inferSchemaReflectCached(v.Type())
 	if err != nil {
 		return nil, false, err
 	}
-	return &StructSaver{Struct: x, Schema: schema}, true, nil
+	return &StructSaver{
+		Struct:   x,
+		InsertID: insertID,
+		Schema:   schema,
+	}, true, nil
 }
 
 func (u *Uploader) putMulti(ctx context.Context, src []ValueSaver) error {
-	var rows []*insertionRow
-	for _, saver := range src {
-		row, insertID, err := saver.Save()
-		if err != nil {
-			return err
-		}
-		rows = append(rows, &insertionRow{InsertID: insertID, Row: row})
+	req, err := u.newInsertRequest(src)
+	if err != nil {
+		return err
 	}
-
-	return u.t.c.service.insertRows(ctx, u.t.ProjectID, u.t.DatasetID, u.t.TableID, rows, &insertRowsConf{
-		skipInvalidRows:     u.SkipInvalidRows,
-		ignoreUnknownValues: u.IgnoreUnknownValues,
-		templateSuffix:      u.TableTemplateSuffix,
+	if req == nil {
+		return nil
+	}
+	call := u.t.c.bqs.Tabledata.InsertAll(u.t.ProjectID, u.t.DatasetID, u.t.TableID, req)
+	call = call.Context(ctx)
+	setClientHeader(call.Header())
+	var res *bq.TableDataInsertAllResponse
+	err = runWithRetry(ctx, func() (err error) {
+		res, err = call.Do()
+		return err
 	})
+	if err != nil {
+		return err
+	}
+	return handleInsertErrors(res.InsertErrors, req.Rows)
 }
 
-// An insertionRow represents a row of data to be inserted into a table.
-type insertionRow struct {
-	// If InsertID is non-empty, BigQuery will use it to de-duplicate insertions of
-	// this row on a best-effort basis.
-	InsertID string
-	// The data to be inserted, represented as a map from field name to Value.
-	Row map[string]Value
+func (u *Uploader) newInsertRequest(savers []ValueSaver) (*bq.TableDataInsertAllRequest, error) {
+	if savers == nil { // If there are no rows, do nothing.
+		return nil, nil
+	}
+	req := &bq.TableDataInsertAllRequest{
+		TemplateSuffix:      u.TableTemplateSuffix,
+		IgnoreUnknownValues: u.IgnoreUnknownValues,
+		SkipInvalidRows:     u.SkipInvalidRows,
+	}
+	for _, saver := range savers {
+		row, insertID, err := saver.Save()
+		if err != nil {
+			return nil, err
+		}
+		if insertID == "" {
+			insertID = randomIDFn()
+		}
+		m := make(map[string]bq.JsonValue)
+		for k, v := range row {
+			m[k] = bq.JsonValue(v)
+		}
+		req.Rows = append(req.Rows, &bq.TableDataInsertAllRequestRows{
+			InsertId: insertID,
+			Json:     m,
+		})
+	}
+	return req, nil
+}
+
+func handleInsertErrors(ierrs []*bq.TableDataInsertAllResponseInsertErrors, rows []*bq.TableDataInsertAllRequestRows) error {
+	if len(ierrs) == 0 {
+		return nil
+	}
+	var errs PutMultiError
+	for _, e := range ierrs {
+		if int(e.Index) > len(rows) {
+			return fmt.Errorf("internal error: unexpected row index: %v", e.Index)
+		}
+		rie := RowInsertionError{
+			InsertID: rows[e.Index].InsertId,
+			RowIndex: int(e.Index),
+		}
+		for _, errp := range e.Errors {
+			rie.Errors = append(rie.Errors, bqToError(errp))
+		}
+		errs = append(errs, rie)
+	}
+	return errs
 }

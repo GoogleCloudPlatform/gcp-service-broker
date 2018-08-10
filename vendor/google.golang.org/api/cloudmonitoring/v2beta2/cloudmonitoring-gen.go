@@ -67,10 +67,9 @@ func New(client *http.Client) (*Service, error) {
 }
 
 type Service struct {
-	client                    *http.Client
-	BasePath                  string // API endpoint base URL
-	UserAgent                 string // optional additional User-Agent fragment
-	GoogleClientHeaderElement string // client header fragment, for Google use only
+	client    *http.Client
+	BasePath  string // API endpoint base URL
+	UserAgent string // optional additional User-Agent fragment
 
 	MetricDescriptors *MetricDescriptorsService
 
@@ -84,10 +83,6 @@ func (s *Service) userAgent() string {
 		return googleapi.UserAgent
 	}
 	return googleapi.UserAgent + " " + s.UserAgent
-}
-
-func (s *Service) clientHeader() string {
-	return gensupport.GoogleClientHeader("20170210", s.GoogleClientHeaderElement)
 }
 
 func NewMetricDescriptorsService(s *Service) *MetricDescriptorsService {
@@ -146,8 +141,8 @@ type DeleteMetricDescriptorResponse struct {
 }
 
 func (s *DeleteMetricDescriptorResponse) MarshalJSON() ([]byte, error) {
-	type noMethod DeleteMetricDescriptorResponse
-	raw := noMethod(*s)
+	type NoMethod DeleteMetricDescriptorResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -176,8 +171,8 @@ type ListMetricDescriptorsRequest struct {
 }
 
 func (s *ListMetricDescriptorsRequest) MarshalJSON() ([]byte, error) {
-	type noMethod ListMetricDescriptorsRequest
-	raw := noMethod(*s)
+	type NoMethod ListMetricDescriptorsRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -219,8 +214,8 @@ type ListMetricDescriptorsResponse struct {
 }
 
 func (s *ListMetricDescriptorsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListMetricDescriptorsResponse
-	raw := noMethod(*s)
+	type NoMethod ListMetricDescriptorsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -249,8 +244,8 @@ type ListTimeseriesDescriptorsRequest struct {
 }
 
 func (s *ListTimeseriesDescriptorsRequest) MarshalJSON() ([]byte, error) {
-	type noMethod ListTimeseriesDescriptorsRequest
-	raw := noMethod(*s)
+	type NoMethod ListTimeseriesDescriptorsRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -300,8 +295,8 @@ type ListTimeseriesDescriptorsResponse struct {
 }
 
 func (s *ListTimeseriesDescriptorsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListTimeseriesDescriptorsResponse
-	raw := noMethod(*s)
+	type NoMethod ListTimeseriesDescriptorsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -329,8 +324,8 @@ type ListTimeseriesRequest struct {
 }
 
 func (s *ListTimeseriesRequest) MarshalJSON() ([]byte, error) {
-	type noMethod ListTimeseriesRequest
-	raw := noMethod(*s)
+	type NoMethod ListTimeseriesRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -381,8 +376,8 @@ type ListTimeseriesResponse struct {
 }
 
 func (s *ListTimeseriesResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListTimeseriesResponse
-	raw := noMethod(*s)
+	type NoMethod ListTimeseriesResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -426,8 +421,8 @@ type MetricDescriptor struct {
 }
 
 func (s *MetricDescriptor) MarshalJSON() ([]byte, error) {
-	type noMethod MetricDescriptor
-	raw := noMethod(*s)
+	type NoMethod MetricDescriptor
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -459,8 +454,8 @@ type MetricDescriptorLabelDescriptor struct {
 }
 
 func (s *MetricDescriptorLabelDescriptor) MarshalJSON() ([]byte, error) {
-	type noMethod MetricDescriptorLabelDescriptor
-	raw := noMethod(*s)
+	type NoMethod MetricDescriptorLabelDescriptor
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -494,8 +489,8 @@ type MetricDescriptorTypeDescriptor struct {
 }
 
 func (s *MetricDescriptorTypeDescriptor) MarshalJSON() ([]byte, error) {
-	type noMethod MetricDescriptorTypeDescriptor
-	raw := noMethod(*s)
+	type NoMethod MetricDescriptorTypeDescriptor
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -555,18 +550,18 @@ type Point struct {
 }
 
 func (s *Point) MarshalJSON() ([]byte, error) {
-	type noMethod Point
-	raw := noMethod(*s)
+	type NoMethod Point
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *Point) UnmarshalJSON(data []byte) error {
-	type noMethod Point
+	type NoMethod Point
 	var s1 struct {
 		DoubleValue *gensupport.JSONFloat64 `json:"doubleValue"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -608,8 +603,8 @@ type PointDistribution struct {
 }
 
 func (s *PointDistribution) MarshalJSON() ([]byte, error) {
-	type noMethod PointDistribution
-	raw := noMethod(*s)
+	type NoMethod PointDistribution
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -648,19 +643,19 @@ type PointDistributionBucket struct {
 }
 
 func (s *PointDistributionBucket) MarshalJSON() ([]byte, error) {
-	type noMethod PointDistributionBucket
-	raw := noMethod(*s)
+	type NoMethod PointDistributionBucket
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *PointDistributionBucket) UnmarshalJSON(data []byte) error {
-	type noMethod PointDistributionBucket
+	type NoMethod PointDistributionBucket
 	var s1 struct {
 		LowerBound gensupport.JSONFloat64 `json:"lowerBound"`
 		UpperBound gensupport.JSONFloat64 `json:"upperBound"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -699,18 +694,18 @@ type PointDistributionOverflowBucket struct {
 }
 
 func (s *PointDistributionOverflowBucket) MarshalJSON() ([]byte, error) {
-	type noMethod PointDistributionOverflowBucket
-	raw := noMethod(*s)
+	type NoMethod PointDistributionOverflowBucket
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *PointDistributionOverflowBucket) UnmarshalJSON(data []byte) error {
-	type noMethod PointDistributionOverflowBucket
+	type NoMethod PointDistributionOverflowBucket
 	var s1 struct {
 		LowerBound gensupport.JSONFloat64 `json:"lowerBound"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -748,18 +743,18 @@ type PointDistributionUnderflowBucket struct {
 }
 
 func (s *PointDistributionUnderflowBucket) MarshalJSON() ([]byte, error) {
-	type noMethod PointDistributionUnderflowBucket
-	raw := noMethod(*s)
+	type NoMethod PointDistributionUnderflowBucket
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *PointDistributionUnderflowBucket) UnmarshalJSON(data []byte) error {
-	type noMethod PointDistributionUnderflowBucket
+	type NoMethod PointDistributionUnderflowBucket
 	var s1 struct {
 		UpperBound gensupport.JSONFloat64 `json:"upperBound"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -797,8 +792,8 @@ type Timeseries struct {
 }
 
 func (s *Timeseries) MarshalJSON() ([]byte, error) {
-	type noMethod Timeseries
-	raw := noMethod(*s)
+	type NoMethod Timeseries
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -833,8 +828,8 @@ type TimeseriesDescriptor struct {
 }
 
 func (s *TimeseriesDescriptor) MarshalJSON() ([]byte, error) {
-	type noMethod TimeseriesDescriptor
-	raw := noMethod(*s)
+	type NoMethod TimeseriesDescriptor
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -863,8 +858,8 @@ type TimeseriesDescriptorLabel struct {
 }
 
 func (s *TimeseriesDescriptorLabel) MarshalJSON() ([]byte, error) {
-	type noMethod TimeseriesDescriptorLabel
-	raw := noMethod(*s)
+	type NoMethod TimeseriesDescriptorLabel
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -896,8 +891,8 @@ type TimeseriesPoint struct {
 }
 
 func (s *TimeseriesPoint) MarshalJSON() ([]byte, error) {
-	type noMethod TimeseriesPoint
-	raw := noMethod(*s)
+	type NoMethod TimeseriesPoint
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -930,8 +925,8 @@ type WriteTimeseriesRequest struct {
 }
 
 func (s *WriteTimeseriesRequest) MarshalJSON() ([]byte, error) {
-	type noMethod WriteTimeseriesRequest
-	raw := noMethod(*s)
+	type NoMethod WriteTimeseriesRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -964,8 +959,8 @@ type WriteTimeseriesResponse struct {
 }
 
 func (s *WriteTimeseriesResponse) MarshalJSON() ([]byte, error) {
-	type noMethod WriteTimeseriesResponse
-	raw := noMethod(*s)
+	type NoMethod WriteTimeseriesResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1019,7 +1014,6 @@ func (c *MetricDescriptorsCreateCall) doRequest(alt string) (*http.Response, err
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.metricdescriptor)
 	if err != nil {
@@ -1070,7 +1064,7 @@ func (c *MetricDescriptorsCreateCall) Do(opts ...googleapi.CallOption) (*MetricD
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1154,7 +1148,6 @@ func (c *MetricDescriptorsDeleteCall) doRequest(alt string) (*http.Response, err
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "{project}/metricDescriptors/{metric}")
@@ -1201,7 +1194,7 @@ func (c *MetricDescriptorsDeleteCall) Do(opts ...googleapi.CallOption) (*DeleteM
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1332,7 +1325,6 @@ func (c *MetricDescriptorsListCall) doRequest(alt string) (*http.Response, error
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -1381,7 +1373,7 @@ func (c *MetricDescriptorsListCall) Do(opts ...googleapi.CallOption) (*ListMetri
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1610,7 +1602,6 @@ func (c *TimeseriesListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -1660,7 +1651,7 @@ func (c *TimeseriesListCall) Do(opts ...googleapi.CallOption) (*ListTimeseriesRe
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1841,7 +1832,6 @@ func (c *TimeseriesWriteCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.writetimeseriesrequest)
 	if err != nil {
@@ -1892,7 +1882,7 @@ func (c *TimeseriesWriteCall) Do(opts ...googleapi.CallOption) (*WriteTimeseries
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2082,7 +2072,6 @@ func (c *TimeseriesDescriptorsListCall) doRequest(alt string) (*http.Response, e
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -2133,7 +2122,7 @@ func (c *TimeseriesDescriptorsListCall) Do(opts ...googleapi.CallOption) (*ListT
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

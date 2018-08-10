@@ -1,10 +1,10 @@
-// Copyright 2017, Google Inc. All rights reserved.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//     https://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package database_test
 import (
 	"cloud.google.com/go/spanner/admin/database/apiv1"
 	"golang.org/x/net/context"
+	"google.golang.org/api/iterator"
 	iampb "google.golang.org/genproto/googleapis/iam/v1"
 	databasepb "google.golang.org/genproto/googleapis/spanner/admin/database/v1"
 )
@@ -41,14 +42,16 @@ func ExampleDatabaseAdminClient_ListDatabases() {
 	}
 
 	req := &databasepb.ListDatabasesRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	it := c.ListDatabases(ctx, req)
 	for {
 		resp, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
 		if err != nil {
 			// TODO: Handle error.
-			break
 		}
 		// TODO: Use resp.
 		_ = resp
@@ -63,7 +66,7 @@ func ExampleDatabaseAdminClient_CreateDatabase() {
 	}
 
 	req := &databasepb.CreateDatabaseRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	op, err := c.CreateDatabase(ctx, req)
 	if err != nil {
@@ -86,7 +89,7 @@ func ExampleDatabaseAdminClient_GetDatabase() {
 	}
 
 	req := &databasepb.GetDatabaseRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	resp, err := c.GetDatabase(ctx, req)
 	if err != nil {
@@ -104,7 +107,7 @@ func ExampleDatabaseAdminClient_UpdateDatabaseDdl() {
 	}
 
 	req := &databasepb.UpdateDatabaseDdlRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	op, err := c.UpdateDatabaseDdl(ctx, req)
 	if err != nil {
@@ -123,7 +126,7 @@ func ExampleDatabaseAdminClient_DropDatabase() {
 	}
 
 	req := &databasepb.DropDatabaseRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	err = c.DropDatabase(ctx, req)
 	if err != nil {
@@ -139,7 +142,7 @@ func ExampleDatabaseAdminClient_GetDatabaseDdl() {
 	}
 
 	req := &databasepb.GetDatabaseDdlRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	resp, err := c.GetDatabaseDdl(ctx, req)
 	if err != nil {
@@ -157,7 +160,7 @@ func ExampleDatabaseAdminClient_SetIamPolicy() {
 	}
 
 	req := &iampb.SetIamPolicyRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	resp, err := c.SetIamPolicy(ctx, req)
 	if err != nil {
@@ -175,7 +178,7 @@ func ExampleDatabaseAdminClient_GetIamPolicy() {
 	}
 
 	req := &iampb.GetIamPolicyRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	resp, err := c.GetIamPolicy(ctx, req)
 	if err != nil {
@@ -193,7 +196,7 @@ func ExampleDatabaseAdminClient_TestIamPermissions() {
 	}
 
 	req := &iampb.TestIamPermissionsRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	resp, err := c.TestIamPermissions(ctx, req)
 	if err != nil {

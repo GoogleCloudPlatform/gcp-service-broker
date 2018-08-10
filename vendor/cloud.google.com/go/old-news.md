@@ -1,3 +1,389 @@
+_February 26, 2018_
+
+*v0.19.0*
+
+- bigquery:
+  - Support customer-managed encryption keys.
+
+- bigtable:
+  - Improved emulator support.
+  - Support GetCluster.
+
+- datastore:
+  - Add general mutations.
+  - Support pointer struct fields.
+  - Support transaction options.
+
+- firestore:
+  - Add Transaction.GetAll.
+  - Support document cursors.
+
+- logging:
+  - Support concurrent RPCs to the service.
+  - Support per-entry resources.
+
+- profiler:
+  - Add config options to disable heap and thread profiling.
+  - Read the project ID from $GOOGLE_CLOUD_PROJECT when it's set.
+
+- pubsub:
+  - BEHAVIOR CHANGE: Release flow control after ack/nack (instead of after the
+    callback returns).
+  - Add SubscriptionInProject.
+  - Add OpenCensus instrumentation for streaming pull.
+
+- storage:
+  - Support CORS.
+
+
+_January 18, 2018_
+
+*v0.18.0*
+
+- bigquery:
+  - Marked stable.
+  - Schema inference of nullable fields supported.
+  - Added TimePartitioning to QueryConfig.
+
+- firestore: Data provided to DocumentRef.Set with a Merge option can contain
+  Delete sentinels.
+
+- logging: Clients can accept parent resources other than projects.
+
+- pubsub:
+  - pubsub/pstest: A lighweight fake for pubsub. Experimental; feedback welcome.
+  - Support updating more subscription metadata: AckDeadline,
+    RetainAckedMessages and RetentionDuration.
+
+- oslogin/apiv1beta: New client for the Cloud OS Login API.
+
+- rpcreplay: A package for recording and replaying gRPC traffic.
+
+- spanner:
+  - Add a ReadWithOptions that supports a row limit, as well as an index.
+  - Support query plan and execution statistics.
+  - Added [OpenCensus](http://opencensus.io) support.
+
+- storage: Clarify checksum validation for gzipped files (it is not validated
+  when the file is served uncompressed).
+
+
+_December 11, 2017_
+
+*v0.17.0*
+
+- firestore BREAKING CHANGES:
+  - Remove UpdateMap and UpdateStruct; rename UpdatePaths to Update.
+    Change
+        `docref.UpdateMap(ctx, map[string]interface{}{"a.b", 1})`
+    to
+        `docref.Update(ctx, []firestore.Update{{Path: "a.b", Value: 1}})`
+
+    Change
+        `docref.UpdateStruct(ctx, []string{"Field"}, aStruct)`
+    to
+        `docref.Update(ctx, []firestore.Update{{Path: "Field", Value: aStruct.Field}})`
+  - Rename MergePaths to Merge; require args to be FieldPaths
+  - A value stored as an integer can be read into a floating-point field, and vice versa.
+- bigtable/cmd/cbt:
+  - Support deleting a column.
+  - Add regex option for row read.
+- spanner: Mark stable.
+- storage:
+  - Add Reader.ContentEncoding method.
+  - Fix handling of SignedURL headers.
+- bigquery:
+  - If Uploader.Put is called with no rows, it returns nil without making a
+    call.
+  - Schema inference supports the "nullable" option in struct tags for
+    non-required fields.
+  - TimePartitioning supports "Field".
+
+
+_October 30, 2017_
+
+*v0.16.0*
+
+- Other bigquery changes:
+  - `JobIterator.Next` returns `*Job`; removed `JobInfo` (BREAKING CHANGE).
+  - UseStandardSQL is deprecated; set UseLegacySQL to true if you need
+    Legacy SQL.
+  - Uploader.Put will generate a random insert ID if you do not provide one.
+  - Support time partitioning for load jobs.
+  - Support dry-run queries.
+  - A `Job` remembers its last retrieved status.
+  - Support retrieving job configuration.
+  - Support labels for jobs and tables.
+  - Support dataset access lists.
+  - Improve support for external data sources, including data from Bigtable and
+    Google Sheets, and tables with external data.
+  - Support updating a table's view configuration.
+  - Fix uploading civil times with nanoseconds.
+
+- storage:
+  - Support PubSub notifications.
+  - Support Requester Pays buckets.
+
+- profiler: Support goroutine and mutex profile types.
+
+
+_October 3, 2017_
+
+*v0.15.0*
+
+- firestore: beta release. See the
+  [announcement](https://firebase.googleblog.com/2017/10/introducing-cloud-firestore.html).
+
+- errorreporting: The existing package has been redesigned.
+
+- errors: This package has been removed. Use errorreporting.
+
+
+_September 28, 2017_
+
+*v0.14.0*
+
+- bigquery BREAKING CHANGES:
+  - Standard SQL is the default for queries and views.
+  - `Table.Create` takes `TableMetadata` as a second argument, instead of
+    options.
+  - `Dataset.Create` takes `DatasetMetadata` as a second argument.
+  - `DatasetMetadata` field `ID` renamed to `FullID`
+  - `TableMetadata` field `ID` renamed to `FullID`
+
+- Other bigquery changes:
+  - The client will append a random suffix to a provided job ID if you set
+    `AddJobIDSuffix` to true in a job config.
+  - Listing jobs is supported.
+  - Better retry logic.
+
+- vision, language, speech: clients are now stable
+
+- monitoring: client is now beta
+
+- profiler:
+  - Rename InstanceName to Instance, ZoneName to Zone
+  - Auto-detect service name and version on AppEngine.
+
+_September 8, 2017_
+
+*v0.13.0*
+
+- bigquery: UseLegacySQL options for CreateTable and QueryConfig. Use these
+  options to continue using Legacy SQL after the client switches its default
+  to Standard SQL.
+
+- bigquery: Support for updating dataset labels.
+
+- bigquery: Set DatasetIterator.ProjectID to list datasets in a project other
+  than the client's. DatasetsInProject is no longer needed and is deprecated.
+
+- bigtable: Fail ListInstances when any zones fail.
+
+- spanner: support decoding of slices of basic types (e.g. []string, []int64,
+  etc.)
+
+- logging/logadmin: UpdateSink no longer creates a sink if it is missing
+  (actually a change to the underlying service, not the client)
+
+- profiler: Service and ServiceVersion replace Target in Config.
+
+_August 22, 2017_
+
+*v0.12.0*
+
+- pubsub: Subscription.Receive now uses streaming pull.
+
+- pubsub: add Client.TopicInProject to access topics in a different project
+  than the client.
+
+- errors: renamed errorreporting. The errors package will be removed shortly.
+
+- datastore: improved retry behavior.
+
+- bigquery: support updates to dataset metadata, with etags.
+
+- bigquery: add etag support to Table.Update (BREAKING: etag argument added).
+
+- bigquery: generate all job IDs on the client.
+
+- storage: support bucket lifecycle configurations.
+
+
+_July 31, 2017_
+
+*v0.11.0*
+
+- Clients for spanner, pubsub and video are now in beta.
+
+- New client for DLP.
+
+- spanner: performance and testing improvements.
+
+- storage: requester-pays buckets are supported.
+
+- storage, profiler, bigtable, bigquery: bug fixes and other minor improvements.
+
+- pubsub: bug fixes and other minor improvements
+
+_June 17, 2017_
+
+
+*v0.10.0*
+
+- pubsub: Subscription.ModifyPushConfig replaced with Subscription.Update.
+
+- pubsub: Subscription.Receive now runs concurrently for higher throughput.
+
+- vision: cloud.google.com/go/vision is deprecated. Use
+cloud.google.com/go/vision/apiv1 instead.
+
+- translation: now stable.
+
+- trace: several changes to the surface. See the link below.
+
+[Code changes required from v0.9.0.](https://github.com/GoogleCloudPlatform/google-cloud-go/blob/master/MIGRATION.md)
+
+
+_March 17, 2017_
+
+Breaking Pubsub changes.
+* Publish is now asynchronous
+([announcement](https://groups.google.com/d/topic/google-api-go-announce/aaqRDIQ3rvU/discussion)).
+* Subscription.Pull replaced by Subscription.Receive, which takes a callback ([announcement](https://groups.google.com/d/topic/google-api-go-announce/8pt6oetAdKc/discussion)).
+* Message.Done replaced with Message.Ack and Message.Nack.
+
+_February 14, 2017_
+
+Release of a client library for Spanner. See
+the
+[blog post](https://cloudplatform.googleblog.com/2017/02/introducing-Cloud-Spanner-a-global-database-service-for-mission-critical-applications.html).
+
+Note that although the Spanner service is beta, the Go client library is alpha.
+
+_December 12, 2016_
+
+Beta release of BigQuery, DataStore, Logging and Storage. See the
+[blog post](https://cloudplatform.googleblog.com/2016/12/announcing-new-google-cloud-client.html).
+
+Also, BigQuery now supports structs. Read a row directly into a struct with
+`RowIterator.Next`, and upload a row directly from a struct with `Uploader.Put`.
+You can also use field tags. See the [package documentation][cloud-bigquery-ref]
+for details.
+
+_December 5, 2016_
+
+More changes to BigQuery:
+
+* The `ValueList` type was removed. It is no longer necessary. Instead of
+   ```go
+   var v ValueList
+   ... it.Next(&v) ..
+   ```
+   use
+
+   ```go
+   var v []Value
+   ... it.Next(&v) ...
+   ```
+
+* Previously, repeatedly calling `RowIterator.Next` on the same `[]Value` or
+  `ValueList` would append to the slice. Now each call resets the size to zero first.
+
+* Schema inference will infer the SQL type BYTES for a struct field of
+  type []byte. Previously it inferred STRING.
+
+* The types `uint`, `uint64` and `uintptr` are no longer supported in schema
+  inference. BigQuery's integer type is INT64, and those types may hold values
+  that are not correctly represented in a 64-bit signed integer.
+
+* The SQL types DATE, TIME and DATETIME are now supported. They correspond to
+  the `Date`, `Time` and `DateTime` types in the new `cloud.google.com/go/civil`
+  package.
+
+_November 17, 2016_
+
+Change to BigQuery: values from INTEGER columns will now be returned as int64,
+not int. This will avoid errors arising from large values on 32-bit systems.
+
+_November 8, 2016_
+
+New datastore feature: datastore now encodes your nested Go structs as Entity values,
+instead of a flattened list of the embedded struct's fields.
+This means that you may now have twice-nested slices, eg.
+```go
+type State struct {
+  Cities  []struct{
+    Populations []int
+  }
+}
+```
+
+See [the announcement](https://groups.google.com/forum/#!topic/google-api-go-announce/79jtrdeuJAg) for
+more details.
+
+_November 8, 2016_
+
+Breaking changes to datastore: contexts no longer hold namespaces; instead you
+must set a key's namespace explicitly. Also, key functions have been changed
+and renamed.
+
+* The WithNamespace function has been removed. To specify a namespace in a Query, use the Query.Namespace method:
+  ```go
+  q := datastore.NewQuery("Kind").Namespace("ns")
+  ```
+
+* All the fields of Key are exported. That means you can construct any Key with a struct literal:
+  ```go
+  k := &Key{Kind: "Kind",  ID: 37, Namespace: "ns"}
+  ```
+
+* As a result of the above, the Key methods Kind, ID, d.Name, Parent, SetParent and Namespace have been removed.
+
+* `NewIncompleteKey` has been removed, replaced by `IncompleteKey`. Replace
+  ```go
+  NewIncompleteKey(ctx, kind, parent)
+  ```
+  with
+  ```go
+  IncompleteKey(kind, parent)
+  ```
+  and if you do use namespaces, make sure you set the namespace on the returned key.
+
+* `NewKey` has been removed, replaced by `NameKey` and `IDKey`. Replace
+  ```go
+  NewKey(ctx, kind, name, 0, parent)
+  NewKey(ctx, kind, "", id, parent)
+  ```
+  with
+  ```go
+  NameKey(kind, name, parent)
+  IDKey(kind, id, parent)
+  ```
+  and if you do use namespaces, make sure you set the namespace on the returned key.
+
+* The `Done` variable has been removed. Replace `datastore.Done` with `iterator.Done`, from the package `google.golang.org/api/iterator`.
+
+* The `Client.Close` method will have a return type of error. It will return the result of closing the underlying gRPC connection.
+
+See [the announcement](https://groups.google.com/forum/#!topic/google-api-go-announce/hqXtM_4Ix-0) for
+more details.
+
+_October 27, 2016_
+
+Breaking change to bigquery: `NewGCSReference` is now a function,
+not a method on `Client`.
+
+New bigquery feature: `Table.LoaderFrom` now accepts a `ReaderSource`, enabling
+loading data into a table from a file or any `io.Reader`.
+
+_October 21, 2016_
+
+Breaking change to pubsub: removed `pubsub.Done`.
+
+Use `iterator.Done` instead, where `iterator` is the package
+`google.golang.org/api/iterator`.
+
 _October 19, 2016_
 
 Breaking changes to cloud.google.com/go/bigquery:

@@ -1,10 +1,10 @@
-// Copyright 2017, Google Inc. All rights reserved.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//     https://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,7 @@
 package database
 
 import (
-	google_protobuf "github.com/golang/protobuf/ptypes/empty"
+	emptypb "github.com/golang/protobuf/ptypes/empty"
 	iampb "google.golang.org/genproto/googleapis/iam/v1"
 	longrunningpb "google.golang.org/genproto/googleapis/longrunning"
 	databasepb "google.golang.org/genproto/googleapis/spanner/admin/database/v1"
@@ -25,10 +25,12 @@ import (
 
 import (
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"net"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -38,6 +40,8 @@ import (
 	status "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	gstatus "google.golang.org/grpc/status"
 )
 
 var _ = io.EOF
@@ -59,7 +63,11 @@ type mockDatabaseAdminServer struct {
 	resps []proto.Message
 }
 
-func (s *mockDatabaseAdminServer) ListDatabases(_ context.Context, req *databasepb.ListDatabasesRequest) (*databasepb.ListDatabasesResponse, error) {
+func (s *mockDatabaseAdminServer) ListDatabases(ctx context.Context, req *databasepb.ListDatabasesRequest) (*databasepb.ListDatabasesResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -67,7 +75,11 @@ func (s *mockDatabaseAdminServer) ListDatabases(_ context.Context, req *database
 	return s.resps[0].(*databasepb.ListDatabasesResponse), nil
 }
 
-func (s *mockDatabaseAdminServer) CreateDatabase(_ context.Context, req *databasepb.CreateDatabaseRequest) (*longrunningpb.Operation, error) {
+func (s *mockDatabaseAdminServer) CreateDatabase(ctx context.Context, req *databasepb.CreateDatabaseRequest) (*longrunningpb.Operation, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -75,7 +87,11 @@ func (s *mockDatabaseAdminServer) CreateDatabase(_ context.Context, req *databas
 	return s.resps[0].(*longrunningpb.Operation), nil
 }
 
-func (s *mockDatabaseAdminServer) GetDatabase(_ context.Context, req *databasepb.GetDatabaseRequest) (*databasepb.Database, error) {
+func (s *mockDatabaseAdminServer) GetDatabase(ctx context.Context, req *databasepb.GetDatabaseRequest) (*databasepb.Database, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -83,7 +99,11 @@ func (s *mockDatabaseAdminServer) GetDatabase(_ context.Context, req *databasepb
 	return s.resps[0].(*databasepb.Database), nil
 }
 
-func (s *mockDatabaseAdminServer) UpdateDatabaseDdl(_ context.Context, req *databasepb.UpdateDatabaseDdlRequest) (*longrunningpb.Operation, error) {
+func (s *mockDatabaseAdminServer) UpdateDatabaseDdl(ctx context.Context, req *databasepb.UpdateDatabaseDdlRequest) (*longrunningpb.Operation, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -91,15 +111,23 @@ func (s *mockDatabaseAdminServer) UpdateDatabaseDdl(_ context.Context, req *data
 	return s.resps[0].(*longrunningpb.Operation), nil
 }
 
-func (s *mockDatabaseAdminServer) DropDatabase(_ context.Context, req *databasepb.DropDatabaseRequest) (*google_protobuf.Empty, error) {
+func (s *mockDatabaseAdminServer) DropDatabase(ctx context.Context, req *databasepb.DropDatabaseRequest) (*emptypb.Empty, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
 	}
-	return s.resps[0].(*google_protobuf.Empty), nil
+	return s.resps[0].(*emptypb.Empty), nil
 }
 
-func (s *mockDatabaseAdminServer) GetDatabaseDdl(_ context.Context, req *databasepb.GetDatabaseDdlRequest) (*databasepb.GetDatabaseDdlResponse, error) {
+func (s *mockDatabaseAdminServer) GetDatabaseDdl(ctx context.Context, req *databasepb.GetDatabaseDdlRequest) (*databasepb.GetDatabaseDdlResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -107,7 +135,11 @@ func (s *mockDatabaseAdminServer) GetDatabaseDdl(_ context.Context, req *databas
 	return s.resps[0].(*databasepb.GetDatabaseDdlResponse), nil
 }
 
-func (s *mockDatabaseAdminServer) SetIamPolicy(_ context.Context, req *iampb.SetIamPolicyRequest) (*iampb.Policy, error) {
+func (s *mockDatabaseAdminServer) SetIamPolicy(ctx context.Context, req *iampb.SetIamPolicyRequest) (*iampb.Policy, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -115,7 +147,11 @@ func (s *mockDatabaseAdminServer) SetIamPolicy(_ context.Context, req *iampb.Set
 	return s.resps[0].(*iampb.Policy), nil
 }
 
-func (s *mockDatabaseAdminServer) GetIamPolicy(_ context.Context, req *iampb.GetIamPolicyRequest) (*iampb.Policy, error) {
+func (s *mockDatabaseAdminServer) GetIamPolicy(ctx context.Context, req *iampb.GetIamPolicyRequest) (*iampb.Policy, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -123,7 +159,11 @@ func (s *mockDatabaseAdminServer) GetIamPolicy(_ context.Context, req *iampb.Get
 	return s.resps[0].(*iampb.Policy), nil
 }
 
-func (s *mockDatabaseAdminServer) TestIamPermissions(_ context.Context, req *iampb.TestIamPermissionsRequest) (*iampb.TestIamPermissionsResponse, error) {
+func (s *mockDatabaseAdminServer) TestIamPermissions(ctx context.Context, req *iampb.TestIamPermissionsRequest) (*iampb.TestIamPermissionsResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -174,7 +214,7 @@ func TestDatabaseAdminListDatabases(t *testing.T) {
 
 	mockDatabaseAdmin.resps = append(mockDatabaseAdmin.resps[:0], expectedResponse)
 
-	var formattedParent string = DatabaseAdminInstancePath("[PROJECT]", "[INSTANCE]")
+	var formattedParent string = fmt.Sprintf("projects/%s/instances/%s", "[PROJECT]", "[INSTANCE]")
 	var request = &databasepb.ListDatabasesRequest{
 		Parent: formattedParent,
 	}
@@ -211,9 +251,9 @@ func TestDatabaseAdminListDatabases(t *testing.T) {
 
 func TestDatabaseAdminListDatabasesError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockDatabaseAdmin.err = grpc.Errorf(errCode, "test error")
+	mockDatabaseAdmin.err = gstatus.Error(errCode, "test error")
 
-	var formattedParent string = DatabaseAdminInstancePath("[PROJECT]", "[INSTANCE]")
+	var formattedParent string = fmt.Sprintf("projects/%s/instances/%s", "[PROJECT]", "[INSTANCE]")
 	var request = &databasepb.ListDatabasesRequest{
 		Parent: formattedParent,
 	}
@@ -225,7 +265,9 @@ func TestDatabaseAdminListDatabasesError(t *testing.T) {
 
 	resp, err := c.ListDatabases(context.Background(), request).Next()
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -249,7 +291,7 @@ func TestDatabaseAdminCreateDatabase(t *testing.T) {
 		Result: &longrunningpb.Operation_Response{Response: any},
 	})
 
-	var formattedParent string = DatabaseAdminInstancePath("[PROJECT]", "[INSTANCE]")
+	var formattedParent string = fmt.Sprintf("projects/%s/instances/%s", "[PROJECT]", "[INSTANCE]")
 	var createStatement string = "createStatement552974828"
 	var request = &databasepb.CreateDatabaseRequest{
 		Parent:          formattedParent,
@@ -294,7 +336,7 @@ func TestDatabaseAdminCreateDatabaseError(t *testing.T) {
 		},
 	})
 
-	var formattedParent string = DatabaseAdminInstancePath("[PROJECT]", "[INSTANCE]")
+	var formattedParent string = fmt.Sprintf("projects/%s/instances/%s", "[PROJECT]", "[INSTANCE]")
 	var createStatement string = "createStatement552974828"
 	var request = &databasepb.CreateDatabaseRequest{
 		Parent:          formattedParent,
@@ -312,7 +354,9 @@ func TestDatabaseAdminCreateDatabaseError(t *testing.T) {
 	}
 	resp, err := respLRO.Wait(context.Background())
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -328,7 +372,7 @@ func TestDatabaseAdminGetDatabase(t *testing.T) {
 
 	mockDatabaseAdmin.resps = append(mockDatabaseAdmin.resps[:0], expectedResponse)
 
-	var formattedName string = DatabaseAdminDatabasePath("[PROJECT]", "[INSTANCE]", "[DATABASE]")
+	var formattedName string = fmt.Sprintf("projects/%s/instances/%s/databases/%s", "[PROJECT]", "[INSTANCE]", "[DATABASE]")
 	var request = &databasepb.GetDatabaseRequest{
 		Name: formattedName,
 	}
@@ -355,9 +399,9 @@ func TestDatabaseAdminGetDatabase(t *testing.T) {
 
 func TestDatabaseAdminGetDatabaseError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockDatabaseAdmin.err = grpc.Errorf(errCode, "test error")
+	mockDatabaseAdmin.err = gstatus.Error(errCode, "test error")
 
-	var formattedName string = DatabaseAdminDatabasePath("[PROJECT]", "[INSTANCE]", "[DATABASE]")
+	var formattedName string = fmt.Sprintf("projects/%s/instances/%s/databases/%s", "[PROJECT]", "[INSTANCE]", "[DATABASE]")
 	var request = &databasepb.GetDatabaseRequest{
 		Name: formattedName,
 	}
@@ -369,13 +413,15 @@ func TestDatabaseAdminGetDatabaseError(t *testing.T) {
 
 	resp, err := c.GetDatabase(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
 }
 func TestDatabaseAdminUpdateDatabaseDdl(t *testing.T) {
-	var expectedResponse *google_protobuf.Empty = &google_protobuf.Empty{}
+	var expectedResponse *emptypb.Empty = &emptypb.Empty{}
 
 	mockDatabaseAdmin.err = nil
 	mockDatabaseAdmin.reqs = nil
@@ -390,7 +436,7 @@ func TestDatabaseAdminUpdateDatabaseDdl(t *testing.T) {
 		Result: &longrunningpb.Operation_Response{Response: any},
 	})
 
-	var formattedDatabase string = DatabaseAdminDatabasePath("[PROJECT]", "[INSTANCE]", "[DATABASE]")
+	var formattedDatabase string = fmt.Sprintf("projects/%s/instances/%s/databases/%s", "[PROJECT]", "[INSTANCE]", "[DATABASE]")
 	var statements []string = nil
 	var request = &databasepb.UpdateDatabaseDdlRequest{
 		Database:   formattedDatabase,
@@ -432,7 +478,7 @@ func TestDatabaseAdminUpdateDatabaseDdlError(t *testing.T) {
 		},
 	})
 
-	var formattedDatabase string = DatabaseAdminDatabasePath("[PROJECT]", "[INSTANCE]", "[DATABASE]")
+	var formattedDatabase string = fmt.Sprintf("projects/%s/instances/%s/databases/%s", "[PROJECT]", "[INSTANCE]", "[DATABASE]")
 	var statements []string = nil
 	var request = &databasepb.UpdateDatabaseDdlRequest{
 		Database:   formattedDatabase,
@@ -450,19 +496,21 @@ func TestDatabaseAdminUpdateDatabaseDdlError(t *testing.T) {
 	}
 	err = respLRO.Wait(context.Background())
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 }
 func TestDatabaseAdminDropDatabase(t *testing.T) {
-	var expectedResponse *google_protobuf.Empty = &google_protobuf.Empty{}
+	var expectedResponse *emptypb.Empty = &emptypb.Empty{}
 
 	mockDatabaseAdmin.err = nil
 	mockDatabaseAdmin.reqs = nil
 
 	mockDatabaseAdmin.resps = append(mockDatabaseAdmin.resps[:0], expectedResponse)
 
-	var formattedDatabase string = DatabaseAdminDatabasePath("[PROJECT]", "[INSTANCE]", "[DATABASE]")
+	var formattedDatabase string = fmt.Sprintf("projects/%s/instances/%s/databases/%s", "[PROJECT]", "[INSTANCE]", "[DATABASE]")
 	var request = &databasepb.DropDatabaseRequest{
 		Database: formattedDatabase,
 	}
@@ -486,9 +534,9 @@ func TestDatabaseAdminDropDatabase(t *testing.T) {
 
 func TestDatabaseAdminDropDatabaseError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockDatabaseAdmin.err = grpc.Errorf(errCode, "test error")
+	mockDatabaseAdmin.err = gstatus.Error(errCode, "test error")
 
-	var formattedDatabase string = DatabaseAdminDatabasePath("[PROJECT]", "[INSTANCE]", "[DATABASE]")
+	var formattedDatabase string = fmt.Sprintf("projects/%s/instances/%s/databases/%s", "[PROJECT]", "[INSTANCE]", "[DATABASE]")
 	var request = &databasepb.DropDatabaseRequest{
 		Database: formattedDatabase,
 	}
@@ -500,7 +548,9 @@ func TestDatabaseAdminDropDatabaseError(t *testing.T) {
 
 	err = c.DropDatabase(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 }
@@ -512,7 +562,7 @@ func TestDatabaseAdminGetDatabaseDdl(t *testing.T) {
 
 	mockDatabaseAdmin.resps = append(mockDatabaseAdmin.resps[:0], expectedResponse)
 
-	var formattedDatabase string = DatabaseAdminDatabasePath("[PROJECT]", "[INSTANCE]", "[DATABASE]")
+	var formattedDatabase string = fmt.Sprintf("projects/%s/instances/%s/databases/%s", "[PROJECT]", "[INSTANCE]", "[DATABASE]")
 	var request = &databasepb.GetDatabaseDdlRequest{
 		Database: formattedDatabase,
 	}
@@ -539,9 +589,9 @@ func TestDatabaseAdminGetDatabaseDdl(t *testing.T) {
 
 func TestDatabaseAdminGetDatabaseDdlError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockDatabaseAdmin.err = grpc.Errorf(errCode, "test error")
+	mockDatabaseAdmin.err = gstatus.Error(errCode, "test error")
 
-	var formattedDatabase string = DatabaseAdminDatabasePath("[PROJECT]", "[INSTANCE]", "[DATABASE]")
+	var formattedDatabase string = fmt.Sprintf("projects/%s/instances/%s/databases/%s", "[PROJECT]", "[INSTANCE]", "[DATABASE]")
 	var request = &databasepb.GetDatabaseDdlRequest{
 		Database: formattedDatabase,
 	}
@@ -553,7 +603,9 @@ func TestDatabaseAdminGetDatabaseDdlError(t *testing.T) {
 
 	resp, err := c.GetDatabaseDdl(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -571,7 +623,7 @@ func TestDatabaseAdminSetIamPolicy(t *testing.T) {
 
 	mockDatabaseAdmin.resps = append(mockDatabaseAdmin.resps[:0], expectedResponse)
 
-	var formattedResource string = DatabaseAdminDatabasePath("[PROJECT]", "[INSTANCE]", "[DATABASE]")
+	var formattedResource string = fmt.Sprintf("projects/%s/instances/%s/databases/%s", "[PROJECT]", "[INSTANCE]", "[DATABASE]")
 	var policy *iampb.Policy = &iampb.Policy{}
 	var request = &iampb.SetIamPolicyRequest{
 		Resource: formattedResource,
@@ -600,9 +652,9 @@ func TestDatabaseAdminSetIamPolicy(t *testing.T) {
 
 func TestDatabaseAdminSetIamPolicyError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockDatabaseAdmin.err = grpc.Errorf(errCode, "test error")
+	mockDatabaseAdmin.err = gstatus.Error(errCode, "test error")
 
-	var formattedResource string = DatabaseAdminDatabasePath("[PROJECT]", "[INSTANCE]", "[DATABASE]")
+	var formattedResource string = fmt.Sprintf("projects/%s/instances/%s/databases/%s", "[PROJECT]", "[INSTANCE]", "[DATABASE]")
 	var policy *iampb.Policy = &iampb.Policy{}
 	var request = &iampb.SetIamPolicyRequest{
 		Resource: formattedResource,
@@ -616,7 +668,9 @@ func TestDatabaseAdminSetIamPolicyError(t *testing.T) {
 
 	resp, err := c.SetIamPolicy(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -634,7 +688,7 @@ func TestDatabaseAdminGetIamPolicy(t *testing.T) {
 
 	mockDatabaseAdmin.resps = append(mockDatabaseAdmin.resps[:0], expectedResponse)
 
-	var formattedResource string = DatabaseAdminDatabasePath("[PROJECT]", "[INSTANCE]", "[DATABASE]")
+	var formattedResource string = fmt.Sprintf("projects/%s/instances/%s/databases/%s", "[PROJECT]", "[INSTANCE]", "[DATABASE]")
 	var request = &iampb.GetIamPolicyRequest{
 		Resource: formattedResource,
 	}
@@ -661,9 +715,9 @@ func TestDatabaseAdminGetIamPolicy(t *testing.T) {
 
 func TestDatabaseAdminGetIamPolicyError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockDatabaseAdmin.err = grpc.Errorf(errCode, "test error")
+	mockDatabaseAdmin.err = gstatus.Error(errCode, "test error")
 
-	var formattedResource string = DatabaseAdminDatabasePath("[PROJECT]", "[INSTANCE]", "[DATABASE]")
+	var formattedResource string = fmt.Sprintf("projects/%s/instances/%s/databases/%s", "[PROJECT]", "[INSTANCE]", "[DATABASE]")
 	var request = &iampb.GetIamPolicyRequest{
 		Resource: formattedResource,
 	}
@@ -675,7 +729,9 @@ func TestDatabaseAdminGetIamPolicyError(t *testing.T) {
 
 	resp, err := c.GetIamPolicy(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -688,7 +744,7 @@ func TestDatabaseAdminTestIamPermissions(t *testing.T) {
 
 	mockDatabaseAdmin.resps = append(mockDatabaseAdmin.resps[:0], expectedResponse)
 
-	var formattedResource string = DatabaseAdminDatabasePath("[PROJECT]", "[INSTANCE]", "[DATABASE]")
+	var formattedResource string = fmt.Sprintf("projects/%s/instances/%s/databases/%s", "[PROJECT]", "[INSTANCE]", "[DATABASE]")
 	var permissions []string = nil
 	var request = &iampb.TestIamPermissionsRequest{
 		Resource:    formattedResource,
@@ -717,9 +773,9 @@ func TestDatabaseAdminTestIamPermissions(t *testing.T) {
 
 func TestDatabaseAdminTestIamPermissionsError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockDatabaseAdmin.err = grpc.Errorf(errCode, "test error")
+	mockDatabaseAdmin.err = gstatus.Error(errCode, "test error")
 
-	var formattedResource string = DatabaseAdminDatabasePath("[PROJECT]", "[INSTANCE]", "[DATABASE]")
+	var formattedResource string = fmt.Sprintf("projects/%s/instances/%s/databases/%s", "[PROJECT]", "[INSTANCE]", "[DATABASE]")
 	var permissions []string = nil
 	var request = &iampb.TestIamPermissionsRequest{
 		Resource:    formattedResource,
@@ -733,7 +789,9 @@ func TestDatabaseAdminTestIamPermissionsError(t *testing.T) {
 
 	resp, err := c.TestIamPermissions(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp

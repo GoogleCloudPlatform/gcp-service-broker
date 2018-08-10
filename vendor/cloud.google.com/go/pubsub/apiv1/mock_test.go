@@ -1,10 +1,10 @@
-// Copyright 2017, Google Inc. All rights reserved.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//     https://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,8 @@
 package pubsub
 
 import (
-	google_protobuf "github.com/golang/protobuf/ptypes/empty"
+	emptypb "github.com/golang/protobuf/ptypes/empty"
+	timestamppb "github.com/golang/protobuf/ptypes/timestamp"
 	iampb "google.golang.org/genproto/googleapis/iam/v1"
 	pubsubpb "google.golang.org/genproto/googleapis/pubsub/v1"
 	field_maskpb "google.golang.org/genproto/protobuf/field_mask"
@@ -25,10 +26,12 @@ import (
 
 import (
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"net"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -38,6 +41,8 @@ import (
 	status "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	gstatus "google.golang.org/grpc/status"
 )
 
 var _ = io.EOF
@@ -59,7 +64,11 @@ type mockPublisherServer struct {
 	resps []proto.Message
 }
 
-func (s *mockPublisherServer) CreateTopic(_ context.Context, req *pubsubpb.Topic) (*pubsubpb.Topic, error) {
+func (s *mockPublisherServer) CreateTopic(ctx context.Context, req *pubsubpb.Topic) (*pubsubpb.Topic, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -67,7 +76,23 @@ func (s *mockPublisherServer) CreateTopic(_ context.Context, req *pubsubpb.Topic
 	return s.resps[0].(*pubsubpb.Topic), nil
 }
 
-func (s *mockPublisherServer) Publish(_ context.Context, req *pubsubpb.PublishRequest) (*pubsubpb.PublishResponse, error) {
+func (s *mockPublisherServer) UpdateTopic(ctx context.Context, req *pubsubpb.UpdateTopicRequest) (*pubsubpb.Topic, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
+	s.reqs = append(s.reqs, req)
+	if s.err != nil {
+		return nil, s.err
+	}
+	return s.resps[0].(*pubsubpb.Topic), nil
+}
+
+func (s *mockPublisherServer) Publish(ctx context.Context, req *pubsubpb.PublishRequest) (*pubsubpb.PublishResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -75,7 +100,11 @@ func (s *mockPublisherServer) Publish(_ context.Context, req *pubsubpb.PublishRe
 	return s.resps[0].(*pubsubpb.PublishResponse), nil
 }
 
-func (s *mockPublisherServer) GetTopic(_ context.Context, req *pubsubpb.GetTopicRequest) (*pubsubpb.Topic, error) {
+func (s *mockPublisherServer) GetTopic(ctx context.Context, req *pubsubpb.GetTopicRequest) (*pubsubpb.Topic, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -83,7 +112,11 @@ func (s *mockPublisherServer) GetTopic(_ context.Context, req *pubsubpb.GetTopic
 	return s.resps[0].(*pubsubpb.Topic), nil
 }
 
-func (s *mockPublisherServer) ListTopics(_ context.Context, req *pubsubpb.ListTopicsRequest) (*pubsubpb.ListTopicsResponse, error) {
+func (s *mockPublisherServer) ListTopics(ctx context.Context, req *pubsubpb.ListTopicsRequest) (*pubsubpb.ListTopicsResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -91,7 +124,11 @@ func (s *mockPublisherServer) ListTopics(_ context.Context, req *pubsubpb.ListTo
 	return s.resps[0].(*pubsubpb.ListTopicsResponse), nil
 }
 
-func (s *mockPublisherServer) ListTopicSubscriptions(_ context.Context, req *pubsubpb.ListTopicSubscriptionsRequest) (*pubsubpb.ListTopicSubscriptionsResponse, error) {
+func (s *mockPublisherServer) ListTopicSubscriptions(ctx context.Context, req *pubsubpb.ListTopicSubscriptionsRequest) (*pubsubpb.ListTopicSubscriptionsResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -99,12 +136,16 @@ func (s *mockPublisherServer) ListTopicSubscriptions(_ context.Context, req *pub
 	return s.resps[0].(*pubsubpb.ListTopicSubscriptionsResponse), nil
 }
 
-func (s *mockPublisherServer) DeleteTopic(_ context.Context, req *pubsubpb.DeleteTopicRequest) (*google_protobuf.Empty, error) {
+func (s *mockPublisherServer) DeleteTopic(ctx context.Context, req *pubsubpb.DeleteTopicRequest) (*emptypb.Empty, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
 	}
-	return s.resps[0].(*google_protobuf.Empty), nil
+	return s.resps[0].(*emptypb.Empty), nil
 }
 
 type mockIamPolicyServer struct {
@@ -122,7 +163,11 @@ type mockIamPolicyServer struct {
 	resps []proto.Message
 }
 
-func (s *mockIamPolicyServer) SetIamPolicy(_ context.Context, req *iampb.SetIamPolicyRequest) (*iampb.Policy, error) {
+func (s *mockIamPolicyServer) SetIamPolicy(ctx context.Context, req *iampb.SetIamPolicyRequest) (*iampb.Policy, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -130,7 +175,11 @@ func (s *mockIamPolicyServer) SetIamPolicy(_ context.Context, req *iampb.SetIamP
 	return s.resps[0].(*iampb.Policy), nil
 }
 
-func (s *mockIamPolicyServer) GetIamPolicy(_ context.Context, req *iampb.GetIamPolicyRequest) (*iampb.Policy, error) {
+func (s *mockIamPolicyServer) GetIamPolicy(ctx context.Context, req *iampb.GetIamPolicyRequest) (*iampb.Policy, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -138,7 +187,11 @@ func (s *mockIamPolicyServer) GetIamPolicy(_ context.Context, req *iampb.GetIamP
 	return s.resps[0].(*iampb.Policy), nil
 }
 
-func (s *mockIamPolicyServer) TestIamPermissions(_ context.Context, req *iampb.TestIamPermissionsRequest) (*iampb.TestIamPermissionsResponse, error) {
+func (s *mockIamPolicyServer) TestIamPermissions(ctx context.Context, req *iampb.TestIamPermissionsRequest) (*iampb.TestIamPermissionsResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -161,7 +214,11 @@ type mockSubscriberServer struct {
 	resps []proto.Message
 }
 
-func (s *mockSubscriberServer) CreateSubscription(_ context.Context, req *pubsubpb.Subscription) (*pubsubpb.Subscription, error) {
+func (s *mockSubscriberServer) CreateSubscription(ctx context.Context, req *pubsubpb.Subscription) (*pubsubpb.Subscription, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -169,7 +226,11 @@ func (s *mockSubscriberServer) CreateSubscription(_ context.Context, req *pubsub
 	return s.resps[0].(*pubsubpb.Subscription), nil
 }
 
-func (s *mockSubscriberServer) GetSubscription(_ context.Context, req *pubsubpb.GetSubscriptionRequest) (*pubsubpb.Subscription, error) {
+func (s *mockSubscriberServer) GetSubscription(ctx context.Context, req *pubsubpb.GetSubscriptionRequest) (*pubsubpb.Subscription, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -177,7 +238,11 @@ func (s *mockSubscriberServer) GetSubscription(_ context.Context, req *pubsubpb.
 	return s.resps[0].(*pubsubpb.Subscription), nil
 }
 
-func (s *mockSubscriberServer) UpdateSubscription(_ context.Context, req *pubsubpb.UpdateSubscriptionRequest) (*pubsubpb.Subscription, error) {
+func (s *mockSubscriberServer) UpdateSubscription(ctx context.Context, req *pubsubpb.UpdateSubscriptionRequest) (*pubsubpb.Subscription, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -185,7 +250,11 @@ func (s *mockSubscriberServer) UpdateSubscription(_ context.Context, req *pubsub
 	return s.resps[0].(*pubsubpb.Subscription), nil
 }
 
-func (s *mockSubscriberServer) ListSubscriptions(_ context.Context, req *pubsubpb.ListSubscriptionsRequest) (*pubsubpb.ListSubscriptionsResponse, error) {
+func (s *mockSubscriberServer) ListSubscriptions(ctx context.Context, req *pubsubpb.ListSubscriptionsRequest) (*pubsubpb.ListSubscriptionsResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -193,31 +262,47 @@ func (s *mockSubscriberServer) ListSubscriptions(_ context.Context, req *pubsubp
 	return s.resps[0].(*pubsubpb.ListSubscriptionsResponse), nil
 }
 
-func (s *mockSubscriberServer) DeleteSubscription(_ context.Context, req *pubsubpb.DeleteSubscriptionRequest) (*google_protobuf.Empty, error) {
+func (s *mockSubscriberServer) DeleteSubscription(ctx context.Context, req *pubsubpb.DeleteSubscriptionRequest) (*emptypb.Empty, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
 	}
-	return s.resps[0].(*google_protobuf.Empty), nil
+	return s.resps[0].(*emptypb.Empty), nil
 }
 
-func (s *mockSubscriberServer) ModifyAckDeadline(_ context.Context, req *pubsubpb.ModifyAckDeadlineRequest) (*google_protobuf.Empty, error) {
+func (s *mockSubscriberServer) ModifyAckDeadline(ctx context.Context, req *pubsubpb.ModifyAckDeadlineRequest) (*emptypb.Empty, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
 	}
-	return s.resps[0].(*google_protobuf.Empty), nil
+	return s.resps[0].(*emptypb.Empty), nil
 }
 
-func (s *mockSubscriberServer) Acknowledge(_ context.Context, req *pubsubpb.AcknowledgeRequest) (*google_protobuf.Empty, error) {
+func (s *mockSubscriberServer) Acknowledge(ctx context.Context, req *pubsubpb.AcknowledgeRequest) (*emptypb.Empty, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
 	}
-	return s.resps[0].(*google_protobuf.Empty), nil
+	return s.resps[0].(*emptypb.Empty), nil
 }
 
-func (s *mockSubscriberServer) Pull(_ context.Context, req *pubsubpb.PullRequest) (*pubsubpb.PullResponse, error) {
+func (s *mockSubscriberServer) Pull(ctx context.Context, req *pubsubpb.PullRequest) (*pubsubpb.PullResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -226,6 +311,10 @@ func (s *mockSubscriberServer) Pull(_ context.Context, req *pubsubpb.PullRequest
 }
 
 func (s *mockSubscriberServer) StreamingPull(stream pubsubpb.Subscriber_StreamingPullServer) error {
+	md, _ := metadata.FromIncomingContext(stream.Context())
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	for {
 		if req, err := stream.Recv(); err == io.EOF {
 			break
@@ -246,15 +335,23 @@ func (s *mockSubscriberServer) StreamingPull(stream pubsubpb.Subscriber_Streamin
 	return nil
 }
 
-func (s *mockSubscriberServer) ModifyPushConfig(_ context.Context, req *pubsubpb.ModifyPushConfigRequest) (*google_protobuf.Empty, error) {
+func (s *mockSubscriberServer) ModifyPushConfig(ctx context.Context, req *pubsubpb.ModifyPushConfigRequest) (*emptypb.Empty, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
 	}
-	return s.resps[0].(*google_protobuf.Empty), nil
+	return s.resps[0].(*emptypb.Empty), nil
 }
 
-func (s *mockSubscriberServer) ListSnapshots(_ context.Context, req *pubsubpb.ListSnapshotsRequest) (*pubsubpb.ListSnapshotsResponse, error) {
+func (s *mockSubscriberServer) ListSnapshots(ctx context.Context, req *pubsubpb.ListSnapshotsRequest) (*pubsubpb.ListSnapshotsResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -262,7 +359,11 @@ func (s *mockSubscriberServer) ListSnapshots(_ context.Context, req *pubsubpb.Li
 	return s.resps[0].(*pubsubpb.ListSnapshotsResponse), nil
 }
 
-func (s *mockSubscriberServer) CreateSnapshot(_ context.Context, req *pubsubpb.CreateSnapshotRequest) (*pubsubpb.Snapshot, error) {
+func (s *mockSubscriberServer) CreateSnapshot(ctx context.Context, req *pubsubpb.CreateSnapshotRequest) (*pubsubpb.Snapshot, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -270,15 +371,35 @@ func (s *mockSubscriberServer) CreateSnapshot(_ context.Context, req *pubsubpb.C
 	return s.resps[0].(*pubsubpb.Snapshot), nil
 }
 
-func (s *mockSubscriberServer) DeleteSnapshot(_ context.Context, req *pubsubpb.DeleteSnapshotRequest) (*google_protobuf.Empty, error) {
+func (s *mockSubscriberServer) UpdateSnapshot(ctx context.Context, req *pubsubpb.UpdateSnapshotRequest) (*pubsubpb.Snapshot, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
 	}
-	return s.resps[0].(*google_protobuf.Empty), nil
+	return s.resps[0].(*pubsubpb.Snapshot), nil
 }
 
-func (s *mockSubscriberServer) Seek(_ context.Context, req *pubsubpb.SeekRequest) (*pubsubpb.SeekResponse, error) {
+func (s *mockSubscriberServer) DeleteSnapshot(ctx context.Context, req *pubsubpb.DeleteSnapshotRequest) (*emptypb.Empty, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
+	s.reqs = append(s.reqs, req)
+	if s.err != nil {
+		return nil, s.err
+	}
+	return s.resps[0].(*emptypb.Empty), nil
+}
+
+func (s *mockSubscriberServer) Seek(ctx context.Context, req *pubsubpb.SeekRequest) (*pubsubpb.SeekResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -330,7 +451,7 @@ func TestPublisherCreateTopic(t *testing.T) {
 
 	mockPublisher.resps = append(mockPublisher.resps[:0], expectedResponse)
 
-	var formattedName string = PublisherTopicPath("[PROJECT]", "[TOPIC]")
+	var formattedName string = fmt.Sprintf("projects/%s/topics/%s", "[PROJECT]", "[TOPIC]")
 	var request = &pubsubpb.Topic{
 		Name: formattedName,
 	}
@@ -357,9 +478,9 @@ func TestPublisherCreateTopic(t *testing.T) {
 
 func TestPublisherCreateTopicError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockPublisher.err = grpc.Errorf(errCode, "test error")
+	mockPublisher.err = gstatus.Error(errCode, "test error")
 
-	var formattedName string = PublisherTopicPath("[PROJECT]", "[TOPIC]")
+	var formattedName string = fmt.Sprintf("projects/%s/topics/%s", "[PROJECT]", "[TOPIC]")
 	var request = &pubsubpb.Topic{
 		Name: formattedName,
 	}
@@ -371,7 +492,72 @@ func TestPublisherCreateTopicError(t *testing.T) {
 
 	resp, err := c.CreateTopic(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
+		t.Errorf("got error code %q, want %q", c, errCode)
+	}
+	_ = resp
+}
+func TestPublisherUpdateTopic(t *testing.T) {
+	var name string = "name3373707"
+	var expectedResponse = &pubsubpb.Topic{
+		Name: name,
+	}
+
+	mockPublisher.err = nil
+	mockPublisher.reqs = nil
+
+	mockPublisher.resps = append(mockPublisher.resps[:0], expectedResponse)
+
+	var topic *pubsubpb.Topic = &pubsubpb.Topic{}
+	var updateMask *field_maskpb.FieldMask = &field_maskpb.FieldMask{}
+	var request = &pubsubpb.UpdateTopicRequest{
+		Topic:      topic,
+		UpdateMask: updateMask,
+	}
+
+	c, err := NewPublisherClient(context.Background(), clientOpt)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp, err := c.UpdateTopic(context.Background(), request)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if want, got := request, mockPublisher.reqs[0]; !proto.Equal(want, got) {
+		t.Errorf("wrong request %q, want %q", got, want)
+	}
+
+	if want, got := expectedResponse, resp; !proto.Equal(want, got) {
+		t.Errorf("wrong response %q, want %q)", got, want)
+	}
+}
+
+func TestPublisherUpdateTopicError(t *testing.T) {
+	errCode := codes.PermissionDenied
+	mockPublisher.err = gstatus.Error(errCode, "test error")
+
+	var topic *pubsubpb.Topic = &pubsubpb.Topic{}
+	var updateMask *field_maskpb.FieldMask = &field_maskpb.FieldMask{}
+	var request = &pubsubpb.UpdateTopicRequest{
+		Topic:      topic,
+		UpdateMask: updateMask,
+	}
+
+	c, err := NewPublisherClient(context.Background(), clientOpt)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp, err := c.UpdateTopic(context.Background(), request)
+
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -388,7 +574,7 @@ func TestPublisherPublish(t *testing.T) {
 
 	mockPublisher.resps = append(mockPublisher.resps[:0], expectedResponse)
 
-	var formattedTopic string = PublisherTopicPath("[PROJECT]", "[TOPIC]")
+	var formattedTopic string = fmt.Sprintf("projects/%s/topics/%s", "[PROJECT]", "[TOPIC]")
 	var data []byte = []byte("-86")
 	var messagesElement = &pubsubpb.PubsubMessage{
 		Data: data,
@@ -421,9 +607,9 @@ func TestPublisherPublish(t *testing.T) {
 
 func TestPublisherPublishError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockPublisher.err = grpc.Errorf(errCode, "test error")
+	mockPublisher.err = gstatus.Error(errCode, "test error")
 
-	var formattedTopic string = PublisherTopicPath("[PROJECT]", "[TOPIC]")
+	var formattedTopic string = fmt.Sprintf("projects/%s/topics/%s", "[PROJECT]", "[TOPIC]")
 	var data []byte = []byte("-86")
 	var messagesElement = &pubsubpb.PubsubMessage{
 		Data: data,
@@ -441,7 +627,9 @@ func TestPublisherPublishError(t *testing.T) {
 
 	resp, err := c.Publish(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -457,7 +645,7 @@ func TestPublisherGetTopic(t *testing.T) {
 
 	mockPublisher.resps = append(mockPublisher.resps[:0], expectedResponse)
 
-	var formattedTopic string = PublisherTopicPath("[PROJECT]", "[TOPIC]")
+	var formattedTopic string = fmt.Sprintf("projects/%s/topics/%s", "[PROJECT]", "[TOPIC]")
 	var request = &pubsubpb.GetTopicRequest{
 		Topic: formattedTopic,
 	}
@@ -484,9 +672,9 @@ func TestPublisherGetTopic(t *testing.T) {
 
 func TestPublisherGetTopicError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockPublisher.err = grpc.Errorf(errCode, "test error")
+	mockPublisher.err = gstatus.Error(errCode, "test error")
 
-	var formattedTopic string = PublisherTopicPath("[PROJECT]", "[TOPIC]")
+	var formattedTopic string = fmt.Sprintf("projects/%s/topics/%s", "[PROJECT]", "[TOPIC]")
 	var request = &pubsubpb.GetTopicRequest{
 		Topic: formattedTopic,
 	}
@@ -498,7 +686,9 @@ func TestPublisherGetTopicError(t *testing.T) {
 
 	resp, err := c.GetTopic(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -517,7 +707,7 @@ func TestPublisherListTopics(t *testing.T) {
 
 	mockPublisher.resps = append(mockPublisher.resps[:0], expectedResponse)
 
-	var formattedProject string = PublisherProjectPath("[PROJECT]")
+	var formattedProject string = fmt.Sprintf("projects/%s", "[PROJECT]")
 	var request = &pubsubpb.ListTopicsRequest{
 		Project: formattedProject,
 	}
@@ -554,9 +744,9 @@ func TestPublisherListTopics(t *testing.T) {
 
 func TestPublisherListTopicsError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockPublisher.err = grpc.Errorf(errCode, "test error")
+	mockPublisher.err = gstatus.Error(errCode, "test error")
 
-	var formattedProject string = PublisherProjectPath("[PROJECT]")
+	var formattedProject string = fmt.Sprintf("projects/%s", "[PROJECT]")
 	var request = &pubsubpb.ListTopicsRequest{
 		Project: formattedProject,
 	}
@@ -568,7 +758,9 @@ func TestPublisherListTopicsError(t *testing.T) {
 
 	resp, err := c.ListTopics(context.Background(), request).Next()
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -587,7 +779,7 @@ func TestPublisherListTopicSubscriptions(t *testing.T) {
 
 	mockPublisher.resps = append(mockPublisher.resps[:0], expectedResponse)
 
-	var formattedTopic string = PublisherTopicPath("[PROJECT]", "[TOPIC]")
+	var formattedTopic string = fmt.Sprintf("projects/%s/topics/%s", "[PROJECT]", "[TOPIC]")
 	var request = &pubsubpb.ListTopicSubscriptionsRequest{
 		Topic: formattedTopic,
 	}
@@ -624,9 +816,9 @@ func TestPublisherListTopicSubscriptions(t *testing.T) {
 
 func TestPublisherListTopicSubscriptionsError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockPublisher.err = grpc.Errorf(errCode, "test error")
+	mockPublisher.err = gstatus.Error(errCode, "test error")
 
-	var formattedTopic string = PublisherTopicPath("[PROJECT]", "[TOPIC]")
+	var formattedTopic string = fmt.Sprintf("projects/%s/topics/%s", "[PROJECT]", "[TOPIC]")
 	var request = &pubsubpb.ListTopicSubscriptionsRequest{
 		Topic: formattedTopic,
 	}
@@ -638,20 +830,22 @@ func TestPublisherListTopicSubscriptionsError(t *testing.T) {
 
 	resp, err := c.ListTopicSubscriptions(context.Background(), request).Next()
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
 }
 func TestPublisherDeleteTopic(t *testing.T) {
-	var expectedResponse *google_protobuf.Empty = &google_protobuf.Empty{}
+	var expectedResponse *emptypb.Empty = &emptypb.Empty{}
 
 	mockPublisher.err = nil
 	mockPublisher.reqs = nil
 
 	mockPublisher.resps = append(mockPublisher.resps[:0], expectedResponse)
 
-	var formattedTopic string = PublisherTopicPath("[PROJECT]", "[TOPIC]")
+	var formattedTopic string = fmt.Sprintf("projects/%s/topics/%s", "[PROJECT]", "[TOPIC]")
 	var request = &pubsubpb.DeleteTopicRequest{
 		Topic: formattedTopic,
 	}
@@ -675,9 +869,9 @@ func TestPublisherDeleteTopic(t *testing.T) {
 
 func TestPublisherDeleteTopicError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockPublisher.err = grpc.Errorf(errCode, "test error")
+	mockPublisher.err = gstatus.Error(errCode, "test error")
 
-	var formattedTopic string = PublisherTopicPath("[PROJECT]", "[TOPIC]")
+	var formattedTopic string = fmt.Sprintf("projects/%s/topics/%s", "[PROJECT]", "[TOPIC]")
 	var request = &pubsubpb.DeleteTopicRequest{
 		Topic: formattedTopic,
 	}
@@ -689,7 +883,9 @@ func TestPublisherDeleteTopicError(t *testing.T) {
 
 	err = c.DeleteTopic(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 }
@@ -710,8 +906,8 @@ func TestSubscriberCreateSubscription(t *testing.T) {
 
 	mockSubscriber.resps = append(mockSubscriber.resps[:0], expectedResponse)
 
-	var formattedName string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
-	var formattedTopic string = SubscriberTopicPath("[PROJECT]", "[TOPIC]")
+	var formattedName string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
+	var formattedTopic string = fmt.Sprintf("projects/%s/topics/%s", "[PROJECT]", "[TOPIC]")
 	var request = &pubsubpb.Subscription{
 		Name:  formattedName,
 		Topic: formattedTopic,
@@ -739,10 +935,10 @@ func TestSubscriberCreateSubscription(t *testing.T) {
 
 func TestSubscriberCreateSubscriptionError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockSubscriber.err = grpc.Errorf(errCode, "test error")
+	mockSubscriber.err = gstatus.Error(errCode, "test error")
 
-	var formattedName string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
-	var formattedTopic string = SubscriberTopicPath("[PROJECT]", "[TOPIC]")
+	var formattedName string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
+	var formattedTopic string = fmt.Sprintf("projects/%s/topics/%s", "[PROJECT]", "[TOPIC]")
 	var request = &pubsubpb.Subscription{
 		Name:  formattedName,
 		Topic: formattedTopic,
@@ -755,7 +951,9 @@ func TestSubscriberCreateSubscriptionError(t *testing.T) {
 
 	resp, err := c.CreateSubscription(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -777,7 +975,7 @@ func TestSubscriberGetSubscription(t *testing.T) {
 
 	mockSubscriber.resps = append(mockSubscriber.resps[:0], expectedResponse)
 
-	var formattedSubscription string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
+	var formattedSubscription string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
 	var request = &pubsubpb.GetSubscriptionRequest{
 		Subscription: formattedSubscription,
 	}
@@ -804,9 +1002,9 @@ func TestSubscriberGetSubscription(t *testing.T) {
 
 func TestSubscriberGetSubscriptionError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockSubscriber.err = grpc.Errorf(errCode, "test error")
+	mockSubscriber.err = gstatus.Error(errCode, "test error")
 
-	var formattedSubscription string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
+	var formattedSubscription string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
 	var request = &pubsubpb.GetSubscriptionRequest{
 		Subscription: formattedSubscription,
 	}
@@ -818,7 +1016,9 @@ func TestSubscriberGetSubscriptionError(t *testing.T) {
 
 	resp, err := c.GetSubscription(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -826,12 +1026,12 @@ func TestSubscriberGetSubscriptionError(t *testing.T) {
 func TestSubscriberUpdateSubscription(t *testing.T) {
 	var name string = "name3373707"
 	var topic string = "topic110546223"
-	var ackDeadlineSeconds int32 = 2135351438
+	var ackDeadlineSeconds2 int32 = 921632575
 	var retainAckedMessages bool = false
 	var expectedResponse = &pubsubpb.Subscription{
 		Name:                name,
 		Topic:               topic,
-		AckDeadlineSeconds:  ackDeadlineSeconds,
+		AckDeadlineSeconds:  ackDeadlineSeconds2,
 		RetainAckedMessages: retainAckedMessages,
 	}
 
@@ -840,8 +1040,15 @@ func TestSubscriberUpdateSubscription(t *testing.T) {
 
 	mockSubscriber.resps = append(mockSubscriber.resps[:0], expectedResponse)
 
-	var subscription *pubsubpb.Subscription = &pubsubpb.Subscription{}
-	var updateMask *field_maskpb.FieldMask = &field_maskpb.FieldMask{}
+	var ackDeadlineSeconds int32 = 42
+	var subscription = &pubsubpb.Subscription{
+		AckDeadlineSeconds: ackDeadlineSeconds,
+	}
+	var pathsElement string = "ack_deadline_seconds"
+	var paths = []string{pathsElement}
+	var updateMask = &field_maskpb.FieldMask{
+		Paths: paths,
+	}
 	var request = &pubsubpb.UpdateSubscriptionRequest{
 		Subscription: subscription,
 		UpdateMask:   updateMask,
@@ -869,10 +1076,17 @@ func TestSubscriberUpdateSubscription(t *testing.T) {
 
 func TestSubscriberUpdateSubscriptionError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockSubscriber.err = grpc.Errorf(errCode, "test error")
+	mockSubscriber.err = gstatus.Error(errCode, "test error")
 
-	var subscription *pubsubpb.Subscription = &pubsubpb.Subscription{}
-	var updateMask *field_maskpb.FieldMask = &field_maskpb.FieldMask{}
+	var ackDeadlineSeconds int32 = 42
+	var subscription = &pubsubpb.Subscription{
+		AckDeadlineSeconds: ackDeadlineSeconds,
+	}
+	var pathsElement string = "ack_deadline_seconds"
+	var paths = []string{pathsElement}
+	var updateMask = &field_maskpb.FieldMask{
+		Paths: paths,
+	}
 	var request = &pubsubpb.UpdateSubscriptionRequest{
 		Subscription: subscription,
 		UpdateMask:   updateMask,
@@ -885,7 +1099,9 @@ func TestSubscriberUpdateSubscriptionError(t *testing.T) {
 
 	resp, err := c.UpdateSubscription(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -904,7 +1120,7 @@ func TestSubscriberListSubscriptions(t *testing.T) {
 
 	mockSubscriber.resps = append(mockSubscriber.resps[:0], expectedResponse)
 
-	var formattedProject string = SubscriberProjectPath("[PROJECT]")
+	var formattedProject string = fmt.Sprintf("projects/%s", "[PROJECT]")
 	var request = &pubsubpb.ListSubscriptionsRequest{
 		Project: formattedProject,
 	}
@@ -941,9 +1157,9 @@ func TestSubscriberListSubscriptions(t *testing.T) {
 
 func TestSubscriberListSubscriptionsError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockSubscriber.err = grpc.Errorf(errCode, "test error")
+	mockSubscriber.err = gstatus.Error(errCode, "test error")
 
-	var formattedProject string = SubscriberProjectPath("[PROJECT]")
+	var formattedProject string = fmt.Sprintf("projects/%s", "[PROJECT]")
 	var request = &pubsubpb.ListSubscriptionsRequest{
 		Project: formattedProject,
 	}
@@ -955,20 +1171,22 @@ func TestSubscriberListSubscriptionsError(t *testing.T) {
 
 	resp, err := c.ListSubscriptions(context.Background(), request).Next()
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
 }
 func TestSubscriberDeleteSubscription(t *testing.T) {
-	var expectedResponse *google_protobuf.Empty = &google_protobuf.Empty{}
+	var expectedResponse *emptypb.Empty = &emptypb.Empty{}
 
 	mockSubscriber.err = nil
 	mockSubscriber.reqs = nil
 
 	mockSubscriber.resps = append(mockSubscriber.resps[:0], expectedResponse)
 
-	var formattedSubscription string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
+	var formattedSubscription string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
 	var request = &pubsubpb.DeleteSubscriptionRequest{
 		Subscription: formattedSubscription,
 	}
@@ -992,9 +1210,9 @@ func TestSubscriberDeleteSubscription(t *testing.T) {
 
 func TestSubscriberDeleteSubscriptionError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockSubscriber.err = grpc.Errorf(errCode, "test error")
+	mockSubscriber.err = gstatus.Error(errCode, "test error")
 
-	var formattedSubscription string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
+	var formattedSubscription string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
 	var request = &pubsubpb.DeleteSubscriptionRequest{
 		Subscription: formattedSubscription,
 	}
@@ -1006,19 +1224,21 @@ func TestSubscriberDeleteSubscriptionError(t *testing.T) {
 
 	err = c.DeleteSubscription(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 }
 func TestSubscriberModifyAckDeadline(t *testing.T) {
-	var expectedResponse *google_protobuf.Empty = &google_protobuf.Empty{}
+	var expectedResponse *emptypb.Empty = &emptypb.Empty{}
 
 	mockSubscriber.err = nil
 	mockSubscriber.reqs = nil
 
 	mockSubscriber.resps = append(mockSubscriber.resps[:0], expectedResponse)
 
-	var formattedSubscription string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
+	var formattedSubscription string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
 	var ackIds []string = nil
 	var ackDeadlineSeconds int32 = 2135351438
 	var request = &pubsubpb.ModifyAckDeadlineRequest{
@@ -1046,9 +1266,9 @@ func TestSubscriberModifyAckDeadline(t *testing.T) {
 
 func TestSubscriberModifyAckDeadlineError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockSubscriber.err = grpc.Errorf(errCode, "test error")
+	mockSubscriber.err = gstatus.Error(errCode, "test error")
 
-	var formattedSubscription string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
+	var formattedSubscription string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
 	var ackIds []string = nil
 	var ackDeadlineSeconds int32 = 2135351438
 	var request = &pubsubpb.ModifyAckDeadlineRequest{
@@ -1064,19 +1284,21 @@ func TestSubscriberModifyAckDeadlineError(t *testing.T) {
 
 	err = c.ModifyAckDeadline(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 }
 func TestSubscriberAcknowledge(t *testing.T) {
-	var expectedResponse *google_protobuf.Empty = &google_protobuf.Empty{}
+	var expectedResponse *emptypb.Empty = &emptypb.Empty{}
 
 	mockSubscriber.err = nil
 	mockSubscriber.reqs = nil
 
 	mockSubscriber.resps = append(mockSubscriber.resps[:0], expectedResponse)
 
-	var formattedSubscription string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
+	var formattedSubscription string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
 	var ackIds []string = nil
 	var request = &pubsubpb.AcknowledgeRequest{
 		Subscription: formattedSubscription,
@@ -1102,9 +1324,9 @@ func TestSubscriberAcknowledge(t *testing.T) {
 
 func TestSubscriberAcknowledgeError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockSubscriber.err = grpc.Errorf(errCode, "test error")
+	mockSubscriber.err = gstatus.Error(errCode, "test error")
 
-	var formattedSubscription string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
+	var formattedSubscription string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
 	var ackIds []string = nil
 	var request = &pubsubpb.AcknowledgeRequest{
 		Subscription: formattedSubscription,
@@ -1118,7 +1340,9 @@ func TestSubscriberAcknowledgeError(t *testing.T) {
 
 	err = c.Acknowledge(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 }
@@ -1130,7 +1354,7 @@ func TestSubscriberPull(t *testing.T) {
 
 	mockSubscriber.resps = append(mockSubscriber.resps[:0], expectedResponse)
 
-	var formattedSubscription string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
+	var formattedSubscription string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
 	var maxMessages int32 = 496131527
 	var request = &pubsubpb.PullRequest{
 		Subscription: formattedSubscription,
@@ -1159,9 +1383,9 @@ func TestSubscriberPull(t *testing.T) {
 
 func TestSubscriberPullError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockSubscriber.err = grpc.Errorf(errCode, "test error")
+	mockSubscriber.err = gstatus.Error(errCode, "test error")
 
-	var formattedSubscription string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
+	var formattedSubscription string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
 	var maxMessages int32 = 496131527
 	var request = &pubsubpb.PullRequest{
 		Subscription: formattedSubscription,
@@ -1175,20 +1399,26 @@ func TestSubscriberPullError(t *testing.T) {
 
 	resp, err := c.Pull(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
 }
 func TestSubscriberStreamingPull(t *testing.T) {
-	var expectedResponse *pubsubpb.StreamingPullResponse = &pubsubpb.StreamingPullResponse{}
+	var receivedMessagesElement *pubsubpb.ReceivedMessage = &pubsubpb.ReceivedMessage{}
+	var receivedMessages = []*pubsubpb.ReceivedMessage{receivedMessagesElement}
+	var expectedResponse = &pubsubpb.StreamingPullResponse{
+		ReceivedMessages: receivedMessages,
+	}
 
 	mockSubscriber.err = nil
 	mockSubscriber.reqs = nil
 
 	mockSubscriber.resps = append(mockSubscriber.resps[:0], expectedResponse)
 
-	var formattedSubscription string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
+	var formattedSubscription string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
 	var streamAckDeadlineSeconds int32 = 1875467245
 	var request = &pubsubpb.StreamingPullRequest{
 		Subscription:             formattedSubscription,
@@ -1227,9 +1457,9 @@ func TestSubscriberStreamingPull(t *testing.T) {
 
 func TestSubscriberStreamingPullError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockSubscriber.err = grpc.Errorf(errCode, "test error")
+	mockSubscriber.err = gstatus.Error(errCode, "test error")
 
-	var formattedSubscription string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
+	var formattedSubscription string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
 	var streamAckDeadlineSeconds int32 = 1875467245
 	var request = &pubsubpb.StreamingPullRequest{
 		Subscription:             formattedSubscription,
@@ -1253,20 +1483,22 @@ func TestSubscriberStreamingPullError(t *testing.T) {
 	}
 	resp, err := stream.Recv()
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
 }
 func TestSubscriberModifyPushConfig(t *testing.T) {
-	var expectedResponse *google_protobuf.Empty = &google_protobuf.Empty{}
+	var expectedResponse *emptypb.Empty = &emptypb.Empty{}
 
 	mockSubscriber.err = nil
 	mockSubscriber.reqs = nil
 
 	mockSubscriber.resps = append(mockSubscriber.resps[:0], expectedResponse)
 
-	var formattedSubscription string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
+	var formattedSubscription string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
 	var pushConfig *pubsubpb.PushConfig = &pubsubpb.PushConfig{}
 	var request = &pubsubpb.ModifyPushConfigRequest{
 		Subscription: formattedSubscription,
@@ -1292,9 +1524,9 @@ func TestSubscriberModifyPushConfig(t *testing.T) {
 
 func TestSubscriberModifyPushConfigError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockSubscriber.err = grpc.Errorf(errCode, "test error")
+	mockSubscriber.err = gstatus.Error(errCode, "test error")
 
-	var formattedSubscription string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
+	var formattedSubscription string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
 	var pushConfig *pubsubpb.PushConfig = &pubsubpb.PushConfig{}
 	var request = &pubsubpb.ModifyPushConfigRequest{
 		Subscription: formattedSubscription,
@@ -1308,7 +1540,9 @@ func TestSubscriberModifyPushConfigError(t *testing.T) {
 
 	err = c.ModifyPushConfig(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 }
@@ -1326,7 +1560,7 @@ func TestSubscriberListSnapshots(t *testing.T) {
 
 	mockSubscriber.resps = append(mockSubscriber.resps[:0], expectedResponse)
 
-	var formattedProject string = SubscriberProjectPath("[PROJECT]")
+	var formattedProject string = fmt.Sprintf("projects/%s", "[PROJECT]")
 	var request = &pubsubpb.ListSnapshotsRequest{
 		Project: formattedProject,
 	}
@@ -1363,9 +1597,9 @@ func TestSubscriberListSnapshots(t *testing.T) {
 
 func TestSubscriberListSnapshotsError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockSubscriber.err = grpc.Errorf(errCode, "test error")
+	mockSubscriber.err = gstatus.Error(errCode, "test error")
 
-	var formattedProject string = SubscriberProjectPath("[PROJECT]")
+	var formattedProject string = fmt.Sprintf("projects/%s", "[PROJECT]")
 	var request = &pubsubpb.ListSnapshotsRequest{
 		Project: formattedProject,
 	}
@@ -1377,7 +1611,9 @@ func TestSubscriberListSnapshotsError(t *testing.T) {
 
 	resp, err := c.ListSnapshots(context.Background(), request).Next()
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -1395,8 +1631,8 @@ func TestSubscriberCreateSnapshot(t *testing.T) {
 
 	mockSubscriber.resps = append(mockSubscriber.resps[:0], expectedResponse)
 
-	var formattedName string = SubscriberSnapshotPath("[PROJECT]", "[SNAPSHOT]")
-	var formattedSubscription string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
+	var formattedName string = fmt.Sprintf("projects/%s/snapshots/%s", "[PROJECT]", "[SNAPSHOT]")
+	var formattedSubscription string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
 	var request = &pubsubpb.CreateSnapshotRequest{
 		Name:         formattedName,
 		Subscription: formattedSubscription,
@@ -1424,10 +1660,10 @@ func TestSubscriberCreateSnapshot(t *testing.T) {
 
 func TestSubscriberCreateSnapshotError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockSubscriber.err = grpc.Errorf(errCode, "test error")
+	mockSubscriber.err = gstatus.Error(errCode, "test error")
 
-	var formattedName string = SubscriberSnapshotPath("[PROJECT]", "[SNAPSHOT]")
-	var formattedSubscription string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
+	var formattedName string = fmt.Sprintf("projects/%s/snapshots/%s", "[PROJECT]", "[SNAPSHOT]")
+	var formattedSubscription string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
 	var request = &pubsubpb.CreateSnapshotRequest{
 		Name:         formattedName,
 		Subscription: formattedSubscription,
@@ -1440,20 +1676,107 @@ func TestSubscriberCreateSnapshotError(t *testing.T) {
 
 	resp, err := c.CreateSnapshot(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
 }
-func TestSubscriberDeleteSnapshot(t *testing.T) {
-	var expectedResponse *google_protobuf.Empty = &google_protobuf.Empty{}
+func TestSubscriberUpdateSnapshot(t *testing.T) {
+	var name string = "name3373707"
+	var topic string = "topic110546223"
+	var expectedResponse = &pubsubpb.Snapshot{
+		Name:  name,
+		Topic: topic,
+	}
 
 	mockSubscriber.err = nil
 	mockSubscriber.reqs = nil
 
 	mockSubscriber.resps = append(mockSubscriber.resps[:0], expectedResponse)
 
-	var formattedSnapshot string = SubscriberSnapshotPath("[PROJECT]", "[SNAPSHOT]")
+	var seconds int64 = 123456
+	var expireTime = &timestamppb.Timestamp{
+		Seconds: seconds,
+	}
+	var snapshot = &pubsubpb.Snapshot{
+		ExpireTime: expireTime,
+	}
+	var pathsElement string = "expire_time"
+	var paths = []string{pathsElement}
+	var updateMask = &field_maskpb.FieldMask{
+		Paths: paths,
+	}
+	var request = &pubsubpb.UpdateSnapshotRequest{
+		Snapshot:   snapshot,
+		UpdateMask: updateMask,
+	}
+
+	c, err := NewSubscriberClient(context.Background(), clientOpt)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp, err := c.UpdateSnapshot(context.Background(), request)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if want, got := request, mockSubscriber.reqs[0]; !proto.Equal(want, got) {
+		t.Errorf("wrong request %q, want %q", got, want)
+	}
+
+	if want, got := expectedResponse, resp; !proto.Equal(want, got) {
+		t.Errorf("wrong response %q, want %q)", got, want)
+	}
+}
+
+func TestSubscriberUpdateSnapshotError(t *testing.T) {
+	errCode := codes.PermissionDenied
+	mockSubscriber.err = gstatus.Error(errCode, "test error")
+
+	var seconds int64 = 123456
+	var expireTime = &timestamppb.Timestamp{
+		Seconds: seconds,
+	}
+	var snapshot = &pubsubpb.Snapshot{
+		ExpireTime: expireTime,
+	}
+	var pathsElement string = "expire_time"
+	var paths = []string{pathsElement}
+	var updateMask = &field_maskpb.FieldMask{
+		Paths: paths,
+	}
+	var request = &pubsubpb.UpdateSnapshotRequest{
+		Snapshot:   snapshot,
+		UpdateMask: updateMask,
+	}
+
+	c, err := NewSubscriberClient(context.Background(), clientOpt)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp, err := c.UpdateSnapshot(context.Background(), request)
+
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
+		t.Errorf("got error code %q, want %q", c, errCode)
+	}
+	_ = resp
+}
+func TestSubscriberDeleteSnapshot(t *testing.T) {
+	var expectedResponse *emptypb.Empty = &emptypb.Empty{}
+
+	mockSubscriber.err = nil
+	mockSubscriber.reqs = nil
+
+	mockSubscriber.resps = append(mockSubscriber.resps[:0], expectedResponse)
+
+	var formattedSnapshot string = fmt.Sprintf("projects/%s/snapshots/%s", "[PROJECT]", "[SNAPSHOT]")
 	var request = &pubsubpb.DeleteSnapshotRequest{
 		Snapshot: formattedSnapshot,
 	}
@@ -1477,9 +1800,9 @@ func TestSubscriberDeleteSnapshot(t *testing.T) {
 
 func TestSubscriberDeleteSnapshotError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockSubscriber.err = grpc.Errorf(errCode, "test error")
+	mockSubscriber.err = gstatus.Error(errCode, "test error")
 
-	var formattedSnapshot string = SubscriberSnapshotPath("[PROJECT]", "[SNAPSHOT]")
+	var formattedSnapshot string = fmt.Sprintf("projects/%s/snapshots/%s", "[PROJECT]", "[SNAPSHOT]")
 	var request = &pubsubpb.DeleteSnapshotRequest{
 		Snapshot: formattedSnapshot,
 	}
@@ -1491,7 +1814,9 @@ func TestSubscriberDeleteSnapshotError(t *testing.T) {
 
 	err = c.DeleteSnapshot(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 }
@@ -1503,7 +1828,7 @@ func TestSubscriberSeek(t *testing.T) {
 
 	mockSubscriber.resps = append(mockSubscriber.resps[:0], expectedResponse)
 
-	var formattedSubscription string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
+	var formattedSubscription string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
 	var request = &pubsubpb.SeekRequest{
 		Subscription: formattedSubscription,
 	}
@@ -1530,9 +1855,9 @@ func TestSubscriberSeek(t *testing.T) {
 
 func TestSubscriberSeekError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockSubscriber.err = grpc.Errorf(errCode, "test error")
+	mockSubscriber.err = gstatus.Error(errCode, "test error")
 
-	var formattedSubscription string = SubscriberSubscriptionPath("[PROJECT]", "[SUBSCRIPTION]")
+	var formattedSubscription string = fmt.Sprintf("projects/%s/subscriptions/%s", "[PROJECT]", "[SUBSCRIPTION]")
 	var request = &pubsubpb.SeekRequest{
 		Subscription: formattedSubscription,
 	}
@@ -1544,7 +1869,9 @@ func TestSubscriberSeekError(t *testing.T) {
 
 	resp, err := c.Seek(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp

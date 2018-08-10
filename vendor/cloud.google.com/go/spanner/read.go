@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Google Inc. All Rights Reserved.
+Copyright 2017 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,14 +19,14 @@ package spanner
 import (
 	"bytes"
 	"io"
+	"log"
 	"sync/atomic"
 	"time"
 
-	log "github.com/golang/glog"
+	"cloud.google.com/go/internal/protostruct"
 	proto "github.com/golang/protobuf/proto"
 	proto3 "github.com/golang/protobuf/ptypes/struct"
 	"golang.org/x/net/context"
-
 	"google.golang.org/api/iterator"
 	sppb "google.golang.org/genproto/googleapis/spanner/v1"
 	"google.golang.org/grpc/codes"
@@ -45,24 +45,35 @@ func errEarlyReadEnd() error {
 
 // stream is the internal fault tolerant method for streaming data from
 // Cloud Spanner.
-func stream(ctx context.Context, rpc func(ct context.Context, resumeToken []byte) (streamingReceiver, error), release func(time.Time, error)) *RowIterator {
+func stream(ctx context.Context, rpc func(ct context.Context, resumeToken []byte) (streamingReceiver, error), setTimestamp func(time.Time), release func(error)) *RowIterator {
 	ctx, cancel := context.WithCancel(ctx)
+	ctx = traceStartSpan(ctx, "cloud.google.com/go/spanner.RowIterator")
 	return &RowIterator{
-		streamd: newResumableStreamDecoder(ctx, rpc),
-		rowd:    &partialResultSetDecoder{},
-		release: release,
-		cancel:  cancel,
+		streamd:      newResumableStreamDecoder(ctx, rpc),
+		rowd:         &partialResultSetDecoder{},
+		setTimestamp: setTimestamp,
+		release:      release,
+		cancel:       cancel,
 	}
 }
 
 // RowIterator is an iterator over Rows.
 type RowIterator struct {
-	streamd *resumableStreamDecoder
-	rowd    *partialResultSetDecoder
-	release func(time.Time, error)
-	cancel  func()
-	err     error
-	rows    []*Row
+	// The plan for the query. Available after RowIterator.Next returns iterator.Done
+	// if QueryWithStats was called.
+	QueryPlan *sppb.QueryPlan
+
+	// Execution statistics for the query. Available after RowIterator.Next returns iterator.Done
+	// if QueryWithStats was called.
+	QueryStats map[string]interface{}
+
+	streamd      *resumableStreamDecoder
+	rowd         *partialResultSetDecoder
+	setTimestamp func(time.Time)
+	release      func(error)
+	cancel       func()
+	err          error
+	rows         []*Row
 }
 
 // Next returns the next result. Its second return value is iterator.Done if
@@ -73,9 +84,18 @@ func (r *RowIterator) Next() (*Row, error) {
 		return nil, r.err
 	}
 	for len(r.rows) == 0 && r.streamd.next() {
-		r.rows, r.err = r.rowd.add(r.streamd.get())
+		prs := r.streamd.get()
+		if prs.Stats != nil {
+			r.QueryPlan = prs.Stats.QueryPlan
+			r.QueryStats = protostruct.DecodeToMap(prs.Stats.QueryStats)
+		}
+		r.rows, r.err = r.rowd.add(prs)
 		if r.err != nil {
 			return nil, r.err
+		}
+		if !r.rowd.ts.IsZero() && r.setTimestamp != nil {
+			r.setTimestamp(r.rowd.ts)
+			r.setTimestamp = nil
 		}
 	}
 	if len(r.rows) > 0 {
@@ -94,7 +114,7 @@ func (r *RowIterator) Next() (*Row, error) {
 }
 
 // Do calls the provided function once in sequence for each row in the iteration.  If the
-// function returns a non-nil error, Do immediately returns that value.
+// function returns a non-nil error, Do immediately returns that error.
 //
 // If there are no rows in the iterator, Do will return nil without calling the
 // provided function.
@@ -117,13 +137,16 @@ func (r *RowIterator) Do(f func(r *Row) error) error {
 	}
 }
 
-// Stop terminates the iteration. It should be called after every iteration.
+// Stop terminates the iteration. It should be called after you finish using the iterator.
 func (r *RowIterator) Stop() {
+	if r.streamd != nil {
+		defer traceEndSpan(r.streamd.ctx, r.err)
+	}
 	if r.cancel != nil {
 		r.cancel()
 	}
 	if r.release != nil {
-		r.release(r.rowd.ts, r.err)
+		r.release(r.err)
 		if r.err == nil {
 			r.err = spannerErrorf(codes.FailedPrecondition, "Next called after Stop")
 		}
@@ -197,7 +220,7 @@ func (q *partialResultQueue) clear() {
 	*q = partialResultQueue{}
 }
 
-// dump retrives all items from partialResultQueue and return them in a slice.
+// dump retrieves all items from partialResultQueue and return them in a slice.
 // It is used only in tests.
 func (q *partialResultQueue) dump() []*sppb.PartialResultSet {
 	var dq []*sppb.PartialResultSet
@@ -232,7 +255,7 @@ type resumableStreamDecoder struct {
 	// ctx is the caller's context, used for cancel/timeout Next().
 	ctx context.Context
 	// rpc is a factory of streamingReceiver, which might resume
-	// a pervious stream from the point encoded in restartToken.
+	// a previous stream from the point encoded in restartToken.
 	// rpc is always a wrapper of a Cloud Spanner query which is
 	// resumable.
 	rpc func(ctx context.Context, restartToken []byte) (streamingReceiver, error)
@@ -359,7 +382,7 @@ func (d *resumableStreamDecoder) next() bool {
 			// Do context check here so that even gRPC failed to do
 			// so, resumableStreamDecoder can still break the loop
 			// as expected.
-			d.err = errContextCanceled(d.err)
+			d.err = errContextCanceled(d.ctx, d.err)
 			d.changeState(aborted)
 		default:
 		}
@@ -435,7 +458,7 @@ func (d *resumableStreamDecoder) next() bool {
 			return true
 
 		default:
-			log.Errorf("Unexpected resumableStreamDecoder.state: %v", d.state)
+			log.Printf("Unexpected resumableStreamDecoder.state: %v", d.state)
 			return false
 		}
 	}
@@ -480,7 +503,9 @@ func (d *resumableStreamDecoder) resetBackOff() {
 
 // doBackoff does an exponential backoff sleep.
 func (d *resumableStreamDecoder) doBackOff() {
-	ticker := time.NewTicker(d.backoff.delay(d.retryCount))
+	delay := d.backoff.delay(d.retryCount)
+	tracePrintf(d.ctx, nil, "Backing off stream read for %s", delay)
+	ticker := time.NewTicker(delay)
 	defer ticker.Stop()
 	d.retryCount++
 	select {
@@ -537,7 +562,7 @@ func (p *partialResultSetDecoder) yield(chunked, last bool) *Row {
 
 // yieldTx returns transaction information via caller supplied callback.
 func errChunkedEmptyRow() error {
-	return spannerErrorf(codes.FailedPrecondition, "partialResultSetDecoder gets chunked empty row")
+	return spannerErrorf(codes.FailedPrecondition, "got invalid chunked PartialResultSet with empty Row")
 }
 
 // add tries to merge a new PartialResultSet into buffered Row. It returns
@@ -611,7 +636,7 @@ func (p *partialResultSetDecoder) isMergeable(a *proto3.Value) bool {
 // errIncompatibleMergeTypes returns error for incompatible protobuf types
 // that cannot be merged by partialResultSetDecoder.
 func errIncompatibleMergeTypes(a, b *proto3.Value) error {
-	return spannerErrorf(codes.FailedPrecondition, "partialResultSetDecoder merge(%T,%T) - incompatible types", a.Kind, b.Kind)
+	return spannerErrorf(codes.FailedPrecondition, "incompatible type in chunked PartialResultSet. expected (%T), got (%T)", a.Kind, b.Kind)
 }
 
 // errUnsupportedMergeType returns error for protobuf type that cannot be

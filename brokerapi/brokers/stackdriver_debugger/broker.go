@@ -18,19 +18,13 @@
 package stackdriver_debugger
 
 import (
-	"gcp-service-broker/brokerapi/brokers/account_managers"
-	"gcp-service-broker/brokerapi/brokers/broker_base"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"net/http"
-
-	"code.cloudfoundry.org/lager"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"github.com/pivotal-cf/brokerapi"
 )
 
 type StackdriverDebuggerBroker struct {
-	Client                *http.Client
-	ProjectId             string
-	Logger                lager.Logger
-	ServiceAccountManager *account_managers.ServiceAccountManager
 	broker_base.BrokerBase
 }
 
@@ -38,25 +32,25 @@ type InstanceInformation struct {
 }
 
 // No-op, no service is required for the Debugger
-func (b *StackdriverDebuggerBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (b *StackdriverDebuggerBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	return models.ServiceInstanceDetails{}, nil
 }
 
 // No-op, no service is required for the Debugger
-func (b *StackdriverDebuggerBroker) Deprovision(instanceID string, details models.DeprovisionDetails) error {
+func (b *StackdriverDebuggerBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
 	return nil
 }
 
 // Creates a service account with access to Stackdriver Debugger
-func (b *StackdriverDebuggerBroker) Bind(instanceID, bindingID string, details models.BindDetails) (models.ServiceBindingCredentials, error) {
-	if details.Parameters == nil {
-		b.Logger.Info("the parameters are nil!")
-		details.Parameters = make(map[string]interface{})
+func (b *StackdriverDebuggerBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
+	out, err := utils.SetParameter(details.RawParameters, "role", "clouddebugger.agent")
+	if err != nil {
+		return models.ServiceBindingCredentials{}, err
 	}
-	details.Parameters["role"] = "clouddebugger.agent"
+	details.RawParameters = out
 
 	// Create account
-	newBinding, err := b.ServiceAccountManager.CreateAccountInGoogle(instanceID, bindingID, details, models.ServiceInstanceDetails{})
+	newBinding, err := b.AccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
 
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err

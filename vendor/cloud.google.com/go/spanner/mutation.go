@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Google Inc. All Rights Reserved.
+Copyright 2017 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -53,22 +53,22 @@ const (
 //
 // Many mutations can be applied in a single atomic commit. For purposes of
 // constraint checking (such as foreign key constraints), the operations can be
-// viewed as applying in same order as the mutations are supplied in (so that
-// e.g., a row and its logical "child" can be inserted in the same commit).
+// viewed as applying in the same order as the mutations are provided (so that, e.g.,
+// a row and its logical "child" can be inserted in the same commit).
 //
-//	- The Apply function applies series of mutations.
-//	- A ReadWriteTransaction applies a series of mutations as part of an
-//	  atomic read-modify-write operation.
-// Example:
+// The Apply function applies series of mutations. For example,
 //
-//	m := spanner.Insert("User",
-//		[]string{"user_id", "profile"},
-//		[]interface{}{UserID, profile})
-//	_, err := client.Apply(ctx, []*spanner.Mutation{m})
+//	 m := spanner.Insert("User",
+//		 []string{"user_id", "profile"},
+//		 []interface{}{UserID, profile})
+//	 _, err := client.Apply(ctx, []*spanner.Mutation{m})
 //
-// In this example, we insert a new row into the User table. The primary key
+// inserts a new row into the User table. The primary key
 // for the new row is UserID (presuming that "user_id" has been declared as the
 // primary key of the "User" table).
+//
+// To apply a series of mutations as part of an atomic read-modify-write operation,
+// use ReadWriteTransaction.
 //
 // Updating a row
 //
@@ -86,6 +86,9 @@ const (
 //
 //	m := spanner.Delete("User", spanner.Key{UserId})
 //	_, err := client.Apply(ctx, []*spanner.Mutation{m})
+//
+// spanner.Delete accepts a KeySet, so you can also pass in a KeyRange, or use the
+// spanner.KeySets function to build any combination of Keys and KeyRanges.
 //
 // Note that deleting a row in a table may also delete rows from other tables
 // if cascading deletes are specified in those tables' schemas. Delete does
@@ -123,7 +126,7 @@ type Mutation struct {
 	// op is the operation type of the mutation.
 	// See documentation for spanner.op for more details.
 	op op
-	// Table is the name of the taget table to be modified.
+	// Table is the name of the target table to be modified.
 	table string
 	// keySet is a set of primary keys that names the rows
 	// in a delete operation.
@@ -253,6 +256,8 @@ func UpdateStruct(table string, in interface{}) (*Mutation, error) {
 // InsertOrUpdate returns a Mutation to insert a row into a table. If the row
 // already exists, it updates it instead. Any column values not explicitly
 // written are preserved.
+//
+// For a similar example, See Update.
 func InsertOrUpdate(table string, cols []string, vals []interface{}) *Mutation {
 	return &Mutation{
 		op:      opInsertOrUpdate,
@@ -265,6 +270,8 @@ func InsertOrUpdate(table string, cols []string, vals []interface{}) *Mutation {
 // InsertOrUpdateMap returns a Mutation to insert a row into a table,
 // specified by a map of column to value. If the row already exists, it
 // updates it instead. Any column values not explicitly written are preserved.
+//
+// For a similar example, See UpdateMap.
 func InsertOrUpdateMap(table string, in map[string]interface{}) *Mutation {
 	cols, vals := mapToMutationParams(in)
 	return InsertOrUpdate(table, cols, vals)
@@ -277,6 +284,8 @@ func InsertOrUpdateMap(table string, in map[string]interface{}) *Mutation {
 // The in argument must be a struct or a pointer to a struct. Its exported
 // fields specify the column names and values. Use a field tag like "spanner:name"
 // to provide an alternative column name, or use "spanner:-" to ignore the field.
+//
+// For a similar example, See UpdateStruct.
 func InsertOrUpdateStruct(table string, in interface{}) (*Mutation, error) {
 	cols, vals, err := structToMutationParams(in)
 	if err != nil {
@@ -288,6 +297,8 @@ func InsertOrUpdateStruct(table string, in interface{}) (*Mutation, error) {
 // Replace returns a Mutation to insert a row into a table, deleting any
 // existing row. Unlike InsertOrUpdate, this means any values not explicitly
 // written become NULL.
+//
+// For a similar example, See Update.
 func Replace(table string, cols []string, vals []interface{}) *Mutation {
 	return &Mutation{
 		op:      opReplace,
@@ -300,6 +311,8 @@ func Replace(table string, cols []string, vals []interface{}) *Mutation {
 // ReplaceMap returns a Mutation to insert a row into a table, deleting any
 // existing row. Unlike InsertOrUpdateMap, this means any values not explicitly
 // written become NULL.  The row is specified by a map of column to value.
+//
+// For a similar example, See UpdateMap.
 func ReplaceMap(table string, in map[string]interface{}) *Mutation {
 	cols, vals := mapToMutationParams(in)
 	return Replace(table, cols, vals)
@@ -312,6 +325,8 @@ func ReplaceMap(table string, in map[string]interface{}) *Mutation {
 // The in argument must be a struct or a pointer to a struct. Its exported
 // fields specify the column names and values. Use a field tag like "spanner:name"
 // to provide an alternative column name, or use "spanner:-" to ignore the field.
+//
+// For a similar example, See UpdateStruct.
 func ReplaceStruct(table string, in interface{}) (*Mutation, error) {
 	cols, vals, err := structToMutationParams(in)
 	if err != nil {
@@ -320,23 +335,13 @@ func ReplaceStruct(table string, in interface{}) (*Mutation, error) {
 	return Replace(table, cols, vals), nil
 }
 
-// Delete removes a key from a table. Succeeds whether or not the key was
-// present.
-func Delete(table string, key Key) *Mutation {
+// Delete removes the rows described by the KeySet from the table. It succeeds
+// whether or not the keys were present.
+func Delete(table string, ks KeySet) *Mutation {
 	return &Mutation{
 		op:     opDelete,
 		table:  table,
-		keySet: Keys(key),
-	}
-}
-
-// DeleteKeyRange removes a range of keys from a table. Succeeds whether or not
-// the keys were present.
-func DeleteKeyRange(table string, r KeyRange) *Mutation {
-	return &Mutation{
-		op:     opDelete,
-		table:  table,
-		keySet: Range(r),
+		keySet: ks,
 	}
 }
 
@@ -365,15 +370,19 @@ func (m Mutation) proto() (*sppb.Mutation, error) {
 	var pb *sppb.Mutation
 	switch m.op {
 	case opDelete:
-		keySetProto, err := m.keySet.proto()
-		if err != nil {
-			return nil, err
+		var kp *sppb.KeySet
+		if m.keySet != nil {
+			var err error
+			kp, err = m.keySet.keySetProto()
+			if err != nil {
+				return nil, err
+			}
 		}
 		pb = &sppb.Mutation{
 			Operation: &sppb.Mutation_Delete_{
 				Delete: &sppb.Mutation_Delete{
 					Table:  m.table,
-					KeySet: keySetProto,
+					KeySet: kp,
 				},
 			},
 		}

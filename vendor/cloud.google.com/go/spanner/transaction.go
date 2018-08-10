@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Google Inc. All Rights Reserved.
+Copyright 2017 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -36,8 +36,10 @@ type transactionID []byte
 type txReadEnv interface {
 	// acquire returns a read-transaction environment that can be used to perform a transactional read.
 	acquire(ctx context.Context) (*sessionHandle, *sppb.TransactionSelector, error)
-	// release should be called at the end of every transactional read to deal with session recycling and read timestamp recording.
-	release(time.Time, error)
+	// sets the transaction's read timestamp
+	setTimestamp(time.Time)
+	// release should be called at the end of every transactional read to deal with session recycling.
+	release(error)
 }
 
 // txReadOnly contains methods for doing transactional reads.
@@ -52,37 +54,38 @@ func errSessionClosed(sh *sessionHandle) error {
 		"session is already recycled / destroyed: session_id = %q, rpc_client = %v", sh.getID(), sh.getClient())
 }
 
-// Read reads multiple rows from the database.
-//
-// The provided function is called once in serial for each row read.  If the
-// function returns a non-nil error, Read immediately returns that value.
-//
-// If no rows are read, Read will return nil without calling the provided
-// function.
+// Read returns a RowIterator for reading multiple rows from the database.
 func (t *txReadOnly) Read(ctx context.Context, table string, keys KeySet, columns []string) *RowIterator {
-	// ReadUsingIndex will use primary index if an empty index name is provided.
-	return t.ReadUsingIndex(ctx, table, "", keys, columns)
+	return t.ReadWithOptions(ctx, table, keys, columns, nil)
 }
 
-// ReadUsingIndex reads multiple rows from the database using an index.
-//
-// Currently, this function can only read columns that are part of the index
-// key, part of the primary key, or stored in the index due to a STORING clause
-// in the index definition.
-//
-// The provided function is called once in serial for each row read. If the
-// function returns a non-nil error, ReadUsingIndex immediately returns that
-// value.
-//
-// If no rows are read, ReadUsingIndex will return nil without calling the
-// provided function.
-func (t *txReadOnly) ReadUsingIndex(ctx context.Context, table, index string, keys KeySet, columns []string) *RowIterator {
+// ReadUsingIndex calls ReadWithOptions with ReadOptions{Index: index}.
+func (t *txReadOnly) ReadUsingIndex(ctx context.Context, table, index string, keys KeySet, columns []string) (ri *RowIterator) {
+	return t.ReadWithOptions(ctx, table, keys, columns, &ReadOptions{Index: index})
+}
+
+// ReadOptions provides options for reading rows from a database.
+type ReadOptions struct {
+	// The index to use for reading. If non-empty, you can only read columns that are
+	// part of the index key, part of the primary key, or stored in the index due to
+	// a STORING clause in the index definition.
+	Index string
+
+	// The maximum number of rows to read. A limit value less than 1 means no limit.
+	Limit int
+}
+
+// ReadWithOptions returns a RowIterator for reading multiple rows from the database.
+// Pass a ReadOptions to modify the read operation.
+func (t *txReadOnly) ReadWithOptions(ctx context.Context, table string, keys KeySet, columns []string, opts *ReadOptions) (ri *RowIterator) {
+	ctx = traceStartSpan(ctx, "cloud.google.com/go/spanner.Read")
+	defer func() { traceEndSpan(ctx, ri.err) }()
 	var (
 		sh  *sessionHandle
 		ts  *sppb.TransactionSelector
 		err error
 	)
-	kset, err := keys.proto()
+	kset, err := keys.keySetProto()
 	if err != nil {
 		return &RowIterator{err: err}
 	}
@@ -95,8 +98,16 @@ func (t *txReadOnly) ReadUsingIndex(ctx context.Context, table, index string, ke
 		// Might happen if transaction is closed in the middle of a API call.
 		return &RowIterator{err: errSessionClosed(sh)}
 	}
+	index := ""
+	limit := 0
+	if opts != nil {
+		index = opts.Index
+		if opts.Limit > 0 {
+			limit = opts.Limit
+		}
+	}
 	return stream(
-		contextWithMetadata(ctx, sh.getMetadata()),
+		contextWithOutgoingMetadata(ctx, sh.getMetadata()),
 		func(ctx context.Context, resumeToken []byte) (streamingReceiver, error) {
 			return client.StreamingRead(ctx,
 				&sppb.ReadRequest{
@@ -107,8 +118,10 @@ func (t *txReadOnly) ReadUsingIndex(ctx context.Context, table, index string, ke
 					Columns:     columns,
 					KeySet:      kset,
 					ResumeToken: resumeToken,
+					Limit:       int64(limit),
 				})
 		},
+		t.setTimestamp,
 		t.release,
 	)
 }
@@ -121,9 +134,9 @@ func errRowNotFound(table string, key Key) error {
 // ReadRow reads a single row from the database.
 //
 // If no row is present with the given key, then ReadRow returns an error where
-// IsRowNotFound(err) is true.
+// spanner.ErrCode(err) is codes.NotFound.
 func (t *txReadOnly) ReadRow(ctx context.Context, table string, key Key, columns []string) (*Row, error) {
-	iter := t.Read(ctx, table, Keys(key), columns)
+	iter := t.Read(ctx, table, key, columns)
 	defer iter.Stop()
 	row, err := iter.Next()
 	switch err {
@@ -136,14 +149,44 @@ func (t *txReadOnly) ReadRow(ctx context.Context, table string, key Key, columns
 	}
 }
 
-// Query executes a query against the database.
+// Query executes a query against the database. It returns a RowIterator
+// for retrieving the resulting rows.
 //
-// The provided function is called once in serial for each row read.  If the
-// function returns a non-nil error, Query immediately returns that value.
-//
-// If no rows are read, Query will return nil without calling the provided
-// function.
+// Query returns only row data, without a query plan or execution statistics.
+// Use QueryWithStats to get rows along with the plan and statistics.
+// Use AnalyzeQuery to get just the plan.
 func (t *txReadOnly) Query(ctx context.Context, statement Statement) *RowIterator {
+	return t.query(ctx, statement, sppb.ExecuteSqlRequest_NORMAL)
+}
+
+// Query executes a query against the database. It returns a RowIterator
+// for retrieving the resulting rows. The RowIterator will also be populated
+// with a query plan and execution statistics.
+func (t *txReadOnly) QueryWithStats(ctx context.Context, statement Statement) *RowIterator {
+	return t.query(ctx, statement, sppb.ExecuteSqlRequest_PROFILE)
+}
+
+// AnalyzeQuery returns the query plan for statement.
+func (t *txReadOnly) AnalyzeQuery(ctx context.Context, statement Statement) (*sppb.QueryPlan, error) {
+	iter := t.query(ctx, statement, sppb.ExecuteSqlRequest_PLAN)
+	for {
+		_, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+	if iter.QueryPlan == nil {
+		return nil, spannerErrorf(codes.Internal, "query plan unavailable")
+	}
+	return iter.QueryPlan, nil
+}
+
+func (t *txReadOnly) query(ctx context.Context, statement Statement, mode sppb.ExecuteSqlRequest_QueryMode) (ri *RowIterator) {
+	ctx = traceStartSpan(ctx, "cloud.google.com/go/spanner.Query")
+	defer func() { traceEndSpan(ctx, ri.err) }()
 	var (
 		sh  *sessionHandle
 		ts  *sppb.TransactionSelector
@@ -162,16 +205,18 @@ func (t *txReadOnly) Query(ctx context.Context, statement Statement) *RowIterato
 		Session:     sid,
 		Transaction: ts,
 		Sql:         statement.SQL,
+		QueryMode:   mode,
 	}
 	if err := statement.bindParams(req); err != nil {
 		return &RowIterator{err: err}
 	}
 	return stream(
-		contextWithMetadata(ctx, sh.getMetadata()),
+		contextWithOutgoingMetadata(ctx, sh.getMetadata()),
 		func(ctx context.Context, resumeToken []byte) (streamingReceiver, error) {
 			req.ResumeToken = resumeToken
 			return client.ExecuteStreamingSql(ctx, req)
 		},
+		t.setTimestamp,
 		t.release)
 }
 
@@ -223,7 +268,7 @@ func errUnexpectedTxState(ts txState) error {
 // applications do not need to worry about this in practice. See the
 // documentation of TimestampBound for more details.
 //
-// A ReadOnlyTransaction consumes resources on the server until Close() is
+// A ReadOnlyTransaction consumes resources on the server until Close is
 // called.
 type ReadOnlyTransaction struct {
 	// txReadOnly contains methods for performing transactional reads.
@@ -284,7 +329,7 @@ func (t *ReadOnlyTransaction) begin(ctx context.Context) error {
 		}
 		t.mu.Unlock()
 		if err != nil && sh != nil {
-			// Got a valid session handle, but failed to initalize transaction on Cloud Spanner.
+			// Got a valid session handle, but failed to initialize transaction on Cloud Spanner.
 			if shouldDropSession(err) {
 				sh.destroy()
 			}
@@ -296,7 +341,7 @@ func (t *ReadOnlyTransaction) begin(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	err = runRetryable(contextWithMetadata(ctx, sh.getMetadata()), func(ctx context.Context) error {
+	err = runRetryable(contextWithOutgoingMetadata(ctx, sh.getMetadata()), func(ctx context.Context) error {
 		res, e := sh.getClient().BeginTransaction(ctx, &sppb.BeginTransactionRequest{
 			Session: sh.getID(),
 			Options: &sppb.TransactionOptions{
@@ -333,6 +378,9 @@ func (t *ReadOnlyTransaction) begin(ctx context.Context) error {
 
 // acquire implements txReadEnv.acquire.
 func (t *ReadOnlyTransaction) acquire(ctx context.Context) (*sessionHandle, *sppb.TransactionSelector, error) {
+	if err := checkNestedTxn(ctx); err != nil {
+		return nil, nil, err
+	}
 	if t.singleUse {
 		return t.acquireSingleUse(ctx)
 	}
@@ -423,12 +471,17 @@ func (t *ReadOnlyTransaction) acquireMultiUse(ctx context.Context) (*sessionHand
 	}
 }
 
-// release implements txReadEnv.release.
-func (t *ReadOnlyTransaction) release(rts time.Time, err error) {
+func (t *ReadOnlyTransaction) setTimestamp(ts time.Time) {
 	t.mu.Lock()
-	if t.singleUse && !rts.IsZero() {
-		t.rts = rts
+	defer t.mu.Unlock()
+	if t.rts.IsZero() {
+		t.rts = ts
 	}
+}
+
+// release implements txReadEnv.release.
+func (t *ReadOnlyTransaction) release(err error) {
+	t.mu.Lock()
 	sh := t.sh
 	t.mu.Unlock()
 	if sh != nil { // sh could be nil if t.acquire() fails.
@@ -454,10 +507,15 @@ func (t *ReadOnlyTransaction) Close() {
 	}
 	sh := t.sh
 	t.mu.Unlock()
+	if sh == nil {
+		return
+	}
 	// If session handle is already destroyed, this becomes a noop.
 	// If there are still active queries and if the recycled session is reused before they complete, Cloud Spanner will cancel them
 	// on behalf of the new transaction on the session.
-	sh.recycle()
+	if sh != nil {
+		sh.recycle()
+	}
 }
 
 // Timestamp returns the timestamp chosen to perform reads and
@@ -565,7 +623,7 @@ type ReadWriteTransaction struct {
 	mu sync.Mutex
 	// state is the current transaction status of the read-write transaction.
 	state txState
-	// wb is the set of buffered mutations waiting to be commited.
+	// wb is the set of buffered mutations waiting to be committed.
 	wb []*Mutation
 }
 
@@ -608,7 +666,7 @@ func (t *ReadWriteTransaction) acquire(ctx context.Context) (*sessionHandle, *sp
 }
 
 // release implements txReadEnv.release.
-func (t *ReadWriteTransaction) release(_ time.Time, err error) {
+func (t *ReadWriteTransaction) release(err error) {
 	t.mu.Lock()
 	sh := t.sh
 	t.mu.Unlock()
@@ -646,7 +704,7 @@ func (t *ReadWriteTransaction) begin(ctx context.Context) error {
 		t.state = txActive
 		return nil
 	}
-	tx, err := beginTransaction(contextWithMetadata(ctx, t.sh.getMetadata()), t.sh.getID(), t.sh.getClient())
+	tx, err := beginTransaction(contextWithOutgoingMetadata(ctx, t.sh.getMetadata()), t.sh.getID(), t.sh.getClient())
 	if err == nil {
 		t.tx = tx
 		t.state = txActive
@@ -662,7 +720,7 @@ func (t *ReadWriteTransaction) begin(ctx context.Context) error {
 func (t *ReadWriteTransaction) commit(ctx context.Context) (time.Time, error) {
 	var ts time.Time
 	t.mu.Lock()
-	t.state = txClosed // No futher operations after commit.
+	t.state = txClosed // No further operations after commit.
 	mPb, err := mutationsProto(t.wb)
 	t.mu.Unlock()
 	if err != nil {
@@ -673,7 +731,7 @@ func (t *ReadWriteTransaction) commit(ctx context.Context) (time.Time, error) {
 	if sid == "" || client == nil {
 		return ts, errSessionClosed(t.sh)
 	}
-	err = runRetryable(contextWithMetadata(ctx, t.sh.getMetadata()), func(ctx context.Context) error {
+	err = runRetryable(contextWithOutgoingMetadata(ctx, t.sh.getMetadata()), func(ctx context.Context) error {
 		var trailer metadata.MD
 		res, e := client.Commit(ctx, &sppb.CommitRequest{
 			Session: sid,
@@ -707,7 +765,7 @@ func (t *ReadWriteTransaction) rollback(ctx context.Context) {
 	if sid == "" || client == nil {
 		return
 	}
-	err := runRetryable(contextWithMetadata(ctx, t.sh.getMetadata()), func(ctx context.Context) error {
+	err := runRetryable(contextWithOutgoingMetadata(ctx, t.sh.getMetadata()), func(ctx context.Context) error {
 		_, e := client.Rollback(ctx, &sppb.RollbackRequest{
 			Session:       sid,
 			TransactionId: t.tx,
@@ -721,12 +779,12 @@ func (t *ReadWriteTransaction) rollback(ctx context.Context) {
 }
 
 // runInTransaction executes f under a read-write transaction context.
-func (t *ReadWriteTransaction) runInTransaction(ctx context.Context, f func(t *ReadWriteTransaction) error) (time.Time, error) {
+func (t *ReadWriteTransaction) runInTransaction(ctx context.Context, f func(context.Context, *ReadWriteTransaction) error) (time.Time, error) {
 	var (
 		ts  time.Time
 		err error
 	)
-	if err = f(t); err == nil {
+	if err = f(context.WithValue(ctx, transactionInProgressKey{}, 1), t); err == nil {
 		// Try to commit if transaction body returns no error.
 		ts, err = t.commit(ctx)
 	}
@@ -742,7 +800,7 @@ func (t *ReadWriteTransaction) runInTransaction(ctx context.Context, f func(t *R
 		return ts, err
 	}
 	// err == nil, return commit timestamp.
-	return ts, err
+	return ts, nil
 }
 
 // writeOnlyTransaction provides the most efficient way of doing write-only transactions. It essentially does blind writes to Cloud Spanner.
@@ -751,9 +809,9 @@ type writeOnlyTransaction struct {
 	sp *sessionPool
 }
 
-// applyAtLeastOnce commits a list of mutations to Cloud Spanner for at least once, unless one of the following happends:
-//     1) Context is timeout.
-//     2) An unretryable error(e.g. database not found) occurs.
+// applyAtLeastOnce commits a list of mutations to Cloud Spanner at least once, unless one of the following happens:
+//     1) Context times out.
+//     2) An unretryable error (e.g. database not found) occurs.
 //     3) There is a malformed Mutation object.
 func (t *writeOnlyTransaction) applyAtLeastOnce(ctx context.Context, ms ...*Mutation) (time.Time, error) {
 	var (
@@ -776,7 +834,7 @@ func (t *writeOnlyTransaction) applyAtLeastOnce(ctx context.Context, ms ...*Muta
 				return e
 			}
 		}
-		res, e := sh.getClient().Commit(contextWithMetadata(ctx, sh.getMetadata()), &sppb.CommitRequest{
+		res, e := sh.getClient().Commit(contextWithOutgoingMetadata(ctx, sh.getMetadata()), &sppb.CommitRequest{
 			Session: sh.getID(),
 			Transaction: &sppb.CommitRequest_SingleUseTransaction{
 				SingleUseTransaction: &sppb.TransactionOptions{

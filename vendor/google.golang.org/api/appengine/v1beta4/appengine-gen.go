@@ -1,4 +1,4 @@
-// Package appengine provides access to the Google App Engine Admin API.
+// Package appengine provides access to the App Engine Admin API.
 //
 // See https://cloud.google.com/appengine/docs/admin-api/
 //
@@ -67,10 +67,9 @@ func New(client *http.Client) (*APIService, error) {
 }
 
 type APIService struct {
-	client                    *http.Client
-	BasePath                  string // API endpoint base URL
-	UserAgent                 string // optional additional User-Agent fragment
-	GoogleClientHeaderElement string // client header fragment, for Google use only
+	client    *http.Client
+	BasePath  string // API endpoint base URL
+	UserAgent string // optional additional User-Agent fragment
 
 	Apps *AppsService
 }
@@ -80,10 +79,6 @@ func (s *APIService) userAgent() string {
 		return googleapi.UserAgent
 	}
 	return googleapi.UserAgent + " " + s.UserAgent
-}
-
-func (s *APIService) clientHeader() string {
-	return gensupport.GoogleClientHeader("20170210", s.GoogleClientHeaderElement)
 }
 
 func NewAppsService(s *APIService) *AppsService {
@@ -163,19 +158,28 @@ type ApiConfigHandler struct {
 	// require authentication. Defaults to redirect.
 	//
 	// Possible values:
-	//   "AUTH_FAIL_ACTION_UNSPECIFIED"
-	//   "AUTH_FAIL_ACTION_REDIRECT"
-	//   "AUTH_FAIL_ACTION_UNAUTHORIZED"
+	//   "AUTH_FAIL_ACTION_UNSPECIFIED" - Not specified.
+	// AUTH_FAIL_ACTION_REDIRECT is assumed.
+	//   "AUTH_FAIL_ACTION_REDIRECT" - Redirects user to
+	// "accounts.google.com". The user is redirected back to the application
+	// URL after signing in or creating an account.
+	//   "AUTH_FAIL_ACTION_UNAUTHORIZED" - Rejects request with a 401 HTTP
+	// status code and an error message.
 	AuthFailAction string `json:"authFailAction,omitempty"`
 
 	// Login: Level of login required to access this resource. Defaults to
 	// optional.
 	//
 	// Possible values:
-	//   "LOGIN_UNSPECIFIED"
-	//   "LOGIN_OPTIONAL"
-	//   "LOGIN_ADMIN"
-	//   "LOGIN_REQUIRED"
+	//   "LOGIN_UNSPECIFIED" - Not specified. LOGIN_OPTIONAL is assumed.
+	//   "LOGIN_OPTIONAL" - Does not require that the user is signed in.
+	//   "LOGIN_ADMIN" - If the user is not signed in, the auth_fail_action
+	// is taken. In addition, if the user is not an administrator for the
+	// application, they are given an error message regardless of
+	// auth_fail_action. If the user is an administrator, the handler
+	// proceeds.
+	//   "LOGIN_REQUIRED" - If the user has signed in, the handler proceeds
+	// normally. Otherwise, the auth_fail_action is taken.
 	Login string `json:"login,omitempty"`
 
 	// Script: Path to the script from the application root directory.
@@ -184,11 +188,20 @@ type ApiConfigHandler struct {
 	// SecurityLevel: Security (HTTPS) enforcement for this URL.
 	//
 	// Possible values:
-	//   "SECURE_UNSPECIFIED"
-	//   "SECURE_DEFAULT"
-	//   "SECURE_NEVER"
-	//   "SECURE_OPTIONAL"
-	//   "SECURE_ALWAYS"
+	//   "SECURE_UNSPECIFIED" - Not specified.
+	//   "SECURE_DEFAULT" - Both HTTP and HTTPS requests with URLs that
+	// match the handler succeed without redirects. The application can
+	// examine the request to determine which protocol was used, and respond
+	// accordingly.
+	//   "SECURE_NEVER" - Requests for a URL that match this handler that
+	// use HTTPS are automatically redirected to the HTTP equivalent URL.
+	//   "SECURE_OPTIONAL" - Both HTTP and HTTPS requests with URLs that
+	// match the handler succeed without redirects. The application can
+	// examine the request to determine which protocol was used and respond
+	// accordingly.
+	//   "SECURE_ALWAYS" - Requests for a URL that match this handler that
+	// do not use HTTPS are automatically redirected to the HTTPS URL with
+	// the same path. Query parameters are reserved for the redirect.
 	SecurityLevel string `json:"securityLevel,omitempty"`
 
 	// Url: URL to serve the endpoint at.
@@ -213,8 +226,8 @@ type ApiConfigHandler struct {
 }
 
 func (s *ApiConfigHandler) MarshalJSON() ([]byte, error) {
-	type noMethod ApiConfigHandler
-	raw := noMethod(*s)
+	type NoMethod ApiConfigHandler
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -241,8 +254,8 @@ type ApiEndpointHandler struct {
 }
 
 func (s *ApiEndpointHandler) MarshalJSON() ([]byte, error) {
-	type noMethod ApiEndpointHandler
-	raw := noMethod(*s)
+	type NoMethod ApiEndpointHandler
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -317,8 +330,8 @@ type Application struct {
 }
 
 func (s *Application) MarshalJSON() ([]byte, error) {
-	type noMethod Application
-	raw := noMethod(*s)
+	type NoMethod Application
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -392,8 +405,8 @@ type AutomaticScaling struct {
 }
 
 func (s *AutomaticScaling) MarshalJSON() ([]byte, error) {
-	type noMethod AutomaticScaling
-	raw := noMethod(*s)
+	type NoMethod AutomaticScaling
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -427,8 +440,8 @@ type BasicScaling struct {
 }
 
 func (s *BasicScaling) MarshalJSON() ([]byte, error) {
-	type noMethod BasicScaling
-	raw := noMethod(*s)
+	type NoMethod BasicScaling
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -460,8 +473,8 @@ type ContainerInfo struct {
 }
 
 func (s *ContainerInfo) MarshalJSON() ([]byte, error) {
-	type noMethod ContainerInfo
-	raw := noMethod(*s)
+	type NoMethod ContainerInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -495,18 +508,18 @@ type CpuUtilization struct {
 }
 
 func (s *CpuUtilization) MarshalJSON() ([]byte, error) {
-	type noMethod CpuUtilization
-	raw := noMethod(*s)
+	type NoMethod CpuUtilization
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *CpuUtilization) UnmarshalJSON(data []byte) error {
-	type noMethod CpuUtilization
+	type NoMethod CpuUtilization
 	var s1 struct {
 		TargetUtilization gensupport.JSONFloat64 `json:"targetUtilization"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -514,11 +527,105 @@ func (s *CpuUtilization) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// CreateVersionMetadataV1: Metadata for the given
+// google.longrunning.Operation during a
+// google.appengine.v1.CreateVersionRequest.
+type CreateVersionMetadataV1 struct {
+	// CloudBuildId: The Cloud Build ID if one was created as part of the
+	// version create. @OutputOnly
+	CloudBuildId string `json:"cloudBuildId,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "CloudBuildId") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "CloudBuildId") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *CreateVersionMetadataV1) MarshalJSON() ([]byte, error) {
+	type NoMethod CreateVersionMetadataV1
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// CreateVersionMetadataV1Alpha: Metadata for the given
+// google.longrunning.Operation during a
+// google.appengine.v1alpha.CreateVersionRequest.
+type CreateVersionMetadataV1Alpha struct {
+	// CloudBuildId: The Cloud Build ID if one was created as part of the
+	// version create. @OutputOnly
+	CloudBuildId string `json:"cloudBuildId,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "CloudBuildId") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "CloudBuildId") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *CreateVersionMetadataV1Alpha) MarshalJSON() ([]byte, error) {
+	type NoMethod CreateVersionMetadataV1Alpha
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// CreateVersionMetadataV1Beta: Metadata for the given
+// google.longrunning.Operation during a
+// google.appengine.v1beta.CreateVersionRequest.
+type CreateVersionMetadataV1Beta struct {
+	// CloudBuildId: The Cloud Build ID if one was created as part of the
+	// version create. @OutputOnly
+	CloudBuildId string `json:"cloudBuildId,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "CloudBuildId") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "CloudBuildId") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *CreateVersionMetadataV1Beta) MarshalJSON() ([]byte, error) {
+	type NoMethod CreateVersionMetadataV1Beta
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // DebugInstanceRequest: Request message for Instances.DebugInstance.
 type DebugInstanceRequest struct {
-	// SshKey: Public SSH key to add to the instance. Examples:
-	// [USERNAME]:ssh-rsa [KEY_VALUE] [USERNAME] [USERNAME]:ssh-rsa
-	// [KEY_VALUE] google-ssh
+	// SshKey: Public SSH key to add to the instance.
+	// Examples:
+	// [USERNAME]:ssh-rsa [KEY_VALUE] [USERNAME]
+	// [USERNAME]:ssh-rsa [KEY_VALUE] google-ssh
 	// {"userName":"[USERNAME]","expireOn":"[EXPIRE_TIME]"}For more
 	// information, see Adding and Removing SSH Keys
 	// (https://cloud.google.com/compute/docs/instances/adding-removing-ssh-k
@@ -543,8 +650,8 @@ type DebugInstanceRequest struct {
 }
 
 func (s *DebugInstanceRequest) MarshalJSON() ([]byte, error) {
-	type noMethod DebugInstanceRequest
-	raw := noMethod(*s)
+	type NoMethod DebugInstanceRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -584,8 +691,8 @@ type Deployment struct {
 }
 
 func (s *Deployment) MarshalJSON() ([]byte, error) {
-	type noMethod Deployment
-	raw := noMethod(*s)
+	type NoMethod Deployment
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -624,8 +731,67 @@ type DiskUtilization struct {
 }
 
 func (s *DiskUtilization) MarshalJSON() ([]byte, error) {
-	type noMethod DiskUtilization
-	raw := noMethod(*s)
+	type NoMethod DiskUtilization
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// EndpointsApiService: Cloud Endpoints
+// (https://cloud.google.com/endpoints) configuration. The Endpoints API
+// Service provides tooling for serving Open API and gRPC endpoints via
+// an NGINX proxy. Only valid for App Engine Flexible environment
+// deployments..The fields here refer to the name and configuration id
+// of a "service" resource in the Service Management API
+// (https://cloud.google.com/service-management/overview).
+type EndpointsApiService struct {
+	// ConfigId: Endpoints service configuration id as specified by the
+	// Service Management API. For example "2016-09-19r1"By default, the
+	// Endpoints service configuration id is fixed and config_id must be
+	// specified. To keep the Endpoints service configuration id updated
+	// with each rollout, specify RolloutStrategy.MANAGED and omit
+	// config_id.
+	ConfigId string `json:"configId,omitempty"`
+
+	// DisableTraceSampling: Enable or disable trace sampling. By default,
+	// this is set to false for enabled.
+	DisableTraceSampling bool `json:"disableTraceSampling,omitempty"`
+
+	// Name: Endpoints service name which is the name of the "service"
+	// resource in the Service Management API. For example
+	// "myapi.endpoints.myproject.cloud.goog"
+	Name string `json:"name,omitempty"`
+
+	// RolloutStrategy: Endpoints rollout strategy. If FIXED, config_id must
+	// be specified. If MANAGED, config_id must be omitted.
+	//
+	// Possible values:
+	//   "UNSPECIFIED_ROLLOUT_STRATEGY" - Not specified. Defaults to FIXED.
+	//   "FIXED" - Endpoints service configuration id will be fixed to the
+	// configuration id specified by config_id.
+	//   "MANAGED" - Endpoints service configuration id will be updated with
+	// each rollout.
+	RolloutStrategy string `json:"rolloutStrategy,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "ConfigId") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ConfigId") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *EndpointsApiService) MarshalJSON() ([]byte, error) {
+	type NoMethod EndpointsApiService
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -635,11 +801,15 @@ type ErrorHandler struct {
 	// ErrorCode: Error condition this handler applies to.
 	//
 	// Possible values:
-	//   "ERROR_CODE_UNSPECIFIED"
-	//   "ERROR_CODE_DEFAULT"
-	//   "ERROR_CODE_OVER_QUOTA"
-	//   "ERROR_CODE_DOS_API_DENIAL"
-	//   "ERROR_CODE_TIMEOUT"
+	//   "ERROR_CODE_UNSPECIFIED" - Not specified. ERROR_CODE_DEFAULT is
+	// assumed.
+	//   "ERROR_CODE_DEFAULT" - All other error types.
+	//   "ERROR_CODE_OVER_QUOTA" - Application has exceeded a resource
+	// quota.
+	//   "ERROR_CODE_DOS_API_DENIAL" - Client blocked by the application's
+	// Denial of Service protection configuration.
+	//   "ERROR_CODE_TIMEOUT" - Deadline reached before the application
+	// responds.
 	ErrorCode string `json:"errorCode,omitempty"`
 
 	// MimeType: MIME type of file. Defaults to text/html.
@@ -666,8 +836,8 @@ type ErrorHandler struct {
 }
 
 func (s *ErrorHandler) MarshalJSON() ([]byte, error) {
-	type noMethod ErrorHandler
-	raw := noMethod(*s)
+	type NoMethod ErrorHandler
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -684,7 +854,7 @@ type FileInfo struct {
 
 	// SourceUrl: URL source to use to fetch this file. Must be a URL to a
 	// resource in Google Cloud Storage in the form
-	// 'http(s)://storage.googleapis.com//'.
+	// 'http(s)://storage.googleapis.com/<bucket>/<object>'.
 	SourceUrl string `json:"sourceUrl,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "MimeType") to
@@ -705,8 +875,8 @@ type FileInfo struct {
 }
 
 func (s *FileInfo) MarshalJSON() ([]byte, error) {
-	type noMethod FileInfo
-	raw := noMethod(*s)
+	type NoMethod FileInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -758,8 +928,8 @@ type HealthCheck struct {
 }
 
 func (s *HealthCheck) MarshalJSON() ([]byte, error) {
-	type noMethod HealthCheck
-	raw := noMethod(*s)
+	type NoMethod HealthCheck
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -800,8 +970,8 @@ type IdentityAwareProxy struct {
 }
 
 func (s *IdentityAwareProxy) MarshalJSON() ([]byte, error) {
-	type noMethod IdentityAwareProxy
-	raw := noMethod(*s)
+	type NoMethod IdentityAwareProxy
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -899,18 +1069,18 @@ type Instance struct {
 }
 
 func (s *Instance) MarshalJSON() ([]byte, error) {
-	type noMethod Instance
-	raw := noMethod(*s)
+	type NoMethod Instance
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *Instance) UnmarshalJSON(data []byte) error {
-	type noMethod Instance
+	type NoMethod Instance
 	var s1 struct {
 		Qps gensupport.JSONFloat64 `json:"qps"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -945,8 +1115,8 @@ type Library struct {
 }
 
 func (s *Library) MarshalJSON() ([]byte, error) {
-	type noMethod Library
-	raw := noMethod(*s)
+	type NoMethod Library
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -981,8 +1151,8 @@ type ListInstancesResponse struct {
 }
 
 func (s *ListInstancesResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListInstancesResponse
-	raw := noMethod(*s)
+	type NoMethod ListInstancesResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1018,8 +1188,8 @@ type ListLocationsResponse struct {
 }
 
 func (s *ListLocationsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListLocationsResponse
-	raw := noMethod(*s)
+	type NoMethod ListLocationsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1054,8 +1224,8 @@ type ListModulesResponse struct {
 }
 
 func (s *ListModulesResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListModulesResponse
-	raw := noMethod(*s)
+	type NoMethod ListModulesResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1091,8 +1261,8 @@ type ListOperationsResponse struct {
 }
 
 func (s *ListOperationsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListOperationsResponse
-	raw := noMethod(*s)
+	type NoMethod ListOperationsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1127,15 +1297,21 @@ type ListVersionsResponse struct {
 }
 
 func (s *ListVersionsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListVersionsResponse
-	raw := noMethod(*s)
+	type NoMethod ListVersionsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // Location: A resource that represents Google Cloud Platform location.
 type Location struct {
-	// Labels: Cross-service attributes for the location. For example
+	// DisplayName: The friendly name for this location, typically a nearby
+	// city name. For example, "Tokyo".
+	DisplayName string `json:"displayName,omitempty"`
+
+	// Labels: Cross-service attributes for the location. For
+	// example
 	// {"cloud.googleapis.com/region": "us-east1"}
+	//
 	Labels map[string]string `json:"labels,omitempty"`
 
 	// LocationId: The canonical id for this location. For example:
@@ -1155,7 +1331,7 @@ type Location struct {
 	// server.
 	googleapi.ServerResponse `json:"-"`
 
-	// ForceSendFields is a list of field names (e.g. "Labels") to
+	// ForceSendFields is a list of field names (e.g. "DisplayName") to
 	// unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
 	// non-interface field appearing in ForceSendFields will be sent to the
@@ -1163,29 +1339,29 @@ type Location struct {
 	// used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
-	// NullFields is a list of field names (e.g. "Labels") to include in API
-	// requests with the JSON null value. By default, fields with empty
-	// values are omitted from API requests. However, any field with an
-	// empty value appearing in NullFields will be sent to the server as
+	// NullFields is a list of field names (e.g. "DisplayName") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
 	// null. It is an error if a field in this list has a non-empty value.
 	// This may be used to include null fields in Patch requests.
 	NullFields []string `json:"-"`
 }
 
 func (s *Location) MarshalJSON() ([]byte, error) {
-	type noMethod Location
-	raw := noMethod(*s)
+	type NoMethod Location
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // LocationMetadata: Metadata for the given
 // google.cloud.location.Location.
 type LocationMetadata struct {
-	// FlexibleEnvironmentAvailable: App Engine Flexible Environment is
+	// FlexibleEnvironmentAvailable: App Engine flexible environment is
 	// available in the given location.@OutputOnly
 	FlexibleEnvironmentAvailable bool `json:"flexibleEnvironmentAvailable,omitempty"`
 
-	// StandardEnvironmentAvailable: App Engine Standard Environment is
+	// StandardEnvironmentAvailable: App Engine standard environment is
 	// available in the given location.@OutputOnly
 	StandardEnvironmentAvailable bool `json:"standardEnvironmentAvailable,omitempty"`
 
@@ -1209,8 +1385,8 @@ type LocationMetadata struct {
 }
 
 func (s *LocationMetadata) MarshalJSON() ([]byte, error) {
-	type noMethod LocationMetadata
-	raw := noMethod(*s)
+	type NoMethod LocationMetadata
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1242,8 +1418,8 @@ type ManualScaling struct {
 }
 
 func (s *ManualScaling) MarshalJSON() ([]byte, error) {
-	type noMethod ManualScaling
-	raw := noMethod(*s)
+	type NoMethod ManualScaling
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1289,8 +1465,8 @@ type Module struct {
 }
 
 func (s *Module) MarshalJSON() ([]byte, error) {
-	type noMethod Module
-	raw := noMethod(*s)
+	type NoMethod Module
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1327,8 +1503,8 @@ type Network struct {
 }
 
 func (s *Network) MarshalJSON() ([]byte, error) {
-	type noMethod Network
-	raw := noMethod(*s)
+	type NoMethod Network
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1367,8 +1543,8 @@ type NetworkUtilization struct {
 }
 
 func (s *NetworkUtilization) MarshalJSON() ([]byte, error) {
-	type noMethod NetworkUtilization
-	raw := noMethod(*s)
+	type NoMethod NetworkUtilization
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1428,8 +1604,8 @@ type Operation struct {
 }
 
 func (s *Operation) MarshalJSON() ([]byte, error) {
-	type noMethod Operation
-	raw := noMethod(*s)
+	type NoMethod Operation
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1475,58 +1651,16 @@ type OperationMetadata struct {
 }
 
 func (s *OperationMetadata) MarshalJSON() ([]byte, error) {
-	type noMethod OperationMetadata
-	raw := noMethod(*s)
-	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
-}
-
-// OperationMetadataExperimental: Metadata for the given
-// google.longrunning.Operation.
-type OperationMetadataExperimental struct {
-	// EndTime: Time that this operation completed.@OutputOnly
-	EndTime string `json:"endTime,omitempty"`
-
-	// InsertTime: Time that this operation was created.@OutputOnly
-	InsertTime string `json:"insertTime,omitempty"`
-
-	// Method: API method that initiated this operation. Example:
-	// google.appengine.experimental.CustomDomains.CreateCustomDomain.@Output
-	// Only
-	Method string `json:"method,omitempty"`
-
-	// Target: Name of the resource that this operation is acting on.
-	// Example: apps/myapp/customDomains/example.com.@OutputOnly
-	Target string `json:"target,omitempty"`
-
-	// User: User who requested this operation.@OutputOnly
-	User string `json:"user,omitempty"`
-
-	// ForceSendFields is a list of field names (e.g. "EndTime") to
-	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
-	ForceSendFields []string `json:"-"`
-
-	// NullFields is a list of field names (e.g. "EndTime") to include in
-	// API requests with the JSON null value. By default, fields with empty
-	// values are omitted from API requests. However, any field with an
-	// empty value appearing in NullFields will be sent to the server as
-	// null. It is an error if a field in this list has a non-empty value.
-	// This may be used to include null fields in Patch requests.
-	NullFields []string `json:"-"`
-}
-
-func (s *OperationMetadataExperimental) MarshalJSON() ([]byte, error) {
-	type noMethod OperationMetadataExperimental
-	raw := noMethod(*s)
+	type NoMethod OperationMetadata
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // OperationMetadataV1: Metadata for the given
 // google.longrunning.Operation.
 type OperationMetadataV1 struct {
+	CreateVersionMetadata *CreateVersionMetadataV1 `json:"createVersionMetadata,omitempty"`
+
 	// EndTime: Time that this operation completed.@OutputOnly
 	EndTime string `json:"endTime,omitempty"`
 
@@ -1552,32 +1686,36 @@ type OperationMetadataV1 struct {
 	// @OutputOnly
 	Warning []string `json:"warning,omitempty"`
 
-	// ForceSendFields is a list of field names (e.g. "EndTime") to
-	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// ForceSendFields is a list of field names (e.g.
+	// "CreateVersionMetadata") to unconditionally include in API requests.
+	// By default, fields with empty values are omitted from API requests.
+	// However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
 	ForceSendFields []string `json:"-"`
 
-	// NullFields is a list of field names (e.g. "EndTime") to include in
-	// API requests with the JSON null value. By default, fields with empty
-	// values are omitted from API requests. However, any field with an
-	// empty value appearing in NullFields will be sent to the server as
-	// null. It is an error if a field in this list has a non-empty value.
-	// This may be used to include null fields in Patch requests.
+	// NullFields is a list of field names (e.g. "CreateVersionMetadata") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
 	NullFields []string `json:"-"`
 }
 
 func (s *OperationMetadataV1) MarshalJSON() ([]byte, error) {
-	type noMethod OperationMetadataV1
-	raw := noMethod(*s)
+	type NoMethod OperationMetadataV1
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // OperationMetadataV1Alpha: Metadata for the given
 // google.longrunning.Operation.
 type OperationMetadataV1Alpha struct {
+	CreateVersionMetadata *CreateVersionMetadataV1Alpha `json:"createVersionMetadata,omitempty"`
+
 	// EndTime: Time that this operation completed.@OutputOnly
 	EndTime string `json:"endTime,omitempty"`
 
@@ -1603,32 +1741,36 @@ type OperationMetadataV1Alpha struct {
 	// @OutputOnly
 	Warning []string `json:"warning,omitempty"`
 
-	// ForceSendFields is a list of field names (e.g. "EndTime") to
-	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// ForceSendFields is a list of field names (e.g.
+	// "CreateVersionMetadata") to unconditionally include in API requests.
+	// By default, fields with empty values are omitted from API requests.
+	// However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
 	ForceSendFields []string `json:"-"`
 
-	// NullFields is a list of field names (e.g. "EndTime") to include in
-	// API requests with the JSON null value. By default, fields with empty
-	// values are omitted from API requests. However, any field with an
-	// empty value appearing in NullFields will be sent to the server as
-	// null. It is an error if a field in this list has a non-empty value.
-	// This may be used to include null fields in Patch requests.
+	// NullFields is a list of field names (e.g. "CreateVersionMetadata") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
 	NullFields []string `json:"-"`
 }
 
 func (s *OperationMetadataV1Alpha) MarshalJSON() ([]byte, error) {
-	type noMethod OperationMetadataV1Alpha
-	raw := noMethod(*s)
+	type NoMethod OperationMetadataV1Alpha
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // OperationMetadataV1Beta: Metadata for the given
 // google.longrunning.Operation.
 type OperationMetadataV1Beta struct {
+	CreateVersionMetadata *CreateVersionMetadataV1Beta `json:"createVersionMetadata,omitempty"`
+
 	// EndTime: Time that this operation completed.@OutputOnly
 	EndTime string `json:"endTime,omitempty"`
 
@@ -1654,26 +1796,28 @@ type OperationMetadataV1Beta struct {
 	// @OutputOnly
 	Warning []string `json:"warning,omitempty"`
 
-	// ForceSendFields is a list of field names (e.g. "EndTime") to
-	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// ForceSendFields is a list of field names (e.g.
+	// "CreateVersionMetadata") to unconditionally include in API requests.
+	// By default, fields with empty values are omitted from API requests.
+	// However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
 	ForceSendFields []string `json:"-"`
 
-	// NullFields is a list of field names (e.g. "EndTime") to include in
-	// API requests with the JSON null value. By default, fields with empty
-	// values are omitted from API requests. However, any field with an
-	// empty value appearing in NullFields will be sent to the server as
-	// null. It is an error if a field in this list has a non-empty value.
-	// This may be used to include null fields in Patch requests.
+	// NullFields is a list of field names (e.g. "CreateVersionMetadata") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
 	NullFields []string `json:"-"`
 }
 
 func (s *OperationMetadataV1Beta) MarshalJSON() ([]byte, error) {
-	type noMethod OperationMetadataV1Beta
-	raw := noMethod(*s)
+	type NoMethod OperationMetadataV1Beta
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1715,8 +1859,8 @@ type OperationMetadataV1Beta5 struct {
 }
 
 func (s *OperationMetadataV1Beta5) MarshalJSON() ([]byte, error) {
-	type noMethod OperationMetadataV1Beta5
-	raw := noMethod(*s)
+	type NoMethod OperationMetadataV1Beta5
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1749,8 +1893,8 @@ type RequestUtilization struct {
 }
 
 func (s *RequestUtilization) MarshalJSON() ([]byte, error) {
-	type noMethod RequestUtilization
-	raw := noMethod(*s)
+	type NoMethod RequestUtilization
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1786,20 +1930,20 @@ type Resources struct {
 }
 
 func (s *Resources) MarshalJSON() ([]byte, error) {
-	type noMethod Resources
-	raw := noMethod(*s)
+	type NoMethod Resources
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *Resources) UnmarshalJSON(data []byte) error {
-	type noMethod Resources
+	type NoMethod Resources
 	var s1 struct {
 		Cpu      gensupport.JSONFloat64 `json:"cpu"`
 		DiskGb   gensupport.JSONFloat64 `json:"diskGb"`
 		MemoryGb gensupport.JSONFloat64 `json:"memoryGb"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -1833,8 +1977,8 @@ type ScriptHandler struct {
 }
 
 func (s *ScriptHandler) MarshalJSON() ([]byte, error) {
-	type noMethod ScriptHandler
-	raw := noMethod(*s)
+	type NoMethod ScriptHandler
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1868,8 +2012,8 @@ type SourceReference struct {
 }
 
 func (s *SourceReference) MarshalJSON() ([]byte, error) {
-	type noMethod SourceReference
-	raw := noMethod(*s)
+	type NoMethod SourceReference
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1926,8 +2070,8 @@ type StaticDirectoryHandler struct {
 }
 
 func (s *StaticDirectoryHandler) MarshalJSON() ([]byte, error) {
-	type noMethod StaticDirectoryHandler
-	raw := noMethod(*s)
+	type NoMethod StaticDirectoryHandler
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1987,15 +2131,16 @@ type StaticFilesHandler struct {
 }
 
 func (s *StaticFilesHandler) MarshalJSON() ([]byte, error) {
-	type noMethod StaticFilesHandler
-	raw := noMethod(*s)
+	type NoMethod StaticFilesHandler
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // Status: The Status type defines a logical error model that is
 // suitable for different programming environments, including REST APIs
 // and RPC APIs. It is used by gRPC (https://github.com/grpc). The error
-// model is designed to be: Simple to use and understand for most users
+// model is designed to be:
+// Simple to use and understand for most users
 // Flexible enough to meet unexpected needsOverviewThe Status message
 // contains three pieces of data: error code, error message, and error
 // details. The error code should be an enum value of google.rpc.Code,
@@ -2005,7 +2150,7 @@ func (s *StaticFilesHandler) MarshalJSON() ([]byte, error) {
 // message is needed, put the localized message in the error details or
 // localize it in the client. The optional error details may contain
 // arbitrary information about the error. There is a predefined set of
-// error detail types in the package google.rpc which can be used for
+// error detail types in the package google.rpc that can be used for
 // common error conditions.Language mappingThe Status message is the
 // logical representation of the error model, but it is not necessarily
 // the actual wire format. When the Status message is exposed in
@@ -2015,25 +2160,28 @@ func (s *StaticFilesHandler) MarshalJSON() ([]byte, error) {
 // C.Other usesThe error model and the Status message can be used in a
 // variety of environments, either with or without APIs, to provide a
 // consistent developer experience across different environments.Example
-// uses of this error model include: Partial errors. If a service needs
-// to return partial errors to the client, it may embed the Status in
-// the normal response to indicate the partial errors. Workflow errors.
-// A typical workflow has multiple steps. Each step may have a Status
-// message for error reporting purpose. Batch operations. If a client
-// uses batch request and batch response, the Status message should be
-// used directly inside batch response, one for each error sub-response.
+// uses of this error model include:
+// Partial errors. If a service needs to return partial errors to the
+// client, it may embed the Status in the normal response to indicate
+// the partial errors.
+// Workflow errors. A typical workflow has multiple steps. Each step may
+// have a Status message for error reporting.
+// Batch operations. If a client uses batch request and batch response,
+// the Status message should be used directly inside batch response, one
+// for each error sub-response.
 // Asynchronous operations. If an API call embeds asynchronous operation
 // results in its response, the status of those operations should be
-// represented directly using the Status message. Logging. If some API
-// errors are stored in logs, the message Status could be used directly
-// after any stripping needed for security/privacy reasons.
+// represented directly using the Status message.
+// Logging. If some API errors are stored in logs, the message Status
+// could be used directly after any stripping needed for
+// security/privacy reasons.
 type Status struct {
 	// Code: The status code, which should be an enum value of
 	// google.rpc.Code.
 	Code int64 `json:"code,omitempty"`
 
-	// Details: A list of messages that carry the error details. There will
-	// be a common set of message types for APIs to use.
+	// Details: A list of messages that carry the error details. There is a
+	// common set of message types for APIs to use.
 	Details []googleapi.RawMessage `json:"details,omitempty"`
 
 	// Message: A developer-facing error message, which should be in
@@ -2059,8 +2207,8 @@ type Status struct {
 }
 
 func (s *Status) MarshalJSON() ([]byte, error) {
-	type noMethod Status
-	raw := noMethod(*s)
+	type NoMethod Status
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2083,9 +2231,12 @@ type TrafficSplit struct {
 	// until allocations are changed.
 	//
 	// Possible values:
-	//   "UNSPECIFIED"
-	//   "COOKIE"
-	//   "IP"
+	//   "UNSPECIFIED" - Diversion method unspecified.
+	//   "COOKIE" - Diversion based on a specially named cookie,
+	// "GOOGAPPUID." The cookie must be set by the application itself or
+	// else no diversion will occur.
+	//   "IP" - Diversion based on applying the modulus operation to a
+	// fingerprint of the IP address.
 	ShardBy string `json:"shardBy,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Allocations") to
@@ -2106,8 +2257,8 @@ type TrafficSplit struct {
 }
 
 func (s *TrafficSplit) MarshalJSON() ([]byte, error) {
-	type noMethod TrafficSplit
-	raw := noMethod(*s)
+	type NoMethod TrafficSplit
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2146,8 +2297,8 @@ type UrlDispatchRule struct {
 }
 
 func (s *UrlDispatchRule) MarshalJSON() ([]byte, error) {
-	type noMethod UrlDispatchRule
-	raw := noMethod(*s)
+	type NoMethod UrlDispatchRule
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2163,29 +2314,39 @@ type UrlMap struct {
 	// require authentication. Defaults to redirect.
 	//
 	// Possible values:
-	//   "AUTH_FAIL_ACTION_UNSPECIFIED"
-	//   "AUTH_FAIL_ACTION_REDIRECT"
-	//   "AUTH_FAIL_ACTION_UNAUTHORIZED"
+	//   "AUTH_FAIL_ACTION_UNSPECIFIED" - Not specified.
+	// AUTH_FAIL_ACTION_REDIRECT is assumed.
+	//   "AUTH_FAIL_ACTION_REDIRECT" - Redirects user to
+	// "accounts.google.com". The user is redirected back to the application
+	// URL after signing in or creating an account.
+	//   "AUTH_FAIL_ACTION_UNAUTHORIZED" - Rejects request with a 401 HTTP
+	// status code and an error message.
 	AuthFailAction string `json:"authFailAction,omitempty"`
 
 	// Login: Level of login required to access this resource.
 	//
 	// Possible values:
-	//   "LOGIN_UNSPECIFIED"
-	//   "LOGIN_OPTIONAL"
-	//   "LOGIN_ADMIN"
-	//   "LOGIN_REQUIRED"
+	//   "LOGIN_UNSPECIFIED" - Not specified. LOGIN_OPTIONAL is assumed.
+	//   "LOGIN_OPTIONAL" - Does not require that the user is signed in.
+	//   "LOGIN_ADMIN" - If the user is not signed in, the auth_fail_action
+	// is taken. In addition, if the user is not an administrator for the
+	// application, they are given an error message regardless of
+	// auth_fail_action. If the user is an administrator, the handler
+	// proceeds.
+	//   "LOGIN_REQUIRED" - If the user has signed in, the handler proceeds
+	// normally. Otherwise, the auth_fail_action is taken.
 	Login string `json:"login,omitempty"`
 
 	// RedirectHttpResponseCode: 30x code to use when performing redirects
 	// for the secure field. Defaults to 302.
 	//
 	// Possible values:
-	//   "REDIRECT_HTTP_RESPONSE_CODE_UNSPECIFIED"
-	//   "REDIRECT_HTTP_RESPONSE_CODE_301"
-	//   "REDIRECT_HTTP_RESPONSE_CODE_302"
-	//   "REDIRECT_HTTP_RESPONSE_CODE_303"
-	//   "REDIRECT_HTTP_RESPONSE_CODE_307"
+	//   "REDIRECT_HTTP_RESPONSE_CODE_UNSPECIFIED" - Not specified. 302 is
+	// assumed.
+	//   "REDIRECT_HTTP_RESPONSE_CODE_301" - 301 Moved Permanently code.
+	//   "REDIRECT_HTTP_RESPONSE_CODE_302" - 302 Moved Temporarily code.
+	//   "REDIRECT_HTTP_RESPONSE_CODE_303" - 303 See Other code.
+	//   "REDIRECT_HTTP_RESPONSE_CODE_307" - 307 Temporary Redirect code.
 	RedirectHttpResponseCode string `json:"redirectHttpResponseCode,omitempty"`
 
 	// Script: Executes a script to handle the request that matches this URL
@@ -2195,11 +2356,20 @@ type UrlMap struct {
 	// SecurityLevel: Security (HTTPS) enforcement for this URL.
 	//
 	// Possible values:
-	//   "SECURE_UNSPECIFIED"
-	//   "SECURE_DEFAULT"
-	//   "SECURE_NEVER"
-	//   "SECURE_OPTIONAL"
-	//   "SECURE_ALWAYS"
+	//   "SECURE_UNSPECIFIED" - Not specified.
+	//   "SECURE_DEFAULT" - Both HTTP and HTTPS requests with URLs that
+	// match the handler succeed without redirects. The application can
+	// examine the request to determine which protocol was used, and respond
+	// accordingly.
+	//   "SECURE_NEVER" - Requests for a URL that match this handler that
+	// use HTTPS are automatically redirected to the HTTP equivalent URL.
+	//   "SECURE_OPTIONAL" - Both HTTP and HTTPS requests with URLs that
+	// match the handler succeed without redirects. The application can
+	// examine the request to determine which protocol was used and respond
+	// accordingly.
+	//   "SECURE_ALWAYS" - Requests for a URL that match this handler that
+	// do not use HTTPS are automatically redirected to the HTTPS URL with
+	// the same path. Query parameters are reserved for the redirect.
 	SecurityLevel string `json:"securityLevel,omitempty"`
 
 	// StaticDirectory: Serves the entire contents of a directory as static
@@ -2236,8 +2406,8 @@ type UrlMap struct {
 }
 
 func (s *UrlMap) MarshalJSON() ([]byte, error) {
-	type noMethod UrlMap
-	raw := noMethod(*s)
+	type NoMethod UrlMap
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2281,6 +2451,11 @@ type Version struct {
 	// Deployment: Code and application artifacts that make up this
 	// version.Only returned in GET requests if view=FULL is set.
 	Deployment *Deployment `json:"deployment,omitempty"`
+
+	// EndpointsApiService: Cloud Endpoints configuration.If
+	// endpoints_api_service is set, the Cloud Endpoints Extensible Service
+	// Proxy will be provided to serve the API implemented by the app.
+	EndpointsApiService *EndpointsApiService `json:"endpointsApiService,omitempty"`
 
 	// Env: App Engine execution environment to use for this
 	// version.Defaults to 1.
@@ -2334,9 +2509,10 @@ type Version struct {
 	InboundServices []string `json:"inboundServices,omitempty"`
 
 	// InstanceClass: Instance class that is used to run this version. Valid
-	// values are: AutomaticScaling: F1, F2, F4, F4_1G ManualScaling or
-	// BasicScaling: B1, B2, B4, B8, B4_1GDefaults to F1 for
-	// AutomaticScaling and B1 for ManualScaling or BasicScaling.
+	// values are:
+	// AutomaticScaling: F1, F2, F4, F4_1G
+	// ManualScaling or BasicScaling: B1, B2, B4, B8, B4_1GDefaults to F1
+	// for AutomaticScaling and B1 for ManualScaling or BasicScaling.
 	InstanceClass string `json:"instanceClass,omitempty"`
 
 	// Libraries: Configuration for third-party Python runtime libraries
@@ -2368,15 +2544,23 @@ type Version struct {
 	// Runtime: Desired runtime. Example: python27.
 	Runtime string `json:"runtime,omitempty"`
 
+	// RuntimeApiVersion: The version of the API in the given runtime
+	// environment. Please see the app.yaml reference for valid values at
+	// https://cloud.google.com/appengine/docs/standard/<language>/config/appref
+	RuntimeApiVersion string `json:"runtimeApiVersion,omitempty"`
+
 	// ServingStatus: Current serving status of this version. Only the
 	// versions with a SERVING status create instances and can be
 	// billed.SERVING_STATUS_UNSPECIFIED is an invalid value. Defaults to
 	// SERVING.
 	//
 	// Possible values:
-	//   "SERVING_STATUS_UNSPECIFIED"
-	//   "SERVING"
-	//   "STOPPED"
+	//   "SERVING_STATUS_UNSPECIFIED" - Not specified.
+	//   "SERVING" - Currently serving. Instances are created according to
+	// the scaling settings of the version.
+	//   "STOPPED" - Disabled. No instances will be created and the scaling
+	// settings are ignored until the state of the version changes to
+	// SERVING.
 	ServingStatus string `json:"servingStatus,omitempty"`
 
 	// Threadsafe: Whether multiple requests can be dispatched to this
@@ -2409,8 +2593,8 @@ type Version struct {
 }
 
 func (s *Version) MarshalJSON() ([]byte, error) {
-	type noMethod Version
-	raw := noMethod(*s)
+	type NoMethod Version
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2444,18 +2628,18 @@ type Volume struct {
 }
 
 func (s *Volume) MarshalJSON() ([]byte, error) {
-	type noMethod Volume
-	raw := noMethod(*s)
+	type NoMethod Volume
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *Volume) UnmarshalJSON(data []byte) error {
-	type noMethod Volume
+	type NoMethod Volume
 	var s1 struct {
 		SizeGb gensupport.JSONFloat64 `json:"sizeGb"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -2474,8 +2658,9 @@ type AppsCreateCall struct {
 }
 
 // Create: Creates an App Engine application for a Google Cloud Platform
-// project. Required fields: id - The ID of the target Cloud Platform
-// project. location - The region
+// project. Required fields:
+// id - The ID of the target Cloud Platform project.
+// location - The region
 // (https://cloud.google.com/appengine/docs/locations) where you want
 // the App Engine application located.For more information about App
 // Engine applications, see Managing Projects, Applications, and Billing
@@ -2517,7 +2702,6 @@ func (c *AppsCreateCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.application)
 	if err != nil {
@@ -2565,14 +2749,17 @@ func (c *AppsCreateCall) Do(opts ...googleapi.CallOption) (*Operation, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Creates an App Engine application for a Google Cloud Platform project. Required fields: id - The ID of the target Cloud Platform project. location - The region (https://cloud.google.com/appengine/docs/locations) where you want the App Engine application located.For more information about App Engine applications, see Managing Projects, Applications, and Billing (https://cloud.google.com/appengine/docs/python/console/).",
+	//   "description": "Creates an App Engine application for a Google Cloud Platform project. Required fields:\nid - The ID of the target Cloud Platform project.\nlocation - The region (https://cloud.google.com/appengine/docs/locations) where you want the App Engine application located.For more information about App Engine applications, see Managing Projects, Applications, and Billing (https://cloud.google.com/appengine/docs/python/console/).",
+	//   "flatPath": "v1beta4/apps",
 	//   "httpMethod": "POST",
 	//   "id": "appengine.apps.create",
+	//   "parameterOrder": [],
+	//   "parameters": {},
 	//   "path": "v1beta4/apps",
 	//   "request": {
 	//     "$ref": "Application"
@@ -2658,7 +2845,6 @@ func (c *AppsGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -2707,12 +2893,13 @@ func (c *AppsGetCall) Do(opts ...googleapi.CallOption) (*Application, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
 	//   "description": "Gets information about an application.",
+	//   "flatPath": "v1beta4/apps/{appsId}",
 	//   "httpMethod": "GET",
 	//   "id": "appengine.apps.get",
 	//   "parameterOrder": [
@@ -2754,9 +2941,11 @@ type AppsPatchCall struct {
 }
 
 // Patch: Updates the specified Application resource. You can update the
-// following fields: auth_domain
+// following fields:
+// auth_domain
 // (https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1be
-// ta4/apps#Application.FIELDS.auth_domain) default_cookie_expiration
+// ta4/apps#Application.FIELDS.auth_domain)
+// default_cookie_expiration
 // (https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1be
 // ta4/apps#Application.FIELDS.default_cookie_expiration)
 func (r *AppsService) Patch(appsId string, application *Application) *AppsPatchCall {
@@ -2804,7 +2993,6 @@ func (c *AppsPatchCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.application)
 	if err != nil {
@@ -2855,12 +3043,13 @@ func (c *AppsPatchCall) Do(opts ...googleapi.CallOption) (*Operation, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates the specified Application resource. You can update the following fields: auth_domain (https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1beta4/apps#Application.FIELDS.auth_domain) default_cookie_expiration (https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1beta4/apps#Application.FIELDS.default_cookie_expiration)",
+	//   "description": "Updates the specified Application resource. You can update the following fields:\nauth_domain (https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1beta4/apps#Application.FIELDS.auth_domain)\ndefault_cookie_expiration (https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1beta4/apps#Application.FIELDS.default_cookie_expiration)",
+	//   "flatPath": "v1beta4/apps/{appsId}",
 	//   "httpMethod": "PATCH",
 	//   "id": "appengine.apps.patch",
 	//   "parameterOrder": [
@@ -2875,6 +3064,7 @@ func (c *AppsPatchCall) Do(opts ...googleapi.CallOption) (*Operation, error) {
 	//     },
 	//     "mask": {
 	//       "description": "Standard field mask for the set of fields to be updated.",
+	//       "format": "google-fieldmask",
 	//       "location": "query",
 	//       "type": "string"
 	//     }
@@ -2905,7 +3095,7 @@ type AppsLocationsGetCall struct {
 	header_      http.Header
 }
 
-// Get: Get information about a location.
+// Get: Gets information about a location.
 func (r *AppsLocationsService) Get(appsId string, locationsId string) *AppsLocationsGetCall {
 	c := &AppsLocationsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.appsId = appsId
@@ -2954,7 +3144,6 @@ func (c *AppsLocationsGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -3004,12 +3193,13 @@ func (c *AppsLocationsGetCall) Do(opts ...googleapi.CallOption) (*Location, erro
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Get information about a location.",
+	//   "description": "Gets information about a location.",
+	//   "flatPath": "v1beta4/apps/{appsId}/locations/{locationsId}",
 	//   "httpMethod": "GET",
 	//   "id": "appengine.apps.locations.get",
 	//   "parameterOrder": [
@@ -3124,7 +3314,6 @@ func (c *AppsLocationsListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -3173,12 +3362,13 @@ func (c *AppsLocationsListCall) Do(opts ...googleapi.CallOption) (*ListLocations
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
 	//   "description": "Lists information about the supported locations for this service.",
+	//   "flatPath": "v1beta4/apps/{appsId}/locations",
 	//   "httpMethod": "GET",
 	//   "id": "appengine.apps.locations.list",
 	//   "parameterOrder": [
@@ -3292,7 +3482,6 @@ func (c *AppsModulesDeleteCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta4/apps/{appsId}/modules/{modulesId}")
@@ -3339,12 +3528,13 @@ func (c *AppsModulesDeleteCall) Do(opts ...googleapi.CallOption) (*Operation, er
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
 	//   "description": "Deletes the specified module and all enclosed versions.",
+	//   "flatPath": "v1beta4/apps/{appsId}/modules/{modulesId}",
 	//   "httpMethod": "DELETE",
 	//   "id": "appengine.apps.modules.delete",
 	//   "parameterOrder": [
@@ -3437,7 +3627,6 @@ func (c *AppsModulesGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -3487,12 +3676,13 @@ func (c *AppsModulesGetCall) Do(opts ...googleapi.CallOption) (*Module, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
 	//   "description": "Gets the current configuration of the specified module.",
+	//   "flatPath": "v1beta4/apps/{appsId}/modules/{modulesId}",
 	//   "httpMethod": "GET",
 	//   "id": "appengine.apps.modules.get",
 	//   "parameterOrder": [
@@ -3599,7 +3789,6 @@ func (c *AppsModulesListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -3648,12 +3837,13 @@ func (c *AppsModulesListCall) Do(opts ...googleapi.CallOption) (*ListModulesResp
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
 	//   "description": "Lists all the modules in the application.",
+	//   "flatPath": "v1beta4/apps/{appsId}/modules",
 	//   "httpMethod": "GET",
 	//   "id": "appengine.apps.modules.list",
 	//   "parameterOrder": [
@@ -3792,7 +3982,6 @@ func (c *AppsModulesPatchCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.module)
 	if err != nil {
@@ -3844,12 +4033,13 @@ func (c *AppsModulesPatchCall) Do(opts ...googleapi.CallOption) (*Operation, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
 	//   "description": "Updates the configuration of the specified module.",
+	//   "flatPath": "v1beta4/apps/{appsId}/modules/{modulesId}",
 	//   "httpMethod": "PATCH",
 	//   "id": "appengine.apps.modules.patch",
 	//   "parameterOrder": [
@@ -3865,6 +4055,7 @@ func (c *AppsModulesPatchCall) Do(opts ...googleapi.CallOption) (*Operation, err
 	//     },
 	//     "mask": {
 	//       "description": "Standard field mask for the set of fields to be updated.",
+	//       "format": "google-fieldmask",
 	//       "location": "query",
 	//       "type": "string"
 	//     },
@@ -3946,7 +4137,6 @@ func (c *AppsModulesVersionsCreateCall) doRequest(alt string) (*http.Response, e
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.version)
 	if err != nil {
@@ -3998,12 +4188,13 @@ func (c *AppsModulesVersionsCreateCall) Do(opts ...googleapi.CallOption) (*Opera
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
 	//   "description": "Deploys code and resource files to a new version.",
+	//   "flatPath": "v1beta4/apps/{appsId}/modules/{modulesId}/versions",
 	//   "httpMethod": "POST",
 	//   "id": "appengine.apps.modules.versions.create",
 	//   "parameterOrder": [
@@ -4090,7 +4281,6 @@ func (c *AppsModulesVersionsDeleteCall) doRequest(alt string) (*http.Response, e
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta4/apps/{appsId}/modules/{modulesId}/versions/{versionsId}")
@@ -4138,12 +4328,13 @@ func (c *AppsModulesVersionsDeleteCall) Do(opts ...googleapi.CallOption) (*Opera
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
 	//   "description": "Deletes an existing version.",
+	//   "flatPath": "v1beta4/apps/{appsId}/modules/{modulesId}/versions/{versionsId}",
 	//   "httpMethod": "DELETE",
 	//   "id": "appengine.apps.modules.versions.delete",
 	//   "parameterOrder": [
@@ -4258,7 +4449,6 @@ func (c *AppsModulesVersionsGetCall) doRequest(alt string) (*http.Response, erro
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -4309,12 +4499,13 @@ func (c *AppsModulesVersionsGetCall) Do(opts ...googleapi.CallOption) (*Version,
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
 	//   "description": "Gets the specified Version resource. By default, only a BASIC_VIEW will be returned. Specify the FULL_VIEW parameter to get the full resource.",
+	//   "flatPath": "v1beta4/apps/{appsId}/modules/{modulesId}/versions/{versionsId}",
 	//   "httpMethod": "GET",
 	//   "id": "appengine.apps.modules.versions.get",
 	//   "parameterOrder": [
@@ -4450,7 +4641,6 @@ func (c *AppsModulesVersionsListCall) doRequest(alt string) (*http.Response, err
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -4500,12 +4690,13 @@ func (c *AppsModulesVersionsListCall) Do(opts ...googleapi.CallOption) (*ListVer
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
 	//   "description": "Lists the versions of a module.",
+	//   "flatPath": "v1beta4/apps/{appsId}/modules/{modulesId}/versions",
 	//   "httpMethod": "GET",
 	//   "id": "appengine.apps.modules.versions.list",
 	//   "parameterOrder": [
@@ -4595,21 +4786,25 @@ type AppsModulesVersionsPatchCall struct {
 
 // Patch: Updates the specified Version resource. You can specify the
 // following fields depending on the App Engine environment and type of
-// scaling that the version resource uses: serving_status
+// scaling that the version resource uses:
+// serving_status
 // (https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1be
-// ta4/apps.modules.versions#Version.FIELDS.serving_status): For Version
-// resources that use basic scaling, manual scaling, or run in the App
-// Engine flexible environment. instance_class
+// ta4/apps.modules.versions#Version.FIELDS.serving_status):  For
+// Version resources that use basic scaling, manual scaling, or run in
+// the App Engine flexible environment.
+// instance_class
 // (https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1be
-// ta4/apps.modules.versions#Version.FIELDS.instance_class): For Version
-// resources that run in the App Engine standard environment.
+// ta4/apps.modules.versions#Version.FIELDS.instance_class):  For
+// Version resources that run in the App Engine standard
+// environment.
 // automatic_scaling.min_idle_instances
 // (https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1be
-// ta4/apps.modules.versions#Version.FIELDS.automatic_scaling): For
+// ta4/apps.modules.versions#Version.FIELDS.automatic_scaling):  For
 // Version resources that use automatic scaling and run in the App
-// Engine standard environment. automatic_scaling.max_idle_instances
+// Engine standard environment.
+// automatic_scaling.max_idle_instances
 // (https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1be
-// ta4/apps.modules.versions#Version.FIELDS.automatic_scaling): For
+// ta4/apps.modules.versions#Version.FIELDS.automatic_scaling):  For
 // Version resources that use automatic scaling and run in the App
 // Engine standard environment.
 func (r *AppsModulesVersionsService) Patch(appsId string, modulesId string, versionsId string, version *Version) *AppsModulesVersionsPatchCall {
@@ -4659,7 +4854,6 @@ func (c *AppsModulesVersionsPatchCall) doRequest(alt string) (*http.Response, er
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.version)
 	if err != nil {
@@ -4712,12 +4906,13 @@ func (c *AppsModulesVersionsPatchCall) Do(opts ...googleapi.CallOption) (*Operat
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates the specified Version resource. You can specify the following fields depending on the App Engine environment and type of scaling that the version resource uses: serving_status (https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1beta4/apps.modules.versions#Version.FIELDS.serving_status): For Version resources that use basic scaling, manual scaling, or run in the App Engine flexible environment. instance_class (https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1beta4/apps.modules.versions#Version.FIELDS.instance_class): For Version resources that run in the App Engine standard environment. automatic_scaling.min_idle_instances (https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1beta4/apps.modules.versions#Version.FIELDS.automatic_scaling): For Version resources that use automatic scaling and run in the App Engine standard environment. automatic_scaling.max_idle_instances (https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1beta4/apps.modules.versions#Version.FIELDS.automatic_scaling): For Version resources that use automatic scaling and run in the App Engine standard environment.",
+	//   "description": "Updates the specified Version resource. You can specify the following fields depending on the App Engine environment and type of scaling that the version resource uses:\nserving_status (https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1beta4/apps.modules.versions#Version.FIELDS.serving_status):  For Version resources that use basic scaling, manual scaling, or run in  the App Engine flexible environment.\ninstance_class (https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1beta4/apps.modules.versions#Version.FIELDS.instance_class):  For Version resources that run in the App Engine standard environment.\nautomatic_scaling.min_idle_instances (https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1beta4/apps.modules.versions#Version.FIELDS.automatic_scaling):  For Version resources that use automatic scaling and run in the App  Engine standard environment.\nautomatic_scaling.max_idle_instances (https://cloud.google.com/appengine/docs/admin-api/reference/rest/v1beta4/apps.modules.versions#Version.FIELDS.automatic_scaling):  For Version resources that use automatic scaling and run in the App  Engine standard environment.",
+	//   "flatPath": "v1beta4/apps/{appsId}/modules/{modulesId}/versions/{versionsId}",
 	//   "httpMethod": "PATCH",
 	//   "id": "appengine.apps.modules.versions.patch",
 	//   "parameterOrder": [
@@ -4734,6 +4929,7 @@ func (c *AppsModulesVersionsPatchCall) Do(opts ...googleapi.CallOption) (*Operat
 	//     },
 	//     "mask": {
 	//       "description": "Standard field mask for the set of fields to be updated.",
+	//       "format": "google-fieldmask",
 	//       "location": "query",
 	//       "type": "string"
 	//     },
@@ -4826,7 +5022,6 @@ func (c *AppsModulesVersionsInstancesDebugCall) doRequest(alt string) (*http.Res
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.debuginstancerequest)
 	if err != nil {
@@ -4880,12 +5075,13 @@ func (c *AppsModulesVersionsInstancesDebugCall) Do(opts ...googleapi.CallOption)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
 	//   "description": "Enables debugging on a VM instance. This allows you to use the SSH command to connect to the virtual machine where the instance lives. While in \"debug mode\", the instance continues to serve live traffic. You should delete the instance when you are done debugging and then allow the system to take over and determine if another instance should be started.Only applicable for instances in App Engine flexible environment.",
+	//   "flatPath": "v1beta4/apps/{appsId}/modules/{modulesId}/versions/{versionsId}/instances/{instancesId}:debug",
 	//   "httpMethod": "POST",
 	//   "id": "appengine.apps.modules.versions.instances.debug",
 	//   "parameterOrder": [
@@ -4988,7 +5184,6 @@ func (c *AppsModulesVersionsInstancesDeleteCall) doRequest(alt string) (*http.Re
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta4/apps/{appsId}/modules/{modulesId}/versions/{versionsId}/instances/{instancesId}")
@@ -5037,12 +5232,13 @@ func (c *AppsModulesVersionsInstancesDeleteCall) Do(opts ...googleapi.CallOption
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
 	//   "description": "Stops a running instance.",
+	//   "flatPath": "v1beta4/apps/{appsId}/modules/{modulesId}/versions/{versionsId}/instances/{instancesId}",
 	//   "httpMethod": "DELETE",
 	//   "id": "appengine.apps.modules.versions.instances.delete",
 	//   "parameterOrder": [
@@ -5153,7 +5349,6 @@ func (c *AppsModulesVersionsInstancesGetCall) doRequest(alt string) (*http.Respo
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -5205,12 +5400,13 @@ func (c *AppsModulesVersionsInstancesGetCall) Do(opts ...googleapi.CallOption) (
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
 	//   "description": "Gets instance information.",
+	//   "flatPath": "v1beta4/apps/{appsId}/modules/{modulesId}/versions/{versionsId}/instances/{instancesId}",
 	//   "httpMethod": "GET",
 	//   "id": "appengine.apps.modules.versions.instances.get",
 	//   "parameterOrder": [
@@ -5338,7 +5534,6 @@ func (c *AppsModulesVersionsInstancesListCall) doRequest(alt string) (*http.Resp
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -5389,12 +5584,13 @@ func (c *AppsModulesVersionsInstancesListCall) Do(opts ...googleapi.CallOption) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
 	//   "description": "Lists the instances of a version.Tip: To aggregate details about instances over time, see the Stackdriver Monitoring API (https://cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.timeSeries/list).",
+	//   "flatPath": "v1beta4/apps/{appsId}/modules/{modulesId}/versions/{versionsId}/instances",
 	//   "httpMethod": "GET",
 	//   "id": "appengine.apps.modules.versions.instances.list",
 	//   "parameterOrder": [
@@ -5530,7 +5726,6 @@ func (c *AppsOperationsGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -5580,12 +5775,13 @@ func (c *AppsOperationsGetCall) Do(opts ...googleapi.CallOption) (*Operation, er
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
 	//   "description": "Gets the latest state of a long-running operation. Clients can use this method to poll the operation result at intervals as recommended by the API service.",
+	//   "flatPath": "v1beta4/apps/{appsId}/operations/{operationsId}",
 	//   "httpMethod": "GET",
 	//   "id": "appengine.apps.operations.get",
 	//   "parameterOrder": [
@@ -5632,9 +5828,14 @@ type AppsOperationsListCall struct {
 
 // List: Lists operations that match the specified filter in the
 // request. If the server doesn't support this method, it returns
-// UNIMPLEMENTED.NOTE: the name binding below allows API services to
-// override the binding to use different resource name schemes, such as
-// users/*/operations.
+// UNIMPLEMENTED.NOTE: the name binding allows API services to override
+// the binding to use different resource name schemes, such as
+// users/*/operations. To override the binding, API services can add a
+// binding such as "/v1/{name=users/*}/operations" to their service
+// configuration. For backwards compatibility, the default name includes
+// the operations collection id, however overriding users must ensure
+// the name binding is the parent resource, without the operations
+// collection id.
 func (r *AppsOperationsService) List(appsId string) *AppsOperationsListCall {
 	c := &AppsOperationsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.appsId = appsId
@@ -5703,7 +5904,6 @@ func (c *AppsOperationsListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -5752,12 +5952,13 @@ func (c *AppsOperationsListCall) Do(opts ...googleapi.CallOption) (*ListOperatio
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Lists operations that match the specified filter in the request. If the server doesn't support this method, it returns UNIMPLEMENTED.NOTE: the name binding below allows API services to override the binding to use different resource name schemes, such as users/*/operations.",
+	//   "description": "Lists operations that match the specified filter in the request. If the server doesn't support this method, it returns UNIMPLEMENTED.NOTE: the name binding allows API services to override the binding to use different resource name schemes, such as users/*/operations. To override the binding, API services can add a binding such as \"/v1/{name=users/*}/operations\" to their service configuration. For backwards compatibility, the default name includes the operations collection id, however overriding users must ensure the name binding is the parent resource, without the operations collection id.",
+	//   "flatPath": "v1beta4/apps/{appsId}/operations",
 	//   "httpMethod": "GET",
 	//   "id": "appengine.apps.operations.list",
 	//   "parameterOrder": [
@@ -5765,7 +5966,7 @@ func (c *AppsOperationsListCall) Do(opts ...googleapi.CallOption) (*ListOperatio
 	//   ],
 	//   "parameters": {
 	//     "appsId": {
-	//       "description": "Part of `name`. The name of the operation collection.",
+	//       "description": "Part of `name`. The name of the operation's parent resource.",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"

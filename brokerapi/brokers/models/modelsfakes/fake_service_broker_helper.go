@@ -2,28 +2,30 @@
 package modelsfakes
 
 import (
-	"gcp-service-broker/brokerapi/brokers/models"
 	"sync"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/pivotal-cf/brokerapi"
 )
 
 type FakeServiceBrokerHelper struct {
-	ProvisionStub        func(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error)
+	ProvisionStub        func(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error)
 	provisionMutex       sync.RWMutex
 	provisionArgsForCall []struct {
 		instanceId string
-		details    models.ProvisionDetails
-		plan       models.PlanDetails
+		details    brokerapi.ProvisionDetails
+		plan       models.ServicePlan
 	}
 	provisionReturns struct {
 		result1 models.ServiceInstanceDetails
 		result2 error
 	}
-	BindStub        func(instanceID, bindingID string, details models.BindDetails) (models.ServiceBindingCredentials, error)
+	BindStub        func(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error)
 	bindMutex       sync.RWMutex
 	bindArgsForCall []struct {
 		instanceID string
 		bindingID  string
-		details    models.BindDetails
+		details    brokerapi.BindDetails
 	}
 	bindReturns struct {
 		result1 models.ServiceBindingCredentials
@@ -47,11 +49,11 @@ type FakeServiceBrokerHelper struct {
 	unbindReturns struct {
 		result1 error
 	}
-	DeprovisionStub        func(instanceID string, details models.DeprovisionDetails) error
+	DeprovisionStub        func(instanceID string, details brokerapi.DeprovisionDetails) error
 	deprovisionMutex       sync.RWMutex
 	deprovisionArgsForCall []struct {
 		instanceID string
-		details    models.DeprovisionDetails
+		details    brokerapi.DeprovisionDetails
 	}
 	deprovisionReturns struct {
 		result1 error
@@ -90,12 +92,12 @@ type FakeServiceBrokerHelper struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeServiceBrokerHelper) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (fake *FakeServiceBrokerHelper) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	fake.provisionMutex.Lock()
 	fake.provisionArgsForCall = append(fake.provisionArgsForCall, struct {
 		instanceId string
-		details    models.ProvisionDetails
-		plan       models.PlanDetails
+		details    brokerapi.ProvisionDetails
+		plan       models.ServicePlan
 	}{instanceId, details, plan})
 	fake.recordInvocation("Provision", []interface{}{instanceId, details, plan})
 	fake.provisionMutex.Unlock()
@@ -112,7 +114,7 @@ func (fake *FakeServiceBrokerHelper) ProvisionCallCount() int {
 	return len(fake.provisionArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) ProvisionArgsForCall(i int) (string, models.ProvisionDetails, models.PlanDetails) {
+func (fake *FakeServiceBrokerHelper) ProvisionArgsForCall(i int) (string, brokerapi.ProvisionDetails, models.ServicePlan) {
 	fake.provisionMutex.RLock()
 	defer fake.provisionMutex.RUnlock()
 	return fake.provisionArgsForCall[i].instanceId, fake.provisionArgsForCall[i].details, fake.provisionArgsForCall[i].plan
@@ -126,12 +128,12 @@ func (fake *FakeServiceBrokerHelper) ProvisionReturns(result1 models.ServiceInst
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) Bind(instanceID string, bindingID string, details models.BindDetails) (models.ServiceBindingCredentials, error) {
+func (fake *FakeServiceBrokerHelper) Bind(instanceID string, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 	fake.bindMutex.Lock()
 	fake.bindArgsForCall = append(fake.bindArgsForCall, struct {
 		instanceID string
 		bindingID  string
-		details    models.BindDetails
+		details    brokerapi.BindDetails
 	}{instanceID, bindingID, details})
 	fake.recordInvocation("Bind", []interface{}{instanceID, bindingID, details})
 	fake.bindMutex.Unlock()
@@ -148,7 +150,7 @@ func (fake *FakeServiceBrokerHelper) BindCallCount() int {
 	return len(fake.bindArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) BindArgsForCall(i int) (string, string, models.BindDetails) {
+func (fake *FakeServiceBrokerHelper) BindArgsForCall(i int) (string, string, brokerapi.BindDetails) {
 	fake.bindMutex.RLock()
 	defer fake.bindMutex.RUnlock()
 	return fake.bindArgsForCall[i].instanceID, fake.bindArgsForCall[i].bindingID, fake.bindArgsForCall[i].details
@@ -230,11 +232,11 @@ func (fake *FakeServiceBrokerHelper) UnbindReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeServiceBrokerHelper) Deprovision(instanceID string, details models.DeprovisionDetails) error {
+func (fake *FakeServiceBrokerHelper) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
 	fake.deprovisionMutex.Lock()
 	fake.deprovisionArgsForCall = append(fake.deprovisionArgsForCall, struct {
 		instanceID string
-		details    models.DeprovisionDetails
+		details    brokerapi.DeprovisionDetails
 	}{instanceID, details})
 	fake.recordInvocation("Deprovision", []interface{}{instanceID, details})
 	fake.deprovisionMutex.Unlock()
@@ -251,7 +253,7 @@ func (fake *FakeServiceBrokerHelper) DeprovisionCallCount() int {
 	return len(fake.deprovisionArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) DeprovisionArgsForCall(i int) (string, models.DeprovisionDetails) {
+func (fake *FakeServiceBrokerHelper) DeprovisionArgsForCall(i int) (string, brokerapi.DeprovisionDetails) {
 	fake.deprovisionMutex.RLock()
 	defer fake.deprovisionMutex.RUnlock()
 	return fake.deprovisionArgsForCall[i].instanceID, fake.deprovisionArgsForCall[i].details

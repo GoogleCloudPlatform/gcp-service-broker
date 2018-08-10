@@ -1,4 +1,4 @@
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2015 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,20 +19,15 @@ import (
 	"reflect"
 
 	"golang.org/x/net/context"
+	bq "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
 
-// A pageFetcher returns a page of rows, starting from the row specified by token.
-type pageFetcher interface {
-	fetch(ctx context.Context, s service, token string) (*readDataResult, error)
-	setPaging(*pagingConf)
-}
-
-func newRowIterator(ctx context.Context, s service, pf pageFetcher) *RowIterator {
+func newRowIterator(ctx context.Context, t *Table, pf pageFetcher) *RowIterator {
 	it := &RowIterator{
-		ctx:     ctx,
-		service: s,
-		pf:      pf,
+		ctx:   ctx,
+		table: t,
+		pf:    pf,
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(
 		it.fetch,
@@ -44,7 +39,7 @@ func newRowIterator(ctx context.Context, s service, pf pageFetcher) *RowIterator
 // A RowIterator provides access to the result of a BigQuery lookup.
 type RowIterator struct {
 	ctx      context.Context
-	service  service
+	table    *Table
 	pf       pageFetcher
 	pageInfo *iterator.PageInfo
 	nextFunc func() error
@@ -53,9 +48,14 @@ type RowIterator struct {
 	// is also set, StartIndex is ignored.
 	StartIndex uint64
 
-	rows [][]Value
+	// The schema of the table. Available after the first call to Next.
+	Schema Schema
 
-	schema       Schema       // populated on first call to fetch
+	// The total number of rows in the result. Available after the first call to Next.
+	// May be zero just after rows were inserted.
+	TotalRows uint64
+
+	rows         [][]Value
 	structLoader structLoader // used to populate a pointer to a struct
 }
 
@@ -70,7 +70,7 @@ type RowIterator struct {
 //
 // If dst is a *map[string]Value, a new map will be created if dst is nil. Then
 // for each schema column name, the map key of that name will be set to the column's
-// value.
+// value. STRUCT types (RECORD types or nested schemas) become nested maps.
 //
 // If dst is pointer to a struct, each column in the schema will be matched
 // with an exported field of the struct that has the same name, ignoring case.
@@ -89,9 +89,15 @@ type RowIterator struct {
 //   TIME        civil.Time
 //   DATETIME    civil.DateTime
 //
-// A repeated field corresponds to a slice or array of the element type.
-// A RECORD type (nested schema) corresponds to a nested struct or struct pointer.
+// A repeated field corresponds to a slice or array of the element type. A STRUCT
+// type (RECORD or nested schema) corresponds to a nested struct or struct pointer.
 // All calls to Next on the same iterator must use the same struct type.
+//
+// It is an error to attempt to read a BigQuery NULL value into a struct field,
+// unless the field is of type []byte or is one of the special Null types: NullInt64,
+// NullFloat64, NullBool, NullString, NullTimestamp, NullDate, NullTime or
+// NullDateTime. You can also use a *[]Value or *map[string]Value to read from a
+// table with NULLs.
 func (it *RowIterator) Next(dst interface{}) error {
 	var vl ValueLoader
 	switch dst := dst.(type) {
@@ -115,12 +121,12 @@ func (it *RowIterator) Next(dst interface{}) error {
 	if vl == nil {
 		// This can only happen if dst is a pointer to a struct. We couldn't
 		// set vl above because we need the schema.
-		if err := it.structLoader.set(dst, it.schema); err != nil {
+		if err := it.structLoader.set(dst, it.Schema); err != nil {
 			return err
 		}
 		vl = &it.structLoader
 	}
-	return vl.Load(row, it.schema)
+	return vl.Load(row, it.Schema)
 }
 
 func isStructPtr(x interface{}) bool {
@@ -132,27 +138,78 @@ func isStructPtr(x interface{}) bool {
 func (it *RowIterator) PageInfo() *iterator.PageInfo { return it.pageInfo }
 
 func (it *RowIterator) fetch(pageSize int, pageToken string) (string, error) {
-	pc := &pagingConf{}
-	if pageSize > 0 {
-		pc.recordsPerRequest = int64(pageSize)
-		pc.setRecordsPerRequest = true
-	}
-	if pageToken == "" {
-		pc.startIndex = it.StartIndex
-	}
-	it.pf.setPaging(pc)
-	var res *readDataResult
-	var err error
-	for {
-		res, err = it.pf.fetch(it.ctx, it.service, pageToken)
-		if err != errIncompleteJob {
-			break
-		}
-	}
+	res, err := it.pf(it.ctx, it.table, it.Schema, it.StartIndex, int64(pageSize), pageToken)
 	if err != nil {
 		return "", err
 	}
 	it.rows = append(it.rows, res.rows...)
-	it.schema = res.schema
+	it.Schema = res.schema
+	it.TotalRows = res.totalRows
 	return res.pageToken, nil
+}
+
+// A pageFetcher returns a page of rows from a destination table.
+type pageFetcher func(ctx context.Context, _ *Table, _ Schema, startIndex uint64, pageSize int64, pageToken string) (*fetchPageResult, error)
+
+type fetchPageResult struct {
+	pageToken string
+	rows      [][]Value
+	totalRows uint64
+	schema    Schema
+}
+
+// fetchPage gets a page of rows from t.
+func fetchPage(ctx context.Context, t *Table, schema Schema, startIndex uint64, pageSize int64, pageToken string) (*fetchPageResult, error) {
+	// Fetch the table schema in the background, if necessary.
+	errc := make(chan error, 1)
+	if schema != nil {
+		errc <- nil
+	} else {
+		go func() {
+			var bqt *bq.Table
+			err := runWithRetry(ctx, func() (err error) {
+				bqt, err = t.c.bqs.Tables.Get(t.ProjectID, t.DatasetID, t.TableID).
+					Fields("schema").
+					Context(ctx).
+					Do()
+				return err
+			})
+			if err == nil && bqt.Schema != nil {
+				schema = bqToSchema(bqt.Schema)
+			}
+			errc <- err
+		}()
+	}
+	call := t.c.bqs.Tabledata.List(t.ProjectID, t.DatasetID, t.TableID)
+	setClientHeader(call.Header())
+	if pageToken != "" {
+		call.PageToken(pageToken)
+	} else {
+		call.StartIndex(startIndex)
+	}
+	if pageSize > 0 {
+		call.MaxResults(pageSize)
+	}
+	var res *bq.TableDataList
+	err := runWithRetry(ctx, func() (err error) {
+		res, err = call.Context(ctx).Do()
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+	err = <-errc
+	if err != nil {
+		return nil, err
+	}
+	rows, err := convertRows(res.Rows, schema)
+	if err != nil {
+		return nil, err
+	}
+	return &fetchPageResult{
+		pageToken: res.PageToken,
+		rows:      rows,
+		totalRows: uint64(res.TotalRows),
+		schema:    schema,
+	}, nil
 }

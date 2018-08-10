@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Google Inc. All Rights Reserved.
+Copyright 2017 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -119,8 +119,11 @@ func isRetryable(err error) bool {
 }
 
 // errContextCanceled returns *spanner.Error for canceled context.
-func errContextCanceled(lastErr error) error {
-	return spannerErrorf(codes.Canceled, "context is canceled, lastErr is <%v>", lastErr)
+func errContextCanceled(ctx context.Context, lastErr error) error {
+	if ctx.Err() == context.DeadlineExceeded {
+		return spannerErrorf(codes.DeadlineExceeded, "%v, lastErr is <%v>", ctx.Err(), lastErr)
+	}
+	return spannerErrorf(codes.Canceled, "%v, lastErr is <%v>", ctx.Err(), lastErr)
 }
 
 // extractRetryDelay extracts retry backoff if present.
@@ -154,6 +157,11 @@ func extractRetryDelay(err error) (time.Duration, bool) {
 // TODO: consider using https://github.com/googleapis/gax-go once it
 // becomes available internally.
 func runRetryable(ctx context.Context, f func(context.Context) error) error {
+	return toSpannerError(runRetryableNoWrap(ctx, f))
+}
+
+// Like runRetryable, but doesn't wrap the returned error in a spanner.Error.
+func runRetryableNoWrap(ctx context.Context, f func(context.Context) error) error {
 	var funcErr error
 	retryCount := 0
 	for {
@@ -162,7 +170,7 @@ func runRetryable(ctx context.Context, f func(context.Context) error) error {
 			// Do context check here so that even f() failed to do
 			// so (for example, gRPC implementation bug), the loop
 			// can still have a chance to exit as expected.
-			return errContextCanceled(funcErr)
+			return errContextCanceled(ctx, funcErr)
 		default:
 		}
 		funcErr = f(ctx)
@@ -175,15 +183,16 @@ func runRetryable(ctx context.Context, f func(context.Context) error) error {
 			if !ok {
 				b = defaultBackoff.delay(retryCount)
 			}
+			tracePrintf(ctx, nil, "Backing off for %s, then retrying", b)
 			select {
 			case <-ctx.Done():
-				return errContextCanceled(funcErr)
+				return errContextCanceled(ctx, funcErr)
 			case <-time.After(b):
 			}
 			retryCount++
 			continue
 		}
 		// Error isn't retryable / no error, return immediately.
-		return toSpannerError(funcErr)
+		return funcErr
 	}
 }

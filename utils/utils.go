@@ -19,58 +19,29 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"golang.org/x/oauth2"
+	"log"
+	"strings"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"golang.org/x/oauth2/google"
-	"net/http"
-	"os"
+	"golang.org/x/oauth2/jwt"
 )
 
-func SetGCPCredsFromEnv() error {
-	rootCreds := os.Getenv(models.RootSaEnvVar)
+const (
+	EnvironmentVarPrefix = "gsb"
+)
 
-	fo, err := os.Create(models.AppCredsFileName)
-	if err != nil {
-		return fmt.Errorf("Error creating file: %s", err)
-	}
-	_, err = fo.Write([]byte(rootCreds))
-	if err != nil {
-		return fmt.Errorf("Error writing to file: %s", err)
-	}
-	if err = fo.Close(); err != nil {
-		return fmt.Errorf("Error closing file: %s", err)
-	}
+var (
+	PropertyToEnvReplacer = strings.NewReplacer(".", "_", "-", "_")
+)
 
-	cwd, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("Error getting cwd: %s", err)
-	}
-
-	os.Setenv(models.AppCredsEnvVar, cwd+"/"+models.AppCredsFileName)
-	return nil
-}
-
-func MapServiceIdToName() (map[string]string, error) {
-	idToNameMap := make(map[string]string)
-	var serviceList []models.Service
-	serviceStr := os.Getenv("SERVICES")
-	if err := json.Unmarshal([]byte(serviceStr), &serviceList); err != nil {
-		return idToNameMap, fmt.Errorf("Error unmarshalling service list %s", err)
-	}
-
-	for _, service := range serviceList {
-		idToNameMap[service.ID] = service.Name
-	}
-	return idToNameMap, nil
-}
-
-func GetAuthedClient() (*http.Client, error) {
-	rootCreds := os.Getenv(models.RootSaEnvVar)
+func GetAuthedConfig() (*jwt.Config, error) {
+	rootCreds := models.GetServiceAccountJson()
 	conf, err := google.JWTConfigFromJSON([]byte(rootCreds), models.CloudPlatformScope)
 	if err != nil {
-		return nil, fmt.Errorf("Error initializing default client from credentials: %s", err)
+		return nil, fmt.Errorf("Error initializing config from credentials: %s", err)
 	}
-	return conf.Client(oauth2.NoContext), nil
+	return conf, nil
 }
 
 func MergeStringMaps(map1 map[string]string, map2 map[string]string) map[string]string {
@@ -82,4 +53,102 @@ func MergeStringMaps(map1 map[string]string, map2 map[string]string) map[string]
 		combined[key] = val
 	}
 	return combined
+}
+
+// PrettyPrintOrExit writes a JSON serialized version of the content to stdout.
+// If a failure occurs during marshaling, the error is logged along with a
+// formatted version of the object and the program exits with a failure status.
+func PrettyPrintOrExit(content interface{}) {
+	err := prettyPrint(content)
+
+	if err != nil {
+		log.Fatalf("Could not format results: %s, results were: %+v", err, content)
+	}
+}
+
+// PrettyPrintOrErr writes a JSON serialized version of the content to stdout.
+// If a failure occurs during marshaling, the error is logged along with a
+// formatted version of the object and the function will return the error.
+func PrettyPrintOrErr(content interface{}) error {
+	err := prettyPrint(content)
+
+	if err != nil {
+		log.Printf("Could not format results: %s, results were: %+v", err, content)
+	}
+
+	return err
+}
+
+func prettyPrint(content interface{}) error {
+	prettyResults, err := json.MarshalIndent(content, "", "    ")
+	if err == nil {
+		fmt.Println(string(prettyResults))
+	}
+
+	return err
+}
+
+// PropertyToEnv converts a Viper configuration property name into an
+// environment variable prefixed with EnvironmentVarPrefix
+func PropertyToEnv(propertyName string) string {
+	return PropertyToEnvUnprefixed(EnvironmentVarPrefix + "." + propertyName)
+}
+
+// PropertyToEnvUnprefixed converts a Viper configuration property name into an
+// environment variable using PropertyToEnvReplacer
+func PropertyToEnvUnprefixed(propertyName string) string {
+	return PropertyToEnvReplacer.Replace(strings.ToUpper(propertyName))
+}
+
+// SetParameter sets a value on a JSON raw message and returns a modified
+// version with the value set
+func SetParameter(input json.RawMessage, key string, value interface{}) (json.RawMessage, error) {
+	params := make(map[string]interface{})
+
+	if input != nil && len(input) != 0 {
+		err := json.Unmarshal(input, &params)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	params[key] = value
+
+	return json.Marshal(params)
+}
+
+// UnmarshalObjectRemaidner unmarshals an object into v and returns the
+// remaining key/value pairs as a JSON string by doing a set difference.
+func UnmarshalObjectRemainder(data []byte, v interface{}) ([]byte, error) {
+	if err := json.Unmarshal(data, v); err != nil {
+		return nil, err
+	}
+
+	encoded, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonDiff(data, encoded)
+}
+
+func jsonDiff(superset, subset json.RawMessage) ([]byte, error) {
+	usedKeys := make(map[string]json.RawMessage)
+	if err := json.Unmarshal(subset, &usedKeys); err != nil {
+		return nil, err
+	}
+
+	allKeys := make(map[string]json.RawMessage)
+	if err := json.Unmarshal(superset, &allKeys); err != nil {
+		return nil, err
+	}
+
+	remainder := make(map[string]json.RawMessage)
+	for key, value := range allKeys {
+		if _, ok := usedKeys[key]; !ok {
+			remainder[key] = value
+		}
+	}
+
+	return json.Marshal(remainder)
 }

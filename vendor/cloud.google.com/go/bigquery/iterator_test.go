@@ -1,4 +1,4 @@
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2015 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,34 +17,32 @@ package bigquery
 import (
 	"errors"
 	"fmt"
-	"reflect"
 	"testing"
+
+	"cloud.google.com/go/internal/testutil"
 
 	"golang.org/x/net/context"
 	"google.golang.org/api/iterator"
 )
 
 type fetchResponse struct {
-	result *readDataResult // The result to return.
-	err    error           // The error to return.
+	result *fetchPageResult // The result to return.
+	err    error            // The error to return.
 }
 
 // pageFetcherStub services fetch requests by returning data from an in-memory list of values.
 type pageFetcherStub struct {
 	fetchResponses map[string]fetchResponse
-
-	err error
+	err            error
 }
 
-func (pf *pageFetcherStub) fetch(ctx context.Context, s service, token string) (*readDataResult, error) {
-	call, ok := pf.fetchResponses[token]
+func (pf *pageFetcherStub) fetchPage(ctx context.Context, _ *Table, _ Schema, _ uint64, _ int64, pageToken string) (*fetchPageResult, error) {
+	call, ok := pf.fetchResponses[pageToken]
 	if !ok {
-		pf.err = fmt.Errorf("Unexpected page token: %q", token)
+		pf.err = fmt.Errorf("Unexpected page token: %q", pageToken)
 	}
 	return call.result, call.err
 }
-
-func (pf *pageFetcherStub) setPaging(pc *pagingConf) {}
 
 func TestIterator(t *testing.T) {
 	var (
@@ -66,12 +64,13 @@ func TestIterator(t *testing.T) {
 		want           [][]Value
 		wantErr        error
 		wantSchema     Schema
+		wantTotalRows  uint64
 	}{
 		{
 			desc: "Iteration over single empty page",
 			fetchResponses: map[string]fetchResponse{
 				"": {
-					result: &readDataResult{
+					result: &fetchPageResult{
 						pageToken: "",
 						rows:      [][]Value{},
 						schema:    Schema{},
@@ -85,21 +84,23 @@ func TestIterator(t *testing.T) {
 			desc: "Iteration over single page",
 			fetchResponses: map[string]fetchResponse{
 				"": {
-					result: &readDataResult{
+					result: &fetchPageResult{
 						pageToken: "",
 						rows:      [][]Value{{1, 2}, {11, 12}},
 						schema:    iiSchema,
+						totalRows: 4,
 					},
 				},
 			},
-			want:       [][]Value{{1, 2}, {11, 12}},
-			wantSchema: iiSchema,
+			want:          [][]Value{{1, 2}, {11, 12}},
+			wantSchema:    iiSchema,
+			wantTotalRows: 4,
 		},
 		{
 			desc: "Iteration over single page with different schema",
 			fetchResponses: map[string]fetchResponse{
 				"": {
-					result: &readDataResult{
+					result: &fetchPageResult{
 						pageToken: "",
 						rows:      [][]Value{{"1", 2}, {"11", 12}},
 						schema:    siSchema,
@@ -113,42 +114,45 @@ func TestIterator(t *testing.T) {
 			desc: "Iteration over two pages",
 			fetchResponses: map[string]fetchResponse{
 				"": {
-					result: &readDataResult{
+					result: &fetchPageResult{
 						pageToken: "a",
 						rows:      [][]Value{{1, 2}, {11, 12}},
 						schema:    iiSchema,
+						totalRows: 4,
 					},
 				},
 				"a": {
-					result: &readDataResult{
+					result: &fetchPageResult{
 						pageToken: "",
 						rows:      [][]Value{{101, 102}, {111, 112}},
 						schema:    iiSchema,
+						totalRows: 4,
 					},
 				},
 			},
-			want:       [][]Value{{1, 2}, {11, 12}, {101, 102}, {111, 112}},
-			wantSchema: iiSchema,
+			want:          [][]Value{{1, 2}, {11, 12}, {101, 102}, {111, 112}},
+			wantSchema:    iiSchema,
+			wantTotalRows: 4,
 		},
 		{
 			desc: "Server response includes empty page",
 			fetchResponses: map[string]fetchResponse{
 				"": {
-					result: &readDataResult{
+					result: &fetchPageResult{
 						pageToken: "a",
 						rows:      [][]Value{{1, 2}, {11, 12}},
 						schema:    iiSchema,
 					},
 				},
 				"a": {
-					result: &readDataResult{
+					result: &fetchPageResult{
 						pageToken: "b",
 						rows:      [][]Value{},
 						schema:    iiSchema,
 					},
 				},
 				"b": {
-					result: &readDataResult{
+					result: &fetchPageResult{
 						pageToken: "",
 						rows:      [][]Value{{101, 102}, {111, 112}},
 						schema:    iiSchema,
@@ -162,7 +166,7 @@ func TestIterator(t *testing.T) {
 			desc: "Fetch error",
 			fetchResponses: map[string]fetchResponse{
 				"": {
-					result: &readDataResult{
+					result: &fetchPageResult{
 						pageToken: "a",
 						rows:      [][]Value{{1, 2}, {11, 12}},
 						schema:    iiSchema,
@@ -172,7 +176,7 @@ func TestIterator(t *testing.T) {
 					// We returns some data from this fetch, but also an error.
 					// So the end result should include only data from the previous fetch.
 					err: fetchFailure,
-					result: &readDataResult{
+					result: &fetchPageResult{
 						pageToken: "b",
 						rows:      [][]Value{{101, 102}, {111, 112}},
 						schema:    iiSchema,
@@ -189,14 +193,14 @@ func TestIterator(t *testing.T) {
 			pageToken: "a",
 			fetchResponses: map[string]fetchResponse{
 				"": {
-					result: &readDataResult{
+					result: &fetchPageResult{
 						pageToken: "a",
 						rows:      [][]Value{{1, 2}, {11, 12}},
 						schema:    iiSchema,
 					},
 				},
 				"a": {
-					result: &readDataResult{
+					result: &fetchPageResult{
 						pageToken: "",
 						rows:      [][]Value{{101, 102}, {111, 112}},
 						schema:    iiSchema,
@@ -212,21 +216,21 @@ func TestIterator(t *testing.T) {
 			pageToken: "b",
 			fetchResponses: map[string]fetchResponse{
 				"": {
-					result: &readDataResult{
+					result: &fetchPageResult{
 						pageToken: "a",
 						rows:      [][]Value{{1, 2}, {11, 12}},
 						schema:    iiSchema,
 					},
 				},
 				"a": {
-					result: &readDataResult{
+					result: &fetchPageResult{
 						pageToken: "b",
 						rows:      [][]Value{{101, 102}, {111, 112}},
 						schema:    iiSchema,
 					},
 				},
 				"b": {
-					result: &readDataResult{},
+					result: &fetchPageResult{},
 				},
 			},
 			// In this test case, Next will return false on its first call,
@@ -240,97 +244,43 @@ func TestIterator(t *testing.T) {
 		pf := &pageFetcherStub{
 			fetchResponses: tc.fetchResponses,
 		}
-		it := newRowIterator(context.Background(), nil, pf)
+		it := newRowIterator(context.Background(), nil, pf.fetchPage)
 		it.PageInfo().Token = tc.pageToken
-		values, schema, err := consumeRowIterator(it)
+		values, schema, totalRows, err := consumeRowIterator(it)
 		if err != tc.wantErr {
 			t.Fatalf("%s: got %v, want %v", tc.desc, err, tc.wantErr)
 		}
-		if (len(values) != 0 || len(tc.want) != 0) && !reflect.DeepEqual(values, tc.want) {
+		if (len(values) != 0 || len(tc.want) != 0) && !testutil.Equal(values, tc.want) {
 			t.Errorf("%s: values:\ngot: %v\nwant:%v", tc.desc, values, tc.want)
 		}
-		if (len(schema) != 0 || len(tc.wantSchema) != 0) && !reflect.DeepEqual(schema, tc.wantSchema) {
+		if (len(schema) != 0 || len(tc.wantSchema) != 0) && !testutil.Equal(schema, tc.wantSchema) {
 			t.Errorf("%s: iterator.Schema:\ngot: %v\nwant: %v", tc.desc, schema, tc.wantSchema)
 		}
+		if totalRows != tc.wantTotalRows {
+			t.Errorf("%s: totalRows: got %d, want %d", tc.desc, totalRows, tc.wantTotalRows)
+		}
 	}
-}
-
-type valueListWithSchema struct {
-	vals   valueList
-	schema Schema
-}
-
-func (v *valueListWithSchema) Load(vs []Value, s Schema) error {
-	v.vals.Load(vs, s)
-	v.schema = s
-	return nil
 }
 
 // consumeRowIterator reads the schema and all values from a RowIterator and returns them.
-func consumeRowIterator(it *RowIterator) ([][]Value, Schema, error) {
-	var got [][]Value
-	var schema Schema
+func consumeRowIterator(it *RowIterator) ([][]Value, Schema, uint64, error) {
+	var (
+		got       [][]Value
+		schema    Schema
+		totalRows uint64
+	)
 	for {
-		var vls valueListWithSchema
+		var vls []Value
 		err := it.Next(&vls)
 		if err == iterator.Done {
-			return got, schema, nil
+			return got, schema, totalRows, nil
 		}
 		if err != nil {
-			return got, schema, err
+			return got, schema, totalRows, err
 		}
-		got = append(got, vls.vals)
-		schema = vls.schema
-	}
-}
-
-type delayedPageFetcher struct {
-	pageFetcherStub
-	delayCount int
-}
-
-func (pf *delayedPageFetcher) fetch(ctx context.Context, s service, token string) (*readDataResult, error) {
-	if pf.delayCount > 0 {
-		pf.delayCount--
-		return nil, errIncompleteJob
-	}
-	return pf.pageFetcherStub.fetch(ctx, s, token)
-}
-
-func TestIterateIncompleteJob(t *testing.T) {
-	want := [][]Value{{1, 2}, {11, 12}, {101, 102}, {111, 112}}
-	pf := pageFetcherStub{
-		fetchResponses: map[string]fetchResponse{
-			"": {
-				result: &readDataResult{
-					pageToken: "a",
-					rows:      [][]Value{{1, 2}, {11, 12}},
-				},
-			},
-			"a": {
-				result: &readDataResult{
-					pageToken: "",
-					rows:      [][]Value{{101, 102}, {111, 112}},
-				},
-			},
-		},
-	}
-	dpf := &delayedPageFetcher{
-		pageFetcherStub: pf,
-		delayCount:      1,
-	}
-	it := newRowIterator(context.Background(), nil, dpf)
-
-	values, _, err := consumeRowIterator(it)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if (len(values) != 0 || len(want) != 0) && !reflect.DeepEqual(values, want) {
-		t.Errorf("values: got:\n%v\nwant:\n%v", values, want)
-	}
-	if dpf.delayCount != 0 {
-		t.Errorf("delayCount: got: %v, want: 0", dpf.delayCount)
+		got = append(got, vls)
+		schema = it.Schema
+		totalRows = it.TotalRows
 	}
 }
 
@@ -340,7 +290,7 @@ func TestNextDuringErrorState(t *testing.T) {
 			"": {err: errors.New("bang")},
 		},
 	}
-	it := newRowIterator(context.Background(), nil, pf)
+	it := newRowIterator(context.Background(), nil, pf.fetchPage)
 	var vals []Value
 	if err := it.Next(&vals); err == nil {
 		t.Errorf("Expected error after calling Next")
@@ -358,7 +308,7 @@ func TestNextAfterFinished(t *testing.T) {
 		{
 			fetchResponses: map[string]fetchResponse{
 				"": {
-					result: &readDataResult{
+					result: &fetchPageResult{
 						pageToken: "",
 						rows:      [][]Value{{1, 2}, {11, 12}},
 					},
@@ -369,7 +319,7 @@ func TestNextAfterFinished(t *testing.T) {
 		{
 			fetchResponses: map[string]fetchResponse{
 				"": {
-					result: &readDataResult{
+					result: &fetchPageResult{
 						pageToken: "",
 						rows:      [][]Value{},
 					},
@@ -383,13 +333,13 @@ func TestNextAfterFinished(t *testing.T) {
 		pf := &pageFetcherStub{
 			fetchResponses: tc.fetchResponses,
 		}
-		it := newRowIterator(context.Background(), nil, pf)
+		it := newRowIterator(context.Background(), nil, pf.fetchPage)
 
-		values, _, err := consumeRowIterator(it)
+		values, _, _, err := consumeRowIterator(it)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if (len(values) != 0 || len(tc.want) != 0) && !reflect.DeepEqual(values, tc.want) {
+		if (len(values) != 0 || len(tc.want) != 0) && !testutil.Equal(values, tc.want) {
 			t.Errorf("values: got:\n%v\nwant:\n%v", values, tc.want)
 		}
 		// Try calling Get again.
@@ -407,7 +357,7 @@ func TestIteratorNextTypes(t *testing.T) {
 		struct{}{},
 	} {
 		if err := it.Next(v); err == nil {
-			t.Error("%v: want error, got nil", v)
+			t.Errorf("%v: want error, got nil", v)
 		}
 	}
 }

@@ -1,4 +1,4 @@
-// Copyright 2014 Google Inc. All Rights Reserved.
+// Copyright 2014 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,10 @@ import (
 	"testing"
 	"time"
 
+	"cloud.google.com/go/internal/testutil"
+
 	"github.com/golang/protobuf/proto"
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/net/context"
 	pb "google.golang.org/genproto/googleapis/datastore/v1"
 	"google.golang.org/grpc"
@@ -149,17 +152,19 @@ type NoOmit struct {
 }
 
 type OmitAll struct {
-	A string `datastore:",omitempty"`
-	B int    `datastore:"Bb,omitempty"`
-	C bool   `datastore:",omitempty,noindex"`
-	F []int  `datastore:",omitempty"`
+	A string    `datastore:",omitempty"`
+	B int       `datastore:"Bb,omitempty"`
+	C bool      `datastore:",omitempty,noindex"`
+	D time.Time `datastore:",omitempty"`
+	F []int     `datastore:",omitempty"`
 }
 
 type Omit struct {
-	A string `datastore:",omitempty"`
-	B int    `datastore:"Bb,omitempty"`
-	C bool   `datastore:",omitempty,noindex"`
-	F []int  `datastore:",omitempty"`
+	A string    `datastore:",omitempty"`
+	B int       `datastore:"Bb,omitempty"`
+	C bool      `datastore:",omitempty,noindex"`
+	D time.Time `datastore:",omitempty"`
+	F []int     `datastore:",omitempty"`
 	S `datastore:",omitempty"`
 }
 
@@ -258,6 +263,43 @@ type Y1 struct {
 type Y2 struct {
 	B bool
 	F []int64
+}
+
+type Pointers struct {
+	Pi *int
+	Ps *string
+	Pb *bool
+	Pf *float64
+	Pg *GeoPoint
+	Pt *time.Time
+}
+
+type PointersOmitEmpty struct {
+	Pi *int       `datastore:",omitempty"`
+	Ps *string    `datastore:",omitempty"`
+	Pb *bool      `datastore:",omitempty"`
+	Pf *float64   `datastore:",omitempty"`
+	Pg *GeoPoint  `datastore:",omitempty"`
+	Pt *time.Time `datastore:",omitempty"`
+}
+
+func populatedPointers() *Pointers {
+	var (
+		i int
+		s string
+		b bool
+		f float64
+		g GeoPoint
+		t time.Time
+	)
+	return &Pointers{
+		Pi: &i,
+		Ps: &s,
+		Pb: &b,
+		Pf: &f,
+		Pg: &g,
+		Pt: &t,
+	}
 }
 
 type Tagged struct {
@@ -402,10 +444,6 @@ type PtrToStructField struct {
 }
 
 var two int = 2
-
-type PtrToInt struct {
-	I *int
-}
 
 type EmbeddedTime struct {
 	time.Time
@@ -652,7 +690,7 @@ var testCases = []testCase{
 		"omit empty does not propagate",
 		&NoOmits{
 			No: []NoOmit{
-				NoOmit{},
+				{},
 			},
 			S:  S{},
 			Ss: S{},
@@ -661,15 +699,15 @@ var testCases = []testCase{
 			Property{Name: "No", Value: []interface{}{
 				&Entity{
 					Properties: []Property{
-						Property{Name: "A", Value: "", NoIndex: false},
-						Property{Name: "Bb", Value: int64(0), NoIndex: false},
-						Property{Name: "C", Value: false, NoIndex: true},
+						{Name: "A", Value: "", NoIndex: false},
+						{Name: "Bb", Value: int64(0), NoIndex: false},
+						{Name: "C", Value: false, NoIndex: true},
 					},
 				},
 			}, NoIndex: false},
 			Property{Name: "Ss", Value: &Entity{
 				Properties: []Property{
-					Property{Name: "St", Value: "", NoIndex: false},
+					{Name: "St", Value: "", NoIndex: false},
 				},
 			}, NoIndex: false},
 			Property{Name: "St", Value: "", NoIndex: false},
@@ -1143,26 +1181,26 @@ var testCases = []testCase{
 			Property{Name: "I", Value: []interface{}{
 				&Entity{
 					Properties: []Property{
-						Property{Name: "W", Value: int64(10), NoIndex: false},
-						Property{Name: "X", Value: "ten", NoIndex: false},
+						{Name: "W", Value: int64(10), NoIndex: false},
+						{Name: "X", Value: "ten", NoIndex: false},
 					},
 				},
 				&Entity{
 					Properties: []Property{
-						Property{Name: "W", Value: int64(20), NoIndex: false},
-						Property{Name: "X", Value: "twenty", NoIndex: false},
+						{Name: "W", Value: int64(20), NoIndex: false},
+						{Name: "X", Value: "twenty", NoIndex: false},
 					},
 				},
 				&Entity{
 					Properties: []Property{
-						Property{Name: "W", Value: int64(30), NoIndex: false},
-						Property{Name: "X", Value: "thirty", NoIndex: false},
+						{Name: "W", Value: int64(30), NoIndex: false},
+						{Name: "X", Value: "thirty", NoIndex: false},
 					},
 				},
 			}, NoIndex: false},
 			Property{Name: "J", Value: &Entity{
 				Properties: []Property{
-					Property{Name: "Y", Value: float64(3.14), NoIndex: false},
+					{Name: "Y", Value: float64(3.14), NoIndex: false},
 				},
 			}, NoIndex: false},
 			Property{Name: "Z", Value: true, NoIndex: false},
@@ -1195,9 +1233,9 @@ var testCases = []testCase{
 		&PropertyList{
 			Property{Name: "A0.A1.A2", Value: &Entity{
 				Properties: []Property{
-					Property{Name: "B3", Value: &Entity{
+					{Name: "B3", Value: &Entity{
 						Properties: []Property{
-							Property{Name: "C4.C5", Value: int64(88), NoIndex: false},
+							{Name: "C4.C5", Value: int64(88), NoIndex: false},
 						},
 					}, NoIndex: false},
 				},
@@ -1211,9 +1249,9 @@ var testCases = []testCase{
 		&PropertyList{
 			Property{Name: "A0.A1.A2", Value: &Entity{
 				Properties: []Property{
-					Property{Name: "B3", Value: &Entity{
+					{Name: "B3", Value: &Entity{
 						Properties: []Property{
-							Property{Name: "C4.C5", Value: 99, NoIndex: false},
+							{Name: "C4.C5", Value: 99, NoIndex: false},
 						},
 					}, NoIndex: false},
 				},
@@ -1402,83 +1440,83 @@ var testCases = []testCase{
 		&PropertyList{
 			Property{Name: "Blue", Value: &Entity{
 				Properties: []Property{
-					Property{Name: "I", Value: int64(0), NoIndex: false},
-					Property{Name: "Nonymous", Value: []interface{}{
+					{Name: "I", Value: int64(0), NoIndex: false},
+					{Name: "Nonymous", Value: []interface{}{
 						&Entity{
 							Properties: []Property{
-								Property{Name: "I", Value: int64(0), NoIndex: false},
-								Property{Name: "S", Value: "blu0", NoIndex: false},
+								{Name: "I", Value: int64(0), NoIndex: false},
+								{Name: "S", Value: "blu0", NoIndex: false},
 							},
 						},
 						&Entity{
 							Properties: []Property{
-								Property{Name: "I", Value: int64(0), NoIndex: false},
-								Property{Name: "S", Value: "blu1", NoIndex: false},
+								{Name: "I", Value: int64(0), NoIndex: false},
+								{Name: "S", Value: "blu1", NoIndex: false},
 							},
 						},
 						&Entity{
 							Properties: []Property{
-								Property{Name: "I", Value: int64(0), NoIndex: false},
-								Property{Name: "S", Value: "blu2", NoIndex: false},
+								{Name: "I", Value: int64(0), NoIndex: false},
+								{Name: "S", Value: "blu2", NoIndex: false},
 							},
 						},
 						&Entity{
 							Properties: []Property{
-								Property{Name: "I", Value: int64(0), NoIndex: false},
-								Property{Name: "S", Value: "blu3", NoIndex: false},
+								{Name: "I", Value: int64(0), NoIndex: false},
+								{Name: "S", Value: "blu3", NoIndex: false},
 							},
 						},
 					}, NoIndex: false},
-					Property{Name: "Other", Value: "", NoIndex: false},
-					Property{Name: "S", Value: "bleu", NoIndex: false},
+					{Name: "Other", Value: "", NoIndex: false},
+					{Name: "S", Value: "bleu", NoIndex: false},
 				},
 			}, NoIndex: false},
 			Property{Name: "green", Value: &Entity{
 				Properties: []Property{
-					Property{Name: "I", Value: int64(0), NoIndex: false},
-					Property{Name: "Nonymous", Value: []interface{}{
+					{Name: "I", Value: int64(0), NoIndex: false},
+					{Name: "Nonymous", Value: []interface{}{
 						&Entity{
 							Properties: []Property{
-								Property{Name: "I", Value: int64(0), NoIndex: false},
-								Property{Name: "S", Value: "verde0", NoIndex: false},
+								{Name: "I", Value: int64(0), NoIndex: false},
+								{Name: "S", Value: "verde0", NoIndex: false},
 							},
 						},
 						&Entity{
 							Properties: []Property{
-								Property{Name: "I", Value: int64(0), NoIndex: false},
-								Property{Name: "S", Value: "verde1", NoIndex: false},
+								{Name: "I", Value: int64(0), NoIndex: false},
+								{Name: "S", Value: "verde1", NoIndex: false},
 							},
 						},
 						&Entity{
 							Properties: []Property{
-								Property{Name: "I", Value: int64(0), NoIndex: false},
-								Property{Name: "S", Value: "verde2", NoIndex: false},
+								{Name: "I", Value: int64(0), NoIndex: false},
+								{Name: "S", Value: "verde2", NoIndex: false},
 							},
 						},
 					}, NoIndex: false},
-					Property{Name: "Other", Value: "", NoIndex: false},
-					Property{Name: "S", Value: "vert", NoIndex: false},
+					{Name: "Other", Value: "", NoIndex: false},
+					{Name: "S", Value: "vert", NoIndex: false},
 				},
 			}, NoIndex: false},
 			Property{Name: "red", Value: &Entity{
 				Properties: []Property{
-					Property{Name: "I", Value: int64(0), NoIndex: false},
-					Property{Name: "Nonymous", Value: []interface{}{
+					{Name: "I", Value: int64(0), NoIndex: false},
+					{Name: "Nonymous", Value: []interface{}{
 						&Entity{
 							Properties: []Property{
-								Property{Name: "I", Value: int64(0), NoIndex: false},
-								Property{Name: "S", Value: "rosso0", NoIndex: false},
+								{Name: "I", Value: int64(0), NoIndex: false},
+								{Name: "S", Value: "rosso0", NoIndex: false},
 							},
 						},
 						&Entity{
 							Properties: []Property{
-								Property{Name: "I", Value: int64(0), NoIndex: false},
-								Property{Name: "S", Value: "rosso1", NoIndex: false},
+								{Name: "I", Value: int64(0), NoIndex: false},
+								{Name: "S", Value: "rosso1", NoIndex: false},
 							},
 						},
 					}, NoIndex: false},
-					Property{Name: "Other", Value: "", NoIndex: false},
-					Property{Name: "S", Value: "rouge", NoIndex: false},
+					{Name: "Other", Value: "", NoIndex: false},
+					{Name: "S", Value: "rouge", NoIndex: false},
 				},
 			}, NoIndex: false},
 		},
@@ -1563,10 +1601,10 @@ var testCases = []testCase{
 				A: "anon",
 			},
 			[]*Basic{
-				&Basic{
+				{
 					A: "slice0",
 				},
-				&Basic{
+				{
 					A: "slice1",
 				},
 			},
@@ -1575,24 +1613,24 @@ var testCases = []testCase{
 			Property{Name: "A", Value: "anon", NoIndex: false},
 			Property{Name: "B", Value: &Entity{
 				Properties: []Property{
-					Property{Name: "A", Value: "b", NoIndex: false},
+					{Name: "A", Value: "b", NoIndex: false},
 				},
 			}},
 			Property{Name: "D", Value: []interface{}{
 				&Entity{
 					Properties: []Property{
-						Property{Name: "A", Value: "slice0", NoIndex: false},
+						{Name: "A", Value: "slice0", NoIndex: false},
 					},
 				},
 				&Entity{
 					Properties: []Property{
-						Property{Name: "A", Value: "slice1", NoIndex: false},
+						{Name: "A", Value: "slice1", NoIndex: false},
 					},
 				},
 			}, NoIndex: false},
 			Property{Name: "c", Value: &Entity{
 				Properties: []Property{
-					Property{Name: "A", Value: "c", NoIndex: true},
+					{Name: "A", Value: "c", NoIndex: true},
 				},
 			}, NoIndex: true},
 		},
@@ -1612,10 +1650,10 @@ var testCases = []testCase{
 				A: "anon",
 			},
 			[]*Basic{
-				&Basic{
+				{
 					A: "slice0",
 				},
-				&Basic{
+				{
 					A: "slice1",
 				},
 			},
@@ -1631,24 +1669,15 @@ var testCases = []testCase{
 				A: "anon",
 			},
 			[]*Basic{
-				&Basic{
+				{
 					A: "slice0",
 				},
-				&Basic{
+				{
 					A: "slice1",
 				},
 			},
 		},
 		"",
-		"",
-	},
-	{
-		"save struct with pointer to int field",
-		&PtrToInt{
-			I: &two,
-		},
-		&PtrToInt{},
-		"unsupported struct field",
 		"",
 	},
 	{
@@ -1676,8 +1705,8 @@ var testCases = []testCase{
 			Property{Name: "N", Value: &Entity{
 				Key: testKey0,
 				Properties: []Property{
-					Property{Name: "I", Value: int64(12), NoIndex: false},
-					Property{Name: "S", Value: "abcd", NoIndex: false},
+					{Name: "I", Value: int64(12), NoIndex: false},
+					{Name: "S", Value: "abcd", NoIndex: false},
 				},
 			},
 				NoIndex: false},
@@ -1691,8 +1720,8 @@ var testCases = []testCase{
 			Property{Name: "N", Value: &Entity{
 				Key: testKey0,
 				Properties: []Property{
-					Property{Name: "I", Value: int64(12), NoIndex: false},
-					Property{Name: "S", Value: "abcd", NoIndex: false},
+					{Name: "I", Value: int64(12), NoIndex: false},
+					{Name: "S", Value: "abcd", NoIndex: false},
 				},
 			}, NoIndex: false},
 		},
@@ -1715,7 +1744,7 @@ var testCases = []testCase{
 		&PropertyList{
 			Property{Name: "red", Value: &Entity{
 				Properties: []Property{
-					Property{Name: "C", Value: "s", NoIndex: false},
+					{Name: "C", Value: "s", NoIndex: false},
 				},
 			}, NoIndex: false},
 		},
@@ -1788,14 +1817,14 @@ var testCases = []testCase{
 		&PropertyList{
 			Property{Name: "A", Value: &Entity{
 				Properties: []Property{
-					Property{Name: "X", Value: "", NoIndex: true},
-					Property{Name: "Y", Value: "", NoIndex: true},
+					{Name: "X", Value: "", NoIndex: true},
+					{Name: "Y", Value: "", NoIndex: true},
 				},
 			}, NoIndex: true},
 			Property{Name: "B", Value: &Entity{
 				Properties: []Property{
-					Property{Name: "X", Value: "", NoIndex: true},
-					Property{Name: "Y", Value: "", NoIndex: false},
+					{Name: "X", Value: "", NoIndex: true},
+					{Name: "Y", Value: "", NoIndex: false},
 				},
 			}, NoIndex: false},
 		},
@@ -1810,8 +1839,8 @@ var testCases = []testCase{
 		&PropertyList{
 			Property{Name: "foo", Value: &Entity{
 				Properties: []Property{
-					Property{Name: "W", Value: int64(0), NoIndex: false},
-					Property{Name: "X", Value: "", NoIndex: false},
+					{Name: "W", Value: int64(0), NoIndex: false},
+					{Name: "X", Value: "", NoIndex: false},
 				},
 			}, NoIndex: false},
 		},
@@ -1900,6 +1929,20 @@ var testCases = []testCase{
 		"",
 		"",
 	},
+	{
+		"pointer fields: nil",
+		&Pointers{},
+		&Pointers{},
+		"",
+		"",
+	},
+	{
+		"pointer fields: populated with zeroes",
+		populatedPointers(),
+		populatedPointers(),
+		"",
+		"",
+	},
 }
 
 // checkErr returns the empty string if either both want and err are zero,
@@ -1942,19 +1985,8 @@ func TestRoundTrip(t *testing.T) {
 			sortPL(*pl)
 		}
 
-		equal := false
-		switch v := got.(type) {
-		// Round tripping a time.Time can result in a different time.Location: Local instead of UTC.
-		// We therefore test equality explicitly, instead of relying on reflect.DeepEqual.
-		case *T:
-			equal = v.T.Equal(tc.want.(*T).T)
-		case *SpecialTime:
-			equal = v.MyTime.Equal(tc.want.(*SpecialTime).MyTime.Time)
-		default:
-			equal = reflect.DeepEqual(got, tc.want)
-		}
-		if !equal {
-			t.Errorf("%s: compare:\ngot:  %#v\nwant: %#v", tc.desc, got, tc.want)
+		if !testutil.Equal(got, tc.want, cmp.AllowUnexported(X0{}, X2{})) {
+			t.Errorf("%s: compare:\ngot:  %+#v\nwant: %+#v", tc.desc, got, tc.want)
 			continue
 		}
 	}
@@ -2014,16 +2046,21 @@ func (s *plsString) Save() ([]Property, error) {
 	return []Property{{Name: "SS", Value: "SAVED"}}, nil
 }
 
+func ptrToplsString(s string) *plsString {
+	plsStr := plsString(s)
+	return &plsStr
+}
+
 type aSubPLS struct {
 	Foo string
 	Bar *aPtrPLS
 	Baz aValuePtrPLS
+	S   plsString
 }
 
 type aSubNotPLS struct {
 	Foo string
 	Bar *aNotPLS
-	S   plsString `datastore:",omitempty"`
 }
 
 type aSubPLSErr struct {
@@ -2031,91 +2068,203 @@ type aSubPLSErr struct {
 	Bar aValuePLS
 }
 
-func TestLoadSaveNestedStructPLS(t *testing.T) {
+type aSubPLSNoErr struct {
+	Foo string
+	Bar aPtrPLS
+}
+
+type GrandparentFlatten struct {
+	Parent Parent `datastore:",flatten"`
+}
+
+type GrandparentOfPtrFlatten struct {
+	Parent ParentOfPtr `datastore:",flatten"`
+}
+
+type GrandparentOfSlice struct {
+	Parent ParentOfSlice
+}
+
+type GrandparentOfSlicePtrs struct {
+	Parent ParentOfSlicePtrs
+}
+
+type GrandparentOfSliceFlatten struct {
+	Parent ParentOfSlice `datastore:",flatten"`
+}
+
+type GrandparentOfSlicePtrsFlatten struct {
+	Parent ParentOfSlicePtrs `datastore:",flatten"`
+}
+
+type Grandparent struct {
+	Parent Parent
+}
+
+type Parent struct {
+	Child  Child
+	String plsString
+}
+
+type ParentOfPtr struct {
+	Child  *Child
+	String *plsString
+}
+
+type ParentOfSlice struct {
+	Children []Child
+	Strings  []plsString
+}
+
+type ParentOfSlicePtrs struct {
+	Children []*Child
+	Strings  []*plsString
+}
+
+type Child struct {
+	I          int
+	Grandchild Grandchild
+}
+
+type Grandchild struct {
+	S string
+}
+
+func (c *Child) Load(props []Property) error {
+	for _, p := range props {
+		if p.Name == "I" {
+			c.I += 1
+		} else if p.Name == "Grandchild.S" {
+			c.Grandchild.S = "grandchild loaded"
+		}
+	}
+
+	return nil
+}
+
+func (c *Child) Save() ([]Property, error) {
+	v := c.I + 1
+	return []Property{
+		{Name: "I", Value: v},
+		{Name: "Grandchild.S", Value: fmt.Sprintf("grandchild saved %d", v)},
+	}, nil
+}
+
+func TestLoadSavePLS(t *testing.T) {
 	type testCase struct {
 		desc     string
 		src      interface{}
 		wantSave *pb.Entity
 		wantLoad interface{}
+		saveErr  string
 		loadErr  string
 	}
 
 	testCases := []testCase{
 		{
-			desc: "substructs do implement PLS",
-			src:  &aSubPLS{Foo: "foo", Bar: &aPtrPLS{Count: 2}, Baz: aValuePtrPLS{Count: 15}},
+			desc: "non-struct implements PLS (top-level)",
+			src:  ptrToplsString("hello"),
 			wantSave: &pb.Entity{
 				Key: keyToProto(testKey0),
 				Properties: map[string]*pb.Value{
-					"Foo": {ValueType: &pb.Value_StringValue{"foo"}},
+					"SS": {ValueType: &pb.Value_StringValue{StringValue: "SAVED"}},
+				},
+			},
+			wantLoad: ptrToplsString("LOADED"),
+		},
+		{
+			desc: "substructs do implement PLS",
+			src:  &aSubPLS{Foo: "foo", Bar: &aPtrPLS{Count: 2}, Baz: aValuePtrPLS{Count: 15}, S: "something"},
+			wantSave: &pb.Entity{
+				Key: keyToProto(testKey0),
+				Properties: map[string]*pb.Value{
+					"Foo": {ValueType: &pb.Value_StringValue{StringValue: "foo"}},
 					"Bar": {ValueType: &pb.Value_EntityValue{
-						&pb.Entity{
+						EntityValue: &pb.Entity{
 							Properties: map[string]*pb.Value{
-								"Count": {ValueType: &pb.Value_IntegerValue{4}},
+								"Count": {ValueType: &pb.Value_IntegerValue{IntegerValue: 4}},
 							},
 						},
 					}},
 					"Baz": {ValueType: &pb.Value_EntityValue{
-						&pb.Entity{
+						EntityValue: &pb.Entity{
 							Properties: map[string]*pb.Value{
-								"Count": {ValueType: &pb.Value_IntegerValue{12}},
+								"Count": {ValueType: &pb.Value_IntegerValue{IntegerValue: 12}},
+							},
+						},
+					}},
+					"S": {ValueType: &pb.Value_EntityValue{
+						EntityValue: &pb.Entity{
+							Properties: map[string]*pb.Value{
+								"SS": {ValueType: &pb.Value_StringValue{StringValue: "SAVED"}},
 							},
 						},
 					}},
 				},
 			},
-			// PLS impl for 'S' not used, not entity.
-			wantLoad: &aSubPLS{Foo: "foo", Bar: &aPtrPLS{Count: 1}, Baz: aValuePtrPLS{Count: 11}},
+			wantLoad: &aSubPLS{Foo: "foo", Bar: &aPtrPLS{Count: 1}, Baz: aValuePtrPLS{Count: 11}, S: "LOADED"},
 		},
 		{
 			desc: "substruct (ptr) does implement PLS, nil valued substruct",
-			src:  &aSubPLS{Foo: "foo"},
+			src:  &aSubPLS{Foo: "foo", S: "something"},
 			wantSave: &pb.Entity{
 				Key: keyToProto(testKey0),
 				Properties: map[string]*pb.Value{
-					"Foo": {ValueType: &pb.Value_StringValue{"foo"}},
+					"Foo": {ValueType: &pb.Value_StringValue{StringValue: "foo"}},
 					"Baz": {ValueType: &pb.Value_EntityValue{
-						&pb.Entity{
+						EntityValue: &pb.Entity{
 							Properties: map[string]*pb.Value{
-								"Count": {ValueType: &pb.Value_IntegerValue{12}},
+								"Count": {ValueType: &pb.Value_IntegerValue{IntegerValue: 12}},
+							},
+						},
+					}},
+					"S": {ValueType: &pb.Value_EntityValue{
+						EntityValue: &pb.Entity{
+							Properties: map[string]*pb.Value{
+								"SS": {ValueType: &pb.Value_StringValue{StringValue: "SAVED"}},
 							},
 						},
 					}},
 				},
 			},
-			wantLoad: &aSubPLS{Foo: "foo", Baz: aValuePtrPLS{Count: 11}},
+			wantLoad: &aSubPLS{Foo: "foo", Baz: aValuePtrPLS{Count: 11}, S: "LOADED"},
 		},
 		{
 			desc: "substruct (ptr) does not implement PLS",
-			src:  &aSubNotPLS{Foo: "foo", Bar: &aNotPLS{Count: 2}, S: "something"},
+			src:  &aSubNotPLS{Foo: "foo", Bar: &aNotPLS{Count: 2}},
 			wantSave: &pb.Entity{
 				Key: keyToProto(testKey0),
 				Properties: map[string]*pb.Value{
-					"Foo": {ValueType: &pb.Value_StringValue{"foo"}},
+					"Foo": {ValueType: &pb.Value_StringValue{StringValue: "foo"}},
 					"Bar": {ValueType: &pb.Value_EntityValue{
-						&pb.Entity{
+						EntityValue: &pb.Entity{
 							Properties: map[string]*pb.Value{
-								"Count": {ValueType: &pb.Value_IntegerValue{2}},
+								"Count": {ValueType: &pb.Value_IntegerValue{IntegerValue: 2}},
 							},
 						},
 					}},
-					// PLS impl for 'S' not used, not entity.
-					"S": {ValueType: &pb.Value_StringValue{"something"}},
 				},
 			},
-			wantLoad: &aSubNotPLS{Foo: "foo", Bar: &aNotPLS{Count: 2}, S: "something"},
+			wantLoad: &aSubNotPLS{Foo: "foo", Bar: &aNotPLS{Count: 2}},
 		},
 		{
-			desc: "substruct (value) does implement PLS, error",
-			src:  &aSubPLSErr{Foo: "foo", Bar: aValuePLS{Count: 3}},
+			desc:     "substruct (value) does implement PLS, error on save",
+			src:      &aSubPLSErr{Foo: "foo", Bar: aValuePLS{Count: 2}},
+			wantSave: (*pb.Entity)(nil),
+			wantLoad: &aSubPLSErr{},
+			saveErr:  "PropertyLoadSaver methods must be implemented on a pointer",
+		},
+		{
+			desc: "substruct (value) does implement PLS, error on load",
+			src:  &aSubPLSNoErr{Foo: "foo", Bar: aPtrPLS{Count: 2}},
 			wantSave: &pb.Entity{
 				Key: keyToProto(testKey0),
 				Properties: map[string]*pb.Value{
-					"Foo": {ValueType: &pb.Value_StringValue{"foo"}},
+					"Foo": {ValueType: &pb.Value_StringValue{StringValue: "foo"}},
 					"Bar": {ValueType: &pb.Value_EntityValue{
-						&pb.Entity{
+						EntityValue: &pb.Entity{
 							Properties: map[string]*pb.Value{
-								"Count": {ValueType: &pb.Value_IntegerValue{8}},
+								"Count": {ValueType: &pb.Value_IntegerValue{IntegerValue: 4}},
 							},
 						},
 					}},
@@ -2124,29 +2273,499 @@ func TestLoadSaveNestedStructPLS(t *testing.T) {
 			wantLoad: &aSubPLSErr{},
 			loadErr:  "PropertyLoadSaver methods must be implemented on a pointer",
 		},
+
+		{
+			desc: "parent does not have flatten option, child impl PLS",
+			src: &Grandparent{
+				Parent: Parent{
+					Child: Child{
+						I: 9,
+						Grandchild: Grandchild{
+							S: "BAD",
+						},
+					},
+					String: plsString("something"),
+				},
+			},
+			wantSave: &pb.Entity{
+				Key: keyToProto(testKey0),
+				Properties: map[string]*pb.Value{
+					"Parent": {ValueType: &pb.Value_EntityValue{
+						EntityValue: &pb.Entity{
+							Properties: map[string]*pb.Value{
+								"Child": {ValueType: &pb.Value_EntityValue{
+									EntityValue: &pb.Entity{
+										Properties: map[string]*pb.Value{
+											"I":            {ValueType: &pb.Value_IntegerValue{IntegerValue: 10}},
+											"Grandchild.S": {ValueType: &pb.Value_StringValue{StringValue: "grandchild saved 10"}},
+										},
+									},
+								}},
+								"String": {ValueType: &pb.Value_EntityValue{
+									EntityValue: &pb.Entity{
+										Properties: map[string]*pb.Value{
+											"SS": {ValueType: &pb.Value_StringValue{StringValue: "SAVED"}},
+										},
+									},
+								}},
+							},
+						},
+					}},
+				},
+			},
+			wantLoad: &Grandparent{
+				Parent: Parent{
+					Child: Child{
+						I: 1,
+						Grandchild: Grandchild{
+							S: "grandchild loaded",
+						},
+					},
+					String: "LOADED",
+				},
+			},
+		},
+		{
+			desc: "parent has flatten option enabled, child impl PLS",
+			src: &GrandparentFlatten{
+				Parent: Parent{
+					Child: Child{
+						I: 7,
+						Grandchild: Grandchild{
+							S: "BAD",
+						},
+					},
+					String: plsString("something"),
+				},
+			},
+			wantSave: &pb.Entity{
+				Key: keyToProto(testKey0),
+				Properties: map[string]*pb.Value{
+					"Parent.Child.I":            {ValueType: &pb.Value_IntegerValue{IntegerValue: 8}},
+					"Parent.Child.Grandchild.S": {ValueType: &pb.Value_StringValue{StringValue: "grandchild saved 8"}},
+					"Parent.String.SS":          {ValueType: &pb.Value_StringValue{StringValue: "SAVED"}},
+				},
+			},
+			wantLoad: &GrandparentFlatten{
+				Parent: Parent{
+					Child: Child{
+						I: 1,
+						Grandchild: Grandchild{
+							S: "grandchild loaded",
+						},
+					},
+					String: "LOADED",
+				},
+			},
+		},
+
+		{
+			desc: "parent has flatten option enabled, child (ptr to) impl PLS",
+			src: &GrandparentOfPtrFlatten{
+				Parent: ParentOfPtr{
+					Child: &Child{
+						I: 7,
+						Grandchild: Grandchild{
+							S: "BAD",
+						},
+					},
+					String: ptrToplsString("something"),
+				},
+			},
+			wantSave: &pb.Entity{
+				Key: keyToProto(testKey0),
+				Properties: map[string]*pb.Value{
+					"Parent.Child.I":            {ValueType: &pb.Value_IntegerValue{IntegerValue: 8}},
+					"Parent.Child.Grandchild.S": {ValueType: &pb.Value_StringValue{StringValue: "grandchild saved 8"}},
+					"Parent.String.SS":          {ValueType: &pb.Value_StringValue{StringValue: "SAVED"}},
+				},
+			},
+			wantLoad: &GrandparentOfPtrFlatten{
+				Parent: ParentOfPtr{
+					Child: &Child{
+						I: 1,
+						Grandchild: Grandchild{
+							S: "grandchild loaded",
+						},
+					},
+					String: ptrToplsString("LOADED"),
+				},
+			},
+		},
+		{
+			desc: "children (slice of) impl PLS",
+			src: &GrandparentOfSlice{
+				Parent: ParentOfSlice{
+					Children: []Child{
+						{
+							I: 7,
+							Grandchild: Grandchild{
+								S: "BAD",
+							},
+						},
+						{
+							I: 9,
+							Grandchild: Grandchild{
+								S: "BAD2",
+							},
+						},
+					},
+					Strings: []plsString{
+						"something1",
+						"something2",
+					},
+				},
+			},
+			wantSave: &pb.Entity{
+				Key: keyToProto(testKey0),
+				Properties: map[string]*pb.Value{
+					"Parent": {ValueType: &pb.Value_EntityValue{
+						EntityValue: &pb.Entity{
+							Properties: map[string]*pb.Value{
+								"Children": {ValueType: &pb.Value_ArrayValue{
+									ArrayValue: &pb.ArrayValue{Values: []*pb.Value{
+										{ValueType: &pb.Value_EntityValue{
+											EntityValue: &pb.Entity{
+												Properties: map[string]*pb.Value{
+													"I":            {ValueType: &pb.Value_IntegerValue{IntegerValue: 8}},
+													"Grandchild.S": {ValueType: &pb.Value_StringValue{StringValue: "grandchild saved 8"}},
+												},
+											},
+										}},
+										{ValueType: &pb.Value_EntityValue{
+											EntityValue: &pb.Entity{
+												Properties: map[string]*pb.Value{
+													"I":            {ValueType: &pb.Value_IntegerValue{IntegerValue: 10}},
+													"Grandchild.S": {ValueType: &pb.Value_StringValue{StringValue: "grandchild saved 10"}},
+												},
+											},
+										}},
+									}},
+								}},
+								"Strings": {ValueType: &pb.Value_ArrayValue{
+									ArrayValue: &pb.ArrayValue{Values: []*pb.Value{
+										{ValueType: &pb.Value_EntityValue{
+											EntityValue: &pb.Entity{
+												Properties: map[string]*pb.Value{
+													"SS": {ValueType: &pb.Value_StringValue{StringValue: "SAVED"}},
+												},
+											},
+										}},
+										{ValueType: &pb.Value_EntityValue{
+											EntityValue: &pb.Entity{
+												Properties: map[string]*pb.Value{
+													"SS": {ValueType: &pb.Value_StringValue{StringValue: "SAVED"}},
+												},
+											},
+										}},
+									}},
+								}},
+							},
+						},
+					}},
+				},
+			},
+			wantLoad: &GrandparentOfSlice{
+				Parent: ParentOfSlice{
+					Children: []Child{
+						{
+							I: 1,
+							Grandchild: Grandchild{
+								S: "grandchild loaded",
+							},
+						},
+						{
+							I: 1,
+							Grandchild: Grandchild{
+								S: "grandchild loaded",
+							},
+						},
+					},
+					Strings: []plsString{
+						"LOADED",
+						"LOADED",
+					},
+				},
+			},
+		},
+		{
+			desc: "children (slice of ptrs) impl PLS",
+			src: &GrandparentOfSlicePtrs{
+				Parent: ParentOfSlicePtrs{
+					Children: []*Child{
+						{
+							I: 7,
+							Grandchild: Grandchild{
+								S: "BAD",
+							},
+						},
+						{
+							I: 9,
+							Grandchild: Grandchild{
+								S: "BAD2",
+							},
+						},
+					},
+					Strings: []*plsString{
+						ptrToplsString("something1"),
+						ptrToplsString("something2"),
+					},
+				},
+			},
+			wantSave: &pb.Entity{
+				Key: keyToProto(testKey0),
+				Properties: map[string]*pb.Value{
+					"Parent": {ValueType: &pb.Value_EntityValue{
+						EntityValue: &pb.Entity{
+							Properties: map[string]*pb.Value{
+								"Children": {ValueType: &pb.Value_ArrayValue{
+									ArrayValue: &pb.ArrayValue{Values: []*pb.Value{
+										{ValueType: &pb.Value_EntityValue{
+											EntityValue: &pb.Entity{
+												Properties: map[string]*pb.Value{
+													"I":            {ValueType: &pb.Value_IntegerValue{IntegerValue: 8}},
+													"Grandchild.S": {ValueType: &pb.Value_StringValue{StringValue: "grandchild saved 8"}},
+												},
+											},
+										}},
+										{ValueType: &pb.Value_EntityValue{
+											EntityValue: &pb.Entity{
+												Properties: map[string]*pb.Value{
+													"I":            {ValueType: &pb.Value_IntegerValue{IntegerValue: 10}},
+													"Grandchild.S": {ValueType: &pb.Value_StringValue{StringValue: "grandchild saved 10"}},
+												},
+											},
+										}},
+									}},
+								}},
+								"Strings": {ValueType: &pb.Value_ArrayValue{
+									ArrayValue: &pb.ArrayValue{Values: []*pb.Value{
+										{ValueType: &pb.Value_EntityValue{
+											EntityValue: &pb.Entity{
+												Properties: map[string]*pb.Value{
+													"SS": {ValueType: &pb.Value_StringValue{StringValue: "SAVED"}},
+												},
+											},
+										}},
+										{ValueType: &pb.Value_EntityValue{
+											EntityValue: &pb.Entity{
+												Properties: map[string]*pb.Value{
+													"SS": {ValueType: &pb.Value_StringValue{StringValue: "SAVED"}},
+												},
+											},
+										}},
+									}},
+								}},
+							},
+						},
+					}},
+				},
+			},
+			wantLoad: &GrandparentOfSlicePtrs{
+				Parent: ParentOfSlicePtrs{
+					Children: []*Child{
+						{
+							I: 1,
+							Grandchild: Grandchild{
+								S: "grandchild loaded",
+							},
+						},
+						{
+							I: 1,
+							Grandchild: Grandchild{
+								S: "grandchild loaded",
+							},
+						},
+					},
+					Strings: []*plsString{
+						ptrToplsString("LOADED"),
+						ptrToplsString("LOADED"),
+					},
+				},
+			},
+		},
+		{
+			desc: "parent has flatten option, children (slice of) impl PLS",
+			src: &GrandparentOfSliceFlatten{
+				Parent: ParentOfSlice{
+					Children: []Child{
+						{
+							I: 7,
+							Grandchild: Grandchild{
+								S: "BAD",
+							},
+						},
+						{
+							I: 9,
+							Grandchild: Grandchild{
+								S: "BAD2",
+							},
+						},
+					},
+					Strings: []plsString{
+						"something1",
+						"something2",
+					},
+				},
+			},
+			wantSave: &pb.Entity{
+				Key: keyToProto(testKey0),
+				Properties: map[string]*pb.Value{
+					"Parent.Children.I": {ValueType: &pb.Value_ArrayValue{ArrayValue: &pb.ArrayValue{
+						Values: []*pb.Value{
+							{ValueType: &pb.Value_IntegerValue{IntegerValue: 8}},
+							{ValueType: &pb.Value_IntegerValue{IntegerValue: 10}},
+						},
+					},
+					}},
+					"Parent.Children.Grandchild.S": {ValueType: &pb.Value_ArrayValue{ArrayValue: &pb.ArrayValue{
+						Values: []*pb.Value{
+							{ValueType: &pb.Value_StringValue{StringValue: "grandchild saved 8"}},
+							{ValueType: &pb.Value_StringValue{StringValue: "grandchild saved 10"}},
+						},
+					},
+					}},
+					"Parent.Strings.SS": {ValueType: &pb.Value_ArrayValue{ArrayValue: &pb.ArrayValue{
+						Values: []*pb.Value{
+							{ValueType: &pb.Value_StringValue{StringValue: "SAVED"}},
+							{ValueType: &pb.Value_StringValue{StringValue: "SAVED"}},
+						},
+					},
+					}},
+				},
+			},
+			wantLoad: &GrandparentOfSliceFlatten{
+				Parent: ParentOfSlice{
+					Children: []Child{
+						{
+							I: 1,
+							Grandchild: Grandchild{
+								S: "grandchild loaded",
+							},
+						},
+						{
+							I: 1,
+							Grandchild: Grandchild{
+								S: "grandchild loaded",
+							},
+						},
+					},
+					Strings: []plsString{
+						"LOADED",
+						"LOADED",
+					},
+				},
+			},
+		},
+		{
+			desc: "parent has flatten option, children (slice of ptrs) impl PLS",
+			src: &GrandparentOfSlicePtrsFlatten{
+				Parent: ParentOfSlicePtrs{
+					Children: []*Child{
+						{
+							I: 7,
+							Grandchild: Grandchild{
+								S: "BAD",
+							},
+						},
+						{
+							I: 9,
+							Grandchild: Grandchild{
+								S: "BAD2",
+							},
+						},
+					},
+					Strings: []*plsString{
+						ptrToplsString("something1"),
+						ptrToplsString("something1"),
+					},
+				},
+			},
+			wantSave: &pb.Entity{
+				Key: keyToProto(testKey0),
+				Properties: map[string]*pb.Value{
+					"Parent.Children.I": {ValueType: &pb.Value_ArrayValue{ArrayValue: &pb.ArrayValue{
+						Values: []*pb.Value{
+							{ValueType: &pb.Value_IntegerValue{IntegerValue: 8}},
+							{ValueType: &pb.Value_IntegerValue{IntegerValue: 10}},
+						},
+					},
+					}},
+					"Parent.Children.Grandchild.S": {ValueType: &pb.Value_ArrayValue{ArrayValue: &pb.ArrayValue{
+						Values: []*pb.Value{
+							{ValueType: &pb.Value_StringValue{StringValue: "grandchild saved 8"}},
+							{ValueType: &pb.Value_StringValue{StringValue: "grandchild saved 10"}},
+						},
+					},
+					}},
+					"Parent.Strings.SS": {ValueType: &pb.Value_ArrayValue{ArrayValue: &pb.ArrayValue{
+						Values: []*pb.Value{
+							{ValueType: &pb.Value_StringValue{StringValue: "SAVED"}},
+							{ValueType: &pb.Value_StringValue{StringValue: "SAVED"}},
+						},
+					},
+					}},
+				},
+			},
+			wantLoad: &GrandparentOfSlicePtrsFlatten{
+				Parent: ParentOfSlicePtrs{
+					Children: []*Child{
+						{
+							I: 1,
+							Grandchild: Grandchild{
+								S: "grandchild loaded",
+							},
+						},
+						{
+							I: 1,
+							Grandchild: Grandchild{
+								S: "grandchild loaded",
+							},
+						},
+					},
+					Strings: []*plsString{
+						ptrToplsString("LOADED"),
+						ptrToplsString("LOADED"),
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
 		e, err := saveEntity(testKey0, tc.src)
-		if err != nil {
-			t.Errorf("%s: save: %v", tc.desc, err)
-			continue
-		}
-
-		if !reflect.DeepEqual(e, tc.wantSave) {
-			t.Errorf("%s: save: \ngot:  %#v\nwant: %#v", tc.desc, e, tc.wantSave)
+		if tc.saveErr == "" { // Want no error.
+			if err != nil {
+				t.Errorf("%s: save: %v", tc.desc, err)
+				continue
+			}
+			if !testutil.Equal(e, tc.wantSave) {
+				t.Errorf("%s: save: \ngot:  %+v\nwant: %+v", tc.desc, e, tc.wantSave)
+				continue
+			}
+		} else { // Want error.
+			if err == nil {
+				t.Errorf("%s: save: want err", tc.desc)
+				continue
+			}
+			if !strings.Contains(err.Error(), tc.saveErr) {
+				t.Errorf("%s: save: \ngot err  '%s'\nwant err '%s'", tc.desc, err.Error(), tc.saveErr)
+			}
 			continue
 		}
 
 		gota := reflect.New(reflect.TypeOf(tc.wantLoad).Elem()).Interface()
 		err = loadEntityProto(gota, e)
-		switch tc.loadErr {
-		case "":
+		if tc.loadErr == "" { // Want no error.
 			if err != nil {
 				t.Errorf("%s: load: %v", tc.desc, err)
 				continue
 			}
-		default:
+			if !testutil.Equal(gota, tc.wantLoad) {
+				t.Errorf("%s: load: \ngot:  %+v\nwant: %+v", tc.desc, gota, tc.wantLoad)
+				continue
+			}
+		} else { // Want error.
 			if err == nil {
 				t.Errorf("%s: load: want err", tc.desc)
 				continue
@@ -2154,15 +2773,8 @@ func TestLoadSaveNestedStructPLS(t *testing.T) {
 			if !strings.Contains(err.Error(), tc.loadErr) {
 				t.Errorf("%s: load: \ngot err  '%s'\nwant err '%s'", tc.desc, err.Error(), tc.loadErr)
 			}
-			continue
-		}
-
-		if !reflect.DeepEqual(tc.wantLoad, gota) {
-			t.Errorf("%s: load:	\ngot:  %#v\nwant: %#v", tc.desc, gota, tc.wantLoad)
-			continue
 		}
 	}
-
 }
 
 func TestQueryConstruction(t *testing.T) {
@@ -2284,7 +2896,7 @@ func TestQueryConstruction(t *testing.T) {
 			}
 			continue
 		}
-		if !reflect.DeepEqual(test.q, test.exp) {
+		if !testutil.Equal(test.q, test.exp, cmp.AllowUnexported(Query{})) {
 			t.Errorf("%d: mismatch: got %v want %v", i, test.q, test.exp)
 		}
 	}
@@ -2377,20 +2989,22 @@ func TestPutMultiTypes(t *testing.T) {
 		NameKey("testKind", "second", nil),
 	}
 	want := []*pb.Mutation{
-		{Operation: &pb.Mutation_Upsert{&pb.Entity{
-			Key: keyToProto(keys[0]),
-			Properties: map[string]*pb.Value{
-				"A": {ValueType: &pb.Value_IntegerValue{1}},
-				"B": {ValueType: &pb.Value_StringValue{"one"}},
-			},
-		}}},
-		{Operation: &pb.Mutation_Upsert{&pb.Entity{
-			Key: keyToProto(keys[1]),
-			Properties: map[string]*pb.Value{
-				"A": {ValueType: &pb.Value_IntegerValue{2}},
-				"B": {ValueType: &pb.Value_StringValue{"two"}},
-			},
-		}}},
+		{Operation: &pb.Mutation_Upsert{
+			Upsert: &pb.Entity{
+				Key: keyToProto(keys[0]),
+				Properties: map[string]*pb.Value{
+					"A": {ValueType: &pb.Value_IntegerValue{IntegerValue: 1}},
+					"B": {ValueType: &pb.Value_StringValue{StringValue: "one"}},
+				},
+			}}},
+		{Operation: &pb.Mutation_Upsert{
+			Upsert: &pb.Entity{
+				Key: keyToProto(keys[1]),
+				Properties: map[string]*pb.Value{
+					"A": {ValueType: &pb.Value_IntegerValue{IntegerValue: 2}},
+					"B": {ValueType: &pb.Value_StringValue{StringValue: "two"}},
+				},
+			}}},
 	}
 
 	for _, tt := range testCases {
@@ -2451,11 +3065,11 @@ func TestNoIndexOnSliceProperties(t *testing.T) {
 	}
 
 	want := &pb.Value{
-		ValueType: &pb.Value_ArrayValue{&pb.ArrayValue{[]*pb.Value{
-			{ValueType: &pb.Value_IntegerValue{123}, ExcludeFromIndexes: true},
-			{ValueType: &pb.Value_BooleanValue{false}, ExcludeFromIndexes: true},
-			{ValueType: &pb.Value_StringValue{"short"}, ExcludeFromIndexes: true},
-			{ValueType: &pb.Value_StringValue{strings.Repeat("a", 1503)}, ExcludeFromIndexes: true},
+		ValueType: &pb.Value_ArrayValue{ArrayValue: &pb.ArrayValue{Values: []*pb.Value{
+			{ValueType: &pb.Value_IntegerValue{IntegerValue: 123}, ExcludeFromIndexes: true},
+			{ValueType: &pb.Value_BooleanValue{BooleanValue: false}, ExcludeFromIndexes: true},
+			{ValueType: &pb.Value_StringValue{StringValue: "short"}, ExcludeFromIndexes: true},
+			{ValueType: &pb.Value_StringValue{StringValue: strings.Repeat("a", 1503)}, ExcludeFromIndexes: true},
 		}}},
 	}
 	if got := entity.Properties["repeated"]; !proto.Equal(got, want) {
@@ -2590,15 +3204,15 @@ func TestDeferred(t *testing.T) {
 	entity1 := &pb.Entity{
 		Key: keyToProto(keys[0]),
 		Properties: map[string]*pb.Value{
-			"A": {ValueType: &pb.Value_IntegerValue{1}},
-			"B": {ValueType: &pb.Value_StringValue{"one"}},
+			"A": {ValueType: &pb.Value_IntegerValue{IntegerValue: 1}},
+			"B": {ValueType: &pb.Value_StringValue{StringValue: "one"}},
 		},
 	}
 	entity2 := &pb.Entity{
 		Key: keyToProto(keys[1]),
 		Properties: map[string]*pb.Value{
-			"A": {ValueType: &pb.Value_IntegerValue{2}},
-			"B": {ValueType: &pb.Value_StringValue{"two"}},
+			"A": {ValueType: &pb.Value_IntegerValue{IntegerValue: 2}},
+			"B": {ValueType: &pb.Value_StringValue{StringValue: "two"}},
 		},
 	}
 
@@ -2658,14 +3272,14 @@ func TestDeferred(t *testing.T) {
 	for _, e := range dst {
 		if e.A == 1 {
 			if e.B != "one" {
-				t.Fatalf("unexpected entity %#v", e)
+				t.Fatalf("unexpected entity %+v", e)
 			}
 		} else if e.A == 2 {
 			if e.B != "two" {
-				t.Fatalf("unexpected entity %#v", e)
+				t.Fatalf("unexpected entity %+v", e)
 			}
 		} else {
-			t.Fatalf("unexpected entity %#v", e)
+			t.Fatalf("unexpected entity %+v", e)
 		}
 	}
 
@@ -2699,15 +3313,15 @@ func TestKeyLoaderEndToEnd(t *testing.T) {
 	entity1 := &pb.Entity{
 		Key: keyToProto(keys[0]),
 		Properties: map[string]*pb.Value{
-			"A": {ValueType: &pb.Value_IntegerValue{1}},
-			"B": {ValueType: &pb.Value_StringValue{"one"}},
+			"A": {ValueType: &pb.Value_IntegerValue{IntegerValue: 1}},
+			"B": {ValueType: &pb.Value_StringValue{StringValue: "one"}},
 		},
 	}
 	entity2 := &pb.Entity{
 		Key: keyToProto(keys[1]),
 		Properties: map[string]*pb.Value{
-			"A": {ValueType: &pb.Value_IntegerValue{2}},
-			"B": {ValueType: &pb.Value_StringValue{"two"}},
+			"A": {ValueType: &pb.Value_IntegerValue{IntegerValue: 2}},
+			"B": {ValueType: &pb.Value_StringValue{StringValue: "two"}},
 		},
 	}
 
@@ -2740,8 +3354,8 @@ func TestKeyLoaderEndToEnd(t *testing.T) {
 	}
 
 	for i := range dst {
-		if !reflect.DeepEqual(dst[i].K, keys[i]) {
-			t.Fatalf("unexpected entity %d to have key %#v, got %#v", i, keys[i], dst[i].K)
+		if !testutil.Equal(dst[i].K, keys[i]) {
+			t.Fatalf("unexpected entity %d to have key %+v, got %+v", i, keys[i], dst[i].K)
 		}
 	}
 }
@@ -2825,12 +3439,14 @@ func TestDeferredMissing(t *testing.T) {
 
 	for _, e := range dst {
 		if e.A != 0 || e.B != "" {
-			t.Fatalf("unexpected entity %#v", e)
+			t.Fatalf("unexpected entity %+v", e)
 		}
 	}
 }
 
 type fakeDatastoreClient struct {
+	pb.DatastoreClient
+
 	// Optional handlers for the datastore methods.
 	// Any handlers left undefined will return an error.
 	lookup           func(*pb.LookupRequest) (*pb.LookupResponse, error)

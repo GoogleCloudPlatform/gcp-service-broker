@@ -27,24 +27,48 @@ import (
 	"code.cloudfoundry.org/lager"
 	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
+	"github.com/spf13/viper"
 )
+
+const (
+	caCertProp     = "db.ca.cert"
+	clientCertProp = "db.client.cert"
+	clientKeyProp  = "db.client.key"
+	dbHostProp     = "db.host"
+	dbUserProp     = "db.user"
+	dbPassProp     = "db.password"
+	dbPortProp     = "db.port"
+	dbNameProp     = "db.name"
+)
+
+func init() {
+	viper.BindEnv(caCertProp, "CA_CERT")
+	viper.BindEnv(clientCertProp, "CLIENT_CERT")
+	viper.BindEnv(clientKeyProp, "CLIENT_KEY")
+
+	viper.BindEnv(dbHostProp, "DB_HOST")
+	viper.BindEnv(dbUserProp, "DB_USERNAME")
+	viper.BindEnv(dbPassProp, "DB_PASSWORD")
+
+	viper.BindEnv(dbPortProp, "DB_PORT")
+	viper.SetDefault(dbPortProp, "3306")
+	viper.BindEnv(dbNameProp, "DB_NAME")
+	viper.SetDefault(dbNameProp, "servicebroker")
+}
 
 // pulls db credentials from the environment, connects to the db, runs migrations, and returns the db connection
 func SetupDb(logger lager.Logger) *gorm.DB {
 	// connect to database
-	dbHost := os.Getenv("DB_HOST")
-	dbUsername := os.Getenv("DB_USERNAME")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbPort := os.Getenv("DB_PORT")
-	dbName := os.Getenv("DB_NAME")
+	dbHost := viper.GetString(dbHostProp)
+	dbUsername := viper.GetString(dbUserProp)
+	dbPassword := viper.GetString(dbPassProp)
 
-	if dbPort == "" {
-		dbPort = "3306"
+	if dbPassword == "" || dbHost == "" || dbUsername == "" {
+		panic("DB_HOST, DB_USERNAME and DB_PASSWORD are required environment variables.")
 	}
 
-	if dbName == "" {
-		dbName = "servicebroker"
-	}
+	dbPort := viper.GetString(dbPortProp)
+	dbName := viper.GetString(dbNameProp)
 
 	tlsStr, err := generateTlsStringFromEnv()
 	if err != nil {
@@ -63,9 +87,9 @@ func SetupDb(logger lager.Logger) *gorm.DB {
 }
 
 func generateTlsStringFromEnv() (string, error) {
-	caCert := os.Getenv("CA_CERT")
-	clientCertStr := os.Getenv("CLIENT_CERT")
-	clientKeyStr := os.Getenv("CLIENT_KEY")
+	caCert := viper.GetString(caCertProp)
+	clientCertStr := viper.GetString(clientCertProp)
+	clientKeyStr := viper.GetString(clientKeyProp)
 	tlsStr := "&tls=custom"
 
 	// make sure ssl is set up for this connection

@@ -18,23 +18,25 @@
 package db_service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"gcp-service-broker/utils"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/jinzhu/gorm"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
-	"os"
 )
 
 // runs schema migrations on the provided service broker database to get it up to date
 func RunMigrations(db *gorm.DB) error {
 
-	migrations := make([]func() error, 2)
+	migrations := make([]func() error, 3)
 
 	// initial migration - creates tables
 	migrations[0] = func() error {
-		if err := db.Exec(`CREATE TABLE service_instance_details (
+		if err := db.Exec(`CREATE TABLE IF NOT EXISTS service_instance_details (
 			  id varchar(255) NOT NULL DEFAULT '',
 			  created_at timestamp NULL DEFAULT NULL,
 			  updated_at timestamp NULL DEFAULT NULL,
@@ -51,7 +53,7 @@ func RunMigrations(db *gorm.DB) error {
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8`).Error; err != nil {
 			return err
 		}
-		if err := db.Exec(`CREATE TABLE service_binding_credentials (
+		if err := db.Exec(`CREATE TABLE IF NOT EXISTS service_binding_credentials (
 			  id int(10) unsigned NOT NULL AUTO_INCREMENT,
 			  created_at timestamp NULL DEFAULT NULL,
 			  updated_at timestamp NULL DEFAULT NULL,
@@ -65,7 +67,7 @@ func RunMigrations(db *gorm.DB) error {
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8`).Error; err != nil {
 			return err
 		}
-		if err := db.Exec(`CREATE TABLE provision_request_details (
+		if err := db.Exec(`CREATE TABLE IF NOT EXISTS provision_request_details (
 			  id int(10) unsigned NOT NULL AUTO_INCREMENT,
 			  created_at timestamp NULL DEFAULT NULL,
 			  updated_at timestamp NULL DEFAULT NULL,
@@ -77,7 +79,7 @@ func RunMigrations(db *gorm.DB) error {
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8`).Error; err != nil {
 			return err
 		}
-		if err := db.Exec(`CREATE TABLE plan_details (
+		if err := db.Exec(`CREATE TABLE IF NOT EXISTS plan_details (
 			  id varchar(255) NOT NULL DEFAULT '',
 			  created_at timestamp NULL DEFAULT NULL,
 			  updated_at timestamp NULL DEFAULT NULL,
@@ -89,7 +91,7 @@ func RunMigrations(db *gorm.DB) error {
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8`).Error; err != nil {
 			return err
 		}
-		if err := db.Exec(`CREATE TABLE migrations (
+		if err := db.Exec(`CREATE TABLE IF NOT EXISTS migrations (
 			  id int(10) unsigned NOT NULL AUTO_INCREMENT,
 			  created_at timestamp NULL DEFAULT NULL,
 			  updated_at timestamp NULL DEFAULT NULL,
@@ -104,7 +106,7 @@ func RunMigrations(db *gorm.DB) error {
 
 	// adds CloudOperation table
 	migrations[1] = func() error {
-		if err := db.Exec(`CREATE TABLE cloud_operations (
+		if err := db.Exec(`CREATE TABLE IF NOT EXISTS cloud_operations (
 			  id int(10) unsigned NOT NULL AUTO_INCREMENT,
 			  created_at timestamp NULL DEFAULT NULL,
 			  updated_at timestamp NULL DEFAULT NULL,
@@ -125,20 +127,14 @@ func RunMigrations(db *gorm.DB) error {
 		}
 
 		// copy provision request details into service instance details
-
 		serviceAccount := make(map[string]string)
-		if err := json.Unmarshal([]byte(os.Getenv("ROOT_SERVICE_ACCOUNT_JSON")), &serviceAccount); err != nil {
-			return err
+		if err := json.Unmarshal([]byte(models.GetServiceAccountJson()), &serviceAccount); err != nil {
+			return fmt.Errorf("Could not unmarshal service account details. %v", err)
 		}
 
-		client, err := utils.GetAuthedClient()
+		cfg, err := utils.GetAuthedConfig()
 		if err != nil {
 			return fmt.Errorf("Error getting authorized http client: %s", err)
-		}
-
-		idToNameMap, err := utils.MapServiceIdToName()
-		if err != nil {
-			return err
 		}
 
 		var prs []models.ProvisionRequestDetails
@@ -158,12 +154,17 @@ func RunMigrations(db *gorm.DB) error {
 			newOd := make(map[string]string)
 
 			// cloudsql
-			switch serviceName := idToNameMap[si.ServiceId]; serviceName {
+			svc, err := broker.GetServiceById(si.ServiceId)
+			if err != nil {
+				return err
+			}
+
+			switch svc.Name {
 			case models.CloudsqlMySQLName:
 				newOd["instance_name"] = od["instance_name"]
 				newOd["database_name"] = od["database_name"]
 
-				sqlService, err := googlecloudsql.New(client)
+				sqlService, err := googlecloudsql.New(cfg.Client(context.Background()))
 				if err != nil {
 					return fmt.Errorf("Error creating new CloudSQL Client: %s", err)
 				}
@@ -189,7 +190,6 @@ func RunMigrations(db *gorm.DB) error {
 				newOd["topic_name"] = od["topic_name"]
 				newOd["subscription_name"] = od["subscription_name"]
 			default:
-				println(fmt.Sprintf("%v", idToNameMap))
 				return fmt.Errorf("unrecognized service: %s", si.ServiceId)
 			}
 
@@ -203,6 +203,15 @@ func RunMigrations(db *gorm.DB) error {
 			}
 		}
 
+		return nil
+	}
+
+	// drops plan details table
+	migrations[2] = func() error {
+		// NOOP migration, this was used to drop the plan_details table, but
+		// there's more of a disincentive than incentive to do that because it could
+		// leave operators wiping out plain details accidentally and not being able
+		// to recover if they don't follow the upgrade path.
 		return nil
 	}
 

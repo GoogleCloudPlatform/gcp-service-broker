@@ -61,10 +61,9 @@ func New(client *http.Client) (*Service, error) {
 }
 
 type Service struct {
-	client                    *http.Client
-	BasePath                  string // API endpoint base URL
-	UserAgent                 string // optional additional User-Agent fragment
-	GoogleClientHeaderElement string // client header fragment, for Google use only
+	client    *http.Client
+	BasePath  string // API endpoint base URL
+	UserAgent string // optional additional User-Agent fragment
 
 	Accounts *AccountsService
 }
@@ -74,10 +73,6 @@ func (s *Service) userAgent() string {
 		return googleapi.UserAgent
 	}
 	return googleapi.UserAgent + " " + s.UserAgent
-}
-
-func (s *Service) clientHeader() string {
-	return gensupport.GoogleClientHeader("20170210", s.GoogleClientHeaderElement)
 }
 
 func NewAccountsService(s *Service) *AccountsService {
@@ -394,8 +389,8 @@ type Avail struct {
 }
 
 func (s *Avail) MarshalJSON() ([]byte, error) {
-	type noMethod Avail
-	raw := noMethod(*s)
+	type NoMethod Avail
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -433,8 +428,8 @@ type ListAvailsResponse struct {
 }
 
 func (s *ListAvailsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListAvailsResponse
-	raw := noMethod(*s)
+	type NoMethod ListAvailsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -472,8 +467,8 @@ type ListOrdersResponse struct {
 }
 
 func (s *ListOrdersResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListOrdersResponse
-	raw := noMethod(*s)
+	type NoMethod ListOrdersResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -511,8 +506,8 @@ type ListStoreInfosResponse struct {
 }
 
 func (s *ListStoreInfosResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListStoreInfosResponse
-	raw := noMethod(*s)
+	type NoMethod ListStoreInfosResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -703,18 +698,18 @@ type Order struct {
 }
 
 func (s *Order) MarshalJSON() ([]byte, error) {
-	type noMethod Order
-	raw := noMethod(*s)
+	type NoMethod Order
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *Order) UnmarshalJSON(data []byte) error {
-	type noMethod Order
+	type NoMethod Order
 	var s1 struct {
 		Priority gensupport.JSONFloat64 `json:"priority"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -877,8 +872,8 @@ type StoreInfo struct {
 }
 
 func (s *StoreInfo) MarshalJSON() ([]byte, error) {
-	type noMethod StoreInfo
-	raw := noMethod(*s)
+	type NoMethod StoreInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -943,7 +938,6 @@ func (c *AccountsAvailsGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -993,7 +987,7 @@ func (c *AccountsAvailsGetCall) Do(opts ...googleapi.CallOption) (*Avail, error)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1164,7 +1158,6 @@ func (c *AccountsAvailsListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -1213,7 +1206,7 @@ func (c *AccountsAvailsListCall) Do(opts ...googleapi.CallOption) (*ListAvailsRe
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1380,7 +1373,6 @@ func (c *AccountsOrdersGetCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -1430,7 +1422,7 @@ func (c *AccountsOrdersGetCall) Do(opts ...googleapi.CallOption) (*Order, error)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1595,7 +1587,6 @@ func (c *AccountsOrdersListCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -1644,7 +1635,7 @@ func (c *AccountsOrdersListCall) Do(opts ...googleapi.CallOption) (*ListOrdersRe
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1887,7 +1878,6 @@ func (c *AccountsStoreInfosListCall) doRequest(alt string) (*http.Response, erro
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -1936,7 +1926,7 @@ func (c *AccountsStoreInfosListCall) Do(opts ...googleapi.CallOption) (*ListStor
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2111,7 +2101,6 @@ func (c *AccountsStoreInfosCountryGetCall) doRequest(alt string) (*http.Response
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	if c.ifNoneMatch_ != "" {
 		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
 	}
@@ -2162,7 +2151,7 @@ func (c *AccountsStoreInfosCountryGetCall) Do(opts ...googleapi.CallOption) (*St
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

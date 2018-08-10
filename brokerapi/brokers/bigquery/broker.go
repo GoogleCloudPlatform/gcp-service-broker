@@ -18,23 +18,19 @@
 package bigquery
 
 import (
-	"code.cloudfoundry.org/lager"
+	"context"
 	"encoding/json"
 	"fmt"
-	"gcp-service-broker/brokerapi/brokers/broker_base"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"gcp-service-broker/brokerapi/brokers/name_generator"
-	"gcp-service-broker/db_service"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/pivotal-cf/brokerapi"
 	googlebigquery "google.golang.org/api/bigquery/v2"
-	"net/http"
 )
 
 type BigQueryBroker struct {
-	Client         *http.Client
-	ProjectId      string
-	Logger         lager.Logger
-	AccountManager models.AccountManager
-
 	broker_base.BrokerBase
 }
 
@@ -44,7 +40,7 @@ type InstanceInformation struct {
 
 // Creates a new BigQuery dataset identified by the name provided in details.RawParameters.name and optional location
 // (possible values are "US" or "EU", defaults to "US")
-func (b *BigQueryBroker) Provision(instanceId string, details models.ProvisionDetails, plan models.PlanDetails) (models.ServiceInstanceDetails, error) {
+func (b *BigQueryBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 	var params map[string]string
 
@@ -59,7 +55,7 @@ func (b *BigQueryBroker) Provision(instanceId string, details models.ProvisionDe
 		params["name"] = name_generator.Basic.InstanceName()
 	}
 
-	service, err := googlebigquery.New(b.Client)
+	service, err := googlebigquery.New(b.HttpConfig.Client(context.Background()))
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating bigquery client: %s", err)
 	}
@@ -102,16 +98,16 @@ func (b *BigQueryBroker) Provision(instanceId string, details models.ProvisionDe
 
 // deletes the dataset associated with the given instanceID string
 // note that all tables in the dataset must be deleted prior to deprovisioning
-func (b *BigQueryBroker) Deprovision(instanceID string, details models.DeprovisionDetails) error {
+func (b *BigQueryBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
 	var err error
-	service, err := googlebigquery.New(b.Client)
+	service, err := googlebigquery.New(b.HttpConfig.Client(context.Background()))
 	if err != nil {
 		return fmt.Errorf("Error creating BigQuery client: %s", err)
 	}
 
 	dataset := models.ServiceInstanceDetails{}
 	if err = db_service.DbConnection.Where("ID = ?", instanceID).First(&dataset).Error; err != nil {
-		return models.ErrInstanceDoesNotExist
+		return brokerapi.ErrInstanceDoesNotExist
 	}
 
 	if err = service.Datasets.Delete(b.ProjectId, dataset.Name).Do(); err != nil {

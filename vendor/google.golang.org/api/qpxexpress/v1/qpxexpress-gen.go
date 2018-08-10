@@ -55,10 +55,9 @@ func New(client *http.Client) (*Service, error) {
 }
 
 type Service struct {
-	client                    *http.Client
-	BasePath                  string // API endpoint base URL
-	UserAgent                 string // optional additional User-Agent fragment
-	GoogleClientHeaderElement string // client header fragment, for Google use only
+	client    *http.Client
+	BasePath  string // API endpoint base URL
+	UserAgent string // optional additional User-Agent fragment
 
 	Trips *TripsService
 }
@@ -68,10 +67,6 @@ func (s *Service) userAgent() string {
 		return googleapi.UserAgent
 	}
 	return googleapi.UserAgent + " " + s.UserAgent
-}
-
-func (s *Service) clientHeader() string {
-	return gensupport.GoogleClientHeader("20170210", s.GoogleClientHeaderElement)
 }
 
 func NewTripsService(s *Service) *TripsService {
@@ -114,8 +109,8 @@ type AircraftData struct {
 }
 
 func (s *AircraftData) MarshalJSON() ([]byte, error) {
-	type noMethod AircraftData
-	raw := noMethod(*s)
+	type NoMethod AircraftData
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -155,8 +150,8 @@ type AirportData struct {
 }
 
 func (s *AirportData) MarshalJSON() ([]byte, error) {
-	type noMethod AirportData
-	raw := noMethod(*s)
+	type NoMethod AirportData
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -198,8 +193,8 @@ type BagDescriptor struct {
 }
 
 func (s *BagDescriptor) MarshalJSON() ([]byte, error) {
-	type noMethod BagDescriptor
-	raw := noMethod(*s)
+	type NoMethod BagDescriptor
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -236,8 +231,8 @@ type CarrierData struct {
 }
 
 func (s *CarrierData) MarshalJSON() ([]byte, error) {
-	type noMethod CarrierData
-	raw := noMethod(*s)
+	type NoMethod CarrierData
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -277,8 +272,8 @@ type CityData struct {
 }
 
 func (s *CityData) MarshalJSON() ([]byte, error) {
-	type noMethod CityData
-	raw := noMethod(*s)
+	type NoMethod CityData
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -327,8 +322,8 @@ type Data struct {
 }
 
 func (s *Data) MarshalJSON() ([]byte, error) {
-	type noMethod Data
-	raw := noMethod(*s)
+	type NoMethod Data
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -380,8 +375,8 @@ type FareInfo struct {
 }
 
 func (s *FareInfo) MarshalJSON() ([]byte, error) {
-	type noMethod FareInfo
-	raw := noMethod(*s)
+	type NoMethod FareInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -417,8 +412,8 @@ type FlightInfo struct {
 }
 
 func (s *FlightInfo) MarshalJSON() ([]byte, error) {
-	type noMethod FlightInfo
-	raw := noMethod(*s)
+	type NoMethod FlightInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -465,8 +460,8 @@ type FreeBaggageAllowance struct {
 }
 
 func (s *FreeBaggageAllowance) MarshalJSON() ([]byte, error) {
-	type noMethod FreeBaggageAllowance
-	raw := noMethod(*s)
+	type NoMethod FreeBaggageAllowance
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -562,8 +557,8 @@ type LegInfo struct {
 }
 
 func (s *LegInfo) MarshalJSON() ([]byte, error) {
-	type noMethod LegInfo
-	raw := noMethod(*s)
+	type NoMethod LegInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -611,8 +606,8 @@ type PassengerCounts struct {
 }
 
 func (s *PassengerCounts) MarshalJSON() ([]byte, error) {
-	type noMethod PassengerCounts
-	raw := noMethod(*s)
+	type NoMethod PassengerCounts
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -691,8 +686,8 @@ type PricingInfo struct {
 }
 
 func (s *PricingInfo) MarshalJSON() ([]byte, error) {
-	type noMethod PricingInfo
-	raw := noMethod(*s)
+	type NoMethod PricingInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -769,8 +764,8 @@ type SegmentInfo struct {
 }
 
 func (s *SegmentInfo) MarshalJSON() ([]byte, error) {
-	type noMethod SegmentInfo
-	raw := noMethod(*s)
+	type NoMethod SegmentInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -810,8 +805,8 @@ type SegmentPricing struct {
 }
 
 func (s *SegmentPricing) MarshalJSON() ([]byte, error) {
-	type noMethod SegmentPricing
-	raw := noMethod(*s)
+	type NoMethod SegmentPricing
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -856,8 +851,8 @@ type SliceInfo struct {
 }
 
 func (s *SliceInfo) MarshalJSON() ([]byte, error) {
-	type noMethod SliceInfo
-	raw := noMethod(*s)
+	type NoMethod SliceInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -924,8 +919,8 @@ type SliceInput struct {
 }
 
 func (s *SliceInput) MarshalJSON() ([]byte, error) {
-	type noMethod SliceInput
-	raw := noMethod(*s)
+	type NoMethod SliceInput
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -959,8 +954,8 @@ type TaxData struct {
 }
 
 func (s *TaxData) MarshalJSON() ([]byte, error) {
-	type noMethod TaxData
-	raw := noMethod(*s)
+	type NoMethod TaxData
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1005,8 +1000,8 @@ type TaxInfo struct {
 }
 
 func (s *TaxInfo) MarshalJSON() ([]byte, error) {
-	type noMethod TaxInfo
-	raw := noMethod(*s)
+	type NoMethod TaxInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1041,8 +1036,8 @@ type TimeOfDayRange struct {
 }
 
 func (s *TimeOfDayRange) MarshalJSON() ([]byte, error) {
-	type noMethod TimeOfDayRange
-	raw := noMethod(*s)
+	type NoMethod TimeOfDayRange
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1083,8 +1078,8 @@ type TripOption struct {
 }
 
 func (s *TripOption) MarshalJSON() ([]byte, error) {
-	type noMethod TripOption
-	raw := noMethod(*s)
+	type NoMethod TripOption
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1140,8 +1135,8 @@ type TripOptionsRequest struct {
 }
 
 func (s *TripOptionsRequest) MarshalJSON() ([]byte, error) {
-	type noMethod TripOptionsRequest
-	raw := noMethod(*s)
+	type NoMethod TripOptionsRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1180,8 +1175,8 @@ type TripOptionsResponse struct {
 }
 
 func (s *TripOptionsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod TripOptionsResponse
-	raw := noMethod(*s)
+	type NoMethod TripOptionsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1209,8 +1204,8 @@ type TripsSearchRequest struct {
 }
 
 func (s *TripsSearchRequest) MarshalJSON() ([]byte, error) {
-	type noMethod TripsSearchRequest
-	raw := noMethod(*s)
+	type NoMethod TripsSearchRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1245,8 +1240,8 @@ type TripsSearchResponse struct {
 }
 
 func (s *TripsSearchResponse) MarshalJSON() ([]byte, error) {
-	type noMethod TripsSearchResponse
-	raw := noMethod(*s)
+	type NoMethod TripsSearchResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1298,7 +1293,6 @@ func (c *TripsSearchCall) doRequest(alt string) (*http.Response, error) {
 		reqHeaders[k] = v
 	}
 	reqHeaders.Set("User-Agent", c.s.userAgent())
-	reqHeaders.Set("x-goog-api-client", c.s.clientHeader())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.tripssearchrequest)
 	if err != nil {
@@ -1346,7 +1340,7 @@ func (c *TripsSearchCall) Do(opts ...googleapi.CallOption) (*TripsSearchResponse
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

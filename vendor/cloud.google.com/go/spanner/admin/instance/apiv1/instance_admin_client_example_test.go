@@ -1,10 +1,10 @@
-// Copyright 2017, Google Inc. All rights reserved.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//     https://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package instance_test
 import (
 	"cloud.google.com/go/spanner/admin/instance/apiv1"
 	"golang.org/x/net/context"
+	"google.golang.org/api/iterator"
 	iampb "google.golang.org/genproto/googleapis/iam/v1"
 	instancepb "google.golang.org/genproto/googleapis/spanner/admin/instance/v1"
 )
@@ -41,14 +42,16 @@ func ExampleInstanceAdminClient_ListInstanceConfigs() {
 	}
 
 	req := &instancepb.ListInstanceConfigsRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	it := c.ListInstanceConfigs(ctx, req)
 	for {
 		resp, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
 		if err != nil {
 			// TODO: Handle error.
-			break
 		}
 		// TODO: Use resp.
 		_ = resp
@@ -63,7 +66,7 @@ func ExampleInstanceAdminClient_GetInstanceConfig() {
 	}
 
 	req := &instancepb.GetInstanceConfigRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	resp, err := c.GetInstanceConfig(ctx, req)
 	if err != nil {
@@ -81,14 +84,16 @@ func ExampleInstanceAdminClient_ListInstances() {
 	}
 
 	req := &instancepb.ListInstancesRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	it := c.ListInstances(ctx, req)
 	for {
 		resp, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
 		if err != nil {
 			// TODO: Handle error.
-			break
 		}
 		// TODO: Use resp.
 		_ = resp
@@ -103,7 +108,7 @@ func ExampleInstanceAdminClient_GetInstance() {
 	}
 
 	req := &instancepb.GetInstanceRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	resp, err := c.GetInstance(ctx, req)
 	if err != nil {
@@ -121,7 +126,7 @@ func ExampleInstanceAdminClient_CreateInstance() {
 	}
 
 	req := &instancepb.CreateInstanceRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	op, err := c.CreateInstance(ctx, req)
 	if err != nil {
@@ -144,7 +149,7 @@ func ExampleInstanceAdminClient_UpdateInstance() {
 	}
 
 	req := &instancepb.UpdateInstanceRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	op, err := c.UpdateInstance(ctx, req)
 	if err != nil {
@@ -167,7 +172,7 @@ func ExampleInstanceAdminClient_DeleteInstance() {
 	}
 
 	req := &instancepb.DeleteInstanceRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	err = c.DeleteInstance(ctx, req)
 	if err != nil {
@@ -183,7 +188,7 @@ func ExampleInstanceAdminClient_SetIamPolicy() {
 	}
 
 	req := &iampb.SetIamPolicyRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	resp, err := c.SetIamPolicy(ctx, req)
 	if err != nil {
@@ -201,7 +206,7 @@ func ExampleInstanceAdminClient_GetIamPolicy() {
 	}
 
 	req := &iampb.GetIamPolicyRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	resp, err := c.GetIamPolicy(ctx, req)
 	if err != nil {
@@ -219,7 +224,7 @@ func ExampleInstanceAdminClient_TestIamPermissions() {
 	}
 
 	req := &iampb.TestIamPermissionsRequest{
-	// TODO: Fill request struct fields.
+		// TODO: Fill request struct fields.
 	}
 	resp, err := c.TestIamPermissions(ctx, req)
 	if err != nil {

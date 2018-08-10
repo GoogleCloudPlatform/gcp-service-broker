@@ -1,10 +1,10 @@
-// Copyright 2017, Google Inc. All rights reserved.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//     https://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,17 +17,19 @@
 package admin
 
 import (
-	google_protobuf "github.com/golang/protobuf/ptypes/empty"
+	emptypb "github.com/golang/protobuf/ptypes/empty"
 	adminpb "google.golang.org/genproto/googleapis/iam/admin/v1"
 	iampb "google.golang.org/genproto/googleapis/iam/v1"
 )
 
 import (
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"net"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -37,6 +39,8 @@ import (
 	status "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	gstatus "google.golang.org/grpc/status"
 )
 
 var _ = io.EOF
@@ -58,7 +62,11 @@ type mockIamServer struct {
 	resps []proto.Message
 }
 
-func (s *mockIamServer) ListServiceAccounts(_ context.Context, req *adminpb.ListServiceAccountsRequest) (*adminpb.ListServiceAccountsResponse, error) {
+func (s *mockIamServer) ListServiceAccounts(ctx context.Context, req *adminpb.ListServiceAccountsRequest) (*adminpb.ListServiceAccountsResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -66,7 +74,11 @@ func (s *mockIamServer) ListServiceAccounts(_ context.Context, req *adminpb.List
 	return s.resps[0].(*adminpb.ListServiceAccountsResponse), nil
 }
 
-func (s *mockIamServer) GetServiceAccount(_ context.Context, req *adminpb.GetServiceAccountRequest) (*adminpb.ServiceAccount, error) {
+func (s *mockIamServer) GetServiceAccount(ctx context.Context, req *adminpb.GetServiceAccountRequest) (*adminpb.ServiceAccount, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -74,7 +86,11 @@ func (s *mockIamServer) GetServiceAccount(_ context.Context, req *adminpb.GetSer
 	return s.resps[0].(*adminpb.ServiceAccount), nil
 }
 
-func (s *mockIamServer) CreateServiceAccount(_ context.Context, req *adminpb.CreateServiceAccountRequest) (*adminpb.ServiceAccount, error) {
+func (s *mockIamServer) CreateServiceAccount(ctx context.Context, req *adminpb.CreateServiceAccountRequest) (*adminpb.ServiceAccount, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -82,7 +98,11 @@ func (s *mockIamServer) CreateServiceAccount(_ context.Context, req *adminpb.Cre
 	return s.resps[0].(*adminpb.ServiceAccount), nil
 }
 
-func (s *mockIamServer) UpdateServiceAccount(_ context.Context, req *adminpb.ServiceAccount) (*adminpb.ServiceAccount, error) {
+func (s *mockIamServer) UpdateServiceAccount(ctx context.Context, req *adminpb.ServiceAccount) (*adminpb.ServiceAccount, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -90,15 +110,23 @@ func (s *mockIamServer) UpdateServiceAccount(_ context.Context, req *adminpb.Ser
 	return s.resps[0].(*adminpb.ServiceAccount), nil
 }
 
-func (s *mockIamServer) DeleteServiceAccount(_ context.Context, req *adminpb.DeleteServiceAccountRequest) (*google_protobuf.Empty, error) {
+func (s *mockIamServer) DeleteServiceAccount(ctx context.Context, req *adminpb.DeleteServiceAccountRequest) (*emptypb.Empty, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
 	}
-	return s.resps[0].(*google_protobuf.Empty), nil
+	return s.resps[0].(*emptypb.Empty), nil
 }
 
-func (s *mockIamServer) ListServiceAccountKeys(_ context.Context, req *adminpb.ListServiceAccountKeysRequest) (*adminpb.ListServiceAccountKeysResponse, error) {
+func (s *mockIamServer) ListServiceAccountKeys(ctx context.Context, req *adminpb.ListServiceAccountKeysRequest) (*adminpb.ListServiceAccountKeysResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -106,7 +134,11 @@ func (s *mockIamServer) ListServiceAccountKeys(_ context.Context, req *adminpb.L
 	return s.resps[0].(*adminpb.ListServiceAccountKeysResponse), nil
 }
 
-func (s *mockIamServer) GetServiceAccountKey(_ context.Context, req *adminpb.GetServiceAccountKeyRequest) (*adminpb.ServiceAccountKey, error) {
+func (s *mockIamServer) GetServiceAccountKey(ctx context.Context, req *adminpb.GetServiceAccountKeyRequest) (*adminpb.ServiceAccountKey, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -114,7 +146,11 @@ func (s *mockIamServer) GetServiceAccountKey(_ context.Context, req *adminpb.Get
 	return s.resps[0].(*adminpb.ServiceAccountKey), nil
 }
 
-func (s *mockIamServer) CreateServiceAccountKey(_ context.Context, req *adminpb.CreateServiceAccountKeyRequest) (*adminpb.ServiceAccountKey, error) {
+func (s *mockIamServer) CreateServiceAccountKey(ctx context.Context, req *adminpb.CreateServiceAccountKeyRequest) (*adminpb.ServiceAccountKey, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -122,15 +158,23 @@ func (s *mockIamServer) CreateServiceAccountKey(_ context.Context, req *adminpb.
 	return s.resps[0].(*adminpb.ServiceAccountKey), nil
 }
 
-func (s *mockIamServer) DeleteServiceAccountKey(_ context.Context, req *adminpb.DeleteServiceAccountKeyRequest) (*google_protobuf.Empty, error) {
+func (s *mockIamServer) DeleteServiceAccountKey(ctx context.Context, req *adminpb.DeleteServiceAccountKeyRequest) (*emptypb.Empty, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
 	}
-	return s.resps[0].(*google_protobuf.Empty), nil
+	return s.resps[0].(*emptypb.Empty), nil
 }
 
-func (s *mockIamServer) SignBlob(_ context.Context, req *adminpb.SignBlobRequest) (*adminpb.SignBlobResponse, error) {
+func (s *mockIamServer) SignBlob(ctx context.Context, req *adminpb.SignBlobRequest) (*adminpb.SignBlobResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -138,7 +182,23 @@ func (s *mockIamServer) SignBlob(_ context.Context, req *adminpb.SignBlobRequest
 	return s.resps[0].(*adminpb.SignBlobResponse), nil
 }
 
-func (s *mockIamServer) GetIamPolicy(_ context.Context, req *iampb.GetIamPolicyRequest) (*iampb.Policy, error) {
+func (s *mockIamServer) SignJwt(ctx context.Context, req *adminpb.SignJwtRequest) (*adminpb.SignJwtResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
+	s.reqs = append(s.reqs, req)
+	if s.err != nil {
+		return nil, s.err
+	}
+	return s.resps[0].(*adminpb.SignJwtResponse), nil
+}
+
+func (s *mockIamServer) GetIamPolicy(ctx context.Context, req *iampb.GetIamPolicyRequest) (*iampb.Policy, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -146,7 +206,11 @@ func (s *mockIamServer) GetIamPolicy(_ context.Context, req *iampb.GetIamPolicyR
 	return s.resps[0].(*iampb.Policy), nil
 }
 
-func (s *mockIamServer) SetIamPolicy(_ context.Context, req *iampb.SetIamPolicyRequest) (*iampb.Policy, error) {
+func (s *mockIamServer) SetIamPolicy(ctx context.Context, req *iampb.SetIamPolicyRequest) (*iampb.Policy, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -154,7 +218,11 @@ func (s *mockIamServer) SetIamPolicy(_ context.Context, req *iampb.SetIamPolicyR
 	return s.resps[0].(*iampb.Policy), nil
 }
 
-func (s *mockIamServer) TestIamPermissions(_ context.Context, req *iampb.TestIamPermissionsRequest) (*iampb.TestIamPermissionsResponse, error) {
+func (s *mockIamServer) TestIamPermissions(ctx context.Context, req *iampb.TestIamPermissionsRequest) (*iampb.TestIamPermissionsResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -162,7 +230,11 @@ func (s *mockIamServer) TestIamPermissions(_ context.Context, req *iampb.TestIam
 	return s.resps[0].(*iampb.TestIamPermissionsResponse), nil
 }
 
-func (s *mockIamServer) QueryGrantableRoles(_ context.Context, req *adminpb.QueryGrantableRolesRequest) (*adminpb.QueryGrantableRolesResponse, error) {
+func (s *mockIamServer) QueryGrantableRoles(ctx context.Context, req *adminpb.QueryGrantableRolesRequest) (*adminpb.QueryGrantableRolesResponse, error) {
+	md, _ := metadata.FromIncomingContext(ctx)
+	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
+		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
+	}
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -213,7 +285,7 @@ func TestIamListServiceAccounts(t *testing.T) {
 
 	mockIam.resps = append(mockIam.resps[:0], expectedResponse)
 
-	var formattedName string = IamProjectPath("[PROJECT]")
+	var formattedName string = fmt.Sprintf("projects/%s", "[PROJECT]")
 	var request = &adminpb.ListServiceAccountsRequest{
 		Name: formattedName,
 	}
@@ -250,9 +322,9 @@ func TestIamListServiceAccounts(t *testing.T) {
 
 func TestIamListServiceAccountsError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockIam.err = grpc.Errorf(errCode, "test error")
+	mockIam.err = gstatus.Error(errCode, "test error")
 
-	var formattedName string = IamProjectPath("[PROJECT]")
+	var formattedName string = fmt.Sprintf("projects/%s", "[PROJECT]")
 	var request = &adminpb.ListServiceAccountsRequest{
 		Name: formattedName,
 	}
@@ -264,7 +336,9 @@ func TestIamListServiceAccountsError(t *testing.T) {
 
 	resp, err := c.ListServiceAccounts(context.Background(), request).Next()
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -292,7 +366,7 @@ func TestIamGetServiceAccount(t *testing.T) {
 
 	mockIam.resps = append(mockIam.resps[:0], expectedResponse)
 
-	var formattedName string = IamServiceAccountPath("[PROJECT]", "[SERVICE_ACCOUNT]")
+	var formattedName string = fmt.Sprintf("projects/%s/serviceAccounts/%s", "[PROJECT]", "[SERVICE_ACCOUNT]")
 	var request = &adminpb.GetServiceAccountRequest{
 		Name: formattedName,
 	}
@@ -319,9 +393,9 @@ func TestIamGetServiceAccount(t *testing.T) {
 
 func TestIamGetServiceAccountError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockIam.err = grpc.Errorf(errCode, "test error")
+	mockIam.err = gstatus.Error(errCode, "test error")
 
-	var formattedName string = IamServiceAccountPath("[PROJECT]", "[SERVICE_ACCOUNT]")
+	var formattedName string = fmt.Sprintf("projects/%s/serviceAccounts/%s", "[PROJECT]", "[SERVICE_ACCOUNT]")
 	var request = &adminpb.GetServiceAccountRequest{
 		Name: formattedName,
 	}
@@ -333,7 +407,9 @@ func TestIamGetServiceAccountError(t *testing.T) {
 
 	resp, err := c.GetServiceAccount(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -361,7 +437,7 @@ func TestIamCreateServiceAccount(t *testing.T) {
 
 	mockIam.resps = append(mockIam.resps[:0], expectedResponse)
 
-	var formattedName string = IamProjectPath("[PROJECT]")
+	var formattedName string = fmt.Sprintf("projects/%s", "[PROJECT]")
 	var accountId string = "accountId-803333011"
 	var request = &adminpb.CreateServiceAccountRequest{
 		Name:      formattedName,
@@ -390,9 +466,9 @@ func TestIamCreateServiceAccount(t *testing.T) {
 
 func TestIamCreateServiceAccountError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockIam.err = grpc.Errorf(errCode, "test error")
+	mockIam.err = gstatus.Error(errCode, "test error")
 
-	var formattedName string = IamProjectPath("[PROJECT]")
+	var formattedName string = fmt.Sprintf("projects/%s", "[PROJECT]")
 	var accountId string = "accountId-803333011"
 	var request = &adminpb.CreateServiceAccountRequest{
 		Name:      formattedName,
@@ -406,7 +482,9 @@ func TestIamCreateServiceAccountError(t *testing.T) {
 
 	resp, err := c.CreateServiceAccount(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -461,7 +539,7 @@ func TestIamUpdateServiceAccount(t *testing.T) {
 
 func TestIamUpdateServiceAccountError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockIam.err = grpc.Errorf(errCode, "test error")
+	mockIam.err = gstatus.Error(errCode, "test error")
 
 	var etag []byte = []byte("21")
 	var request = &adminpb.ServiceAccount{
@@ -475,20 +553,22 @@ func TestIamUpdateServiceAccountError(t *testing.T) {
 
 	resp, err := c.UpdateServiceAccount(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
 }
 func TestIamDeleteServiceAccount(t *testing.T) {
-	var expectedResponse *google_protobuf.Empty = &google_protobuf.Empty{}
+	var expectedResponse *emptypb.Empty = &emptypb.Empty{}
 
 	mockIam.err = nil
 	mockIam.reqs = nil
 
 	mockIam.resps = append(mockIam.resps[:0], expectedResponse)
 
-	var formattedName string = IamServiceAccountPath("[PROJECT]", "[SERVICE_ACCOUNT]")
+	var formattedName string = fmt.Sprintf("projects/%s/serviceAccounts/%s", "[PROJECT]", "[SERVICE_ACCOUNT]")
 	var request = &adminpb.DeleteServiceAccountRequest{
 		Name: formattedName,
 	}
@@ -512,9 +592,9 @@ func TestIamDeleteServiceAccount(t *testing.T) {
 
 func TestIamDeleteServiceAccountError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockIam.err = grpc.Errorf(errCode, "test error")
+	mockIam.err = gstatus.Error(errCode, "test error")
 
-	var formattedName string = IamServiceAccountPath("[PROJECT]", "[SERVICE_ACCOUNT]")
+	var formattedName string = fmt.Sprintf("projects/%s/serviceAccounts/%s", "[PROJECT]", "[SERVICE_ACCOUNT]")
 	var request = &adminpb.DeleteServiceAccountRequest{
 		Name: formattedName,
 	}
@@ -526,7 +606,9 @@ func TestIamDeleteServiceAccountError(t *testing.T) {
 
 	err = c.DeleteServiceAccount(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 }
@@ -538,7 +620,7 @@ func TestIamListServiceAccountKeys(t *testing.T) {
 
 	mockIam.resps = append(mockIam.resps[:0], expectedResponse)
 
-	var formattedName string = IamServiceAccountPath("[PROJECT]", "[SERVICE_ACCOUNT]")
+	var formattedName string = fmt.Sprintf("projects/%s/serviceAccounts/%s", "[PROJECT]", "[SERVICE_ACCOUNT]")
 	var request = &adminpb.ListServiceAccountKeysRequest{
 		Name: formattedName,
 	}
@@ -565,9 +647,9 @@ func TestIamListServiceAccountKeys(t *testing.T) {
 
 func TestIamListServiceAccountKeysError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockIam.err = grpc.Errorf(errCode, "test error")
+	mockIam.err = gstatus.Error(errCode, "test error")
 
-	var formattedName string = IamServiceAccountPath("[PROJECT]", "[SERVICE_ACCOUNT]")
+	var formattedName string = fmt.Sprintf("projects/%s/serviceAccounts/%s", "[PROJECT]", "[SERVICE_ACCOUNT]")
 	var request = &adminpb.ListServiceAccountKeysRequest{
 		Name: formattedName,
 	}
@@ -579,7 +661,9 @@ func TestIamListServiceAccountKeysError(t *testing.T) {
 
 	resp, err := c.ListServiceAccountKeys(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -599,7 +683,7 @@ func TestIamGetServiceAccountKey(t *testing.T) {
 
 	mockIam.resps = append(mockIam.resps[:0], expectedResponse)
 
-	var formattedName string = IamKeyPath("[PROJECT]", "[SERVICE_ACCOUNT]", "[KEY]")
+	var formattedName string = fmt.Sprintf("projects/%s/serviceAccounts/%s/keys/%s", "[PROJECT]", "[SERVICE_ACCOUNT]", "[KEY]")
 	var request = &adminpb.GetServiceAccountKeyRequest{
 		Name: formattedName,
 	}
@@ -626,9 +710,9 @@ func TestIamGetServiceAccountKey(t *testing.T) {
 
 func TestIamGetServiceAccountKeyError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockIam.err = grpc.Errorf(errCode, "test error")
+	mockIam.err = gstatus.Error(errCode, "test error")
 
-	var formattedName string = IamKeyPath("[PROJECT]", "[SERVICE_ACCOUNT]", "[KEY]")
+	var formattedName string = fmt.Sprintf("projects/%s/serviceAccounts/%s/keys/%s", "[PROJECT]", "[SERVICE_ACCOUNT]", "[KEY]")
 	var request = &adminpb.GetServiceAccountKeyRequest{
 		Name: formattedName,
 	}
@@ -640,7 +724,9 @@ func TestIamGetServiceAccountKeyError(t *testing.T) {
 
 	resp, err := c.GetServiceAccountKey(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -660,7 +746,7 @@ func TestIamCreateServiceAccountKey(t *testing.T) {
 
 	mockIam.resps = append(mockIam.resps[:0], expectedResponse)
 
-	var formattedName string = IamServiceAccountPath("[PROJECT]", "[SERVICE_ACCOUNT]")
+	var formattedName string = fmt.Sprintf("projects/%s/serviceAccounts/%s", "[PROJECT]", "[SERVICE_ACCOUNT]")
 	var request = &adminpb.CreateServiceAccountKeyRequest{
 		Name: formattedName,
 	}
@@ -687,9 +773,9 @@ func TestIamCreateServiceAccountKey(t *testing.T) {
 
 func TestIamCreateServiceAccountKeyError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockIam.err = grpc.Errorf(errCode, "test error")
+	mockIam.err = gstatus.Error(errCode, "test error")
 
-	var formattedName string = IamServiceAccountPath("[PROJECT]", "[SERVICE_ACCOUNT]")
+	var formattedName string = fmt.Sprintf("projects/%s/serviceAccounts/%s", "[PROJECT]", "[SERVICE_ACCOUNT]")
 	var request = &adminpb.CreateServiceAccountKeyRequest{
 		Name: formattedName,
 	}
@@ -701,20 +787,22 @@ func TestIamCreateServiceAccountKeyError(t *testing.T) {
 
 	resp, err := c.CreateServiceAccountKey(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
 }
 func TestIamDeleteServiceAccountKey(t *testing.T) {
-	var expectedResponse *google_protobuf.Empty = &google_protobuf.Empty{}
+	var expectedResponse *emptypb.Empty = &emptypb.Empty{}
 
 	mockIam.err = nil
 	mockIam.reqs = nil
 
 	mockIam.resps = append(mockIam.resps[:0], expectedResponse)
 
-	var formattedName string = IamKeyPath("[PROJECT]", "[SERVICE_ACCOUNT]", "[KEY]")
+	var formattedName string = fmt.Sprintf("projects/%s/serviceAccounts/%s/keys/%s", "[PROJECT]", "[SERVICE_ACCOUNT]", "[KEY]")
 	var request = &adminpb.DeleteServiceAccountKeyRequest{
 		Name: formattedName,
 	}
@@ -738,9 +826,9 @@ func TestIamDeleteServiceAccountKey(t *testing.T) {
 
 func TestIamDeleteServiceAccountKeyError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockIam.err = grpc.Errorf(errCode, "test error")
+	mockIam.err = gstatus.Error(errCode, "test error")
 
-	var formattedName string = IamKeyPath("[PROJECT]", "[SERVICE_ACCOUNT]", "[KEY]")
+	var formattedName string = fmt.Sprintf("projects/%s/serviceAccounts/%s/keys/%s", "[PROJECT]", "[SERVICE_ACCOUNT]", "[KEY]")
 	var request = &adminpb.DeleteServiceAccountKeyRequest{
 		Name: formattedName,
 	}
@@ -752,7 +840,9 @@ func TestIamDeleteServiceAccountKeyError(t *testing.T) {
 
 	err = c.DeleteServiceAccountKey(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 }
@@ -769,7 +859,7 @@ func TestIamSignBlob(t *testing.T) {
 
 	mockIam.resps = append(mockIam.resps[:0], expectedResponse)
 
-	var formattedName string = IamServiceAccountPath("[PROJECT]", "[SERVICE_ACCOUNT]")
+	var formattedName string = fmt.Sprintf("projects/%s/serviceAccounts/%s", "[PROJECT]", "[SERVICE_ACCOUNT]")
 	var bytesToSign []byte = []byte("45")
 	var request = &adminpb.SignBlobRequest{
 		Name:        formattedName,
@@ -798,9 +888,9 @@ func TestIamSignBlob(t *testing.T) {
 
 func TestIamSignBlobError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockIam.err = grpc.Errorf(errCode, "test error")
+	mockIam.err = gstatus.Error(errCode, "test error")
 
-	var formattedName string = IamServiceAccountPath("[PROJECT]", "[SERVICE_ACCOUNT]")
+	var formattedName string = fmt.Sprintf("projects/%s/serviceAccounts/%s", "[PROJECT]", "[SERVICE_ACCOUNT]")
 	var bytesToSign []byte = []byte("45")
 	var request = &adminpb.SignBlobRequest{
 		Name:        formattedName,
@@ -814,7 +904,9 @@ func TestIamSignBlobError(t *testing.T) {
 
 	resp, err := c.SignBlob(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -832,7 +924,7 @@ func TestIamGetIamPolicy(t *testing.T) {
 
 	mockIam.resps = append(mockIam.resps[:0], expectedResponse)
 
-	var formattedResource string = IamServiceAccountPath("[PROJECT]", "[SERVICE_ACCOUNT]")
+	var formattedResource string = fmt.Sprintf("projects/%s/serviceAccounts/%s", "[PROJECT]", "[SERVICE_ACCOUNT]")
 	var request = &iampb.GetIamPolicyRequest{
 		Resource: formattedResource,
 	}
@@ -859,9 +951,9 @@ func TestIamGetIamPolicy(t *testing.T) {
 
 func TestIamGetIamPolicyError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockIam.err = grpc.Errorf(errCode, "test error")
+	mockIam.err = gstatus.Error(errCode, "test error")
 
-	var formattedResource string = IamServiceAccountPath("[PROJECT]", "[SERVICE_ACCOUNT]")
+	var formattedResource string = fmt.Sprintf("projects/%s/serviceAccounts/%s", "[PROJECT]", "[SERVICE_ACCOUNT]")
 	var request = &iampb.GetIamPolicyRequest{
 		Resource: formattedResource,
 	}
@@ -873,7 +965,9 @@ func TestIamGetIamPolicyError(t *testing.T) {
 
 	resp, err := c.getIamPolicy(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -891,7 +985,7 @@ func TestIamSetIamPolicy(t *testing.T) {
 
 	mockIam.resps = append(mockIam.resps[:0], expectedResponse)
 
-	var formattedResource string = IamServiceAccountPath("[PROJECT]", "[SERVICE_ACCOUNT]")
+	var formattedResource string = fmt.Sprintf("projects/%s/serviceAccounts/%s", "[PROJECT]", "[SERVICE_ACCOUNT]")
 	var policy *iampb.Policy = &iampb.Policy{}
 	var request = &iampb.SetIamPolicyRequest{
 		Resource: formattedResource,
@@ -920,9 +1014,9 @@ func TestIamSetIamPolicy(t *testing.T) {
 
 func TestIamSetIamPolicyError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockIam.err = grpc.Errorf(errCode, "test error")
+	mockIam.err = gstatus.Error(errCode, "test error")
 
-	var formattedResource string = IamServiceAccountPath("[PROJECT]", "[SERVICE_ACCOUNT]")
+	var formattedResource string = fmt.Sprintf("projects/%s/serviceAccounts/%s", "[PROJECT]", "[SERVICE_ACCOUNT]")
 	var policy *iampb.Policy = &iampb.Policy{}
 	var request = &iampb.SetIamPolicyRequest{
 		Resource: formattedResource,
@@ -936,7 +1030,9 @@ func TestIamSetIamPolicyError(t *testing.T) {
 
 	resp, err := c.setIamPolicy(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -949,7 +1045,7 @@ func TestIamTestIamPermissions(t *testing.T) {
 
 	mockIam.resps = append(mockIam.resps[:0], expectedResponse)
 
-	var formattedResource string = IamServiceAccountPath("[PROJECT]", "[SERVICE_ACCOUNT]")
+	var formattedResource string = fmt.Sprintf("projects/%s/serviceAccounts/%s", "[PROJECT]", "[SERVICE_ACCOUNT]")
 	var permissions []string = nil
 	var request = &iampb.TestIamPermissionsRequest{
 		Resource:    formattedResource,
@@ -978,9 +1074,9 @@ func TestIamTestIamPermissions(t *testing.T) {
 
 func TestIamTestIamPermissionsError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockIam.err = grpc.Errorf(errCode, "test error")
+	mockIam.err = gstatus.Error(errCode, "test error")
 
-	var formattedResource string = IamServiceAccountPath("[PROJECT]", "[SERVICE_ACCOUNT]")
+	var formattedResource string = fmt.Sprintf("projects/%s/serviceAccounts/%s", "[PROJECT]", "[SERVICE_ACCOUNT]")
 	var permissions []string = nil
 	var request = &iampb.TestIamPermissionsRequest{
 		Resource:    formattedResource,
@@ -994,13 +1090,18 @@ func TestIamTestIamPermissionsError(t *testing.T) {
 
 	resp, err := c.TestIamPermissions(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
 }
 func TestIamQueryGrantableRoles(t *testing.T) {
-	var expectedResponse *adminpb.QueryGrantableRolesResponse = &adminpb.QueryGrantableRolesResponse{}
+	var nextPageToken string = "nextPageToken-1530815211"
+	var expectedResponse = &adminpb.QueryGrantableRolesResponse{
+		NextPageToken: nextPageToken,
+	}
 
 	mockIam.err = nil
 	mockIam.reqs = nil
@@ -1034,7 +1135,7 @@ func TestIamQueryGrantableRoles(t *testing.T) {
 
 func TestIamQueryGrantableRolesError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockIam.err = grpc.Errorf(errCode, "test error")
+	mockIam.err = gstatus.Error(errCode, "test error")
 
 	var fullResourceName string = "fullResourceName1300993644"
 	var request = &adminpb.QueryGrantableRolesRequest{
@@ -1048,7 +1149,74 @@ func TestIamQueryGrantableRolesError(t *testing.T) {
 
 	resp, err := c.QueryGrantableRoles(context.Background(), request)
 
-	if c := grpc.Code(err); c != errCode {
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
+		t.Errorf("got error code %q, want %q", c, errCode)
+	}
+	_ = resp
+}
+func TestIamSignJwt(t *testing.T) {
+	var keyId string = "keyId-1134673157"
+	var signedJwt string = "signedJwt-979546844"
+	var expectedResponse = &adminpb.SignJwtResponse{
+		KeyId:     keyId,
+		SignedJwt: signedJwt,
+	}
+
+	mockIam.err = nil
+	mockIam.reqs = nil
+
+	mockIam.resps = append(mockIam.resps[:0], expectedResponse)
+
+	var name string = "name3373707"
+	var payload string = "payload-786701938"
+	var request = &adminpb.SignJwtRequest{
+		Name:    name,
+		Payload: payload,
+	}
+
+	c, err := NewIamClient(context.Background(), clientOpt)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp, err := c.SignJwt(context.Background(), request)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if want, got := request, mockIam.reqs[0]; !proto.Equal(want, got) {
+		t.Errorf("wrong request %q, want %q", got, want)
+	}
+
+	if want, got := expectedResponse, resp; !proto.Equal(want, got) {
+		t.Errorf("wrong response %q, want %q)", got, want)
+	}
+}
+
+func TestIamSignJwtError(t *testing.T) {
+	errCode := codes.PermissionDenied
+	mockIam.err = gstatus.Error(errCode, "test error")
+
+	var name string = "name3373707"
+	var payload string = "payload-786701938"
+	var request = &adminpb.SignJwtRequest{
+		Name:    name,
+		Payload: payload,
+	}
+
+	c, err := NewIamClient(context.Background(), clientOpt)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp, err := c.SignJwt(context.Background(), request)
+
+	if st, ok := gstatus.FromError(err); !ok {
+		t.Errorf("got error %v, expected grpc error", err)
+	} else if c := st.Code(); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp

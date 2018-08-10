@@ -8,7 +8,7 @@ see [here](https://www.youtube.com/watch?v=8nc4624K91A&list=PLIivdWyY5sqKJ48ycao
 ### Service Brokers
 
 This product is a [Cloud Foundry Service Broker](https://docs.cloudfoundry.org/services/overview.html). It adheres
-to [v2.8](https://docs.pivotal.io/pivotalcf/1-7/services/api.html) of the Service Broker API.
+to [v2.13](https://github.com/openservicebrokerapi/servicebroker/blob/v2.13/spec.md) of the Service Broker API.
 
 ### Google Cloud Platform (GCP)
 
@@ -127,6 +127,8 @@ See the [examples](https://github.com/GoogleCloudPlatform/gcp-service-broker/blo
 The [cmd](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/cmd/) folder contains commands that can be run independent of the broker.
 
 * `migrate`: migrates the database to the latest schema
+* `get_plan_info`: dumps plan information stored in the database for versions < 4.0.0 to the command line. Advised to 
+run this command and copy plan guids into manifest.yml before upgrading between < 4 to >= 4.
 
 ## Testing
 

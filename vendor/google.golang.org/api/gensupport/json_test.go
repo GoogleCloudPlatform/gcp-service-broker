@@ -227,6 +227,33 @@ func TestMapField(t *testing.T) {
 			},
 			want: `{"m":{"a":"b"}}`,
 		},
+		{
+			s: schema{
+				M:          map[string]string{"a": "b"},
+				NullFields: []string{"M.a", "M."},
+			},
+			want: `{"m": {"a": null, "":null}}`,
+		},
+		{
+			s: schema{
+				M:          map[string]string{"a": "b"},
+				NullFields: []string{"M.c"},
+			},
+			want: `{"m": {"a": "b", "c": null}}`,
+		},
+		{
+			s: schema{
+				NullFields:      []string{"M.a"},
+				ForceSendFields: []string{"M"},
+			},
+			want: `{"m": {"a": null}}`,
+		},
+		{
+			s: schema{
+				NullFields: []string{"M.a"},
+			},
+			want: `{}`,
+		},
 	} {
 		checkMarshalJSON(t, tc)
 	}
@@ -466,7 +493,7 @@ func TestParseJSONTag(t *testing.T) {
 			t.Fatalf("parsing json:\n got err: %v\ntag: %q", err, tc.tag)
 		}
 		if !reflect.DeepEqual(got, tc.want) {
-			t.Errorf("parseJSONTage:\ngot :%s\nwant:%s", got, tc.want)
+			t.Errorf("parseJSONTage:\ngot :%v\nwant:%v", got, tc.want)
 		}
 	}
 }

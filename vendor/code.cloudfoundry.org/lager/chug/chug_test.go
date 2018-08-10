@@ -25,6 +25,9 @@ var _ = Describe("Chug", func() {
 		logger = lager.NewLogger("chug-test")
 		logger.RegisterSink(lager.NewWriterSink(pipeWriter, lager.DEBUG))
 		stream = make(chan Entry, 100)
+	})
+
+	JustBeforeEach(func() {
 		go Chug(pipeReader, stream)
 	})
 
@@ -62,7 +65,7 @@ var _ = Describe("Chug", func() {
 		It("should parse the timestamp", func() {
 			logger.Debug("chug")
 			entry := <-stream
-			Expect(entry.Log.Timestamp).To(BeTemporally("~", time.Now(), 10*time.Millisecond))
+			Expect(entry.Log.Timestamp).To(BeTemporally("~", time.Now(), time.Second))
 		})
 
 		Context("when parsing an error message", func() {
@@ -148,13 +151,44 @@ var _ = Describe("Chug", func() {
 
 			})
 		})
+
+		Context("when the input is formatted with human readable timestamps", func() {
+			BeforeEach(func() {
+				logger = lager.NewLogger("chug-test")
+				logger.RegisterSink(lager.NewPrettySink(pipeWriter, lager.DEBUG))
+			})
+
+			It("should return parsed lager messages", func() {
+				data := lager.Data{"some-float": 3.0, "some-string": "foo"}
+				logger.Debug("chug", data)
+				logger.Info("again", data)
+
+				entry := <-stream
+				Expect(entry.IsLager).To(BeTrue())
+				Expect(entry.Log).To(MatchLogEntry(LogEntry{
+					LogLevel: lager.DEBUG,
+					Source:   "chug-test",
+					Message:  "chug-test.chug",
+					Data:     data,
+				}))
+
+				entry = <-stream
+				Expect(entry.IsLager).To(BeTrue())
+				Expect(entry.Log).To(MatchLogEntry(LogEntry{
+					LogLevel: lager.INFO,
+					Source:   "chug-test",
+					Message:  "chug-test.again",
+					Data:     data,
+				}))
+			})
+		})
 	})
 
 	Context("handling lager JSON that is surrounded by non-JSON", func() {
 		var input []byte
 		var entry Entry
 
-		BeforeEach(func() {
+		JustBeforeEach(func() {
 			input = []byte(`[some-component][e]{"timestamp":"1407102779.028711081","source":"chug-test","message":"chug-test.chug","log_level":0,"data":{"some-float":3,"some-string":"foo"}}...some trailing stuff`)
 			pipeWriter.Write(input)
 			pipeWriter.Write([]byte("\n"))

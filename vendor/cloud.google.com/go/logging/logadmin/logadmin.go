@@ -1,4 +1,4 @@
-// Copyright 2016 Google Inc. All Rights Reserved.
+// Copyright 2016 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@
 package logadmin // import "cloud.google.com/go/logging/logadmin"
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -46,28 +45,28 @@ import (
 	logtypepb "google.golang.org/genproto/googleapis/logging/type"
 	logpb "google.golang.org/genproto/googleapis/logging/v2"
 	"google.golang.org/grpc/codes"
+
 	// Import the following so EntryIterator can unmarshal log protos.
+	_ "google.golang.org/genproto/googleapis/appengine/logging/v1"
 	_ "google.golang.org/genproto/googleapis/cloud/audit"
 )
 
 // Client is a Logging client. A Client is associated with a single Cloud project.
 type Client struct {
-	lClient   *vkit.Client        // logging client
-	sClient   *vkit.ConfigClient  // sink client
-	mClient   *vkit.MetricsClient // metric client
-	projectID string
-	closed    bool
+	lClient *vkit.Client        // logging client
+	sClient *vkit.ConfigClient  // sink client
+	mClient *vkit.MetricsClient // metric client
+	parent  string
+	closed  bool
 }
 
 // NewClient returns a new logging client associated with the provided project ID.
 //
 // By default NewClient uses AdminScope. To use a different scope, call
 // NewClient using a WithScopes option (see https://godoc.org/google.golang.org/api/option#WithScopes).
-func NewClient(ctx context.Context, projectID string, opts ...option.ClientOption) (*Client, error) {
-	// Check for '/' in project ID to reserve the ability to support various owning resources,
-	// in the form "{Collection}/{Name}", for instance "organizations/my-org".
-	if strings.ContainsRune(projectID, '/') {
-		return nil, errors.New("logging: project ID contains '/'")
+func NewClient(ctx context.Context, parent string, opts ...option.ClientOption) (*Client, error) {
+	if !strings.ContainsRune(parent, '/') {
+		parent = "projects/" + parent
 	}
 	opts = append([]option.ClientOption{
 		option.WithEndpoint(internal.ProdAddr),
@@ -104,17 +103,12 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 	sc.SetGoogleClientInfo("gccl", version.Repo)
 	mc.SetGoogleClientInfo("gccl", version.Repo)
 	client := &Client{
-		lClient:   lc,
-		sClient:   sc,
-		mClient:   mc,
-		projectID: projectID,
+		lClient: lc,
+		sClient: sc,
+		mClient: mc,
+		parent:  parent,
 	}
 	return client, nil
-}
-
-// parent returns the string used in many RPCs to denote the parent resource of the log.
-func (c *Client) parent() string {
-	return "projects/" + c.projectID
 }
 
 // Close closes the client.
@@ -135,7 +129,7 @@ func (c *Client) Close() error {
 // logID identifies the log within the project. An example log ID is "syslog". Requires AdminScope.
 func (c *Client) DeleteLog(ctx context.Context, logID string) error {
 	return c.lClient.DeleteLog(ctx, &logpb.DeleteLogRequest{
-		LogName: internal.LogPath(c.parent(), logID),
+		LogName: internal.LogPath(c.parent, logID),
 	})
 }
 
@@ -188,7 +182,22 @@ func ProjectIDs(pids []string) EntriesOption { return projectIDs(pids) }
 
 type projectIDs []string
 
-func (p projectIDs) set(r *logpb.ListLogEntriesRequest) { r.ProjectIds = []string(p) }
+func (p projectIDs) set(r *logpb.ListLogEntriesRequest) {
+	r.ResourceNames = make([]string, len(p))
+	for i, v := range p {
+		r.ResourceNames[i] = fmt.Sprintf("projects/%s", v)
+	}
+}
+
+// ResourceNames sets the resource names from which to retrieve
+// log entries. Examples: "projects/my-project-1A", "organizations/my-org".
+func ResourceNames(rns []string) EntriesOption { return resourceNames(rns) }
+
+type resourceNames []string
+
+func (rn resourceNames) set(r *logpb.ListLogEntriesRequest) {
+	r.ResourceNames = append([]string(nil), rn...)
+}
 
 // Filter sets an advanced logs filter for listing log entries (see
 // https://cloud.google.com/logging/docs/view/advanced_filters). The filter is
@@ -221,7 +230,7 @@ func (newestFirst) set(r *logpb.ListLogEntriesRequest) { r.OrderBy = "timestamp 
 // NewClient. This may be overridden by passing a ProjectIDs option. Requires ReadScope or AdminScope.
 func (c *Client) Entries(ctx context.Context, opts ...EntriesOption) *EntryIterator {
 	it := &EntryIterator{
-		it: c.lClient.ListLogEntries(ctx, listLogEntriesRequest(c.projectID, opts)),
+		it: c.lClient.ListLogEntries(ctx, listLogEntriesRequest(c.parent, opts)),
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(
 		it.fetch,
@@ -230,9 +239,9 @@ func (c *Client) Entries(ctx context.Context, opts ...EntriesOption) *EntryItera
 	return it
 }
 
-func listLogEntriesRequest(projectID string, opts []EntriesOption) *logpb.ListLogEntriesRequest {
+func listLogEntriesRequest(parent string, opts []EntriesOption) *logpb.ListLogEntriesRequest {
 	req := &logpb.ListLogEntriesRequest{
-		ProjectIds: []string{projectID},
+		ResourceNames: []string{parent},
 	}
 	for _, opt := range opts {
 		opt.set(req)
@@ -328,6 +337,55 @@ func fromLogEntry(le *logpb.LogEntry) (*logging.Entry, error) {
 		Resource:    le.Resource,
 		Trace:       le.Trace,
 	}, nil
+}
+
+// Logs lists the logs owned by the parent resource of the client.
+func (c *Client) Logs(ctx context.Context) *LogIterator {
+	it := &LogIterator{
+		parentResource: c.parent,
+		it:             c.lClient.ListLogs(ctx, &logpb.ListLogsRequest{Parent: c.parent}),
+	}
+	it.pageInfo, it.nextFunc = iterator.NewPageInfo(
+		it.fetch,
+		func() int { return len(it.items) },
+		func() interface{} { b := it.items; it.items = nil; return b })
+	return it
+}
+
+// A LogIterator iterates over logs.
+type LogIterator struct {
+	parentResource string
+	it             *vkit.StringIterator
+	pageInfo       *iterator.PageInfo
+	nextFunc       func() error
+	items          []string
+}
+
+// PageInfo supports pagination. See https://godoc.org/google.golang.org/api/iterator package for details.
+func (it *LogIterator) PageInfo() *iterator.PageInfo { return it.pageInfo }
+
+// Next returns the next result. Its second return value is iterator.Done
+// (https://godoc.org/google.golang.org/api/iterator) if there are no more
+// results. Once Next returns Done, all subsequent calls will return Done.
+func (it *LogIterator) Next() (string, error) {
+	if err := it.nextFunc(); err != nil {
+		return "", err
+	}
+	item := it.items[0]
+	it.items = it.items[1:]
+	return item, nil
+}
+
+func (it *LogIterator) fetch(pageSize int, pageToken string) (string, error) {
+	return iterFetch(pageSize, pageToken, it.it.PageInfo(), func() error {
+		logPath, err := it.it.Next()
+		if err != nil {
+			return err
+		}
+		logID := internal.LogIDFromPath(it.parentResource, logPath)
+		it.items = append(it.items, logID)
+		return nil
+	})
 }
 
 // Common fetch code for iterators that are backed by vkit iterators.

@@ -1,4 +1,4 @@
-// Copyright 2016 Google Inc. All Rights Reserved.
+// Copyright 2016 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,9 +21,6 @@ import (
 
 // CopyConfig holds the configuration for a copy job.
 type CopyConfig struct {
-	// JobID is the ID to use for the copy job. If unset, a job ID will be automatically created.
-	JobID string
-
 	// Srcs are the tables from which data will be copied.
 	Srcs []*Table
 
@@ -35,18 +32,56 @@ type CopyConfig struct {
 	CreateDisposition TableCreateDisposition
 
 	// WriteDisposition specifies how existing data in the destination table is treated.
-	// The default is WriteAppend.
+	// The default is WriteEmpty.
 	WriteDisposition TableWriteDisposition
+
+	// The labels associated with this job.
+	Labels map[string]string
+
+	// Custom encryption configuration (e.g., Cloud KMS keys).
+	DestinationEncryptionConfig *EncryptionConfig
+}
+
+func (c *CopyConfig) toBQ() *bq.JobConfiguration {
+	var ts []*bq.TableReference
+	for _, t := range c.Srcs {
+		ts = append(ts, t.toBQ())
+	}
+	return &bq.JobConfiguration{
+		Labels: c.Labels,
+		Copy: &bq.JobConfigurationTableCopy{
+			CreateDisposition:                  string(c.CreateDisposition),
+			WriteDisposition:                   string(c.WriteDisposition),
+			DestinationTable:                   c.Dst.toBQ(),
+			DestinationEncryptionConfiguration: c.DestinationEncryptionConfig.toBQ(),
+			SourceTables:                       ts,
+		},
+	}
+}
+
+func bqToCopyConfig(q *bq.JobConfiguration, c *Client) *CopyConfig {
+	cc := &CopyConfig{
+		Labels:            q.Labels,
+		CreateDisposition: TableCreateDisposition(q.Copy.CreateDisposition),
+		WriteDisposition:  TableWriteDisposition(q.Copy.WriteDisposition),
+		Dst:               bqToTable(q.Copy.DestinationTable, c),
+		DestinationEncryptionConfig: bqToEncryptionConfig(q.Copy.DestinationEncryptionConfiguration),
+	}
+	for _, t := range q.Copy.SourceTables {
+		cc.Srcs = append(cc.Srcs, bqToTable(t, c))
+	}
+	return cc
 }
 
 // A Copier copies data into a BigQuery table from one or more BigQuery tables.
 type Copier struct {
+	JobIDConfig
 	CopyConfig
 	c *Client
 }
 
 // CopierFrom returns a Copier which can be used to copy data into a
-// BigQuery table from  one or more BigQuery tables.
+// BigQuery table from one or more BigQuery tables.
 // The returned Copier may optionally be further configured before its Run method is called.
 func (t *Table) CopierFrom(srcs ...*Table) *Copier {
 	return &Copier{
@@ -60,15 +95,12 @@ func (t *Table) CopierFrom(srcs ...*Table) *Copier {
 
 // Run initiates a copy job.
 func (c *Copier) Run(ctx context.Context) (*Job, error) {
-	conf := &bq.JobConfigurationTableCopy{
-		CreateDisposition: string(c.CreateDisposition),
-		WriteDisposition:  string(c.WriteDisposition),
-		DestinationTable:  c.Dst.tableRefProto(),
+	return c.c.insertJob(ctx, c.newJob(), nil)
+}
+
+func (c *Copier) newJob() *bq.Job {
+	return &bq.Job{
+		JobReference:  c.JobIDConfig.createJobRef(c.c),
+		Configuration: c.CopyConfig.toBQ(),
 	}
-	for _, t := range c.Srcs {
-		conf.SourceTables = append(conf.SourceTables, t.tableRefProto())
-	}
-	job := &bq.Job{Configuration: &bq.JobConfiguration{Copy: conf}}
-	setJobRef(job, c.JobID, c.c.projectID)
-	return c.c.service.insertJob(ctx, c.c.projectID, &insertJobConf{job: job})
 }

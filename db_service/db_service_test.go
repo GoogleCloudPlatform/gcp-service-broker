@@ -4,8 +4,8 @@ import (
 	"code.cloudfoundry.org/lager"
 	"database/sql"
 	"fmt"
-	"gcp-service-broker/brokerapi/brokers/models"
-	"gcp-service-broker/fakes"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/fakes"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -71,7 +71,7 @@ var _ = Describe("DbService", func() {
 		logger = lager.NewLogger("brokers_test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 
-		os.Setenv("SERVICES", fakes.Services)
+		fakes.SetUpTestServices()
 
 		createTestDatabase()
 		testDb, _ := gorm.Open("mysql", getLocalTestConnectionStr("servicebroker"))
@@ -93,7 +93,7 @@ var _ = Describe("DbService", func() {
 			err = DbConnection.Order("id desc").Find(&storedMigrations).Error
 			Expect(err).NotTo(HaveOccurred())
 			lastMigrationNumber := storedMigrations[0].MigrationId
-			Expect(lastMigrationNumber).To(Equal(1))
+			Expect(lastMigrationNumber).To(Equal(2))
 		})
 
 		It("should be able to run migrations multiple times", func() {

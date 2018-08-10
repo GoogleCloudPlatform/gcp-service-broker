@@ -1,4 +1,4 @@
-// Copyright 2014 Google Inc. All Rights Reserved.
+// Copyright 2014 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import (
 )
 
 func TestInvoke(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	// Time-based tests are flaky. We just make sure that invoke eventually
 	// returns with the right error.

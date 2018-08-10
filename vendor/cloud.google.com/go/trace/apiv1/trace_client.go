@@ -1,10 +1,10 @@
-// Copyright 2017, Google Inc. All rights reserved.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//     https://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/internal/version"
+	"github.com/golang/protobuf/proto"
 	gax "github.com/googleapis/gax-go"
 	"golang.org/x/net/context"
 	"google.golang.org/api/iterator"
@@ -29,6 +30,7 @@ import (
 	cloudtracepb "google.golang.org/genproto/googleapis/devtools/cloudtrace/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 )
 
 // CallOptions contains the retry settings for each method of Client.
@@ -41,11 +43,7 @@ type CallOptions struct {
 func defaultClientOptions() []option.ClientOption {
 	return []option.ClientOption{
 		option.WithEndpoint("cloudtrace.googleapis.com:443"),
-		option.WithScopes(
-			"https://www.googleapis.com/auth/cloud-platform",
-			"https://www.googleapis.com/auth/trace.append",
-			"https://www.googleapis.com/auth/trace.readonly",
-		),
+		option.WithScopes(DefaultAuthScopes()...),
 	}
 }
 
@@ -72,6 +70,8 @@ func defaultCallOptions() *CallOptions {
 }
 
 // Client is a client for interacting with Stackdriver Trace API.
+//
+// Methods, except Close, may be called concurrently. However, fields must not be modified concurrently with method calls.
 type Client struct {
 	// The connection to the service.
 	conn *grpc.ClientConn
@@ -82,8 +82,8 @@ type Client struct {
 	// The call options for this service.
 	CallOptions *CallOptions
 
-	// The metadata to be sent with each request.
-	xGoogHeader string
+	// The x-goog-* metadata to be sent with each request.
+	xGoogMetadata metadata.MD
 }
 
 // NewClient creates a new trace service client.
@@ -124,8 +124,8 @@ func (c *Client) Close() error {
 // use by Google-written clients.
 func (c *Client) SetGoogleClientInfo(keyval ...string) {
 	kv := append([]string{"gl-go", version.Go()}, keyval...)
-	kv = append(kv, "gapic", version.Repo, "gax", gax.Version, "grpc", "")
-	c.xGoogHeader = gax.XGoogHeader(kv...)
+	kv = append(kv, "gapic", version.Repo, "gax", gax.Version, "grpc", grpc.Version)
+	c.xGoogMetadata = metadata.Pairs("x-goog-api-client", gax.XGoogHeader(kv...))
 }
 
 // PatchTraces sends new traces to Stackdriver Trace or updates existing traces. If the ID
@@ -133,25 +133,27 @@ func (c *Client) SetGoogleClientInfo(keyval ...string) {
 // in the existing trace and its spans are overwritten by the provided values,
 // and any new fields provided are merged with the existing trace data. If the
 // ID does not match, a new trace is created.
-func (c *Client) PatchTraces(ctx context.Context, req *cloudtracepb.PatchTracesRequest) error {
-	ctx = insertXGoog(ctx, c.xGoogHeader)
-	err := gax.Invoke(ctx, func(ctx context.Context) error {
+func (c *Client) PatchTraces(ctx context.Context, req *cloudtracepb.PatchTracesRequest, opts ...gax.CallOption) error {
+	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	opts = append(c.CallOptions.PatchTraces[0:len(c.CallOptions.PatchTraces):len(c.CallOptions.PatchTraces)], opts...)
+	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
-		_, err = c.client.PatchTraces(ctx, req)
+		_, err = c.client.PatchTraces(ctx, req, settings.GRPC...)
 		return err
-	}, c.CallOptions.PatchTraces...)
+	}, opts...)
 	return err
 }
 
 // GetTrace gets a single trace by its ID.
-func (c *Client) GetTrace(ctx context.Context, req *cloudtracepb.GetTraceRequest) (*cloudtracepb.Trace, error) {
-	ctx = insertXGoog(ctx, c.xGoogHeader)
+func (c *Client) GetTrace(ctx context.Context, req *cloudtracepb.GetTraceRequest, opts ...gax.CallOption) (*cloudtracepb.Trace, error) {
+	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	opts = append(c.CallOptions.GetTrace[0:len(c.CallOptions.GetTrace):len(c.CallOptions.GetTrace)], opts...)
 	var resp *cloudtracepb.Trace
-	err := gax.Invoke(ctx, func(ctx context.Context) error {
+	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 		var err error
-		resp, err = c.client.GetTrace(ctx, req)
+		resp, err = c.client.GetTrace(ctx, req, settings.GRPC...)
 		return err
-	}, c.CallOptions.GetTrace...)
+	}, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -159,9 +161,11 @@ func (c *Client) GetTrace(ctx context.Context, req *cloudtracepb.GetTraceRequest
 }
 
 // ListTraces returns of a list of traces that match the specified filter conditions.
-func (c *Client) ListTraces(ctx context.Context, req *cloudtracepb.ListTracesRequest) *TraceIterator {
-	ctx = insertXGoog(ctx, c.xGoogHeader)
+func (c *Client) ListTraces(ctx context.Context, req *cloudtracepb.ListTracesRequest, opts ...gax.CallOption) *TraceIterator {
+	ctx = insertMetadata(ctx, c.xGoogMetadata)
+	opts = append(c.CallOptions.ListTraces[0:len(c.CallOptions.ListTraces):len(c.CallOptions.ListTraces)], opts...)
 	it := &TraceIterator{}
+	req = proto.Clone(req).(*cloudtracepb.ListTracesRequest)
 	it.InternalFetch = func(pageSize int, pageToken string) ([]*cloudtracepb.Trace, string, error) {
 		var resp *cloudtracepb.ListTracesResponse
 		req.PageToken = pageToken
@@ -170,11 +174,11 @@ func (c *Client) ListTraces(ctx context.Context, req *cloudtracepb.ListTracesReq
 		} else {
 			req.PageSize = int32(pageSize)
 		}
-		err := gax.Invoke(ctx, func(ctx context.Context) error {
+		err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {
 			var err error
-			resp, err = c.client.ListTraces(ctx, req)
+			resp, err = c.client.ListTraces(ctx, req, settings.GRPC...)
 			return err
-		}, c.CallOptions.ListTraces...)
+		}, opts...)
 		if err != nil {
 			return nil, "", err
 		}
@@ -189,6 +193,7 @@ func (c *Client) ListTraces(ctx context.Context, req *cloudtracepb.ListTracesReq
 		return nextPageToken, nil
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(fetch, it.bufLen, it.takeBuf)
+	it.pageInfo.MaxSize = int(req.PageSize)
 	return it
 }
 

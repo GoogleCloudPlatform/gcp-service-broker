@@ -1,4 +1,4 @@
-// Copyright 2016 Google Inc. All Rights Reserved.
+// Copyright 2016 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,4 +27,13 @@ const (
 func LogPath(parent, logID string) string {
 	logID = strings.Replace(logID, "/", "%2F", -1)
 	return fmt.Sprintf("%s/logs/%s", parent, logID)
+}
+
+func LogIDFromPath(parent, path string) string {
+	start := len(parent) + len("/logs/")
+	if len(path) < start {
+		return ""
+	}
+	logID := path[start:]
+	return strings.Replace(logID, "%2F", "/", -1)
 }

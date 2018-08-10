@@ -1,4 +1,4 @@
-// Copyright 2016 Google Inc. All Rights Reserved.
+// Copyright 2016 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"reflect"
 	"testing"
 	"time"
 
@@ -33,6 +32,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	durpb "github.com/golang/protobuf/ptypes/duration"
 	structpb "github.com/golang/protobuf/ptypes/struct"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
 	mrpb "google.golang.org/genproto/googleapis/api/monitoredres"
@@ -123,7 +123,7 @@ func TestFromLogEntry(t *testing.T) {
 	logEntry := logpb.LogEntry{
 		LogName:   "projects/PROJECT_ID/logs/LOG_ID",
 		Resource:  res,
-		Payload:   &logpb.LogEntry_TextPayload{"hello"},
+		Payload:   &logpb.LogEntry_TextPayload{TextPayload: "hello"},
 		Timestamp: ts,
 		Severity:  logtypepb.LogSeverity_INFO,
 		InsertId:  "123",
@@ -167,8 +167,8 @@ func TestFromLogEntry(t *testing.T) {
 				Method: "GET",
 				URL:    u,
 				Header: map[string][]string{
-					"User-Agent": []string{"user-agent"},
-					"Referer":    []string{"referer"},
+					"User-Agent": {"user-agent"},
+					"Referer":    {"referer"},
 				},
 			},
 			RequestSize:                    100,
@@ -184,16 +184,8 @@ func TestFromLogEntry(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Test sub-values separately because %+v and %#v do not follow pointers.
-	// TODO(jba): use a differ or pretty-printer.
-	if !reflect.DeepEqual(got.HTTPRequest.Request, want.HTTPRequest.Request) {
-		t.Fatalf("HTTPRequest.Request:\ngot  %+v\nwant %+v", got.HTTPRequest.Request, want.HTTPRequest.Request)
-	}
-	if !reflect.DeepEqual(got.HTTPRequest, want.HTTPRequest) {
-		t.Fatalf("HTTPRequest:\ngot  %+v\nwant %+v", got.HTTPRequest, want.HTTPRequest)
-	}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("FullEntry:\ngot  %+v\nwant %+v", got, want)
+	if diff := testutil.Diff(got, want, cmpopts.IgnoreUnexported(http.Request{})); diff != "" {
+		t.Errorf("FullEntry:\n%s", diff)
 	}
 
 	// Proto payload.
@@ -210,62 +202,63 @@ func TestFromLogEntry(t *testing.T) {
 		LogName:   "projects/PROJECT_ID/logs/LOG_ID",
 		Resource:  res,
 		Timestamp: ts,
-		Payload:   &logpb.LogEntry_ProtoPayload{any},
+		Payload:   &logpb.LogEntry_ProtoPayload{ProtoPayload: any},
 	}
 	got, err = fromLogEntry(&logEntry)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(got.Payload, alog) {
+	if !ltesting.PayloadEqual(got.Payload, alog) {
 		t.Errorf("got %+v, want %+v", got.Payload, alog)
 	}
 
 	// JSON payload.
-	jstruct := &structpb.Struct{map[string]*structpb.Value{
-		"f": &structpb.Value{&structpb.Value_NumberValue{3.1}},
+	jstruct := &structpb.Struct{Fields: map[string]*structpb.Value{
+		"f": {Kind: &structpb.Value_NumberValue{NumberValue: 3.1}},
 	}}
 	logEntry = logpb.LogEntry{
 		LogName:   "projects/PROJECT_ID/logs/LOG_ID",
 		Resource:  res,
 		Timestamp: ts,
-		Payload:   &logpb.LogEntry_JsonPayload{jstruct},
+		Payload:   &logpb.LogEntry_JsonPayload{JsonPayload: jstruct},
 	}
 	got, err = fromLogEntry(&logEntry)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(got.Payload, jstruct) {
+	if !ltesting.PayloadEqual(got.Payload, jstruct) {
 		t.Errorf("got %+v, want %+v", got.Payload, jstruct)
 	}
 }
 
 func TestListLogEntriesRequest(t *testing.T) {
 	for _, test := range []struct {
-		opts       []EntriesOption
-		projectIDs []string
-		filter     string
-		orderBy    string
+		opts          []EntriesOption
+		resourceNames []string
+		filter        string
+		orderBy       string
 	}{
 		// Default is client's project ID, empty filter and orderBy.
-		{nil,
-			[]string{"PROJECT_ID"}, "", ""},
+		{nil, []string{"projects/PROJECT_ID"}, "", ""},
 		{[]EntriesOption{NewestFirst(), Filter("f")},
-			[]string{"PROJECT_ID"}, "f", "timestamp desc"},
+			[]string{"projects/PROJECT_ID"}, "f", "timestamp desc"},
 		{[]EntriesOption{ProjectIDs([]string{"foo"})},
-			[]string{"foo"}, "", ""},
+			[]string{"projects/foo"}, "", ""},
+		{[]EntriesOption{ResourceNames([]string{"folders/F", "organizations/O"})},
+			[]string{"folders/F", "organizations/O"}, "", ""},
 		{[]EntriesOption{NewestFirst(), Filter("f"), ProjectIDs([]string{"foo"})},
-			[]string{"foo"}, "f", "timestamp desc"},
+			[]string{"projects/foo"}, "f", "timestamp desc"},
 		{[]EntriesOption{NewestFirst(), Filter("f"), ProjectIDs([]string{"foo"})},
-			[]string{"foo"}, "f", "timestamp desc"},
+			[]string{"projects/foo"}, "f", "timestamp desc"},
 		// If there are repeats, last one wins.
 		{[]EntriesOption{NewestFirst(), Filter("no"), ProjectIDs([]string{"foo"}), Filter("f")},
-			[]string{"foo"}, "f", "timestamp desc"},
+			[]string{"projects/foo"}, "f", "timestamp desc"},
 	} {
-		got := listLogEntriesRequest("PROJECT_ID", test.opts)
+		got := listLogEntriesRequest("projects/PROJECT_ID", test.opts)
 		want := &logpb.ListLogEntriesRequest{
-			ProjectIds: test.projectIDs,
-			Filter:     test.filter,
-			OrderBy:    test.orderBy,
+			ResourceNames: test.resourceNames,
+			Filter:        test.filter,
+			OrderBy:       test.orderBy,
 		}
 		if !proto.Equal(got, want) {
 			t.Errorf("%v:\ngot  %v\nwant %v", test.opts, got, want)
