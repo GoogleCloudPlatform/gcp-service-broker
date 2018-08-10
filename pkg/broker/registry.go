@@ -182,7 +182,7 @@ func (svc *BrokerService) GetPlanById(planId string) (*models.ServicePlan, error
 }
 
 // UserDefinedPlans extracts user defined plans from the environment, failing if
-// the plans were not valid JSON.
+// the plans were not valid JSON or were missing required properties/variables.
 func (svc *BrokerService) UserDefinedPlans() ([]models.ServicePlan, error) {
 	plans := []models.ServicePlan{}
 
@@ -191,8 +191,63 @@ func (svc *BrokerService) UserDefinedPlans() ([]models.ServicePlan, error) {
 		return plans, nil
 	}
 
-	err := json.Unmarshal([]byte(userPlanJson), &plans)
-	return plans, err
+	// There's a mismatch between how plans are used internally and defined by
+	// the user and the tile. In the environment variables we parse an array of
+	// flat maps, but internally extra variables need to be put into a sub-map.
+	// e.g. they come in as [{"id":"1234", "name":"foo", "A": 1, "B": 2}]
+	// but we need [{"id":"1234", "name":"foo", "service_properties":{"A": 1, "B": 2}}]
+	// Go doesn't support this natively so we do it manually here.
+	rawPlans := []json.RawMessage{}
+	if err := json.Unmarshal([]byte(userPlanJson), &rawPlans); err != nil {
+		return plans, err
+	}
+
+	for _, rawPlan := range rawPlans {
+		plan := models.ServicePlan{}
+		remainder, err := utils.UnmarshalObjectRemainder(rawPlan, &plan)
+		if err != nil {
+			return []models.ServicePlan{}, err
+		}
+
+		plan.ServiceProperties = make(map[string]string)
+		if err := json.Unmarshal(remainder, &plan.ServiceProperties); err != nil {
+			return []models.ServicePlan{}, err
+		}
+
+		if err := svc.validatePlan(plan); err != nil {
+			return []models.ServicePlan{}, err
+		}
+
+		plans = append(plans, plan)
+	}
+
+	return plans, nil
+}
+
+func (svc *BrokerService) validatePlan(plan models.ServicePlan) error {
+	if plan.ID == "" {
+		return fmt.Errorf("%s custom plan %+v is missing an id", svc.Name, plan)
+	}
+
+	if plan.Name == "" {
+		return fmt.Errorf("%s custom plan %+v is missing a name", svc.Name, plan)
+	}
+
+	if svc.PlanVariables == nil {
+		return nil
+	}
+
+	for _, customVar := range svc.PlanVariables {
+		if !customVar.Required {
+			continue
+		}
+
+		if _, ok := plan.ServiceProperties[customVar.FieldName]; !ok {
+			return fmt.Errorf("%s custom plan %+v is missing required property %s", svc.Name, plan, customVar.FieldName)
+		}
+	}
+
+	return nil
 }
 
 // ServiceDefinition extracts service definition from the environment, failing

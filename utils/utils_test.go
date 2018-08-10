@@ -14,7 +14,9 @@
 
 package utils
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func ExamplePropertyToEnv() {
 	env := PropertyToEnv("my.property.key-value")
@@ -41,4 +43,20 @@ func ExampleSetParameter() {
 
 	// Output: {"foo":42}, <nil>
 	// {"replace":"new"}, <nil>
+}
+
+func ExampleUnmarshalObjectRemainder() {
+	var obj struct {
+		A string `json:"a_str"`
+		B int
+	}
+
+	remainder, err := UnmarshalObjectRemainder([]byte(`{"a_str":"hello", "B": 33, "C": 123}`), &obj)
+	fmt.Printf("%s, %v\n", string(remainder), err)
+
+	remainder, err = UnmarshalObjectRemainder([]byte(`{"a_str":"hello", "B": 33}`), &obj)
+	fmt.Printf("%s, %v\n", string(remainder), err)
+
+	// Output: {"C":123}, <nil>
+	// {}, <nil>
 }
