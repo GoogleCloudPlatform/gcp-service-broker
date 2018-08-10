@@ -130,9 +130,11 @@ func (svc *BrokerService) UserDefinedPlansProperty() string {
 // TileUserDefinedPlansVariable returns the name of the user defined plans
 // variable for the broker tile.
 func (svc *BrokerService) TileUserDefinedPlansVariable() string {
+	prefix := "GOOGLE_"
+
 	v := utils.PropertyToEnvUnprefixed(svc.Name)
-	if strings.HasPrefix(v, "GOOGLE_") {
-		v = v[7:]
+	if strings.HasPrefix(v, prefix) {
+		v = v[len(prefix):]
 	}
 
 	return v + "_CUSTOM_PLANS"

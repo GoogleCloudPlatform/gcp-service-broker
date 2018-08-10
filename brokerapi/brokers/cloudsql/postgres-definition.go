@@ -135,7 +135,7 @@ func init() {
 			broker.BrokerVariable{
 				FieldName: "tier",
 				Type:      broker.JsonTypeString,
-				Details:   "a string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840",
+				Details:   "A string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840",
 				Required:  true,
 			},
 			broker.BrokerVariable{
