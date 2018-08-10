@@ -72,40 +72,40 @@ For example:
 
 <table>
 <tr>
-	<th>JSON Property</th>
-	<th>Type</th>
-	<th>Label</th>
-	<th>Details</th>
+  <th>JSON Property</th>
+  <th>Type</th>
+  <th>Label</th>
+  <th>Details</th>
 </tr>
 <tr>
-	<td><tt>id</tt></td>
-	<td><i>string</i></td>
-	<td>Plan UUID</td>
-	<td>
-		The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
-		<ul><li>**Required**</li></ul>
-	</td>
+  <td><tt>id</tt></td>
+  <td><i>string</i></td>
+  <td>Plan UUID</td>
+  <td>
+    The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
+    <ul><li><b>Required</b></li></ul>
+  </td>
 </tr>
 <tr>
-	<td><tt>name</tt></td>
-	<td><i>string</i></td>
-	<td>Plan CLI Name</td>
-	<td>
-		The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
-		<ul><li>**Required**</li></ul>
-	</td>
+  <td><tt>name</tt></td>
+  <td><i>string</i></td>
+  <td>Plan CLI Name</td>
+  <td>
+    The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
+    <ul><li><b>Required</b></li></ul>
+  </td>
 </tr>
 
 {{ range .Properties }}
-	<tr>
-		<td><tt>{{ .Name }}</tt></td>
-		<td><i>{{ .Type }}</i></td>
-		<td>{{ .Label }}</td>
-		<td>
-		{{ .Description }}
-		{{ template "variable-details-list" . }}
-		</td>
-	</tr>
+<tr>
+  <td><tt>{{ .Name }}</tt></td>
+  <td><i>{{ .Type }}</i></td>
+  <td>{{ .Label }}</td>
+  <td>
+  {{ .Description }}
+  {{ template "variable-details-list" . }}
+  </td>
+</tr>
 {{ end }}
 </table>
 
@@ -114,7 +114,7 @@ For example:
 {{/*=======================================================================*/}}
 {{ define "environment-variable-doc" -}}
 
-**<tt>{{ upper .Name }}</tt>** - _{{ .Type }}_ - {{ .Label }}
+<b><tt>{{ upper .Name }}</tt></b> - <i>{{ .Type }}</i> - {{ .Label }}
 
 {{ .Description }}
 
@@ -126,22 +126,22 @@ For example:
 {{ define "variable-details-list"}}
 
 <ul>
-	<li>{{ if .Optional }} _Optional_ {{ else }} **Required** {{ end }}</li>
+  <li>{{ if .Optional }}<i>Optional</i>{{ else }}<b>Required</b>{{ end }}</li>
 
 {{ if .Default }}
-	<li>Default: <code>{{ js .Default }}</code></li>
+  <li>Default: <code>{{ js .Default }}</code></li>
 {{- end }}
 
 {{- if not .Configurable }}
-	<li>This option _is not_ user configurable. It must be set to the default.</li>
+  <li>This option _is not_ user configurable. It must be set to the default.</li>
 {{- end }}
 
 {{- if .Options }}
-	<li>Valid Values:
-	<ul>
-		{{ range .Options }}<li><tt>{{ .Name }}</tt> - {{ .Label }}</li>{{ end }}
-	</ul>
-	</li>
+  <li>Valid Values:
+  <ul>
+    {{ range .Options }}<li><tt>{{ .Name }}</tt> - {{ .Label }}</li>{{ end }}
+  </ul>
+  </li>
 {{ end }}
 </ul>
 

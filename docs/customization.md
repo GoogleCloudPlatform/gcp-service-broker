@@ -1,4 +1,3 @@
-
 # Installation Customization
 
 This file documents the various environment variables you can set to change the functionality of the service broker.
@@ -12,14 +11,14 @@ Please paste in the contents of the json keyfile (un-encoded) for your service a
 
 You can configure the following environment variables:
 
-**<tt>ROOT_SERVICE_ACCOUNT_JSON</tt>** - _text_ - Root Service Account JSON
+<b><tt>ROOT_SERVICE_ACCOUNT_JSON</tt></b> - <i>text</i> - Root Service Account JSON
 
 
 
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
 </ul>
@@ -32,100 +31,100 @@ Connection details for the backing database for the service broker
 
 You can configure the following environment variables:
 
-**<tt>DB_HOST</tt>** - _string_ - Database host
+<b><tt>DB_HOST</tt></b> - <i>string</i> - Database host
 
 
 
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
 </ul>
 
-**<tt>DB_USERNAME</tt>** - _string_ - Database username
+<b><tt>DB_USERNAME</tt></b> - <i>string</i> - Database username
 
 
 
 
 
 <ul>
-	<li> _Optional_ </li>
+  <li><i>Optional</i></li>
 
 
 </ul>
 
-**<tt>DB_PASSWORD</tt>** - _secret_ - Database password
+<b><tt>DB_PASSWORD</tt></b> - <i>secret</i> - Database password
 
 
 
 
 
 <ul>
-	<li> _Optional_ </li>
+  <li><i>Optional</i></li>
 
 
 </ul>
 
-**<tt>DB_PORT</tt>** - _string_ - Database port (defaults to 3306)
+<b><tt>DB_PORT</tt></b> - <i>string</i> - Database port (defaults to 3306)
 
 
 
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>3306</code></li>
+  <li>Default: <code>3306</code></li>
 </ul>
 
-**<tt>DB_NAME</tt>** - _string_ - Database name
+<b><tt>DB_NAME</tt></b> - <i>string</i> - Database name
 
 
 
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>servicebroker</code></li>
+  <li>Default: <code>servicebroker</code></li>
 </ul>
 
-**<tt>CA_CERT</tt>** - _text_ - Server CA cert
+<b><tt>CA_CERT</tt></b> - <i>text</i> - Server CA cert
 
 
 
 
 
 <ul>
-	<li> _Optional_ </li>
-
-
-</ul>
-
-**<tt>CLIENT_CERT</tt>** - _text_ - Client cert
-
-
-
-
-
-<ul>
-	<li> _Optional_ </li>
+  <li><i>Optional</i></li>
 
 
 </ul>
 
-**<tt>CLIENT_KEY</tt>** - _text_ - Client key
+<b><tt>CLIENT_CERT</tt></b> - <i>text</i> - Client cert
 
 
 
 
 
 <ul>
-	<li> _Optional_ </li>
+  <li><i>Optional</i></li>
+
+
+</ul>
+
+<b><tt>CLIENT_KEY</tt></b> - <i>text</i> - Client key
+
+
+
+
+
+<ul>
+  <li><i>Optional</i></li>
 
 
 </ul>
@@ -138,147 +137,147 @@ Enable or disable services
 
 You can configure the following environment variables:
 
-**<tt>GSB_SERVICE_GOOGLE_BIGQUERY_ENABLED</tt>** - _boolean_ - Let the broker create and bind Google BigQuery instances
+<b><tt>GSB_SERVICE_GOOGLE_BIGQUERY_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google BigQuery instances
 
 
 
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>true</code></li>
+  <li>Default: <code>true</code></li>
 </ul>
 
-**<tt>GSB_SERVICE_GOOGLE_BIGTABLE_ENABLED</tt>** - _boolean_ - Let the broker create and bind Google Bigtable instances
+<b><tt>GSB_SERVICE_GOOGLE_BIGTABLE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Bigtable instances
 
 
 
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>true</code></li>
+  <li>Default: <code>true</code></li>
 </ul>
 
-**<tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_ENABLED</tt>** - _boolean_ - Let the broker create and bind Google CloudSQL MySQL instances
+<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google CloudSQL MySQL instances
 
 
 
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>true</code></li>
+  <li>Default: <code>true</code></li>
 </ul>
 
-**<tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_ENABLED</tt>** - _boolean_ - Let the broker create and bind Google CloudSQL PostgreSQL instances
+<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google CloudSQL PostgreSQL instances
 
 
 
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>true</code></li>
+  <li>Default: <code>true</code></li>
 </ul>
 
-**<tt>GSB_SERVICE_GOOGLE_DATASTORE_ENABLED</tt>** - _boolean_ - Let the broker create and bind Google Cloud Datastore instances
+<b><tt>GSB_SERVICE_GOOGLE_DATASTORE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Datastore instances
 
 
 
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>true</code></li>
+  <li>Default: <code>true</code></li>
 </ul>
 
-**<tt>GSB_SERVICE_GOOGLE_ML_APIS_ENABLED</tt>** - _boolean_ - Let the broker create and bind Google Machine Learning APIs instances
+<b><tt>GSB_SERVICE_GOOGLE_ML_APIS_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Machine Learning APIs instances
 
 
 
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>true</code></li>
+  <li>Default: <code>true</code></li>
 </ul>
 
-**<tt>GSB_SERVICE_GOOGLE_PUBSUB_ENABLED</tt>** - _boolean_ - Let the broker create and bind Google PubSub instances
+<b><tt>GSB_SERVICE_GOOGLE_PUBSUB_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google PubSub instances
 
 
 
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>true</code></li>
+  <li>Default: <code>true</code></li>
 </ul>
 
-**<tt>GSB_SERVICE_GOOGLE_SPANNER_ENABLED</tt>** - _boolean_ - Let the broker create and bind Google Spanner instances
+<b><tt>GSB_SERVICE_GOOGLE_SPANNER_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Spanner instances
 
 
 
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>true</code></li>
+  <li>Default: <code>true</code></li>
 </ul>
 
-**<tt>GSB_SERVICE_GOOGLE_STACKDRIVER_DEBUGGER_ENABLED</tt>** - _boolean_ - Let the broker create and bind Stackdriver Debugger instances
+<b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_DEBUGGER_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Debugger instances
 
 
 
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>true</code></li>
+  <li>Default: <code>true</code></li>
 </ul>
 
-**<tt>GSB_SERVICE_GOOGLE_STACKDRIVER_TRACE_ENABLED</tt>** - _boolean_ - Let the broker create and bind Stackdriver Trace instances
+<b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_TRACE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Trace instances
 
 
 
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>true</code></li>
+  <li>Default: <code>true</code></li>
 </ul>
 
-**<tt>GSB_SERVICE_GOOGLE_STORAGE_ENABLED</tt>** - _boolean_ - Let the broker create and bind Google Cloud Storage instances
+<b><tt>GSB_SERVICE_GOOGLE_STORAGE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Storage instances
 
 
 
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>true</code></li>
+  <li>Default: <code>true</code></li>
 </ul>
 
 
@@ -304,136 +303,136 @@ For example:
 
 <table>
 <tr>
-	<th>JSON Property</th>
-	<th>Type</th>
-	<th>Label</th>
-	<th>Details</th>
+  <th>JSON Property</th>
+  <th>Type</th>
+  <th>Label</th>
+  <th>Details</th>
 </tr>
 <tr>
-	<td><tt>id</tt></td>
-	<td><i>string</i></td>
-	<td>Plan UUID</td>
-	<td>
-		The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
-		<ul><li>**Required**</li></ul>
-	</td>
+  <td><tt>id</tt></td>
+  <td><i>string</i></td>
+  <td>Plan UUID</td>
+  <td>
+    The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
+    <ul><li><b>Required</b></li></ul>
+  </td>
 </tr>
 <tr>
-	<td><tt>name</tt></td>
-	<td><i>string</i></td>
-	<td>Plan CLI Name</td>
-	<td>
-		The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
-		<ul><li>**Required**</li></ul>
-	</td>
+  <td><tt>name</tt></td>
+  <td><i>string</i></td>
+  <td>Plan CLI Name</td>
+  <td>
+    The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
+    <ul><li><b>Required</b></li></ul>
+  </td>
 </tr>
 
 
-	<tr>
-		<td><tt>display_name</tt></td>
-		<td><i>string</i></td>
-		<td>Display Name</td>
-		<td>
-		Display name
+<tr>
+  <td><tt>display_name</tt></td>
+  <td><i>string</i></td>
+  <td>Display Name</td>
+  <td>
+  Display name
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
-	<tr>
-		<td><tt>description</tt></td>
-		<td><i>string</i></td>
-		<td>Plan description</td>
-		<td>
-		Plan description
+<tr>
+  <td><tt>description</tt></td>
+  <td><i>string</i></td>
+  <td>Plan description</td>
+  <td>
+  Plan description
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
-	<tr>
-		<td><tt>service</tt></td>
-		<td><i>dropdown_select</i></td>
-		<td>Service</td>
-		<td>
-		The service this plan is associated with
+<tr>
+  <td><tt>service</tt></td>
+  <td><i>dropdown_select</i></td>
+  <td>Service</td>
+  <td>
+  The service this plan is associated with
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>b8e19880-ac58-42ef-b033-f7cd9c94d1fe</code></li>
-	<li>This option _is not_ user configurable. It must be set to the default.</li>
-	<li>Valid Values:
-	<ul>
-		<li><tt>b8e19880-ac58-42ef-b033-f7cd9c94d1fe</tt> - Google Bigtable</li>
-	</ul>
-	</li>
+  <li>Default: <code>b8e19880-ac58-42ef-b033-f7cd9c94d1fe</code></li>
+  <li>This option _is not_ user configurable. It must be set to the default.</li>
+  <li>Valid Values:
+  <ul>
+    <li><tt>b8e19880-ac58-42ef-b033-f7cd9c94d1fe</tt> - Google Bigtable</li>
+  </ul>
+  </li>
 
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
-	<tr>
-		<td><tt>storage_type</tt></td>
-		<td><i>dropdown_select</i></td>
-		<td>Storage Type</td>
-		<td>
-		Either HDD or SSD (see https://cloud.google.com/bigtable/pricing for more information)
+<tr>
+  <td><tt>storage_type</tt></td>
+  <td><i>dropdown_select</i></td>
+  <td>Storage Type</td>
+  <td>
+  Either HDD or SSD (see https://cloud.google.com/bigtable/pricing for more information)
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>SSD</code></li>
-	<li>Valid Values:
-	<ul>
-		<li><tt>SSD</tt> - SSD - Solid-state Drive</li><li><tt>HDD</tt> - HDD - Hard Disk Drive</li>
-	</ul>
-	</li>
+  <li>Default: <code>SSD</code></li>
+  <li>Valid Values:
+  <ul>
+    <li><tt>SSD</tt> - SSD - Solid-state Drive</li><li><tt>HDD</tt> - HDD - Hard Disk Drive</li>
+  </ul>
+  </li>
 
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
-	<tr>
-		<td><tt>num_nodes</tt></td>
-		<td><i>string</i></td>
-		<td>Num Nodes</td>
-		<td>
-		Number of Nodes, Between 3 and 30 (see https://cloud.google.com/bigtable/pricing for more information)
+<tr>
+  <td><tt>num_nodes</tt></td>
+  <td><i>string</i></td>
+  <td>Num Nodes</td>
+  <td>
+  Number of Nodes, Between 3 and 30 (see https://cloud.google.com/bigtable/pricing for more information)
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>3</code></li>
+  <li>Default: <code>3</code></li>
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
 </table>
 
@@ -449,154 +448,154 @@ For example:
 
 <table>
 <tr>
-	<th>JSON Property</th>
-	<th>Type</th>
-	<th>Label</th>
-	<th>Details</th>
+  <th>JSON Property</th>
+  <th>Type</th>
+  <th>Label</th>
+  <th>Details</th>
 </tr>
 <tr>
-	<td><tt>id</tt></td>
-	<td><i>string</i></td>
-	<td>Plan UUID</td>
-	<td>
-		The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
-		<ul><li>**Required**</li></ul>
-	</td>
+  <td><tt>id</tt></td>
+  <td><i>string</i></td>
+  <td>Plan UUID</td>
+  <td>
+    The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
+    <ul><li><b>Required</b></li></ul>
+  </td>
 </tr>
 <tr>
-	<td><tt>name</tt></td>
-	<td><i>string</i></td>
-	<td>Plan CLI Name</td>
-	<td>
-		The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
-		<ul><li>**Required**</li></ul>
-	</td>
+  <td><tt>name</tt></td>
+  <td><i>string</i></td>
+  <td>Plan CLI Name</td>
+  <td>
+    The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
+    <ul><li><b>Required</b></li></ul>
+  </td>
 </tr>
 
 
-	<tr>
-		<td><tt>display_name</tt></td>
-		<td><i>string</i></td>
-		<td>Display Name</td>
-		<td>
-		Display name
+<tr>
+  <td><tt>display_name</tt></td>
+  <td><i>string</i></td>
+  <td>Display Name</td>
+  <td>
+  Display name
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
-	<tr>
-		<td><tt>description</tt></td>
-		<td><i>string</i></td>
-		<td>Plan description</td>
-		<td>
-		Plan description
+<tr>
+  <td><tt>description</tt></td>
+  <td><i>string</i></td>
+  <td>Plan description</td>
+  <td>
+  Plan description
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
-	<tr>
-		<td><tt>service</tt></td>
-		<td><i>dropdown_select</i></td>
-		<td>Service</td>
-		<td>
-		The service this plan is associated with
+<tr>
+  <td><tt>service</tt></td>
+  <td><i>dropdown_select</i></td>
+  <td>Service</td>
+  <td>
+  The service this plan is associated with
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>4bc59b9a-8520-409f-85da-1c7552315863</code></li>
-	<li>This option _is not_ user configurable. It must be set to the default.</li>
-	<li>Valid Values:
-	<ul>
-		<li><tt>4bc59b9a-8520-409f-85da-1c7552315863</tt> - Google CloudSQL MySQL</li>
-	</ul>
-	</li>
+  <li>Default: <code>4bc59b9a-8520-409f-85da-1c7552315863</code></li>
+  <li>This option _is not_ user configurable. It must be set to the default.</li>
+  <li>Valid Values:
+  <ul>
+    <li><tt>4bc59b9a-8520-409f-85da-1c7552315863</tt> - Google CloudSQL MySQL</li>
+  </ul>
+  </li>
 
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
-	<tr>
-		<td><tt>tier</tt></td>
-		<td><i>string</i></td>
-		<td>Tier</td>
-		<td>
-		Case-sensitive tier/machine type name (see https://cloud.google.com/sql/pricing for more information)
+<tr>
+  <td><tt>tier</tt></td>
+  <td><i>string</i></td>
+  <td>Tier</td>
+  <td>
+  Case-sensitive tier/machine type name (see https://cloud.google.com/sql/pricing for more information)
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
-	<tr>
-		<td><tt>pricing_plan</tt></td>
-		<td><i>dropdown_select</i></td>
-		<td>Pricing Plan</td>
-		<td>
-		Select a pricing plan (only for 1st generation instances)
+<tr>
+  <td><tt>pricing_plan</tt></td>
+  <td><i>dropdown_select</i></td>
+  <td>Pricing Plan</td>
+  <td>
+  Select a pricing plan (only for 1st generation instances)
 
 
 <ul>
-	<li> _Optional_ </li>
+  <li><i>Optional</i></li>
 
 
-	<li>Default: <code>PER_USE</code></li>
-	<li>Valid Values:
-	<ul>
-		<li><tt>PACKAGE</tt> - Package</li><li><tt>PER_USE</tt> - Per-Use</li>
-	</ul>
-	</li>
+  <li>Default: <code>PER_USE</code></li>
+  <li>Valid Values:
+  <ul>
+    <li><tt>PER_USE</tt> - Per-Use</li><li><tt>PACKAGE</tt> - Package</li>
+  </ul>
+  </li>
 
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
-	<tr>
-		<td><tt>max_disk_size</tt></td>
-		<td><i>string</i></td>
-		<td>Max Disk Size</td>
-		<td>
-		Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default)
+<tr>
+  <td><tt>max_disk_size</tt></td>
+  <td><i>string</i></td>
+  <td>Max Disk Size</td>
+  <td>
+  Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default)
 
 
 <ul>
-	<li> _Optional_ </li>
+  <li><i>Optional</i></li>
 
 
-	<li>Default: <code>10</code></li>
+  <li>Default: <code>10</code></li>
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
 </table>
 
@@ -612,155 +611,155 @@ For example:
 
 <table>
 <tr>
-	<th>JSON Property</th>
-	<th>Type</th>
-	<th>Label</th>
-	<th>Details</th>
+  <th>JSON Property</th>
+  <th>Type</th>
+  <th>Label</th>
+  <th>Details</th>
 </tr>
 <tr>
-	<td><tt>id</tt></td>
-	<td><i>string</i></td>
-	<td>Plan UUID</td>
-	<td>
-		The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
-		<ul><li>**Required**</li></ul>
-	</td>
+  <td><tt>id</tt></td>
+  <td><i>string</i></td>
+  <td>Plan UUID</td>
+  <td>
+    The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
+    <ul><li><b>Required</b></li></ul>
+  </td>
 </tr>
 <tr>
-	<td><tt>name</tt></td>
-	<td><i>string</i></td>
-	<td>Plan CLI Name</td>
-	<td>
-		The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
-		<ul><li>**Required**</li></ul>
-	</td>
+  <td><tt>name</tt></td>
+  <td><i>string</i></td>
+  <td>Plan CLI Name</td>
+  <td>
+    The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
+    <ul><li><b>Required</b></li></ul>
+  </td>
 </tr>
 
 
-	<tr>
-		<td><tt>display_name</tt></td>
-		<td><i>string</i></td>
-		<td>Display Name</td>
-		<td>
-		Display name
+<tr>
+  <td><tt>display_name</tt></td>
+  <td><i>string</i></td>
+  <td>Display Name</td>
+  <td>
+  Display name
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
-	<tr>
-		<td><tt>description</tt></td>
-		<td><i>string</i></td>
-		<td>Plan description</td>
-		<td>
-		Plan description
+<tr>
+  <td><tt>description</tt></td>
+  <td><i>string</i></td>
+  <td>Plan description</td>
+  <td>
+  Plan description
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
-	<tr>
-		<td><tt>service</tt></td>
-		<td><i>dropdown_select</i></td>
-		<td>Service</td>
-		<td>
-		The service this plan is associated with
+<tr>
+  <td><tt>service</tt></td>
+  <td><i>dropdown_select</i></td>
+  <td>Service</td>
+  <td>
+  The service this plan is associated with
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>cbad6d78-a73c-432d-b8ff-b219a17a803a</code></li>
-	<li>This option _is not_ user configurable. It must be set to the default.</li>
-	<li>Valid Values:
-	<ul>
-		<li><tt>cbad6d78-a73c-432d-b8ff-b219a17a803a</tt> - Google CloudSQL PostgreSQL</li>
-	</ul>
-	</li>
+  <li>Default: <code>cbad6d78-a73c-432d-b8ff-b219a17a803a</code></li>
+  <li>This option _is not_ user configurable. It must be set to the default.</li>
+  <li>Valid Values:
+  <ul>
+    <li><tt>cbad6d78-a73c-432d-b8ff-b219a17a803a</tt> - Google CloudSQL PostgreSQL</li>
+  </ul>
+  </li>
 
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
-	<tr>
-		<td><tt>tier</tt></td>
-		<td><i>string</i></td>
-		<td>Tier</td>
-		<td>
-		a string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840
+<tr>
+  <td><tt>tier</tt></td>
+  <td><i>string</i></td>
+  <td>Tier</td>
+  <td>
+  a string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
-	<tr>
-		<td><tt>pricing_plan</tt></td>
-		<td><i>dropdown_select</i></td>
-		<td>Pricing Plan</td>
-		<td>
-		The pricing plan
+<tr>
+  <td><tt>pricing_plan</tt></td>
+  <td><i>dropdown_select</i></td>
+  <td>Pricing Plan</td>
+  <td>
+  The pricing plan
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>PER_USE</code></li>
-	<li>This option _is not_ user configurable. It must be set to the default.</li>
-	<li>Valid Values:
-	<ul>
-		<li><tt>PER_USE</tt> - Per-Use</li>
-	</ul>
-	</li>
+  <li>Default: <code>PER_USE</code></li>
+  <li>This option _is not_ user configurable. It must be set to the default.</li>
+  <li>Valid Values:
+  <ul>
+    <li><tt>PER_USE</tt> - Per-Use</li>
+  </ul>
+  </li>
 
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
-	<tr>
-		<td><tt>max_disk_size</tt></td>
-		<td><i>string</i></td>
-		<td>Max Disk Size</td>
-		<td>
-		Maximum disk size in GB (10 minimum/default)
+<tr>
+  <td><tt>max_disk_size</tt></td>
+  <td><i>string</i></td>
+  <td>Max Disk Size</td>
+  <td>
+  Maximum disk size in GB (10 minimum/default)
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>10</code></li>
+  <li>Default: <code>10</code></li>
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
 </table>
 
@@ -776,111 +775,111 @@ For example:
 
 <table>
 <tr>
-	<th>JSON Property</th>
-	<th>Type</th>
-	<th>Label</th>
-	<th>Details</th>
+  <th>JSON Property</th>
+  <th>Type</th>
+  <th>Label</th>
+  <th>Details</th>
 </tr>
 <tr>
-	<td><tt>id</tt></td>
-	<td><i>string</i></td>
-	<td>Plan UUID</td>
-	<td>
-		The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
-		<ul><li>**Required**</li></ul>
-	</td>
+  <td><tt>id</tt></td>
+  <td><i>string</i></td>
+  <td>Plan UUID</td>
+  <td>
+    The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
+    <ul><li><b>Required</b></li></ul>
+  </td>
 </tr>
 <tr>
-	<td><tt>name</tt></td>
-	<td><i>string</i></td>
-	<td>Plan CLI Name</td>
-	<td>
-		The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
-		<ul><li>**Required**</li></ul>
-	</td>
+  <td><tt>name</tt></td>
+  <td><i>string</i></td>
+  <td>Plan CLI Name</td>
+  <td>
+    The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
+    <ul><li><b>Required</b></li></ul>
+  </td>
 </tr>
 
 
-	<tr>
-		<td><tt>display_name</tt></td>
-		<td><i>string</i></td>
-		<td>Display Name</td>
-		<td>
-		Display name
+<tr>
+  <td><tt>display_name</tt></td>
+  <td><i>string</i></td>
+  <td>Display Name</td>
+  <td>
+  Display name
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
-	<tr>
-		<td><tt>description</tt></td>
-		<td><i>string</i></td>
-		<td>Plan description</td>
-		<td>
-		Plan description
+<tr>
+  <td><tt>description</tt></td>
+  <td><i>string</i></td>
+  <td>Plan description</td>
+  <td>
+  Plan description
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
-	<tr>
-		<td><tt>service</tt></td>
-		<td><i>dropdown_select</i></td>
-		<td>Service</td>
-		<td>
-		The service this plan is associated with
+<tr>
+  <td><tt>service</tt></td>
+  <td><i>dropdown_select</i></td>
+  <td>Service</td>
+  <td>
+  The service this plan is associated with
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>51b3e27e-d323-49ce-8c5f-1211e6409e82</code></li>
-	<li>This option _is not_ user configurable. It must be set to the default.</li>
-	<li>Valid Values:
-	<ul>
-		<li><tt>51b3e27e-d323-49ce-8c5f-1211e6409e82</tt> - Google Spanner</li>
-	</ul>
-	</li>
+  <li>Default: <code>51b3e27e-d323-49ce-8c5f-1211e6409e82</code></li>
+  <li>This option _is not_ user configurable. It must be set to the default.</li>
+  <li>Valid Values:
+  <ul>
+    <li><tt>51b3e27e-d323-49ce-8c5f-1211e6409e82</tt> - Google Spanner</li>
+  </ul>
+  </li>
 
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
-	<tr>
-		<td><tt>num_nodes</tt></td>
-		<td><i>string</i></td>
-		<td>Num Nodes</td>
-		<td>
-		Number of Nodes, A minimum of 3 nodes is recommended for production environments. (see https://cloud.google.com/spanner/pricing for more information)
+<tr>
+  <td><tt>num_nodes</tt></td>
+  <td><i>string</i></td>
+  <td>Num Nodes</td>
+  <td>
+  Number of Nodes, A minimum of 3 nodes is recommended for production environments. (see https://cloud.google.com/spanner/pricing for more information)
 
 
 <ul>
-	<li> **Required** </li>
+  <li><b>Required</b></li>
 
 
-	<li>Default: <code>1</code></li>
+  <li>Default: <code>1</code></li>
 </ul>
 
 
-		</td>
-	</tr>
+  </td>
+</tr>
 
 </table>
 
