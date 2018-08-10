@@ -31,7 +31,6 @@ import:
   - storage
   - spanner/admin/instance/apiv1
   - spanner/...
-- package: github.com/kelseyhightower/envconfig
 - package: gopkg.in/validator.v2
 - package: github.com/spf13/cobra
   version: ^0.0.3
