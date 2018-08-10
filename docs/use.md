@@ -716,6 +716,69 @@ Uses plan: `10866183-a775-49e8-96e3-4e7a901e4a79`
 
 --------------------------------------------------------------------------------
 
+# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg) Stackdriver Profiler
+
+Continuous CPU and heap profiling to improve performance and reduce costs.
+
+ * [Documentation](https://cloud.google.com/profiler/docs/)
+ * [Support](https://cloud.google.com/support/)
+ * Catalog Metadata ID: `00b9ca4a-7cd6-406a-a5b7-2f43f41ade75`
+ * Tags: gcp, stackdriver, profiler
+
+## Provisioning
+
+**Request Parameters**
+
+_No parameters supported._
+
+
+## Binding
+
+**Request Parameters**
+
+_No parameters supported._
+
+**Response Parameters**
+
+ * `Email` _string_ - Email address of the service account
+ * `Name` _string_ - The name of the service account
+ * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
+ * `ProjectId` _string_ - ID of the project that owns the service account
+ * `UniqueId` _string_ - Unique and stable id of the service account
+
+## Plans
+
+
+  * **default**: Stackdriver Profiler default plan - Plan ID: `594627f6-35f5-462f-9074-10fb033fb18a`
+
+
+## Examples
+
+
+
+
+### Basic Configuration
+
+
+Creates an account with the permission `cloudprofiler.agent`.
+Uses plan: `594627f6-35f5-462f-9074-10fb033fb18a`
+
+**Provision**
+
+```javascript
+{}
+```
+
+**Bind**
+
+```javascript
+{}
+```
+
+
+
+--------------------------------------------------------------------------------
+
 # ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg) Stackdriver Trace
 
 Stackdriver Trace is a distributed tracing system that collects latency data from your applications and displays it in the Google Cloud Platform Console. You can track how requests propagate through your application and receive detailed near real-time performance insights.
@@ -847,6 +910,3 @@ Uses plan: `a42c1182-d1a0-4d40-82c1-28220518b360`
     "role": "storage.objectAdmin"
 }
 ```
-
-
-

@@ -30,6 +30,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigtable"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/cloudsql"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver_profiler"
 	"github.com/pivotal-cf/brokerapi"
 	"google.golang.org/api/googleapi"
 
@@ -95,6 +96,9 @@ func New(cfg *config.BrokerConfig, Logger lager.Logger) (*GCPAsyncServiceBroker,
 			BrokerBase: bb,
 		},
 		models.StackdriverDebuggerName: &stackdriver_debugger.StackdriverDebuggerBroker{
+			BrokerBase: bb,
+		},
+		models.StackdriverProfilerName: &stackdriver_profiler.StackdriverProfilerBroker{
 			BrokerBase: bb,
 		},
 		models.StackdriverTraceName: &stackdriver_trace.StackdriverTraceBroker{

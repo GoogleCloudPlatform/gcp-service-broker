@@ -206,6 +206,16 @@ var _ = Describe("Brokers", func() {
 			}
 		})
 
+		It("should have 1 profiler plan available", func() {
+			serviceList, err := gcpBroker.Services(context.Background())
+			Expect(err).ToNot(HaveOccurred())
+			for _, s := range serviceList {
+				if s.ID == serviceNameToId[models.StackdriverProfilerName] {
+					Expect(len(s.Plans)).To(Equal(1))
+				}
+			}
+		})
+
 		It("should have 1 datastore plan available", func() {
 			serviceList, err := gcpBroker.Services(context.Background())
 			Expect(err).ToNot(HaveOccurred())

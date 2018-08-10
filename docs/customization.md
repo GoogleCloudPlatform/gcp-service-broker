@@ -1,3 +1,4 @@
+
 # Installation Customization
 
 This file documents the various environment variables you can set to change the functionality of the service broker.
@@ -242,6 +243,19 @@ You can configure the following environment variables:
 </ul>
 
 <b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_DEBUGGER_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Debugger instances
+
+
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+  <li>Default: <code>true</code></li>
+</ul>
+
+<b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_PROFILER_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Profiler instances
 
 
 
@@ -703,7 +717,7 @@ For example:
   <td><i>string</i></td>
   <td>Tier</td>
   <td>
-  a string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840
+  A string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840
 
 
 <ul>
