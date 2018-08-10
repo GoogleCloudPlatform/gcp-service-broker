@@ -139,7 +139,7 @@ func TestBrokerService_UserDefinedPlans(t *testing.T) {
 			ExpectError: false,
 		},
 		"single-plan": {
-			Value:       `[{"id":"aaa"}]`,
+			Value:       `[{"id":"aaa","name":"aaa","instances":"3"}]`,
 			PlanIds:     map[string]bool{"aaa": true},
 			ExpectError: false,
 		},
@@ -149,15 +149,37 @@ func TestBrokerService_UserDefinedPlans(t *testing.T) {
 			ExpectError: true,
 		},
 		"multiple-plans": {
-			Value:       `[{"id":"aaa"},{"id":"bbb"}]`,
+			Value:       `[{"id":"aaa","name":"aaa","instances":"3"},{"id":"bbb","name":"bbb","instances":"3"}]`,
 			PlanIds:     map[string]bool{"aaa": true, "bbb": true},
 			ExpectError: false,
+		},
+		"missing-name": {
+			Value:       `[{"id":"aaa","instances":"3"}]`,
+			PlanIds:     map[string]bool{},
+			ExpectError: true,
+		},
+		"missing-id": {
+			Value:       `[{"name":"aaa","instances":"3"}]`,
+			PlanIds:     map[string]bool{},
+			ExpectError: true,
+		},
+		"missing-instances": {
+			Value:       `[{"name":"aaa","id":"aaa"}]`,
+			PlanIds:     map[string]bool{},
+			ExpectError: true,
 		},
 	}
 
 	service := BrokerService{
 		Name: "left-handed-smoke-sifter",
-		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl"}`,
+		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "name":"lhss"}`,
+		PlanVariables: []BrokerVariable{
+			BrokerVariable{
+				Required:  true,
+				FieldName: "instances",
+				Type:      JsonTypeString,
+			},
+		},
 	}
 
 	for tn, tc := range cases {
@@ -168,6 +190,7 @@ func TestBrokerService_UserDefinedPlans(t *testing.T) {
 		hasErr := err != nil
 		if hasErr != tc.ExpectError {
 			t.Errorf("%s) Expected Error? %v, got error: %v", tn, tc.ExpectError, err)
+			continue
 		}
 
 		// Check IDs
@@ -200,20 +223,20 @@ func TestBrokerService_CatalogEntry(t *testing.T) {
 			ExpectError:    false,
 		},
 		"custom-definition": {
-			UserDefinition: `{"id":"abcd-efgh-ijkl", "plans":[{"id":"zzz"}]}`,
+			UserDefinition: `{"id":"abcd-efgh-ijkl", "plans":[{"id":"zzz","name":"zzz"}]}`,
 			UserPlans:      nil,
 			PlanIds:        map[string]bool{"zzz": true},
 			ExpectError:    false,
 		},
 		"custom-plans": {
 			UserDefinition: nil,
-			UserPlans:      `[{"id":"aaa"},{"id":"bbb"}]`,
+			UserPlans:      `[{"id":"aaa","name":"aaa"},{"id":"bbb","name":"bbb"}]`,
 			PlanIds:        map[string]bool{"aaa": true, "bbb": true},
 			ExpectError:    false,
 		},
 		"custom-plans-and-definition": {
-			UserDefinition: `{"id":"abcd-efgh-ijkl", "plans":[{"id":"zzz"}]}`,
-			UserPlans:      `[{"id":"aaa"},{"id":"bbb"}]`,
+			UserDefinition: `{"id":"abcd-efgh-ijkl", "plans":[{"id":"zzz","name":"zzz"}]}`,
+			UserPlans:      `[{"id":"aaa","name":"aaa"},{"id":"bbb","name":"bbb"}]`,
 			PlanIds:        map[string]bool{"aaa": true, "bbb": true, "zzz": true},
 			ExpectError:    false,
 		},

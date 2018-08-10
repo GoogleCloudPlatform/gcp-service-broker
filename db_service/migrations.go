@@ -208,9 +208,10 @@ func RunMigrations(db *gorm.DB) error {
 
 	// drops plan details table
 	migrations[2] = func() error {
-		if err := db.Exec(`DROP TABLE plan_details`).Error; err != nil {
-			return err
-		}
+		// NOOP migration, this was used to drop the plan_details table, but
+		// there's more of a disincentive than incentive to do that because it could
+		// leave operators wiping out plain details accidentally and not being able
+		// to recover if they don't follow the upgrade path.
 		return nil
 	}
 
