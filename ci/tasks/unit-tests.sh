@@ -2,11 +2,15 @@
 
 set -e
 
-export GOPATH="${PWD}"
-export PATH=$PATH:$GOPATH/bin
+PROGNAME=gcp-service-broker
+GODIR=github.com/GoogleCloudPlatform/gcp-service-broker
+
+mkdir -p $GOPATH/src/github.com/GoogleCloudPlatform
+ln -s $PWD $GOPATH/src/$GODIR
+
 
 go get github.com/onsi/ginkgo/ginkgo
 
-cd "${GOPATH}/src/gcp-service-broker"
+cd "${GOPATH}/src/${GODIR}"
 
 ginkgo -r -race -skipPackage=integration,db_service .
