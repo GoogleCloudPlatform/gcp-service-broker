@@ -2,11 +2,12 @@
 
 set -e
 
-export GOPATH="${PWD}"
-export PATH=$PATH:$GOPATH/bin
+# Setup Environment
+GODIR=$GOPATH/src/github.com/GoogleCloudPlatform/gcp-service-broker
+mkdir -p $GOPATH/src/github.com/GoogleCloudPlatform
+ln -s $PWD/src/gcp-service-broker $GODIR
+cd $GODIR
 
+# Run Tests
 go get github.com/onsi/ginkgo/ginkgo
-
-cd "${GOPATH}/src/gcp-service-broker"
-
 ginkgo -race integration_tests db_service
