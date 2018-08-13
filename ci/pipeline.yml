@@ -10,7 +10,7 @@ resources:
     type: git
     source:
       uri: https://github.com/GoogleCloudPlatform/gcp-service-broker.git
-      branch: master
+      branch: {{code_branch}}
       ignore_paths:
         - ci/*
 
@@ -18,7 +18,7 @@ resources:
     type: git
     source:
       uri: https://github.com/GoogleCloudPlatform/gcp-service-broker.git
-      branch: master
+      branch: {{ci_branch}}
       paths:
         - ci/*
 
@@ -79,13 +79,19 @@ jobs:
           TEST_DB_USERNAME: {{TEST_DB_USERNAME}}
           TEST_DB_PASSWORD: {{TEST_DB_PASSWORD}}
           TEST_DB_HOST: {{TEST_DB_HOST}}
+  - name: osb-integration
+    plan:
+      - aggregate:
+        - get: gcp-service-broker
+          trigger: true
+        - get: gcp-service-broker-ci
       - task: osb-integration-tests
         file: gcp-service-broker-ci/ci/tasks/osb-integration-tests.yml
         params:
           ROOT_SERVICE_ACCOUNT_JSON: {{service_account_key}}
-          TEST_DB_USERNAME: {{TEST_DB_USERNAME}}
-          TEST_DB_PASSWORD: {{TEST_DB_PASSWORD}}
-          TEST_DB_HOST: {{TEST_DB_HOST}}
+          DB_USERNAME: {{TEST_DB_USERNAME}}
+          DB_PASSWORD: {{TEST_DB_PASSWORD}}
+          DB_HOST: {{TEST_DB_HOST}}
 
   - name: build-test-tile
     plan:
@@ -94,7 +100,7 @@ jobs:
           params: {bump: patch, pre: rc}
         - get: gcp-service-broker
           trigger: true
-          passed: [test-unit, integration]
+          passed: [test-unit, integration, osb-integration]
         - get: gcp-service-broker-ci
       - task: build-tile
         file: gcp-service-broker-ci/ci/tasks/build-tile.yml
