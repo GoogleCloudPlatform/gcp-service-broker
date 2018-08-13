@@ -13,6 +13,7 @@ go build
 
 export SECURITY_USER_NAME=user
 export SECURITY_USER_PASSWORD=password
+export PORT=8080
 
 echo "Starting server"
 ./gcp-service-broker serve &
