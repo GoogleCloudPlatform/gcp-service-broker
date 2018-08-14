@@ -9,7 +9,6 @@ import:
   version: ~1.0.0
   subpackages:
   - dialects/sqlite
-- package: github.com/leonelquinteros/gorand
 - package: golang.org/x/net
   subpackages:
   - context
