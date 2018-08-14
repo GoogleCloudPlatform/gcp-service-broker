@@ -137,14 +137,14 @@ func RunMigrations(db *gorm.DB) error {
 			return fmt.Errorf("Error getting authorized http client: %s", err)
 		}
 
-		var prs []models.ProvisionRequestDetails
-		if err := DbConnection.Find(&prs).Error; err != nil {
+		prs := []models.ProvisionRequestDetails{}
+		if err := db.Find(&prs).Error; err != nil {
 			return err
 		}
 
 		for _, pr := range prs {
 			var si models.ServiceInstanceDetails
-			if err := DbConnection.Where("id = ?", pr.ServiceInstanceId).First(&si).Error; err != nil {
+			if err := db.Where("id = ?", pr.ServiceInstanceId).First(&si).Error; err != nil {
 				return err
 			}
 			od := make(map[string]string)
@@ -198,7 +198,7 @@ func RunMigrations(db *gorm.DB) error {
 				return err
 			}
 			si.OtherDetails = string(odBytes)
-			if err := DbConnection.Save(&si).Error; err != nil {
+			if err := db.Save(&si).Error; err != nil {
 				return err
 			}
 		}
