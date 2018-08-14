@@ -18,7 +18,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
@@ -45,8 +44,6 @@ type GCPServiceBroker struct {
 	Catalog          map[string]models.Service
 	ServiceBrokerMap map[string]models.ServiceBrokerHelper
 
-	InstanceLimit int
-
 	Logger lager.Logger
 }
 
@@ -59,11 +56,6 @@ func New(cfg *config.BrokerConfig, Logger lager.Logger) (*GCPAsyncServiceBroker,
 
 	self := GCPAsyncServiceBroker{}
 	self.Logger = Logger
-
-	// hardcoding this for now so we don't have to delete the nice built-in quota code, but also don't have to
-	// handle that as a config option.
-	self.InstanceLimit = math.MaxInt32
-
 	self.Catalog = cfg.Catalog
 
 	saManager := &account_managers.ServiceAccountManager{
@@ -179,18 +171,6 @@ func (gcpBroker *GCPAsyncServiceBroker) Provision(ctx context.Context, instanceI
 		"asyncAllowed": asyncAllowed,
 		"details":      details,
 	})
-
-	var err error
-
-	// first make sure we're not over quota
-	provisionedInstancesCount, err := db_service.GetServiceInstanceTotal()
-	if err != nil {
-		return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("Database error checking for instance count: %s", err)
-	} else {
-		if provisionedInstancesCount >= gcpBroker.InstanceLimit {
-			return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrInstanceLimitMet
-		}
-	}
 
 	// make sure that instance hasn't already been provisioned
 	count, err := db_service.GetServiceInstanceCount(instanceID)

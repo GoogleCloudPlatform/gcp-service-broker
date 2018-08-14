@@ -242,15 +242,6 @@ var _ = Describe("Brokers", func() {
 
 		})
 
-		Context("when too many services are provisioned", func() {
-			It("should return an error", func() {
-				gcpBroker.InstanceLimit = 0
-				_, err := gcpBroker.Provision(context.Background(), instanceId, bqProvisionDetails, true)
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(Equal(brokerapi.ErrInstanceLimitMet))
-			})
-		})
-
 		Context("when an unrecognized service is provisioned", func() {
 			It("should return an error", func() {
 				_, err = gcpBroker.Provision(context.Background(), instanceId, brokerapi.ProvisionDetails{

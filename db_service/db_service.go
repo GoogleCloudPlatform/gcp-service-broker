@@ -38,13 +38,6 @@ func New(logger lager.Logger) *gorm.DB {
 	return DbConnection
 }
 
-// gets the totaly number of service instances that are currently provisioned
-func GetServiceInstanceTotal() (int, error) {
-	var provisionedInstancesCount int
-	err := DbConnection.Model(&models.ServiceInstanceDetails{}).Count(&provisionedInstancesCount).Error
-	return provisionedInstancesCount, err
-}
-
 // gets the count of service instances by instance id (i.e. 0 or 1)
 func GetServiceInstanceCount(instanceID string) (int, error) {
 	var count int
