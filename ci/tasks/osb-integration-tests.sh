@@ -16,6 +16,7 @@ export SECURITY_USER_PASSWORD=password
 export PORT=8080
 
 echo "Starting server"
+./gcp-service-broker migrate
 ./gcp-service-broker serve &
 
 sleep 5
