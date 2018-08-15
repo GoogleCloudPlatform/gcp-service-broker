@@ -43,7 +43,7 @@ type ServiceAccountManager struct {
 // If roleWhitelist is specified, then the extracted role is validated against it and an error is returned if
 // the role is not contained within the whitelist
 func (sam *ServiceAccountManager) CreateCredentials(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
-	role, err := sam.ExtractRole(details)
+	role, err := extractRole(details)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}
@@ -65,7 +65,7 @@ func (sam *ServiceAccountManager) CreateCredentials(instanceID string, bindingID
 	return sam.CreateAccountWithRoles(bindingID, []string{role})
 }
 
-func (sam *ServiceAccountManager) ExtractRole(details brokerapi.BindDetails) (string, error) {
+func extractRole(details brokerapi.BindDetails) (string, error) {
 	bindParameters := map[string]interface{}{}
 	if err := json.Unmarshal(details.RawParameters, &bindParameters); err != nil {
 		return "", err
@@ -296,12 +296,16 @@ func ServiceAccountBindOutputVariables() []broker.BrokerVariable {
 	}
 }
 
-func whitelistAllows(whitelist []string, needle string) bool {
+func whitelistAllows(whitelist []string, role string) bool {
+	if len(whitelist) == 0 {
+		return true
+	}
+
 	for _, s := range whitelist {
-		if s == needle {
+		if s == role {
 			return true
 		}
 	}
 
-	return len(whitelist) > 0
+	return false
 }

@@ -105,6 +105,9 @@ func GenerateEnableDisableForm() Form {
 	}
 }
 
+// GenerateRoleWhitelistForm generates a form for users to enable/disable the
+// whitelist validation for new service accounts bound to the service.
+// They are opt-out and on by default for safety.
 func GenerateRoleWhitelistForm() Form {
 	enablers := []FormProperty{}
 	for _, svc := range broker.GetAllServices() {

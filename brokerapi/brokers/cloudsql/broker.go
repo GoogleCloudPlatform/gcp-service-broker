@@ -22,7 +22,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
@@ -41,7 +40,7 @@ type CloudSQLBroker struct {
 	ProjectId        string
 	Logger           lager.Logger
 	AccountManager   models.AccountManager
-	SaAccountManager *account_managers.ServiceAccountManager
+	SaAccountManager models.AccountManager
 }
 
 type InstanceInformation struct {
@@ -459,6 +458,7 @@ func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details brokerapi.Bi
 	}
 
 	saCredBytes, err := b.SaAccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
+
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}

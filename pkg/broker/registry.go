@@ -44,9 +44,7 @@ func Register(service *BrokerService) {
 
 	// set defaults
 	viper.SetDefault(service.EnabledProperty(), true)
-	if service.ServiceAccountRoleWhitelist == nil {
-		viper.SetDefault(service.RoleWhitelistProperty(), true)
-	}
+	viper.SetDefault(service.RoleWhitelistProperty(), true)
 
 	// Test deserializing the user defined plans and service definition
 	if _, err := service.CatalogEntry(); err != nil {
@@ -103,14 +101,13 @@ func GetServiceById(id string) (*BrokerService, error) {
 }
 
 type BrokerService struct {
-	Name                     string
-	DefaultServiceDefinition string
-	ProvisionInputVariables  []BrokerVariable
-	BindInputVariables       []BrokerVariable
-	BindOutputVariables      []BrokerVariable
-	PlanVariables            []BrokerVariable
-	Examples                 []ServiceExample
-	// does this broker service allow users to limit roles to only safe ones?
+	Name                        string
+	DefaultServiceDefinition    string
+	ProvisionInputVariables     []BrokerVariable
+	BindInputVariables          []BrokerVariable
+	BindOutputVariables         []BrokerVariable
+	PlanVariables               []BrokerVariable
+	Examples                    []ServiceExample
 	ServiceAccountRoleWhitelist []string
 }
 
@@ -135,7 +132,7 @@ func (svc *BrokerService) UserDefinedPlansProperty() string {
 // RoleWhitelistProperty computes the Viper property name for the boolean the user
 // can set to enable or disable the role whitelist.
 func (svc *BrokerService) RoleWhitelistProperty() string {
-	return fmt.Sprintf("service.%s.enable-role-whitelist", svc.Name)
+	return fmt.Sprintf("service.%s.whitelist.enabled", svc.Name)
 }
 
 // TileUserDefinedPlansVariable returns the name of the user defined plans
@@ -160,7 +157,9 @@ func (svc *BrokerService) IsEnabled() bool {
 // IsRoleWhitelistEnabled returns false if the operator has explicitly disabled
 // the role whitelist for this service or true otherwise.
 func (svc *BrokerService) IsRoleWhitelistEnabled() bool {
-	return viper.GetBool(svc.RoleWhitelistProperty())
+	whitelistExists := len(svc.ServiceAccountRoleWhitelist) > 0
+	userEnabled := viper.GetBool(svc.RoleWhitelistProperty())
+	return whitelistExists && userEnabled
 }
 
 // CatalogEntry returns the service broker catalog entry for this service, it
