@@ -68,6 +68,11 @@ forms:
     default: "3306"
     label: Database port (defaults to 3306)
     configurable: true
+  - name: db_name
+    type: string
+    default: servicebroker
+    label: Database name
+    configurable: true
   - name: ca_cert
     type: text
     label: Server CA cert
@@ -142,7 +147,101 @@ forms:
     default: true
     label: Let the broker create and bind Google Cloud Storage instances
     configurable: true
+- name: role_whitelists
+  label: Role Whitelisting
+  description: Enable or disable role whitelisting
+  properties:
+  - name: gsb_service_google_bigquery_whitelist_enabled
+    type: boolean
+    default: true
+    label: Use a builtin whitelist of roles to limit what developers can do on binding
+      Google BigQuery instances
+    configurable: true
+  - name: gsb_service_google_bigtable_whitelist_enabled
+    type: boolean
+    default: true
+    label: Use a builtin whitelist of roles to limit what developers can do on binding
+      Google Bigtable instances
+    configurable: true
+  - name: gsb_service_google_cloudsql_mysql_whitelist_enabled
+    type: boolean
+    default: true
+    label: Use a builtin whitelist of roles to limit what developers can do on binding
+      Google CloudSQL MySQL instances
+    configurable: true
+  - name: gsb_service_google_cloudsql_postgres_whitelist_enabled
+    type: boolean
+    default: true
+    label: Use a builtin whitelist of roles to limit what developers can do on binding
+      Google CloudSQL PostgreSQL instances
+    configurable: true
+  - name: gsb_service_google_ml_apis_whitelist_enabled
+    type: boolean
+    default: true
+    label: Use a builtin whitelist of roles to limit what developers can do on binding
+      Google Machine Learning APIs instances
+    configurable: true
+  - name: gsb_service_google_pubsub_whitelist_enabled
+    type: boolean
+    default: true
+    label: Use a builtin whitelist of roles to limit what developers can do on binding
+      Google PubSub instances
+    configurable: true
+  - name: gsb_service_google_spanner_whitelist_enabled
+    type: boolean
+    default: true
+    label: Use a builtin whitelist of roles to limit what developers can do on binding
+      Google Spanner instances
+    configurable: true
+  - name: gsb_service_google_storage_whitelist_enabled
+    type: boolean
+    default: true
+    label: Use a builtin whitelist of roles to limit what developers can do on binding
+      Google Cloud Storage instances
+    configurable: true
 service_plan_forms:
+- name: bigtable_custom_plans
+  label: Google Bigtable Custom Plans
+  description: Generate custom plans for Google Bigtable
+  optional: true
+  properties:
+  - name: display_name
+    type: string
+    label: Display Name
+    description: Display name
+    configurable: true
+  - name: description
+    type: string
+    label: Plan description
+    description: Plan description
+    configurable: true
+  - name: service
+    type: dropdown_select
+    default: b8e19880-ac58-42ef-b033-f7cd9c94d1fe
+    label: Service
+    description: The service this plan is associated with
+    options:
+    - name: b8e19880-ac58-42ef-b033-f7cd9c94d1fe
+      label: Google Bigtable
+  - name: storage_type
+    type: dropdown_select
+    default: SSD
+    label: Storage Type
+    description: Either HDD or SSD (see https://cloud.google.com/bigtable/pricing
+      for more information)
+    configurable: true
+    options:
+    - name: SSD
+      label: SSD - Solid-state Drive
+    - name: HDD
+      label: HDD - Hard Disk Drive
+  - name: num_nodes
+    type: string
+    default: "3"
+    label: Num Nodes
+    description: Number of Nodes, Between 3 and 30 (see https://cloud.google.com/bigtable/pricing
+      for more information)
+    configurable: true
 - name: cloudsql_mysql_custom_plans
   label: Google CloudSQL MySQL Custom Plans
   description: Generate custom plans for Google CloudSQL MySQL
@@ -160,6 +259,7 @@ service_plan_forms:
     configurable: true
   - name: service
     type: dropdown_select
+    default: 4bc59b9a-8520-409f-85da-1c7552315863
     label: Service
     description: The service this plan is associated with
     options:
@@ -178,10 +278,10 @@ service_plan_forms:
     description: Select a pricing plan (only for 1st generation instances)
     configurable: true
     options:
-    - name: PER_USE
-      label: Per-Use
     - name: PACKAGE
       label: Package
+    - name: PER_USE
+      label: Per-Use
     optional: true
   - name: max_disk_size
     type: string
@@ -208,6 +308,7 @@ service_plan_forms:
     configurable: true
   - name: service
     type: dropdown_select
+    default: cbad6d78-a73c-432d-b8ff-b219a17a803a
     label: Service
     description: The service this plan is associated with
     options:
@@ -216,7 +317,7 @@ service_plan_forms:
   - name: tier
     type: string
     label: Tier
-    description: a string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory
+    description: A string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory
       is at least 3840
     configurable: true
   - name: pricing_plan
@@ -232,47 +333,6 @@ service_plan_forms:
     default: "10"
     label: Max Disk Size
     description: Maximum disk size in GB (10 minimum/default)
-    configurable: true
-- name: bigtable_custom_plans
-  label: Google Bigtable Custom Plans
-  description: Generate custom plans for Google Bigtable
-  optional: true
-  properties:
-  - name: display_name
-    type: string
-    label: Display Name
-    description: Display name
-    configurable: true
-  - name: description
-    type: string
-    label: Plan description
-    description: Plan description
-    configurable: true
-  - name: service
-    type: dropdown_select
-    label: Service
-    description: The service this plan is associated with
-    options:
-    - name: b8e19880-ac58-42ef-b033-f7cd9c94d1fe
-      label: Google Bigtable
-  - name: storage_type
-    type: dropdown_select
-    default: SSD
-    label: Storage Type
-    description: Either HDD or SSD (see https://cloud.google.com/bigtable/pricing
-      for more information)
-    configurable: true
-    options:
-    - name: HDD
-      label: HDD - Hard Disk Drive
-    - name: SSD
-      label: SSD - Solid-state Drive
-  - name: num_nodes
-    type: string
-    default: "3"
-    label: Num Nodes
-    description: Number of Nodes, Between 3 and 30 (see https://cloud.google.com/bigtable/pricing
-      for more information)
     configurable: true
 - name: spanner_custom_plans
   label: Google Spanner Custom Plans
@@ -291,6 +351,7 @@ service_plan_forms:
     configurable: true
   - name: service
     type: dropdown_select
+    default: 51b3e27e-d323-49ce-8c5f-1211e6409e82
     label: Service
     description: The service this plan is associated with
     options:

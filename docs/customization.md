@@ -1,3 +1,4 @@
+
 # Installation Customization
 
 This file documents the various environment variables you can set to change the functionality of the service broker.
@@ -268,6 +269,118 @@ You can configure the following environment variables:
 </ul>
 
 <b><tt>GSB_SERVICE_GOOGLE_STORAGE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Storage instances
+
+
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+  <li>Default: <code>true</code></li>
+</ul>
+
+
+
+## Role Whitelisting
+
+Enable or disable role whitelisting
+
+You can configure the following environment variables:
+
+<b><tt>GSB_SERVICE_GOOGLE_BIGQUERY_WHITELIST_ENABLED</tt></b> - <i>boolean</i> - Use a builtin whitelist of roles to limit what developers can do on binding Google BigQuery instances
+
+
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+  <li>Default: <code>true</code></li>
+</ul>
+
+<b><tt>GSB_SERVICE_GOOGLE_BIGTABLE_WHITELIST_ENABLED</tt></b> - <i>boolean</i> - Use a builtin whitelist of roles to limit what developers can do on binding Google Bigtable instances
+
+
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+  <li>Default: <code>true</code></li>
+</ul>
+
+<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_WHITELIST_ENABLED</tt></b> - <i>boolean</i> - Use a builtin whitelist of roles to limit what developers can do on binding Google CloudSQL MySQL instances
+
+
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+  <li>Default: <code>true</code></li>
+</ul>
+
+<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_WHITELIST_ENABLED</tt></b> - <i>boolean</i> - Use a builtin whitelist of roles to limit what developers can do on binding Google CloudSQL PostgreSQL instances
+
+
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+  <li>Default: <code>true</code></li>
+</ul>
+
+<b><tt>GSB_SERVICE_GOOGLE_ML_APIS_WHITELIST_ENABLED</tt></b> - <i>boolean</i> - Use a builtin whitelist of roles to limit what developers can do on binding Google Machine Learning APIs instances
+
+
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+  <li>Default: <code>true</code></li>
+</ul>
+
+<b><tt>GSB_SERVICE_GOOGLE_PUBSUB_WHITELIST_ENABLED</tt></b> - <i>boolean</i> - Use a builtin whitelist of roles to limit what developers can do on binding Google PubSub instances
+
+
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+  <li>Default: <code>true</code></li>
+</ul>
+
+<b><tt>GSB_SERVICE_GOOGLE_SPANNER_WHITELIST_ENABLED</tt></b> - <i>boolean</i> - Use a builtin whitelist of roles to limit what developers can do on binding Google Spanner instances
+
+
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+  <li>Default: <code>true</code></li>
+</ul>
+
+<b><tt>GSB_SERVICE_GOOGLE_STORAGE_WHITELIST_ENABLED</tt></b> - <i>boolean</i> - Use a builtin whitelist of roles to limit what developers can do on binding Google Cloud Storage instances
 
 
 
@@ -703,7 +816,7 @@ For example:
   <td><i>string</i></td>
   <td>Tier</td>
   <td>
-  a string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840
+  A string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840
 
 
 <ul>

@@ -116,7 +116,7 @@ func GenerateRoleWhitelistForm() Form {
 			log.Fatalf("Error getting catalog entry for service %s, %v", svc.Name, err)
 		}
 
-		if svc.ServiceAccountRoleWhitelist != nil {
+		if len(svc.ServiceAccountRoleWhitelist) == 0 {
 			continue
 		}
 
