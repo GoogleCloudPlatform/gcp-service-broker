@@ -205,12 +205,12 @@ func (b *SqlAccountManager) BuildInstanceCredentials(bindRecord models.ServiceBi
 
 type SqlAccountInfo struct {
 	// the bits to return
-	Username   string
-	Password   string
-	CaCert     string
-	ClientCert string
-	ClientKey  string
+	Username   string `json:"Username"`
+	Password   string `json:"Password"`
+	CaCert     string `json:"CaCert"`
+	ClientCert string `json:"ClientCert"`
+	ClientKey  string `json:"ClientKey"`
 
 	// the bits to save
-	Sha1Fingerprint string
+	Sha1Fingerprint string `json:"Sha1Fingerprint"`
 }

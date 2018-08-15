@@ -186,13 +186,13 @@ func ServiceAccountName(bindingId string) string {
 
 type ServiceAccountInfo struct {
 	// the bits to save
-	Name      string
-	Email     string
-	UniqueId  string
-	ProjectId string
+	Name      string `json:"Name"`
+	Email     string `json:"Email"`
+	UniqueId  string `json:"UniqueId"`
+	ProjectId string `json:"ProjectId"`
 
 	// the bit to return
-	PrivateKeyData string
+	PrivateKeyData string `json:"PrivateKeyData"`
 }
 
 func ServiceAccountBindInputVariables() []broker.BrokerVariable {
