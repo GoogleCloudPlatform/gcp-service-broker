@@ -453,23 +453,12 @@ func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details brokerapi.Bi
 		return models.ServiceBindingCredentials{}, err
 	}
 
-	bkr, err := broker.GetServiceById(details.ServiceID)
-	if err != nil {
-		return models.ServiceBindingCredentials{}, err
-	}
-
-	whitelist := []string{}
-	if bkr.IsRoleWhitelistEnabled() {
-		whitelist = bkr.ServiceAccountRoleWhitelist
-	}
-
 	sqlCredBytes, err := b.AccountManager.CreateCredentials(instanceID, bindingID, details, cloudDb)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}
 
-	saCredBytes, err := b.SaAccountManager.CreateCredentials(bindingID, details, whitelist)
-
+	saCredBytes, err := b.SaAccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}

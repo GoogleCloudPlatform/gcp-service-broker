@@ -18,7 +18,6 @@ import (
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	registry "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
@@ -32,17 +31,7 @@ type BrokerBase struct {
 }
 
 func (b *BrokerBase) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
-	bkr, err := registry.GetServiceById(details.ServiceID)
-	if err != nil {
-		return models.ServiceBindingCredentials{}, err
-	}
-
-	whitelist := []string{}
-	if bkr.IsRoleWhitelistEnabled() {
-		whitelist = bkr.ServiceAccountRoleWhitelist
-	}
-
-	return b.AccountManager.CreateCredentials(bindingID, details, whitelist)
+	return b.AccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
 }
 
 func (b *BrokerBase) BuildInstanceCredentials(bindDetails models.ServiceBindingCredentials, instanceDetails models.ServiceInstanceDetails) (map[string]string, error) {

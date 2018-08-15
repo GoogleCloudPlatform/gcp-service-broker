@@ -19,16 +19,16 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
-var roleWhitelist = []string{
-	"ml.developer",
-	"ml.viewer",
-	"ml.modelOwner",
-	"ml.modelUser",
-	"ml.jobOwner",
-	"ml.operationOwner",
-}
-
 func init() {
+	roleWhitelist := []string{
+		"ml.developer",
+		"ml.viewer",
+		"ml.modelOwner",
+		"ml.modelUser",
+		"ml.jobOwner",
+		"ml.operationOwner",
+	}
+
 	bs := &broker.BrokerService{
 		Name: "google-ml-apis",
 		DefaultServiceDefinition: `

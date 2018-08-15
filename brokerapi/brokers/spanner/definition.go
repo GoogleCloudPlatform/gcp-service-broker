@@ -17,14 +17,14 @@ package spanner
 import "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 import accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 
-var roleWhitelist = []string{
-	"spanner.databaseAdmin",
-	"spanner.databaseReader",
-	"spanner.databaseUser",
-	"spanner.viewer",
-}
-
 func init() {
+	roleWhitelist := []string{
+		"spanner.databaseAdmin",
+		"spanner.databaseReader",
+		"spanner.databaseUser",
+		"spanner.viewer",
+	}
+
 	bs := &broker.BrokerService{
 		Name: "google-spanner",
 		DefaultServiceDefinition: `

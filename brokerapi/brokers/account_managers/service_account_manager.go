@@ -42,10 +42,20 @@ type ServiceAccountManager struct {
 
 // If roleWhitelist is specified, then the extracted role is validated against it and an error is returned if
 // the role is not contained within the whitelist
-func (sam *ServiceAccountManager) CreateCredentials(bindingID string, details brokerapi.BindDetails, roleWhitelist []string) (models.ServiceBindingCredentials, error) {
+func (sam *ServiceAccountManager) CreateCredentials(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 	role, err := sam.ExtractRole(details)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
+	}
+
+	bkr, err := broker.GetServiceById(details.ServiceID)
+	if err != nil {
+		return models.ServiceBindingCredentials{}, err
+	}
+
+	roleWhitelist := []string{}
+	if bkr.IsRoleWhitelistEnabled() {
+		roleWhitelist = bkr.ServiceAccountRoleWhitelist
 	}
 
 	if !whitelistAllows(roleWhitelist, role) {

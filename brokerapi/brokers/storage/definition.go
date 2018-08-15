@@ -17,13 +17,13 @@ package storage
 import "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 import accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 
-var roleWhitelist = []string{
-	"storage.objectCreator",
-	"storage.objectViewer",
-	"storage.objectAdmin",
-}
-
 func init() {
+	roleWhitelist := []string{
+		"storage.objectCreator",
+		"storage.objectViewer",
+		"storage.objectAdmin",
+	}
+
 	bs := &broker.BrokerService{
 		Name: "google-storage",
 		DefaultServiceDefinition: `{

@@ -17,14 +17,14 @@ package pubsub
 import "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 import accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 
-var roleWhitelist = []string{
-	"pubsub.publisher",
-	"pubsub.subscriber",
-	"pubsub.viewer",
-	"pubsub.editor",
-}
-
 func init() {
+	roleWhitelist := []string{
+		"pubsub.publisher",
+		"pubsub.subscriber",
+		"pubsub.viewer",
+		"pubsub.editor",
+	}
+
 	bs := &broker.BrokerService{
 		Name: "google-pubsub",
 		DefaultServiceDefinition: `{

@@ -19,13 +19,13 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
-var roleWhitelist = []string{
-	"bigtable.user",
-	"bigtable.reader",
-	"bigtable.viewer",
-}
-
 func init() {
+	roleWhitelist := []string{
+		"bigtable.user",
+		"bigtable.reader",
+		"bigtable.viewer",
+	}
+
 	bs := &broker.BrokerService{
 		Name: "google-bigtable",
 		DefaultServiceDefinition: `{

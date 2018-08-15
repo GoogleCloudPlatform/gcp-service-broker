@@ -19,15 +19,15 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
-var roleWhitelist = []string{
-	"bigquery.dataViewer",
-	"bigquery.dataEditor",
-	"bigquery.dataOwner",
-	"bigquery.user",
-	"bigquery.jobUser",
-}
-
 func init() {
+	roleWhitelist := []string{
+		"bigquery.dataViewer",
+		"bigquery.dataEditor",
+		"bigquery.dataOwner",
+		"bigquery.user",
+		"bigquery.jobUser",
+	}
+
 	bs := &broker.BrokerService{
 		Name: "google-bigquery",
 		DefaultServiceDefinition: `{
