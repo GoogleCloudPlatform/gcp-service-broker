@@ -17,6 +17,13 @@ package spanner
 import "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 import accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 
+var roleWhitelist = []string{
+	"spanner.databaseAdmin",
+	"spanner.databaseReader",
+	"spanner.databaseUser",
+	"spanner.viewer",
+}
+
 func init() {
 	bs := &broker.BrokerService{
 		Name: "google-spanner",
@@ -72,7 +79,8 @@ func init() {
 				Details:   `The location of the Spanner instance.`,
 			},
 		},
-		BindInputVariables: accountmanagers.ServiceAccountBindInputVariables(),
+		ServiceAccountRoleWhitelist: roleWhitelist,
+		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "instance_id",

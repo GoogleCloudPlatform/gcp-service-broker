@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
@@ -40,7 +41,7 @@ type CloudSQLBroker struct {
 	ProjectId        string
 	Logger           lager.Logger
 	AccountManager   models.AccountManager
-	SaAccountManager models.AccountManager
+	SaAccountManager *account_managers.ServiceAccountManager
 }
 
 type InstanceInformation struct {
@@ -452,12 +453,22 @@ func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details brokerapi.Bi
 		return models.ServiceBindingCredentials{}, err
 	}
 
+	bkr, err := broker.GetServiceById(details.ServiceID)
+	if err != nil {
+		return models.ServiceBindingCredentials{}, err
+	}
+
+	whitelist := []string{}
+	if bkr.IsRoleWhitelistEnabled() {
+		whitelist = bkr.ServiceAccountRoleWhitelist
+	}
+
 	sqlCredBytes, err := b.AccountManager.CreateCredentials(instanceID, bindingID, details, cloudDb)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}
 
-	saCredBytes, err := b.SaAccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
+	saCredBytes, err := b.SaAccountManager.CreateCredentials(bindingID, details, whitelist)
 
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err

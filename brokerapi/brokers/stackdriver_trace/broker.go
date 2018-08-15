@@ -17,15 +17,11 @@ package stackdriver_trace
 import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 )
 
 type StackdriverTraceBroker struct {
 	broker_base.BrokerBase
-}
-
-type InstanceInformation struct {
 }
 
 // No-op, no serivce is required for Stackdriver Trace
@@ -40,18 +36,5 @@ func (b *StackdriverTraceBroker) Deprovision(instanceID string, details brokerap
 
 // Creates a service account with access to Stackdriver Trace
 func (b *StackdriverTraceBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
-	out, err := utils.SetParameter(details.RawParameters, "role", "cloudtrace.agent")
-	if err != nil {
-		return models.ServiceBindingCredentials{}, err
-	}
-	details.RawParameters = out
-
-	// Create account
-	newBinding, err := b.AccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
-
-	if err != nil {
-		return models.ServiceBindingCredentials{}, err
-	}
-
-	return newBinding, nil
+	return b.AccountManager.CreateAccountWithRoles(bindingID, []string{"cloudtrace.agent"})
 }

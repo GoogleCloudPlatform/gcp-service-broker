@@ -19,6 +19,15 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
+var roleWhitelist = []string{
+	"ml.developer",
+	"ml.viewer",
+	"ml.modelOwner",
+	"ml.modelUser",
+	"ml.jobOwner",
+	"ml.operationOwner",
+}
+
 func init() {
 	bs := &broker.BrokerService{
 		Name: "google-ml-apis",
@@ -49,9 +58,10 @@ func init() {
       ]
     }
 		`,
-		ProvisionInputVariables: []broker.BrokerVariable{},
-		BindInputVariables:      accountmanagers.ServiceAccountBindInputVariables(),
-		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
+		ProvisionInputVariables:     []broker.BrokerVariable{},
+		ServiceAccountRoleWhitelist: roleWhitelist,
+		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
+		BindOutputVariables:         accountmanagers.ServiceAccountBindOutputVariables(),
 		Examples: []broker.ServiceExample{
 			broker.ServiceExample{
 				Name:            "Basic Configuration",

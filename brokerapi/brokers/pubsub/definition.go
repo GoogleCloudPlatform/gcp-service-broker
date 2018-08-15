@@ -17,6 +17,13 @@ package pubsub
 import "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 import accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 
+var roleWhitelist = []string{
+	"pubsub.publisher",
+	"pubsub.subscriber",
+	"pubsub.viewer",
+	"pubsub.editor",
+}
+
 func init() {
 	bs := &broker.BrokerService{
 		Name: "google-pubsub",
@@ -83,7 +90,8 @@ again during that time (on a best-effort basis).
 				Default: "10",
 			},
 		},
-		BindInputVariables: accountmanagers.ServiceAccountBindInputVariables(),
+		ServiceAccountRoleWhitelist: roleWhitelist,
+		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "subscription_name",

@@ -44,6 +44,9 @@ func Register(service *BrokerService) {
 
 	// set defaults
 	viper.SetDefault(service.EnabledProperty(), true)
+	if service.ServiceAccountRoleWhitelist == nil {
+		viper.SetDefault(service.RoleWhitelistProperty(), true)
+	}
 
 	// Test deserializing the user defined plans and service definition
 	if _, err := service.CatalogEntry(); err != nil {
@@ -107,6 +110,8 @@ type BrokerService struct {
 	BindOutputVariables      []BrokerVariable
 	PlanVariables            []BrokerVariable
 	Examples                 []ServiceExample
+	// does this broker service allow users to limit roles to only safe ones?
+	ServiceAccountRoleWhitelist []string
 }
 
 // EnabledProperty computes the Viper property name for the boolean the user
@@ -127,6 +132,12 @@ func (svc *BrokerService) UserDefinedPlansProperty() string {
 	return fmt.Sprintf("service.%s.plans", svc.Name)
 }
 
+// RoleWhitelistProperty computes the Viper property name for the boolean the user
+// can set to enable or disable the role whitelist.
+func (svc *BrokerService) RoleWhitelistProperty() string {
+	return fmt.Sprintf("service.%s.enable-role-whitelist", svc.Name)
+}
+
 // TileUserDefinedPlansVariable returns the name of the user defined plans
 // variable for the broker tile.
 func (svc *BrokerService) TileUserDefinedPlansVariable() string {
@@ -144,6 +155,12 @@ func (svc *BrokerService) TileUserDefinedPlansVariable() string {
 // or true otherwise.
 func (svc *BrokerService) IsEnabled() bool {
 	return viper.GetBool(svc.EnabledProperty())
+}
+
+// IsRoleWhitelistEnabled returns false if the operator has explicitly disabled
+// the role whitelist for this service or true otherwise.
+func (svc *BrokerService) IsRoleWhitelistEnabled() bool {
+	return viper.GetBool(svc.RoleWhitelistProperty())
 }
 
 // CatalogEntry returns the service broker catalog entry for this service, it

@@ -19,6 +19,14 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
+var roleWhitelist = []string{
+	"bigquery.dataViewer",
+	"bigquery.dataEditor",
+	"bigquery.dataOwner",
+	"bigquery.user",
+	"bigquery.jobUser",
+}
+
 func init() {
 	bs := &broker.BrokerService{
 		Name: "google-bigquery",
@@ -55,7 +63,8 @@ func init() {
 				Default:   "a generated value",
 			},
 		},
-		BindInputVariables: accountmanagers.ServiceAccountBindInputVariables(),
+		ServiceAccountRoleWhitelist: roleWhitelist,
+		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "dataset_id",
