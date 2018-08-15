@@ -70,6 +70,7 @@ const MlName = "google-ml-apis"
 const SpannerName = "google-spanner"
 const StackdriverTraceName = "google-stackdriver-trace"
 const StackdriverDebuggerName = "google-stackdriver-debugger"
+const StackdriverProfilerName = "google-stackdriver-profiler"
 const DatastoreName = "google-datastore"
 const rootSaEnvVar = "ROOT_SERVICE_ACCOUNT_JSON"
 
