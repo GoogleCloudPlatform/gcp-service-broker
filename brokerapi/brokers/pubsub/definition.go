@@ -90,7 +90,7 @@ again during that time (on a best-effort basis).
 				Default: "10",
 			},
 		},
-		ServiceAccountRoleWhitelist: roleWhitelist,
+		DefaultRoleWhitelist: roleWhitelist,
 		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{

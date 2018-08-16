@@ -79,7 +79,7 @@ func init() {
 				Details:   `The location of the Spanner instance.`,
 			},
 		},
-		ServiceAccountRoleWhitelist: roleWhitelist,
+		DefaultRoleWhitelist: roleWhitelist,
 		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{

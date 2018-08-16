@@ -63,7 +63,7 @@ func init() {
 				Default:   "a generated value",
 			},
 		},
-		ServiceAccountRoleWhitelist: roleWhitelist,
+		DefaultRoleWhitelist: roleWhitelist,
 		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{

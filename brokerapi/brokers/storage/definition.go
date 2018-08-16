@@ -81,7 +81,7 @@ func init() {
 				Details:   `The location of the bucket. Object data for objects in the bucket resides in physical storage within this region. See https://cloud.google.com/storage/docs/bucket-locations`,
 			},
 		},
-		ServiceAccountRoleWhitelist: roleWhitelist,
+		DefaultRoleWhitelist: roleWhitelist,
 		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{

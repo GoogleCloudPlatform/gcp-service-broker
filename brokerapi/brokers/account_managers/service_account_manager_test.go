@@ -29,7 +29,7 @@ func TestWhitelistAllows(t *testing.T) {
 		"Empty Whitelist": {
 			Whitelist: []string{},
 			Role:      "test",
-			Expected:  true,
+			Expected:  false,
 		},
 		"Contained": {
 			Whitelist: []string{"foo", "bar", "bazz"},

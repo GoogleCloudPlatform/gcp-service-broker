@@ -129,7 +129,7 @@ func init() {
 				]
     }`,
 		ProvisionInputVariables:     commonProvisionVariables,
-		ServiceAccountRoleWhitelist: roleWhitelist,
+		DefaultRoleWhitelist: roleWhitelist,
 		BindInputVariables:          commonBindVariables,
 		BindOutputVariables:         commonBindOutputVariables,
 		PlanVariables: []broker.BrokerVariable{

@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
@@ -53,13 +54,8 @@ func (sam *ServiceAccountManager) CreateCredentials(instanceID string, bindingID
 		return models.ServiceBindingCredentials{}, err
 	}
 
-	roleWhitelist := []string{}
-	if bkr.IsRoleWhitelistEnabled() {
-		roleWhitelist = bkr.ServiceAccountRoleWhitelist
-	}
-
-	if !whitelistAllows(roleWhitelist, role) {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("The role %s is not allowed for this service. You must use one of %v.", role, roleWhitelist)
+	if bkr.IsRoleWhitelistEnabled() && !whitelistAllows(bkr.RoleWhitelist(), role) {
+		return models.ServiceBindingCredentials{}, fmt.Errorf("The role %s is not allowed for this service. You must use one of %v.", role, bkr.RoleWhitelist())
 	}
 
 	return sam.CreateAccountWithRoles(bindingID, []string{role})
@@ -249,18 +245,17 @@ type ServiceAccountInfo struct {
 }
 
 func ServiceAccountBindInputVariables(roleWhitelist []string) []broker.BrokerVariable {
-	whitelistMap := make(map[interface{}]string)
-	for _, role := range roleWhitelist {
-		whitelistMap[role] = role
-	}
+	defaultRoles := strings.Join(roleWhitelist, "', '")
+	details := fmt.Sprintf(`The role for the account without the "roles/" prefix.
+		See https://cloud.google.com/iam/docs/understanding-roles for more details.
+		The following roles are available by default but may be overridden by your operator: '%s'.`, defaultRoles)
 
 	return []broker.BrokerVariable{
 		broker.BrokerVariable{
 			Required:  true,
 			FieldName: "role",
 			Type:      broker.JsonTypeString,
-			Details:   `The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for available roles.`,
-			Enum:      whitelistMap,
+			Details:   details,
 		},
 	}
 }
@@ -297,10 +292,6 @@ func ServiceAccountBindOutputVariables() []broker.BrokerVariable {
 }
 
 func whitelistAllows(whitelist []string, role string) bool {
-	if len(whitelist) == 0 {
-		return true
-	}
-
 	for _, s := range whitelist {
 		if s == role {
 			return true

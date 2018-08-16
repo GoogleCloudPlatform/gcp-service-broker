@@ -93,7 +93,7 @@ func init() {
 				Default:   "us-east1-b",
 			},
 		},
-		ServiceAccountRoleWhitelist: roleWhitelist,
+		DefaultRoleWhitelist: roleWhitelist,
 		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{

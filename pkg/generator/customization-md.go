@@ -164,5 +164,17 @@ func GenerateCustomizationMd() string {
 		log.Fatalf("Error rendering template: %s", err)
 	}
 
-	return buf.String()
+	return cleanMdOutput(buf.String())
+}
+
+// Remove trailing whitespace from the document and every line
+func cleanMdOutput(text string) string {
+	text = strings.TrimSpace(text)
+
+	lines := strings.Split(text, "\n")
+	for i, l := range lines {
+		lines[i] = strings.TrimRight(l, " \t")
+	}
+
+	return strings.Join(lines, "\n")
 }

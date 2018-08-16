@@ -116,15 +116,16 @@ func GenerateRoleWhitelistForm() Form {
 			log.Fatalf("Error getting catalog entry for service %s, %v", svc.Name, err)
 		}
 
-		if len(svc.ServiceAccountRoleWhitelist) == 0 {
+		if !svc.IsRoleWhitelistEnabled() {
 			continue
 		}
 
 		enableForm := FormProperty{
 			Name:         strings.ToLower(utils.PropertyToEnv(svc.RoleWhitelistProperty())),
-			Label:        fmt.Sprintf("Use a builtin whitelist of roles to limit what developers can do on binding %s instances", entry.Metadata.DisplayName),
-			Type:         "boolean",
-			Default:      true,
+			Label:        fmt.Sprintf("Role whitelist for %s instances", entry.Metadata.DisplayName),
+			Description:  "A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service",
+			Type:         "string",
+			Default:      strings.Join(svc.DefaultRoleWhitelist, ","),
 			Configurable: true,
 		}
 
