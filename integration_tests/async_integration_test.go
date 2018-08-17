@@ -155,7 +155,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 				RawParameters: []byte(`{"role": "editor"}`),
 			}
 
-			bindId := fmt.Sprintf("%d", rand.Uint32())
+			bindId := fmt.Sprintf("my-%d", rand.Uint32())
 			creds, err := gcpBroker.Bind(context.Background(), "integration_test_instance", bindId, bindDetails)
 			Expect(err).NotTo(HaveOccurred())
 			credsMap := creds.Credentials.(map[string]string)
@@ -240,7 +240,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 				RawParameters: []byte(`{"role":"editor"}`),
 			}
 
-			bindId := fmt.Sprintf("%d", rand.Uint32())
+			bindId := fmt.Sprintf("pg-%d", rand.Uint32())
 			creds, err := gcpBroker.Bind(context.Background(), "integration_test_instance", bindId, bindDetails)
 			Expect(err).NotTo(HaveOccurred())
 			credsMap := creds.Credentials.(map[string]string)
@@ -337,7 +337,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 				PlanID:        serviceNameToPlanId[models.SpannerName],
 				RawParameters: []byte(`{"role": "spanner.admin"}`),
 			}
-			bindId := fmt.Sprintf("%d", rand.Uint32())
+			bindId := fmt.Sprintf("sp-%d", rand.Uint32())
 			creds, err := gcpBroker.Bind(context.Background(), "integration_test_instance", bindId, bindDetails)
 			Expect(err).NotTo(HaveOccurred())
 			credsMap := creds.Credentials.(map[string]string)
