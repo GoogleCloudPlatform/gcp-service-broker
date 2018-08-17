@@ -16,6 +16,7 @@ package integration_tests
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"time"
 
@@ -153,7 +154,9 @@ var _ = Describe("AsyncIntegrationTests", func() {
 				PlanID:        serviceNameToPlanId[models.CloudsqlMySQLName],
 				RawParameters: []byte(`{"role": "editor"}`),
 			}
-			creds, err := gcpBroker.Bind(context.Background(), "integration_test_instance", "bind-id", bindDetails)
+
+			bindId := fmt.Sprintf("my-%d", rand.Uint32())
+			creds, err := gcpBroker.Bind(context.Background(), "integration_test_instance", bindId, bindDetails)
 			Expect(err).NotTo(HaveOccurred())
 			credsMap := creds.Credentials.(map[string]string)
 			Expect(credsMap["uri"]).To(ContainSubstring("mysql"))
@@ -168,7 +171,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 				ServiceID: serviceNameToId[models.CloudsqlMySQLName],
 				PlanID:    serviceNameToPlanId[models.CloudsqlMySQLName],
 			}
-			err = gcpBroker.Unbind(context.Background(), "integration_test_instance", "bind-id", unBindDetails)
+			err = gcpBroker.Unbind(context.Background(), "integration_test_instance", bindId, unBindDetails)
 			Expect(err).NotTo(HaveOccurred())
 
 			// make sure google no longer has certs
@@ -204,7 +207,9 @@ var _ = Describe("AsyncIntegrationTests", func() {
 		var dbService *googlecloudsql.InstancesService
 		var sslService *googlecloudsql.SslCertsService
 		BeforeEach(func() {
-			sqlService, err := googlecloudsql.New(brokerConfig.HttpConfig.Client(context.Background()))
+			var err error
+
+			sqlService, err = googlecloudsql.New(brokerConfig.HttpConfig.Client(context.Background()))
 			Expect(err).NotTo(HaveOccurred())
 			dbService = googlecloudsql.NewInstancesService(sqlService)
 			sslService = googlecloudsql.NewSslCertsService(sqlService)
@@ -236,7 +241,9 @@ var _ = Describe("AsyncIntegrationTests", func() {
 				PlanID:        serviceNameToPlanId[models.CloudsqlPostgresName],
 				RawParameters: []byte(`{"role":"editor"}`),
 			}
-			creds, err := gcpBroker.Bind(context.Background(), "integration_test_instance", "bind-id", bindDetails)
+
+			bindId := fmt.Sprintf("pg-%d", rand.Uint32())
+			creds, err := gcpBroker.Bind(context.Background(), "integration_test_instance", bindId, bindDetails)
 			Expect(err).NotTo(HaveOccurred())
 			credsMap := creds.Credentials.(map[string]string)
 
@@ -267,7 +274,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 				PlanID:    serviceNameToPlanId[models.CloudsqlPostgresName],
 			}
 
-			err = gcpBroker.Unbind(context.Background(), "integration_test_instance", "bind-id", unBindDetails)
+			err = gcpBroker.Unbind(context.Background(), "integration_test_instance", bindId, unBindDetails)
 			Expect(err).NotTo(HaveOccurred())
 
 			// make sure google no longer has certs
@@ -332,7 +339,8 @@ var _ = Describe("AsyncIntegrationTests", func() {
 				PlanID:        serviceNameToPlanId[models.SpannerName],
 				RawParameters: []byte(`{"role": "spanner.admin"}`),
 			}
-			creds, err := gcpBroker.Bind(context.Background(), "integration_test_instance", "bind-id", bindDetails)
+			bindId := fmt.Sprintf("sp-%d", rand.Uint32())
+			creds, err := gcpBroker.Bind(context.Background(), "integration_test_instance", bindId, bindDetails)
 			Expect(err).NotTo(HaveOccurred())
 			credsMap := creds.Credentials.(map[string]string)
 			Expect(credsMap["credentials"]).ToNot(BeNil())
@@ -348,7 +356,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 				ServiceID: serviceNameToId[models.SpannerName],
 				PlanID:    serviceNameToPlanId[models.SpannerName],
 			}
-			err = gcpBroker.Unbind(context.Background(), "integration_test_instance", "bind-id", unBindDetails)
+			err = gcpBroker.Unbind(context.Background(), "integration_test_instance", bindId, unBindDetails)
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = saService.Get(bindResourceName).Do()

@@ -9,5 +9,15 @@ ln -s $PWD/src/gcp-service-broker $GODIR
 cd $GODIR
 
 # Run Tests
-go get github.com/onsi/ginkgo/ginkgo
-ginkgo -r -race -skipPackage=integration,db_service .
+go build
+
+export SECURITY_USER_NAME=user
+export SECURITY_USER_PASSWORD=password
+export PORT=8080
+
+echo "Starting server"
+./gcp-service-broker migrate
+./gcp-service-broker serve &
+
+sleep 5
+./gcp-service-broker client run-examples

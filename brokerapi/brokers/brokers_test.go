@@ -33,8 +33,6 @@ import (
 
 	"code.cloudfoundry.org/lager"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/fakes"
-
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/config"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
@@ -83,8 +81,6 @@ var _ = Describe("Brokers", func() {
 		      }`)
 		os.Setenv("SECURITY_USER_NAME", "username")
 		os.Setenv("SECURITY_USER_PASSWORD", "password")
-
-		fakes.SetUpTestServices()
 
 		brokerConfig, err = config.NewBrokerConfigFromEnv()
 		if err != nil {
