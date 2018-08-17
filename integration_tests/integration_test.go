@@ -18,6 +18,7 @@ import (
 	"time"
 
 	. "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/pivotal-cf/brokerapi"
 
 	"golang.org/x/net/context"
@@ -247,7 +248,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 	Describe("Broker init", func() {
 		It("should have 11 services in sevices map", func() {
-			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(11))
+			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(len(broker.GetEnabledServices())))
 		})
 
 		It("should have a default client", func() {
@@ -264,7 +265,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 			serviceList, err := gcpBroker.Services(context.Background())
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(len(serviceList)).To(Equal(11))
+			Expect(len(serviceList)).To(Equal(len(broker.GetEnabledServices())))
 		})
 
 		It("should have 3 storage plans available", func() {
