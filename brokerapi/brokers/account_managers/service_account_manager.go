@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
@@ -28,6 +29,7 @@ import (
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/jwt"
 	cloudres "google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/googleapi"
 	iam "google.golang.org/api/iam/v1"
 )
 
@@ -197,40 +199,39 @@ func (sam *ServiceAccountManager) grantRoleToAccount(role string, account *iam.S
 		return fmt.Errorf("Error creating new cloud resource management service: %s", err)
 	}
 
-	currPolicy, err := cloudresService.Projects.GetIamPolicy(sam.ProjectId, &cloudres.GetIamPolicyRequest{}).Do()
-	if err != nil {
-		return fmt.Errorf("Error getting current project iam policy: %s", err)
-	}
-
-	// seems not really necessary, but collapse the bindings into single role entries just in case.
-	var existingBinding *cloudres.Binding
-
-	for _, binding := range currPolicy.Bindings {
-		if binding.Role == roleResourcePrefix+role {
-			existingBinding = binding
+	for attempt := 0; attempt < 3; attempt++ {
+		currPolicy, err := cloudresService.Projects.GetIamPolicy(sam.ProjectId, &cloudres.GetIamPolicyRequest{}).Do()
+		if err != nil {
+			return fmt.Errorf("Error getting current project iam policy: %s", err)
 		}
-	}
 
-	if existingBinding != nil {
-		existingBinding.Members = append(existingBinding.Members, saResourcePrefix+account.Email)
-	} else {
-		existingBinding = &cloudres.Binding{
+		currPolicy.Bindings = mergeBindings(append(currPolicy.Bindings, &cloudres.Binding{
 			Members: []string{saResourcePrefix + account.Email},
 			Role:    roleResourcePrefix + role,
+		}))
+
+		newPolicyRequest := cloudres.SetIamPolicyRequest{
+			Policy: currPolicy,
 		}
-		b := append(currPolicy.Bindings, existingBinding)
-		currPolicy.Bindings = b
+		_, err = cloudresService.Projects.SetIamPolicy(sam.ProjectId, &newPolicyRequest).Do()
+		if err == nil {
+			return nil
+		}
+
+		if isConflictError(err) {
+			time.Sleep(5 * time.Second)
+			continue
+		} else {
+			return fmt.Errorf("Error assigning policy to service account: %s", err)
+		}
 	}
 
-	newPolicyRequest := cloudres.SetIamPolicyRequest{
-		Policy: currPolicy,
-	}
-	_, err = cloudresService.Projects.SetIamPolicy(sam.ProjectId, &newPolicyRequest).Do()
-	if err != nil {
-		return fmt.Errorf("Error assigning policy to service account: %s", err)
-	}
+	return err
+}
 
-	return nil
+func isConflictError(err error) bool {
+	gerr, ok := err.(*googleapi.Error)
+	return ok && gerr != nil && gerr.Code == 409
 }
 
 type ServiceAccountInfo struct {
@@ -292,11 +293,5 @@ func ServiceAccountBindOutputVariables() []broker.BrokerVariable {
 }
 
 func whitelistAllows(whitelist []string, role string) bool {
-	for _, s := range whitelist {
-		if s == role {
-			return true
-		}
-	}
-
-	return false
+	return NewStringSet(whitelist...).Contains(role)
 }
