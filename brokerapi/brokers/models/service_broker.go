@@ -1,4 +1,4 @@
-// Copyright the Service Broker Project Authors.
+// Copyright 2018 the Service Broker Project Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -70,6 +70,7 @@ const MlName = "google-ml-apis"
 const SpannerName = "google-spanner"
 const StackdriverTraceName = "google-stackdriver-trace"
 const StackdriverDebuggerName = "google-stackdriver-debugger"
+const StackdriverProfilerName = "google-stackdriver-profiler"
 const DatastoreName = "google-datastore"
 const rootSaEnvVar = "ROOT_SERVICE_ACCOUNT_JSON"
 

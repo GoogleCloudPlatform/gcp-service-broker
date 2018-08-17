@@ -65,8 +65,6 @@ imports:
   - dialects/sqlite
 - name: github.com/jinzhu/inflection
   version: 04140366298a54a039076d798123ffa108fff46c
-- name: github.com/leonelquinteros/gorand
-  version: c6864945f54c4dc60dd5d399c0390e85da44a8a8
 - name: github.com/lib/pq
   version: 90697d60dd844d5ef6ff15135d0203f65d2f53b8
   subpackages:

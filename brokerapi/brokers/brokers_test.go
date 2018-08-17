@@ -1,3 +1,17 @@
+// Copyright 2018 the Service Broker Project Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package brokers_test
 
 import (
@@ -202,6 +216,16 @@ var _ = Describe("Brokers", func() {
 			}
 		})
 
+		It("should have 1 profiler plan available", func() {
+			serviceList, err := gcpBroker.Services(context.Background())
+			Expect(err).ToNot(HaveOccurred())
+			for _, s := range serviceList {
+				if s.ID == serviceNameToId[models.StackdriverProfilerName] {
+					Expect(len(s.Plans)).To(Equal(1))
+				}
+			}
+		})
+
 		It("should have 1 datastore plan available", func() {
 			serviceList, err := gcpBroker.Services(context.Background())
 			Expect(err).ToNot(HaveOccurred())
@@ -222,15 +246,6 @@ var _ = Describe("Brokers", func() {
 				Expect(gcpBroker.ServiceBrokerMap[bqId].(*modelsfakes.FakeServiceBrokerHelper).ProvisionCallCount()).To(Equal(1))
 			})
 
-		})
-
-		Context("when too many services are provisioned", func() {
-			It("should return an error", func() {
-				gcpBroker.InstanceLimit = 0
-				_, err := gcpBroker.Provision(context.Background(), instanceId, bqProvisionDetails, true)
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(Equal(brokerapi.ErrInstanceLimitMet))
-			})
 		})
 
 		Context("when an unrecognized service is provisioned", func() {

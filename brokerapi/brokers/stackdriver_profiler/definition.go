@@ -1,10 +1,10 @@
-// Copyright 2018 the Service Broker Project Authors.
+// Copyright 2018 Google Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//    http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package stackdriver_debugger
+package stackdriver_profiler
 
 import (
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
@@ -21,28 +21,28 @@ import (
 
 func init() {
 	bs := &broker.BrokerService{
-		Name: "google-stackdriver-debugger",
+		Name: "google-stackdriver-profiler",
 		DefaultServiceDefinition: `{
-		      "id": "83837945-1547-41e0-b661-ea31d76eed11",
-		      "description": "Stackdriver Debugger",
-		      "name": "google-stackdriver-debugger",
+		      "id": "00b9ca4a-7cd6-406a-a5b7-2f43f41ade75",
+		      "description": "Stackdriver Profiler",
+		      "name": "google-stackdriver-profiler",
 		      "bindable": true,
 		      "plan_updateable": false,
 		      "metadata": {
-		        "displayName": "Stackdriver Debugger",
-		        "longDescription": "Stackdriver Debugger is a feature of the Google Cloud Platform that lets you inspect the state of an application at any code location without using logging statements and without stopping or slowing down your applications. Your users are not impacted during debugging. Using the production debugger you can capture the local variables and call stack and link it back to a specific line location in your source code.",
-		        "documentationUrl": "https://cloud.google.com/debugger/docs/",
+		        "displayName": "Stackdriver Profiler",
+		        "longDescription": "Continuous CPU and heap profiling to improve performance and reduce costs.",
+		        "documentationUrl": "https://cloud.google.com/profiler/docs/",
 		        "supportUrl": "https://cloud.google.com/support/",
-		        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg"
+		        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg"
 		      },
-		      "tags": ["gcp", "stackdriver", "debugger"],
+		      "tags": ["gcp", "stackdriver", "profiler"],
 		      "plans": [
 		        {
-		          "id": "10866183-a775-49e8-96e3-4e7a901e4a79",
-		          "service_id": "83837945-1547-41e0-b661-ea31d76eed11",
+		          "id": "594627f6-35f5-462f-9074-10fb033fb18a",
+		          "service_id": "00b9ca4a-7cd6-406a-a5b7-2f43f41ade75",
 		          "name": "default",
 		          "display_name": "Default",
-		          "description": "Stackdriver Debugger default plan",
+		          "description": "Stackdriver Profiler default plan",
 		          "service_properties": {}
 		        }
 		      ]
@@ -54,8 +54,8 @@ func init() {
 		Examples: []broker.ServiceExample{
 			broker.ServiceExample{
 				Name:            "Basic Configuration",
-				Description:     "Creates an account with the permission `clouddebugger.agent`.",
-				PlanId:          "10866183-a775-49e8-96e3-4e7a901e4a79",
+				Description:     "Creates an account with the permission `cloudprofiler.agent`.",
+				PlanId:          "594627f6-35f5-462f-9074-10fb033fb18a",
 				ProvisionParams: map[string]interface{}{},
 				BindParams:      map[string]interface{}{},
 			},

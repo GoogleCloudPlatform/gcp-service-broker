@@ -25,6 +25,7 @@ available through this Service Broker are:
 * [Spanner](https://cloud.google.com/spanner/)
 * [Stackdriver Debugger](https://cloud.google.com/debugger/)
 * [Stackdriver Trace](https://cloud.google.com/trace/)
+* [Stackdriver Profiler](https://cloud.google.com/profiler/)
 
 
 ## Installation
@@ -100,7 +101,7 @@ Add these to the env section of `manifest.yml`
 
 #### [Optional env vars](#optional-env)
 
-See https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/customization.md 
+See https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/customization.md
 for instructions on providing database name and port overrides, ssl certs, and custom service plans for Cloud SQL, Bigtable, and Spanner.
 
 #### [Push the service broker to CF and enable services](#push)
@@ -119,7 +120,7 @@ binding, and CloudSQL bind operations may exceed 60 seconds. To change this sett
 ## Usage
 
 See https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/use.md for instructions on creating and binding to GCP Services
- 
+
 See the [examples](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/examples/) folder to understand how to use services once they are created and bound.
 
 ## Commands
@@ -127,17 +128,17 @@ See the [examples](https://github.com/GoogleCloudPlatform/gcp-service-broker/blo
 The [cmd](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/cmd/) folder contains commands that can be run independent of the broker.
 
 * `migrate`: migrates the database to the latest schema
-* `get_plan_info`: dumps plan information stored in the database for versions < 4.0.0 to the command line. Advised to 
+* `get_plan_info`: dumps plan information stored in the database for versions < 4.0.0 to the command line. Advised to
 run this command and copy plan guids into manifest.yml before upgrading between < 4 to >= 4.
 
 ## Testing
 
 Production testing for the GCP Service Broker is administered via a private Concourse pipeline.
 
-To run tests locally, use [Ginkgo](https://onsi.github.io/ginkgo/). 
+To run tests locally, use [Ginkgo](https://onsi.github.io/ginkgo/).
 
 Integration tests require the `ROOT_SERVICE_ACCOUNT_JSON` environment variable to be set.
- 
+
 **Note: Integration tests create and destroy real project resources and therefore have associated costs to run**
 
 
