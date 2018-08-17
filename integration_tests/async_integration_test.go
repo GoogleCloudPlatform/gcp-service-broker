@@ -207,7 +207,9 @@ var _ = Describe("AsyncIntegrationTests", func() {
 		var dbService *googlecloudsql.InstancesService
 		var sslService *googlecloudsql.SslCertsService
 		BeforeEach(func() {
-			sqlService, err := googlecloudsql.New(brokerConfig.HttpConfig.Client(context.Background()))
+			var err error
+
+			sqlService, err = googlecloudsql.New(brokerConfig.HttpConfig.Client(context.Background()))
 			Expect(err).NotTo(HaveOccurred())
 			dbService = googlecloudsql.NewInstancesService(sqlService)
 			sslService = googlecloudsql.NewSslCertsService(sqlService)
