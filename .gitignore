@@ -6,3 +6,4 @@ gcp-service-broker
 product/
 release/
 tile-history.yml
+ci/parameters.yml
