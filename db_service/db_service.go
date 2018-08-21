@@ -40,10 +40,9 @@ func New(logger lager.Logger) *gorm.DB {
 }
 
 // gets the count of service instances by instance id (i.e. 0 or 1)
+// Deprecated, use CountServiceInstanceDetailsById instead
 func GetServiceInstanceCount(instanceID string) (int, error) {
-	var count int
-	err := DbConnection.Model(&models.ServiceInstanceDetails{}).Where("id = ?", instanceID).Count(&count).Error
-	return count, err
+	return CountServiceInstanceDetailsById(instanceID)
 }
 
 // soft deletes an instance from the database by instance id
