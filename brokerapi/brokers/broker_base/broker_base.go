@@ -16,7 +16,6 @@ package broker_base
 
 import (
 	"code.cloudfoundry.org/lager"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 
 	"github.com/pivotal-cf/brokerapi"
@@ -24,7 +23,7 @@ import (
 )
 
 type BrokerBase struct {
-	AccountManager *account_managers.ServiceAccountManager
+	AccountManager models.ServiceAccountManager
 	HttpConfig     *jwt.Config
 	ProjectId      string
 	Logger         lager.Logger
