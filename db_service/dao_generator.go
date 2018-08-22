@@ -32,21 +32,53 @@ func main() {
 			Type:            "ServiceInstanceDetails",
 			PrimaryKeyType:  "string",
 			PrimaryKeyField: "id",
+			ExampleFields: map[string]interface{}{
+				"Name":             "Hello",
+				"Location":         "loc",
+				"Url":              "https://google.com",
+				"OtherDetails":     `{"some":["json","blob","here"]}`,
+				"ServiceId":        "123-456-7890",
+				"PlanId":           "planid",
+				"SpaceGuid":        "0000-0000-0000",
+				"OrganizationGuid": "1111-1111-1111",
+			},
 		},
 		{
 			Type:            "CloudOperation",
 			PrimaryKeyType:  "uint",
 			PrimaryKeyField: "id",
+			ExampleFields: map[string]interface{}{
+				"Name":              "cloud-operation-name",
+				"Status":            "DELETED",
+				"OperationType":     "Delete",
+				"ErrorMessage":      "<empty>",
+				"InsertTime":        "1970-01-01T01:01:01Z",
+				"StartTime":         "1980-01-01T01:01:01Z",
+				"TargetId":          "some-uuid-here",
+				"TargetLink":        "https://cloud.google.com/my/target/instance",
+				"ServiceId":         "1111-1111-1111",
+				"ServiceInstanceId": "2222-2222-2222",
+			},
 		},
 		{
 			Type:            "ServiceBindingCredentials",
 			PrimaryKeyType:  "uint",
 			PrimaryKeyField: "id",
+			ExampleFields: map[string]interface{}{
+				"ServiceId":         "1111-1111-1111",
+				"ServiceInstanceId": "2222-2222-2222",
+				"BindingId":         "0000-0000-0000",
+				"OtherDetails":      `{"some":["json","blob","here"]}`,
+			},
 		},
 		{
 			Type:            "ProvisionRequestDetails",
 			PrimaryKeyType:  "uint",
 			PrimaryKeyField: "id",
+			ExampleFields: map[string]interface{}{
+				"ServiceInstanceId": "2222-2222-2222",
+				"RequestDetails":    `{"some":["json","blob","here"]}`,
+			},
 		},
 	}
 
@@ -89,10 +121,10 @@ func die(err error) {
 }
 
 type crudModel struct {
-	Type              string
-	PrimaryKeyType    string
-	PrimaryKeyField   string
-	ExamplePrimaryKey string
+	Type            string
+	PrimaryKeyType  string
+	PrimaryKeyField string
+	ExampleFields   map[string]interface{}
 }
 
 func snakeToProper(in string) string {
@@ -242,7 +274,7 @@ import (
 	"testing"
 	"time"
 
-  "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/jinzhu/gorm"
 )
 
@@ -266,6 +298,8 @@ func TestSqlDatastore_{{.Type}}DAO(t *testing.T) {
 
 	instance := models.{{.Type}}{}
 	instance.ID = testPk
+{{range $k, $v := .ExampleFields}}	instance.{{$k}} = {{ printf "%#v" $v}}
+{{end}}
 
 	// on startup, there should be no objects to find or delete
 	if count, err := ds.{{funcName "Count" . .PrimaryKeyField}}(testPk); count != 0 || err != nil {
@@ -305,9 +339,20 @@ func TestSqlDatastore_{{.Type}}DAO(t *testing.T) {
 		t.Errorf("Expected initial update time to equal creation time, but got update: %v, create: %v", ret.UpdatedAt, ret.CreatedAt)
 	}
 
+	// Ensure non-gorm fields were deserialized correctly
+{{range $k, $v := .ExampleFields}}
+	if instance.{{$k}} != ret.{{$k}} {
+		t.Errorf("Expected field {{$k}} to be %#v, got %#v", instance.{{$k}}, ret.{{$k}})
+	}
+{{end}}
+
 	// we should be able to update the item and it will have a new updated time
 	if err := ds.{{funcName "Save" .}}(ret); err != nil {
 		t.Errorf("Expected no error trying to get update %#v , got: %v", ret, err)
+	}
+
+	if !ret.UpdatedAt.After(ret.CreatedAt) {
+		t.Errorf("Expected update time to be after create time after update, got update: %#v create: %#v", ret.UpdatedAt, ret.CreatedAt)
 	}
 
 	// after deleting the item we should not be able to get it
