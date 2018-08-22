@@ -18,6 +18,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
@@ -27,6 +29,7 @@ import (
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/jwt"
 	cloudres "google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/googleapi"
 	iam "google.golang.org/api/iam/v1"
 )
 
@@ -40,88 +43,61 @@ type ServiceAccountManager struct {
 	HttpConfig *jwt.Config
 }
 
-// creates a new service account for the given binding id with the role listed in details.Parameters["role"]
+// If roleWhitelist is specified, then the extracted role is validated against it and an error is returned if
+// the role is not contained within the whitelist
 func (sam *ServiceAccountManager) CreateCredentials(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
-	client := sam.HttpConfig.Client(context.Background())
+	role, err := extractRole(details)
+	if err != nil {
+		return models.ServiceBindingCredentials{}, err
+	}
 
+	bkr, err := broker.GetServiceById(details.ServiceID)
+	if err != nil {
+		return models.ServiceBindingCredentials{}, err
+	}
+
+	if bkr.IsRoleWhitelistEnabled() && !whitelistAllows(bkr.RoleWhitelist(), role) {
+		return models.ServiceBindingCredentials{}, fmt.Errorf("The role %s is not allowed for this service. You must use one of %v.", role, bkr.RoleWhitelist())
+	}
+
+	return sam.CreateAccountWithRoles(bindingID, []string{role})
+}
+
+func extractRole(details brokerapi.BindDetails) (string, error) {
 	bindParameters := map[string]interface{}{}
 	if err := json.Unmarshal(details.RawParameters, &bindParameters); err != nil {
-		return models.ServiceBindingCredentials{}, err
+		return "", err
 	}
 
 	role, ok := bindParameters["role"].(string)
 	if !ok {
-		return models.ServiceBindingCredentials{}, errors.New("Error getting role as string from request")
+		return "", errors.New("Error getting role as string from request")
 	}
 
-	someName := ServiceAccountName(bindingID)
-	var resourceName = projectResourcePrefix + sam.ProjectId
-	var err error
+	return role, nil
+}
 
-	iamService, err := iam.New(client)
-	if err != nil {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating new iam service: %s", err)
-	}
-	saService := iam.NewProjectsServiceAccountsService(iamService)
-
+// CreateAccountWithRoles creates a service account with a name based on bindingID, JSON key and grants it zero or more roles
+// the roles MUST be missing the roles/ prefix.
+func (sam *ServiceAccountManager) CreateAccountWithRoles(bindingID string, roles []string) (models.ServiceBindingCredentials, error) {
 	// create and save account
-	newSARequest := iam.CreateServiceAccountRequest{
-		AccountId: someName,
-		ServiceAccount: &iam.ServiceAccount{
-			DisplayName: someName,
-		},
-	}
-
-	newSA, err := saService.Create(resourceName, &newSARequest).Do()
+	newSA, err := sam.createServiceAccount(bindingID)
 	if err != nil {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating service account: %s", err)
+		return models.ServiceBindingCredentials{}, err
 	}
 
 	// adjust account permissions
 	// roles defined here: https://cloud.google.com/iam/docs/understanding-roles?hl=en_US#curated_roles
-	cloudresService, err := cloudres.New(client)
-	if err != nil {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating new cloud resource management service: %s", err)
-	}
-
-	currPolicy, err := cloudresService.Projects.GetIamPolicy(sam.ProjectId, &cloudres.GetIamPolicyRequest{}).Do()
-	if err != nil {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("Error getting current project iam policy: %s", err)
-	}
-
-	// seems not really necessary, but collapse the bindings into single role entries just in case.
-	var existingBinding *cloudres.Binding
-
-	for _, binding := range currPolicy.Bindings {
-		if binding.Role == roleResourcePrefix+role {
-			existingBinding = binding
+	for _, role := range roles {
+		if err := sam.grantRoleToAccount(role, newSA); err != nil {
+			return models.ServiceBindingCredentials{}, err
 		}
-	}
-
-	if existingBinding != nil {
-		existingBinding.Members = append(existingBinding.Members, saResourcePrefix+newSA.Email)
-	} else {
-		existingBinding = &cloudres.Binding{
-			Members: []string{saResourcePrefix + newSA.Email},
-			Role:    roleResourcePrefix + role,
-		}
-		b := append(currPolicy.Bindings, existingBinding)
-		currPolicy.Bindings = b
-	}
-
-	newPolicyRequest := cloudres.SetIamPolicyRequest{
-		Policy: currPolicy,
-	}
-	_, err = cloudresService.Projects.SetIamPolicy(sam.ProjectId, &newPolicyRequest).Do()
-	if err != nil {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("ERROR assigning policy to service account: %s", err)
 	}
 
 	// create and save key
-	saKeyService := iam.NewProjectsServiceAccountsKeysService(iamService)
-	newSAKey, err := saKeyService.Create(newSA.Name, &iam.CreateServiceAccountKeyRequest{}).Do()
+	newSAKey, err := sam.createServiceAccountKey(newSA)
 	if err != nil {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("ERROR creating new service account key: %s", err)
+		return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating new service account key: %s", err)
 	}
 
 	newSAInfo := ServiceAccountInfo{
@@ -142,7 +118,6 @@ func (sam *ServiceAccountManager) CreateCredentials(instanceID string, bindingID
 	}
 
 	return newCreds, nil
-
 }
 
 // deletes the given service account from Google
@@ -184,6 +159,81 @@ func ServiceAccountName(bindingId string) string {
 	}
 }
 
+func (sam *ServiceAccountManager) createServiceAccount(bindingID string) (*iam.ServiceAccount, error) {
+	client := sam.HttpConfig.Client(context.Background())
+	iamService, err := iam.New(client)
+	if err != nil {
+		return nil, fmt.Errorf("Error creating new IAM service: %s", err)
+	}
+
+	someName := ServiceAccountName(bindingID)
+	resourceName := projectResourcePrefix + sam.ProjectId
+
+	// create and save account
+	newSARequest := iam.CreateServiceAccountRequest{
+		AccountId: someName,
+		ServiceAccount: &iam.ServiceAccount{
+			DisplayName: someName,
+		},
+	}
+
+	return iam.NewProjectsServiceAccountsService(iamService).Create(resourceName, &newSARequest).Do()
+}
+
+func (sam *ServiceAccountManager) createServiceAccountKey(account *iam.ServiceAccount) (*iam.ServiceAccountKey, error) {
+	client := sam.HttpConfig.Client(context.Background())
+	iamService, err := iam.New(client)
+	if err != nil {
+		return nil, fmt.Errorf("Error creating new IAM service: %s", err)
+	}
+
+	saKeyService := iam.NewProjectsServiceAccountsKeysService(iamService)
+	return saKeyService.Create(account.Name, &iam.CreateServiceAccountKeyRequest{}).Do()
+}
+
+func (sam *ServiceAccountManager) grantRoleToAccount(role string, account *iam.ServiceAccount) error {
+	client := sam.HttpConfig.Client(context.Background())
+
+	cloudresService, err := cloudres.New(client)
+	if err != nil {
+		return fmt.Errorf("Error creating new cloud resource management service: %s", err)
+	}
+
+	for attempt := 0; attempt < 3; attempt++ {
+		currPolicy, err := cloudresService.Projects.GetIamPolicy(sam.ProjectId, &cloudres.GetIamPolicyRequest{}).Do()
+		if err != nil {
+			return fmt.Errorf("Error getting current project iam policy: %s", err)
+		}
+
+		currPolicy.Bindings = mergeBindings(append(currPolicy.Bindings, &cloudres.Binding{
+			Members: []string{saResourcePrefix + account.Email},
+			Role:    roleResourcePrefix + role,
+		}))
+
+		newPolicyRequest := cloudres.SetIamPolicyRequest{
+			Policy: currPolicy,
+		}
+		_, err = cloudresService.Projects.SetIamPolicy(sam.ProjectId, &newPolicyRequest).Do()
+		if err == nil {
+			return nil
+		}
+
+		if isConflictError(err) {
+			time.Sleep(5 * time.Second)
+			continue
+		} else {
+			return fmt.Errorf("Error assigning policy to service account: %s", err)
+		}
+	}
+
+	return err
+}
+
+func isConflictError(err error) bool {
+	gerr, ok := err.(*googleapi.Error)
+	return ok && gerr != nil && gerr.Code == 409
+}
+
 type ServiceAccountInfo struct {
 	// the bits to save
 	Name      string `json:"Name"`
@@ -195,13 +245,18 @@ type ServiceAccountInfo struct {
 	PrivateKeyData string `json:"PrivateKeyData"`
 }
 
-func ServiceAccountBindInputVariables() []broker.BrokerVariable {
+func ServiceAccountBindInputVariables(roleWhitelist []string) []broker.BrokerVariable {
+	defaultRoles := strings.Join(roleWhitelist, "', '")
+	details := fmt.Sprintf(`The role for the account without the "roles/" prefix.
+		See https://cloud.google.com/iam/docs/understanding-roles for more details.
+		The following roles are available by default but may be overridden by your operator: '%s'.`, defaultRoles)
+
 	return []broker.BrokerVariable{
 		broker.BrokerVariable{
 			Required:  true,
 			FieldName: "role",
 			Type:      broker.JsonTypeString,
-			Details:   `The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for available roles.`,
+			Details:   details,
 		},
 	}
 }
@@ -235,4 +290,8 @@ func ServiceAccountBindOutputVariables() []broker.BrokerVariable {
 			Details:   "Unique and stable id of the service account",
 		},
 	}
+}
+
+func whitelistAllows(whitelist []string, role string) bool {
+	return NewStringSet(whitelist...).Contains(role)
 }

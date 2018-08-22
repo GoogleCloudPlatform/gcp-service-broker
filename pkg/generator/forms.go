@@ -70,6 +70,7 @@ func GenerateForms() TileFormsSections {
 			GenerateServiceAccountForm(),
 			GenerateDatabaseForm(),
 			GenerateEnableDisableForm(),
+			GenerateRoleWhitelistForm(),
 		},
 
 		ServicePlanForms: GenerateServicePlanForms(),
@@ -100,6 +101,41 @@ func GenerateEnableDisableForm() Form {
 		Name:        "enable_disable",
 		Label:       "Enable Services",
 		Description: "Enable or disable services",
+		Properties:  enablers,
+	}
+}
+
+// GenerateRoleWhitelistForm generates a form for users to enable/disable the
+// whitelist validation for new service accounts bound to the service.
+// They are opt-out and on by default for safety.
+func GenerateRoleWhitelistForm() Form {
+	enablers := []FormProperty{}
+	for _, svc := range broker.GetAllServices() {
+		entry, err := svc.CatalogEntry()
+		if err != nil {
+			log.Fatalf("Error getting catalog entry for service %s, %v", svc.Name, err)
+		}
+
+		if !svc.IsRoleWhitelistEnabled() {
+			continue
+		}
+
+		enableForm := FormProperty{
+			Name:         strings.ToLower(utils.PropertyToEnv(svc.RoleWhitelistProperty())),
+			Label:        fmt.Sprintf("Role whitelist for %s instances", entry.Metadata.DisplayName),
+			Description:  "A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service",
+			Type:         "string",
+			Default:      strings.Join(svc.DefaultRoleWhitelist, ","),
+			Configurable: true,
+		}
+
+		enablers = append(enablers, enableForm)
+	}
+
+	return Form{
+		Name:        "role_whitelists",
+		Label:       "Role Whitelisting",
+		Description: "Enable or disable role whitelisting",
 		Properties:  enablers,
 	}
 }

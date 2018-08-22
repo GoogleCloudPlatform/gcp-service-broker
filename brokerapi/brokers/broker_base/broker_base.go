@@ -16,28 +16,22 @@ package broker_base
 
 import (
 	"code.cloudfoundry.org/lager"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
 )
 
 type BrokerBase struct {
-	AccountManager models.AccountManager
+	AccountManager *account_managers.ServiceAccountManager
 	HttpConfig     *jwt.Config
 	ProjectId      string
 	Logger         lager.Logger
 }
 
 func (b *BrokerBase) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
-
-	// Create account
-	newBinding, err := b.AccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
-
-	if err != nil {
-		return models.ServiceBindingCredentials{}, err
-	}
-
-	return newBinding, nil
+	return b.AccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
 }
 
 func (b *BrokerBase) BuildInstanceCredentials(bindDetails models.ServiceBindingCredentials, instanceDetails models.ServiceInstanceDetails) (map[string]string, error) {
@@ -45,13 +39,7 @@ func (b *BrokerBase) BuildInstanceCredentials(bindDetails models.ServiceBindingC
 }
 
 func (b *BrokerBase) Unbind(creds models.ServiceBindingCredentials) error {
-
-	err := b.AccountManager.DeleteCredentials(creds)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return b.AccountManager.DeleteCredentials(creds)
 }
 
 // Does nothing but return an error because Base services are provisioned synchronously so this method should not be called

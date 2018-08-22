@@ -23,7 +23,7 @@ A fast, economical and fully managed data warehouse for large-scale data analyti
 **Request Parameters**
 
 
- * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for available roles.
+ * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for more details. The following roles are available by default but may be overridden by your operator: 'bigquery.dataViewer', 'bigquery.dataEditor', 'bigquery.dataOwner', 'bigquery.user', 'bigquery.jobUser'
 
 **Response Parameters**
 
@@ -96,7 +96,7 @@ A high performance NoSQL database service for large analytical and operational w
 **Request Parameters**
 
 
- * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for available roles.
+ * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for more details. The following roles are available by default but may be overridden by your operator: 'bigtable.user', 'bigtable.reader', 'bigtable.viewer'
 
 **Response Parameters**
 
@@ -183,7 +183,7 @@ Google Cloud SQL is a fully-managed MySQL database service
 **Request Parameters**
 
 
- * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for available roles.
+ * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for more details. The following roles are available by default but may be overridden by your operator: 'cloudsql.editor', 'cloudsql.viewer', 'cloudsql.client'
  * `jdbc_uri_format` _string_ - if `true`, `uri` field will contain a JDBC formatted URI Default: `false`
  * `username` _string_ - The SQL username for the account Default: `a generated value`
  * `password` _string_ - The SQL password for the account Default: `a generated value`
@@ -298,7 +298,7 @@ Google Cloud SQL is a fully-managed MySQL database service
 **Request Parameters**
 
 
- * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for available roles.
+ * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for more details. The following roles are available by default but may be overridden by your operator: 'cloudsql.editor', 'cloudsql.viewer', 'cloudsql.client'
  * `jdbc_uri_format` _string_ - if `true`, `uri` field will contain a JDBC formatted URI Default: `false`
  * `username` _string_ - The SQL username for the account Default: `a generated value`
  * `password` _string_ - The SQL password for the account Default: `a generated value`
@@ -459,7 +459,7 @@ _No parameters supported._
 **Request Parameters**
 
 
- * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for available roles.
+ * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for more details. The following roles are available by default but may be overridden by your operator: 'ml.developer', 'ml.viewer', 'ml.modelOwner', 'ml.modelUser', 'ml.jobOwner', 'ml.operationOwner'
 
 **Response Parameters**
 
@@ -530,7 +530,7 @@ A global service for real-time and reliable messaging and streaming data
 **Request Parameters**
 
 
- * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for available roles.
+ * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for more details. The following roles are available by default but may be overridden by your operator: 'pubsub.publisher', 'pubsub.subscriber', 'pubsub.viewer', 'pubsub.editor'
 
 **Response Parameters**
 
@@ -604,7 +604,7 @@ The first horizontally scalable, globally consistent, relational database servic
 **Request Parameters**
 
 
- * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for available roles.
+ * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for more details. The following roles are available by default but may be overridden by your operator: 'spanner.databaseAdmin', 'spanner.databaseReader', 'spanner.databaseUser', 'spanner.viewer'
 
 **Response Parameters**
 
@@ -865,7 +865,7 @@ A Powerful, Simple and Cost Effective Object Storage Service
 **Request Parameters**
 
 
- * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for available roles.
+ * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See https://cloud.google.com/iam/docs/understanding-roles for more details. The following roles are available by default but may be overridden by your operator: 'storage.objectCreator', 'storage.objectViewer', 'storage.objectAdmin'
 
 **Response Parameters**
 

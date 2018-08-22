@@ -20,6 +20,14 @@ import (
 )
 
 func init() {
+	roleWhitelist := []string{
+		"bigquery.dataViewer",
+		"bigquery.dataEditor",
+		"bigquery.dataOwner",
+		"bigquery.user",
+		"bigquery.jobUser",
+	}
+
 	bs := &broker.BrokerService{
 		Name: "google-bigquery",
 		DefaultServiceDefinition: `{
@@ -55,7 +63,8 @@ func init() {
 				Default:   "a generated value",
 			},
 		},
-		BindInputVariables: accountmanagers.ServiceAccountBindInputVariables(),
+		DefaultRoleWhitelist: roleWhitelist,
+		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "dataset_id",

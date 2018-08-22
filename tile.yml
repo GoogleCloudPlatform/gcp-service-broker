@@ -153,6 +153,66 @@ forms:
     default: true
     label: Let the broker create and bind Google Cloud Storage instances
     configurable: true
+- name: role_whitelists
+  label: Role Whitelisting
+  description: Enable or disable role whitelisting
+  properties:
+  - name: gsb_service_google_bigquery_whitelist
+    type: string
+    default: bigquery.dataViewer,bigquery.dataEditor,bigquery.dataOwner,bigquery.user,bigquery.jobUser
+    label: Role whitelist for Google BigQuery instances
+    description: A comma delimited list of roles (minus the role/ prefix) that can
+      be used when creating bound users for this service
+    configurable: true
+  - name: gsb_service_google_bigtable_whitelist
+    type: string
+    default: bigtable.user,bigtable.reader,bigtable.viewer
+    label: Role whitelist for Google Bigtable instances
+    description: A comma delimited list of roles (minus the role/ prefix) that can
+      be used when creating bound users for this service
+    configurable: true
+  - name: gsb_service_google_cloudsql_mysql_whitelist
+    type: string
+    default: cloudsql.editor,cloudsql.viewer,cloudsql.client
+    label: Role whitelist for Google CloudSQL MySQL instances
+    description: A comma delimited list of roles (minus the role/ prefix) that can
+      be used when creating bound users for this service
+    configurable: true
+  - name: gsb_service_google_cloudsql_postgres_whitelist
+    type: string
+    default: cloudsql.editor,cloudsql.viewer,cloudsql.client
+    label: Role whitelist for Google CloudSQL PostgreSQL instances
+    description: A comma delimited list of roles (minus the role/ prefix) that can
+      be used when creating bound users for this service
+    configurable: true
+  - name: gsb_service_google_ml_apis_whitelist
+    type: string
+    default: ml.developer,ml.viewer,ml.modelOwner,ml.modelUser,ml.jobOwner,ml.operationOwner
+    label: Role whitelist for Google Machine Learning APIs instances
+    description: A comma delimited list of roles (minus the role/ prefix) that can
+      be used when creating bound users for this service
+    configurable: true
+  - name: gsb_service_google_pubsub_whitelist
+    type: string
+    default: pubsub.publisher,pubsub.subscriber,pubsub.viewer,pubsub.editor
+    label: Role whitelist for Google PubSub instances
+    description: A comma delimited list of roles (minus the role/ prefix) that can
+      be used when creating bound users for this service
+    configurable: true
+  - name: gsb_service_google_spanner_whitelist
+    type: string
+    default: spanner.databaseAdmin,spanner.databaseReader,spanner.databaseUser,spanner.viewer
+    label: Role whitelist for Google Spanner instances
+    description: A comma delimited list of roles (minus the role/ prefix) that can
+      be used when creating bound users for this service
+    configurable: true
+  - name: gsb_service_google_storage_whitelist
+    type: string
+    default: storage.objectCreator,storage.objectViewer,storage.objectAdmin
+    label: Role whitelist for Google Cloud Storage instances
+    description: A comma delimited list of roles (minus the role/ prefix) that can
+      be used when creating bound users for this service
+    configurable: true
 service_plan_forms:
 - name: bigtable_custom_plans
   label: Google Bigtable Custom Plans

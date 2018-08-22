@@ -296,6 +296,118 @@ You can configure the following environment variables:
 
 
 
+## Role Whitelisting
+
+Enable or disable role whitelisting
+
+You can configure the following environment variables:
+
+<b><tt>GSB_SERVICE_GOOGLE_BIGQUERY_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google BigQuery instances
+
+A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+  <li>Default: <code>bigquery.dataViewer,bigquery.dataEditor,bigquery.dataOwner,bigquery.user,bigquery.jobUser</code></li>
+</ul>
+
+<b><tt>GSB_SERVICE_GOOGLE_BIGTABLE_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Bigtable instances
+
+A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+  <li>Default: <code>bigtable.user,bigtable.reader,bigtable.viewer</code></li>
+</ul>
+
+<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google CloudSQL MySQL instances
+
+A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+  <li>Default: <code>cloudsql.editor,cloudsql.viewer,cloudsql.client</code></li>
+</ul>
+
+<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google CloudSQL PostgreSQL instances
+
+A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+  <li>Default: <code>cloudsql.editor,cloudsql.viewer,cloudsql.client</code></li>
+</ul>
+
+<b><tt>GSB_SERVICE_GOOGLE_ML_APIS_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Machine Learning APIs instances
+
+A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+  <li>Default: <code>ml.developer,ml.viewer,ml.modelOwner,ml.modelUser,ml.jobOwner,ml.operationOwner</code></li>
+</ul>
+
+<b><tt>GSB_SERVICE_GOOGLE_PUBSUB_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google PubSub instances
+
+A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+  <li>Default: <code>pubsub.publisher,pubsub.subscriber,pubsub.viewer,pubsub.editor</code></li>
+</ul>
+
+<b><tt>GSB_SERVICE_GOOGLE_SPANNER_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Spanner instances
+
+A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+  <li>Default: <code>spanner.databaseAdmin,spanner.databaseReader,spanner.databaseUser,spanner.viewer</code></li>
+</ul>
+
+<b><tt>GSB_SERVICE_GOOGLE_STORAGE_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Cloud Storage instances
+
+A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+  <li>Default: <code>storage.objectCreator,storage.objectViewer,storage.objectAdmin</code></li>
+</ul>
+
+
+
 
 ## Custom Plans
 

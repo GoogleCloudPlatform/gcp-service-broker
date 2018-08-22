@@ -173,9 +173,10 @@ func init() {
 				    }
 				]
 		}`,
-		ProvisionInputVariables: commonProvisionVariables,
-		BindInputVariables:      commonBindVariables,
-		BindOutputVariables:     commonBindOutputVariables,
+		ProvisionInputVariables:     commonProvisionVariables,
+		DefaultRoleWhitelist: roleWhitelist,
+		BindInputVariables:          commonBindVariables,
+		BindOutputVariables:         commonBindOutputVariables,
 		PlanVariables: []broker.BrokerVariable{
 			broker.BrokerVariable{
 				FieldName: "tier",

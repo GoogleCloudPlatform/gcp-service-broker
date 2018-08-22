@@ -19,7 +19,13 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
-var commonBindVariables = append(accountmanagers.ServiceAccountBindInputVariables(),
+var roleWhitelist = []string{
+	"cloudsql.editor",
+	"cloudsql.viewer",
+	"cloudsql.client",
+}
+
+var commonBindVariables = append(accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
 	broker.BrokerVariable{
 		FieldName: "jdbc_uri_format",
 		Type:      broker.JsonTypeString,

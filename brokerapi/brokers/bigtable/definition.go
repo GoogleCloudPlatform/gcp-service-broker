@@ -20,6 +20,12 @@ import (
 )
 
 func init() {
+	roleWhitelist := []string{
+		"bigtable.user",
+		"bigtable.reader",
+		"bigtable.viewer",
+	}
+
 	bs := &broker.BrokerService{
 		Name: "google-bigtable",
 		DefaultServiceDefinition: `{
@@ -86,12 +92,9 @@ func init() {
 				Details:   "The zone the data will reside in.",
 				Default:   "us-east1-b",
 			},
-			// NOTE: the following variables are defined in the original documentation
-			// but do not seem to be editable by users (only operators)
-			// - storage_type (one of "SSD" or "HDD", defaults to "SSD")
-			// - num_nodes (defaults to 3)
 		},
-		BindInputVariables: accountmanagers.ServiceAccountBindInputVariables(),
+		DefaultRoleWhitelist: roleWhitelist,
+		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "instance_id",

@@ -18,6 +18,12 @@ import "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 import accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 
 func init() {
+	roleWhitelist := []string{
+		"storage.objectCreator",
+		"storage.objectViewer",
+		"storage.objectAdmin",
+	}
+
 	bs := &broker.BrokerService{
 		Name: "google-storage",
 		DefaultServiceDefinition: `{
@@ -75,7 +81,8 @@ func init() {
 				Details:   `The location of the bucket. Object data for objects in the bucket resides in physical storage within this region. See https://cloud.google.com/storage/docs/bucket-locations`,
 			},
 		},
-		BindInputVariables: accountmanagers.ServiceAccountBindInputVariables(),
+		DefaultRoleWhitelist: roleWhitelist,
+		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "bucket_name",

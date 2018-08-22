@@ -20,6 +20,15 @@ import (
 )
 
 func init() {
+	roleWhitelist := []string{
+		"ml.developer",
+		"ml.viewer",
+		"ml.modelOwner",
+		"ml.modelUser",
+		"ml.jobOwner",
+		"ml.operationOwner",
+	}
+
 	bs := &broker.BrokerService{
 		Name: "google-ml-apis",
 		DefaultServiceDefinition: `
@@ -49,9 +58,10 @@ func init() {
       ]
     }
 		`,
-		ProvisionInputVariables: []broker.BrokerVariable{},
-		BindInputVariables:      accountmanagers.ServiceAccountBindInputVariables(),
-		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
+		ProvisionInputVariables:     []broker.BrokerVariable{},
+		DefaultRoleWhitelist: roleWhitelist,
+		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
+		BindOutputVariables:         accountmanagers.ServiceAccountBindOutputVariables(),
 		Examples: []broker.ServiceExample{
 			broker.ServiceExample{
 				Name:            "Basic Configuration",
