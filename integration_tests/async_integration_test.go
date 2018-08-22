@@ -337,7 +337,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			bindDetails := brokerapi.BindDetails{
 				ServiceID:     serviceNameToId[models.SpannerName],
 				PlanID:        serviceNameToPlanId[models.SpannerName],
-				RawParameters: []byte(`{"role": "spanner.admin"}`),
+				RawParameters: []byte(`{"role": "spanner.databaseAdmin"}`),
 			}
 			bindId := fmt.Sprintf("sp-%d", rand.Uint32())
 			creds, err := gcpBroker.Bind(context.Background(), "integration_test_instance", bindId, bindDetails)
