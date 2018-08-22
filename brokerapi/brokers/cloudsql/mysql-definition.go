@@ -173,10 +173,10 @@ func init() {
 				    }
 				]
 		}`,
-		ProvisionInputVariables:     commonProvisionVariables,
-		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:          commonBindVariables,
-		BindOutputVariables:         commonBindOutputVariables,
+		ProvisionInputVariables: commonProvisionVariables,
+		DefaultRoleWhitelist:    roleWhitelist,
+		BindInputVariables:      commonBindVariables,
+		BindOutputVariables:     commonBindOutputVariables,
 		PlanVariables: []broker.BrokerVariable{
 			broker.BrokerVariable{
 				FieldName: "tier",
@@ -193,12 +193,14 @@ func init() {
 					"PER_USE": "Per-Use",
 					"PACKAGE": "Package",
 				},
+				Required: true,
 			},
 			broker.BrokerVariable{
 				FieldName: "max_disk_size",
 				Type:      broker.JsonTypeString,
 				Details:   "Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default)",
 				Default:   "10",
+				Required:  true,
 			},
 		},
 		Examples: []broker.ServiceExample{

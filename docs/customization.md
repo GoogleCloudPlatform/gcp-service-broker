@@ -1,4 +1,3 @@
-
 # Installation Customization
 
 This file documents the various environment variables you can set to change the functionality of the service broker.
@@ -688,7 +687,7 @@ For example:
 
 
 <ul>
-  <li><i>Optional</i></li>
+  <li><b>Required</b></li>
 
 
   <li>Default: <code>PER_USE</code></li>
@@ -713,7 +712,7 @@ For example:
 
 
 <ul>
-  <li><i>Optional</i></li>
+  <li><b>Required</b></li>
 
 
   <li>Default: <code>10</code></li>
