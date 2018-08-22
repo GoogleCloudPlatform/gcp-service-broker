@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:generate go run dao_generator.go
+
 package db_service
 
 import (
@@ -21,7 +23,6 @@ import (
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/jinzhu/gorm"
-	"github.com/pivotal-cf/brokerapi"
 )
 
 var DbConnection *gorm.DB
@@ -39,20 +40,15 @@ func New(logger lager.Logger) *gorm.DB {
 }
 
 // gets the count of service instances by instance id (i.e. 0 or 1)
+// Deprecated, use CountServiceInstanceDetailsById instead
 func GetServiceInstanceCount(instanceID string) (int, error) {
-	var count int
-	err := DbConnection.Model(&models.ServiceInstanceDetails{}).Where("id = ?", instanceID).Count(&count).Error
-	return count, err
+	return CountServiceInstanceDetailsById(instanceID)
 }
 
 // soft deletes an instance from the database by instance id
+// Deprecated, use DeleteServiceInstanceDetailsById
 func SoftDeleteInstanceDetails(instanceID string) error {
-	// TODO(cbriant): how do I know if this is a connection error or a does not exist error
-	instance := models.ServiceInstanceDetails{}
-	if err := DbConnection.Where("ID = ?", instanceID).First(&instance).Error; err != nil {
-		return brokerapi.ErrInstanceDoesNotExist
-	}
-	return DbConnection.Delete(&instance).Error
+	return DeleteServiceInstanceDetailsById(instanceID)
 }
 
 func GetLastOperation(instanceId string) (models.CloudOperation, error) {
@@ -62,4 +58,15 @@ func GetLastOperation(instanceId string) (models.CloudOperation, error) {
 		return models.CloudOperation{}, err
 	}
 	return op, nil
+}
+
+// defaultDatastore gets the default datastore for the given default database
+// instantiated in New(). In the future, all accesses of DbConnection will be
+// done through SqlDatastore and it will become the globally shared instance.
+func defaultDatastore() *SqlDatastore {
+	return &SqlDatastore{db: DbConnection}
+}
+
+type SqlDatastore struct {
+	db *gorm.DB
 }
