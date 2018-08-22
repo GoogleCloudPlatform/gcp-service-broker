@@ -44,7 +44,7 @@ func createTestDatabase() {
 	}
 	defer db.Close()
 
-	res, err := db.Query("SHOW DATABASES LIKE 'servicebroker'")
+	res, err := db.Query("SHOW DATABASES LIKE 'servicebrokertest'")
 	if err != nil {
 		panic(err)
 	}
@@ -52,12 +52,12 @@ func createTestDatabase() {
 		dropTestDatabase()
 	}
 
-	_, err = db.Exec("CREATE DATABASE servicebroker")
+	_, err = db.Exec("CREATE DATABASE servicebrokertest")
 	if err != nil {
 		panic(err)
 	}
 
-	_, err = db.Exec("USE servicebroker")
+	_, err = db.Exec("USE servicebrokertest")
 	if err != nil {
 		panic(err)
 	}
@@ -70,7 +70,7 @@ func dropTestDatabase() {
 	}
 	defer db.Close()
 
-	_, err = db.Exec("DROP DATABASE servicebroker")
+	_, err = db.Exec("DROP DATABASE servicebrokertest")
 	if err != nil {
 		panic(err)
 	}
@@ -89,7 +89,7 @@ var _ = Describe("DbService", func() {
 		fakes.SetUpTestServices()
 
 		createTestDatabase()
-		testDb, _ := gorm.Open("mysql", getLocalTestConnectionStr("servicebroker"))
+		testDb, _ := gorm.Open("mysql", getLocalTestConnectionStr("servicebrokertest"))
 
 		DbConnection = testDb
 	})

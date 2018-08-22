@@ -29,6 +29,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/pivotal-cf/brokerapi"
 
 	"code.cloudfoundry.org/lager"
@@ -152,8 +153,8 @@ var _ = Describe("Brokers", func() {
 	})
 
 	Describe("Broker init", func() {
-		It("should have 11 services in sevices map", func() {
-			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(11))
+		It("should have enabled services in sevices map", func() {
+			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(len(broker.GetEnabledServices())))
 		})
 
 		It("should have a default client", func() {
@@ -170,7 +171,7 @@ var _ = Describe("Brokers", func() {
 			serviceList, err := gcpBroker.Services(context.Background())
 			Expect(err).ToNot(HaveOccurred())
 
-			Expect(len(serviceList)).To(Equal(11))
+			Expect(len(serviceList)).To(Equal(len(broker.GetEnabledServices())))
 		})
 
 		It("should have 3 storage plans available", func() {
@@ -421,7 +422,7 @@ var _ = Describe("AccountManagers", func() {
 		iamStyleBroker    models.ServiceBrokerHelper
 		spannerBroker     models.ServiceBrokerHelper
 		cloudsqlBroker    models.ServiceBrokerHelper
-		accountManager    modelsfakes.FakeAccountManager
+		accountManager    modelsfakes.FakeServiceAccountManager
 		sqlAccountManager modelsfakes.FakeAccountManager
 		err               error
 	)
@@ -438,7 +439,7 @@ var _ = Describe("AccountManagers", func() {
 		db_service.DbConnection = testDb
 		name_generator.New()
 
-		accountManager = modelsfakes.FakeAccountManager{
+		accountManager = modelsfakes.FakeServiceAccountManager{
 			CreateCredentialsStub: func(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 				return models.ServiceBindingCredentials{OtherDetails: "{}"}, nil
 			},

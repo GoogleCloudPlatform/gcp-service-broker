@@ -19,6 +19,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+//go:generate counterfeiter . ServiceBrokerHelper
+//go:generate counterfeiter . AccountManager
+//go:generate counterfeiter . ServiceAccountManager
+
 type ServiceBrokerHelper interface {
 	Provision(instanceId string, details brokerapi.ProvisionDetails, plan ServicePlan) (ServiceInstanceDetails, error)
 	Bind(instanceID, bindingID string, details brokerapi.BindDetails) (ServiceBindingCredentials, error)
@@ -35,6 +39,11 @@ type AccountManager interface {
 	CreateCredentials(instanceID string, bindingID string, details brokerapi.BindDetails, instance ServiceInstanceDetails) (ServiceBindingCredentials, error)
 	DeleteCredentials(creds ServiceBindingCredentials) error
 	BuildInstanceCredentials(bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
+}
+
+type ServiceAccountManager interface {
+	AccountManager
+	CreateAccountWithRoles(bindingID string, roles []string) (ServiceBindingCredentials, error)
 }
 
 type GCPCredentials struct {
