@@ -296,7 +296,6 @@ service_plan_forms:
       label: Per-Use
     - name: PACKAGE
       label: Package
-    optional: true
   - name: max_disk_size
     type: string
     default: "10"
@@ -304,7 +303,6 @@ service_plan_forms:
     description: Maximum disk size in GB (applicable only to Second Generation instances,
       10 minimum/default)
     configurable: true
-    optional: true
 - name: cloudsql_postgres_custom_plans
   label: Google CloudSQL PostgreSQL Custom Plans
   description: Generate custom plans for Google CloudSQL PostgreSQL
