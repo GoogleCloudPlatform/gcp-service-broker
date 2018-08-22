@@ -152,7 +152,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			bindDetails := brokerapi.BindDetails{
 				ServiceID:     serviceNameToId[models.CloudsqlMySQLName],
 				PlanID:        serviceNameToPlanId[models.CloudsqlMySQLName],
-				RawParameters: []byte(`{"role": "editor"}`),
+				RawParameters: []byte(`{"role": "cloudsql.editor"}`),
 			}
 
 			bindId := fmt.Sprintf("my-%d", rand.Uint32())
@@ -239,7 +239,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 			bindDetails := brokerapi.BindDetails{
 				ServiceID:     serviceNameToId[models.CloudsqlPostgresName],
 				PlanID:        serviceNameToPlanId[models.CloudsqlPostgresName],
-				RawParameters: []byte(`{"role":"editor"}`),
+				RawParameters: []byte(`{"role":"cloudsql.editor"}`),
 			}
 
 			bindId := fmt.Sprintf("pg-%d", rand.Uint32())

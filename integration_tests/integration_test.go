@@ -247,7 +247,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	Describe("Broker init", func() {
-		It("should have 11 services in sevices map", func() {
+		It("should have all enabled services in sevices map", func() {
 			Expect(len(gcpBroker.ServiceBrokerMap)).To(Equal(len(broker.GetEnabledServices())))
 		})
 
@@ -261,7 +261,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 	})
 
 	Describe("getting broker catalog", func() {
-		It("should have 11 services available", func() {
+		It("should have all enabled services available", func() {
 			serviceList, err := gcpBroker.Services(context.Background())
 
 			Expect(err).ToNot(HaveOccurred())
@@ -290,7 +290,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 				planId:           serviceNameToPlanId[models.BigqueryName],
 				bindingId:        "integration_test_bind",
 				instanceId:       "integration_test_dataset",
-				rawBindingParams: []byte(`{"role": "bigquery.admin"}`),
+				rawBindingParams: []byte(`{"role": "bigquery.dataOwner"}`),
 				serviceExistsFn: func(expected bool) bool {
 					_, err = service.Datasets.Get(brokerConfig.ProjectId, instance_name).Do()
 
@@ -333,7 +333,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 				planId:           serviceNameToPlanId[models.BigtableName],
 				bindingId:        "integration_test_bind",
 				instanceId:       "integration_test_instance",
-				rawBindingParams: []byte(`{"role": "editor"}`),
+				rawBindingParams: []byte(`{"role": "bigtable.user"}`),
 				serviceExistsFn: func(expected bool) bool {
 					instances, err := service.Instances(ctx)
 
@@ -364,7 +364,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 				planId:           serviceNameToPlanId[models.StorageName],
 				instanceId:       "integration_test_bucket",
 				bindingId:        "integration_test_bucket_binding",
-				rawBindingParams: []byte(`{"role": "storage.admin"}`),
+				rawBindingParams: []byte(`{"role": "storage.objectAdmin"}`),
 				serviceExistsFn: func(bool) bool {
 					bucket := service.Bucket(instance_name)
 					_, err = bucket.Attrs(context.Background())
@@ -399,7 +399,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 				planId:           serviceNameToPlanId[models.PubsubName],
 				instanceId:       "integration_test_topic",
 				bindingId:        "integration_test_topic_bindingId",
-				rawBindingParams: []byte(`{"role": "pubsub.admin"}`),
+				rawBindingParams: []byte(`{"role": "pubsub.editor"}`),
 				serviceExistsFn: func(bool) bool {
 					exists, err := topic.Exists(context.Background())
 					return exists && err == nil
