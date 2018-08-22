@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - The ability to customize the database name in the Tile.
 - The ability to turn on/off services via environment variable.
 - Default plans for Spanner, BigTable, and CloudSQL.
+- Whitelists for bindings so only certain "safe" roles can be chosen by end-users.
 
 ### Deprecated
 - Running the service by executing the main executable. Use the `serve` sub-command instead.
