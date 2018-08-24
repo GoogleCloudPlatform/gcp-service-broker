@@ -23,8 +23,6 @@ import (
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
 var _ = Describe("DbService", func() {
@@ -39,7 +37,8 @@ var _ = Describe("DbService", func() {
 
 		fakes.SetUpTestServices()
 
-		testDb, _ := gorm.Open("sqlite3", "test.sqlite3")
+		testDb, err := gorm.Open("sqlite3", "test.sqlite3")
+		Expect(err).NotTo(HaveOccurred())
 
 		DbConnection = testDb
 	})

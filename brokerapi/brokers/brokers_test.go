@@ -60,12 +60,11 @@ var _ = Describe("Brokers", func() {
 		logger = lager.NewLogger("brokers_test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 
-		testDb, _ := gorm.Open("sqlite3", "test.db")
-		testDb.CreateTable(models.ServiceInstanceDetails{})
-		testDb.CreateTable(models.ServiceBindingCredentials{})
-		testDb.CreateTable(models.ProvisionRequestDetails{})
-
+		testDb, err := gorm.Open("sqlite3", "test.db")
+		Expect(err).NotTo(HaveOccurred())
+		db_service.RunMigrations(testDb)
 		db_service.DbConnection = testDb
+
 		name_generator.New()
 
 		os.Setenv("ROOT_SERVICE_ACCOUNT_JSON", `{
@@ -431,11 +430,9 @@ var _ = Describe("AccountManagers", func() {
 		logger = lager.NewLogger("brokers_test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 
-		testDb, _ := gorm.Open("sqlite3", "test.db")
-		testDb.CreateTable(models.ServiceInstanceDetails{})
-		testDb.CreateTable(models.ServiceBindingCredentials{})
-		testDb.CreateTable(models.ProvisionRequestDetails{})
-
+		testDb, err := gorm.Open("sqlite3", "test.db")
+		Expect(err).NotTo(HaveOccurred())
+		db_service.RunMigrations(testDb)
 		db_service.DbConnection = testDb
 		name_generator.New()
 
