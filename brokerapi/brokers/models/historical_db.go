@@ -24,7 +24,8 @@ import (
 // can do proper tracking through gorm.
 //
 // If you need to change a model you MUST make a copy here and update the
-// reference elsewhere.
+// reference to the new model in db.go and add a migration path in the
+// db_service package.
 
 type ServiceBindingCredentialsV1 struct {
 	gorm.Model
