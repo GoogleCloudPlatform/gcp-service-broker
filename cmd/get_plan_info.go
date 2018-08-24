@@ -16,9 +16,9 @@ package cmd
 
 import (
 	"fmt"
-	"time"
 
 	"code.cloudfoundry.org/lager"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/cobra"
@@ -33,7 +33,7 @@ func init() {
 			logger := lager.NewLogger("get_plan_info_cmd")
 			db := db_service.SetupDb(logger)
 
-			var pds []*PlanDetails
+			var pds []*models.PlanDetailsV1
 			if err := db.Find(&pds).Error; err != nil {
 				fmt.Errorf("Could not retrieve plan details rows from db: %s", err)
 			}
@@ -41,15 +41,4 @@ func init() {
 			utils.PrettyPrintOrExit(pds)
 		},
 	})
-}
-
-type PlanDetails struct {
-	ID        string `gorm:"primary_key"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time
-
-	ServiceId string
-	Name      string
-	Features  string `sql:"type:text"`
 }

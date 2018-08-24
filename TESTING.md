@@ -11,6 +11,14 @@ $ mysql> CREATE DATABASE servicebroker;
 $ mysql> exit
 ```
 
+Or, you can run the service broker using SQLite3 for development by sepecifying
+the `db.type` and `db.path` fields:
+
+```
+db.type: sqlite3
+db.path: service-broker-db.sqlite3
+```
+
 ## Database Exploration
 
 You can debug the database locally using the `show` sub-command.

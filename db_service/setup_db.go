@@ -36,6 +36,11 @@ const (
 	dbPassProp     = "db.password"
 	dbPortProp     = "db.port"
 	dbNameProp     = "db.name"
+	dbTypeProp     = "db.type"
+	dbPathProp     = "db.path"
+
+	DbTypeMysql   = "mysql"
+	DbTypeSqlite3 = "sqlite3"
 )
 
 func init() {
@@ -51,17 +56,55 @@ func init() {
 	viper.SetDefault(dbPortProp, "3306")
 	viper.BindEnv(dbNameProp, "DB_NAME")
 	viper.SetDefault(dbNameProp, "servicebroker")
+
+	viper.BindEnv(dbTypeProp, "DB_TYPE")
+	viper.SetDefault(dbTypeProp, "mysql")
+
+	viper.BindEnv(dbPathProp, "DB_PATH")
 }
 
-// pulls db credentials from the environment, connects to the db, runs migrations, and returns the db connection
+// pulls db credentials from the environment, connects to the db, and returns the db connection
 func SetupDb(logger lager.Logger) *gorm.DB {
+	dbType := viper.GetString(dbTypeProp)
+	var db *gorm.DB
+	var err error
+	switch dbType {
+	default:
+		logger.Error("Database Setup", fmt.Errorf("Invalid database type %q, valid types are: sqlite3 and mysql", dbType))
+		os.Exit(1)
+	case DbTypeMysql:
+		db, err = setupMysqlDb(logger)
+	case DbTypeSqlite3:
+		db, err = setupSqlite3Db(logger)
+	}
+
+	if err != nil {
+		logger.Error("Database Setup", err)
+		os.Exit(1)
+	}
+
+	return db
+}
+
+func setupSqlite3Db(logger lager.Logger) (*gorm.DB, error) {
+	dbPath := viper.GetString(dbPathProp)
+	if dbPath == "" {
+		return nil, fmt.Errorf("You must set a database path when using SQLite3 databases")
+	}
+
+	logger.Info("WARNING: DO NOT USE SQLITE3 IN PRODUCTION!")
+
+	return gorm.Open(DbTypeSqlite3, dbPath)
+}
+
+func setupMysqlDb(logger lager.Logger) (*gorm.DB, error) {
 	// connect to database
 	dbHost := viper.GetString(dbHostProp)
 	dbUsername := viper.GetString(dbUserProp)
 	dbPassword := viper.GetString(dbPassProp)
 
 	if dbPassword == "" || dbHost == "" || dbUsername == "" {
-		panic("DB_HOST, DB_USERNAME and DB_PASSWORD are required environment variables.")
+		return nil, errors.New("DB_HOST, DB_USERNAME and DB_PASSWORD are required environment variables.")
 	}
 
 	dbPort := viper.GetString(dbPortProp)
@@ -69,18 +112,17 @@ func SetupDb(logger lager.Logger) *gorm.DB {
 
 	tlsStr, err := generateTlsStringFromEnv()
 	if err != nil {
-		logger.Error("Error generating TLS string from env", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("Error generating TLS string from env: %s", err)
 	}
+
+	logger.Info("Connecting to MySQL Database", lager.Data{
+		"host": dbHost,
+		"port": dbPort,
+		"name": dbName,
+	})
 
 	connStr := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=utf8&parseTime=True&loc=Local%v", dbUsername, dbPassword, dbHost, dbPort, dbName, tlsStr)
-	db, err := gorm.Open("mysql", connStr)
-	if err != nil {
-		logger.Error("Error connecting to db", err)
-		os.Exit(1)
-	}
-
-	return db
+	return gorm.Open(DbTypeMysql, connStr)
 }
 
 func generateTlsStringFromEnv() (string, error) {

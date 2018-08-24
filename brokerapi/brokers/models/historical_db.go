@@ -104,6 +104,9 @@ func (CloudOperationV1) TableName() string {
 	return "cloud_operations"
 }
 
+// PlanDetailsV1 is a table that was deprecated in favor of using Environment
+// variables. It only remains for ORM migrations and the ability for existing
+// users to export their plans.
 type PlanDetailsV1 struct {
 	ID        string `gorm:"primary_key"`
 	CreatedAt time.Time
