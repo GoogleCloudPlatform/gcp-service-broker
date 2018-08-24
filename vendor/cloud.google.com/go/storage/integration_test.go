@@ -38,6 +38,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/net/context"
 
@@ -442,6 +443,15 @@ func TestIntegration_Objects(t *testing.T) {
 		if got, want := rc.CacheControl(), "public, max-age=60"; got != want {
 			t.Errorf("CacheControl (%q) = %q; want %q", obj, got, want)
 		}
+		// We just wrote these objects, so they should have a recent last-modified time.
+		lm, err := rc.LastModified()
+		now := time.Now()
+		expectedVariance := -5 * time.Minute
+		if err != nil {
+			t.Errorf("LastModified (%q): got error %v", obj, err)
+		} else if lm.Before(now.Add(expectedVariance)) || lm.After(now) {
+			t.Errorf("LastModified (%q): got %s, which not in the %v from now (%v)", obj, lm, expectedVariance, now)
+		}
 		rc.Close()
 
 		// Check early close.
@@ -566,55 +576,48 @@ func TestIntegration_Objects(t *testing.T) {
 
 	// Test UpdateAttrs.
 	metadata := map[string]string{"key": "value"}
-	updated, err := bkt.Object(objName).Update(ctx, ObjectAttrsToUpdate{
+	updated := h.mustUpdateObject(bkt.Object(objName), ObjectAttrsToUpdate{
 		ContentType:     "text/html",
 		ContentLanguage: "en",
 		Metadata:        metadata,
 		ACL:             []ACLRule{{Entity: "domain-google.com", Role: RoleReader}},
 	})
-	if err != nil {
-		t.Errorf("UpdateAttrs failed with %v", err)
-	} else {
-		if got, want := updated.ContentType, "text/html"; got != want {
-			t.Errorf("updated.ContentType == %q; want %q", got, want)
-		}
-		if got, want := updated.ContentLanguage, "en"; got != want {
-			t.Errorf("updated.ContentLanguage == %q; want %q", updated.ContentLanguage, want)
-		}
-		if got, want := updated.Metadata, metadata; !testutil.Equal(got, want) {
-			t.Errorf("updated.Metadata == %+v; want %+v", updated.Metadata, want)
-		}
-		if got, want := updated.Created, created; got != want {
-			t.Errorf("updated.Created == %q; want %q", got, want)
-		}
-		if !updated.Created.Before(updated.Updated) {
-			t.Errorf("updated.Updated should be newer than update.Created")
-		}
+	if got, want := updated.ContentType, "text/html"; got != want {
+		t.Errorf("updated.ContentType == %q; want %q", got, want)
 	}
+	if got, want := updated.ContentLanguage, "en"; got != want {
+		t.Errorf("updated.ContentLanguage == %q; want %q", updated.ContentLanguage, want)
+	}
+	if got, want := updated.Metadata, metadata; !testutil.Equal(got, want) {
+		t.Errorf("updated.Metadata == %+v; want %+v", updated.Metadata, want)
+	}
+	if got, want := updated.Created, created; got != want {
+		t.Errorf("updated.Created == %q; want %q", got, want)
+	}
+	if !updated.Created.Before(updated.Updated) {
+		t.Errorf("updated.Updated should be newer than update.Created")
+	}
+
 	// Delete ContentType and ContentLanguage.
-	updated, err = bkt.Object(objName).Update(ctx, ObjectAttrsToUpdate{
+	updated = h.mustUpdateObject(bkt.Object(objName), ObjectAttrsToUpdate{
 		ContentType:     "",
 		ContentLanguage: "",
 		Metadata:        map[string]string{},
 	})
-	if err != nil {
-		t.Errorf("UpdateAttrs failed with %v", err)
-	} else {
-		if got, want := updated.ContentType, ""; got != want {
-			t.Errorf("updated.ContentType == %q; want %q", got, want)
-		}
-		if got, want := updated.ContentLanguage, ""; got != want {
-			t.Errorf("updated.ContentLanguage == %q; want %q", updated.ContentLanguage, want)
-		}
-		if updated.Metadata != nil {
-			t.Errorf("updated.Metadata == %+v; want nil", updated.Metadata)
-		}
-		if got, want := updated.Created, created; got != want {
-			t.Errorf("updated.Created == %q; want %q", got, want)
-		}
-		if !updated.Created.Before(updated.Updated) {
-			t.Errorf("updated.Updated should be newer than update.Created")
-		}
+	if got, want := updated.ContentType, ""; got != want {
+		t.Errorf("updated.ContentType == %q; want %q", got, want)
+	}
+	if got, want := updated.ContentLanguage, ""; got != want {
+		t.Errorf("updated.ContentLanguage == %q; want %q", updated.ContentLanguage, want)
+	}
+	if updated.Metadata != nil {
+		t.Errorf("updated.Metadata == %+v; want nil", updated.Metadata)
+	}
+	if got, want := updated.Created, created; got != want {
+		t.Errorf("updated.Created == %q; want %q", got, want)
+	}
+	if !updated.Created.Before(updated.Updated) {
+		t.Errorf("updated.Updated should be newer than update.Created")
 	}
 
 	// Test checksums.
@@ -921,10 +924,11 @@ func TestIntegration_ACL(t *testing.T) {
 	bkt := client.Bucket(bucketName)
 
 	entity := ACLEntity("domain-google.com")
-	rule := ACLRule{Entity: entity, Role: RoleReader}
+	rule := ACLRule{Entity: entity, Role: RoleReader, Domain: "google.com"}
 	if err := bkt.DefaultObjectACL().Set(ctx, entity, RoleReader); err != nil {
 		t.Errorf("Can't put default ACL rule for the bucket, errored with %v", err)
 	}
+
 	acl, err := bkt.DefaultObjectACL().List(ctx)
 	if err != nil {
 		t.Errorf("DefaultObjectACL.List for bucket %q: %v", bucketName, err)
@@ -957,7 +961,7 @@ func TestIntegration_ACL(t *testing.T) {
 	}
 
 	entity2 := ACLEntity("user-jbd@google.com")
-	rule2 := ACLRule{Entity: entity2, Role: RoleReader}
+	rule2 := ACLRule{Entity: entity2, Role: RoleReader, Email: "jbd@google.com"}
 	if err := bkt.ACL().Set(ctx, entity2, RoleReader); err != nil {
 		t.Errorf("Error while putting bucket ACL rule: %v", err)
 	}
@@ -975,7 +979,7 @@ func TestIntegration_ACL(t *testing.T) {
 
 func hasRule(acl []ACLRule, rule ACLRule) bool {
 	for _, r := range acl {
-		if r == rule {
+		if cmp.Equal(r, rule) {
 			return true
 		}
 	}
@@ -2227,6 +2231,112 @@ func TestIntegration_KMS(t *testing.T) {
 	}
 }
 
+func TestIntegration_PredefinedACLs(t *testing.T) {
+	check := func(msg string, rs []ACLRule, i int, wantEntity ACLEntity, wantRole ACLRole) {
+		if i >= len(rs) {
+			t.Errorf("%s: no rule at index %d", msg, i)
+			return
+		}
+		got := rs[i]
+		if got.Entity != wantEntity || got.Role != wantRole {
+			t.Errorf("%s[%d]: got %+v, want Entity %s and Role %s",
+				msg, i, got, wantEntity, wantRole)
+		}
+	}
+	checkPrefix := func(msg string, rs []ACLRule, i int, wantPrefix string, wantRole ACLRole) {
+		if i >= len(rs) {
+			t.Errorf("%s: no rule at index %d", msg, i)
+			return
+		}
+		got := rs[i]
+		if !strings.HasPrefix(string(got.Entity), wantPrefix) || got.Role != wantRole {
+			t.Errorf("%s[%d]: got %+v, want Entity %s... and Role %s",
+				msg, i, got, wantPrefix, wantRole)
+		}
+	}
+
+	ctx := context.Background()
+	client := testConfig(ctx, t)
+	defer client.Close()
+	h := testHelper{t}
+
+	bkt := client.Bucket(uidSpace.New())
+	h.mustCreate(bkt, testutil.ProjID(), &BucketAttrs{
+		PredefinedACL:              "authenticatedRead",
+		PredefinedDefaultObjectACL: "publicRead",
+	})
+	defer h.mustDeleteBucket(bkt)
+	attrs := h.mustBucketAttrs(bkt)
+	checkPrefix("Bucket.ACL", attrs.ACL, 0, "project-owners", RoleOwner)
+	check("Bucket.ACL", attrs.ACL, 1, AllAuthenticatedUsers, RoleReader)
+	check("DefaultObjectACL", attrs.DefaultObjectACL, 0, AllUsers, RoleReader)
+
+	// Bucket update
+	attrs = h.mustUpdateBucket(bkt, BucketAttrsToUpdate{
+		PredefinedACL:              "private",
+		PredefinedDefaultObjectACL: "authenticatedRead",
+	})
+	checkPrefix("Bucket.ACL update", attrs.ACL, 0, "project-owners", RoleOwner)
+	check("DefaultObjectACL update", attrs.DefaultObjectACL, 0, AllAuthenticatedUsers, RoleReader)
+
+	// Object creation
+	obj := bkt.Object("private")
+	w := obj.NewWriter(ctx)
+	w.PredefinedACL = "authenticatedRead"
+	h.mustWrite(w, []byte("hello"))
+	defer h.mustDeleteObject(obj)
+	checkPrefix("Object.ACL", w.Attrs().ACL, 0, "user", RoleOwner)
+	check("Object.ACL", w.Attrs().ACL, 1, AllAuthenticatedUsers, RoleReader)
+
+	// Object update
+	oattrs := h.mustUpdateObject(obj, ObjectAttrsToUpdate{PredefinedACL: "private"})
+	checkPrefix("Object.ACL update", oattrs.ACL, 0, "user", RoleOwner)
+	if got := len(oattrs.ACL); got != 1 {
+		t.Errorf("got %d ACLs, want 1", got)
+	}
+
+	// Copy
+	dst := bkt.Object("dst")
+	copier := dst.CopierFrom(obj)
+	copier.PredefinedACL = "publicRead"
+	oattrs, err := copier.Run(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer h.mustDeleteObject(dst)
+	// The copied object still retains the "private" ACL of the source object.
+	checkPrefix("Copy dest", oattrs.ACL, 0, "user", RoleOwner)
+	check("Copy dest", oattrs.ACL, 1, AllUsers, RoleReader)
+
+	// Compose
+	comp := bkt.Object("comp")
+	composer := comp.ComposerFrom(obj, dst)
+	composer.PredefinedACL = "authenticatedRead"
+	oattrs, err = composer.Run(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer h.mustDeleteObject(comp)
+	// The composed object still retains the "private" ACL.
+	checkPrefix("Copy dest", oattrs.ACL, 0, "user", RoleOwner)
+	check("Copy dest", oattrs.ACL, 1, AllAuthenticatedUsers, RoleReader)
+}
+
+func TestIntegration_ServiceAccount(t *testing.T) {
+	ctx := context.Background()
+	client := testConfig(ctx, t)
+	defer client.Close()
+
+	s, err := client.ServiceAccount(ctx, testutil.ProjID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "@gs-project-accounts.iam.gserviceaccount.com"
+	if !strings.Contains(s, want) {
+		t.Fatalf("got %v, want to contain %v", s, want)
+	}
+}
+
 type testHelper struct {
 	t *testing.T
 }
@@ -2271,6 +2381,14 @@ func (h testHelper) mustDeleteObject(o *ObjectHandle) {
 	if err := o.Delete(context.Background()); err != nil {
 		h.t.Fatalf("%s: object delete: %v", loc(), err)
 	}
+}
+
+func (h testHelper) mustUpdateObject(o *ObjectHandle, ua ObjectAttrsToUpdate) *ObjectAttrs {
+	attrs, err := o.Update(context.Background(), ua)
+	if err != nil {
+		h.t.Fatalf("%s: update: %v", loc(), err)
+	}
+	return attrs
 }
 
 func (h testHelper) mustWrite(w *Writer, data []byte) {

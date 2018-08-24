@@ -16,21 +16,9 @@ package models
 
 import (
 	"encoding/json"
-	"time"
-
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
-type ServiceBindingCredentials struct {
-	gorm.Model
-
-	OtherDetails string `sql:"type:text"`
-
-	ServiceId         string
-	ServiceInstanceId string
-	BindingId         string
-}
+type ServiceBindingCredentials ServiceBindingCredentialsV1
 
 func (sbc ServiceBindingCredentials) GetOtherDetails() map[string]string {
 	var creds map[string]string
@@ -40,22 +28,7 @@ func (sbc ServiceBindingCredentials) GetOtherDetails() map[string]string {
 	return creds
 }
 
-type ServiceInstanceDetails struct {
-	ID        string `gorm:"primary_key"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time
-
-	Name         string
-	Location     string
-	Url          string
-	OtherDetails string `sql:"type:text"`
-
-	ServiceId        string
-	PlanId           string
-	SpaceGuid        string
-	OrganizationGuid string
-}
+type ServiceInstanceDetails ServiceInstanceDetailsV1
 
 func (si ServiceInstanceDetails) GetOtherDetails() map[string]string {
 	var instanceDetails map[string]string
@@ -69,32 +42,6 @@ func (si ServiceInstanceDetails) GetOtherDetails() map[string]string {
 
 }
 
-type ProvisionRequestDetails struct {
-	gorm.Model
-
-	ServiceInstanceId string
-	// is a json.Marshal of models.ProvisionDetails
-	RequestDetails string
-}
-
-type Migration struct {
-	gorm.Model
-
-	MigrationId int
-}
-
-type CloudOperation struct {
-	gorm.Model
-
-	Name          string
-	Status        string
-	OperationType string
-	ErrorMessage  string
-	InsertTime    string
-	StartTime     string
-	TargetId      string
-	TargetLink    string
-
-	ServiceId         string
-	ServiceInstanceId string
-}
+type ProvisionRequestDetails ProvisionRequestDetailsV1
+type Migration MigrationV1
+type CloudOperation CloudOperationV1

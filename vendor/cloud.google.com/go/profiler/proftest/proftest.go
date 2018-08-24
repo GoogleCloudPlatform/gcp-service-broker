@@ -281,6 +281,10 @@ func (tr *TestRunner) QueryProfiles(projectID, service, startTime, endTime, prof
 		return ProfileResponse{}, fmt.Errorf("failed to read response body: %v", err)
 	}
 
+	if resp.StatusCode != 200 {
+		return ProfileResponse{}, fmt.Errorf("failed to query API: status: %s, response body: %s", resp.Status, string(body))
+	}
+
 	var pr ProfileResponse
 	if err := json.Unmarshal(body, &pr); err != nil {
 		return ProfileResponse{}, err
@@ -546,7 +550,7 @@ func (tr *GKETestRunner) uploadImageSource(ctx context.Context, bucket, objectNa
 	}
 	wc := tr.StorageClient.Bucket(bucket).Object(objectName).NewWriter(ctx)
 	wc.ContentType = "application/zip"
-	wc.ACL = []storage.ACLRule{{storage.AllUsers, storage.RoleReader}}
+	wc.ACL = []storage.ACLRule{{Entity: storage.AllUsers, Role: storage.RoleReader}}
 	if _, err := wc.Write(zipBuf.Bytes()); err != nil {
 		return err
 	}

@@ -245,7 +245,7 @@
       }
     }
   },
-  "revision": "20180622",
+  "revision": "20180813",
   "rootUrl": "https://serviceuser.googleapis.com/",
   "schemas": {
     "Api": {
@@ -929,6 +929,10 @@
           "description": "Used for updating a resource.",
           "type": "string"
         },
+        "responseBody": {
+          "description": "Optional. The name of the response field whose value is mapped to the HTTP\nbody of response. Other response fields are ignored. When\nnot set, the response message will be used as HTTP body of response.",
+          "type": "string"
+        },
         "selector": {
           "description": "Selects methods to which this rule applies.\n\nRefer to selector for syntax details.",
           "type": "string"
@@ -1213,7 +1217,7 @@
           "type": "string"
         },
         "type": {
-          "description": "The metric type, including its DNS name prefix. The type is not\nURL-encoded.  All user-defined custom metric types have the DNS name\n`custom.googleapis.com`.  Metric types should use a natural hierarchical\ngrouping. For example:\n\n    \"custom.googleapis.com/invoice/paid/amount\"\n    \"appengine.googleapis.com/http/server/response_latencies\"",
+          "description": "The metric type, including its DNS name prefix. The type is not\nURL-encoded.  All user-defined metric types have the DNS name\n`custom.googleapis.com` or `external.googleapis.com`.  Metric types should\nuse a natural hierarchical grouping. For example:\n\n    \"custom.googleapis.com/invoice/paid/amount\"\n    \"external.googleapis.com/prometheus/up\"\n    \"appengine.googleapis.com/http/server/response_latencies\"",
           "type": "string"
         },
         "unit": {

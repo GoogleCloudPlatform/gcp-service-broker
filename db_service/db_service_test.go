@@ -15,8 +15,6 @@
 package db_service
 
 import (
-	"database/sql"
-	"fmt"
 	"os"
 
 	"code.cloudfoundry.org/lager"
@@ -25,56 +23,9 @@ import (
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
-
-func getLocalTestConnectionStr(dbName string) string {
-
-	username := os.Getenv("TEST_DB_USERNAME")
-	password := os.Getenv("TEST_DB_PASSWORD")
-	host := os.Getenv("TEST_DB_HOST")
-
-	return fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?parseTime=true", username, password, host, dbName)
-}
-
-func createTestDatabase() {
-
-	db, err := sql.Open("mysql", getLocalTestConnectionStr(""))
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-
-	res, err := db.Query("SHOW DATABASES LIKE 'servicebrokertest'")
-	if err != nil {
-		panic(err)
-	}
-	if res.Next() {
-		dropTestDatabase()
-	}
-
-	_, err = db.Exec("CREATE DATABASE servicebrokertest")
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = db.Exec("USE servicebrokertest")
-	if err != nil {
-		panic(err)
-	}
-}
-
-func dropTestDatabase() {
-	db, err := sql.Open("mysql", getLocalTestConnectionStr(""))
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-
-	_, err = db.Exec("DROP DATABASE servicebrokertest")
-	if err != nil {
-		panic(err)
-	}
-}
 
 var _ = Describe("DbService", func() {
 	var (
@@ -88,8 +39,7 @@ var _ = Describe("DbService", func() {
 
 		fakes.SetUpTestServices()
 
-		createTestDatabase()
-		testDb, _ := gorm.Open("mysql", getLocalTestConnectionStr("servicebrokertest"))
+		testDb, _ := gorm.Open("sqlite3", "test.sqlite3")
 
 		DbConnection = testDb
 	})
@@ -121,6 +71,6 @@ var _ = Describe("DbService", func() {
 	})
 
 	AfterEach(func() {
-		dropTestDatabase()
+		os.Remove("test.sqlite3")
 	})
 })

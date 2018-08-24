@@ -147,26 +147,57 @@ func (s *ComputeEngine) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// ContainerStartedEvent: This event is generated when a container
-// starts.
+// ContainerKilledEvent: An event generated when a container is forcibly
+// terminated by the
+// worker. Currently, this only occurs when the container outlives
+// the
+// timeout specified by the user.
+type ContainerKilledEvent struct {
+	// ActionId: The numeric ID of the action that started the container.
+	ActionId int64 `json:"actionId,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "ActionId") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ActionId") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ContainerKilledEvent) MarshalJSON() ([]byte, error) {
+	type NoMethod ContainerKilledEvent
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ContainerStartedEvent: An event generated when a container starts.
 type ContainerStartedEvent struct {
 	// ActionId: The numeric ID of the action that started this container.
 	ActionId int64 `json:"actionId,omitempty"`
 
 	// IpAddress: The public IP address that can be used to connect to the
-	// container.  This
-	// field is only populated when at least one port mapping is present.
-	// If the
-	// instance was created with a private address this field will be empty
+	// container. This
+	// field is only populated when at least one port mapping is present. If
+	// the
+	// instance was created with a private address, this field will be empty
 	// even
 	// if port mappings exist.
 	IpAddress string `json:"ipAddress,omitempty"`
 
-	// PortMappings: The container to host port mappings installed for this
-	// container.  This
-	// set will contain any ports exposed using the PUBLISH_EXPOSED_PORTS
-	// flag as
-	// well as any specified in the Action definition.
+	// PortMappings: The container-to-host port mappings installed for this
+	// container. This
+	// set will contain any ports exposed using the `PUBLISH_EXPOSED_PORTS`
+	// flag
+	// as well as any specified in the `Action` definition.
 	PortMappings map[string]int64 `json:"portMappings,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "ActionId") to
@@ -192,8 +223,7 @@ func (s *ContainerStartedEvent) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// ContainerStoppedEvent: This event is generated when a container
-// exits.
+// ContainerStoppedEvent: An event generated when a container exits.
 type ContainerStoppedEvent struct {
 	// ActionId: The numeric ID of the action that started this container.
 	ActionId int64 `json:"actionId,omitempty"`
@@ -203,17 +233,17 @@ type ContainerStoppedEvent struct {
 
 	// Stderr: The tail end of any content written to standard error by the
 	// container.
-	// To prevent this from being recorded if the action is known to
-	// emit
-	// large amounts of debugging noise or sensitive information, set
-	// the
-	// DISABLE_STANDARD_ERROR_CAPTURE flag.
+	// If the content emits large amounts of debugging noise or
+	// contains
+	// sensitive information, you can prevent the content from being printed
+	// by
+	// setting the `DISABLE_STANDARD_ERROR_CAPTURE` flag.
 	//
 	// Note that only a small amount of the end of the stream is captured
 	// here.
-	// The entire stream is stored in the /google/logs directory mounted
+	// The entire stream is stored in the `/google/logs` directory mounted
 	// into
-	// each action, and may be copied off the machine as described
+	// each action, and can be copied off the machine as described
 	// elsewhere.
 	Stderr string `json:"stderr,omitempty"`
 
@@ -289,13 +319,13 @@ func (s *ControllerConfig) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// DelayedEvent: This event is generated whenever a resource limitation
-// or transient error
+// DelayedEvent: An event generated whenever a resource limitation or
+// transient error
 // delays execution of a pipeline that was otherwise ready to run.
 type DelayedEvent struct {
-	// Cause: A textual description of the cause of the delay.  The string
-	// may change
-	// without notice since it is often generated by another service (such
+	// Cause: A textual description of the cause of the delay. The string
+	// can change
+	// without notice because it is often generated by another service (such
 	// as
 	// Compute Engine).
 	Cause string `json:"cause,omitempty"`
@@ -304,9 +334,9 @@ type DelayedEvent struct {
 	// lists the
 	// Compute Engine metrics that are preventing this operation from
 	// running
-	// (for example, CPUS or INSTANCES).  If the particular metric is not
-	// known,
-	// a single UNKNOWN metric will be present.
+	// (for example, `CPUS` or `INSTANCES`). If the particular metric is
+	// not
+	// known, a single `UNKNOWN` metric will be present.
 	Metrics []string `json:"metrics,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Cause") to
@@ -478,20 +508,20 @@ type Empty struct {
 	googleapi.ServerResponse `json:"-"`
 }
 
-// Event: Event carries information about events that occur during
-// pipeline execution.
+// Event: Carries information about events that occur during pipeline
+// execution.
 type Event struct {
-	// Description: A human readable description of the event.  Note that
-	// these strings may
-	// change at any time without notice.  Any application logic must use
+	// Description: A human-readable description of the event. Note that
+	// these strings can
+	// change at any time without notice. Any application logic must use
 	// the
-	// information in the details field.
+	// information in the `details` field.
 	Description string `json:"description,omitempty"`
 
-	// Details: Machine readable details about the event.
+	// Details: Machine-readable details about the event.
 	Details googleapi.RawMessage `json:"details,omitempty"`
 
-	// Timestamp: The time that the event occurred.
+	// Timestamp: The time at which the event occurred.
 	Timestamp string `json:"timestamp,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Description") to
@@ -517,11 +547,11 @@ func (s *Event) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// FailedEvent: This event is generated when the execution of a pipeline
-// has failed.  Note
-// that other events may continue to occur after this event.
+// FailedEvent: An event generated when the execution of a pipeline has
+// failed. Note
+// that other events can continue to occur after this event.
 type FailedEvent struct {
-	// Cause: The human readable description of the cause of the failure.
+	// Cause: The human-readable description of the cause of the failure.
 	Cause string `json:"cause,omitempty"`
 
 	// Code: The Google standard error code that best describes this
@@ -1429,8 +1459,8 @@ func (s *PipelineResources) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// PullStartedEvent: This event is generated when the worker starts
-// pulling an image.
+// PullStartedEvent: An event generated when the worker starts pulling
+// an image.
 type PullStartedEvent struct {
 	// ImageUri: The URI of the image that was pulled.
 	ImageUri string `json:"imageUri,omitempty"`
@@ -1458,8 +1488,8 @@ func (s *PullStartedEvent) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// PullStoppedEvent: This event is generated when the worker stops
-// pulling an image.
+// PullStoppedEvent: An event generated when the worker stops pulling an
+// image.
 type PullStoppedEvent struct {
 	// ImageUri: The URI of the image that was pulled.
 	ImageUri string `json:"imageUri,omitempty"`
@@ -2071,13 +2101,13 @@ func (s *TimestampEvent) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// UnexpectedExitStatusEvent: This event is generated when the execution
-// of a container results in a
-// non-zero exit status that was not otherwise ignored.  Execution
+// UnexpectedExitStatusEvent: An event generated when the execution of a
+// container results in a
+// non-zero exit status that was not otherwise ignored. Execution
 // will
-// continue, but only actions that are flagged as ALWAYS_RUN will be
-// executed:
-// other actions will be skipped.
+// continue, but only actions that are flagged as `ALWAYS_RUN` will
+// be
+// executed. Other actions will be skipped.
 type UnexpectedExitStatusEvent struct {
 	// ActionId: The numeric ID of the action that started the container.
 	ActionId int64 `json:"actionId,omitempty"`
@@ -2108,8 +2138,8 @@ func (s *UnexpectedExitStatusEvent) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// WorkerAssignedEvent: This event is generated once a worker VM has
-// been assigned to run the
+// WorkerAssignedEvent: An event generated after a worker VM has been
+// assigned to run the
 // pipeline.
 type WorkerAssignedEvent struct {
 	// Instance: The worker's instance name.
@@ -2141,9 +2171,9 @@ func (s *WorkerAssignedEvent) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// WorkerReleasedEvent: This event is generated when the worker VM that
-// was assigned to the pipeline
-// has been released (i.e., deleted).
+// WorkerReleasedEvent: An event generated when the worker VM that was
+// assigned to the pipeline
+// has been released (deleted).
 type WorkerReleasedEvent struct {
 	// Instance: The worker's instance name.
 	Instance string `json:"instance,omitempty"`
@@ -2490,6 +2520,9 @@ func (r *OperationsService) List(name string) *OperationsListCall {
 // the
 //   pipeline finishes, the value is the standard Google error code.
 // * labels.key or labels."key with space" where key is a label key.
+// * done&#58; If the pipeline is running, this value is false. Once
+// the
+//   pipeline finishes, the value is true.
 //
 // In v1 and v1alpha2, the following filter fields are supported&#58;
 //
@@ -2634,7 +2667,7 @@ func (c *OperationsListCall) Do(opts ...googleapi.CallOption) (*ListOperationsRe
 	//   ],
 	//   "parameters": {
 	//     "filter": {
-	//       "description": "A string for filtering Operations.\nIn v2alpha1, the following filter fields are supported\u0026#58;\n\n* createTime\u0026#58; The time this job was created\n* events\u0026#58; The set of event (names) that have occurred while running\n  the pipeline.  The \u0026#58; operator can be used to determine if a\n  particular event has occurred.\n* error\u0026#58; If the pipeline is running, this value is NULL.  Once the\n  pipeline finishes, the value is the standard Google error code.\n* labels.key or labels.\"key with space\" where key is a label key.\n\nIn v1 and v1alpha2, the following filter fields are supported\u0026#58;\n\n* projectId\u0026#58; Required. Corresponds to\n  OperationMetadata.projectId.\n* createTime\u0026#58; The time this job was created, in seconds from the\n  [epoch](http://en.wikipedia.org/wiki/Unix_time). Can use `\u003e=` and/or `\u003c=`\n  operators.\n* status\u0026#58; Can be `RUNNING`, `SUCCESS`, `FAILURE`, or `CANCELED`. Only\n  one status may be specified.\n* labels.key where key is a label key.\n\nExamples\u0026#58;\n\n* `projectId = my-project AND createTime \u003e= 1432140000`\n* `projectId = my-project AND createTime \u003e= 1432140000 AND createTime \u003c= 1432150000 AND status = RUNNING`\n* `projectId = my-project AND labels.color = *`\n* `projectId = my-project AND labels.color = red`",
+	//       "description": "A string for filtering Operations.\nIn v2alpha1, the following filter fields are supported\u0026#58;\n\n* createTime\u0026#58; The time this job was created\n* events\u0026#58; The set of event (names) that have occurred while running\n  the pipeline.  The \u0026#58; operator can be used to determine if a\n  particular event has occurred.\n* error\u0026#58; If the pipeline is running, this value is NULL.  Once the\n  pipeline finishes, the value is the standard Google error code.\n* labels.key or labels.\"key with space\" where key is a label key.\n* done\u0026#58; If the pipeline is running, this value is false. Once the\n  pipeline finishes, the value is true.\n\nIn v1 and v1alpha2, the following filter fields are supported\u0026#58;\n\n* projectId\u0026#58; Required. Corresponds to\n  OperationMetadata.projectId.\n* createTime\u0026#58; The time this job was created, in seconds from the\n  [epoch](http://en.wikipedia.org/wiki/Unix_time). Can use `\u003e=` and/or `\u003c=`\n  operators.\n* status\u0026#58; Can be `RUNNING`, `SUCCESS`, `FAILURE`, or `CANCELED`. Only\n  one status may be specified.\n* labels.key where key is a label key.\n\nExamples\u0026#58;\n\n* `projectId = my-project AND createTime \u003e= 1432140000`\n* `projectId = my-project AND createTime \u003e= 1432140000 AND createTime \u003c= 1432150000 AND status = RUNNING`\n* `projectId = my-project AND labels.color = *`\n* `projectId = my-project AND labels.color = red`",
 	//       "location": "query",
 	//       "type": "string"
 	//     },
