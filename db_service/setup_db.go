@@ -58,7 +58,7 @@ func init() {
 	viper.SetDefault(dbNameProp, "servicebroker")
 
 	viper.BindEnv(dbTypeProp, "DB_TYPE")
-	viper.SetDefault(dbTypeProp, "mysql")
+	viper.SetDefault(dbTypeProp, DbTypeMysql)
 
 	viper.BindEnv(dbPathProp, "DB_PATH")
 }
