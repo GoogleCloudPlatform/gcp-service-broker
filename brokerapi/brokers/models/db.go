@@ -18,8 +18,12 @@ import (
 	"encoding/json"
 )
 
+// ServiceBindingCredentials holds credentials returned to the users after
+// binding to a service.
 type ServiceBindingCredentials ServiceBindingCredentialsV1
 
+// GetOtherDetails returns an unmarshaled version of the OtherDetails field
+// or panics.
 func (sbc ServiceBindingCredentials) GetOtherDetails() map[string]string {
 	var creds map[string]string
 	if err := json.Unmarshal([]byte(sbc.OtherDetails), &creds); err != nil {
@@ -28,8 +32,12 @@ func (sbc ServiceBindingCredentials) GetOtherDetails() map[string]string {
 	return creds
 }
 
+// ServiceInstanceDetails returns an unmarshaled version of the OtherDetails field
+// or panics.
 type ServiceInstanceDetails ServiceInstanceDetailsV1
 
+// GetOtherDetails returns an unmarshaled version of the OtherDetails field
+// or panics.
 func (si ServiceInstanceDetails) GetOtherDetails() map[string]string {
 	var instanceDetails map[string]string
 	// if the instance has access details saved
@@ -42,6 +50,14 @@ func (si ServiceInstanceDetails) GetOtherDetails() map[string]string {
 
 }
 
+// ProvisionRequestDetails holds user-defined properties passed to a call
+// to provision a service.
 type ProvisionRequestDetails ProvisionRequestDetailsV1
+
+// Migration represents the mgirations table. It holds a monotonically
+// increasing number that gets incremented with every database schema revision.
 type Migration MigrationV1
+
+// CloudOperation holds information about the status of Google Cloud
+// long-running operations.
 type CloudOperation CloudOperationV1

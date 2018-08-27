@@ -33,7 +33,7 @@ and Service objects are defined individually by setting env variables like `GOOG
 - **Breaking** The GCS plan `reduced_availability` was changed to `reduced-availability` to be compliant with the spec and work with Kubernetes.
 - Tables are created only if they do not exist on migration, fixing [#194](https://github.com/GoogleCloudPlatform/gcp-service-broker/issues/194).
 - The broker now adheres to OSB version 2.13.
-- The way the broker does ORM migrations and we now tests with SQLite3.
+- Improved ORM migrations and test coverage with SQLite3.
 
 ## [3.6.0] - 2017-01-03
 

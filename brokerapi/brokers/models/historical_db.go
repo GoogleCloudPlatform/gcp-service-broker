@@ -27,6 +27,8 @@ import (
 // reference to the new model in db.go and add a migration path in the
 // db_service package.
 
+// ServiceBindingCredentialsV1 holds credentials returned to the users after
+// binding to a service.
 type ServiceBindingCredentialsV1 struct {
 	gorm.Model
 
@@ -37,10 +39,14 @@ type ServiceBindingCredentialsV1 struct {
 	BindingId         string
 }
 
+// TableName returns a consistent table name (`service_binding_credentials`) for
+// gorm so multiple structs from different versions of the database all operate
+// on the same table.
 func (ServiceBindingCredentialsV1) TableName() string {
 	return "service_binding_credentials"
 }
 
+// ServiceInstanceDetailsV1 holds information about provisioned services.
 type ServiceInstanceDetailsV1 struct {
 	ID        string `gorm:"primary_key;type:varchar(255);not null"`
 	CreatedAt time.Time
@@ -58,10 +64,15 @@ type ServiceInstanceDetailsV1 struct {
 	OrganizationGuid string
 }
 
+// TableName returns a consistent table name (`service_instance_details`) for
+// gorm so multiple structs from different versions of the database all operate
+// on the same table.
 func (ServiceInstanceDetailsV1) TableName() string {
 	return "service_instance_details"
 }
 
+// ProvisionRequestDetailsV1 holds user-defined properties passed to a call
+// to provision a service.
 type ProvisionRequestDetailsV1 struct {
 	gorm.Model
 
@@ -70,20 +81,30 @@ type ProvisionRequestDetailsV1 struct {
 	RequestDetails string
 }
 
+// TableName returns a consistent table name (`provision_request_details`) for
+// gorm so multiple structs from different versions of the database all operate
+// on the same table.
 func (ProvisionRequestDetailsV1) TableName() string {
 	return "provision_request_details"
 }
 
+// MigrationV1 represents the mgirations table. It holds a monotonically
+// increasing number that gets incremented with every database schema revision.
 type MigrationV1 struct {
 	gorm.Model
 
 	MigrationId int `gorm:"type:int(10)"`
 }
 
+// TableName returns a consistent table name (`migrations`) for gorm so
+// multiple structs from different versions of the database all operate on the
+// same table.
 func (MigrationV1) TableName() string {
 	return "migrations"
 }
 
+// CloudOperationV1 holds information about the status of Google Cloud
+// long-running operations.
 type CloudOperationV1 struct {
 	gorm.Model
 
@@ -100,6 +121,9 @@ type CloudOperationV1 struct {
 	ServiceInstanceId string
 }
 
+// TableName returns a consistent table name (`cloud_operations`) for gorm so
+// multiple structs from different versions of the database all operate on the
+// same table.
 func (CloudOperationV1) TableName() string {
 	return "cloud_operations"
 }
@@ -118,6 +142,9 @@ type PlanDetailsV1 struct {
 	Features  string `sql:"type:text"`
 }
 
+// TableName returns a consistent table name (`plan_details`) for gorm so
+// multiple structs from different versions of the database all operate on the
+// same table.
 func (PlanDetailsV1) TableName() string {
 	return "plan_details"
 }
