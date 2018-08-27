@@ -15,6 +15,8 @@
 package stackdriver_profiler
 
 import (
+	"context"
+
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
@@ -31,7 +33,7 @@ func (b *StackdriverProfilerBroker) Provision(instanceId string, details brokera
 }
 
 // No-op, no service is required for the profiler
-func (b *StackdriverProfilerBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
+func (b *StackdriverProfilerBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, instanceID string, details brokerapi.DeprovisionDetails) error {
 	return nil
 }
 

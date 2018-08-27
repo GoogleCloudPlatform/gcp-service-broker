@@ -22,7 +22,6 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
@@ -105,13 +104,7 @@ func (b *StorageBroker) Provision(instanceId string, details brokerapi.Provision
 
 // Deletes the bucket associated with the given instance id
 // Note that all objects within the bucket must be deleted first
-func (b *StorageBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
-	bucket := models.ServiceInstanceDetails{}
-	if err := db_service.DbConnection.Where("ID = ?", instanceID).First(&bucket).Error; err != nil {
-		return brokerapi.ErrInstanceDoesNotExist
-	}
-
-	ctx := context.Background()
+func (b *StorageBroker) Deprovision(ctx context.Context, bucket models.ServiceInstanceDetails, instanceID string, details brokerapi.DeprovisionDetails) error {
 	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
 	storageService, err := googlestorage.NewClient(ctx, ct)
 	if err != nil {

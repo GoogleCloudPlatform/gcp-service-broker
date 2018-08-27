@@ -225,18 +225,11 @@ func createCloudOperation(op *googlespanner.CreateInstanceOperation, instanceId 
 }
 
 // deletes the instance associated with the given instanceID string
-func (s *SpannerBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
-	var err error
-
-	instance := models.ServiceInstanceDetails{}
-	if err = db_service.DbConnection.Where("ID = ?", instanceID).First(&instance).Error; err != nil {
-		return brokerapi.ErrInstanceDoesNotExist
-	}
-
+func (s *SpannerBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, instanceID string, details brokerapi.DeprovisionDetails) error {
 	// set up client
 	co := option.WithUserAgent(models.CustomUserAgent)
 	ct := option.WithTokenSource(s.HttpConfig.TokenSource(context.Background()))
-	client, err := googlespanner.NewInstanceAdminClient(context.Background(), co, ct)
+	client, err := googlespanner.NewInstanceAdminClient(ctx, co, ct)
 	if err != nil {
 		return fmt.Errorf("Error creating client: %s", err)
 	}
