@@ -21,6 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 	"text/template"
@@ -232,7 +233,8 @@ func TestAgentIntegration(t *testing.T) {
 			goVersion:        "1.6",
 		},
 	}
-
+	// The number of tests run in parallel is the current value of GOMAXPROCS.
+	runtime.GOMAXPROCS(len(testcases))
 	for _, tc := range testcases {
 		tc := tc // capture range variable
 		t.Run(tc.name, func(t *testing.T) {

@@ -1375,13 +1375,15 @@ type MetricDescriptor struct {
 	Name string `json:"name,omitempty"`
 
 	// Type: The metric type, including its DNS name prefix. The type is not
-	// URL-encoded. All user-defined custom metric types have the DNS name
-	// custom.googleapis.com. Metric types should use a natural hierarchical
-	// grouping. For
+	// URL-encoded. All user-defined metric types have the DNS name
+	// custom.googleapis.com or external.googleapis.com. Metric types should
+	// use a natural hierarchical grouping. For
 	// example:
 	// "custom.googleapis.com/invoice/paid/amount"
-	// "appengine.google
-	// apis.com/http/server/response_latencies"
+	// "external.googlea
+	// pis.com/prometheus/up"
+	// "appengine.googleapis.com/http/server/response_
+	// latencies"
 	//
 	Type string `json:"type,omitempty"`
 
@@ -1810,6 +1812,10 @@ type RequestLog struct {
 
 	// TraceId: Stackdriver Trace identifier for this request.
 	TraceId string `json:"traceId,omitempty"`
+
+	// TraceSampled: If true, the value in the 'trace_id' field was sampled
+	// for storage in a trace backend.
+	TraceSampled bool `json:"traceSampled,omitempty"`
 
 	// UrlMapEntry: File or class that handled the request.
 	UrlMapEntry string `json:"urlMapEntry,omitempty"`

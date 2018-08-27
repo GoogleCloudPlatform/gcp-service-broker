@@ -15,7 +15,7 @@
   "description": "Reads and publishes results from Firebase Test Lab.",
   "discoveryVersion": "v1",
   "documentationLink": "https://firebase.google.com/docs/test-lab/",
-  "etag": "\"J3WqvAcMk4eQjJXvfSI4Yr8VouA/GZVFJ3j-A8g9PVROsKYf1ylrdrI\"",
+  "etag": "\"J3WqvAcMk4eQjJXvfSI4Yr8VouA/mEuuuN8nb5iL8wTNkkXQ6-1VwRs\"",
   "icons": {
     "x16": "https://www.gstatic.com/images/branding/product/1x/googleg_16dp.png",
     "x32": "https://www.gstatic.com/images/branding/product/1x/googleg_32dp.png"
@@ -1161,6 +1161,7 @@
       }
     }
   },
+  "revision": "20180816",
   "rootUrl": "https://www.googleapis.com/",
   "schemas": {
     "AndroidAppInfo": {
@@ -2054,16 +2055,8 @@
       "description": "A stacktrace.",
       "id": "StackTrace",
       "properties": {
-        "clusterId": {
-          "description": "Exception cluster ID",
-          "type": "string"
-        },
         "exception": {
           "description": "The stack trace message.\n\nRequired",
-          "type": "string"
-        },
-        "reportId": {
-          "description": "Exception report ID",
           "type": "string"
         }
       },
@@ -2306,16 +2299,28 @@
             "availableDeepLinks",
             "compatibleWithOrchestrator",
             "completeRoboScriptExecution",
+            "encounteredLoginScreen",
+            "encounteredNonAndroidUiWidgetScreen",
             "failedToInstall",
             "fatalException",
             "incompleteRoboScriptExecution",
+            "iosCrash",
+            "iosException",
             "launcherActivityNotFound",
             "nativeCrash",
+            "nonSdkApiUsageViolation",
+            "performedGoogleLogin",
             "startActivityNotFound",
             "unspecifiedType",
             "unusedRoboDirective"
           ],
           "enumDescriptions": [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
             "",
             "",
             "",

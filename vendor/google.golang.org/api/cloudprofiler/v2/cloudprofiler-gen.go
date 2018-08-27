@@ -1,6 +1,6 @@
 // Package cloudprofiler provides access to the Stackdriver Profiler API.
 //
-// See https://cloud.google.com/
+// See https://cloud.google.com/profiler/
 //
 // Usage example:
 //
@@ -114,17 +114,6 @@ type CreateProfileRequest struct {
 	// Deployment: Deployment details.
 	Deployment *Deployment `json:"deployment,omitempty"`
 
-	// Profile: DEPRECATED: When the profile field is set and the profile
-	// type field is not
-	// set, the creation is done in the offline mode as documented for
-	// the
-	// CreateOfflineProfile method above. This behavior is temporarily
-	// kept
-	// to smoothly migrate the clients that use the old model of when the
-	// single
-	// CreateProfile method was used for both creation modes.
-	Profile *Profile `json:"profile,omitempty"`
-
 	// ProfileType: One or more profile types that the agent is capable of
 	// providing.
 	//
@@ -133,10 +122,23 @@ type CreateProfileRequest struct {
 	//   "CPU" - Thread CPU time sampling.
 	//   "WALL" - Wallclock time sampling. More expensive as stops all
 	// threads.
-	//   "HEAP" - Heap allocation sampling.
+	//   "HEAP" - In-use heap profile. Represents a snapshot of the
+	// allocations that are
+	// live at the time of the profiling.
 	//   "THREADS" - Single-shot collection of all thread stacks.
 	//   "CONTENTION" - Synchronization contention profile.
 	//   "PEAK_HEAP" - Peak heap profile.
+	//   "HEAP_ALLOC" - Heap allocation profile. It represents the
+	// aggregation of all allocations
+	// made over the duration of the profile. All allocations are
+	// included,
+	// including those that might have been freed by the end of the
+	// profiling
+	// interval. The profile is in particular useful for garbage
+	// collecting
+	// languages to understand which parts of the code create most of the
+	// garbage
+	// collection pressure to see if those can be optimized.
 	ProfileType []string `json:"profileType,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Deployment") to
@@ -266,10 +268,23 @@ type Profile struct {
 	//   "CPU" - Thread CPU time sampling.
 	//   "WALL" - Wallclock time sampling. More expensive as stops all
 	// threads.
-	//   "HEAP" - Heap allocation sampling.
+	//   "HEAP" - In-use heap profile. Represents a snapshot of the
+	// allocations that are
+	// live at the time of the profiling.
 	//   "THREADS" - Single-shot collection of all thread stacks.
 	//   "CONTENTION" - Synchronization contention profile.
 	//   "PEAK_HEAP" - Peak heap profile.
+	//   "HEAP_ALLOC" - Heap allocation profile. It represents the
+	// aggregation of all allocations
+	// made over the duration of the profile. All allocations are
+	// included,
+	// including those that might have been freed by the end of the
+	// profiling
+	// interval. The profile is in particular useful for garbage
+	// collecting
+	// languages to understand which parts of the code create most of the
+	// garbage
+	// collection pressure to see if those can be optimized.
 	ProfileType string `json:"profileType,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
