@@ -1,6 +1,6 @@
-// Package cloudbuild provides access to the Cloud Container Builder.
+// Package cloudbuild provides access to the Cloud Build API.
 //
-// See https://cloud.google.com/container-builder/docs/
+// See https://cloud.google.com/cloud-build/docs/
 //
 // Usage example:
 //
@@ -260,7 +260,7 @@ func (s *Artifacts) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// Build: A build resource in the Container Builder API.
+// Build: A build resource in the Cloud Build API.
 //
 // At a high level, a `Build` describes where to find source code, how
 // to build
@@ -736,6 +736,35 @@ type BuildTrigger struct {
 	// Id: Output only. Unique identifier of the trigger.
 	Id string `json:"id,omitempty"`
 
+	// IgnoredFiles: ignored_files and included_files are file glob matches
+	// using
+	// http://godoc/pkg/path/filepath#Match extended with support for
+	// "**".
+	//
+	// If ignored_files and changed files are both empty, then they are
+	// not used to determine whether or not to trigger a build.
+	//
+	// If ignored_files is not empty, then we ignore any files that
+	// match
+	// any of the ignored_file globs. If the change has no files that
+	// are
+	// outside of the ignored_files globs, then we do not trigger a build.
+	IgnoredFiles []string `json:"ignoredFiles,omitempty"`
+
+	// IncludedFiles: If any of the files altered in the commit pass the
+	// ignored_files
+	// filter and included_files is empty, then as far as this filter
+	// is
+	// concerned, we should trigger the build.
+	//
+	// If any of the files altered in the commit pass the
+	// ignored_files
+	// filter and included_files is not empty, then we make sure that
+	// at
+	// least one of those files matches a included_files glob. If not,
+	// then we do not trigger a build.
+	IncludedFiles []string `json:"includedFiles,omitempty"`
+
 	// Substitutions: Substitutions data for Build resource.
 	Substitutions map[string]string `json:"substitutions,omitempty"`
 
@@ -1151,6 +1180,17 @@ type Results struct {
 	// corresponding to build step
 	// indices.
 	BuildStepImages []string `json:"buildStepImages,omitempty"`
+
+	// BuildStepOutputs: List of build step outputs, produced by builder
+	// images, in the order
+	// corresponding to build step indices.
+	//
+	// [Cloud
+	// Builders](https://cloud.google.com/cloud-build/docs/cloud-builders)
+	// ca
+	// n produce this output by writing to `$BUILDER_OUTPUT/output`.
+	// Only the first 4KB of data is stored.
+	BuildStepOutputs []string `json:"buildStepOutputs,omitempty"`
 
 	// Images: Container images that were built as a part of the build.
 	Images []*BuiltImage `json:"images,omitempty"`

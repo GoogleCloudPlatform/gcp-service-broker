@@ -145,7 +145,8 @@ func (d *DocumentRef) newCreateWrites(data interface{}) ([]*pb.Write, error) {
 // Set creates or overwrites the document with the given data. See DocumentRef.Create
 // for the acceptable values of data. Without options, Set overwrites the document
 // completely. Specify one of the Merge options to preserve an existing document's
-// fields.
+// fields. To delete some fields, use a Merge option with firestore.Delete as the
+// field value.
 func (d *DocumentRef) Set(ctx context.Context, data interface{}, opts ...SetOption) (*WriteResult, error) {
 	ws, err := d.newSetWrites(data, opts)
 	if err != nil {
@@ -613,9 +614,9 @@ func (it *DocumentSnapshotIterator) Next() (*DocumentSnapshot, error) {
 	return snap.(*DocumentSnapshot), nil
 }
 
-// Stop stops receiving snapshots.
-// You should always call Stop when you are done with an iterator, to free up resources.
-// It is not safe to call Stop concurrently with Next.
+// Stop stops receiving snapshots. You should always call Stop when you are done with
+// a DocumentSnapshotIterator, to free up resources. It is not safe to call Stop
+// concurrently with Next.
 func (it *DocumentSnapshotIterator) Stop() {
 	it.ws.stop()
 }

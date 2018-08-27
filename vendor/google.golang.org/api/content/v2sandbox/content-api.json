@@ -15,7 +15,7 @@
   "description": "Manages product items, inventory, and Merchant Center accounts for Google Shopping.",
   "discoveryVersion": "v1",
   "documentationLink": "https://developers.google.com/shopping-content",
-  "etag": "\"J3WqvAcMk4eQjJXvfSI4Yr8VouA/kCPv4u6Uhzo97uC-UVSXFV5eBQ4\"",
+  "etag": "\"J3WqvAcMk4eQjJXvfSI4Yr8VouA/kgPtidcipbzhbCRh7x96H2hAeIM\"",
   "icons": {
     "x16": "https://www.gstatic.com/images/branding/product/1x/googleg_16dp.png",
     "x32": "https://www.gstatic.com/images/branding/product/1x/googleg_32dp.png"
@@ -109,7 +109,7 @@
           ]
         },
         "createrefundinvoice": {
-          "description": "Creates a refund invoice for one or more shipment groups, and triggers a refund for non-facilitated payment orders.",
+          "description": "Creates a refund invoice for one or more shipment groups, and triggers a refund for non-facilitated payment orders. This can only be used for line items that have previously been charged using createChargeInvoice. All amounts (except for the summary) are incremental with respect to the previous invoice.",
           "httpMethod": "POST",
           "id": "content.orderinvoices.createrefundinvoice",
           "parameterOrder": [
@@ -532,6 +532,11 @@
             "templateName"
           ],
           "parameters": {
+            "country": {
+              "description": "The country of the template to retrieve. Defaults to US.",
+              "location": "query",
+              "type": "string"
+            },
             "merchantId": {
               "description": "The ID of the account that should manage the order. This cannot be a multi-client account.",
               "format": "uint64",
@@ -567,7 +572,7 @@
           ]
         },
         "instorerefundlineitem": {
-          "description": "Notifies that item return and refund was handled directly in store.",
+          "description": "Notifies that item return and refund was handled directly by merchant outside of Google payments processing (e.g. cash refund done in store).",
           "httpMethod": "POST",
           "id": "content.orders.instorerefundlineitem",
           "parameterOrder": [
@@ -696,7 +701,7 @@
           ]
         },
         "refund": {
-          "description": "Refund a portion of the order, up to the full amount paid.",
+          "description": "Deprecated, please use returnRefundLineItem instead.",
           "httpMethod": "POST",
           "id": "content.orders.refund",
           "parameterOrder": [
@@ -1004,6 +1009,7 @@
       }
     }
   },
+  "revision": "20180821",
   "rootUrl": "https://www.googleapis.com/",
   "schemas": {
     "Amount": {
@@ -1074,15 +1080,15 @@
         },
         "customerBalance": {
           "$ref": "Amount",
-          "description": "[required] Customer balance on this invoice. A positive amount means the customer is paying, a negative one means the customer is receiving money. Note: the sum of merchant_balance, customer_balance and google_balance must always be zero."
+          "description": "[required] Customer balance on this invoice. A negative amount means the customer is paying, a positive one means the customer is receiving money. Note: the sum of merchant_balance, customer_balance and google_balance must always be zero.\n\nFurthermore the absolute value of this amount is expected to be equal to the sum of product amount and additional charges, minus promotions."
         },
         "googleBalance": {
           "$ref": "Amount",
-          "description": "[required] Google balance on this invoice. A positive amount means Google is paying, a negative one means Google is receiving money. Note: the sum of merchant_balance, customer_balance and google_balance must always be zero."
+          "description": "[required] Google balance on this invoice. A negative amount means Google is paying, a positive one means Google is receiving money. Note: the sum of merchant_balance, customer_balance and google_balance must always be zero."
         },
         "merchantBalance": {
           "$ref": "Amount",
-          "description": "[required] Merchant balance on this invoice. A positive amount means the merchant is paying, a negative one means the merchant is receiving money. Note: the sum of merchant_balance, customer_balance and google_balance must always be zero."
+          "description": "[required] Merchant balance on this invoice. A negative amount means the merchant is paying, a positive one means the merchant is receiving money. Note: the sum of merchant_balance, customer_balance and google_balance must always be zero."
         },
         "productTotal": {
           "$ref": "Amount",
@@ -1242,7 +1248,7 @@
           "type": "string"
         },
         "region": {
-          "description": "Top-level administrative subdivision of the country (e.g. \"CA\").",
+          "description": "Top-level administrative subdivision of the country. For example, a state like California (\"CA\") or a province like Quebec (\"QC\").",
           "type": "string"
         },
         "streetAddress": {
@@ -2093,7 +2099,7 @@
       "properties": {
         "amount": {
           "$ref": "Price",
-          "description": "Amount to refund for the cancelation. Optional. If not set, Google will calculate the default based on the price and tax of the items involved. The amount must not be larger than the net amount left on the order."
+          "description": "Deprecated. Please use amountPretax and amountTax instead."
         },
         "amountPretax": {
           "$ref": "Price",
@@ -2182,6 +2188,10 @@
     "OrdersCreateTestOrderRequest": {
       "id": "OrdersCreateTestOrderRequest",
       "properties": {
+        "country": {
+          "description": "The  CLDR territory code of the country of the test order to create. Affects the currency and addresses of orders created via template_name, or the addresses of orders created via test_order.\n\nAcceptable values are:  \n- \"US\" \n- \"FR\"  Defaults to US.",
+          "type": "string"
+        },
         "templateName": {
           "description": "The test order template to use. Specify as an alternative to testOrder as a shortcut for retrieving a template and then creating an order using that template.",
           "type": "string"
@@ -2316,7 +2326,7 @@
       "properties": {
         "amount": {
           "$ref": "Price",
-          "description": "Amount to refund for the cancelation. Optional. If not set, Google will calculate the default based on the price and tax of the items involved. The amount must not be larger than the net amount left on the order."
+          "description": "Deprecated. Please use amountPretax and amountTax instead."
         },
         "amountPretax": {
           "$ref": "Price",
@@ -2390,7 +2400,7 @@
       "properties": {
         "amount": {
           "$ref": "Price",
-          "description": "The amount that is refunded."
+          "description": "Deprecated. Please use amountPretax and amountTax instead."
         },
         "amountPretax": {
           "$ref": "Price",
@@ -2470,7 +2480,7 @@
       "properties": {
         "amountPretax": {
           "$ref": "Price",
-          "description": "The amount that is refunded. Optional, but if filled then both amountPretax and amountTax must be set."
+          "description": "The amount that is refunded. If omitted, refundless return is assumed (same as calling returnLineItem method). Optional, but if filled then both amountPretax and amountTax must be set."
         },
         "amountTax": {
           "$ref": "Price",
@@ -2658,7 +2668,7 @@
           "description": "A list of errors defined if and only if the request failed."
         },
         "executionStatus": {
-          "description": "The status of the execution. Only defined if the method is not get or getByMerchantOrderId and if the request was successful.",
+          "description": "The status of the execution. Only defined if  \n- the request was successful; and \n- the method is not get, getByMerchantOrderId, or one of the test methods.",
           "type": "string"
         },
         "kind": {
@@ -2783,7 +2793,7 @@
       "properties": {
         "amount": {
           "$ref": "Price",
-          "description": "The amount that is refunded."
+          "description": "Deprecated. Please use amountPretax and amountTax instead."
         },
         "amountPretax": {
           "$ref": "Price",
@@ -2920,7 +2930,7 @@
       "properties": {
         "amountPretax": {
           "$ref": "Price",
-          "description": "The amount that is refunded. Optional, but if filled then both amountPretax and amountTax must be set."
+          "description": "The amount that is refunded. If omitted, refundless return is assumed (same as calling returnLineItem method). Optional, but if filled then both amountPretax and amountTax must be set."
         },
         "amountTax": {
           "$ref": "Price",

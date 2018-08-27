@@ -17,6 +17,7 @@ package ochttp
 import (
 	"io"
 	"net/http"
+	"net/http/httptrace"
 
 	"go.opencensus.io/plugin/ochttp/propagation/b3"
 	"go.opencensus.io/trace"
@@ -42,6 +43,7 @@ type traceTransport struct {
 	startOptions   trace.StartOptions
 	format         propagation.HTTPFormat
 	formatSpanName func(*http.Request) string
+	newClientTrace func(*http.Request, *trace.Span) *httptrace.ClientTrace
 }
 
 // TODO(jbd): Add message events for request and response size.
@@ -57,7 +59,12 @@ func (t *traceTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		trace.WithSampler(t.startOptions.Sampler),
 		trace.WithSpanKind(trace.SpanKindClient))
 
-	req = req.WithContext(ctx)
+	if t.newClientTrace != nil {
+		req = req.WithContext(httptrace.WithClientTrace(ctx, t.newClientTrace(req, span)))
+	} else {
+		req = req.WithContext(ctx)
+	}
+
 	if t.format != nil {
 		t.format.SpanContextToRequest(span.SpanContext(), req)
 	}
@@ -196,4 +203,16 @@ var codeToStr = map[int32]string{
 	trace.StatusCodeUnavailable:        `"UNAVAILABLE"`,
 	trace.StatusCodeDataLoss:           `"DATA_LOSS"`,
 	trace.StatusCodeUnauthenticated:    `"UNAUTHENTICATED"`,
+}
+
+func isHealthEndpoint(path string) bool {
+	// Health checking is pretty frequent and
+	// traces collected for health endpoints
+	// can be extremely noisy and expensive.
+	// Disable canonical health checking endpoints
+	// like /healthz and /_ah/health for now.
+	if path == "/healthz" || path == "/_ah/health" {
+		return true
+	}
+	return false
 }

@@ -629,8 +629,7 @@ type VoicesListCall struct {
 	header_      http.Header
 }
 
-// List: Returns a list of Voice
-// supported for synthesis.
+// List: Returns a list of Voice supported for synthesis.
 func (r *VoicesService) List() *VoicesListCall {
 	c := &VoicesListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	return c
@@ -748,7 +747,7 @@ func (c *VoicesListCall) Do(opts ...googleapi.CallOption) (*ListVoicesResponse, 
 	}
 	return ret, nil
 	// {
-	//   "description": "Returns a list of Voice\nsupported for synthesis.",
+	//   "description": "Returns a list of Voice supported for synthesis.",
 	//   "flatPath": "v1beta1/voices",
 	//   "httpMethod": "GET",
 	//   "id": "texttospeech.voices.list",
