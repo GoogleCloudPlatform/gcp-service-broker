@@ -23,6 +23,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/net/context"
@@ -516,8 +517,8 @@ func TestReadRowsOrder(t *testing.T) {
 
 	// Read with interleave filter
 	inter := &btpb.RowFilter_Interleave{}
-	fnr := &btpb.RowFilter{Filter: &btpb.RowFilter_FamilyNameRegexFilter{FamilyNameRegexFilter: "1"}}
-	cqr := &btpb.RowFilter{Filter: &btpb.RowFilter_ColumnQualifierRegexFilter{ColumnQualifierRegexFilter: []byte("2")}}
+	fnr := &btpb.RowFilter{Filter: &btpb.RowFilter_FamilyNameRegexFilter{FamilyNameRegexFilter: "cf1"}}
+	cqr := &btpb.RowFilter{Filter: &btpb.RowFilter_ColumnQualifierRegexFilter{ColumnQualifierRegexFilter: []byte("col2")}}
 	inter.Filters = append(inter.Filters, fnr, cqr)
 	req = &btpb.ReadRowsRequest{
 		TableName: tblInfo.Name,
@@ -800,6 +801,145 @@ func TestFilters(t *testing.T) {
 		if len(mock.responses) != tc.out {
 			t.Errorf("Response count: got %d, want %d", len(mock.responses), tc.out)
 			continue
+		}
+	}
+}
+
+func Test_Mutation_DeleteFromColumn(t *testing.T) {
+	ctx := context.Background()
+
+	s := &server{
+		tables: make(map[string]*table),
+	}
+
+	tblInfo, err := populateTable(ctx, s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		in   *btpb.MutateRowRequest
+		fail bool
+	}{
+		{in: &btpb.MutateRowRequest{
+			TableName: tblInfo.Name,
+			RowKey:    []byte("row"),
+			Mutations: []*btpb.Mutation{{
+				Mutation: &btpb.Mutation_DeleteFromColumn_{DeleteFromColumn: &btpb.Mutation_DeleteFromColumn{
+					FamilyName:      "cf1",
+					ColumnQualifier: []byte("col1"),
+					TimeRange: &btpb.TimestampRange{
+						StartTimestampMicros: 2000,
+						EndTimestampMicros:   1000,
+					},
+				}},
+			}},
+		},
+			fail: true,
+		},
+		{in: &btpb.MutateRowRequest{
+			TableName: tblInfo.Name,
+			RowKey:    []byte("row"),
+			Mutations: []*btpb.Mutation{{
+				Mutation: &btpb.Mutation_DeleteFromColumn_{DeleteFromColumn: &btpb.Mutation_DeleteFromColumn{
+					FamilyName:      "cf2",
+					ColumnQualifier: []byte("col2"),
+					TimeRange: &btpb.TimestampRange{
+						StartTimestampMicros: 1000,
+						EndTimestampMicros:   2000,
+					},
+				}},
+			}},
+		},
+			fail: false,
+		},
+		{in: &btpb.MutateRowRequest{
+			TableName: tblInfo.Name,
+			RowKey:    []byte("row"),
+			Mutations: []*btpb.Mutation{{
+				Mutation: &btpb.Mutation_DeleteFromColumn_{DeleteFromColumn: &btpb.Mutation_DeleteFromColumn{
+					FamilyName:      "cf3",
+					ColumnQualifier: []byte("col3"),
+					TimeRange: &btpb.TimestampRange{
+						StartTimestampMicros: 1000,
+						EndTimestampMicros:   0,
+					},
+				}},
+			}},
+		},
+			fail: false,
+		},
+		{in: &btpb.MutateRowRequest{
+			TableName: tblInfo.Name,
+			RowKey:    []byte("row"),
+			Mutations: []*btpb.Mutation{{
+				Mutation: &btpb.Mutation_DeleteFromColumn_{DeleteFromColumn: &btpb.Mutation_DeleteFromColumn{
+					FamilyName:      "cf4",
+					ColumnQualifier: []byte("col4"),
+					TimeRange: &btpb.TimestampRange{
+						StartTimestampMicros: 0,
+						EndTimestampMicros:   1000,
+					},
+				}},
+			}},
+		},
+			fail: true,
+		},
+	}
+
+	for _, tst := range tests {
+		_, err = s.MutateRow(ctx, tst.in)
+
+		if err != nil && !tst.fail {
+			t.Errorf("expected passed got failure for : %v \n with err: %v", tst.in, err)
+		}
+
+		if err == nil && tst.fail {
+			t.Errorf("expected failure got passed for : %v", tst)
+		}
+	}
+}
+
+func TestFilterRow(t *testing.T) {
+	row := &row{
+		key: "row",
+		families: map[string]*family{
+			"fam": {
+				name: "fam",
+				cells: map[string][]cell{
+					"col": {{ts: 100, value: []byte("val")}},
+				},
+			},
+		},
+	}
+	for _, test := range []struct {
+		filter *btpb.RowFilter
+		want   bool
+	}{
+		// The regexp-based filters perform whole-string, case-sensitive matches.
+		{&btpb.RowFilter{Filter: &btpb.RowFilter_RowKeyRegexFilter{[]byte("row")}}, true},
+		{&btpb.RowFilter{Filter: &btpb.RowFilter_RowKeyRegexFilter{[]byte("ro")}}, false},
+		{&btpb.RowFilter{Filter: &btpb.RowFilter_RowKeyRegexFilter{[]byte("ROW")}}, false},
+		{&btpb.RowFilter{Filter: &btpb.RowFilter_RowKeyRegexFilter{[]byte("moo")}}, false},
+
+		{&btpb.RowFilter{Filter: &btpb.RowFilter_FamilyNameRegexFilter{"fam"}}, true},
+		{&btpb.RowFilter{Filter: &btpb.RowFilter_FamilyNameRegexFilter{"fa"}}, false},
+		{&btpb.RowFilter{Filter: &btpb.RowFilter_FamilyNameRegexFilter{"FAM"}}, false},
+		{&btpb.RowFilter{Filter: &btpb.RowFilter_FamilyNameRegexFilter{"moo"}}, false},
+
+		{&btpb.RowFilter{Filter: &btpb.RowFilter_ColumnQualifierRegexFilter{[]byte("col")}}, true},
+		{&btpb.RowFilter{Filter: &btpb.RowFilter_ColumnQualifierRegexFilter{[]byte("co")}}, false},
+		{&btpb.RowFilter{Filter: &btpb.RowFilter_ColumnQualifierRegexFilter{[]byte("COL")}}, false},
+		{&btpb.RowFilter{Filter: &btpb.RowFilter_ColumnQualifierRegexFilter{[]byte("moo")}}, false},
+
+		{&btpb.RowFilter{Filter: &btpb.RowFilter_ValueRegexFilter{[]byte("val")}}, true},
+		{&btpb.RowFilter{Filter: &btpb.RowFilter_ValueRegexFilter{[]byte("va")}}, false},
+		{&btpb.RowFilter{Filter: &btpb.RowFilter_ValueRegexFilter{[]byte("VAL")}}, false},
+		{&btpb.RowFilter{Filter: &btpb.RowFilter_ValueRegexFilter{[]byte("moo")}}, false},
+	} {
+		got := filterRow(test.filter, row.copy())
+		if got != test.want {
+			t.Errorf("%s: got %t, want %t", proto.CompactTextString(test.filter), got, test.want)
 		}
 	}
 }

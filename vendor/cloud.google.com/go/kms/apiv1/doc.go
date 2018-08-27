@@ -16,14 +16,11 @@
 
 // Package kms is an auto-generated package for the
 // Google Cloud Key Management Service (KMS) API.
-//
-//   NOTE: This package is in alpha. It is not stable, and is likely to change.
+
 //
 // Manages encryption for your cloud services the same way you do
 // on-premises.
 // You can generate, use, rotate, and destroy AES256 encryption keys.
-//
-// Use the client at cloud.google.com/go/kms in preference to this.
 package kms // import "cloud.google.com/go/kms/apiv1"
 
 import (

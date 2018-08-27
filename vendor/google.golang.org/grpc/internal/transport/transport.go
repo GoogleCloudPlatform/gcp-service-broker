@@ -619,19 +619,6 @@ type ServerTransport interface {
 	IncrMsgRecv()
 }
 
-// streamErrorf creates an StreamError with the specified error code and description.
-func streamErrorf(c codes.Code, format string, a ...interface{}) StreamError {
-	return StreamError{
-		Code: c,
-		Desc: fmt.Sprintf(format, a...),
-	}
-}
-
-// streamError creates an StreamError with the specified error code and description.
-func streamError(c codes.Code, desc string) StreamError {
-	return StreamError{Code: c, Desc: desc}
-}
-
 // connectionErrorf creates an ConnectionError with the specified error description.
 func connectionErrorf(temp bool, e error, format string, a ...interface{}) ConnectionError {
 	return ConnectionError{
@@ -674,7 +661,7 @@ var (
 	// errStreamDrain indicates that the stream is rejected because the
 	// connection is draining. This could be caused by goaway or balancer
 	// removing the address.
-	errStreamDrain = streamErrorf(codes.Unavailable, "the connection is draining")
+	errStreamDrain = status.Error(codes.Unavailable, "the connection is draining")
 	// errStreamDone is returned from write at the client side to indiacte application
 	// layer of an error.
 	errStreamDone = errors.New("the stream is done")
@@ -682,18 +669,6 @@ var (
 	// stream's ID in unprocessed RPCs.
 	statusGoAway = status.New(codes.Unavailable, "the stream is rejected because server is draining the connection")
 )
-
-// TODO: See if we can replace StreamError with status package errors.
-
-// StreamError is an error that only affects one stream within a connection.
-type StreamError struct {
-	Code codes.Code
-	Desc string
-}
-
-func (e StreamError) Error() string {
-	return fmt.Sprintf("stream error: code = %s desc = %q", e.Code, e.Desc)
-}
 
 // GoAwayReason contains the reason for the GoAway frame received.
 type GoAwayReason uint8
@@ -708,3 +683,27 @@ const (
 	// "too_many_pings".
 	GoAwayTooManyPings GoAwayReason = 2
 )
+
+// channelzData is used to store channelz related data for http2Client and http2Server.
+// These fields cannot be embedded in the original structs (e.g. http2Client), since to do atomic
+// operation on int64 variable on 32-bit machine, user is responsible to enforce memory alignment.
+// Here, by grouping those int64 fields inside a struct, we are enforcing the alignment.
+type channelzData struct {
+	kpCount int64
+	// The number of streams that have started, including already finished ones.
+	streamsStarted int64
+	// Client side: The number of streams that have ended successfully by receiving
+	// EoS bit set frame from server.
+	// Server side: The number of streams that have ended successfully by sending
+	// frame with EoS bit set.
+	streamsSucceeded int64
+	streamsFailed    int64
+	// lastStreamCreatedTime stores the timestamp that the last stream gets created. It is of int64 type
+	// instead of time.Time since it's more costly to atomically update time.Time variable than int64
+	// variable. The same goes for lastMsgSentTime and lastMsgRecvTime.
+	lastStreamCreatedTime int64
+	msgSent               int64
+	msgRecv               int64
+	lastMsgSentTime       int64
+	lastMsgRecvTime       int64
+}

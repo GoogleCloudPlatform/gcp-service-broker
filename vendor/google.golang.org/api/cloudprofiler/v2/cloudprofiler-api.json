@@ -18,9 +18,9 @@
   "baseUrl": "https://cloudprofiler.googleapis.com/",
   "batchPath": "batch",
   "canonicalName": "Cloud Profiler",
-  "description": "Allows Google services manage the continuous profiling information.",
+  "description": "Manages continuous profiling information.",
   "discoveryVersion": "v1",
-  "documentationLink": "https://cloud.google.com/",
+  "documentationLink": "https://cloud.google.com/profiler/",
   "fullyEncodeReservedExpansion": true,
   "icons": {
     "x16": "http://www.google.com/images/icons/product/search-16.gif",
@@ -215,7 +215,7 @@
       }
     }
   },
-  "revision": "20180625",
+  "revision": "20180730",
   "rootUrl": "https://cloudprofiler.googleapis.com/",
   "schemas": {
     "CreateProfileRequest": {
@@ -226,20 +226,17 @@
           "$ref": "Deployment",
           "description": "Deployment details."
         },
-        "profile": {
-          "$ref": "Profile",
-          "description": "DEPRECATED: When the profile field is set and the profile type field is not\nset, the creation is done in the offline mode as documented for the\nCreateOfflineProfile method above. This behavior is temporarily kept\nto smoothly migrate the clients that use the old model of when the single\nCreateProfile method was used for both creation modes."
-        },
         "profileType": {
           "description": "One or more profile types that the agent is capable of providing.",
           "enumDescriptions": [
             "Unspecified profile type.",
             "Thread CPU time sampling.",
             "Wallclock time sampling. More expensive as stops all threads.",
-            "Heap allocation sampling.",
+            "In-use heap profile. Represents a snapshot of the allocations that are\nlive at the time of the profiling.",
             "Single-shot collection of all thread stacks.",
             "Synchronization contention profile.",
-            "Peak heap profile."
+            "Peak heap profile.",
+            "Heap allocation profile. It represents the aggregation of all allocations\nmade over the duration of the profile. All allocations are included,\nincluding those that might have been freed by the end of the profiling\ninterval. The profile is in particular useful for garbage collecting\nlanguages to understand which parts of the code create most of the garbage\ncollection pressure to see if those can be optimized."
           ],
           "items": {
             "enum": [
@@ -249,7 +246,8 @@
               "HEAP",
               "THREADS",
               "CONTENTION",
-              "PEAK_HEAP"
+              "PEAK_HEAP",
+              "HEAP_ALLOC"
             ],
             "type": "string"
           },
@@ -318,16 +316,18 @@
             "HEAP",
             "THREADS",
             "CONTENTION",
-            "PEAK_HEAP"
+            "PEAK_HEAP",
+            "HEAP_ALLOC"
           ],
           "enumDescriptions": [
             "Unspecified profile type.",
             "Thread CPU time sampling.",
             "Wallclock time sampling. More expensive as stops all threads.",
-            "Heap allocation sampling.",
+            "In-use heap profile. Represents a snapshot of the allocations that are\nlive at the time of the profiling.",
             "Single-shot collection of all thread stacks.",
             "Synchronization contention profile.",
-            "Peak heap profile."
+            "Peak heap profile.",
+            "Heap allocation profile. It represents the aggregation of all allocations\nmade over the duration of the profile. All allocations are included,\nincluding those that might have been freed by the end of the profiling\ninterval. The profile is in particular useful for garbage collecting\nlanguages to understand which parts of the code create most of the garbage\ncollection pressure to see if those can be optimized."
           ],
           "type": "string"
         }

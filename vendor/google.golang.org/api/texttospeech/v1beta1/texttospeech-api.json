@@ -129,7 +129,7 @@
     "voices": {
       "methods": {
         "list": {
-          "description": "Returns a list of Voice\nsupported for synthesis.",
+          "description": "Returns a list of Voice supported for synthesis.",
           "flatPath": "v1beta1/voices",
           "httpMethod": "GET",
           "id": "texttospeech.voices.list",
@@ -152,7 +152,7 @@
       }
     }
   },
-  "revision": "20180629",
+  "revision": "20180727",
   "rootUrl": "https://texttospeech.googleapis.com/",
   "schemas": {
     "AudioConfig": {

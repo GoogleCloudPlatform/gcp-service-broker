@@ -322,6 +322,7 @@ func TestIntegration_UpdateSubscription(t *testing.T) {
 		AckDeadline:         2 * time.Minute,
 		RetainAckedMessages: true,
 		RetentionDuration:   2 * time.Hour,
+		Labels:              map[string]string{"label": "value"},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -332,22 +333,27 @@ func TestIntegration_UpdateSubscription(t *testing.T) {
 		AckDeadline:         2 * time.Minute,
 		RetainAckedMessages: true,
 		RetentionDuration:   2 * time.Hour,
+		Labels:              map[string]string{"label": "value"},
 	}
+
 	if !testutil.Equal(got, want) {
 		t.Fatalf("\ngot  %+v\nwant %+v", got, want)
 	}
+
 	// Remove the PushConfig, turning the subscription back into pull mode.
-	// Change AckDeadline, but nothing else.
+	// Change AckDeadline, remove labels.
 	pc = PushConfig{}
 	got, err = sub.Update(ctx, SubscriptionConfigToUpdate{
 		PushConfig:  &pc,
 		AckDeadline: 30 * time.Second,
+		Labels:      map[string]string{},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	want.PushConfig = pc
 	want.AckDeadline = 30 * time.Second
+	want.Labels = nil
 	// service issue: PushConfig attributes are not removed.
 	// TODO(jba): remove when issue resolved.
 	want.PushConfig.Attributes = map[string]string{"x-goog-version": "v1"}
@@ -358,6 +364,57 @@ func TestIntegration_UpdateSubscription(t *testing.T) {
 	_, err = sub.Update(ctx, SubscriptionConfigToUpdate{})
 	if err == nil {
 		t.Fatal("got nil, wanted error")
+	}
+}
+
+func TestIntegration_UpdateTopic(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	client := integrationTestClient(t, ctx)
+	defer client.Close()
+
+	compareConfig := func(got TopicConfig, wantLabels map[string]string) bool {
+		if !testutil.Equal(got.Labels, wantLabels) {
+			return false
+		}
+		// For MessageStoragePolicy, we don't want to check for an exact set of regions.
+		// That set may change at any time. Instead, just make sure that the set isn't empty.
+		if len(got.MessageStoragePolicy.AllowedPersistenceRegions) == 0 {
+			return false
+		}
+		return true
+	}
+
+	topic, err := client.CreateTopic(ctx, topicIDs.New())
+	if err != nil {
+		t.Fatalf("CreateTopic error: %v", err)
+	}
+	defer topic.Stop()
+	defer topic.Delete(ctx)
+
+	got, err := topic.Config(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !compareConfig(got, nil) {
+		t.Fatalf("\ngot  %+v\nwant no labels", got)
+	}
+
+	labels := map[string]string{"label": "value"}
+	got, err = topic.Update(ctx, TopicConfigToUpdate{Labels: labels})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !compareConfig(got, labels) {
+		t.Fatalf("\ngot  %+v\nwant labels %+v", got, labels)
+	}
+	// Remove all labels.
+	got, err = topic.Update(ctx, TopicConfigToUpdate{Labels: map[string]string{}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !compareConfig(got, nil) {
+		t.Fatalf("\ngot  %+v\nwant no labels", got)
 	}
 }
 
@@ -445,5 +502,45 @@ func TestIntegration_Errors(t *testing.T) {
 	_, err = sub.Update(ctx, SubscriptionConfigToUpdate{RetentionDuration: 1000 * time.Hour})
 	if want := codes.InvalidArgument; grpc.Code(err) != want {
 		t.Errorf("got <%v>, want %s", err, want)
+	}
+}
+
+func TestIntegration_MessageStoragePolicy(t *testing.T) {
+	// Verify that the message storage policy is populated.
+	if testing.Short() {
+		t.Skip("Integration tests skipped in short mode")
+	}
+	ctx := context.Background()
+	// The message storage policy depends on the Resource Location Restriction org policy.
+	// The usual testing project is in the google.com org, which has no resource location restrictions,
+	// so we will always see an empty MessageStoragePolicy. Use a project in another org that does
+	// have a restriction set ("us-east1").
+	projID := "ps-geofencing-test"
+	// We can use the same creds as always because the service account of the default testing project
+	// has permission to use the above project. This test will fail if a different service account
+	// is used for testing.
+	ts := testutil.TokenSource(ctx, ScopePubSub, ScopeCloudPlatform)
+	if ts == nil {
+		t.Skip("Integration tests skipped. See CONTRIBUTING.md for details")
+	}
+	client, err := NewClient(ctx, projID, option.WithTokenSource(ts))
+	if err != nil {
+		t.Fatalf("Creating client error: %v", err)
+	}
+	topic, err := client.CreateTopic(ctx, topicIDs.New())
+	if err != nil {
+		t.Fatalf("CreateTopic error: %v", err)
+	}
+	defer topic.Stop()
+	defer topic.Delete(ctx)
+
+	config, err := topic.Config(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := config.MessageStoragePolicy.AllowedPersistenceRegions
+	want := []string{"us-east1"}
+	if !testutil.Equal(got, want) {
+		t.Errorf("got %v, want %v", got, want)
 	}
 }

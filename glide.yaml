@@ -6,7 +6,7 @@ import:
 - package: github.com/gorilla/mux
   version: ~1.1.0
 - package: github.com/jinzhu/gorm
-  version: ~1.0.0
+  version: ~1.9.0
   subpackages:
   - dialects/sqlite
 - package: golang.org/x/net

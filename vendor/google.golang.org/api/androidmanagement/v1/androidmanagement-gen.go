@@ -786,11 +786,7 @@ type Device struct {
 	// true in the device's policy.
 	HardwareStatusSamples []*HardwareStatus `json:"hardwareStatusSamples,omitempty"`
 
-	// LastPolicyComplianceReportTime: The last time the device sent a
-	// policy compliance report. Important: This field is deprecated. The
-	// timestamp will be on last_status_report_time field, and
-	// last_status_report_time will be used for both status report and
-	// compliance report.
+	// LastPolicyComplianceReportTime: Deprecated.
 	LastPolicyComplianceReportTime string `json:"lastPolicyComplianceReportTime,omitempty"`
 
 	// LastPolicySyncTime: The last time the device fetched its policy.
@@ -1132,9 +1128,7 @@ type Enterprise struct {
 	// Possible values:
 	//   "NOTIFICATION_TYPE_UNSPECIFIED" - This value is ignored.
 	//   "ENROLLMENT" - A notification sent when a device enrolls.
-	//   "COMPLIANCE_REPORT" - A notification sent when a device issues a
-	// policy compliance report. Important: This enum value is deprecated.
-	// The notification will be sent as STATUS_REPORT.
+	//   "COMPLIANCE_REPORT" - Deprecated.
 	//   "STATUS_REPORT" - A notification sent when a device issues a status
 	// report.
 	//   "COMMAND" - A notification sent when a device command has
@@ -1742,7 +1736,8 @@ type NonComplianceDetail struct {
 	//   "NO_LICENSES_REMAINING" - There are no licenses available to assign
 	// to the user.
 	//   "NOT_ENROLLED" - The enterprise is no longer enrolled with managed
-	// Play or Android Device Policy is not enabled for the enterprise.
+	// Play or the admin has not accepted the latest managed Play terms of
+	// service.
 	//   "USER_INVALID" - The user is no longer valid. The user may have
 	// been deleted or disabled.
 	InstallationFailureReason string `json:"installationFailureReason,omitempty"`
@@ -2061,7 +2056,7 @@ func (s *PasswordRequirements) MarshalJSON() ([]byte, error) {
 // PermissionGrant: Configuration for an Android permission and its
 // grant state.
 type PermissionGrant struct {
-	// Permission: The android permission or group, e.g.
+	// Permission: The Android permission or group, e.g.
 	// android.permission.READ_CALENDAR or
 	// android.permission_group.CALENDAR.
 	Permission string `json:"permission,omitempty"`

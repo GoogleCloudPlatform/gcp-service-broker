@@ -62,6 +62,8 @@ const DocumentID = "__name__"
 // to return from the result documents.
 // Each path argument can be a single field or a dot-separated sequence of
 // fields, and must not contain any of the runes "˜*/[]".
+//
+// An empty Select call will produce a query that returns only document IDs.
 func (q Query) Select(paths ...string) Query {
 	var fps []FieldPath
 	for _, s := range paths {
@@ -77,6 +79,8 @@ func (q Query) Select(paths ...string) Query {
 
 // SelectPaths returns a new Query that specifies the field paths
 // to return from the result documents.
+//
+// An empty SelectPaths call will produce a query that returns only document IDs.
 func (q Query) SelectPaths(fieldPaths ...FieldPath) Query {
 	if len(fieldPaths) == 0 {
 		q.selection = []FieldPath{{DocumentID}}
@@ -583,7 +587,7 @@ func (it *DocumentIterator) Next() (*DocumentSnapshot, error) {
 }
 
 // Stop stops the iterator, freeing its resources.
-// Always call Stop when you are done with an iterator.
+// Always call Stop when you are done with a DocumentIterator.
 // It is not safe to call Stop concurrently with Next.
 func (it *DocumentIterator) Stop() {
 	if it.iter != nil { // possible in error cases
@@ -738,9 +742,9 @@ func (it *QuerySnapshotIterator) Next() (*DocumentIterator, error) {
 	}, nil
 }
 
-// Stop stops receiving snapshots.
-// You should always call Stop when you are done with an iterator, to free up resources.
-// It is not safe to call Stop concurrently with Next.
+// Stop stops receiving snapshots. You should always call Stop when you are done with
+// a QuerySnapshotIterator, to free up resources. It is not safe to call Stop
+// concurrently with Next.
 func (it *QuerySnapshotIterator) Stop() {
 	it.ws.stop()
 }
