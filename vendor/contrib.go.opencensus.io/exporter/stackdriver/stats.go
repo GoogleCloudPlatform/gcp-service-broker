@@ -98,8 +98,12 @@ func newStatsExporter(o Options, enforceProjectUniqueness bool) (*statsExporter,
 		vds := bundle.([]*view.Data)
 		e.handleUpload(vds...)
 	})
-	e.bundler.DelayThreshold = e.o.BundleDelayThreshold
-	e.bundler.BundleCountThreshold = e.o.BundleCountThreshold
+	if e.o.BundleDelayThreshold > 0 {
+		e.bundler.DelayThreshold = e.o.BundleDelayThreshold
+	}
+	if e.o.BundleCountThreshold > 0 {
+		e.bundler.BundleCountThreshold = e.o.BundleCountThreshold
+	}
 	return e, nil
 }
 
@@ -113,8 +117,6 @@ func (e *statsExporter) ExportView(vd *view.Data) {
 	switch err {
 	case nil:
 		return
-	case bundler.ErrOversizedItem:
-		go e.handleUpload(vd)
 	case bundler.ErrOverflow:
 		e.o.handleError(errors.New("failed to upload: buffer full"))
 	default:

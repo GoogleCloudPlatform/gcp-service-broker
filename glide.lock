@@ -1,5 +1,5 @@
 hash: d68e0a2f0123e2243c416987db37959f25cdf9a136f39652da1645b8a29b8764
-updated: 2018-08-24T08:57:20.591814758-07:00
+updated: 2018-08-27T09:29:47.80339545-07:00
 imports:
 - name: cloud.google.com/go
   version: b1954287c11b66ec6972819af95ccd7af1b3cdb1
@@ -25,7 +25,7 @@ imports:
 - name: code.cloudfoundry.org/lager
   version: b60e04e119450552243196105bae0d42179ee0ca
 - name: contrib.go.opencensus.io/exporter/stackdriver
-  version: f7f5758592258ab71384efef9cdb0daf785a9ab1
+  version: 2f26a5d1900c27d75297423079bda98fedb6712b
   subpackages:
   - propagation
 - name: github.com/fsnotify/fsnotify
@@ -50,7 +50,7 @@ imports:
 - name: github.com/gorilla/mux
   version: 0eeaf8392f5b04950925b8a69fe70f110fa7cbfc
 - name: github.com/hashicorp/hcl
-  version: ef8a98b0bbce4a65b5aa4c368430a80ddc533168
+  version: 8cb6e5b959231cc1119e43259c4a608f9c51a241
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -102,7 +102,7 @@ imports:
 - name: github.com/spf13/viper
   version: 907c19d40d9a6c9bb55f040ff4ae45271a4754b9
 - name: go.opencensus.io
-  version: 71e2e3e3082a525f158c187a70a4dbb59aa522b9
+  version: 91168ff30a428d6a67d5f5ad2526514ae93c1615
   subpackages:
   - internal
   - internal/tagencoding
@@ -117,7 +117,7 @@ imports:
   - trace/internal
   - trace/propagation
 - name: golang.org/x/net
-  version: 4bcd98cce591d8c7061bf313d7a3cbad05b58549
+  version: 8a410e7b638dca158bf9e766925842f6651ff828
   subpackages:
   - context
   - context/ctxhttp
@@ -151,7 +151,7 @@ imports:
   - unicode/bidi
   - unicode/norm
 - name: google.golang.org/api
-  version: 943e5aafc110feadee8cf71cde31afa0d1bab9f8
+  version: 7954115fcf34e0dcda6981c9ed8a81a293f0489b
   subpackages:
   - bigquery/v2
   - cloudresourcemanager/v1

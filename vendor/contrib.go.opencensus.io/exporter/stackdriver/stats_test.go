@@ -42,7 +42,7 @@ func TestRejectBlankProjectID(t *testing.T) {
 	ids := []string{"", "     ", " "}
 	for _, projectID := range ids {
 		opts := Options{ProjectID: projectID, MonitoringClientOptions: authOptions}
-		exp, err := newStatsExporter(opts, false)
+		exp, err := newStatsExporter(opts)
 		if err == nil || exp != nil {
 			t.Errorf("%q ProjectID must be rejected: NewExporter() = %v err = %q", projectID, exp, err)
 		}
@@ -341,7 +341,7 @@ func TestExporter_makeReq(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e, err := newStatsExporter(Options{ProjectID: tt.projID, MonitoringClientOptions: authOptions}, false)
+			e, err := newStatsExporter(Options{ProjectID: tt.projID, MonitoringClientOptions: authOptions})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -568,7 +568,7 @@ func TestEqualAggWindowTagKeys(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	e, err := newStatsExporter(Options{ProjectID: "opencensus-test", MonitoringClientOptions: authOptions}, false)
+	e, err := newStatsExporter(Options{ProjectID: "opencensus-test", MonitoringClientOptions: authOptions})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -634,7 +634,7 @@ func TestExporter_createMeasure(t *testing.T) {
 			opts := tt.opts
 			opts.MonitoringClientOptions = authOptions
 			opts.ProjectID = "test_project"
-			e, err := newStatsExporter(opts, false)
+			e, err := newStatsExporter(opts)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -997,7 +997,7 @@ func TestExporter_makeReq_withCustomMonitoredResource(t *testing.T) {
 			opts := tt.opts
 			opts.MonitoringClientOptions = authOptions
 			opts.ProjectID = "proj-id"
-			e, err := newStatsExporter(opts, false)
+			e, err := newStatsExporter(opts)
 			if err != nil {
 				t.Fatal(err)
 			}
