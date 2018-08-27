@@ -72,7 +72,7 @@ var (
 // newStatsExporter returns an exporter that uploads stats data to Stackdriver Monitoring.
 // Only one Stackdriver exporter should be created per ProjectID per process, any subsequent
 // invocations of NewExporter with the same ProjectID will return an error.
-func newStatsExporter(o Options, enforceProjectUniqueness bool) (*statsExporter, error) {
+func newStatsExporter(o Options) (*statsExporter, error) {
 	if strings.TrimSpace(o.ProjectID) == "" {
 		return nil, errBlankProjectID
 	}
