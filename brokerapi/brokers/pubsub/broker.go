@@ -125,7 +125,7 @@ func (b *PubSubBroker) Provision(instanceId string, details brokerapi.ProvisionD
 }
 
 // Deletes the topic associated with the given instanceID
-func (b *PubSubBroker) Deprovision(ctx context.Context, topic models.ServiceInstanceDetails, instanceID string, details brokerapi.DeprovisionDetails) error {
+func (b *PubSubBroker) Deprovision(ctx context.Context, topic models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	ct := option.WithTokenSource(b.HttpConfig.TokenSource(ctx))
 	service, err := googlepubsub.NewClient(ctx, b.ProjectId, ct)
 	if err != nil {

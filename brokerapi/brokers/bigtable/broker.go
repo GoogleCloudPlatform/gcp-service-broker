@@ -126,7 +126,7 @@ func (b *BigTableBroker) Provision(instanceId string, details brokerapi.Provisio
 }
 
 // deletes the instance associated with the given instanceID string
-func (b *BigTableBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, instanceID string, details brokerapi.DeprovisionDetails) error {
+func (b *BigTableBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	ct := option.WithTokenSource(b.HttpConfig.TokenSource(ctx))
 	service, err := googlebigtable.NewInstanceAdminClient(ctx, b.ProjectId, ct)
 	if err != nil {

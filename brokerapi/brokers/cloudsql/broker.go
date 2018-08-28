@@ -640,7 +640,7 @@ func (b *CloudSQLBroker) pollOperationUntilDone(op *googlecloudsql.Operation, pr
 }
 
 // issue a delete call on the database instance
-func (b *CloudSQLBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, instanceId string, details brokerapi.DeprovisionDetails) error {
+func (b *CloudSQLBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	sqlService, err := googlecloudsql.New(b.HttpConfig.Client(ctx))
 	if err != nil {
 		return fmt.Errorf("Error creating CloudSQL client: %s", err)
@@ -653,7 +653,7 @@ func (b *CloudSQLBroker) Deprovision(ctx context.Context, instance models.Servic
 	}
 
 	// update the service instance state (other details)
-	if err = createCloudOperation(op, instanceId, details.ServiceID); err != nil {
+	if err = createCloudOperation(op, instance.ID, details.ServiceID); err != nil {
 		return err
 	}
 

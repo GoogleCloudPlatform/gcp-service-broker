@@ -104,7 +104,7 @@ func (b *StorageBroker) Provision(instanceId string, details brokerapi.Provision
 
 // Deletes the bucket associated with the given instance id
 // Note that all objects within the bucket must be deleted first
-func (b *StorageBroker) Deprovision(ctx context.Context, bucket models.ServiceInstanceDetails, instanceID string, details brokerapi.DeprovisionDetails) error {
+func (b *StorageBroker) Deprovision(ctx context.Context, bucket models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	ct := option.WithTokenSource(b.HttpConfig.TokenSource(ctx))
 	storageService, err := googlestorage.NewClient(ctx, ct)
 	if err != nil {

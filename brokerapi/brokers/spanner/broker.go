@@ -225,7 +225,7 @@ func createCloudOperation(op *googlespanner.CreateInstanceOperation, instanceId 
 }
 
 // deletes the instance associated with the given instanceID string
-func (s *SpannerBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, instanceID string, details brokerapi.DeprovisionDetails) error {
+func (s *SpannerBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	// set up client
 	co := option.WithUserAgent(models.CustomUserAgent)
 	ct := option.WithTokenSource(s.HttpConfig.TokenSource(ctx))

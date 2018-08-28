@@ -251,7 +251,7 @@ func (gcpBroker *GCPAsyncServiceBroker) Deprovision(ctx context.Context, instanc
 		return response, brokerapi.ErrInstanceDoesNotExist
 	}
 
-	// if async provisioning isn't allowed but this service needs it, throw an error
+	// if async deprovisioning isn't allowed but this service needs it, throw an error
 	if shouldDeprovisionAsync && !asyncAllowed {
 		return brokerapi.DeprovisionServiceSpec{IsAsync: asyncAllowed}, brokerapi.ErrAsyncRequired
 	}
@@ -262,7 +262,7 @@ func (gcpBroker *GCPAsyncServiceBroker) Deprovision(ctx context.Context, instanc
 		return response, brokerapi.NewFailureResponseBuilder(err, http.StatusInternalServerError, "fetching instance from database").Build()
 	}
 
-	if err := service.Deprovision(ctx, *instance, instanceID, details); err != nil {
+	if err := service.Deprovision(ctx, *instance, details); err != nil {
 		return response, err
 	}
 

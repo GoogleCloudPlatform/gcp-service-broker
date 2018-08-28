@@ -65,13 +65,12 @@ type FakeServiceBrokerHelper struct {
 	unbindReturnsOnCall map[int]struct {
 		result1 error
 	}
-	DeprovisionStub        func(ctx context.Context, instance models.ServiceInstanceDetails, instanceID string, details brokerapi.DeprovisionDetails) error
+	DeprovisionStub        func(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error
 	deprovisionMutex       sync.RWMutex
 	deprovisionArgsForCall []struct {
-		ctx        context.Context
-		instance   models.ServiceInstanceDetails
-		instanceID string
-		details    brokerapi.DeprovisionDetails
+		ctx      context.Context
+		instance models.ServiceInstanceDetails
+		details  brokerapi.DeprovisionDetails
 	}
 	deprovisionReturns struct {
 		result1 error
@@ -333,19 +332,18 @@ func (fake *FakeServiceBrokerHelper) UnbindReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeServiceBrokerHelper) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, instanceID string, details brokerapi.DeprovisionDetails) error {
+func (fake *FakeServiceBrokerHelper) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	fake.deprovisionMutex.Lock()
 	ret, specificReturn := fake.deprovisionReturnsOnCall[len(fake.deprovisionArgsForCall)]
 	fake.deprovisionArgsForCall = append(fake.deprovisionArgsForCall, struct {
-		ctx        context.Context
-		instance   models.ServiceInstanceDetails
-		instanceID string
-		details    brokerapi.DeprovisionDetails
-	}{ctx, instance, instanceID, details})
-	fake.recordInvocation("Deprovision", []interface{}{ctx, instance, instanceID, details})
+		ctx      context.Context
+		instance models.ServiceInstanceDetails
+		details  brokerapi.DeprovisionDetails
+	}{ctx, instance, details})
+	fake.recordInvocation("Deprovision", []interface{}{ctx, instance, details})
 	fake.deprovisionMutex.Unlock()
 	if fake.DeprovisionStub != nil {
-		return fake.DeprovisionStub(ctx, instance, instanceID, details)
+		return fake.DeprovisionStub(ctx, instance, details)
 	}
 	if specificReturn {
 		return ret.result1
@@ -359,10 +357,10 @@ func (fake *FakeServiceBrokerHelper) DeprovisionCallCount() int {
 	return len(fake.deprovisionArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) DeprovisionArgsForCall(i int) (context.Context, models.ServiceInstanceDetails, string, brokerapi.DeprovisionDetails) {
+func (fake *FakeServiceBrokerHelper) DeprovisionArgsForCall(i int) (context.Context, models.ServiceInstanceDetails, brokerapi.DeprovisionDetails) {
 	fake.deprovisionMutex.RLock()
 	defer fake.deprovisionMutex.RUnlock()
-	return fake.deprovisionArgsForCall[i].ctx, fake.deprovisionArgsForCall[i].instance, fake.deprovisionArgsForCall[i].instanceID, fake.deprovisionArgsForCall[i].details
+	return fake.deprovisionArgsForCall[i].ctx, fake.deprovisionArgsForCall[i].instance, fake.deprovisionArgsForCall[i].details
 }
 
 func (fake *FakeServiceBrokerHelper) DeprovisionReturns(result1 error) {

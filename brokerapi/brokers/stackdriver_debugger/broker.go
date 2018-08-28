@@ -32,7 +32,7 @@ func (b *StackdriverDebuggerBroker) Provision(instanceId string, details brokera
 }
 
 // No-op, no service is required for the Debugger
-func (b *StackdriverDebuggerBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, instanceID string, details brokerapi.DeprovisionDetails) error {
+func (b *StackdriverDebuggerBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	return nil
 }
 

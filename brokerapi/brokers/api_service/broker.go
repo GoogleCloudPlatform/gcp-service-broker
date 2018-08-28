@@ -30,6 +30,6 @@ func (b *ApiServiceBroker) Provision(instanceId string, details brokerapi.Provis
 	return models.ServiceInstanceDetails{}, nil
 }
 
-func (b *ApiServiceBroker) Deprovision(ctx context.Context, dataset models.ServiceInstanceDetails, instanceID string, details brokerapi.DeprovisionDetails) error {
+func (b *ApiServiceBroker) Deprovision(ctx context.Context, dataset models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	return nil
 }
