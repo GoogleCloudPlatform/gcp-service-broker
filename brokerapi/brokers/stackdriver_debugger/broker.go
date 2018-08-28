@@ -20,21 +20,22 @@ import (
 	"github.com/pivotal-cf/brokerapi"
 )
 
+// StackdriverDebuggerBroker is the service-broker back-end for binding to Stackdriver for logging
 type StackdriverDebuggerBroker struct {
 	broker_base.BrokerBase
 }
 
-// No-op, no service is required for the Debugger
+// Provision is a no-op call because only service accounts need to be bound/unbound for Stackdriver
 func (b *StackdriverDebuggerBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	return models.ServiceInstanceDetails{}, nil
 }
 
-// No-op, no service is required for the Debugger
+// Deprovision is a no-op call because only service accounts need to be bound/unbound for Stackdriver
 func (b *StackdriverDebuggerBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
 	return nil
 }
 
-// Creates a service account with access to Stackdriver Debugger
+// Bind creates a service account with access to Stackdriver Debugger
 func (b *StackdriverDebuggerBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 	return b.AccountManager.CreateAccountWithRoles(bindingID, []string{"clouddebugger.agent"})
 }

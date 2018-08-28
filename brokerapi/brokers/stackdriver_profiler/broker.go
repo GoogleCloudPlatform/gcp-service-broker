@@ -21,21 +21,22 @@ import (
 	"github.com/pivotal-cf/brokerapi"
 )
 
+// StackdriverProfilerBroker is the service-broker back-end for binding to Stackdriver for application profiling
 type StackdriverProfilerBroker struct {
 	broker_base.BrokerBase
 }
 
-// No-op, no service is required for the profiler
+// Provision is a no-op call because only service accounts need to be bound/unbound for Stackdriver
 func (b *StackdriverProfilerBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	return models.ServiceInstanceDetails{}, nil
 }
 
-// No-op, no service is required for the profiler
+// Deprovision is a no-op call because only service accounts need to be bound/unbound for Stackdriver
 func (b *StackdriverProfilerBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
 	return nil
 }
 
-// Creates a service account with access to Stackdriver Profiler
+// Bind creates a service account with access to Stackdriver Profiler
 func (b *StackdriverProfilerBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 	out, err := utils.SetParameter(details.RawParameters, "role", "cloudprofiler.agent")
 	if err != nil {

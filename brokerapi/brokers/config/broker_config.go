@@ -33,7 +33,7 @@ type BrokerConfig struct {
 func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
 	var err error
 	bc := BrokerConfig{}
-	creds, err := bc.GetCredentialsFromEnv()
+	creds, err := bc.getCredentialsFromEnv()
 
 	if err != nil {
 		return &BrokerConfig{}, err
@@ -44,7 +44,7 @@ func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
 		return &BrokerConfig{}, err
 	}
 	bc.HttpConfig = conf
-	bc.Catalog, err = bc.InitCatalogFromEnv()
+	bc.Catalog, err = bc.initCatalogFromEnv()
 	if err != nil {
 		return &BrokerConfig{}, err
 	}
@@ -55,7 +55,7 @@ func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
 // reads the service account json string from the environment variable ROOT_SERVICE_ACCOUNT_JSON, writes it to a file,
 // and then exports the file location to the environment variable GOOGLE_APPLICATION_CREDENTIALS, making it visible to
 // all google cloud apis
-func (bc *BrokerConfig) GetCredentialsFromEnv() (models.GCPCredentials, error) {
+func (bc *BrokerConfig) getCredentialsFromEnv() (models.GCPCredentials, error) {
 	var err error
 	g := models.GCPCredentials{}
 
@@ -68,7 +68,7 @@ func (bc *BrokerConfig) GetCredentialsFromEnv() (models.GCPCredentials, error) {
 }
 
 // pulls SERVICES, PLANS, and environment variables to construct catalog
-func (bc *BrokerConfig) InitCatalogFromEnv() (map[string]models.Service, error) {
+func (bc *BrokerConfig) initCatalogFromEnv() (map[string]models.Service, error) {
 	serviceMap := make(map[string]models.Service)
 
 	for _, service := range broker.GetEnabledServices() {

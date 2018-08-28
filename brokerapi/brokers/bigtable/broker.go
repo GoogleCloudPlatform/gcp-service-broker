@@ -29,21 +29,27 @@ import (
 	"google.golang.org/api/option"
 )
 
+// BigTableBroker is the service-broker back-end for creating and binding BigTable instances
 type BigTableBroker struct {
 	broker_base.BrokerBase
 }
 
+// InstanceInformation holds the details needed to bind a service account to a
+// BigTable instance after it has been provisioned
 type InstanceInformation struct {
 	InstanceId string `json:"instance_id"`
 }
 
-var StorageTypes = map[string]googlebigtable.StorageType{
+// storageTypes holds the valid value mapping for string storage types to their
+// REST call equivalent.
+var storageTypes = map[string]googlebigtable.StorageType{
 	"SSD": googlebigtable.SSD,
 	"HDD": googlebigtable.HDD,
 }
 
-// Creates a new Bigtable Instance identified by the name provided in details.RawParameters.name and
-// optional cluster_id (a default will be supplied), display_name, and zone (defaults to us-east1-b)
+// Provision creates a new Bigtable Instance identified by the name provided in
+// details.RawParameters.name and  optional cluster_id (a default will be
+// supplied), display_name, and zone (defaults to us-east1-b)
 func (b *BigTableBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 	var params map[string]string
@@ -97,7 +103,7 @@ func (b *BigTableBroker) Provision(instanceId string, details brokerapi.Provisio
 		InstanceId:  params["name"],
 		ClusterId:   clusterId,
 		NumNodes:    int32(numNodes),
-		StorageType: StorageTypes[plan.ServiceProperties["storage_type"]],
+		StorageType: storageTypes[plan.ServiceProperties["storage_type"]],
 		Zone:        zone,
 		DisplayName: displayName,
 	}
@@ -126,7 +132,7 @@ func (b *BigTableBroker) Provision(instanceId string, details brokerapi.Provisio
 	return i, nil
 }
 
-// deletes the instance associated with the given instanceID string
+// Deprovision deletes the instance associated with the given instanceID string
 func (b *BigTableBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
 	var err error
 	ctx := context.Background()

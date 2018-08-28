@@ -24,7 +24,7 @@ type Service struct {
 	Plans []ServicePlan `json:"plans"`
 }
 
-// Converts this service to a plain PCF Service definition.
+// ToPlain converts this service to a plain PCF Service definition.
 func (s Service) ToPlain() pcfosb.Service {
 	plain := s.Service
 	plainPlans := []pcfosb.ServicePlan{}

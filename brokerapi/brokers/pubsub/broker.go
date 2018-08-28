@@ -32,16 +32,20 @@ import (
 	"google.golang.org/api/option"
 )
 
+// PubSubBroker is the service-broker back-end for creating Google Pub/Sub
+// topics, subscriptions, and accounts
 type PubSubBroker struct {
 	broker_base.BrokerBase
 }
 
+// InstanceInformation holds the details needed to connect to a PubSub instance
+// after it has been provisioned
 type InstanceInformation struct {
 	TopicName        string `json:"topic_name"`
 	SubscriptionName string `json:"subscription_name"`
 }
 
-// Creates a new PubSub topic with the name given in details.topic_name
+// Provision creates a new PubSub topic with the name given in details.topic_name
 // if subscription_name is supplied, will also create a subscription for this topic with optional config parameters
 // is_push (defaults to "false"; i.e. pull), endpoint (defaults to nil), ack_deadline (seconds, defaults to 10, 600 max)
 func (b *PubSubBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
@@ -125,7 +129,7 @@ func (b *PubSubBroker) Provision(instanceId string, details brokerapi.ProvisionD
 	return i, nil
 }
 
-// Deletes the topic associated with the given instanceID
+// Deprovision deletes the topic associated with the given instanceID
 func (b *PubSubBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
 	topic := models.ServiceInstanceDetails{}
 	if err := db_service.DbConnection.Where("ID = ?", instanceID).First(&topic).Error; err != nil {

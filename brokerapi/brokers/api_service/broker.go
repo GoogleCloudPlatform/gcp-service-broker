@@ -15,21 +15,24 @@
 package api_service
 
 import (
+	"context"
+
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/pivotal-cf/brokerapi"
 )
 
+// ApiServiceBroker is the service-broker back-end for creating Google Machine Learning API accounts
 type ApiServiceBroker struct {
 	broker_base.BrokerBase
 }
 
+// Provision is a no-op call because only service accounts need to be bound/unbound for Google Machine Learning APIs
 func (b *ApiServiceBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
-
 	return models.ServiceInstanceDetails{}, nil
 }
 
-func (b *ApiServiceBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
-
+// Deprovision is a no-op call because only service accounts need to be bound/unbound for Google Machine Learning APIs
+func (b *ApiServiceBroker) Deprovision(ctx context.Context, dataset models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	return nil
 }

@@ -43,6 +43,7 @@ type CloudSQLBroker struct {
 	SaAccountManager models.AccountManager
 }
 
+// InstanceInformation holds the details needed to bind a service account to a CloudSQL instance after it has been provisioned
 type InstanceInformation struct {
 	InstanceName string `json:"instance_name"`
 	DatabaseName string `json:"database_name"`

@@ -30,16 +30,21 @@ import (
 	instancepb "google.golang.org/genproto/googleapis/spanner/admin/instance/v1"
 )
 
+// PubSubBroker is the service-broker back-end for creating Spanner databases
+// and accounts
 type SpannerBroker struct {
 	broker_base.BrokerBase
 }
 
+// InstanceInformation holds the details needed to connect to a Spanner instance
+// after it has been provisioned
 type InstanceInformation struct {
 	InstanceId string `json:"instance_id"`
 }
 
-// Creates a new Spanner Instance identified by the name provided in details.RawParameters.name and
-// an optional region (defaults to regional-us-central1) and optional display_name
+// Provision creates a new Spanner Instance identified by the name provided in
+// details.RawParameters.name and an optional region (defaults to
+// regional-us-central1) and optional display_name
 func (s *SpannerBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 	var params map[string]string
@@ -122,7 +127,7 @@ func (s *SpannerBroker) Provision(instanceId string, details brokerapi.Provision
 	return i, nil
 }
 
-// gets the last operation for this instance and polls the status of it
+// PollInstance gets the last operation for this instance and polls its status
 func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 
 	var op models.CloudOperation
@@ -224,7 +229,7 @@ func createCloudOperation(op *googlespanner.CreateInstanceOperation, instanceId 
 	return nil
 }
 
-// deletes the instance associated with the given instanceID string
+// Deprovision deletes the instance associated with the given instanceID string
 func (s *SpannerBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
 	var err error
 
@@ -253,14 +258,16 @@ func (s *SpannerBroker) Deprovision(instanceID string, details brokerapi.Deprovi
 	return nil
 }
 
-// Indicates that Spanner uses asynchronous provisioning
+// ProvisionsAsync indicates that Spanner uses asynchronous provisioning
 func (s *SpannerBroker) ProvisionsAsync() bool {
 	return true
 }
 
-// used during polling of async operations to determine if the workflow is a provision or deprovision flow based off the
-// type of the most recent operation
-// since spanner deprovisions synchronously, the last operation will never have been delete
+// LastOperationWasDelete is used during polling of async operations to check
+// if the workflow is a provision or deprovision flow based off the type of the
+// most recent operation
+// since spanner deprovisions synchronously, the last operation will never have
+// been delete
 func (s *SpannerBroker) LastOperationWasDelete(instanceId string) (bool, error) {
 	return false, nil
 }
