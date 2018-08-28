@@ -228,7 +228,7 @@ func createCloudOperation(op *googlespanner.CreateInstanceOperation, instanceId 
 func (s *SpannerBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, instanceID string, details brokerapi.DeprovisionDetails) error {
 	// set up client
 	co := option.WithUserAgent(models.CustomUserAgent)
-	ct := option.WithTokenSource(s.HttpConfig.TokenSource(context.Background()))
+	ct := option.WithTokenSource(s.HttpConfig.TokenSource(ctx))
 	client, err := googlespanner.NewInstanceAdminClient(ctx, co, ct)
 	if err != nil {
 		return fmt.Errorf("Error creating client: %s", err)
