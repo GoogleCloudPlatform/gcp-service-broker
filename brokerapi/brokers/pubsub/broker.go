@@ -28,7 +28,6 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"google.golang.org/api/option"
 )
 
@@ -126,14 +125,8 @@ func (b *PubSubBroker) Provision(instanceId string, details brokerapi.ProvisionD
 }
 
 // Deletes the topic associated with the given instanceID
-func (b *PubSubBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
-	topic := models.ServiceInstanceDetails{}
-	if err := db_service.DbConnection.Where("ID = ?", instanceID).First(&topic).Error; err != nil {
-		return brokerapi.ErrInstanceDoesNotExist
-	}
-
-	ctx := context.Background()
-	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
+func (b *PubSubBroker) Deprovision(ctx context.Context, topic models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(ctx))
 	service, err := googlepubsub.NewClient(ctx, b.ProjectId, ct)
 	if err != nil {
 		return fmt.Errorf("Error creating new pubsub client: %s", err)

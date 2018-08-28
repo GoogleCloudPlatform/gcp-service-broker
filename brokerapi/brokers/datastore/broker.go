@@ -15,6 +15,8 @@
 package datastore
 
 import (
+	"context"
+
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/pivotal-cf/brokerapi"
@@ -30,7 +32,7 @@ func (b *DatastoreBroker) Provision(instanceId string, details brokerapi.Provisi
 }
 
 // No-op, no service is required for Datastore
-func (b *DatastoreBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
+func (b *DatastoreBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	return nil
 }
 

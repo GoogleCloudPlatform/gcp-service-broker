@@ -22,7 +22,6 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/pivotal-cf/brokerapi"
 	googlebigquery "google.golang.org/api/bigquery/v2"
 )
@@ -95,16 +94,10 @@ func (b *BigQueryBroker) Provision(instanceId string, details brokerapi.Provisio
 
 // deletes the dataset associated with the given instanceID string
 // note that all tables in the dataset must be deleted prior to deprovisioning
-func (b *BigQueryBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
-	var err error
-	service, err := googlebigquery.New(b.HttpConfig.Client(context.Background()))
+func (b *BigQueryBroker) Deprovision(ctx context.Context, dataset models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
+	service, err := googlebigquery.New(b.HttpConfig.Client(ctx))
 	if err != nil {
 		return fmt.Errorf("Error creating BigQuery client: %s", err)
-	}
-
-	dataset := models.ServiceInstanceDetails{}
-	if err = db_service.DbConnection.Where("ID = ?", instanceID).First(&dataset).Error; err != nil {
-		return brokerapi.ErrInstanceDoesNotExist
 	}
 
 	if err = service.Datasets.Delete(b.ProjectId, dataset.Name).Do(); err != nil {

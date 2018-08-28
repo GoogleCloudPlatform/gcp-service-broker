@@ -15,6 +15,8 @@
 package api_service
 
 import (
+	"context"
+
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/pivotal-cf/brokerapi"
@@ -25,11 +27,9 @@ type ApiServiceBroker struct {
 }
 
 func (b *ApiServiceBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
-
 	return models.ServiceInstanceDetails{}, nil
 }
 
-func (b *ApiServiceBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
-
+func (b *ApiServiceBroker) Deprovision(ctx context.Context, dataset models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	return nil
 }

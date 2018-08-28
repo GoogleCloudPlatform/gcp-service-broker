@@ -15,9 +15,10 @@
 package stackdriver_profiler
 
 import (
+	"context"
+
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 )
 
@@ -31,24 +32,11 @@ func (b *StackdriverProfilerBroker) Provision(instanceId string, details brokera
 }
 
 // No-op, no service is required for the profiler
-func (b *StackdriverProfilerBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
+func (b *StackdriverProfilerBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	return nil
 }
 
 // Creates a service account with access to Stackdriver Profiler
 func (b *StackdriverProfilerBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
-	out, err := utils.SetParameter(details.RawParameters, "role", "cloudprofiler.agent")
-	if err != nil {
-		return models.ServiceBindingCredentials{}, err
-	}
-	details.RawParameters = out
-
-	// Create account
-	newBinding, err := b.AccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
-
-	if err != nil {
-		return models.ServiceBindingCredentials{}, err
-	}
-
-	return newBinding, nil
+	return b.AccountManager.CreateAccountWithRoles(bindingID, []string{"cloudprofiler.agent"})
 }
