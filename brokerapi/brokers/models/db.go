@@ -16,22 +16,14 @@ package models
 
 import (
 	"encoding/json"
-	"time"
-
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
-type ServiceBindingCredentials struct {
-	gorm.Model
+// ServiceBindingCredentials holds credentials returned to the users after
+// binding to a service.
+type ServiceBindingCredentials ServiceBindingCredentialsV1
 
-	OtherDetails string `sql:"type:text"`
-
-	ServiceId         string
-	ServiceInstanceId string
-	BindingId         string
-}
-
+// GetOtherDetails returns an unmarshaled version of the OtherDetails field
+// or panics.
 func (sbc ServiceBindingCredentials) GetOtherDetails() map[string]string {
 	var creds map[string]string
 	if err := json.Unmarshal([]byte(sbc.OtherDetails), &creds); err != nil {
@@ -40,23 +32,12 @@ func (sbc ServiceBindingCredentials) GetOtherDetails() map[string]string {
 	return creds
 }
 
-type ServiceInstanceDetails struct {
-	ID        string `gorm:"primary_key"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time
+// ServiceInstanceDetails returns an unmarshaled version of the OtherDetails field
+// or panics.
+type ServiceInstanceDetails ServiceInstanceDetailsV1
 
-	Name         string
-	Location     string
-	Url          string
-	OtherDetails string `sql:"type:text"`
-
-	ServiceId        string
-	PlanId           string
-	SpaceGuid        string
-	OrganizationGuid string
-}
-
+// GetOtherDetails returns an unmarshaled version of the OtherDetails field
+// or panics.
 func (si ServiceInstanceDetails) GetOtherDetails() map[string]string {
 	var instanceDetails map[string]string
 	// if the instance has access details saved
@@ -69,32 +50,14 @@ func (si ServiceInstanceDetails) GetOtherDetails() map[string]string {
 
 }
 
-type ProvisionRequestDetails struct {
-	gorm.Model
+// ProvisionRequestDetails holds user-defined properties passed to a call
+// to provision a service.
+type ProvisionRequestDetails ProvisionRequestDetailsV1
 
-	ServiceInstanceId string
-	// is a json.Marshal of models.ProvisionDetails
-	RequestDetails string
-}
+// Migration represents the mgirations table. It holds a monotonically
+// increasing number that gets incremented with every database schema revision.
+type Migration MigrationV1
 
-type Migration struct {
-	gorm.Model
-
-	MigrationId int
-}
-
-type CloudOperation struct {
-	gorm.Model
-
-	Name          string
-	Status        string
-	OperationType string
-	ErrorMessage  string
-	InsertTime    string
-	StartTime     string
-	TargetId      string
-	TargetLink    string
-
-	ServiceId         string
-	ServiceInstanceId string
-}
+// CloudOperation holds information about the status of Google Cloud
+// long-running operations.
+type CloudOperation CloudOperationV1

@@ -33,114 +33,43 @@ func RunMigrations(db *gorm.DB) error {
 
 	// initial migration - creates tables
 	migrations[0] = func() error {
-		if err := db.Exec(`CREATE TABLE IF NOT EXISTS service_instance_details (
-			  id varchar(255) NOT NULL DEFAULT '',
-			  created_at timestamp NULL DEFAULT NULL,
-			  updated_at timestamp NULL DEFAULT NULL,
-			  deleted_at timestamp NULL DEFAULT NULL,
-			  name varchar(255) DEFAULT NULL,
-			  location varchar(255) DEFAULT NULL,
-			  url varchar(255) DEFAULT NULL,
-			  other_details text,
-			  service_id varchar(255) DEFAULT NULL,
-			  plan_id varchar(255) DEFAULT NULL,
-			  space_guid varchar(255) DEFAULT NULL,
-			  organization_guid varchar(255) DEFAULT NULL,
-			  PRIMARY KEY (id)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8`).Error; err != nil {
-			return err
-		}
-		if err := db.Exec(`CREATE TABLE IF NOT EXISTS service_binding_credentials (
-			  id int(10) unsigned NOT NULL AUTO_INCREMENT,
-			  created_at timestamp NULL DEFAULT NULL,
-			  updated_at timestamp NULL DEFAULT NULL,
-			  deleted_at timestamp NULL DEFAULT NULL,
-			  other_details text,
-			  service_id varchar(255) DEFAULT NULL,
-			  service_instance_id varchar(255) DEFAULT NULL,
-			  binding_id varchar(255) DEFAULT NULL,
-			  PRIMARY KEY (id),
-			  KEY idx_service_binding_credentials_deleted_at (deleted_at)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8`).Error; err != nil {
-			return err
-		}
-		if err := db.Exec(`CREATE TABLE IF NOT EXISTS provision_request_details (
-			  id int(10) unsigned NOT NULL AUTO_INCREMENT,
-			  created_at timestamp NULL DEFAULT NULL,
-			  updated_at timestamp NULL DEFAULT NULL,
-			  deleted_at timestamp NULL DEFAULT NULL,
-			  service_instance_id varchar(255) DEFAULT NULL,
-			  request_details varchar(255) DEFAULT NULL,
-			  PRIMARY KEY (id),
-			  KEY idx_provision_request_details_deleted_at (deleted_at)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8`).Error; err != nil {
-			return err
-		}
-		if err := db.Exec(`CREATE TABLE IF NOT EXISTS plan_details (
-			  id varchar(255) NOT NULL DEFAULT '',
-			  created_at timestamp NULL DEFAULT NULL,
-			  updated_at timestamp NULL DEFAULT NULL,
-			  deleted_at timestamp NULL DEFAULT NULL,
-			  service_id varchar(255) DEFAULT NULL,
-			  name varchar(255) DEFAULT NULL,
-			  features text,
-			  PRIMARY KEY (id)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8`).Error; err != nil {
-			return err
-		}
-		if err := db.Exec(`CREATE TABLE IF NOT EXISTS migrations (
-			  id int(10) unsigned NOT NULL AUTO_INCREMENT,
-			  created_at timestamp NULL DEFAULT NULL,
-			  updated_at timestamp NULL DEFAULT NULL,
-			  deleted_at timestamp NULL DEFAULT NULL,
-			  migration_id int(10) DEFAULT NULL,
-			  PRIMARY KEY (id)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8`).Error; err != nil {
-			return err
-		}
-		return nil
+		return autoMigrateTables(db,
+			&models.ServiceInstanceDetailsV1{},
+			&models.ServiceBindingCredentialsV1{},
+			&models.ProvisionRequestDetailsV1{},
+			&models.PlanDetailsV1{},
+			&models.MigrationV1{})
 	}
 
 	// adds CloudOperation table
 	migrations[1] = func() error {
-		if err := db.Exec(`CREATE TABLE IF NOT EXISTS cloud_operations (
-			  id int(10) unsigned NOT NULL AUTO_INCREMENT,
-			  created_at timestamp NULL DEFAULT NULL,
-			  updated_at timestamp NULL DEFAULT NULL,
-			  deleted_at timestamp NULL DEFAULT NULL,
-			  name varchar(255) DEFAULT NULL,
-			  status varchar(255) DEFAULT NULL,
-			  operation_type varchar(255) DEFAULT NULL,
-			  error_message text,
-			  insert_time varchar(255) DEFAULT NULL,
-			  start_time varchar(255) DEFAULT NULL,
-			  target_id varchar(255) DEFAULT NULL,
-			  target_link varchar(255) DEFAULT NULL,
-			  service_id varchar(255) DEFAULT NULL,
-			  service_instance_id varchar(255) DEFAULT NULL,
-			  PRIMARY KEY (id)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8`).Error; err != nil {
+
+		if err := autoMigrateTables(db, &models.CloudOperationV1{}); err != nil {
 			return err
 		}
 
 		// copy provision request details into service instance details
-		serviceAccount := make(map[string]string)
-		if err := json.Unmarshal([]byte(models.GetServiceAccountJson()), &serviceAccount); err != nil {
-			return fmt.Errorf("Could not unmarshal service account details. %v", err)
-		}
-
 		cfg, err := utils.GetAuthedConfig()
 		if err != nil {
 			return fmt.Errorf("Error getting authorized http client: %s", err)
 		}
 
-		prs := []models.ProvisionRequestDetails{}
+		prs := []models.ProvisionRequestDetailsV1{}
 		if err := db.Find(&prs).Error; err != nil {
 			return err
 		}
 
+		if len(prs) == 0 {
+			return nil
+		}
+
+		serviceAccount := make(map[string]string)
+		if err := json.Unmarshal([]byte(models.GetServiceAccountJson()), &serviceAccount); err != nil {
+			return fmt.Errorf("Could not unmarshal service account details. %v", err)
+		}
+
 		for _, pr := range prs {
-			var si models.ServiceInstanceDetails
+			var si models.ServiceInstanceDetailsV1
 			if err := db.Where("id = ?", pr.ServiceInstanceId).First(&si).Error; err != nil {
 				return err
 			}
@@ -244,4 +173,12 @@ func RunMigrations(db *gorm.DB) error {
 		}
 	}
 	return nil
+}
+
+func autoMigrateTables(db *gorm.DB, tables ...interface{}) error {
+	if db.Dialect().GetName() == "mysql" {
+		return db.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8").AutoMigrate(tables...).Error
+	} else {
+		return db.AutoMigrate(tables...).Error
+	}
 }

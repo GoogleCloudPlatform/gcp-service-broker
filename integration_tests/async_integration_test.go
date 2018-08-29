@@ -78,11 +78,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 
 		testDb, _ := gorm.Open("sqlite3", "test.db")
-		testDb.CreateTable(models.ServiceInstanceDetails{})
-		testDb.CreateTable(models.ServiceBindingCredentials{})
-		testDb.CreateTable(models.ProvisionRequestDetails{})
-		testDb.CreateTable(models.CloudOperation{})
-
+		db_service.RunMigrations(testDb)
 		db_service.DbConnection = testDb
 
 		os.Setenv("SECURITY_USER_NAME", "username")
