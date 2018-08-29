@@ -27,16 +27,19 @@ import (
 	"google.golang.org/api/option"
 )
 
+// StorageBroker is the service-broker back-end for creating and binding to
+// Google Cloud Storage buckets.
 type StorageBroker struct {
 	broker_base.BrokerBase
 }
 
+// InstanceInformation holds the details needed to connect to a GCS instance
+// after it has been provisioned.
 type InstanceInformation struct {
 	BucketName string `json:"bucket_name"`
 }
 
-// creates a new bucket with the name given in provision details and optional location
-// (defaults to "US", for acceptable location values see: https://cloud.google.com/storage/docs/bucket-locations)
+// Provision creates a new GCS bucket from the settings in the user-provided details and service plan.
 func (b *StorageBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 
@@ -102,8 +105,8 @@ func (b *StorageBroker) Provision(instanceId string, details brokerapi.Provision
 	return i, nil
 }
 
-// Deletes the bucket associated with the given instance id
-// Note that all objects within the bucket must be deleted first
+// Deprovision deletes the bucket associated with the given instance.
+// Note that all objects within the bucket must be deleted first.
 func (b *StorageBroker) Deprovision(ctx context.Context, bucket models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	ct := option.WithTokenSource(b.HttpConfig.TokenSource(ctx))
 	storageService, err := googlestorage.NewClient(ctx, ct)
