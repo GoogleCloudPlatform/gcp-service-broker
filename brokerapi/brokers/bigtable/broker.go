@@ -23,7 +23,6 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
@@ -133,21 +132,14 @@ func (b *BigTableBroker) Provision(instanceId string, details brokerapi.Provisio
 }
 
 // Deprovision deletes the instance associated with the given instanceID string
-func (b *BigTableBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
-	var err error
-	ctx := context.Background()
-	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
+func (b *BigTableBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(ctx))
 	service, err := googlebigtable.NewInstanceAdminClient(ctx, b.ProjectId, ct)
 	if err != nil {
 		return fmt.Errorf("Error creating BigQuery client: %s", err)
 	}
 
-	instance := models.ServiceInstanceDetails{}
-	if err = db_service.DbConnection.Where("ID = ?", instanceID).First(&instance).Error; err != nil {
-		return brokerapi.ErrInstanceDoesNotExist
-	}
-
-	if err = service.DeleteInstance(ctx, instance.Name); err != nil {
+	if err := service.DeleteInstance(ctx, instance.Name); err != nil {
 		return fmt.Errorf("Error deleting dataset: %s", err)
 	}
 

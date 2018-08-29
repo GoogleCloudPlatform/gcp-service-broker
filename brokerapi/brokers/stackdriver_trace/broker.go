@@ -15,6 +15,8 @@
 package stackdriver_trace
 
 import (
+	"context"
+
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/pivotal-cf/brokerapi"
@@ -31,7 +33,7 @@ func (b *StackdriverTraceBroker) Provision(instanceId string, details brokerapi.
 }
 
 // Deprovision is a no-op call because only service accounts need to be bound/unbound for Stackdriver
-func (b *StackdriverTraceBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
+func (b *StackdriverTraceBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	return nil
 }
 

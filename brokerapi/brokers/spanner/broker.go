@@ -30,7 +30,7 @@ import (
 	instancepb "google.golang.org/genproto/googleapis/spanner/admin/instance/v1"
 )
 
-// PubSubBroker is the service-broker back-end for creating Spanner databases
+// SpannerBroker is the service-broker back-end for creating Spanner databases
 // and accounts
 type SpannerBroker struct {
 	broker_base.BrokerBase
@@ -230,18 +230,11 @@ func createCloudOperation(op *googlespanner.CreateInstanceOperation, instanceId 
 }
 
 // Deprovision deletes the instance associated with the given instanceID string
-func (s *SpannerBroker) Deprovision(instanceID string, details brokerapi.DeprovisionDetails) error {
-	var err error
-
-	instance := models.ServiceInstanceDetails{}
-	if err = db_service.DbConnection.Where("ID = ?", instanceID).First(&instance).Error; err != nil {
-		return brokerapi.ErrInstanceDoesNotExist
-	}
-
+func (s *SpannerBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	// set up client
 	co := option.WithUserAgent(models.CustomUserAgent)
-	ct := option.WithTokenSource(s.HttpConfig.TokenSource(context.Background()))
-	client, err := googlespanner.NewInstanceAdminClient(context.Background(), co, ct)
+	ct := option.WithTokenSource(s.HttpConfig.TokenSource(ctx))
+	client, err := googlespanner.NewInstanceAdminClient(ctx, co, ct)
 	if err != nil {
 		return fmt.Errorf("Error creating client: %s", err)
 	}
