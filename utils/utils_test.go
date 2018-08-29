@@ -16,6 +16,7 @@ package utils
 
 import (
 	"fmt"
+	"os"
 )
 
 func ExamplePropertyToEnv() {
@@ -59,4 +60,14 @@ func ExampleUnmarshalObjectRemainder() {
 
 	// Output: {"C":123}, <nil>
 	// {}, <nil>
+}
+
+func ExampleGetDefaultProjectId() {
+	os.Setenv("ROOT_SERVICE_ACCOUNT_JSON", `{"project_id": "my-project-123"}`)
+	defer os.Unsetenv("ROOT_SERVICE_ACCOUNT_JSON")
+
+	projectId, err := GetDefaultProjectId()
+	fmt.Printf("%s, %v\n", projectId, err)
+
+	// Output: my-project-123, <nil>
 }

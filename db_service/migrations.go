@@ -63,9 +63,9 @@ func RunMigrations(db *gorm.DB) error {
 			return nil
 		}
 
-		serviceAccount := make(map[string]string)
-		if err := json.Unmarshal([]byte(models.GetServiceAccountJson()), &serviceAccount); err != nil {
-			return fmt.Errorf("Could not unmarshal service account details. %v", err)
+		projectId, err := utils.GetDefaultProjectId()
+		if err != nil {
+			return fmt.Errorf("couldn't get Project ID for database upgrades %s", err)
 		}
 
 		for _, pr := range prs {
@@ -95,7 +95,7 @@ func RunMigrations(db *gorm.DB) error {
 					return fmt.Errorf("Error creating new CloudSQL Client: %s", err)
 				}
 				dbService := googlecloudsql.NewInstancesService(sqlService)
-				clouddb, err := dbService.Get(serviceAccount["project_id"], od["instance_name"]).Do()
+				clouddb, err := dbService.Get(projectId, od["instance_name"]).Do()
 				if err != nil {
 					return fmt.Errorf("Error getting instance from api: %s", err)
 				}

@@ -18,7 +18,6 @@ import (
 	"context"
 
 	"github.com/pivotal-cf/brokerapi"
-	"github.com/spf13/viper"
 )
 
 //go:generate counterfeiter . ServiceBrokerHelper
@@ -48,19 +47,6 @@ type ServiceAccountManager interface {
 	CreateAccountWithRoles(bindingID string, roles []string) (ServiceBindingCredentials, error)
 }
 
-type GCPCredentials struct {
-	Type                string `json:"type"`
-	ProjectId           string `json:"project_id"`
-	PrivateKeyId        string `json:"private_key_id"`
-	PrivateKey          string `json:"private_key"`
-	ClientEmail         string `json:"client_email"`
-	ClientId            string `json:"client_id"`
-	AuthUri             string `json:"auth_uri"`
-	TokenUri            string `json:"token_uri"`
-	AuthProviderCertUrl string `json:"auth_provider_x509_cert_url"`
-	ClientCertUrl       string `json:"client_x509_cert_url"`
-}
-
 // This custom user agent string is added to provision calls so that Google can track the aggregated use of this tool
 // We can better advocate for devoting resources to supporting cloud foundry and this service broker if we can show
 // good usage statistics for it, so if you feel the need to fork this repo, please leave this string in place!
@@ -83,12 +69,3 @@ const StackdriverTraceName = "google-stackdriver-trace"
 const StackdriverDebuggerName = "google-stackdriver-debugger"
 const StackdriverProfilerName = "google-stackdriver-profiler"
 const DatastoreName = "google-datastore"
-const rootSaEnvVar = "ROOT_SERVICE_ACCOUNT_JSON"
-
-func init() {
-	viper.BindEnv("google.account", rootSaEnvVar)
-}
-
-func GetServiceAccountJson() string {
-	return viper.GetString("google.account")
-}
