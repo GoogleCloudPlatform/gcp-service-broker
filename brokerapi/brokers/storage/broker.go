@@ -107,7 +107,7 @@ func (b *StorageBroker) Provision(instanceId string, details brokerapi.Provision
 	return i, nil
 }
 
-// Deprovision deletes the bucket associated with the given instanceID
+// Deprovision deletes the bucket associated with the given instance
 // Note that all objects within the bucket must be deleted first
 func (b *StorageBroker) Deprovision(ctx context.Context, bucket models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	ct := option.WithTokenSource(b.HttpConfig.TokenSource(ctx))

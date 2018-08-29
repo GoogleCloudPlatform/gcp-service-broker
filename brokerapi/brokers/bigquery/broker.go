@@ -94,8 +94,8 @@ func (b *BigQueryBroker) Provision(instanceId string, details brokerapi.Provisio
 	return i, nil
 }
 
-// Deprovision deletes the dataset associated with the given instanceID string
-// note that all tables in the dataset must be deleted prior to deprovisioning
+// Deprovision deletes the dataset associated with the given instance
+// all tables in the dataset must be deleted prior to deprovisioning
 func (b *BigQueryBroker) Deprovision(ctx context.Context, dataset models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	service, err := googlebigquery.New(b.HttpConfig.Client(ctx))
 	if err != nil {

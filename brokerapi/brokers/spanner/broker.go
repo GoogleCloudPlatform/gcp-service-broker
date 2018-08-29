@@ -229,7 +229,7 @@ func createCloudOperation(op *googlespanner.CreateInstanceOperation, instanceId 
 	return nil
 }
 
-// Deprovision deletes the instance associated with the given instanceID string
+// Deprovision deletes the Spanner instance associated with the given instance
 func (s *SpannerBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	// set up client
 	co := option.WithUserAgent(models.CustomUserAgent)
