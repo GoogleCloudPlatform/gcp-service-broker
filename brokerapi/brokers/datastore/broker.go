@@ -22,22 +22,22 @@ import (
 	"github.com/pivotal-cf/brokerapi"
 )
 
-// DatastoreBroker is the service-broker back-end for creating and binding Datastore instances
+// DatastoreBroker is the service-broker back-end for creating and binding Datastore instances.
 type DatastoreBroker struct {
 	broker_base.BrokerBase
 }
 
-// Provision is a no-op call because only service accounts need to be bound/unbound for Datastore
+// Provision is a no-op call because only service accounts need to be bound/unbound for Datastore.
 func (b *DatastoreBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	return models.ServiceInstanceDetails{}, nil
 }
 
-// Deprovision is a no-op call because only service accounts need to be bound/unbound for Datastore
+// Deprovision is a no-op call because only service accounts need to be bound/unbound for Datastore.
 func (b *DatastoreBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	return nil
 }
 
-// Bind creates a service account with access to Datastore
+// Bind creates a service account with access to Datastore.
 func (b *DatastoreBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 	return b.AccountManager.CreateAccountWithRoles(instanceID, []string{"datastore.user"})
 }

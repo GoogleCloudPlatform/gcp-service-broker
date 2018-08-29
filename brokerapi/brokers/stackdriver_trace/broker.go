@@ -22,22 +22,22 @@ import (
 	"github.com/pivotal-cf/brokerapi"
 )
 
-// StackdriverTraceBroker is the service-broker back-end for binding to Stackdriver for application request tracing
+// StackdriverTraceBroker is the service-broker back-end for binding to Stackdriver for application request tracing.
 type StackdriverTraceBroker struct {
 	broker_base.BrokerBase
 }
 
-// Provision is a no-op call because only service accounts need to be bound/unbound for Stackdriver
+// Provision is a no-op call because only service accounts need to be bound/unbound for Stackdriver.
 func (b *StackdriverTraceBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	return models.ServiceInstanceDetails{}, nil
 }
 
-// Deprovision is a no-op call because only service accounts need to be bound/unbound for Stackdriver
+// Deprovision is a no-op call because only service accounts need to be bound/unbound for Stackdriver.
 func (b *StackdriverTraceBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	return nil
 }
 
-// Bind creates a service account with access to Stackdriver Trace
+// Bind creates a service account with access to Stackdriver Trace.
 func (b *StackdriverTraceBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 	return b.AccountManager.CreateAccountWithRoles(bindingID, []string{"cloudtrace.agent"})
 }

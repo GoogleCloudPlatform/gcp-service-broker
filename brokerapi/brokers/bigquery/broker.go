@@ -26,18 +26,17 @@ import (
 	googlebigquery "google.golang.org/api/bigquery/v2"
 )
 
-// BigQueryBroker is the service-broker back-end for creating and binding BigQuery instances
+// BigQueryBroker is the service-broker back-end for creating and binding BigQuery instances.
 type BigQueryBroker struct {
 	broker_base.BrokerBase
 }
 
-// InstanceInformation holds the details needed to bind a service account to a BigQuery instance after it has been provisioned
+// InstanceInformation holds the details needed to bind a service account to a BigQuery instance after it has been provisioned.
 type InstanceInformation struct {
 	DatasetId string `json:"dataset_id"`
 }
 
-// Provision creates a new BigQuery dataset identified by the name provided in details.RawParameters.name and optional location
-// (possible values are "US" or "EU", defaults to "US")
+// Provision creates a new BigQuery dataset from the settings in the user-provided details and service plan.
 func (b *BigQueryBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 	var params map[string]string
@@ -94,8 +93,8 @@ func (b *BigQueryBroker) Provision(instanceId string, details brokerapi.Provisio
 	return i, nil
 }
 
-// Deprovision deletes the dataset associated with the given instance
-// all tables in the dataset must be deleted prior to deprovisioning
+// Deprovision deletes the dataset associated with the given instance.
+// Note: before deprovisioning you must delete all the tables in the dataset.
 func (b *BigQueryBroker) Deprovision(ctx context.Context, dataset models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	service, err := googlebigquery.New(b.HttpConfig.Client(ctx))
 	if err != nil {

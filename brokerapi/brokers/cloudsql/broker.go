@@ -35,6 +35,14 @@ import (
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 )
 
+const (
+	secondGenPricingPlan         string = "PER_USE"
+	postgresDefaultVersion       string = "POSTGRES_9_6"
+	mySqlFirstGenDefaultVersion  string = "MYSQL_5_6"
+	mySqlSecondGenDefaultVersion string = "MYSQL_5_7"
+)
+
+// CloudSQLBroker is the service-broker back-end for creating and binding CloudSQL instances.
 type CloudSQLBroker struct {
 	HttpConfig       *jwt.Config
 	ProjectId        string
@@ -43,7 +51,7 @@ type CloudSQLBroker struct {
 	SaAccountManager models.AccountManager
 }
 
-// InstanceInformation holds the details needed to bind a service account to a CloudSQL instance after it has been provisioned
+// InstanceInformation holds the details needed to bind a service account to a CloudSQL instance after it has been provisioned.
 type InstanceInformation struct {
 	InstanceName string `json:"instance_name"`
 	DatabaseName string `json:"database_name"`
@@ -53,33 +61,7 @@ type InstanceInformation struct {
 	LastMasterOperationId string `json:"last_master_operation_id"`
 }
 
-const SecondGenPricingPlan string = "PER_USE"
-const PostgresDefaultVersion string = "POSTGRES_9_6"
-const MySqlFirstGenDefaultVersion string = "MYSQL_5_6"
-const MySqlSecondGenDefaultVersion string = "MYSQL_5_7"
-
-// Creates a new CloudSQL instance
-//
-// optional custom parameters:
-//   - database_name (generated and returned in ServiceInstanceDetails.OtherDetails.DatabaseName)
-//   - instance_name (generated and returned in ServiceInstanceDetails.Name if not provided)
-//   - version (defaults to 5.6 for 1st gen mysql, 5.7 for 2nd gen mysql, 9.6 for postgres)
-//   - disk_size in GB (only for 2nd gen, defaults to 10)
-//   - region (defaults to us-central)
-//   - zone (for 2nd gen)
-//   - disk_type (for 2nd gen, defaults to ssd)
-//   - failover_replica_name (only for 2nd gen, if specified creates a failover replica, defaults to "")
-//   - maintenance_window_day (for 2nd gen only)
-//   - defaults to 1 (Sunday))
-//   - maintenance_window_hour (for 2nd gen only, defaults to 0)
-//   - backups_enabled (defaults to true)
-//   - backup_start_time (defaults to 06:00)
-//   - binlog (defaults to false for 1st gen, true for 2nd gen)
-//   - activation_policy (defaults to on demand)
-//   - replication_type (defaults to synchronous)
-//   - auto_resize (2nd gen only, defaults to false)
-//
-// for more information, see: https://cloud.google.com/sql/docs/admin-api/v1beta4/instances/insert
+// Provision creates a new CloudSQL instance from the settings in the user-provided details and service plan.
 func (b *CloudSQLBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	// validate parameters
 	var params map[string]string
@@ -119,17 +101,17 @@ func (b *CloudSQLBroker) Provision(instanceId string, details brokerapi.Provisio
 	// set default parameters or cast strings to proper values
 	if svc.Name == models.CloudsqlPostgresName {
 		if !versionOk {
-			params["version"] = PostgresDefaultVersion
+			params["version"] = postgresDefaultVersion
 		}
 	} else {
 		if !versionOk {
-			params["version"] = MySqlFirstGenDefaultVersion
+			params["version"] = mySqlFirstGenDefaultVersion
 		}
 
 		if !isFirstGen {
 			binlogEnabled = true
 			if !versionOk {
-				params["version"] = MySqlSecondGenDefaultVersion
+				params["version"] = mySqlSecondGenDefaultVersion
 			}
 		}
 		binlog, binlogOk := params["binlog"]
@@ -272,7 +254,7 @@ func createInstanceRequest(planDetails, params map[string]string) (googlecloudsq
 			},
 			DataDiskType:      params["disk_type"],
 			MaintenanceWindow: mw,
-			PricingPlan:       SecondGenPricingPlan,
+			PricingPlan:       secondGenPricingPlan,
 			ActivationPolicy:  params["activation_policy"],
 			ReplicationType:   params["replication_type"],
 			StorageAutoResize: &autoResize,
@@ -326,10 +308,10 @@ func getDiskSize(params, planDetails map[string]string) (int64, error) {
 	return int64(diskSize), nil
 }
 
-// Completes the second step in provisioning a cloudsql instance, namely, creating the db.
-// executing this "synchronously" even though technically db creation returns an op - but it's just a db call, so
-// it should be quick and not actually async.
-func (b *CloudSQLBroker) FinishProvisioning(instanceId string, params map[string]string) error {
+// finishProvisioning completes the second step in provisioning a CloudSQL instance, namely, creating the db.
+func (b *CloudSQLBroker) finishProvisioning(instanceId string, params map[string]string) error {
+	// executing this "synchronously" even though technically db creation returns an op - but it's just a db call, so
+	// it should be quick and not actually async.
 	var err error
 
 	instance := models.ServiceInstanceDetails{}
@@ -440,8 +422,9 @@ func (b *CloudSQLBroker) ensureUsernamePassword(instanceID, bindingID string, de
 	return err
 }
 
-// creates a new username, password, and set of ssl certs for the given instance
-// may be slow to return because CloudSQL operations are async. Timeout may need to be raised to 90 or 120 seconds
+// Bind creates a new username, password, and set of ssl certs for the given instance.
+// The function may be slow to return because CloudSQL operations are asyncronous.
+// The default PCF service broker timeout may need to be raised to 90 or 120 seconds to accommodate the long bind time.
 func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 
 	cloudDb := models.ServiceInstanceDetails{}
@@ -519,9 +502,7 @@ func (b *CloudSQLBroker) BuildInstanceCredentials(bindDetails models.ServiceBind
 	return b.AccountManager.BuildInstanceCredentials(bindDetails, instanceDetails)
 }
 
-// Deletes the user and invalidates the ssl certs associated with this binding
-// CloudFoundry doesn't seem to support async unbinding, so hopefully this works all the time even though technically
-// some of these operations are async
+// Unbind deletes the database user, service account and invalidates the ssl certs associated with this binding.
 func (b *CloudSQLBroker) Unbind(creds models.ServiceBindingCredentials) error {
 
 	err := b.AccountManager.DeleteCredentials(creds)
@@ -539,7 +520,7 @@ func (b *CloudSQLBroker) Unbind(creds models.ServiceBindingCredentials) error {
 	return nil
 }
 
-// gets the last operation for this instance and polls the status of it
+// PollInstance gets the last operation for this instance and checks its status.
 func (b *CloudSQLBroker) PollInstance(instanceId string) (bool, error) {
 	var instance models.ServiceInstanceDetails
 
@@ -555,13 +536,12 @@ func (b *CloudSQLBroker) PollInstance(instanceId string) (bool, error) {
 	return b.PollOperation(instance, op)
 }
 
-// Checks the status of the given CloudSQL operation and determines if it is ready to continue provisioning. If so,
-// calls the finish method and returns a bool indicating if provisioning is done or not, and any error
-// TODO(cbriant): at least rename, if not restructure, this function
-// XXX: note that for this function in particular, we are being explicit to return errors from the google api exactly
-// as we get them, because further up the stack these errors will be evaluated differently and need to be preserved
+// PollOperation checks the status of the given CloudSQL operation and determines if it is ready to continue provisioning.
+// If the operation is done it finalizes provisioning and returns true.
 func (b *CloudSQLBroker) PollOperation(instance models.ServiceInstanceDetails, op models.CloudOperation) (bool, error) {
-
+	// TODO(cbriant): at least rename, if not restructure, this function
+	// XXX: note that for this function in particular, we are being explicit to return errors from the google api exactly
+	// as we get them, because further up the stack these errors will be evaluated differently and need to be preserved
 	var err error
 
 	// create operation service
@@ -607,7 +587,7 @@ func (b *CloudSQLBroker) PollOperation(instance models.ServiceInstanceDetails, o
 		}
 
 		// XXX: return error exactly as is from google api
-		err = b.FinishProvisioning(instance.ID, pd)
+		err = b.finishProvisioning(instance.ID, pd)
 		if err != nil {
 			return false, err
 		}
@@ -617,7 +597,7 @@ func (b *CloudSQLBroker) PollOperation(instance models.ServiceInstanceDetails, o
 	return opStatus.Status == "DONE", nil
 }
 
-// loops and waits until a cloudsql operation is done, returns an error if any is encountered
+// pollOperationUntilDone loops and waits until a cloudsql operation is done, returning an error if any is encountered
 // XXX: note that for this function in particular, we are being explicit to return errors from the google api exactly
 // as we get them, because further up the stack these errors will be evaluated differently and need to be preserved
 func (b *CloudSQLBroker) pollOperationUntilDone(op *googlecloudsql.Operation, projectId string) error {
@@ -640,7 +620,7 @@ func (b *CloudSQLBroker) pollOperationUntilDone(op *googlecloudsql.Operation, pr
 	return err
 }
 
-// issue a delete call on the database instance
+// Deprovision issues a delete call on the database instance.
 func (b *CloudSQLBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	sqlService, err := googlecloudsql.New(b.HttpConfig.Client(ctx))
 	if err != nil {
@@ -716,8 +696,7 @@ func updateOperationId(instance models.ServiceInstanceDetails, operationId strin
 	return nil
 }
 
-// used during polling of async operations to determine if the workflow is a provision or deprovision flow based off the
-// type of the most recent operation
+// LastOperationWasDelete checks if the last async operation was a deletion (as opposed to a provision).
 func (b *CloudSQLBroker) LastOperationWasDelete(instanceId string) (bool, error) {
 	op, err := db_service.GetLastOperation(instanceId)
 	if err != nil {
@@ -726,11 +705,12 @@ func (b *CloudSQLBroker) LastOperationWasDelete(instanceId string) (bool, error)
 	return op.OperationType == "DELETE", nil
 }
 
-// Indicates that CloudSQL uses asynchronous provisioning
+// ProvisionsAsync indicates that CloudSQL uses asynchronous provisioning.
 func (b *CloudSQLBroker) ProvisionsAsync() bool {
 	return true
 }
 
+// DeprovisionsAsync indicates that CloudSQL uses asynchronous deprovisioning.
 func (b *CloudSQLBroker) DeprovisionsAsync() bool {
 	return true
 }

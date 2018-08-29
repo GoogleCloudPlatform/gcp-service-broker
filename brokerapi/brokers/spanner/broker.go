@@ -31,20 +31,18 @@ import (
 )
 
 // SpannerBroker is the service-broker back-end for creating Spanner databases
-// and accounts
+// and accounts.
 type SpannerBroker struct {
 	broker_base.BrokerBase
 }
 
 // InstanceInformation holds the details needed to connect to a Spanner instance
-// after it has been provisioned
+// after it has been provisioned.
 type InstanceInformation struct {
 	InstanceId string `json:"instance_id"`
 }
 
-// Provision creates a new Spanner Instance identified by the name provided in
-// details.RawParameters.name and an optional region (defaults to
-// regional-us-central1) and optional display_name
+// Provision creates a new Spanner instance from the settings in the user-provided details and service plan.
 func (s *SpannerBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 	var params map[string]string
@@ -127,7 +125,7 @@ func (s *SpannerBroker) Provision(instanceId string, details brokerapi.Provision
 	return i, nil
 }
 
-// PollInstance gets the last operation for this instance and polls its status
+// PollInstance gets the last operation for this instance and polls its status.
 func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 
 	var op models.CloudOperation
@@ -229,7 +227,7 @@ func createCloudOperation(op *googlespanner.CreateInstanceOperation, instanceId 
 	return nil
 }
 
-// Deprovision deletes the Spanner instance associated with the given instance
+// Deprovision deletes the Spanner instance associated with the given instance.
 func (s *SpannerBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
 	// set up client
 	co := option.WithUserAgent(models.CustomUserAgent)
