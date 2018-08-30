@@ -36,7 +36,7 @@ func (set StringSet) Add(str ...string) {
 // ToSlice converts the set to a slice with undefined contents order.
 func (set StringSet) ToSlice() []string {
 	out := []string{}
-	for k, _ := range set {
+	for k := range set {
 		out = append(out, k)
 	}
 

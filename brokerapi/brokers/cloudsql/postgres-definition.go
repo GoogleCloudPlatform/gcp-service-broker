@@ -128,18 +128,18 @@ func init() {
 				    }
 				]
     }`,
-		ProvisionInputVariables:     commonProvisionVariables,
-		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:          commonBindVariables,
-		BindOutputVariables:         commonBindOutputVariables,
+		ProvisionInputVariables: commonProvisionVariables,
+		DefaultRoleWhitelist:    roleWhitelist,
+		BindInputVariables:      commonBindVariables,
+		BindOutputVariables:     commonBindOutputVariables,
 		PlanVariables: []broker.BrokerVariable{
-			broker.BrokerVariable{
+			{
 				FieldName: "tier",
 				Type:      broker.JsonTypeString,
 				Details:   "A string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840",
 				Required:  true,
 			},
-			broker.BrokerVariable{
+			{
 				FieldName: "pricing_plan",
 				Type:      broker.JsonTypeString,
 				Details:   "The pricing plan",
@@ -148,7 +148,7 @@ func init() {
 				},
 				Required: true,
 			},
-			broker.BrokerVariable{
+			{
 				FieldName: "max_disk_size",
 				Type:      broker.JsonTypeString,
 				Details:   "Maximum disk size in GB (10 minimum/default)",
@@ -157,7 +157,7 @@ func init() {
 			},
 		},
 		Examples: []broker.ServiceExample{
-			broker.ServiceExample{
+			{
 				Name:        "Development Sandbox",
 				Description: "An inexpensive PostgreSQL sandbox for developing with no backups.",
 				PlanId:      "2513d4d9-684b-4c3c-add4-6404969006de",

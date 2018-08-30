@@ -58,12 +58,12 @@ func init() {
       ]
     }
 		`,
-		ProvisionInputVariables:     []broker.BrokerVariable{},
-		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
-		BindOutputVariables:         accountmanagers.ServiceAccountBindOutputVariables(),
+		ProvisionInputVariables: []broker.BrokerVariable{},
+		DefaultRoleWhitelist:    roleWhitelist,
+		BindInputVariables:      accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
+		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
 		Examples: []broker.ServiceExample{
-			broker.ServiceExample{
+			{
 				Name:            "Basic Configuration",
 				Description:     "Create an account with developer access to your ML models.",
 				PlanId:          "be7954e1-ecfb-4936-a0b6-db35e6424c7a",

@@ -68,25 +68,25 @@ func init() {
       ]
     }`,
 		ProvisionInputVariables: []broker.BrokerVariable{
-			broker.BrokerVariable{
+			{
 				FieldName: "name",
 				Type:      broker.JsonTypeString,
 				Details:   "The name of the dataset. Should match [a-z][a-z0-9\\-]+[a-z0-9]",
 				Default:   "a generated value",
 			},
-			broker.BrokerVariable{
+			{
 				FieldName: "cluster_id",
 				Type:      broker.JsonTypeString,
 				Details:   "The name of the cluster.",
 				Default:   "a generated value",
 			},
-			broker.BrokerVariable{
+			{
 				FieldName: "display_name",
 				Type:      broker.JsonTypeString,
 				Details:   "The human-readable name of the dataset.",
 				Default:   "a generated value",
 			},
-			broker.BrokerVariable{
+			{
 				FieldName: "zone",
 				Type:      broker.JsonTypeString,
 				Details:   "The zone the data will reside in.",
@@ -94,7 +94,7 @@ func init() {
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
+		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "instance_id",
@@ -103,7 +103,7 @@ func init() {
 			},
 		),
 		PlanVariables: []broker.BrokerVariable{
-			broker.BrokerVariable{
+			{
 				FieldName: "storage_type",
 				Type:      broker.JsonTypeString,
 				Details:   "Either HDD or SSD (see https://cloud.google.com/bigtable/pricing for more information)",
@@ -114,7 +114,7 @@ func init() {
 					"HDD": "HDD - Hard Disk Drive",
 				},
 			},
-			broker.BrokerVariable{
+			{
 				FieldName: "num_nodes",
 				Type:      broker.JsonTypeString,
 				Details:   "Number of Nodes, Between 3 and 30 (see https://cloud.google.com/bigtable/pricing for more information)",
@@ -123,7 +123,7 @@ func init() {
 			},
 		},
 		Examples: []broker.ServiceExample{
-			broker.ServiceExample{
+			{
 				Name:        "Basic Production Configuration",
 				Description: "Create an HDD production table and account that can manage and query the data.",
 				PlanId:      "65a49268-2c73-481e-80f3-9fde5bd5a654",

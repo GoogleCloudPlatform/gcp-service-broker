@@ -60,19 +60,19 @@ func init() {
 			]
 		}`,
 		ProvisionInputVariables: []broker.BrokerVariable{
-			broker.BrokerVariable{
+			{
 				FieldName: "name",
 				Type:      broker.JsonTypeString,
 				Details:   "The name of the instance.",
 				Default:   "a generated value",
 			},
-			broker.BrokerVariable{
+			{
 				FieldName: "display_name",
 				Type:      broker.JsonTypeString,
 				Details:   "A human-readable name for the instance.",
 				Default:   "a generated value",
 			},
-			broker.BrokerVariable{
+			{
 				FieldName: "location",
 				Type:      broker.JsonTypeString,
 				Default:   "regional-us-central1",
@@ -80,7 +80,7 @@ func init() {
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
+		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "instance_id",
@@ -89,7 +89,7 @@ func init() {
 			},
 		),
 		PlanVariables: []broker.BrokerVariable{
-			broker.BrokerVariable{
+			{
 				FieldName: "num_nodes",
 				Type:      broker.JsonTypeString,
 				Details:   "Number of Nodes, A minimum of 3 nodes is recommended for production environments. (see https://cloud.google.com/spanner/pricing for more information)",
@@ -98,7 +98,7 @@ func init() {
 			},
 		},
 		Examples: []broker.ServiceExample{
-			broker.ServiceExample{
+			{
 				Name:            "Basic Configuration",
 				Description:     "Create a sandbox environment with a database admin account",
 				PlanId:          "44828436-cfbd-47ae-b4bc-48854564347b",

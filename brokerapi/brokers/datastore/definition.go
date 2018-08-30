@@ -51,7 +51,7 @@ func init() {
 		BindInputVariables:      []broker.BrokerVariable{},
 		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
 		Examples: []broker.ServiceExample{
-			broker.ServiceExample{
+			{
 				Name:            "Basic Configuration",
 				Description:     "Creates a datastore and a user with the permission `datastore.user`.",
 				PlanId:          "05f1fb6b-b5f0-48a2-9c2b-a5f236507a97",
