@@ -15,7 +15,7 @@
 package cmd
 
 import (
-	"fmt"
+	"log"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
@@ -35,7 +35,7 @@ func init() {
 
 			var pds []*models.PlanDetailsV1
 			if err := db.Find(&pds).Error; err != nil {
-				fmt.Errorf("Could not retrieve plan details rows from db: %s", err)
+				log.Fatalf("Could not retrieve plan details rows from db: %s", err)
 			}
 
 			utils.PrettyPrintOrExit(pds)

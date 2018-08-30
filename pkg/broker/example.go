@@ -19,7 +19,7 @@ package broker
 type ServiceExample struct {
 	// Name is a human-readable name of the example.
 	Name string
-	// Descrpition is a long-form description of what this example is about.
+	// Description is a long-form description of what this example is about.
 	Description string
 	// PlanId is the plan this example will run against.
 	PlanId string

@@ -89,8 +89,8 @@ var _ = Describe("AsyncIntegrationTests", func() {
 		brokerConfig, err = config.NewBrokerConfigFromEnv()
 
 		if err != nil {
-			panic(err.Error())
 			logger.Error("error", err)
+			panic(err.Error())
 		}
 
 		instance_name = generateInstanceName(brokerConfig.ProjectId, "-")
@@ -172,6 +172,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 
 			// make sure google no longer has certs
 			certsList, err := sslService.List(brokerConfig.ProjectId, cloudsqlInstanceName).Do()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(len(certsList.Items)).To(Equal(0))
 
 			// deprovision the instance
@@ -275,6 +276,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 
 			// make sure google no longer has certs
 			certsList, err := sslService.List(brokerConfig.ProjectId, cloudsqlInstanceName).Do()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(len(certsList.Items)).To(Equal(0))
 
 			// deprovision the instance
