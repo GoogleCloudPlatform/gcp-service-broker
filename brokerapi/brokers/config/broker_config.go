@@ -15,9 +15,6 @@
 package config
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
@@ -31,44 +28,30 @@ type BrokerConfig struct {
 }
 
 func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
-	var err error
-	bc := BrokerConfig{}
-	creds, err := bc.getCredentialsFromEnv()
-
+	projectId, err := utils.GetDefaultProjectId()
 	if err != nil {
-		return &BrokerConfig{}, err
+		return nil, err
 	}
-	bc.ProjectId = creds.ProjectId
+
 	conf, err := utils.GetAuthedConfig()
 	if err != nil {
-		return &BrokerConfig{}, err
+		return nil, err
 	}
-	bc.HttpConfig = conf
-	bc.Catalog, err = bc.initCatalogFromEnv()
+
+	catalog, err := initCatalogFromEnv()
 	if err != nil {
-		return &BrokerConfig{}, err
+		return nil, err
 	}
 
-	return &bc, nil
-}
-
-// reads the service account json string from the environment variable ROOT_SERVICE_ACCOUNT_JSON, writes it to a file,
-// and then exports the file location to the environment variable GOOGLE_APPLICATION_CREDENTIALS, making it visible to
-// all google cloud apis
-func (bc *BrokerConfig) getCredentialsFromEnv() (models.GCPCredentials, error) {
-	var err error
-	g := models.GCPCredentials{}
-
-	rootCreds := models.GetServiceAccountJson()
-	if err = json.Unmarshal([]byte(rootCreds), &g); err != nil {
-		return models.GCPCredentials{}, fmt.Errorf("Error unmarshalling service account json: %s", err)
-	}
-
-	return g, nil
+	return &BrokerConfig{
+		Catalog:    catalog,
+		ProjectId:  projectId,
+		HttpConfig: conf,
+	}, nil
 }
 
 // pulls SERVICES, PLANS, and environment variables to construct catalog
-func (bc *BrokerConfig) initCatalogFromEnv() (map[string]models.Service, error) {
+func initCatalogFromEnv() (map[string]models.Service, error) {
 	serviceMap := make(map[string]models.Service)
 
 	for _, service := range broker.GetEnabledServices() {

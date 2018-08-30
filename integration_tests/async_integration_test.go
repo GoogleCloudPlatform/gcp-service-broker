@@ -40,7 +40,7 @@ import (
 	instancepb "google.golang.org/genproto/googleapis/spanner/admin/instance/v1"
 )
 
-func pollLastOrTimeout(gcpb *GCPAsyncServiceBroker, instanceId string) error {
+func pollLastOrTimeout(gcpb *GCPServiceBroker, instanceId string) error {
 	var err error
 	timeout := time.After(10 * time.Minute)
 	tick := time.Tick(30 * time.Second)
@@ -63,7 +63,7 @@ func pollLastOrTimeout(gcpb *GCPAsyncServiceBroker, instanceId string) error {
 
 var _ = Describe("AsyncIntegrationTests", func() {
 	var (
-		gcpBroker            *GCPAsyncServiceBroker
+		gcpBroker            *GCPServiceBroker
 		brokerConfig         *config.BrokerConfig
 		err                  error
 		logger               lager.Logger

@@ -43,7 +43,7 @@ import (
 
 var _ = Describe("Brokers", func() {
 	var (
-		gcpBroker                *GCPAsyncServiceBroker
+		gcpBroker                *GCPServiceBroker
 		brokerConfig             *config.BrokerConfig
 		err                      error
 		logger                   lager.Logger

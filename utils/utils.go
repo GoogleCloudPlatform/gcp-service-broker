@@ -21,20 +21,26 @@ import (
 	"strings"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/spf13/viper"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
 )
 
 const (
 	EnvironmentVarPrefix = "gsb"
+	rootSaEnvVar         = "ROOT_SERVICE_ACCOUNT_JSON"
 )
 
 var (
 	PropertyToEnvReplacer = strings.NewReplacer(".", "_", "-", "_")
 )
 
+func init() {
+	viper.BindEnv("google.account", rootSaEnvVar)
+}
+
 func GetAuthedConfig() (*jwt.Config, error) {
-	rootCreds := models.GetServiceAccountJson()
+	rootCreds := getServiceAccountJson()
 	conf, err := google.JWTConfigFromJSON([]byte(rootCreds), models.CloudPlatformScope)
 	if err != nil {
 		return nil, fmt.Errorf("Error initializing config from credentials: %s", err)
@@ -149,4 +155,21 @@ func jsonDiff(superset, subset json.RawMessage) ([]byte, error) {
 	}
 
 	return json.Marshal(remainder)
+}
+
+// GetDefaultProject gets the default project id for the service broker based
+// on the JSON Service Account key.
+func GetDefaultProjectId() (string, error) {
+	serviceAccount := make(map[string]string)
+	if err := json.Unmarshal([]byte(getServiceAccountJson()), &serviceAccount); err != nil {
+		return "", fmt.Errorf("could not unmarshal service account details. %v", err)
+	}
+
+	return serviceAccount["project_id"], nil
+}
+
+// getServiceAccountJson gets the raw JSON credentials of the Service Account
+// the service broker acts as.
+func getServiceAccountJson() string {
+	return viper.GetString("google.account")
 }
