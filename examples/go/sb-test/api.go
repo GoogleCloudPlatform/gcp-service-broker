@@ -7,13 +7,14 @@ import (
 	"net/http"
 	"os"
 
-	googlebigtable "cloud.google.com/go/bigtable"
-	"cloud.google.com/go/pubsub"
-	googlespanner "cloud.google.com/go/spanner/admin/instance/apiv1"
 	"crypto/tls"
 	"crypto/x509"
 	"database/sql"
 	"fmt"
+
+	googlebigtable "cloud.google.com/go/bigtable"
+	"cloud.google.com/go/pubsub"
+	googlespanner "cloud.google.com/go/spanner/admin/instance/apiv1"
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -119,19 +120,36 @@ func putPicture(w http.ResponseWriter, req *http.Request) {
 	object := &storage.Object{Name: "test-img"}
 
 	out, err := os.Create("/tmp/test-img.png")
+	if err != nil {
+		respond(w, http.StatusInternalServerError, fmt.Sprintf("error creating temporary file: %s", err))
+		return
+	}
 	defer out.Close()
+
 	resp, err := http.Get("https://www.cloudfoundry.org/wp-content/uploads/2015/11/CF_rabbit_Blacksmith_rgb_trans_back-269x300.png")
+	if err != nil {
+		respond(w, http.StatusInternalServerError, fmt.Sprintf("error fetching example image: %s", err))
+		return
+	}
 	defer resp.Body.Close()
+
 	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		respond(w, http.StatusInternalServerError, fmt.Sprintf("error copying image: %s", err))
+		return
+	}
 
 	file, err := os.Open("/tmp/test-img.png")
 	if err != nil {
-		println("Error opening file")
+		respond(w, http.StatusInternalServerError, fmt.Sprintf("error opening file: %s", err))
+		return
 	}
+	defer os.Remove("/tmp/test-img.png")
+
 	_, err = storageService.Objects.Insert(bucketName, object).Media(file).Do()
 	if err != nil {
-		println("error inserting object")
-		println(err.Error())
+		respond(w, http.StatusInternalServerError, fmt.Sprintf("error inserting object: %s", err))
+		return
 	}
 
 	respond(w, http.StatusOK, "success!")

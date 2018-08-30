@@ -136,7 +136,7 @@ user-defined plans.
 	bindFlag(&bindingId, "bindingid", "GUID of the binding to work on (user defined)", bindCmd, unbindCmd)
 
 	for _, sc := range []*cobra.Command{provisionCmd, bindCmd} {
-		sc.Flags().StringVarP(&parametersJson, "params", "", "{}", "JSON string of user-defined paramaters to pass to the request")
+		sc.Flags().StringVarP(&parametersJson, "params", "", "{}", "JSON string of user-defined parameters to pass to the request")
 	}
 
 	runExamplesCmd.Flags().StringVarP(&serviceName, "service-name", "", "", "name of the service to run tests for")

@@ -45,7 +45,7 @@ type InstanceInformation struct {
 }
 
 // Provision creates a new Pub/Sub topic from the settings in the user-provided details and service plan.
-// If a subscription name is supplied, the funciton will also create a subscription for the topic.
+// If a subscription name is supplied, the function will also create a subscription for the topic.
 func (b *PubSubBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 
 	var err error
@@ -85,7 +85,7 @@ func (b *PubSubBroker) Provision(instanceId string, details brokerapi.ProvisionD
 		TopicName: params["topic_name"],
 	}
 
-	if sub_name, ok := params["subscription_name"]; ok {
+	if subscriptionName, ok := params["subscription_name"]; ok {
 		var pushConfig googlepubsub.PushConfig
 		var ackDeadline = 10
 
@@ -110,7 +110,7 @@ func (b *PubSubBroker) Provision(instanceId string, details brokerapi.ProvisionD
 			AckDeadline: time.Duration(ackDeadline) * time.Second,
 		}
 
-		_, err = pubsubClient.CreateSubscription(ctx, sub_name, subsConfig)
+		_, err = pubsubClient.CreateSubscription(ctx, subscriptionName, subsConfig)
 		if err != nil {
 			return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating subscription: %s", err)
 		}

@@ -423,7 +423,7 @@ func (b *CloudSQLBroker) ensureUsernamePassword(instanceID, bindingID string, de
 }
 
 // Bind creates a new username, password, and set of ssl certs for the given instance.
-// The function may be slow to return because CloudSQL operations are asyncronous.
+// The function may be slow to return because CloudSQL operations are asynchronous.
 // The default PCF service broker timeout may need to be raised to 90 or 120 seconds to accommodate the long bind time.
 func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 
