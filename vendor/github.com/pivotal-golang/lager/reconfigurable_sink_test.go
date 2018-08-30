@@ -1,11 +1,12 @@
 package lager_test
 
 import (
-	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/lager/lagertest"
+	"github.com/pivotal-golang/lager"
+	"github.com/pivotal-golang/lager/lagertest"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("ReconfigurableSink", func() {
@@ -22,29 +23,26 @@ var _ = Describe("ReconfigurableSink", func() {
 	})
 
 	It("returns the current level", func() {
-		Expect(sink.GetMinLevel()).To(Equal(lager.INFO))
+		Ω(sink.GetMinLevel()).Should(Equal(lager.INFO))
 	})
 
 	Context("when logging above the minimum log level", func() {
-		var log lager.LogFormat
-
 		BeforeEach(func() {
-			log = lager.LogFormat{LogLevel: lager.INFO, Message: "hello world"}
-			sink.Log(log)
+			sink.Log(lager.INFO, []byte("hello world"))
 		})
 
 		It("writes to the given sink", func() {
-			Expect(testSink.Buffer().Contents()).To(MatchJSON(log.ToJSON()))
+			Ω(testSink.Buffer()).Should(gbytes.Say("hello world\n"))
 		})
 	})
 
 	Context("when logging below the minimum log level", func() {
 		BeforeEach(func() {
-			sink.Log(lager.LogFormat{LogLevel: lager.DEBUG, Message: "hello world"})
+			sink.Log(lager.DEBUG, []byte("hello world"))
 		})
 
 		It("does not write to the given writer", func() {
-			Expect(testSink.Buffer().Contents()).To(BeEmpty())
+			Ω(testSink.Buffer().Contents()).Should(BeEmpty())
 		})
 	})
 
@@ -54,13 +52,12 @@ var _ = Describe("ReconfigurableSink", func() {
 		})
 
 		It("writes logs above the new log level", func() {
-			log := lager.LogFormat{LogLevel: lager.DEBUG, Message: "hello world"}
-			sink.Log(log)
-			Expect(testSink.Buffer().Contents()).To(MatchJSON(log.ToJSON()))
+			sink.Log(lager.DEBUG, []byte("hello world"))
+			Ω(testSink.Buffer()).Should(gbytes.Say("hello world\n"))
 		})
 
 		It("returns the newly updated level", func() {
-			Expect(sink.GetMinLevel()).To(Equal(lager.DEBUG))
+			Ω(sink.GetMinLevel()).Should(Equal(lager.DEBUG))
 		})
 	})
 })
