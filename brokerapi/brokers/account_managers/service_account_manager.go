@@ -252,7 +252,7 @@ func ServiceAccountBindInputVariables(roleWhitelist []string) []broker.BrokerVar
 		The following roles are available by default but may be overridden by your operator: '%s'.`, defaultRoles)
 
 	return []broker.BrokerVariable{
-		broker.BrokerVariable{
+		{
 			Required:  true,
 			FieldName: "role",
 			Type:      broker.JsonTypeString,
@@ -264,27 +264,27 @@ func ServiceAccountBindInputVariables(roleWhitelist []string) []broker.BrokerVar
 // Variables output by all brokers that return service account info
 func ServiceAccountBindOutputVariables() []broker.BrokerVariable {
 	return []broker.BrokerVariable{
-		broker.BrokerVariable{
+		{
 			FieldName: "Email",
 			Type:      broker.JsonTypeString,
 			Details:   "Email address of the service account",
 		},
-		broker.BrokerVariable{
+		{
 			FieldName: "Name",
 			Type:      broker.JsonTypeString,
 			Details:   "The name of the service account",
 		},
-		broker.BrokerVariable{
+		{
 			FieldName: "PrivateKeyData",
 			Type:      broker.JsonTypeString,
 			Details:   "Service account private key data. Base-64 encoded JSON.",
 		},
-		broker.BrokerVariable{
+		{
 			FieldName: "ProjectId",
 			Type:      broker.JsonTypeString,
 			Details:   "ID of the project that owns the service account",
 		},
-		broker.BrokerVariable{
+		{
 			FieldName: "UniqueId",
 			Type:      broker.JsonTypeString,
 			Details:   "Unique and stable id of the service account",

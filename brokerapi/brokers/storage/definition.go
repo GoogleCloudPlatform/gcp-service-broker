@@ -68,13 +68,13 @@ func init() {
 	        ]
 	      }`,
 		ProvisionInputVariables: []broker.BrokerVariable{
-			broker.BrokerVariable{
+			{
 				FieldName: "name",
 				Type:      broker.JsonTypeString,
 				Details:   "The name of the bucket. There is a single global namespace shared by all buckets so it MUST be unique.",
 				Default:   "a generated value",
 			},
-			broker.BrokerVariable{
+			{
 				FieldName: "location",
 				Type:      broker.JsonTypeString,
 				Default:   "US",
@@ -82,7 +82,7 @@ func init() {
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
+		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "bucket_name",
@@ -92,7 +92,7 @@ func init() {
 		),
 
 		Examples: []broker.ServiceExample{
-			broker.ServiceExample{
+			{
 				Name:            "Basic Configuration",
 				Description:     "Create a nearline bucket with a service account that can create/read/delete the objects in it.",
 				PlanId:          "a42c1182-d1a0-4d40-82c1-28220518b360",

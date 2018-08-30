@@ -147,14 +147,14 @@ func GenerateDatabaseForm() Form {
 		Label:       "Database Properties",
 		Description: "Connection details for the backing database for the service broker",
 		Properties: []FormProperty{
-			FormProperty{Name: "db_host", Type: "string", Label: "Database host", Configurable: true},
-			FormProperty{Name: "db_username", Type: "string", Label: "Database username", Optional: true, Configurable: true},
-			FormProperty{Name: "db_password", Type: "secret", Label: "Database password", Optional: true, Configurable: true},
-			FormProperty{Name: "db_port", Type: "string", Label: "Database port (defaults to 3306)", Default: "3306", Configurable: true},
-			FormProperty{Name: "db_name", Type: "string", Label: "Database name", Default: "servicebroker", Configurable: true},
-			FormProperty{Name: "ca_cert", Type: "text", Label: "Server CA cert", Optional: true, Configurable: true},
-			FormProperty{Name: "client_cert", Type: "text", Label: "Client cert", Optional: true, Configurable: true},
-			FormProperty{Name: "client_key", Type: "text", Label: "Client key", Optional: true, Configurable: true},
+			{Name: "db_host", Type: "string", Label: "Database host", Configurable: true},
+			{Name: "db_username", Type: "string", Label: "Database username", Optional: true, Configurable: true},
+			{Name: "db_password", Type: "secret", Label: "Database password", Optional: true, Configurable: true},
+			{Name: "db_port", Type: "string", Label: "Database port (defaults to 3306)", Default: "3306", Configurable: true},
+			{Name: "db_name", Type: "string", Label: "Database name", Default: "servicebroker", Configurable: true},
+			{Name: "ca_cert", Type: "text", Label: "Server CA cert", Optional: true, Configurable: true},
+			{Name: "client_cert", Type: "text", Label: "Client cert", Optional: true, Configurable: true},
+			{Name: "client_key", Type: "text", Label: "Client key", Optional: true, Configurable: true},
 		},
 	}
 }
@@ -167,7 +167,7 @@ func GenerateServiceAccountForm() Form {
 		Label:       "Root Service Account",
 		Description: "Please paste in the contents of the json keyfile (un-encoded) for your service account with owner credentials",
 		Properties: []FormProperty{
-			FormProperty{Name: "root_service_account_json", Type: "text", Label: "Root Service Account JSON", Configurable: true},
+			{Name: "root_service_account_json", Type: "text", Label: "Root Service Account JSON", Configurable: true},
 		},
 	}
 }
@@ -210,28 +210,28 @@ func GenerateServicePlanForm(svc *broker.BrokerService) (Form, error) {
 		Label:       fmt.Sprintf("%s Custom Plans", displayName),
 		Optional:    true,
 		Properties: []FormProperty{
-			FormProperty{
+			{
 				Name:         "display_name",
 				Label:        "Display Name",
 				Type:         "string",
 				Description:  "Display name",
 				Configurable: true,
 			},
-			FormProperty{
+			{
 				Name:         "description",
 				Label:        "Plan description",
 				Type:         "string",
 				Description:  "Plan description",
 				Configurable: true,
 			},
-			FormProperty{
+			{
 				Name:        "service",
 				Label:       "Service",
 				Type:        "dropdown_select",
 				Description: "The service this plan is associated with",
 				Default:     entry.ID,
 				Options: []FormOption{
-					FormOption{
+					{
 						Name:  entry.ID,
 						Label: displayName,
 					},

@@ -53,31 +53,31 @@ func init() {
       ]
 	  }`,
 		ProvisionInputVariables: []broker.BrokerVariable{
-			broker.BrokerVariable{
+			{
 				FieldName: "topic_name",
 				Type:      broker.JsonTypeString,
 				Details:   "Name of the topic.",
 				Default:   "a generated value",
 			},
-			broker.BrokerVariable{
+			{
 				Required:  true,
 				FieldName: "subscription_name",
 				Type:      broker.JsonTypeString,
 				Details:   `Name of the subscription.`,
 			},
-			broker.BrokerVariable{
+			{
 				FieldName: "is_push",
 				Type:      broker.JsonTypeString,
 				Details:   `Are events handled by POSTing to a URL?`,
 				Default:   "false",
 			},
-			broker.BrokerVariable{
+			{
 				FieldName: "endpoint",
 				Type:      broker.JsonTypeString,
 				Details:   "If `is_push` == 'true', then this is the URL that will be pused to.",
 				Default:   "",
 			},
-			broker.BrokerVariable{
+			{
 				FieldName: "ack_deadline",
 				Type:      broker.JsonTypeString,
 				Details: `Value is in seconds. Max: 600
@@ -91,7 +91,7 @@ again during that time (on a best-effort basis).
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
+		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "subscription_name",
@@ -106,7 +106,7 @@ again during that time (on a best-effort basis).
 		),
 
 		Examples: []broker.ServiceExample{
-			broker.ServiceExample{
+			{
 				Name:        "Basic Configuration",
 				Description: "Create a topic and a publisher to it",
 				PlanId:      "622f4da3-8731-492a-af29-66a9146f8333",

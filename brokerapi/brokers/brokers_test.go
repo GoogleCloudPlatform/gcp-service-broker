@@ -112,7 +112,7 @@ var _ = Describe("Brokers", func() {
 			}
 		}
 
-		for k, _ := range gcpBroker.ServiceBrokerMap {
+		for k := range gcpBroker.ServiceBrokerMap {
 			async := false
 			if k == serviceNameToId[models.CloudsqlMySQLName] {
 				async = true

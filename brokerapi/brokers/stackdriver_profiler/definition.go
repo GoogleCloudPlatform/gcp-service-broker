@@ -52,7 +52,7 @@ func init() {
 		BindInputVariables:      []broker.BrokerVariable{},
 		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
 		Examples: []broker.ServiceExample{
-			broker.ServiceExample{
+			{
 				Name:            "Basic Configuration",
 				Description:     "Creates an account with the permission `cloudprofiler.agent`.",
 				PlanId:          "594627f6-35f5-462f-9074-10fb033fb18a",

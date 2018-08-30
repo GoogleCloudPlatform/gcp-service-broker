@@ -213,7 +213,7 @@ func TestBrokerService_UserDefinedPlans(t *testing.T) {
 		Name: "left-handed-smoke-sifter",
 		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "name":"lhss"}`,
 		PlanVariables: []BrokerVariable{
-			BrokerVariable{
+			{
 				Required:  true,
 				FieldName: "instances",
 				Type:      JsonTypeString,

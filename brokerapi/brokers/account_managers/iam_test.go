@@ -31,7 +31,7 @@ func TestIamMergeBindings(t *testing.T) {
 				{Role: "role-1", Members: []string{"m2"}},
 			},
 			expect: map[string][]string{
-				"role-1": []string{"m1", "m2"},
+				"role-1": {"m1", "m2"},
 			},
 		},
 		"deduplicates members": {
@@ -40,7 +40,7 @@ func TestIamMergeBindings(t *testing.T) {
 				{Role: "role-1", Members: []string{"m1"}},
 			},
 			expect: map[string][]string{
-				"role-1": []string{"m1"},
+				"role-1": {"m1"},
 			},
 		},
 		"removes roles with no members": {
@@ -55,8 +55,8 @@ func TestIamMergeBindings(t *testing.T) {
 				{Role: "role-2", Members: []string{"m1", "m3"}},
 			},
 			expect: map[string][]string{
-				"role-1": []string{"m1", "m2"},
-				"role-2": []string{"m1", "m3"},
+				"role-1": {"m1", "m2"},
+				"role-2": {"m1", "m3"},
 			},
 		},
 	}

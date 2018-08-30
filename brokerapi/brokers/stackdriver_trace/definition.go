@@ -52,7 +52,7 @@ func init() {
 		BindInputVariables:      []broker.BrokerVariable{},
 		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
 		Examples: []broker.ServiceExample{
-			broker.ServiceExample{
+			{
 				Name:            "Basic Configuration",
 				Description:     "Creates an account with the permission `cloudtrace.agent`.",
 				PlanId:          "ab6c2287-b4bc-4ff4-a36a-0575e7910164",

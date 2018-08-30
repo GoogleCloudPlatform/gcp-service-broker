@@ -56,7 +56,7 @@ func init() {
         ]
       }`,
 		ProvisionInputVariables: []broker.BrokerVariable{
-			broker.BrokerVariable{
+			{
 				FieldName: "name",
 				Type:      broker.JsonTypeString,
 				Details:   "The name of the BigQuery dataset. Must be alphanumeric (plus underscores) and must be at most 1024 characters long.",
@@ -64,7 +64,7 @@ func init() {
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:          accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
+		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "dataset_id",
@@ -73,7 +73,7 @@ func init() {
 			},
 		),
 		Examples: []broker.ServiceExample{
-			broker.ServiceExample{
+			{
 				Name:        "Basic Configuration",
 				Description: "Create a dataset and account that can manage and query the data.",
 				PlanId:      "10ff4e72-6e84-44eb-851f-bdb38a791914",
