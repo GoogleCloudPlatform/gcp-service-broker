@@ -77,7 +77,7 @@ func getAndUnmarshalInstanceDetails(instanceId string) map[string]string {
 	return instanceDetails
 }
 
-func testGenericService(brokerConfig *config.BrokerConfig, gcpBroker *GCPAsyncServiceBroker, params *genericService) {
+func testGenericService(brokerConfig *config.BrokerConfig, gcpBroker *GCPServiceBroker, params *genericService) {
 	// If the service already exists (eg, failed previous test), clean it up before the run
 	if params.serviceExistsFn != nil && params.serviceExistsFn(false) {
 		params.cleanupFn()
@@ -166,7 +166,7 @@ func testGenericService(brokerConfig *config.BrokerConfig, gcpBroker *GCPAsyncSe
 }
 
 // For services that only create a service account and bind those credentials.
-func testIamBasedService(brokerConfig *config.BrokerConfig, gcpBroker *GCPAsyncServiceBroker, params *iamService) {
+func testIamBasedService(brokerConfig *config.BrokerConfig, gcpBroker *GCPServiceBroker, params *iamService) {
 	genericServiceParams := &genericService{
 		serviceId:        params.serviceId,
 		planId:           params.planId,
@@ -203,7 +203,7 @@ func generateInstanceName(projectId string, sep string) string {
 var _ = Describe("LiveIntegrationTests", func() {
 	var (
 		brokerConfig        *config.BrokerConfig
-		gcpBroker           *GCPAsyncServiceBroker
+		gcpBroker           *GCPServiceBroker
 		err                 error
 		logger              lager.Logger
 		serviceNameToId     map[string]string = make(map[string]string)
