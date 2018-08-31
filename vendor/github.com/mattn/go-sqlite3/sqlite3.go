@@ -205,13 +205,13 @@ const (
 	SQLITE_UPDATE = C.SQLITE_UPDATE
 )
 
-// SQLiteDriver implements driver.Driver.
+// SQLiteDriver implement sql.Driver.
 type SQLiteDriver struct {
 	Extensions  []string
 	ConnectHook func(*SQLiteConn) error
 }
 
-// SQLiteConn implements driver.Conn.
+// SQLiteConn implement sql.Conn.
 type SQLiteConn struct {
 	mu          sync.Mutex
 	db          *C.sqlite3
@@ -221,12 +221,12 @@ type SQLiteConn struct {
 	aggregators []*aggInfo
 }
 
-// SQLiteTx implements driver.Tx.
+// SQLiteTx implemen sql.Tx.
 type SQLiteTx struct {
 	c *SQLiteConn
 }
 
-// SQLiteStmt implements driver.Stmt.
+// SQLiteStmt implement sql.Stmt.
 type SQLiteStmt struct {
 	mu     sync.Mutex
 	c      *SQLiteConn
@@ -236,13 +236,13 @@ type SQLiteStmt struct {
 	cls    bool
 }
 
-// SQLiteResult implements sql.Result.
+// SQLiteResult implement sql.Result.
 type SQLiteResult struct {
 	id      int64
 	changes int64
 }
 
-// SQLiteRows implements driver.Rows.
+// SQLiteRows implement sql.Rows.
 type SQLiteRows struct {
 	s        *SQLiteStmt
 	nc       int
@@ -1883,11 +1883,11 @@ func (rc *SQLiteRows) DeclTypes() []string {
 
 // Next move cursor to next.
 func (rc *SQLiteRows) Next(dest []driver.Value) error {
-	rc.s.mu.Lock()
-	defer rc.s.mu.Unlock()
 	if rc.s.closed {
 		return io.EOF
 	}
+	rc.s.mu.Lock()
+	defer rc.s.mu.Unlock()
 	rv := C.sqlite3_step(rc.s.s)
 	if rv == C.SQLITE_DONE {
 		return io.EOF

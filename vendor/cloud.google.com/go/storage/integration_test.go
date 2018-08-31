@@ -443,15 +443,6 @@ func TestIntegration_Objects(t *testing.T) {
 		if got, want := rc.CacheControl(), "public, max-age=60"; got != want {
 			t.Errorf("CacheControl (%q) = %q; want %q", obj, got, want)
 		}
-		// We just wrote these objects, so they should have a recent last-modified time.
-		lm, err := rc.LastModified()
-		now := time.Now()
-		expectedVariance := -5 * time.Minute
-		if err != nil {
-			t.Errorf("LastModified (%q): got error %v", obj, err)
-		} else if lm.Before(now.Add(expectedVariance)) || lm.After(now) {
-			t.Errorf("LastModified (%q): got %s, which not in the %v from now (%v)", obj, lm, expectedVariance, now)
-		}
 		rc.Close()
 
 		// Check early close.
@@ -2320,21 +2311,6 @@ func TestIntegration_PredefinedACLs(t *testing.T) {
 	// The composed object still retains the "private" ACL.
 	checkPrefix("Copy dest", oattrs.ACL, 0, "user", RoleOwner)
 	check("Copy dest", oattrs.ACL, 1, AllAuthenticatedUsers, RoleReader)
-}
-
-func TestIntegration_ServiceAccount(t *testing.T) {
-	ctx := context.Background()
-	client := testConfig(ctx, t)
-	defer client.Close()
-
-	s, err := client.ServiceAccount(ctx, testutil.ProjID())
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := "@gs-project-accounts.iam.gserviceaccount.com"
-	if !strings.Contains(s, want) {
-		t.Fatalf("got %v, want to contain %v", s, want)
-	}
 }
 
 type testHelper struct {

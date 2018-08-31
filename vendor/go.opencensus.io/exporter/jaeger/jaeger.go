@@ -58,11 +58,7 @@ type Options struct {
 	Password string
 
 	// ServiceName is the Jaeger service name.
-	// Deprecated: Specify Process instead.
 	ServiceName string
-
-	// Process contains the information about the exporting process.
-	Process Process
 }
 
 // NewExporter returns a trace.Exporter implementation that exports
@@ -90,16 +86,9 @@ func NewExporter(o Options) (*Exporter, error) {
 		}
 		log.Printf("Error when uploading spans to Jaeger: %v", err)
 	}
-	service := o.Process.ServiceName
-	if service == "" && o.ServiceName != "" {
-		// fallback to old service name if specified
-		service = o.ServiceName
-	} else if service == "" {
+	service := o.ServiceName
+	if service == "" {
 		service = defaultServiceName
-	}
-	tags := make([]*gen.Tag, len(o.Process.Tags))
-	for i, tag := range o.Process.Tags {
-		tags[i] = attributeToTag(tag.key, tag.value)
 	}
 	e := &Exporter{
 		endpoint:      endpoint,
@@ -107,10 +96,7 @@ func NewExporter(o Options) (*Exporter, error) {
 		client:        client,
 		username:      o.Username,
 		password:      o.Password,
-		process: &gen.Process{
-			ServiceName: service,
-			Tags:        tags,
-		},
+		service:       service,
 	}
 	bundler := bundler.NewBundler((*gen.Span)(nil), func(bundle interface{}) {
 		if err := e.upload(bundle.([]*gen.Span)); err != nil {
@@ -121,43 +107,11 @@ func NewExporter(o Options) (*Exporter, error) {
 	return e, nil
 }
 
-// Process contains the information exported to jaeger about the source
-// of the trace data.
-type Process struct {
-	// ServiceName is the Jaeger service name.
-	ServiceName string
-
-	// Tags are added to Jaeger Process exports
-	Tags []Tag
-}
-
-// Tag defines a key-value pair
-// It is limited to the possible conversions to *jaeger.Tag by attributeToTag
-type Tag struct {
-	key   string
-	value interface{}
-}
-
-// BoolTag creates a new tag of type bool, exported as jaeger.TagType_BOOL
-func BoolTag(key string, value bool) Tag {
-	return Tag{key, value}
-}
-
-// StringTag creates a new tag of type string, exported as jaeger.TagType_STRING
-func StringTag(key string, value string) Tag {
-	return Tag{key, value}
-}
-
-// Int64Tag creates a new tag of type int64, exported as jaeger.TagType_LONG
-func Int64Tag(key string, value int64) Tag {
-	return Tag{key, value}
-}
-
 // Exporter is an implementation of trace.Exporter that uploads spans to Jaeger.
 type Exporter struct {
 	endpoint      string
 	agentEndpoint string
-	process       *gen.Process
+	service       string
 	bundler       *bundler.Bundler
 	client        *agentClientUDP
 
@@ -276,8 +230,10 @@ func (e *Exporter) Flush() {
 
 func (e *Exporter) upload(spans []*gen.Span) error {
 	batch := &gen.Batch{
-		Spans:   spans,
-		Process: e.process,
+		Spans: spans,
+		Process: &gen.Process{
+			ServiceName: e.service,
+		},
 	}
 	if e.endpoint != "" {
 		return e.uploadCollector(batch)

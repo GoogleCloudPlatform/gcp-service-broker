@@ -135,7 +135,6 @@ func DialContext(ctx context.Context, target string, opts ...DialOption) (conn *
 		conns:          make(map[*addrConn]struct{}),
 		dopts:          defaultDialOptions(),
 		blockingpicker: newPickerWrapper(),
-		czData:         new(channelzData),
 	}
 	cc.retryThrottler.Store((*retryThrottler)(nil))
 	cc.ctx, cc.cancel = context.WithCancel(context.Background())
@@ -146,9 +145,9 @@ func DialContext(ctx context.Context, target string, opts ...DialOption) (conn *
 
 	if channelz.IsOn() {
 		if cc.dopts.channelzParentID != 0 {
-			cc.channelzID = channelz.RegisterChannel(&channelzChannel{cc}, cc.dopts.channelzParentID, target)
+			cc.channelzID = channelz.RegisterChannel(cc, cc.dopts.channelzParentID, target)
 		} else {
-			cc.channelzID = channelz.RegisterChannel(&channelzChannel{cc}, 0, target)
+			cc.channelzID = channelz.RegisterChannel(cc, 0, target)
 		}
 	}
 
@@ -375,8 +374,12 @@ type ClientConn struct {
 	balancerWrapper *ccBalancerWrapper
 	retryThrottler  atomic.Value
 
-	channelzID int64 // channelz unique identification number
-	czData     *channelzData
+	channelzID          int64 // channelz unique identification number
+	czmu                sync.RWMutex
+	callsStarted        int64
+	callsSucceeded      int64
+	callsFailed         int64
+	lastCallStartedTime time.Time
 }
 
 // WaitForStateChange waits until the connectivity.State of ClientConn changes from sourceState or
@@ -529,10 +532,9 @@ func (cc *ClientConn) handleSubConnStateChange(sc balancer.SubConn, s connectivi
 // Caller needs to make sure len(addrs) > 0.
 func (cc *ClientConn) newAddrConn(addrs []resolver.Address) (*addrConn, error) {
 	ac := &addrConn{
-		cc:     cc,
-		addrs:  addrs,
-		dopts:  cc.dopts,
-		czData: new(channelzData),
+		cc:    cc,
+		addrs: addrs,
+		dopts: cc.dopts,
 	}
 	ac.ctx, ac.cancel = context.WithCancel(cc.ctx)
 	// Track ac in cc. This needs to be done before any getTransport(...) is called.
@@ -562,14 +564,19 @@ func (cc *ClientConn) removeAddrConn(ac *addrConn, err error) {
 	ac.tearDown(err)
 }
 
-func (cc *ClientConn) channelzMetric() *channelz.ChannelInternalMetric {
+// ChannelzMetric returns ChannelInternalMetric of current ClientConn.
+// This is an EXPERIMENTAL API.
+func (cc *ClientConn) ChannelzMetric() *channelz.ChannelInternalMetric {
+	state := cc.GetState()
+	cc.czmu.RLock()
+	defer cc.czmu.RUnlock()
 	return &channelz.ChannelInternalMetric{
-		State:                    cc.GetState(),
+		State:                    state,
 		Target:                   cc.target,
-		CallsStarted:             atomic.LoadInt64(&cc.czData.callsStarted),
-		CallsSucceeded:           atomic.LoadInt64(&cc.czData.callsSucceeded),
-		CallsFailed:              atomic.LoadInt64(&cc.czData.callsFailed),
-		LastCallStartedTimestamp: time.Unix(0, atomic.LoadInt64(&cc.czData.lastCallStartedTime)),
+		CallsStarted:             cc.callsStarted,
+		CallsSucceeded:           cc.callsSucceeded,
+		CallsFailed:              cc.callsFailed,
+		LastCallStartedTimestamp: cc.lastCallStartedTime,
 	}
 }
 
@@ -580,16 +587,23 @@ func (cc *ClientConn) Target() string {
 }
 
 func (cc *ClientConn) incrCallsStarted() {
-	atomic.AddInt64(&cc.czData.callsStarted, 1)
-	atomic.StoreInt64(&cc.czData.lastCallStartedTime, time.Now().UnixNano())
+	cc.czmu.Lock()
+	cc.callsStarted++
+	// TODO(yuxuanli): will make this a time.Time pointer improve performance?
+	cc.lastCallStartedTime = time.Now()
+	cc.czmu.Unlock()
 }
 
 func (cc *ClientConn) incrCallsSucceeded() {
-	atomic.AddInt64(&cc.czData.callsSucceeded, 1)
+	cc.czmu.Lock()
+	cc.callsSucceeded++
+	cc.czmu.Unlock()
 }
 
 func (cc *ClientConn) incrCallsFailed() {
-	atomic.AddInt64(&cc.czData.callsFailed, 1)
+	cc.czmu.Lock()
+	cc.callsFailed++
+	cc.czmu.Unlock()
 }
 
 // connect starts to creating transport and also starts the transport monitor
@@ -808,8 +822,12 @@ type addrConn struct {
 	// negotiations must complete.
 	connectDeadline time.Time
 
-	channelzID int64 // channelz unique identification number
-	czData     *channelzData
+	channelzID          int64 // channelz unique identification number
+	czmu                sync.RWMutex
+	callsStarted        int64
+	callsSucceeded      int64
+	callsFailed         int64
+	lastCallStartedTime time.Time
 }
 
 // adjustParams updates parameters used to create transports upon
@@ -1179,27 +1197,36 @@ func (ac *addrConn) ChannelzMetric() *channelz.ChannelInternalMetric {
 	ac.mu.Lock()
 	addr := ac.curAddr.Addr
 	ac.mu.Unlock()
+	state := ac.getState()
+	ac.czmu.RLock()
+	defer ac.czmu.RUnlock()
 	return &channelz.ChannelInternalMetric{
-		State:                    ac.getState(),
+		State:                    state,
 		Target:                   addr,
-		CallsStarted:             atomic.LoadInt64(&ac.czData.callsStarted),
-		CallsSucceeded:           atomic.LoadInt64(&ac.czData.callsSucceeded),
-		CallsFailed:              atomic.LoadInt64(&ac.czData.callsFailed),
-		LastCallStartedTimestamp: time.Unix(0, atomic.LoadInt64(&ac.czData.lastCallStartedTime)),
+		CallsStarted:             ac.callsStarted,
+		CallsSucceeded:           ac.callsSucceeded,
+		CallsFailed:              ac.callsFailed,
+		LastCallStartedTimestamp: ac.lastCallStartedTime,
 	}
 }
 
 func (ac *addrConn) incrCallsStarted() {
-	atomic.AddInt64(&ac.czData.callsStarted, 1)
-	atomic.StoreInt64(&ac.czData.lastCallStartedTime, time.Now().UnixNano())
+	ac.czmu.Lock()
+	ac.callsStarted++
+	ac.lastCallStartedTime = time.Now()
+	ac.czmu.Unlock()
 }
 
 func (ac *addrConn) incrCallsSucceeded() {
-	atomic.AddInt64(&ac.czData.callsSucceeded, 1)
+	ac.czmu.Lock()
+	ac.callsSucceeded++
+	ac.czmu.Unlock()
 }
 
 func (ac *addrConn) incrCallsFailed() {
-	atomic.AddInt64(&ac.czData.callsFailed, 1)
+	ac.czmu.Lock()
+	ac.callsFailed++
+	ac.czmu.Unlock()
 }
 
 type retryThrottler struct {
@@ -1237,14 +1264,6 @@ func (rt *retryThrottler) successfulRPC() {
 	if rt.tokens > rt.max {
 		rt.tokens = rt.max
 	}
-}
-
-type channelzChannel struct {
-	cc *ClientConn
-}
-
-func (c *channelzChannel) ChannelzMetric() *channelz.ChannelInternalMetric {
-	return c.cc.channelzMetric()
 }
 
 // ErrClientConnTimeout indicates that the ClientConn cannot establish the

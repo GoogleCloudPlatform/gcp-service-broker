@@ -25,7 +25,6 @@ import (
 	"testing"
 
 	"cloud.google.com/go/cmd/go-cloud-debug-agent/internal/debug/dwarf"
-	"cloud.google.com/go/cmd/go-cloud-debug-agent/internal/debug/elf"
 )
 
 var (
@@ -138,21 +137,4 @@ func TestPCToSPOffset(t *testing.T) {
 	if count[addrSize+3*argSize] == 0 {
 		t.Errorf("expected some values at offset %d; got %v", addrSize+3*argSize, count)
 	}
-}
-
-func getData(file string) (*dwarf.Data, error) {
-	switch runtime.GOOS {
-	case "linux":
-		f, err := elf.Open(file)
-		if err != nil {
-			return nil, err
-		}
-		dwarf, err := f.DWARF()
-		if err != nil {
-			return nil, err
-		}
-		f.Close()
-		return dwarf, nil
-	}
-	panic("unimplemented DWARF for GOOS=" + runtime.GOOS)
 }

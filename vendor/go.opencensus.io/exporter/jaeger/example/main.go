@@ -30,10 +30,8 @@ func main() {
 	// Register the Jaeger exporter to be able to retrieve
 	// the collected spans.
 	exporter, err := jaeger.NewExporter(jaeger.Options{
-		Endpoint: "http://localhost:14268",
-		Process: jaeger.Process{
-			ServiceName: "trace-demo",
-		},
+		Endpoint:    "http://localhost:14268",
+		ServiceName: "trace-demo",
 	})
 	if err != nil {
 		log.Fatal(err)

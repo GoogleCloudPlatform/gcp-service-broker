@@ -5,9 +5,9 @@ import (
 	"io"
 	"time"
 
-	"code.cloudfoundry.org/lager"
 	"github.com/onsi/ginkgo/config"
 	"github.com/onsi/ginkgo/types"
+	"github.com/pivotal-golang/lager"
 )
 
 type SuiteStartSummary struct {

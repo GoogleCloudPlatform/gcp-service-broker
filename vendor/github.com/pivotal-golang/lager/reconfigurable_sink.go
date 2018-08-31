@@ -16,14 +16,14 @@ func NewReconfigurableSink(sink Sink, initialMinLogLevel LogLevel) *Reconfigurab
 	}
 }
 
-func (sink *ReconfigurableSink) Log(log LogFormat) {
+func (sink *ReconfigurableSink) Log(level LogLevel, log []byte) {
 	minLogLevel := LogLevel(atomic.LoadInt32(&sink.minLogLevel))
 
-	if log.LogLevel < minLogLevel {
+	if level < minLogLevel {
 		return
 	}
 
-	sink.sink.Log(log)
+	sink.sink.Log(level, log)
 }
 
 func (sink *ReconfigurableSink) SetMinLevel(level LogLevel) {

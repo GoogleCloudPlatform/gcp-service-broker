@@ -207,7 +207,7 @@ func NewExporter(o Options) (*Exporter, error) {
 		o.Resource = convertMonitoredResourceToPB(o.MonitoredResource)
 	}
 
-	se, err := newStatsExporter(o)
+	se, err := newStatsExporter(o, true)
 	if err != nil {
 		return nil, err
 	}
