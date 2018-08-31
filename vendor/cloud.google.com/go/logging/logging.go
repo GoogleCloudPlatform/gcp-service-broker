@@ -29,6 +29,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -716,7 +717,7 @@ func jsonValueToStructValue(v interface{}) *structpb.Value {
 // Prefer Log for most uses.
 // TODO(jba): come up with a better name (LogNow?) or eliminate.
 func (l *Logger) LogSync(ctx context.Context, e Entry) error {
-	ent, err := l.toLogEntry(e)
+	ent, err := toLogEntry(e)
 	if err != nil {
 		return err
 	}
@@ -731,7 +732,7 @@ func (l *Logger) LogSync(ctx context.Context, e Entry) error {
 
 // Log buffers the Entry for output to the logging service. It never blocks.
 func (l *Logger) Log(e Entry) {
-	ent, err := l.toLogEntry(e)
+	ent, err := toLogEntry(e)
 	if err != nil {
 		l.client.error(err)
 		return
@@ -774,7 +775,14 @@ func (l *Logger) writeLogEntries(entries []*logpb.LogEntry) {
 // (for example by calling SetFlags or SetPrefix).
 func (l *Logger) StandardLogger(s Severity) *log.Logger { return l.stdLoggers[s] }
 
-func (l *Logger) toLogEntry(e Entry) (*logpb.LogEntry, error) {
+func trunc32(i int) int32 {
+	if i > math.MaxInt32 {
+		i = math.MaxInt32
+	}
+	return int32(i)
+}
+
+func toLogEntry(e Entry) (*logpb.LogEntry, error) {
 	if e.LogName != "" {
 		return nil, errors.New("logging: Entry.LogName should be not be set when writing")
 	}
@@ -787,12 +795,7 @@ func (l *Logger) toLogEntry(e Entry) (*logpb.LogEntry, error) {
 		return nil, err
 	}
 	if e.Trace == "" && e.HTTPRequest != nil && e.HTTPRequest.Request != nil {
-		traceHeader := e.HTTPRequest.Request.Header.Get("X-Cloud-Trace-Context")
-		if traceHeader != "" {
-			// Set to a relative resource name, as described at
-			// https://cloud.google.com/appengine/docs/flexible/go/writing-application-logs.
-			e.Trace = fmt.Sprintf("%s/traces/%s", l.client.parent, traceHeader)
-		}
+		e.Trace = e.HTTPRequest.Request.Header.Get("X-Cloud-Trace-Context")
 	}
 	ent := &logpb.LogEntry{
 		Timestamp:      ts,

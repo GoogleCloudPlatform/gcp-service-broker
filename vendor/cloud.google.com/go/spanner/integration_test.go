@@ -1429,8 +1429,7 @@ func TestReadErrors(t *testing.T) {
 		t.Error(msg)
 	}
 	// Read should fail if deadline exceeded.
-	dctx, cancel := context.WithTimeout(ctx, time.Nanosecond)
-	defer cancel()
+	dctx, _ := context.WithTimeout(ctx, time.Nanosecond)
 	<-dctx.Done()
 	_, err = client.Single().ReadRow(dctx, "TestTable", Key{1}, []string{"StringValue"})
 	if msg, ok := matchError(err, codes.DeadlineExceeded, ""); !ok {

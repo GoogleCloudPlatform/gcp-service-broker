@@ -1066,12 +1066,4 @@ func setEncryptionHeaders(headers http.Header, key []byte, copySource bool) erro
 	return nil
 }
 
-// ServiceAccount fetches the email address of the given project's Google Cloud Storage service account.
-func (c *Client) ServiceAccount(ctx context.Context, projectID string) (string, error) {
-	r := c.raw.Projects.ServiceAccount.Get(projectID)
-	res, err := r.Context(ctx).Do()
-	if err != nil {
-		return "", err
-	}
-	return res.EmailAddress, nil
-}
+// TODO(jbd): Add storage.objects.watch.

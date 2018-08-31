@@ -174,7 +174,7 @@
       }
     }
   },
-  "revision": "20180629",
+  "revision": "20180713",
   "rootUrl": "https://speech.googleapis.com/",
   "schemas": {
     "LongRunningRecognizeRequest": {
