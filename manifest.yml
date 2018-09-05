@@ -23,4 +23,4 @@ applications:
     buildpack: go_buildpack
     env:
       GOPACKAGENAME: github.com/GoogleCloudPlatform/gcp-service-broker
-      GOVERSION: go1.11
+      GOVERSION: go1.10
