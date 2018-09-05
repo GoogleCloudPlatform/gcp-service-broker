@@ -51,30 +51,6 @@ func GetLastOperation(instanceId string) (models.CloudOperation, error) {
 	return op, nil
 }
 
-// CountServiceBindingCredentialsByServiceInstanceIdAndBindingId returns the total number of ServiceBindingCredentials with the given binding id and service instance id.
-func CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(serviceInstanceId, bindingId string) (int, error) {
-	var count int
-	err := DbConnection.Model(&models.ServiceBindingCredentials{}).Where("service_instance_id = ? and binding_id = ?", serviceInstanceId, bindingId).Count(&count).Error
-	return count, err
-}
-
-// CountServiceBindingCredentialsByBindingId returns the total number of ServiceBindingCredentials with the given binding id.
-func CountServiceBindingCredentialsByBindingId(bindingId string) (int, error) {
-	var count int
-	err := DbConnection.Model(&models.ServiceBindingCredentials{}).Where("binding_id = ?", bindingId).Count(&count).Error
-	return count, err
-}
-
-// CheckDeletedServiceBindingCredentialsByBindingId returns true if the ServiceBindingCredentials with the given binding id were deleted.
-func CheckDeletedServiceBindingCredentialsByBindingId(bindingId string) (bool, error) {
-	binding := models.ServiceBindingCredentials{}
-	if err := DbConnection.Unscoped().Where("binding_id = ?", bindingId).First(&binding).Error; err != nil {
-		return false, err
-	}
-
-	return binding.DeletedAt != nil, nil
-}
-
 // defaultDatastore gets the default datastore for the given default database
 // instantiated in New(). In the future, all accesses of DbConnection will be
 // done through SqlDatastore and it will become the globally shared instance.
