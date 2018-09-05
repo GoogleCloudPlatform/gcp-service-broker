@@ -22,7 +22,5 @@ applications:
     memory: 1G
     buildpack: go_buildpack
     env:
-      GO15VENDOREXPERIMENT: 1
       GOPACKAGENAME: github.com/GoogleCloudPlatform/gcp-service-broker
-      # Put your database connection info here.
-      # You can override plans here.
+      GOVERSION: go1.11
