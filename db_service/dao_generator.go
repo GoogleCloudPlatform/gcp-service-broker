@@ -209,6 +209,21 @@ func (fl fieldList) CallParams() string {
 	return strings.Join(args, ", ")
 }
 
+// ExampleArgs is like CallParams, but with the properties on the struct parent.
+// e.g. ExampleArgs(foo) would return "foo.ID, foo.PropertyA, foo.PropertyB"
+func (fl fieldList) ExampleArgs(parent string) string {
+	var exampleArgs []string
+	for _, field := range fl {
+		fieldName := snakeToProper(field.Column)
+		if fieldName == "Id" {
+			fieldName = "ID"
+		}
+		exampleArgs = append(exampleArgs, parent+"."+fieldName)
+	}
+
+	return strings.Join(exampleArgs, ", ")
+}
+
 type crudField struct {
 	Type   string
 	Column string
@@ -394,14 +409,28 @@ func newInMemoryDatastore(t *testing.T) *SqlDatastore {
 
 {{- range .Models}}
 
-func TestSqlDatastore_{{.Type}}DAO(t *testing.T) {
-	ds := newInMemoryDatastore(t)
+func create{{.Type}}Instance() ({{.PrimaryKeyType}}, models.{{.Type}}) {
 	testPk := {{.PrimaryKeyType}}(42)
 
 	instance := models.{{.Type}}{}
 	instance.ID = testPk
 {{range $k, $v := .ExampleFields}}	instance.{{$k}} = {{ printf "%#v" $v}}
 {{end}}
+
+	return testPk, instance
+}
+
+func ensure{{.Type}}FieldsMatch(t *testing.T, expected, actual *models.{{.Type}}) {
+	{{range $k, $v := .ExampleFields}}
+	if expected.{{$k}} != actual.{{$k}} {
+		t.Errorf("Expected field {{$k}} to be %#v, got %#v", expected.{{$k}}, actual.{{$k}})
+	}
+	{{end}}
+}
+
+func TestSqlDatastore_{{.Type}}DAO(t *testing.T) {
+	ds := newInMemoryDatastore(t)
+	testPk, instance := create{{.Type}}Instance()
 
 	// on startup, there should be no objects to find or delete
 	if count, err := ds.{{funcName "Count" .Type .PrimaryKeyField}}(testPk); count != 0 || err != nil {
@@ -442,11 +471,7 @@ func TestSqlDatastore_{{.Type}}DAO(t *testing.T) {
 	}
 
 	// Ensure non-gorm fields were deserialized correctly
-{{range $k, $v := .ExampleFields}}
-	if instance.{{$k}} != ret.{{$k}} {
-		t.Errorf("Expected field {{$k}} to be %#v, got %#v", instance.{{$k}}, ret.{{$k}})
-	}
-{{end}}
+	ensure{{.Type}}FieldsMatch(t, &instance, ret)
 
 	// we should be able to update the item and it will have a new updated time
 	if err := ds.{{funcName "Save" .Type}}(ret); err != nil {
@@ -484,6 +509,98 @@ func TestSqlDatastore_{{.Type}}DAO(t *testing.T) {
 		t.Errorf("Expected ErrRecordNotFound after delete but got %v", err)
 	}
 }
+
+{{- $type := .Type}}{{ $pk := .PrimaryKeyField }}
+{{ range $idx, $key := .Keys -}}
+{{ $fn := (print "Get" $type $key.FuncName) -}}
+func TestSqlDatastore_{{$fn}}(t *testing.T) {
+	ds := newInMemoryDatastore(t)
+	_, instance := create{{$type}}Instance()
+
+	if _, err := ds.{{$fn}}({{$key.ExampleArgs "instance"}}); err != gorm.ErrRecordNotFound {
+		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
+	}
+
+	beforeCreation := time.Now()
+	if err := ds.{{funcName "Create" $type}}(&instance); err != nil {
+		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
+	}
+	afterCreation := time.Now()
+
+	// after creation we should be able to get the item
+	ret, err := ds.{{$fn}}({{$key.ExampleArgs "instance"}})
+	if err != nil {
+		t.Errorf("Expected no error trying to get saved item, got: %v", err)
+	}
+
+	if ret.CreatedAt.Before(beforeCreation) || ret.CreatedAt.After(afterCreation) {
+		t.Errorf("Expected creation time to be between  %v and %v got %v", beforeCreation, afterCreation, ret.CreatedAt)
+	}
+
+	if !ret.UpdatedAt.Equal(ret.CreatedAt) {
+		t.Errorf("Expected initial update time to equal creation time, but got update: %v, create: %v", ret.UpdatedAt, ret.CreatedAt)
+	}
+
+	// Ensure non-gorm fields were deserialized correctly
+	ensure{{$type}}FieldsMatch(t, &instance, ret)
+}
+
+{{ $fn := (print "CheckDeleted" $type $key.FuncName) -}}
+func TestSqlDatastore_{{$fn}}(t *testing.T) {
+	ds := newInMemoryDatastore(t)
+	_, instance := create{{$type}}Instance()
+
+	if _, err := ds.{{$fn}}({{$key.ExampleArgs "instance"}}); err != gorm.ErrRecordNotFound {
+		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
+	}
+
+	if err := ds.{{funcName "Create" $type}}(&instance); err != nil {
+		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
+	}
+
+	deleted, err := ds.{{$fn}}({{$key.ExampleArgs "instance"}})
+	if err != nil {
+		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
+	}
+	if deleted {
+		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
+	}
+
+	if err := ds.{{funcName "Delete" $type}}(&instance); err != nil {
+		t.Errorf("Expected no error when deleting by pk got: %v", err)
+	}
+
+	// we should be able to see that it was soft-deleted
+	deleted, err = ds.{{$fn}}({{$key.ExampleArgs "instance"}})
+	if err != nil {
+		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
+	}
+	if !deleted {
+		t.Errorf("Expected a deleted instance to marked as deleted but it was not.")
+	}
+}
+
+{{ $fn := (print "Count" $type $key.FuncName) -}}
+func TestSqlDatastore_{{$fn}}(t *testing.T) {
+	ds := newInMemoryDatastore(t)
+	_, instance := create{{$type}}Instance()
+
+	// on startup, there should be no objects to find or delete
+	if count, err := ds.{{$fn}}({{$key.ExampleArgs "instance"}}); count != 0 || err != nil {
+		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
+	}
+
+	if err := ds.{{funcName "Create" $type}}(&instance); err != nil {
+		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
+	}
+
+	// on startup, there should be no objects to find or delete
+	if count, err := ds.{{$fn}}({{$key.ExampleArgs "instance"}}); count != 1 || err != nil {
+		t.Fatalf("Expected count to be 1 and error to be nil got count: %d, err: %v", count, err)
+	}
+}
+{{ end }}
+
 
 {{- end }}
 `))
