@@ -41,18 +41,7 @@ func New(logger lager.Logger) *gorm.DB {
 	return DbConnection
 }
 
-// gets the count of service instances by instance id (i.e. 0 or 1)
-// Deprecated, use CountServiceInstanceDetailsById instead
-func GetServiceInstanceCount(instanceID string) (int, error) {
-	return CountServiceInstanceDetailsById(instanceID)
-}
-
-// soft deletes an instance from the database by instance id
-// Deprecated, use DeleteServiceInstanceDetailsById
-func SoftDeleteInstanceDetails(instanceID string) error {
-	return DeleteServiceInstanceDetailsById(instanceID)
-}
-
+// GetLastOperation gets the most recently created cloud operation for a given service instance id.
 func GetLastOperation(instanceId string) (models.CloudOperation, error) {
 	var op models.CloudOperation
 
@@ -60,6 +49,30 @@ func GetLastOperation(instanceId string) (models.CloudOperation, error) {
 		return models.CloudOperation{}, err
 	}
 	return op, nil
+}
+
+// CountServiceBindingCredentialsByServiceInstanceIdAndBindingId returns the total number of ServiceBindingCredentials with the given binding id and service instance id.
+func CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(serviceInstanceId, bindingId string) (int, error) {
+	var count int
+	err := DbConnection.Model(&models.ServiceBindingCredentials{}).Where("service_instance_id = ? and binding_id = ?", serviceInstanceId, bindingId).Count(&count).Error
+	return count, err
+}
+
+// CountServiceBindingCredentialsByBindingId returns the total number of ServiceBindingCredentials with the given binding id.
+func CountServiceBindingCredentialsByBindingId(bindingId string) (int, error) {
+	var count int
+	err := DbConnection.Model(&models.ServiceBindingCredentials{}).Where("binding_id = ?", bindingId).Count(&count).Error
+	return count, err
+}
+
+// CheckDeletedServiceBindingCredentialsByBindingId returns true if the ServiceBindingCredentials with the given binding id were deleted.
+func CheckDeletedServiceBindingCredentialsByBindingId(bindingId string) (bool, error) {
+	binding := models.ServiceBindingCredentials{}
+	if err := DbConnection.Unscoped().Where("binding_id = ?", bindingId).First(&binding).Error; err != nil {
+		return false, err
+	}
+
+	return binding.DeletedAt != nil, nil
 }
 
 // defaultDatastore gets the default datastore for the given default database

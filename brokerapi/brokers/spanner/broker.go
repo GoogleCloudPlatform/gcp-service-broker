@@ -128,15 +128,12 @@ func (s *SpannerBroker) Provision(instanceId string, details brokerapi.Provision
 // PollInstance gets the last operation for this instance and polls its status.
 func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 
-	var op models.CloudOperation
-
-	if err := db_service.DbConnection.Where("service_instance_id = ?", instanceId).First(&op).Error; err != nil {
+	op, err := db_service.GetCloudOperationByServiceInstanceId(instanceId)
+	if err != nil {
 		return false, fmt.Errorf("Could not locate CloudOperation in database: %s", err)
 	}
 
-	var instance models.ServiceInstanceDetails
-
-	if err := db_service.DbConnection.Where("id = ?", instanceId).First(&instance).Error; err != nil {
+	if _, err := db_service.GetServiceInstanceDetailsById(instanceId); err != nil {
 		return false, brokerapi.ErrInstanceDoesNotExist
 	}
 
@@ -168,7 +165,7 @@ func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 		op.Status = "FAILED"
 		op.ErrorMessage = err.Error()
 
-		if dberr := db_service.DbConnection.Save(&op).Error; dberr != nil {
+		if dberr := db_service.SaveCloudOperation(op); dberr != nil {
 			return false, fmt.Errorf(`Error saving operation details to database: %s.`, dberr)
 		}
 
@@ -176,7 +173,7 @@ func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 	} else if spannerInstance == nil && err == nil && !done {
 		op.Status = string(instancepb.Instance_STATE_UNSPECIFIED)
 
-		if err = db_service.DbConnection.Save(&op).Error; err != nil {
+		if err := db_service.SaveCloudOperation(op); err != nil {
 			return false, fmt.Errorf(`Error saving operation details to database: %s.`, err)
 		}
 
@@ -184,7 +181,7 @@ func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 	} else if spannerInstance != nil && err == nil && done {
 		op.Status = spannerInstance.State.String()
 
-		if err = db_service.DbConnection.Save(&op).Error; err != nil {
+		if err := db_service.SaveCloudOperation(op); err != nil {
 			return false, fmt.Errorf(`Error saving operation details to database: %s.`, err)
 		}
 
@@ -221,7 +218,7 @@ func createCloudOperation(op *googlespanner.CreateInstanceOperation, instanceId 
 		ServiceInstanceId: instanceId,
 	}
 
-	if err = db_service.DbConnection.Create(&currentState).Error; err != nil {
+	if err = db_service.CreateCloudOperation(&currentState); err != nil {
 		return fmt.Errorf("Error saving operation details to database: %s. Services relying on async deprovisioning will not be able to complete deprovisioning", err)
 	}
 	return nil

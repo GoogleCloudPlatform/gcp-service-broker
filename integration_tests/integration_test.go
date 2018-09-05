@@ -70,11 +70,8 @@ type iamService struct {
 }
 
 func getAndUnmarshalInstanceDetails(instanceId string) map[string]string {
-	var instanceRecord models.ServiceInstanceDetails
-	db_service.DbConnection.Find(&instanceRecord).Where("id = ?", instanceId)
-	var instanceDetails map[string]string
-	json.Unmarshal([]byte(instanceRecord.OtherDetails), &instanceDetails)
-	return instanceDetails
+	instanceRecord, _ := db_service.GetServiceInstanceDetailsById(instanceId)
+	return instanceRecord.GetOtherDetails()
 }
 
 func testGenericService(brokerConfig *config.BrokerConfig, gcpBroker *GCPServiceBroker, params *genericService) {
@@ -94,8 +91,8 @@ func testGenericService(brokerConfig *config.BrokerConfig, gcpBroker *GCPService
 	Expect(err).ToNot(HaveOccurred())
 
 	// Provision is registered in the database
-	var count int
-	db_service.DbConnection.Model(&models.ServiceInstanceDetails{}).Where("id = ?", params.instanceId).Count(&count)
+	count, err := db_service.CountServiceInstanceDetailsById(params.instanceId)
+	Expect(err).NotTo(HaveOccurred())
 	Expect(count).To(Equal(1))
 
 	if params.serviceExistsFn != nil {
@@ -114,7 +111,8 @@ func testGenericService(brokerConfig *config.BrokerConfig, gcpBroker *GCPService
 	creds, err := gcpBroker.Bind(context.Background(), params.instanceId, params.bindingId, bindDetails)
 	Expect(err).ToNot(HaveOccurred())
 
-	db_service.DbConnection.Model(&models.ServiceBindingCredentials{}).Where("binding_id = ?", params.bindingId).Count(&count)
+	count, err = db_service.CountServiceBindingCredentialsByBindingId(params.bindingId)
+	Expect(err).ToNot(HaveOccurred())
 	Expect(count).To(Equal(1))
 
 	iamService, err := iam.New(brokerConfig.HttpConfig.Client(context.Background()))
@@ -134,11 +132,9 @@ func testGenericService(brokerConfig *config.BrokerConfig, gcpBroker *GCPService
 	err = gcpBroker.Unbind(context.Background(), params.instanceId, params.bindingId, unbindDetails)
 	Expect(err).ToNot(HaveOccurred())
 
-	binding := models.ServiceBindingCredentials{}
-	if err := db_service.DbConnection.Unscoped().Where("binding_id = ?", params.bindingId).First(&binding).Error; err != nil {
-		panic("error checking for binding details: " + err.Error())
-	}
-	Expect(binding.DeletedAt).NotTo(BeNil())
+	deleted, err := db_service.CheckDeletedServiceBindingCredentialsByBindingId(params.bindingId)
+	Expect(err).ToNot(HaveOccurred())
+	Expect(deleted).To(BeTrue())
 
 	// wait because services don't always show as deleted right away
 	time.Sleep(5 * time.Second)
@@ -154,11 +150,10 @@ func testGenericService(brokerConfig *config.BrokerConfig, gcpBroker *GCPService
 	}
 	_, err = gcpBroker.Deprovision(context.Background(), params.instanceId, deprovisionDetails, true)
 	Expect(err).ToNot(HaveOccurred())
-	instance := models.ServiceInstanceDetails{}
-	if err := db_service.DbConnection.Unscoped().Where("ID = ?", params.instanceId).First(&instance).Error; err != nil {
-		panic("error checking for service instance details: " + err.Error())
-	}
-	Expect(instance.DeletedAt).NotTo(BeNil())
+
+	deleted, err = db_service.CheckDeletedServiceInstanceDetailsById(params.instanceId)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(deleted).To(BeTrue())
 
 	if params.serviceExistsFn != nil {
 		Expect(params.serviceExistsFn(false)).To(BeFalse())
@@ -216,10 +211,7 @@ var _ = Describe("LiveIntegrationTests", func() {
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 
 		testDb, _ := gorm.Open("sqlite3", "test.db")
-		testDb.CreateTable(models.ServiceInstanceDetails{})
-		testDb.CreateTable(models.ServiceBindingCredentials{})
-		testDb.CreateTable(models.ProvisionRequestDetails{})
-
+		db_service.RunMigrations(testDb)
 		db_service.DbConnection = testDb
 
 		os.Setenv("SECURITY_USER_NAME", "username")

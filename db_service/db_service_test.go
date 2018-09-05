@@ -29,6 +29,7 @@ var _ = Describe("DbService", func() {
 	var (
 		err    error
 		logger lager.Logger
+		testDb *gorm.DB
 	)
 
 	BeforeEach(func() {
@@ -37,33 +38,31 @@ var _ = Describe("DbService", func() {
 
 		fakes.SetUpTestServices()
 
-		testDb, err := gorm.Open("sqlite3", "test.sqlite3")
+		testDb, err = gorm.Open("sqlite3", "test.sqlite3")
 		Expect(err).NotTo(HaveOccurred())
-
-		DbConnection = testDb
 	})
 
 	Describe("Migrations", func() {
 		It("should create a migrations table", func() {
-			err = RunMigrations(DbConnection)
+			err = RunMigrations(testDb)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(DbConnection.HasTable("migrations")).To(BeTrue())
+			Expect(testDb.HasTable("migrations")).To(BeTrue())
 		})
 
 		It("should apply all migrations when run", func() {
-			err = RunMigrations(DbConnection)
+			err = RunMigrations(testDb)
 			Expect(err).NotTo(HaveOccurred())
 			var storedMigrations []models.Migration
-			err = DbConnection.Order("id desc").Find(&storedMigrations).Error
+			err = testDb.Order("id desc").Find(&storedMigrations).Error
 			Expect(err).NotTo(HaveOccurred())
 			lastMigrationNumber := storedMigrations[0].MigrationId
 			Expect(lastMigrationNumber).To(Equal(2))
 		})
 
 		It("should be able to run migrations multiple times", func() {
-			err = RunMigrations(DbConnection)
+			err = RunMigrations(testDb)
 			Expect(err).NotTo(HaveOccurred())
-			err = RunMigrations(DbConnection)
+			err = RunMigrations(testDb)
 			Expect(err).NotTo(HaveOccurred())
 		})
 

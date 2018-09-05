@@ -314,10 +314,11 @@ func (b *CloudSQLBroker) finishProvisioning(instanceId string, params map[string
 	// it should be quick and not actually async.
 	var err error
 
-	instance := models.ServiceInstanceDetails{}
-	if err = db_service.DbConnection.Where("ID = ?", instanceId).First(&instance).Error; err != nil {
+	instancePtr, err := db_service.GetServiceInstanceDetailsById(instanceId)
+	if err != nil {
 		return brokerapi.ErrInstanceDoesNotExist
 	}
+	instance := *instancePtr
 
 	sqlService, err := googlecloudsql.New(b.HttpConfig.Client(context.Background()))
 	if err != nil {
@@ -383,7 +384,7 @@ func (b *CloudSQLBroker) finishProvisioning(instanceId string, params map[string
 	b.Logger.Debug(fmt.Sprintf("UPDATING OTHER DETAILS FROM %v to %s", instance.OtherDetails, string(otherDetails)))
 	instance.OtherDetails = string(otherDetails)
 
-	if err = db_service.DbConnection.Save(&instance).Error; err != nil {
+	if err = db_service.SaveServiceInstanceDetails(&instance); err != nil {
 		return fmt.Errorf(`Error saving instance details to database: %s. WARNING: this instance cannot be deprovisioned through cf.
 		Please contact your operator for cleanup`, err)
 	}
@@ -427,10 +428,11 @@ func (b *CloudSQLBroker) ensureUsernamePassword(instanceID, bindingID string, de
 // The default PCF service broker timeout may need to be raised to 90 or 120 seconds to accommodate the long bind time.
 func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 
-	cloudDb := models.ServiceInstanceDetails{}
-	if err := db_service.DbConnection.Where("ID = ?", instanceID).First(&cloudDb).Error; err != nil {
+	cloudDbPtr, err := db_service.GetServiceInstanceDetailsById(instanceID)
+	if err != nil {
 		return models.ServiceBindingCredentials{}, brokerapi.ErrInstanceDoesNotExist
 	}
+	cloudDb := *cloudDbPtr
 
 	if err := b.ensureUsernamePassword(instanceID, bindingID, &details); err != nil {
 		return models.ServiceBindingCredentials{}, err
@@ -522,9 +524,9 @@ func (b *CloudSQLBroker) Unbind(creds models.ServiceBindingCredentials) error {
 
 // PollInstance gets the last operation for this instance and checks its status.
 func (b *CloudSQLBroker) PollInstance(instanceId string) (bool, error) {
-	var instance models.ServiceInstanceDetails
 
-	if err := db_service.DbConnection.Where("id = ?", instanceId).First(&instance).Error; err != nil {
+	instance, err := db_service.GetServiceInstanceDetailsById(instanceId)
+	if err != nil {
 		return false, brokerapi.ErrInstanceDoesNotExist
 	}
 
@@ -533,7 +535,7 @@ func (b *CloudSQLBroker) PollInstance(instanceId string) (bool, error) {
 		return false, err
 	}
 
-	return b.PollOperation(instance, op)
+	return b.PollOperation(*instance, op)
 }
 
 // PollOperation checks the status of the given CloudSQL operation and determines if it is ready to continue provisioning.
@@ -569,13 +571,13 @@ func (b *CloudSQLBroker) PollOperation(instance models.ServiceInstanceDetails, o
 			opErr = ""
 		}
 		op.ErrorMessage = string(opErr)
-		db_service.DbConnection.Save(&op)
+		db_service.SaveCloudOperation(&op)
 	}
 
 	// we were provisioning and finished the first step
 	if opStatus.Status == "DONE" && op.OperationType == "CREATE" {
-		pr := models.ProvisionRequestDetails{}
-		if err = db_service.DbConnection.Where("service_instance_id = ?", instance.ID).First(&pr).Error; err != nil {
+		pr, err := db_service.GetProvisionRequestDetailsByServiceInstanceId(instance.ID)
+		if err != nil {
 			return false, brokerapi.ErrInstanceDoesNotExist
 		}
 
@@ -670,7 +672,7 @@ func createCloudOperation(op *googlecloudsql.Operation, instanceId string, servi
 		ServiceInstanceId: instanceId,
 	}
 
-	if err = db_service.DbConnection.Create(&currentState).Error; err != nil {
+	if err = db_service.CreateCloudOperation(&currentState); err != nil {
 		return fmt.Errorf("Error saving operation details to database: %s. Services relying on async deprovisioning will not be able to complete deprovisioning", err)
 	}
 	return nil
@@ -689,7 +691,7 @@ func updateOperationId(instance models.ServiceInstanceDetails, operationId strin
 	}
 	instance.OtherDetails = string(otherDetails)
 
-	if err = db_service.DbConnection.Save(&instance).Error; err != nil {
+	if err = db_service.SaveServiceInstanceDetails(&instance); err != nil {
 		return fmt.Errorf(`Error saving instance details to database: %s. WARNING: this instance cannot be deprovisioned through cf.
 		Please contact your operator for cleanup`, err)
 	}
