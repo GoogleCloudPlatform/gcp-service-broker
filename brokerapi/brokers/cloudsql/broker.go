@@ -314,11 +314,10 @@ func (b *CloudSQLBroker) finishProvisioning(instanceId string, params map[string
 	// it should be quick and not actually async.
 	var err error
 
-	instancePtr, err := db_service.GetServiceInstanceDetailsById(instanceId)
+	instance, err := db_service.GetServiceInstanceDetailsById(instanceId)
 	if err != nil {
 		return brokerapi.ErrInstanceDoesNotExist
 	}
-	instance := *instancePtr
 
 	sqlService, err := googlecloudsql.New(b.HttpConfig.Client(context.Background()))
 	if err != nil {
@@ -352,7 +351,7 @@ func (b *CloudSQLBroker) finishProvisioning(instanceId string, params map[string
 	}
 
 	// Save new operation id and database name to instance data
-	if err = updateOperationId(instance, op.Name); err != nil {
+	if err = updateOperationId(*instance, op.Name); err != nil {
 		return err
 	}
 
@@ -384,7 +383,7 @@ func (b *CloudSQLBroker) finishProvisioning(instanceId string, params map[string
 	b.Logger.Debug(fmt.Sprintf("UPDATING OTHER DETAILS FROM %v to %s", instance.OtherDetails, string(otherDetails)))
 	instance.OtherDetails = string(otherDetails)
 
-	if err = db_service.SaveServiceInstanceDetails(&instance); err != nil {
+	if err = db_service.SaveServiceInstanceDetails(instance); err != nil {
 		return fmt.Errorf(`Error saving instance details to database: %s. WARNING: this instance cannot be deprovisioned through cf.
 		Please contact your operator for cleanup`, err)
 	}
@@ -428,17 +427,16 @@ func (b *CloudSQLBroker) ensureUsernamePassword(instanceID, bindingID string, de
 // The default PCF service broker timeout may need to be raised to 90 or 120 seconds to accommodate the long bind time.
 func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 
-	cloudDbPtr, err := db_service.GetServiceInstanceDetailsById(instanceID)
+	cloudDb, err := db_service.GetServiceInstanceDetailsById(instanceID)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, brokerapi.ErrInstanceDoesNotExist
 	}
-	cloudDb := *cloudDbPtr
 
 	if err := b.ensureUsernamePassword(instanceID, bindingID, &details); err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}
 
-	sqlCredBytes, err := b.AccountManager.CreateCredentials(instanceID, bindingID, details, cloudDb)
+	sqlCredBytes, err := b.AccountManager.CreateCredentials(instanceID, bindingID, details, *cloudDb)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}
@@ -524,23 +522,17 @@ func (b *CloudSQLBroker) Unbind(creds models.ServiceBindingCredentials) error {
 
 // PollInstance gets the last operation for this instance and checks its status.
 func (b *CloudSQLBroker) PollInstance(instanceId string) (bool, error) {
-
-	instance, err := db_service.GetServiceInstanceDetailsById(instanceId)
-	if err != nil {
-		return false, brokerapi.ErrInstanceDoesNotExist
-	}
-
 	op, err := db_service.GetLastOperation(instanceId)
 	if err != nil {
 		return false, err
 	}
 
-	return b.PollOperation(*instance, op)
+	return b.pollOperation(instanceId, op)
 }
 
-// PollOperation checks the status of the given CloudSQL operation and determines if it is ready to continue provisioning.
+// pollOperation checks the status of the given CloudSQL operation and determines if it is ready to continue provisioning.
 // If the operation is done it finalizes provisioning and returns true.
-func (b *CloudSQLBroker) PollOperation(instance models.ServiceInstanceDetails, op models.CloudOperation) (bool, error) {
+func (b *CloudSQLBroker) pollOperation(instanceId string, op models.CloudOperation) (bool, error) {
 	// TODO(cbriant): at least rename, if not restructure, this function
 	// XXX: note that for this function in particular, we are being explicit to return errors from the google api exactly
 	// as we get them, because further up the stack these errors will be evaluated differently and need to be preserved
@@ -576,7 +568,7 @@ func (b *CloudSQLBroker) PollOperation(instance models.ServiceInstanceDetails, o
 
 	// we were provisioning and finished the first step
 	if opStatus.Status == "DONE" && op.OperationType == "CREATE" {
-		pr, err := db_service.GetProvisionRequestDetailsByServiceInstanceId(instance.ID)
+		pr, err := db_service.GetProvisionRequestDetailsByServiceInstanceId(instanceId)
 		if err != nil {
 			return false, brokerapi.ErrInstanceDoesNotExist
 		}
@@ -589,7 +581,7 @@ func (b *CloudSQLBroker) PollOperation(instance models.ServiceInstanceDetails, o
 		}
 
 		// XXX: return error exactly as is from google api
-		err = b.finishProvisioning(instance.ID, pd)
+		err = b.finishProvisioning(instanceId, pd)
 		if err != nil {
 			return false, err
 		}
@@ -604,22 +596,25 @@ func (b *CloudSQLBroker) PollOperation(instance models.ServiceInstanceDetails, o
 // as we get them, because further up the stack these errors will be evaluated differently and need to be preserved
 func (b *CloudSQLBroker) pollOperationUntilDone(op *googlecloudsql.Operation, projectId string) error {
 	sqlService, err := googlecloudsql.New(b.HttpConfig.Client(context.Background()))
+	if err != nil {
+		return err
+	}
+
 	opsService := googlecloudsql.NewOperationsService(sqlService)
-	done := false
-	for done == false {
+	for {
 		status, err := opsService.Get(projectId, op.Name).Do()
 		if err != nil {
 			return err
 		}
+
 		if status.EndTime != "" {
-			done = true
-		} else {
-			println("still waiting for it to be done")
+			return nil
 		}
+
+		b.Logger.Info("waiting for operation", lager.Data{"operation": op.Name, "status": status.Status})
 		// sleep for 1 second between polling so we don't hit our rate limit
 		time.Sleep(time.Second)
 	}
-	return err
 }
 
 // Deprovision issues a delete call on the database instance.
