@@ -168,7 +168,7 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 	})
 
 	// make sure that instance hasn't already been provisioned
-	count, err := db_service.GetServiceInstanceCount(instanceID)
+	count, err := db_service.CountServiceInstanceDetailsById(instanceID)
 	if err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("Database error checking for existing instance: %s", err)
 	}
@@ -204,7 +204,7 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 	instanceDetails.SpaceGuid = details.SpaceGUID
 	instanceDetails.OrganizationGuid = details.OrganizationGUID
 
-	err = db_service.DbConnection.Create(&instanceDetails).Error
+	err = db_service.CreateServiceInstanceDetails(&instanceDetails)
 	if err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("Error saving instance details to database: %s. WARNING: this instance cannot be deprovisioned through cf. Contact your operator for cleanup", err)
 	}
@@ -214,7 +214,7 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 		ServiceInstanceId: instanceID,
 		RequestDetails:    string(details.RawParameters),
 	}
-	if err = db_service.DbConnection.Create(&pr).Error; err != nil {
+	if err = db_service.CreateProvisionRequestDetails(&pr); err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("Error saving provision request details to database: %s. Services relying on async provisioning will not be able to complete provisioning", err)
 	}
 
@@ -235,7 +235,7 @@ func (gcpBroker *GCPServiceBroker) Deprovision(ctx context.Context, instanceID s
 	response := brokerapi.DeprovisionServiceSpec{IsAsync: deprovisionIsAsync}
 
 	// make sure that instance actually exists
-	count, err := db_service.GetServiceInstanceCount(instanceID)
+	count, err := db_service.CountServiceInstanceDetailsById(instanceID)
 	if err != nil {
 		return response, fmt.Errorf("Database error checking for existing instance: %s", err)
 	}
@@ -262,7 +262,7 @@ func (gcpBroker *GCPServiceBroker) Deprovision(ctx context.Context, instanceID s
 	// if it's an async operation we can't delete from the db until we're sure delete succeeded, so this is
 	// handled internally to LastOperation
 	if !deprovisionIsAsync {
-		err = db_service.SoftDeleteInstanceDetails(instanceID)
+		err = db_service.DeleteServiceInstanceDetailsById(instanceID)
 		if err != nil {
 			return response, fmt.Errorf("Error deleting instance details from database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup", err)
 		}
@@ -284,8 +284,8 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 
 	// check for existing binding
 
-	var count int
-	if err := db_service.DbConnection.Model(&models.ServiceBindingCredentials{}).Where("service_instance_id = ? and binding_id = ?", instanceID, bindingID).Count(&count).Error; err != nil {
+	count, err := db_service.CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(instanceID, bindingID)
+	if err != nil {
 		return brokerapi.Binding{}, fmt.Errorf("Error checking for existing binding: %s", err)
 	}
 	if count > 0 {
@@ -303,7 +303,7 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 	newCreds.BindingId = bindingID
 	newCreds.ServiceId = details.ServiceID
 
-	if err := db_service.DbConnection.Create(&newCreds).Error; err != nil {
+	if err := db_service.CreateServiceBindingCredentials(&newCreds); err != nil {
 		return brokerapi.Binding{}, fmt.Errorf("Error saving credentials to database: %s. WARNING: these credentials cannot be unbound through cf. Please contact your operator for cleanup",
 			err)
 	}
@@ -334,18 +334,18 @@ func (gcpBroker *GCPServiceBroker) Unbind(ctx context.Context, instanceID, bindi
 	service := gcpBroker.ServiceBrokerMap[details.ServiceID]
 
 	// validate existence of binding
-	existingBinding := models.ServiceBindingCredentials{}
-	if err := db_service.DbConnection.Where("service_instance_id = ? and binding_id = ?", instanceID, bindingID).Find(&existingBinding).Error; err != nil {
+	existingBinding, err := db_service.GetServiceBindingCredentialsByServiceInstanceIdAndBindingId(instanceID, bindingID)
+	if err != nil {
 		return brokerapi.ErrBindingDoesNotExist
 	}
 
 	// remove binding from Google
-	if err := service.Unbind(existingBinding); err != nil {
+	if err := service.Unbind(*existingBinding); err != nil {
 		return err
 	}
 
 	// remove binding from database
-	if err := db_service.DeleteServiceBindingCredentials(&existingBinding); err != nil {
+	if err := db_service.DeleteServiceBindingCredentials(existingBinding); err != nil {
 		return fmt.Errorf("Error soft-deleting credentials from database: %s. WARNING: these credentials will remain visible in cf. Contact your operator for cleanup", err)
 	}
 
@@ -399,7 +399,7 @@ func (gcpBroker *GCPServiceBroker) lastOperationAsync(instanceId string, service
 		return brokerapi.LastOperation{State: brokerapi.Succeeded}, fmt.Errorf("Couldn't determine if provision or deprovision flow, this may leave orphaned resources, contact your operator for cleanup")
 	}
 	if deleteFlow {
-		err = db_service.SoftDeleteInstanceDetails(instanceId)
+		err = db_service.DeleteServiceInstanceDetailsById(instanceId)
 		if err != nil {
 			return brokerapi.LastOperation{State: brokerapi.Succeeded}, fmt.Errorf("Error deleting instance details from database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup", err)
 		}

@@ -41,18 +41,7 @@ func New(logger lager.Logger) *gorm.DB {
 	return DbConnection
 }
 
-// gets the count of service instances by instance id (i.e. 0 or 1)
-// Deprecated, use CountServiceInstanceDetailsById instead
-func GetServiceInstanceCount(instanceID string) (int, error) {
-	return CountServiceInstanceDetailsById(instanceID)
-}
-
-// soft deletes an instance from the database by instance id
-// Deprecated, use DeleteServiceInstanceDetailsById
-func SoftDeleteInstanceDetails(instanceID string) error {
-	return DeleteServiceInstanceDetailsById(instanceID)
-}
-
+// GetLastOperation gets the most recently created cloud operation for a given service instance id.
 func GetLastOperation(instanceId string) (models.CloudOperation, error) {
 	var op models.CloudOperation
 

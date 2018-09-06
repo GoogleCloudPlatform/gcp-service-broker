@@ -477,7 +477,7 @@ var _ = Describe("AccountManagers", func() {
 
 		Context("when bind is called on a cloudsql broker after provision", func() {
 			It("should call the account manager create account in google method", func() {
-				db_service.DbConnection.Save(&models.ServiceInstanceDetails{ID: "foo"})
+				db_service.SaveServiceInstanceDetails(&models.ServiceInstanceDetails{ID: "foo"})
 				_, err = iamStyleBroker.Bind("foo", "bar", brokerapi.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
@@ -493,7 +493,7 @@ var _ = Describe("AccountManagers", func() {
 
 		Context("when bind is called on a cloudsql broker with no username/password after provision", func() {
 			It("should return a generated username and password", func() {
-				db_service.DbConnection.Create(&models.ServiceInstanceDetails{ID: "foo"})
+				db_service.CreateServiceInstanceDetails(&models.ServiceInstanceDetails{ID: "foo"})
 
 				_, err := cloudsqlBroker.Bind("foo", "bar", brokerapi.BindDetails{})
 
