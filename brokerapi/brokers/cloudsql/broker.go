@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 
 	"context"
@@ -80,6 +81,7 @@ func (b *CloudSQLBroker) Provision(instanceId string, details brokerapi.Provisio
 	}
 
 	instanceName := params["instance_name"]
+	labels := utils.ExtractDefaultLabels(instanceId, details)
 
 	// set default parameters or cast strings to proper values
 	firstGenTiers := []string{"d0", "d1", "d2", "d4", "d8", "d16", "d32"}
@@ -148,9 +150,9 @@ func (b *CloudSQLBroker) Provision(instanceId string, details brokerapi.Provisio
 	var di googlecloudsql.DatabaseInstance
 	if isFirstGen {
 
-		di = createFirstGenRequest(plan.ServiceProperties, params)
+		di = createFirstGenRequest(plan.ServiceProperties, params, labels)
 	} else {
-		di, err = createInstanceRequest(plan.ServiceProperties, params)
+		di, err = createInstanceRequest(plan.ServiceProperties, params, labels)
 		if err != nil {
 			return models.ServiceInstanceDetails{}, err
 		}
@@ -204,7 +206,7 @@ func (b *CloudSQLBroker) Provision(instanceId string, details brokerapi.Provisio
 
 }
 
-func createFirstGenRequest(planDetails, params map[string]string) googlecloudsql.DatabaseInstance {
+func createFirstGenRequest(planDetails, params, labels map[string]string) googlecloudsql.DatabaseInstance {
 	// set up instance resource
 	return googlecloudsql.DatabaseInstance{
 		Settings: &googlecloudsql.Settings{
@@ -216,13 +218,14 @@ func createFirstGenRequest(planDetails, params map[string]string) googlecloudsql
 			PricingPlan:      planDetails["pricing_plan"],
 			ActivationPolicy: params["activation_policy"],
 			ReplicationType:  params["replication_type"],
+			UserLabels:       labels,
 		},
 		DatabaseVersion: params["version"],
 		Region:          params["region"],
 	}
 }
 
-func createInstanceRequest(planDetails, params map[string]string) (googlecloudsql.DatabaseInstance, error) {
+func createInstanceRequest(planDetails, params, labels map[string]string) (googlecloudsql.DatabaseInstance, error) {
 	var err error
 
 	diskSize, err := getDiskSize(params, planDetails)
@@ -258,6 +261,7 @@ func createInstanceRequest(planDetails, params map[string]string) (googlecloudsq
 			ActivationPolicy:  params["activation_policy"],
 			ReplicationType:   params["replication_type"],
 			StorageAutoResize: &autoResize,
+			UserLabels:        labels,
 		},
 		DatabaseVersion: params["version"],
 		Region:          params["region"],
