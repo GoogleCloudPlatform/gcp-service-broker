@@ -100,6 +100,22 @@ func main() {
 				"RequestDetails":    `{"some":["json","blob","here"]}`,
 			},
 		},
+		{
+			Type:            "PlanDetailsV1",
+			PrimaryKeyType:  "string",
+			PrimaryKeyField: "id",
+			Keys: []fieldList{
+				{
+					{Type: "string", Column: "service_id"},
+					{Type: "string", Column: "name"},
+				},
+			},
+			ExampleFields: map[string]interface{}{
+				"ServiceId": "2222-2222-2222",
+				"Name":      "service-name",
+				"Features":  `{"some":["json","blob","here"]}`,
+			},
+		},
 	}
 
 	for i, model := range models {

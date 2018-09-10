@@ -387,3 +387,95 @@ func (ds *SqlDatastore) CheckDeletedProvisionRequestDetailsById(id uint) (bool, 
 }
 
 
+
+
+// CountPlanDetailsV1ByServiceIdAndName gets the count of PlanDetailsV1 by its key (serviceId, name) in the datastore (0 or 1)
+func CountPlanDetailsV1ByServiceIdAndName(serviceId string, name string) (int, error) { return defaultDatastore().CountPlanDetailsV1ByServiceIdAndName(serviceId, name) }
+func (ds *SqlDatastore) CountPlanDetailsV1ByServiceIdAndName(serviceId string, name string) (int, error) {
+	var count int
+	err := ds.db.Model(&models.PlanDetailsV1{}).Where("service_id = ? AND name = ?", serviceId, name).Count(&count).Error
+	return count, err
+}
+
+
+// CountPlanDetailsV1ById gets the count of PlanDetailsV1 by its key (id) in the datastore (0 or 1)
+func CountPlanDetailsV1ById(id string) (int, error) { return defaultDatastore().CountPlanDetailsV1ById(id) }
+func (ds *SqlDatastore) CountPlanDetailsV1ById(id string) (int, error) {
+	var count int
+	err := ds.db.Model(&models.PlanDetailsV1{}).Where("id = ?", id).Count(&count).Error
+	return count, err
+}
+
+// CreatePlanDetailsV1 creates a new record in the database and assigns it a primary key.
+func CreatePlanDetailsV1(object *models.PlanDetailsV1) error { return defaultDatastore().CreatePlanDetailsV1(object) }
+func (ds *SqlDatastore) CreatePlanDetailsV1(object *models.PlanDetailsV1) error {
+	return ds.db.Create(object).Error
+}
+
+// SavePlanDetailsV1 updates an existing record in the database.
+func SavePlanDetailsV1(object *models.PlanDetailsV1) error { return defaultDatastore().SavePlanDetailsV1(object) }
+func (ds *SqlDatastore) SavePlanDetailsV1(object *models.PlanDetailsV1) error {
+	return ds.db.Save(object).Error
+}
+
+// DeletePlanDetailsV1ById soft-deletes the record.
+func DeletePlanDetailsV1ById(pk string) error { return defaultDatastore().DeletePlanDetailsV1ById(pk) }
+func (ds *SqlDatastore) DeletePlanDetailsV1ById(pk string) error {
+	record, err := ds.GetPlanDetailsV1ById(pk)
+	if err != nil {
+		return err
+	}
+
+	return ds.DeletePlanDetailsV1(record)
+}
+
+// DeletePlanDetailsV1 soft-deletes the record.
+func DeletePlanDetailsV1(record *models.PlanDetailsV1) error { return defaultDatastore().DeletePlanDetailsV1(record) }
+func (ds *SqlDatastore) DeletePlanDetailsV1(record *models.PlanDetailsV1) error {
+	return ds.db.Delete(record).Error
+}
+// GetPlanDetailsV1ByServiceIdAndName gets an instance of PlanDetailsV1 by its key (serviceId, name).
+func GetPlanDetailsV1ByServiceIdAndName(serviceId string, name string) (*models.PlanDetailsV1, error) { return defaultDatastore().GetPlanDetailsV1ByServiceIdAndName(serviceId, name) }
+func (ds *SqlDatastore) GetPlanDetailsV1ByServiceIdAndName(serviceId string, name string) (*models.PlanDetailsV1, error) {
+	record := models.PlanDetailsV1{}
+	if err := ds.db.Where("service_id = ? AND name = ?", serviceId, name).First(&record).Error; err != nil {
+		return nil, err
+	}
+
+	return &record, nil
+}
+
+// CheckDeletedPlanDetailsV1ByServiceIdAndName checks to see if an instance of PlanDetailsV1 was soft deleted by its key (serviceId, name).
+func CheckDeletedPlanDetailsV1ByServiceIdAndName(serviceId string, name string) (bool, error) { return defaultDatastore().CheckDeletedPlanDetailsV1ByServiceIdAndName(serviceId, name) }
+func (ds *SqlDatastore) CheckDeletedPlanDetailsV1ByServiceIdAndName(serviceId string, name string) (bool, error) {
+	record := models.PlanDetailsV1{}
+	if err := ds.db.Unscoped().Where("service_id = ? AND name = ?", serviceId, name).First(&record).Error; err != nil {
+		return false, err
+	}
+
+	return record.DeletedAt != nil, nil
+}
+
+// GetPlanDetailsV1ById gets an instance of PlanDetailsV1 by its key (id).
+func GetPlanDetailsV1ById(id string) (*models.PlanDetailsV1, error) { return defaultDatastore().GetPlanDetailsV1ById(id) }
+func (ds *SqlDatastore) GetPlanDetailsV1ById(id string) (*models.PlanDetailsV1, error) {
+	record := models.PlanDetailsV1{}
+	if err := ds.db.Where("id = ?", id).First(&record).Error; err != nil {
+		return nil, err
+	}
+
+	return &record, nil
+}
+
+// CheckDeletedPlanDetailsV1ById checks to see if an instance of PlanDetailsV1 was soft deleted by its key (id).
+func CheckDeletedPlanDetailsV1ById(id string) (bool, error) { return defaultDatastore().CheckDeletedPlanDetailsV1ById(id) }
+func (ds *SqlDatastore) CheckDeletedPlanDetailsV1ById(id string) (bool, error) {
+	record := models.PlanDetailsV1{}
+	if err := ds.db.Unscoped().Where("id = ?", id).First(&record).Error; err != nil {
+		return false, err
+	}
+
+	return record.DeletedAt != nil, nil
+}
+
+
