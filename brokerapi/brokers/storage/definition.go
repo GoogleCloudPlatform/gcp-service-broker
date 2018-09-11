@@ -28,13 +28,13 @@ func init() {
 		Name: "google-storage",
 		DefaultServiceDefinition: `{
 	        "id": "b9e4332e-b42b-4680-bda5-ea1506797474",
-	        "description": "A Powerful, Simple and Cost Effective Object Storage Service",
+	        "description": "Unified object storage for developers and enterprises. Cloud Storage allows world-wide storage and retrieval of any amount of data at any time.",
 	        "name": "google-storage",
 	        "bindable": true,
 	        "plan_updateable": false,
 	        "metadata": {
 	          "displayName": "Google Cloud Storage",
-	          "longDescription": "A Powerful, Simple and Cost Effective Object Storage Service",
+	          "longDescription": "Unified object storage for developers and enterprises. Cloud Storage allows world-wide storage and retrieval of any amount of data at any time.",
 	          "documentationUrl": "https://cloud.google.com/storage/docs/overview",
 	          "supportUrl": "https://cloud.google.com/support/",
 	          "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/storage.svg"
@@ -46,7 +46,7 @@ func init() {
 	            "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
 	            "name": "standard",
 	            "display_name": "Standard",
-	            "description": "Standard storage class",
+	            "description": "Standard storage class.",
 	            "service_properties": {"storage_class": "STANDARD"}
 	          },
 	          {
@@ -54,7 +54,7 @@ func init() {
 	            "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
 	            "name": "nearline",
 	            "display_name": "Nearline",
-	            "description": "Nearline storage class",
+	            "description": "Nearline storage class.",
 	            "service_properties": {"storage_class": "NEARLINE"}
 	          },
 	          {
@@ -62,7 +62,7 @@ func init() {
 	            "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
 	            "name": "reduced-availability",
 	            "display_name": "Durable Reduced Availability",
-	            "description": "Durable Reduced Availability storage class",
+	            "description": "Durable Reduced Availability storage class.",
 	            "service_properties": {"storage_class": "DURABLE_REDUCED_AVAILABILITY"}
 	          }
 	        ]
@@ -78,7 +78,7 @@ func init() {
 				FieldName: "location",
 				Type:      broker.JsonTypeString,
 				Default:   "US",
-				Details:   `The location of the bucket. Object data for objects in the bucket resides in physical storage within this region. See https://cloud.google.com/storage/docs/bucket-locations`,
+				Details:   `The location of the bucket. Object data for objects in the bucket resides in physical storage within this region. See: https://cloud.google.com/storage/docs/bucket-locations`,
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,

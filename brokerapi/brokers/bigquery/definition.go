@@ -32,13 +32,13 @@ func init() {
 		Name: "google-bigquery",
 		DefaultServiceDefinition: `{
         "id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
-        "description": "A fast, economical and fully managed data warehouse for large-scale data analytics",
+        "description": "A fast, economical and fully managed data warehouse for large-scale data analytics.",
         "name": "google-bigquery",
         "bindable": true,
         "plan_updateable": false,
         "metadata": {
           "displayName": "Google BigQuery",
-          "longDescription": "A fast, economical and fully managed data warehouse for large-scale data analytics",
+          "longDescription": "A fast, economical and fully managed data warehouse for large-scale data analytics.",
           "documentationUrl": "https://cloud.google.com/bigquery/docs/",
           "supportUrl": "https://cloud.google.com/support/",
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigquery.svg"
@@ -50,7 +50,7 @@ func init() {
             "service_id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
             "name": "default",
             "display_name": "Default",
-            "description": "BigQuery default plan",
+            "description": "BigQuery default plan.",
             "service_properties": {}
           }
         ]

@@ -42,7 +42,7 @@ func init() {
           "service_id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
           "name": "default",
           "display_name": "Default",
-          "description": "Stackdriver Trace default plan",
+          "description": "Stackdriver Trace default plan.",
           "service_properties": {}
         }
       ]

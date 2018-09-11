@@ -248,7 +248,7 @@ type ServiceAccountInfo struct {
 func ServiceAccountBindInputVariables(roleWhitelist []string) []broker.BrokerVariable {
 	defaultRoles := strings.Join(roleWhitelist, "', '")
 	details := fmt.Sprintf(`The role for the account without the "roles/" prefix.
-		See https://cloud.google.com/iam/docs/understanding-roles for more details.
+		See: https://cloud.google.com/iam/docs/understanding-roles for more details.
 		The following roles are available by default but may be overridden by your operator: '%s'.`, defaultRoles)
 
 	return []broker.BrokerVariable{
@@ -267,12 +267,12 @@ func ServiceAccountBindOutputVariables() []broker.BrokerVariable {
 		{
 			FieldName: "Email",
 			Type:      broker.JsonTypeString,
-			Details:   "Email address of the service account",
+			Details:   "Email address of the service account.",
 		},
 		{
 			FieldName: "Name",
 			Type:      broker.JsonTypeString,
-			Details:   "The name of the service account",
+			Details:   "The name of the service account.",
 		},
 		{
 			FieldName: "PrivateKeyData",
@@ -282,12 +282,12 @@ func ServiceAccountBindOutputVariables() []broker.BrokerVariable {
 		{
 			FieldName: "ProjectId",
 			Type:      broker.JsonTypeString,
-			Details:   "ID of the project that owns the service account",
+			Details:   "ID of the project that owns the service account.",
 		},
 		{
 			FieldName: "UniqueId",
 			Type:      broker.JsonTypeString,
-			Details:   "Unique and stable id of the service account",
+			Details:   "Unique and stable id of the service account.",
 		},
 	}
 }

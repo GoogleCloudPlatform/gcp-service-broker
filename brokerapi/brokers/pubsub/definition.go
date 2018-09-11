@@ -29,13 +29,13 @@ func init() {
 		Name: "google-pubsub",
 		DefaultServiceDefinition: `{
       "id": "628629e3-79f5-4255-b981-d14c6c7856be",
-      "description": "A global service for real-time and reliable messaging and streaming data",
+      "description": "A global service for real-time and reliable messaging and streaming data.",
       "name": "google-pubsub",
       "bindable": true,
       "plan_updateable": false,
       "metadata": {
         "displayName": "Google PubSub",
-        "longDescription": "A global service for real-time and reliable messaging and streaming data",
+        "longDescription": "A global service for real-time and reliable messaging and streaming data.",
         "documentationUrl": "https://cloud.google.com/pubsub/docs/",
         "supportUrl": "https://cloud.google.com/support/",
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/pubsub.svg"
@@ -47,7 +47,7 @@ func init() {
           "service_id": "628629e3-79f5-4255-b981-d14c6c7856be",
           "name": "default",
           "display_name": "Default",
-          "description": "PubSub Default plan",
+          "description": "PubSub Default plan.",
           "service_properties": {}
         }
       ]
@@ -96,19 +96,19 @@ again during that time (on a best-effort basis).
 			broker.BrokerVariable{
 				FieldName: "subscription_name",
 				Type:      broker.JsonTypeString,
-				Details:   "Name of the subscription",
+				Details:   "Name of the subscription.",
 			},
 			broker.BrokerVariable{
 				FieldName: "topic_name",
 				Type:      broker.JsonTypeString,
-				Details:   "Name of the topic",
+				Details:   "Name of the topic.",
 			},
 		),
 
 		Examples: []broker.ServiceExample{
 			{
 				Name:        "Basic Configuration",
-				Description: "Create a topic and a publisher to it",
+				Description: "Create a topic and a publisher to it.",
 				PlanId:      "622f4da3-8731-492a-af29-66a9146f8333",
 				ProvisionParams: map[string]interface{}{
 					"topic_name":        "example_topic",

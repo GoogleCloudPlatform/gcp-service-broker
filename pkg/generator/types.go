@@ -36,7 +36,7 @@ func CatalogDocumentation() string {
 		out += "\n"
 	}
 
-	return out
+	return cleanMdOutput(out)
 }
 
 // generateServiceDocumentation creates documentation for a single catalog entry
@@ -96,19 +96,19 @@ func generateServiceDocumentation(svc *broker.BrokerService) string {
 ## Plans
 
 {{ if eq (len .catalog.Plans) 0 }}_No plans available_{{ end }}
-{{ range $i, $plan := .catalog.Plans }}  * **{{ $plan.Name }}**: {{ $plan.Description }} - Plan ID: {{code $plan.ID}}
+{{ range $i, $plan := .catalog.Plans }}  * **{{ $plan.Name }}**: {{ $plan.Description }} Plan ID: {{code $plan.ID}}.
 {{ end }}
 
 ## Examples
 
-{{ if eq (len .examples) 0 }}_No examples_{{ end }}
+{{ if eq (len .examples) 0 }}_No examples._{{ end }}
 
 {{ range $i, $example := .examples}}
 ### {{ $example.Name }}
 
 
 {{ $example.Description }}
-Uses plan: {{ code $example.PlanId }}
+Uses plan: {{ code $example.PlanId }}.
 
 **Provision**
 
@@ -150,7 +150,7 @@ func varNotes(variable broker.BrokerVariable) string {
 	out += cleanLines(variable.Details)
 
 	if variable.Default != nil {
-		out += fmt.Sprintf(" Default: `%v`", variable.Default)
+		out += fmt.Sprintf(" Default: `%v`.", variable.Default)
 	}
 
 	return out
