@@ -30,13 +30,13 @@ func init() {
 		Name: "google-bigtable",
 		DefaultServiceDefinition: `{
       "id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe",
-      "description": "A high performance NoSQL database service for large analytical and operational workloads",
+      "description": "A high performance NoSQL database service for large analytical and operational workloads.",
       "name": "google-bigtable",
       "bindable": true,
       "plan_updateable": false,
       "metadata": {
           "displayName": "Google Bigtable",
-          "longDescription": "A high performance NoSQL database service for large analytical and operational workloads",
+          "longDescription": "A high performance NoSQL database service for large analytical and operational workloads.",
           "documentationUrl": "https://cloud.google.com/bigtable/",
           "supportUrl": "https://cloud.google.com/support/",
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigtable.svg"
@@ -46,7 +46,7 @@ func init() {
         {
           "id": "65a49268-2c73-481e-80f3-9fde5bd5a654",
           "name": "three-node-production-hdd",
-          "description": "BigTable HDD basic production plan: Approx: Reads: 1,500 QPS @ 200ms or Writes: 30,000 QPS @ 50ms or Scans: 540 MB/s, 24TB storage",
+          "description": "BigTable HDD basic production plan: Approx: Reads: 1,500 QPS @ 200ms or Writes: 30,000 QPS @ 50ms or Scans: 540 MB/s, 24TB storage.",
           "service_properties": {
             "storage_type": "HDD",
             "num_nodes": "3"
@@ -57,7 +57,7 @@ func init() {
         {
           "id": "38aa0e65-624b-4998-9c06-f9194b56d252",
           "name": "three-node-production-ssd",
-          "description": "BigTable SSD basic production plan: Approx: Reads: 30,000 QPS @ 6ms or Writes: 30,000 QPS @ 6ms or Scans: 660 MB/s, 7.5TB storage",
+          "description": "BigTable SSD basic production plan: Approx: Reads: 30,000 QPS @ 6ms or Writes: 30,000 QPS @ 6ms or Scans: 660 MB/s, 7.5TB storage.",
           "service_properties": {
             "storage_type": "SSD",
             "num_nodes": "3"
@@ -71,7 +71,7 @@ func init() {
 			{
 				FieldName: "name",
 				Type:      broker.JsonTypeString,
-				Details:   "The name of the dataset. Should match [a-z][a-z0-9\\-]+[a-z0-9]",
+				Details:   "The name of the dataset. Should match `[a-z][a-z0-9\\-]+[a-z0-9]`.",
 				Default:   "a generated value",
 			},
 			{
@@ -99,14 +99,14 @@ func init() {
 			broker.BrokerVariable{
 				FieldName: "instance_id",
 				Type:      broker.JsonTypeString,
-				Details:   "The name of the BigTable dataset",
+				Details:   "The name of the BigTable dataset.",
 			},
 		),
 		PlanVariables: []broker.BrokerVariable{
 			{
 				FieldName: "storage_type",
 				Type:      broker.JsonTypeString,
-				Details:   "Either HDD or SSD (see https://cloud.google.com/bigtable/pricing for more information)",
+				Details:   "Either HDD or SSD. See https://cloud.google.com/bigtable/pricing for more information.",
 				Default:   "SSD",
 				Required:  true,
 				Enum: map[interface{}]string{
@@ -117,7 +117,7 @@ func init() {
 			{
 				FieldName: "num_nodes",
 				Type:      broker.JsonTypeString,
-				Details:   "Number of Nodes, Between 3 and 30 (see https://cloud.google.com/bigtable/pricing for more information)",
+				Details:   "Number of nodes, Between 3 and 30. See https://cloud.google.com/bigtable/pricing for more information.",
 				Default:   "3",
 				Required:  true,
 			},

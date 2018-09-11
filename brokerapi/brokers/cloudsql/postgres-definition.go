@@ -23,13 +23,13 @@ func init() {
 		Name: "google-cloudsql-postgres",
 		DefaultServiceDefinition: `{
         "id": "cbad6d78-a73c-432d-b8ff-b219a17a803a",
-        "description": "Google Cloud SQL is a fully-managed PostgreSQL database service",
+        "description": "Google Cloud SQL is a fully-managed PostgreSQL database service.",
         "name": "google-cloudsql-postgres",
         "bindable": true,
         "plan_updateable": false,
         "metadata": {
 	          "displayName": "Google CloudSQL PostgreSQL",
-	          "longDescription": "Google Cloud SQL is a fully-managed MySQL database service",
+	          "longDescription": "Google Cloud SQL is a fully-managed MySQL database service.",
 	          "documentationUrl": "https://cloud.google.com/sql/docs/",
 	          "supportUrl": "https://cloud.google.com/support/",
 	          "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
@@ -136,7 +136,7 @@ func init() {
 			{
 				FieldName: "tier",
 				Type:      broker.JsonTypeString,
-				Details:   "A string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840",
+				Details:   "A string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840.",
 				Required:  true,
 			},
 			{

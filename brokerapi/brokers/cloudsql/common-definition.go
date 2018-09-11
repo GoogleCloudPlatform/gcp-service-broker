@@ -29,19 +29,19 @@ var commonBindVariables = append(accountmanagers.ServiceAccountBindInputVariable
 	broker.BrokerVariable{
 		FieldName: "jdbc_uri_format",
 		Type:      broker.JsonTypeString,
-		Details:   "if `true`, `uri` field will contain a JDBC formatted URI",
+		Details:   "If `true`, `uri` field will contain a JDBC formatted URI.",
 		Default:   "false",
 	},
 	broker.BrokerVariable{
 		FieldName: "username",
 		Type:      broker.JsonTypeString,
-		Details:   "The SQL username for the account",
+		Details:   "The SQL username for the account.",
 		Default:   "a generated value",
 	},
 	broker.BrokerVariable{
 		FieldName: "password",
 		Type:      broker.JsonTypeString,
-		Details:   "The SQL password for the account",
+		Details:   "The SQL password for the account.",
 		Default:   "a generated value",
 	},
 )
@@ -67,7 +67,7 @@ var commonProvisionVariables = []broker.BrokerVariable{
 	{
 		FieldName: "disk_size",
 		Type:      broker.JsonTypeString,
-		Details:   "in GB (only for 2nd generation instances).",
+		Details:   "In GB (only for 2nd generation instances).",
 		Default:   "10",
 	},
 	{
@@ -84,25 +84,25 @@ var commonProvisionVariables = []broker.BrokerVariable{
 	{
 		FieldName: "disk_type",
 		Type:      broker.JsonTypeString,
-		Details:   "(only for 2nd generation instances) ",
+		Details:   "(only for 2nd generation instances)",
 		Default:   "ssd",
 	},
 	{
 		FieldName: "failover_replica_name",
 		Type:      broker.JsonTypeString,
-		Details:   "(only for 2nd generation instances) if specified creates a failover replica",
+		Details:   "(only for 2nd generation instances) If specified, creates a failover replica with the given name.",
 		Default:   "",
 	},
 	{
 		FieldName: "maintenance_window_day",
 		Type:      broker.JsonTypeString,
-		Details:   "(only for 2nd generation instances) The day when disruptive updates (updates that require an instance restart) to this Cloud SQL instance can be made. Day of week (1-7), starting on Monday",
+		Details:   "(only for 2nd generation instances) The day when disruptive updates (updates that require an instance restart) to this CloudSQL instance can be made. Day of week (1-7), starting on Monday.",
 		Default:   "1",
 	},
 	{
 		FieldName: "maintenance_window_hour",
 		Type:      broker.JsonTypeString,
-		Details:   "(only for 2nd generation instances) The hour of the day when disruptive updates (updates that require an instance restart) to this Cloud SQL instance can be made. Hour of day 0-23",
+		Details:   "(only for 2nd generation instances) The hour of the day when disruptive updates (updates that require an instance restart) to this CloudSQL instance can be made. Hour of day 0-23.",
 		Default:   "0",
 	},
 	{
@@ -114,24 +114,29 @@ var commonProvisionVariables = []broker.BrokerVariable{
 	{
 		FieldName: "backup_start_time",
 		Type:      broker.JsonTypeString,
-		Details:   "Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM",
+		Details:   "Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM.",
 		Default:   "06:00",
 	},
 	{
 		FieldName: "binlog",
 		Type:      broker.JsonTypeString,
-		Details:   "Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use",
+		Details:   "Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use.",
 	},
 	{
 		FieldName: "activation_policy",
 		Type:      broker.JsonTypeString,
-		Details:   "The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE. ",
+		Details:   "The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE.",
 		Default:   "ON_DEMAND",
+		Enum: map[interface{}]string{
+			"ALWAYS":    "Always, instance is always on.",
+			"NEVER":     "Never, instance does not turn on if a request arrives.",
+			"ON_DEMAND": "On Demand, instance responses to incoming requests and turns off when not in use.",
+		},
 	},
 	{
 		FieldName: "authorized_networks",
 		Type:      broker.JsonTypeString,
-		Details:   "A comma separated list without spaces",
+		Details:   "A comma separated list without spaces.",
 		Default:   "none",
 	},
 	{
@@ -139,6 +144,10 @@ var commonProvisionVariables = []broker.BrokerVariable{
 		Type:      broker.JsonTypeString,
 		Details:   "The type of replication this instance uses. This can be either ASYNCHRONOUS or SYNCHRONOUS.",
 		Default:   "SYNCHRONOUS",
+		Enum: map[interface{}]string{
+			"ASYNCHRONOUS": "Asynchronous Replication",
+			"SYNCHRONOUS":  "Synchronous Replication",
+		},
 	},
 	{
 		FieldName: "auto_resize",
