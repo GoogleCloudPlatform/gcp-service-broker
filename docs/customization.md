@@ -418,7 +418,7 @@ DO NOT delete plans, instead you should change their labels to mark them as depr
 
 ### Google Bigtable Custom Plans
 
-Generate custom plans for Google Bigtable..
+Generate custom plans for Google Bigtable.
 To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>BIGTABLE_CUSTOM_PLANS</tt>.
 
 For example:
@@ -520,7 +520,7 @@ For example:
   <td><i>dropdown_select</i></td>
   <td>Storage Type</td>
   <td>
-  Either HDD or SSD. See https://cloud.google.com/bigtable/pricing for more information.
+  Either HDD or SSD. See: https://cloud.google.com/bigtable/pricing for more information.
 
 
 <ul>
@@ -545,7 +545,7 @@ For example:
   <td><i>string</i></td>
   <td>Num Nodes</td>
   <td>
-  Number of nodes, Between 3 and 30. See https://cloud.google.com/bigtable/pricing for more information.
+  Number of nodes, between 3 and 30. See: https://cloud.google.com/bigtable/pricing for more information.
 
 
 <ul>
@@ -563,7 +563,7 @@ For example:
 
 ### Google CloudSQL MySQL Custom Plans
 
-Generate custom plans for Google CloudSQL MySQL..
+Generate custom plans for Google CloudSQL MySQL.
 To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>CLOUDSQL_MYSQL_CUSTOM_PLANS</tt>.
 
 For example:
@@ -726,7 +726,7 @@ For example:
 
 ### Google CloudSQL PostgreSQL Custom Plans
 
-Generate custom plans for Google CloudSQL PostgreSQL..
+Generate custom plans for Google CloudSQL PostgreSQL.
 To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>CLOUDSQL_POSTGRES_CUSTOM_PLANS</tt>.
 
 For example:
@@ -872,7 +872,7 @@ For example:
   <td><i>string</i></td>
   <td>Max Disk Size</td>
   <td>
-  Maximum disk size in GB 10 is the minimum.
+  Maximum disk size in GB, 10 is the minimum.
 
 
 <ul>
@@ -890,7 +890,7 @@ For example:
 
 ### Google Spanner Custom Plans
 
-Generate custom plans for Google Spanner..
+Generate custom plans for Google Spanner.
 To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>SPANNER_CUSTOM_PLANS</tt>.
 
 For example:
@@ -992,7 +992,7 @@ For example:
   <td><i>string</i></td>
   <td>Num Nodes</td>
   <td>
-  Number of nodes, a minimum of 3 nodes is recommended for production environments. See https://cloud.google.com/spanner/pricing for more information.
+  Number of nodes, a minimum of 3 nodes is recommended for production environments. See: https://cloud.google.com/spanner/pricing for more information.
 
 
 <ul>

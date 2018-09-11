@@ -34,13 +34,13 @@ func init() {
 		DefaultServiceDefinition: `
 		{
       "id": "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4",
-      "description": "Machine Learning Apis including Vision, Translate, Speech, and Natural Language.",
+      "description": "Machine Learning APIs including Vision, Translate, Speech, and Natural Language.",
       "name": "google-ml-apis",
       "bindable": true,
       "plan_updateable": false,
       "metadata": {
         "displayName": "Google Machine Learning APIs",
-        "longDescription": "Machine Learning Apis including Vision, Translate, Speech, and Natural Language.",
+        "longDescription": "Machine Learning APIs including Vision, Translate, Speech, and Natural Language.",
         "documentationUrl": "https://cloud.google.com/ml/",
         "supportUrl": "https://cloud.google.com/support/",
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/machine-learning.svg"

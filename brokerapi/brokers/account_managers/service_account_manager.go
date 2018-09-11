@@ -248,7 +248,7 @@ type ServiceAccountInfo struct {
 func ServiceAccountBindInputVariables(roleWhitelist []string) []broker.BrokerVariable {
 	defaultRoles := strings.Join(roleWhitelist, "', '")
 	details := fmt.Sprintf(`The role for the account without the "roles/" prefix.
-		See https://cloud.google.com/iam/docs/understanding-roles for more details.
+		See: https://cloud.google.com/iam/docs/understanding-roles for more details.
 		The following roles are available by default but may be overridden by your operator: '%s'.`, defaultRoles)
 
 	return []broker.BrokerVariable{

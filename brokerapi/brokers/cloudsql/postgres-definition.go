@@ -151,7 +151,7 @@ func init() {
 			{
 				FieldName: "max_disk_size",
 				Type:      broker.JsonTypeString,
-				Details:   "Maximum disk size in GB 10 is the minimum.",
+				Details:   "Maximum disk size in GB, 10 is the minimum.",
 				Default:   "10",
 				Required:  true,
 			},

@@ -92,7 +92,7 @@ func init() {
 			{
 				FieldName: "num_nodes",
 				Type:      broker.JsonTypeString,
-				Details:   "Number of nodes, a minimum of 3 nodes is recommended for production environments. See https://cloud.google.com/spanner/pricing for more information.",
+				Details:   "Number of nodes, a minimum of 3 nodes is recommended for production environments. See: https://cloud.google.com/spanner/pricing for more information.",
 				Default:   "1",
 				Required:  true,
 			},

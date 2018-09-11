@@ -106,7 +106,7 @@ func init() {
 			{
 				FieldName: "storage_type",
 				Type:      broker.JsonTypeString,
-				Details:   "Either HDD or SSD. See https://cloud.google.com/bigtable/pricing for more information.",
+				Details:   "Either HDD or SSD. See: https://cloud.google.com/bigtable/pricing for more information.",
 				Default:   "SSD",
 				Required:  true,
 				Enum: map[interface{}]string{
@@ -117,7 +117,7 @@ func init() {
 			{
 				FieldName: "num_nodes",
 				Type:      broker.JsonTypeString,
-				Details:   "Number of nodes, Between 3 and 30. See https://cloud.google.com/bigtable/pricing for more information.",
+				Details:   "Number of nodes, between 3 and 30. See: https://cloud.google.com/bigtable/pricing for more information.",
 				Default:   "3",
 				Required:  true,
 			},
