@@ -7,7 +7,7 @@ If you are running your own, then you can set them in the application manifest o
 
 ## Root Service Account
 
-Please paste in the contents of the json keyfile (un-encoded) for your service account with owner credentials
+Please paste in the contents of the json keyfile (un-encoded) for your service account with owner credentials.
 
 You can configure the following environment variables:
 
@@ -27,7 +27,7 @@ You can configure the following environment variables:
 
 ## Database Properties
 
-Connection details for the backing database for the service broker
+Connection details for the backing database for the service broker.
 
 You can configure the following environment variables:
 
@@ -133,11 +133,11 @@ You can configure the following environment variables:
 
 ## Enable Services
 
-Enable or disable services
+Enable or disable services.
 
 You can configure the following environment variables:
 
-<b><tt>GSB_SERVICE_GOOGLE_BIGQUERY_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google BigQuery instances
+<b><tt>GSB_SERVICE_GOOGLE_BIGQUERY_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google BigQuery instances.
 
 
 
@@ -150,7 +150,7 @@ You can configure the following environment variables:
   <li>Default: <code>true</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_BIGTABLE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Bigtable instances
+<b><tt>GSB_SERVICE_GOOGLE_BIGTABLE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Bigtable instances.
 
 
 
@@ -163,7 +163,7 @@ You can configure the following environment variables:
   <li>Default: <code>true</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google CloudSQL MySQL instances
+<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google CloudSQL MySQL instances.
 
 
 
@@ -176,7 +176,7 @@ You can configure the following environment variables:
   <li>Default: <code>true</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google CloudSQL PostgreSQL instances
+<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google CloudSQL PostgreSQL instances.
 
 
 
@@ -189,7 +189,7 @@ You can configure the following environment variables:
   <li>Default: <code>true</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_DATASTORE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Datastore instances
+<b><tt>GSB_SERVICE_GOOGLE_DATASTORE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Datastore instances.
 
 
 
@@ -202,7 +202,7 @@ You can configure the following environment variables:
   <li>Default: <code>true</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_ML_APIS_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Machine Learning APIs instances
+<b><tt>GSB_SERVICE_GOOGLE_ML_APIS_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Machine Learning APIs instances.
 
 
 
@@ -215,7 +215,7 @@ You can configure the following environment variables:
   <li>Default: <code>true</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_PUBSUB_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google PubSub instances
+<b><tt>GSB_SERVICE_GOOGLE_PUBSUB_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google PubSub instances.
 
 
 
@@ -228,7 +228,7 @@ You can configure the following environment variables:
   <li>Default: <code>true</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_SPANNER_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Spanner instances
+<b><tt>GSB_SERVICE_GOOGLE_SPANNER_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Spanner instances.
 
 
 
@@ -241,7 +241,7 @@ You can configure the following environment variables:
   <li>Default: <code>true</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_DEBUGGER_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Debugger instances
+<b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_DEBUGGER_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Debugger instances.
 
 
 
@@ -254,7 +254,7 @@ You can configure the following environment variables:
   <li>Default: <code>true</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_PROFILER_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Profiler instances
+<b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_PROFILER_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Profiler instances.
 
 
 
@@ -267,7 +267,7 @@ You can configure the following environment variables:
   <li>Default: <code>true</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_TRACE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Trace instances
+<b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_TRACE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Trace instances.
 
 
 
@@ -280,7 +280,7 @@ You can configure the following environment variables:
   <li>Default: <code>true</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_STORAGE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Storage instances
+<b><tt>GSB_SERVICE_GOOGLE_STORAGE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Storage instances.
 
 
 
@@ -297,13 +297,13 @@ You can configure the following environment variables:
 
 ## Role Whitelisting
 
-Enable or disable role whitelisting
+Enable or disable role whitelisting.
 
 You can configure the following environment variables:
 
-<b><tt>GSB_SERVICE_GOOGLE_BIGQUERY_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google BigQuery instances
+<b><tt>GSB_SERVICE_GOOGLE_BIGQUERY_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google BigQuery instances.
 
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service
+A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
 
 
 
@@ -314,9 +314,9 @@ A comma delimited list of roles (minus the role/ prefix) that can be used when c
   <li>Default: <code>bigquery.dataViewer,bigquery.dataEditor,bigquery.dataOwner,bigquery.user,bigquery.jobUser</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_BIGTABLE_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Bigtable instances
+<b><tt>GSB_SERVICE_GOOGLE_BIGTABLE_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Bigtable instances.
 
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service
+A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
 
 
 
@@ -327,22 +327,9 @@ A comma delimited list of roles (minus the role/ prefix) that can be used when c
   <li>Default: <code>bigtable.user,bigtable.reader,bigtable.viewer</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google CloudSQL MySQL instances
+<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google CloudSQL MySQL instances.
 
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service
-
-
-
-<ul>
-  <li><b>Required</b></li>
-
-
-  <li>Default: <code>cloudsql.editor,cloudsql.viewer,cloudsql.client</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google CloudSQL PostgreSQL instances
-
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service
+A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
 
 
 
@@ -353,9 +340,22 @@ A comma delimited list of roles (minus the role/ prefix) that can be used when c
   <li>Default: <code>cloudsql.editor,cloudsql.viewer,cloudsql.client</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_ML_APIS_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Machine Learning APIs instances
+<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google CloudSQL PostgreSQL instances.
 
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service
+A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+  <li>Default: <code>cloudsql.editor,cloudsql.viewer,cloudsql.client</code></li>
+</ul>
+
+<b><tt>GSB_SERVICE_GOOGLE_ML_APIS_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Machine Learning APIs instances.
+
+A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
 
 
 
@@ -366,9 +366,9 @@ A comma delimited list of roles (minus the role/ prefix) that can be used when c
   <li>Default: <code>ml.developer,ml.viewer,ml.modelOwner,ml.modelUser,ml.jobOwner,ml.operationOwner</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_PUBSUB_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google PubSub instances
+<b><tt>GSB_SERVICE_GOOGLE_PUBSUB_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google PubSub instances.
 
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service
+A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
 
 
 
@@ -379,9 +379,9 @@ A comma delimited list of roles (minus the role/ prefix) that can be used when c
   <li>Default: <code>pubsub.publisher,pubsub.subscriber,pubsub.viewer,pubsub.editor</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_SPANNER_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Spanner instances
+<b><tt>GSB_SERVICE_GOOGLE_SPANNER_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Spanner instances.
 
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service
+A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
 
 
 
@@ -392,9 +392,9 @@ A comma delimited list of roles (minus the role/ prefix) that can be used when c
   <li>Default: <code>spanner.databaseAdmin,spanner.databaseReader,spanner.databaseUser,spanner.viewer</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_STORAGE_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Cloud Storage instances
+<b><tt>GSB_SERVICE_GOOGLE_STORAGE_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Cloud Storage instances.
 
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service
+A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
 
 
 
@@ -418,7 +418,7 @@ DO NOT delete plans, instead you should change their labels to mark them as depr
 
 ### Google Bigtable Custom Plans
 
-Generate custom plans for Google Bigtable.
+Generate custom plans for Google Bigtable..
 To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>BIGTABLE_CUSTOM_PLANS</tt>.
 
 For example:
@@ -520,7 +520,7 @@ For example:
   <td><i>dropdown_select</i></td>
   <td>Storage Type</td>
   <td>
-  Either HDD or SSD (see https://cloud.google.com/bigtable/pricing for more information)
+  Either HDD or SSD. See https://cloud.google.com/bigtable/pricing for more information.
 
 
 <ul>
@@ -530,7 +530,7 @@ For example:
   <li>Default: <code>SSD</code></li>
   <li>Valid Values:
   <ul>
-    <li><tt>SSD</tt> - SSD - Solid-state Drive</li><li><tt>HDD</tt> - HDD - Hard Disk Drive</li>
+    <li><tt>HDD</tt> - HDD - Hard Disk Drive</li><li><tt>SSD</tt> - SSD - Solid-state Drive</li>
   </ul>
   </li>
 
@@ -545,7 +545,7 @@ For example:
   <td><i>string</i></td>
   <td>Num Nodes</td>
   <td>
-  Number of Nodes, Between 3 and 30 (see https://cloud.google.com/bigtable/pricing for more information)
+  Number of nodes, Between 3 and 30. See https://cloud.google.com/bigtable/pricing for more information.
 
 
 <ul>
@@ -563,7 +563,7 @@ For example:
 
 ### Google CloudSQL MySQL Custom Plans
 
-Generate custom plans for Google CloudSQL MySQL.
+Generate custom plans for Google CloudSQL MySQL..
 To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>CLOUDSQL_MYSQL_CUSTOM_PLANS</tt>.
 
 For example:
@@ -665,7 +665,7 @@ For example:
   <td><i>string</i></td>
   <td>Tier</td>
   <td>
-  Case-sensitive tier/machine type name (see https://cloud.google.com/sql/pricing for more information)
+  Case-sensitive tier/machine type name (see https://cloud.google.com/sql/pricing for more information).
 
 
 <ul>
@@ -683,7 +683,7 @@ For example:
   <td><i>dropdown_select</i></td>
   <td>Pricing Plan</td>
   <td>
-  Select a pricing plan (only for 1st generation instances)
+  Select a pricing plan (only for 1st generation instances).
 
 
 <ul>
@@ -693,7 +693,7 @@ For example:
   <li>Default: <code>PER_USE</code></li>
   <li>Valid Values:
   <ul>
-    <li><tt>PER_USE</tt> - Per-Use</li><li><tt>PACKAGE</tt> - Package</li>
+    <li><tt>PACKAGE</tt> - Package</li><li><tt>PER_USE</tt> - Per-Use</li>
   </ul>
   </li>
 
@@ -708,7 +708,7 @@ For example:
   <td><i>string</i></td>
   <td>Max Disk Size</td>
   <td>
-  Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default)
+  Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default).
 
 
 <ul>
@@ -726,7 +726,7 @@ For example:
 
 ### Google CloudSQL PostgreSQL Custom Plans
 
-Generate custom plans for Google CloudSQL PostgreSQL.
+Generate custom plans for Google CloudSQL PostgreSQL..
 To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>CLOUDSQL_POSTGRES_CUSTOM_PLANS</tt>.
 
 For example:
@@ -828,7 +828,7 @@ For example:
   <td><i>string</i></td>
   <td>Tier</td>
   <td>
-  A string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840
+  A string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840.
 
 
 <ul>
@@ -890,7 +890,7 @@ For example:
 
 ### Google Spanner Custom Plans
 
-Generate custom plans for Google Spanner.
+Generate custom plans for Google Spanner..
 To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>SPANNER_CUSTOM_PLANS</tt>.
 
 For example:
