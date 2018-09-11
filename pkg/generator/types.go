@@ -36,7 +36,7 @@ func CatalogDocumentation() string {
 		out += "\n"
 	}
 
-	return out
+	return cleanMdOutput(out)
 }
 
 // generateServiceDocumentation creates documentation for a single catalog entry

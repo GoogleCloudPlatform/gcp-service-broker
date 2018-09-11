@@ -1,4 +1,3 @@
-
 --------------------------------------------------------------------------------
 
 # ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/bigquery.svg) Google BigQuery
@@ -910,6 +909,3 @@ Uses plan: `a42c1182-d1a0-4d40-82c1-28220518b360`.
     "role": "storage.objectAdmin"
 }
 ```
-
-
-
