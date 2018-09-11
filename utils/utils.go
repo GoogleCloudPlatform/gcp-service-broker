@@ -18,9 +18,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
@@ -33,6 +35,10 @@ const (
 
 var (
 	PropertyToEnvReplacer = strings.NewReplacer(".", "_", "-", "_")
+
+	// GCP labels only support alphanumeric, dash and underscore characters in
+	// keys and values.
+	invalidLabelChars = regexp.MustCompile("[^a-zA-Z0-9_-]+")
 )
 
 func init() {
@@ -172,4 +178,34 @@ func GetDefaultProjectId() (string, error) {
 // the service broker acts as.
 func getServiceAccountJson() string {
 	return viper.GetString("google.account")
+}
+
+// ExtractDefaultLabels creates a map[string]string of labels that should be
+// applied to a resource on creation if the resource supports labels.
+// These include the organization, space, and instance id.
+func ExtractDefaultLabels(instanceId string, details brokerapi.ProvisionDetails) map[string]string {
+	labels := map[string]string{
+		"pcf-organization-guid": details.OrganizationGUID,
+		"pcf-space-guid":        details.SpaceGUID,
+		"pcf-instance-id":       instanceId,
+	}
+
+	// After v 2.14 of the OSB the top-level organization_guid and space_guid are
+	// deprecated in favor of context, so we'll override those.
+	requestContext := map[string]string{}
+	json.Unmarshal(details.GetRawContext(), &requestContext) // explicitly ignore parse errors
+	if orgGuid, ok := requestContext["organization_guid"]; ok {
+		labels["pcf-organization-guid"] = orgGuid
+	}
+
+	if spaceGuid, ok := requestContext["space_guid"]; ok {
+		labels["pcf-space-guid"] = spaceGuid
+	}
+
+	sanitized := map[string]string{}
+	for key, value := range labels {
+		sanitized[key] = invalidLabelChars.ReplaceAllString(value, "_")
+	}
+
+	return sanitized
 }

@@ -22,6 +22,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	googlebigquery "google.golang.org/api/bigquery/v2"
 )
@@ -68,6 +69,7 @@ func (b *BigQueryBroker) Provision(instanceId string, details brokerapi.Provisio
 		DatasetReference: &googlebigquery.DatasetReference{
 			DatasetId: params["name"],
 		},
+		Labels: utils.ExtractDefaultLabels(instanceId, details),
 	}
 	new_dataset, err := service.Datasets.Insert(b.ProjectId, &d).Do()
 	if err != nil {

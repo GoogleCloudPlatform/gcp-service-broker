@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	"google.golang.org/api/option"
 	instancepb "google.golang.org/genproto/googleapis/spanner/admin/instance/v1"
@@ -94,6 +95,7 @@ func (s *SpannerBroker) Provision(instanceId string, details brokerapi.Provision
 			DisplayName: displayName,
 			NodeCount:   int32(numNodes),
 			Config:      loc,
+			Labels:      utils.ExtractDefaultLabels(instanceId, details),
 		},
 	})
 	if err != nil {
