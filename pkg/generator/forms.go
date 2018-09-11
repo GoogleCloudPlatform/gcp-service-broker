@@ -214,21 +214,21 @@ func GenerateServicePlanForm(svc *broker.BrokerService) (Form, error) {
 				Name:         "display_name",
 				Label:        "Display Name",
 				Type:         "string",
-				Description:  "Display name",
+				Description:  "Name of the plan to be displayed to users.",
 				Configurable: true,
 			},
 			{
 				Name:         "description",
 				Label:        "Plan description",
 				Type:         "string",
-				Description:  "Plan description",
+				Description:  "The description of the plan shown to users.",
 				Configurable: true,
 			},
 			{
 				Name:        "service",
 				Label:       "Service",
 				Type:        "dropdown_select",
-				Description: "The service this plan is associated with",
+				Description: "The service this plan is associated with.",
 				Default:     entry.ID,
 				Options: []FormOption{
 					{

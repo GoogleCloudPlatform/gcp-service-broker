@@ -458,7 +458,7 @@ For example:
   <td><i>string</i></td>
   <td>Display Name</td>
   <td>
-  Display name
+  Name of the plan to be displayed to users.
 
 
 <ul>
@@ -476,7 +476,7 @@ For example:
   <td><i>string</i></td>
   <td>Plan description</td>
   <td>
-  Plan description
+  The description of the plan shown to users.
 
 
 <ul>
@@ -494,7 +494,7 @@ For example:
   <td><i>dropdown_select</i></td>
   <td>Service</td>
   <td>
-  The service this plan is associated with
+  The service this plan is associated with.
 
 
 <ul>
@@ -530,7 +530,7 @@ For example:
   <li>Default: <code>SSD</code></li>
   <li>Valid Values:
   <ul>
-    <li><tt>HDD</tt> - HDD - Hard Disk Drive</li><li><tt>SSD</tt> - SSD - Solid-state Drive</li>
+    <li><tt>SSD</tt> - SSD - Solid-state Drive</li><li><tt>HDD</tt> - HDD - Hard Disk Drive</li>
   </ul>
   </li>
 
@@ -603,7 +603,7 @@ For example:
   <td><i>string</i></td>
   <td>Display Name</td>
   <td>
-  Display name
+  Name of the plan to be displayed to users.
 
 
 <ul>
@@ -621,7 +621,7 @@ For example:
   <td><i>string</i></td>
   <td>Plan description</td>
   <td>
-  Plan description
+  The description of the plan shown to users.
 
 
 <ul>
@@ -639,7 +639,7 @@ For example:
   <td><i>dropdown_select</i></td>
   <td>Service</td>
   <td>
-  The service this plan is associated with
+  The service this plan is associated with.
 
 
 <ul>
@@ -693,7 +693,7 @@ For example:
   <li>Default: <code>PER_USE</code></li>
   <li>Valid Values:
   <ul>
-    <li><tt>PACKAGE</tt> - Package</li><li><tt>PER_USE</tt> - Per-Use</li>
+    <li><tt>PER_USE</tt> - Per-Use</li><li><tt>PACKAGE</tt> - Package</li>
   </ul>
   </li>
 
@@ -766,7 +766,7 @@ For example:
   <td><i>string</i></td>
   <td>Display Name</td>
   <td>
-  Display name
+  Name of the plan to be displayed to users.
 
 
 <ul>
@@ -784,7 +784,7 @@ For example:
   <td><i>string</i></td>
   <td>Plan description</td>
   <td>
-  Plan description
+  The description of the plan shown to users.
 
 
 <ul>
@@ -802,7 +802,7 @@ For example:
   <td><i>dropdown_select</i></td>
   <td>Service</td>
   <td>
-  The service this plan is associated with
+  The service this plan is associated with.
 
 
 <ul>
@@ -930,7 +930,7 @@ For example:
   <td><i>string</i></td>
   <td>Display Name</td>
   <td>
-  Display name
+  Name of the plan to be displayed to users.
 
 
 <ul>
@@ -948,7 +948,7 @@ For example:
   <td><i>string</i></td>
   <td>Plan description</td>
   <td>
-  Plan description
+  The description of the plan shown to users.
 
 
 <ul>
@@ -966,7 +966,7 @@ For example:
   <td><i>dropdown_select</i></td>
   <td>Service</td>
   <td>
-  The service this plan is associated with
+  The service this plan is associated with.
 
 
 <ul>
