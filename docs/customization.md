@@ -846,7 +846,7 @@ For example:
   <td><i>dropdown_select</i></td>
   <td>Pricing Plan</td>
   <td>
-  The pricing plan
+  The pricing plan.
 
 
 <ul>
@@ -872,7 +872,7 @@ For example:
   <td><i>string</i></td>
   <td>Max Disk Size</td>
   <td>
-  Maximum disk size in GB (10 minimum/default)
+  Maximum disk size in GB 10 is the minimum.
 
 
 <ul>
@@ -992,7 +992,7 @@ For example:
   <td><i>string</i></td>
   <td>Num Nodes</td>
   <td>
-  Number of Nodes, A minimum of 3 nodes is recommended for production environments. (see https://cloud.google.com/spanner/pricing for more information)
+  Number of nodes, a minimum of 3 nodes is recommended for production environments. See https://cloud.google.com/spanner/pricing for more information.
 
 
 <ul>

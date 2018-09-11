@@ -142,7 +142,7 @@ func init() {
 			{
 				FieldName: "pricing_plan",
 				Type:      broker.JsonTypeString,
-				Details:   "The pricing plan",
+				Details:   "The pricing plan.",
 				Enum: map[interface{}]string{
 					"PER_USE": "Per-Use",
 				},
@@ -151,7 +151,7 @@ func init() {
 			{
 				FieldName: "max_disk_size",
 				Type:      broker.JsonTypeString,
-				Details:   "Maximum disk size in GB (10 minimum/default)",
+				Details:   "Maximum disk size in GB 10 is the minimum.",
 				Default:   "10",
 				Required:  true,
 			},
