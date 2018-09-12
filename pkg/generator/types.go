@@ -60,6 +60,27 @@ func generateServiceDocumentation(svc *broker.BrokerService) string {
 		"join":          strings.Join,
 		"varNotes":      varNotes,
 		"jsonCodeBlock": jsonCodeBlock,
+		"exampleCommands": func(example broker.ServiceExample) string {
+			planName := "unknown-plan"
+			for _, plan := range catalog.Plans {
+				if plan.ID == example.PlanId {
+					planName = plan.Name
+				}
+			}
+
+			params, err := json.Marshal(example.ProvisionParams)
+			if err != nil {
+				return err.Error()
+			}
+			provision := fmt.Sprintf("$ cf create-service %s %s my-%s-example -c `%s`", catalog.Name, planName, catalog.Name, params)
+
+			params, err = json.Marshal(example.BindParams)
+			if err != nil {
+				return err.Error()
+			}
+			bind := fmt.Sprintf("$ cf bind-service my-app my-%s-example -c `%s`", catalog.Name, params)
+			return provision + "\n" + bind
+		},
 	}
 
 	templateText := `
@@ -73,6 +94,7 @@ func generateServiceDocumentation(svc *broker.BrokerService) string {
  * [Support]({{ .metadata.SupportUrl }})
  * Catalog Metadata ID: {{code .catalog.ID}}
  * Tags: {{ join .catalog.Tags ", " }}
+ * Service Name: {{ code .catalog.Name }}
 
 ## Provisioning
 
@@ -94,6 +116,9 @@ func generateServiceDocumentation(svc *broker.BrokerService) string {
 {{ range $i, $var := .bindOut }} * {{ varNotes $var }}
 {{ end }}
 ## Plans
+
+The following plans are built-in to the GCP Service Broker and may be overriden
+or disabled by the broker administrator.
 
 {{ if eq (len .catalog.Plans) 0 }}_No plans available_{{ end }}
 {{ range $i, $plan := .catalog.Plans }}  * **{{ $plan.Name }}**: {{ $plan.Description }} Plan ID: {{code $plan.ID}}.
@@ -117,6 +142,13 @@ Uses plan: {{ code $example.PlanId }}.
 **Bind**
 
 {{ jsonCodeBlock $example.BindParams }}
+
+**Cloud Foundry Example**
+
+<pre>
+{{exampleCommands $example}}
+</pre>
+
 {{ end }}
 `
 

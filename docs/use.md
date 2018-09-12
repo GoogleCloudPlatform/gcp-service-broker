@@ -8,6 +8,7 @@ A fast, economical and fully managed data warehouse for large-scale data analyti
  * [Support](https://cloud.google.com/support/)
  * Catalog Metadata ID: `f80c0a3e-bd4d-4809-a900-b4e33a6450f1`
  * Tags: gcp, bigquery
+ * Service Name: `google-bigquery`
 
 ## Provisioning
 
@@ -34,6 +35,9 @@ A fast, economical and fully managed data warehouse for large-scale data analyti
  * `dataset_id` _string_ - The name of the BigQuery dataset.
 
 ## Plans
+
+The following plans are built-in to the GCP Service Broker and may be overriden
+or disabled by the broker administrator.
 
 
   * **default**: BigQuery default plan. Plan ID: `10ff4e72-6e84-44eb-851f-bdb38a791914`.
@@ -66,6 +70,14 @@ Uses plan: `10ff4e72-6e84-44eb-851f-bdb38a791914`.
 }
 ```
 
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-bigquery default my-google-bigquery-example -c `{"name":"orders_1997"}`
+$ cf bind-service my-app my-google-bigquery-example -c `{"role":"bigquery.user"}`
+</pre>
+
+
 
 
 --------------------------------------------------------------------------------
@@ -78,6 +90,7 @@ A high performance NoSQL database service for large analytical and operational w
  * [Support](https://cloud.google.com/support/)
  * Catalog Metadata ID: `b8e19880-ac58-42ef-b033-f7cd9c94d1fe`
  * Tags: gcp, bigtable
+ * Service Name: `google-bigtable`
 
 ## Provisioning
 
@@ -107,6 +120,9 @@ A high performance NoSQL database service for large analytical and operational w
  * `instance_id` _string_ - The name of the BigTable dataset.
 
 ## Plans
+
+The following plans are built-in to the GCP Service Broker and may be overriden
+or disabled by the broker administrator.
 
 
   * **three-node-production-hdd**: BigTable HDD basic production plan: Approx: Reads: 1,500 QPS @ 200ms or Writes: 30,000 QPS @ 50ms or Scans: 540 MB/s, 24TB storage. Plan ID: `65a49268-2c73-481e-80f3-9fde5bd5a654`.
@@ -140,6 +156,14 @@ Uses plan: `65a49268-2c73-481e-80f3-9fde5bd5a654`.
 }
 ```
 
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-bigtable three-node-production-hdd my-google-bigtable-example -c `{"name":"orders-table"}`
+$ cf bind-service my-app my-google-bigtable-example -c `{"role":"bigtable.user"}`
+</pre>
+
+
 
 
 --------------------------------------------------------------------------------
@@ -152,6 +176,7 @@ Google Cloud SQL is a fully-managed MySQL database service.
  * [Support](https://cloud.google.com/support/)
  * Catalog Metadata ID: `4bc59b9a-8520-409f-85da-1c7552315863`
  * Tags: gcp, cloudsql, mysql
+ * Service Name: `google-cloudsql-mysql`
 
 ## Provisioning
 
@@ -207,6 +232,9 @@ Google Cloud SQL is a fully-managed MySQL database service.
  * `region` _string_ - The region the database is in.
 
 ## Plans
+
+The following plans are built-in to the GCP Service Broker and may be overriden
+or disabled by the broker administrator.
 
 
   * **mysql-db-f1-micro**: MySQL on a db-f1-micro (Shared CPUs, 0.6 GB/RAM, 3062 GB/disk, 250 Connections) Plan ID: `7d8f9ade-30c1-4c96-b622-ea0205cc5f0b`.
@@ -255,6 +283,14 @@ Uses plan: `7d8f9ade-30c1-4c96-b622-ea0205cc5f0b`.
 }
 ```
 
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-cloudsql-mysql mysql-db-f1-micro my-google-cloudsql-mysql-example -c `{"backups_enabled":"false","binlog":"false","disk_size":"10"}`
+$ cf bind-service my-app my-google-cloudsql-mysql-example -c `{"role":"cloudsql.editor"}`
+</pre>
+
+
 
 
 --------------------------------------------------------------------------------
@@ -267,6 +303,7 @@ Google Cloud SQL is a fully-managed MySQL database service.
  * [Support](https://cloud.google.com/support/)
  * Catalog Metadata ID: `cbad6d78-a73c-432d-b8ff-b219a17a803a`
  * Tags: gcp, cloudsql, postgres
+ * Service Name: `google-cloudsql-postgres`
 
 ## Provisioning
 
@@ -323,6 +360,9 @@ Google Cloud SQL is a fully-managed MySQL database service.
 
 ## Plans
 
+The following plans are built-in to the GCP Service Broker and may be overriden
+or disabled by the broker administrator.
+
 
   * **postgres-db-f1-micro**: PostgreSQL on a db-f1-micro (Shared CPUs, 0.6 GB/RAM, 3062 GB/disk, 250 Connections) Plan ID: `2513d4d9-684b-4c3c-add4-6404969006de`.
   * **postgres-db-g1-small**: PostgreSQL on a db-g1-small (Shared CPUs, 1.7 GB/RAM, 3062 GB/disk, 1,000 Connections) Plan ID: `6c1174d8-243c-44d1-b7a8-e94a779f67f5`.
@@ -370,6 +410,14 @@ Uses plan: `2513d4d9-684b-4c3c-add4-6404969006de`.
 }
 ```
 
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-cloudsql-postgres postgres-db-f1-micro my-google-cloudsql-postgres-example -c `{"backups_enabled":"false","binlog":"false","disk_size":"10"}`
+$ cf bind-service my-app my-google-cloudsql-postgres-example -c `{"role":"cloudsql.editor"}`
+</pre>
+
+
 
 
 --------------------------------------------------------------------------------
@@ -382,6 +430,7 @@ Google Cloud Datastore is a NoSQL document database built for automatic scaling,
  * [Support](https://cloud.google.com/support/)
  * Catalog Metadata ID: `76d4abb2-fee7-4c8f-aee1-bcea2837f02b`
  * Tags: gcp, datastore
+ * Service Name: `google-datastore`
 
 ## Provisioning
 
@@ -405,6 +454,9 @@ _No parameters supported._
  * `UniqueId` _string_ - Unique and stable id of the service account.
 
 ## Plans
+
+The following plans are built-in to the GCP Service Broker and may be overriden
+or disabled by the broker administrator.
 
 
   * **default**: Datastore default plan. Plan ID: `05f1fb6b-b5f0-48a2-9c2b-a5f236507a97`.
@@ -433,6 +485,14 @@ Uses plan: `05f1fb6b-b5f0-48a2-9c2b-a5f236507a97`.
 {}
 ```
 
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-datastore default my-google-datastore-example -c `{}`
+$ cf bind-service my-app my-google-datastore-example -c `{}`
+</pre>
+
+
 
 
 --------------------------------------------------------------------------------
@@ -445,6 +505,7 @@ Machine Learning APIs including Vision, Translate, Speech, and Natural Language.
  * [Support](https://cloud.google.com/support/)
  * Catalog Metadata ID: `5ad2dce0-51f7-4ede-8b46-293d6df1e8d4`
  * Tags: gcp, ml
+ * Service Name: `google-ml-apis`
 
 ## Provisioning
 
@@ -469,6 +530,9 @@ _No parameters supported._
  * `UniqueId` _string_ - Unique and stable id of the service account.
 
 ## Plans
+
+The following plans are built-in to the GCP Service Broker and may be overriden
+or disabled by the broker administrator.
 
 
   * **default**: Machine Learning API default plan. Plan ID: `be7954e1-ecfb-4936-a0b6-db35e6424c7a`.
@@ -499,6 +563,14 @@ Uses plan: `be7954e1-ecfb-4936-a0b6-db35e6424c7a`.
 }
 ```
 
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-ml-apis default my-google-ml-apis-example -c `{}`
+$ cf bind-service my-app my-google-ml-apis-example -c `{"role":"ml.developer"}`
+</pre>
+
+
 
 
 --------------------------------------------------------------------------------
@@ -511,6 +583,7 @@ A global service for real-time and reliable messaging and streaming data.
  * [Support](https://cloud.google.com/support/)
  * Catalog Metadata ID: `628629e3-79f5-4255-b981-d14c6c7856be`
  * Tags: gcp, pubsub
+ * Service Name: `google-pubsub`
 
 ## Provisioning
 
@@ -542,6 +615,9 @@ A global service for real-time and reliable messaging and streaming data.
  * `topic_name` _string_ - Name of the topic.
 
 ## Plans
+
+The following plans are built-in to the GCP Service Broker and may be overriden
+or disabled by the broker administrator.
 
 
   * **default**: PubSub Default plan. Plan ID: `622f4da3-8731-492a-af29-66a9146f8333`.
@@ -575,6 +651,14 @@ Uses plan: `622f4da3-8731-492a-af29-66a9146f8333`.
 }
 ```
 
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-pubsub default my-google-pubsub-example -c `{"subscription_name":"example_topic_subscription","topic_name":"example_topic"}`
+$ cf bind-service my-app my-google-pubsub-example -c `{"role":"pubsub.publisher"}`
+</pre>
+
+
 
 
 --------------------------------------------------------------------------------
@@ -587,6 +671,7 @@ The first horizontally scalable, globally consistent, relational database servic
  * [Support](https://cloud.google.com/support/)
  * Catalog Metadata ID: `51b3e27e-d323-49ce-8c5f-1211e6409e82`
  * Tags: gcp, spanner
+ * Service Name: `google-spanner`
 
 ## Provisioning
 
@@ -615,6 +700,9 @@ The first horizontally scalable, globally consistent, relational database servic
  * `instance_id` _string_ - Name of the spanner instance the account can connect to.
 
 ## Plans
+
+The following plans are built-in to the GCP Service Broker and may be overriden
+or disabled by the broker administrator.
 
 
   * **sandbox**: Useful for testing, not eligible for SLA. Plan ID: `44828436-cfbd-47ae-b4bc-48854564347b`.
@@ -648,6 +736,14 @@ Uses plan: `44828436-cfbd-47ae-b4bc-48854564347b`.
 }
 ```
 
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-spanner sandbox my-google-spanner-example -c `{"name":"auth-database"}`
+$ cf bind-service my-app my-google-spanner-example -c `{"role":"spanner.databaseAdmin"}`
+</pre>
+
+
 
 
 --------------------------------------------------------------------------------
@@ -660,6 +756,7 @@ Stackdriver Debugger is a feature of the Google Cloud Platform that lets you ins
  * [Support](https://cloud.google.com/support/)
  * Catalog Metadata ID: `83837945-1547-41e0-b661-ea31d76eed11`
  * Tags: gcp, stackdriver, debugger
+ * Service Name: `google-stackdriver-debugger`
 
 ## Provisioning
 
@@ -683,6 +780,9 @@ _No parameters supported._
  * `UniqueId` _string_ - Unique and stable id of the service account.
 
 ## Plans
+
+The following plans are built-in to the GCP Service Broker and may be overriden
+or disabled by the broker administrator.
 
 
   * **default**: Stackdriver Debugger default plan. Plan ID: `10866183-a775-49e8-96e3-4e7a901e4a79`.
@@ -711,6 +811,14 @@ Uses plan: `10866183-a775-49e8-96e3-4e7a901e4a79`.
 {}
 ```
 
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-stackdriver-debugger default my-google-stackdriver-debugger-example -c `{}`
+$ cf bind-service my-app my-google-stackdriver-debugger-example -c `{}`
+</pre>
+
+
 
 
 --------------------------------------------------------------------------------
@@ -723,6 +831,7 @@ Continuous CPU and heap profiling to improve performance and reduce costs.
  * [Support](https://cloud.google.com/support/)
  * Catalog Metadata ID: `00b9ca4a-7cd6-406a-a5b7-2f43f41ade75`
  * Tags: gcp, stackdriver, profiler
+ * Service Name: `google-stackdriver-profiler`
 
 ## Provisioning
 
@@ -746,6 +855,9 @@ _No parameters supported._
  * `UniqueId` _string_ - Unique and stable id of the service account.
 
 ## Plans
+
+The following plans are built-in to the GCP Service Broker and may be overriden
+or disabled by the broker administrator.
 
 
   * **default**: Stackdriver Profiler default plan. Plan ID: `594627f6-35f5-462f-9074-10fb033fb18a`.
@@ -774,6 +886,14 @@ Uses plan: `594627f6-35f5-462f-9074-10fb033fb18a`.
 {}
 ```
 
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-stackdriver-profiler default my-google-stackdriver-profiler-example -c `{}`
+$ cf bind-service my-app my-google-stackdriver-profiler-example -c `{}`
+</pre>
+
+
 
 
 --------------------------------------------------------------------------------
@@ -786,6 +906,7 @@ Stackdriver Trace is a distributed tracing system that collects latency data fro
  * [Support](https://cloud.google.com/support/)
  * Catalog Metadata ID: `c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a`
  * Tags: gcp, stackdriver, trace
+ * Service Name: `google-stackdriver-trace`
 
 ## Provisioning
 
@@ -809,6 +930,9 @@ _No parameters supported._
  * `UniqueId` _string_ - Unique and stable id of the service account.
 
 ## Plans
+
+The following plans are built-in to the GCP Service Broker and may be overriden
+or disabled by the broker administrator.
 
 
   * **default**: Stackdriver Trace default plan. Plan ID: `ab6c2287-b4bc-4ff4-a36a-0575e7910164`.
@@ -837,6 +961,14 @@ Uses plan: `ab6c2287-b4bc-4ff4-a36a-0575e7910164`.
 {}
 ```
 
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-stackdriver-trace default my-google-stackdriver-trace-example -c `{}`
+$ cf bind-service my-app my-google-stackdriver-trace-example -c `{}`
+</pre>
+
+
 
 
 --------------------------------------------------------------------------------
@@ -849,6 +981,7 @@ Unified object storage for developers and enterprises. Cloud Storage allows worl
  * [Support](https://cloud.google.com/support/)
  * Catalog Metadata ID: `b9e4332e-b42b-4680-bda5-ea1506797474`
  * Tags: gcp, storage
+ * Service Name: `google-storage`
 
 ## Provisioning
 
@@ -876,6 +1009,9 @@ Unified object storage for developers and enterprises. Cloud Storage allows worl
  * `bucket_name` _string_ - Name of the bucket this binding is for
 
 ## Plans
+
+The following plans are built-in to the GCP Service Broker and may be overriden
+or disabled by the broker administrator.
 
 
   * **standard**: Standard storage class. Plan ID: `e1d11f65-da66-46ad-977c-6d56513baf43`.
@@ -909,3 +1045,10 @@ Uses plan: `a42c1182-d1a0-4d40-82c1-28220518b360`.
     "role": "storage.objectAdmin"
 }
 ```
+
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-storage nearline my-google-storage-example -c `{"location":"us"}`
+$ cf bind-service my-app my-google-storage-example -c `{"role":"storage.objectAdmin"}`
+</pre>
