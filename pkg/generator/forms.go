@@ -71,6 +71,7 @@ func GenerateForms() TileFormsSections {
 			GenerateDatabaseForm(),
 			GenerateEnableDisableForm(),
 			GenerateRoleWhitelistForm(),
+			generateCompatibilityForm(),
 		},
 
 		ServicePlanForms: GenerateServicePlanForms(),
@@ -168,6 +169,27 @@ func GenerateServiceAccountForm() Form {
 		Description: "Please paste in the contents of the json keyfile (un-encoded) for your service account with owner credentials",
 		Properties: []FormProperty{
 			{Name: "root_service_account_json", Type: "text", Label: "Root Service Account JSON", Configurable: true},
+		},
+	}
+}
+
+func generateCompatibilityForm() Form {
+	return Form{
+		Name:        "compatibility",
+		Label:       "Compatibility",
+		Description: "Legacy Compatibility Options",
+		Properties: []FormProperty{
+			{
+				Name:         "gsb_compatibility_three_to_four",
+				Type:         "boolean",
+				Label:        "Compatibility with GCP Service Broker v3.X",
+				Configurable: true,
+				Default:      false,
+				Description: `Enable compatibility with the GCP Service Broker v3.x.
+Before version 4.0, each installation generated its own plan UUIDs, after 4.0 they have been standardized.
+This option installs a compatibility layer which checks if a service is using the correct plan GUID.
+If the service does not use the correct GUID, the request will fail with a message about how to upgrade.`,
+			},
 		},
 	}
 }

@@ -407,6 +407,29 @@ A comma delimited list of roles (minus the role/ prefix) that can be used when c
 
 
 
+## Compatibility
+
+Legacy Compatibility Options
+
+You can configure the following environment variables:
+
+<b><tt>GSB_COMPATIBILITY_THREE_TO_FOUR</tt></b> - <i>boolean</i> - Compatibility with GCP Service Broker v3.X
+
+Enable compatibility with the GCP Service Broker v3.x.
+Before version 4.0, each installation generated its own plan UUIDs, after 4.0 they have been standardized.
+This option installs a compatibility layer which checks if a service is using the correct plan GUID.
+If the service does not use the correct GUID, the request will fail with a message about how to upgrade.
+
+
+
+<ul>
+  <li><b>Required</b></li>
+
+
+</ul>
+
+
+
 
 ## Custom Plans
 
@@ -693,7 +716,7 @@ For example:
   <li>Default: <code>PER_USE</code></li>
   <li>Valid Values:
   <ul>
-    <li><tt>PER_USE</tt> - Per-Use</li><li><tt>PACKAGE</tt> - Package</li>
+    <li><tt>PACKAGE</tt> - Package</li><li><tt>PER_USE</tt> - Per-Use</li>
   </ul>
   </li>
 

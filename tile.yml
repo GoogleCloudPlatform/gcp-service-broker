@@ -214,6 +214,20 @@ forms:
     description: A comma delimited list of roles (minus the role/ prefix) that can
       be used when creating bound users for this service
     configurable: true
+- name: compatibility
+  label: Compatibility
+  description: Legacy Compatibility Options
+  properties:
+  - name: gsb_compatibility_three_to_four
+    type: boolean
+    default: false
+    label: Compatibility with GCP Service Broker v3.X
+    description: |-
+      Enable compatibility with the GCP Service Broker v3.x.
+      Before version 4.0, each installation generated its own plan UUIDs, after 4.0 they have been standardized.
+      This option installs a compatibility layer which checks if a service is using the correct plan GUID.
+      If the service does not use the correct GUID, the request will fail with a message about how to upgrade.
+    configurable: true
 service_plan_forms:
 - name: bigtable_custom_plans
   label: Google Bigtable Custom Plans
@@ -377,3 +391,4 @@ service_plan_forms:
     description: Number of Nodes, A minimum of 3 nodes is recommended for production
       environments. (see https://cloud.google.com/spanner/pricing for more information)
     configurable: true
+

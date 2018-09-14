@@ -24,15 +24,17 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/compatibility"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 const (
-	apiUserProp     = "api.user"
-	apiPasswordProp = "api.password"
-	apiPortProp     = "api.port"
+	apiUserProp         = "api.user"
+	apiPasswordProp     = "api.password"
+	apiPortProp         = "api.port"
+	v3CompatibilityProp = "compatibility.three-to-four"
 )
 
 func init() {
@@ -66,7 +68,8 @@ func serve() {
 	if err != nil {
 		logger.Fatal("Error initializing service broker config: %s", err)
 	}
-	serviceBroker, err := brokers.New(cfg, logger)
+	var serviceBroker brokerapi.ServiceBroker
+	serviceBroker, err = brokers.New(cfg, logger)
 	if err != nil {
 		logger.Fatal("Error initializing service broker: %s", err)
 	}
@@ -85,6 +88,12 @@ func serve() {
 		"port":     port,
 		"username": username,
 	})
+
+	if viper.GetBool(v3CompatibilityProp) {
+		logger.Info("Enabling v3 Compatibility Mode")
+
+		serviceBroker = compatibility.NewLegacyPlanUpgrader(serviceBroker)
+	}
 
 	brokerAPI := brokerapi.New(serviceBroker, logger, credentials)
 	http.Handle("/", brokerAPI)
