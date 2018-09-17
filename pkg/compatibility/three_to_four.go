@@ -162,6 +162,8 @@ func (t *ThreeToFour) augmentServiceCatalog(entry brokerapi.Service) brokerapi.S
 	return entry
 }
 
+// Update checks if the update is for a plan change from legacy to the defined
+// acceptable upgrade plan and modifies the database if so.
 func (t *ThreeToFour) Update(ctx context.Context, instanceID string, details brokerapi.UpdateDetails, asyncAllowed bool) (brokerapi.UpdateServiceSpec, error) {
 	instanceDetails, err := db_service.GetServiceInstanceDetailsById(instanceID)
 	if err != nil {
@@ -201,7 +203,7 @@ func (t *ThreeToFour) migrationErrorMessage(verb, instanceId string) error {
 		return nil
 	}
 
-	command := fmt.Sprintf("cf update-service %s -p %s", service.Name, path.NewPlanName)
+	command := fmt.Sprintf("cf update-service SERVICE_NAME -p %s", path.NewPlanName)
 	return fmt.Errorf("The instance you're trying to %s is using an unsupported plan. You must update it first by running `%s`", verb, command)
 }
 

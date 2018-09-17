@@ -158,7 +158,7 @@ func TestThreeToFour_migrationErrorMessage(t *testing.T) {
 		PlanId      string
 		ErrContains string
 	}{
-		"upgrade-needed":    {"83837945-1547-41e0-b661-ea31d76eed11", "11308f80-dc53-44f7-a49b-c3e65258b421", "cf update-service my-service -p default"},
+		"upgrade-needed":    {"83837945-1547-41e0-b661-ea31d76eed11", "11308f80-dc53-44f7-a49b-c3e65258b421", "cf update-service SERVICE_NAME -p default"},
 		"no-upgrade-needed": {"b9e4332e-b42b-4680-bda5-ea1506797474", "a42c1182-d1a0-4d40-82c1-28220518b360", ""},
 	}
 
