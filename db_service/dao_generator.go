@@ -332,16 +332,16 @@ func (ds *SqlDatastore) {{funcName "Save" .Type}}(object *models.{{.Type}}) erro
 	return ds.db.Save(object).Error
 }
 
-// {{funcName "Delete" .Type .PrimaryKeyField}} soft-deletes the record.
-func {{funcName "Delete" .Type .PrimaryKeyField}}(pk {{.PrimaryKeyType}}) error { return defaultDatastore().{{funcName "Delete" .Type .PrimaryKeyField}}(pk) }
-func (ds *SqlDatastore) {{funcName "Delete" .Type .PrimaryKeyField}}(pk {{.PrimaryKeyType}}) error {
-	record, err := ds.{{funcName "Get" .Type .PrimaryKeyField}}(pk)
-	if err != nil {
-		return err
-	}
-
-	return ds.{{funcName "Delete" .Type}}(record)
+{{- $type := .Type}}
+{{ range $idx, $key := .Keys -}}
+{{ $fn := (print "Delete" $type $key.FuncName) -}}
+// {{$fn}} soft-deletes the record by its key ({{$key.CallParams}}).
+func {{$fn}}({{ $key.Args }}) error { return defaultDatastore().{{$fn}}({{$key.CallParams}}) }
+func (ds *SqlDatastore) {{$fn}}({{ $key.Args }}) error {
+	return ds.db.{{ $key.WhereClause }}.Delete(&models.{{$type}}{}).Error
 }
+
+{{ end }}
 
 // Delete{{.Type}} soft-deletes the record.
 func {{funcName "Delete" .Type}}(record *models.{{.Type}}) error { return defaultDatastore().{{funcName "Delete" .Type}}(record) }
@@ -459,10 +459,6 @@ func TestSqlDatastore_{{.Type}}DAO(t *testing.T) {
 
 	if _, err := ds.{{funcName "CheckDeleted" .Type .PrimaryKeyField}}(testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to check deletion status of a non-existing PK got %v", err)
-	}
-
-	if err := ds.{{funcName "Delete" .Type .PrimaryKeyField}}(testPk); err != gorm.ErrRecordNotFound {
-		t.Errorf("Expected an ErrRecordNotFound trying to delete non-existing PK got %v", err)
 	}
 
 	// Should be able to create the item

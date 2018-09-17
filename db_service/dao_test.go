@@ -110,10 +110,6 @@ func TestSqlDatastore_ServiceInstanceDetailsDAO(t *testing.T) {
 		t.Errorf("Expected an ErrRecordNotFound trying to check deletion status of a non-existing PK got %v", err)
 	}
 
-	if err := ds.DeleteServiceInstanceDetailsById(testPk); err != gorm.ErrRecordNotFound {
-		t.Errorf("Expected an ErrRecordNotFound trying to delete non-existing PK got %v", err)
-	}
-
 	// Should be able to create the item
 	beforeCreation := time.Now()
 	if err := ds.CreateServiceInstanceDetails(&instance); err != nil {
@@ -339,10 +335,6 @@ func TestSqlDatastore_CloudOperationDAO(t *testing.T) {
 
 	if _, err := ds.CheckDeletedCloudOperationById(testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to check deletion status of a non-existing PK got %v", err)
-	}
-
-	if err := ds.DeleteCloudOperationById(testPk); err != gorm.ErrRecordNotFound {
-		t.Errorf("Expected an ErrRecordNotFound trying to delete non-existing PK got %v", err)
 	}
 
 	// Should be able to create the item
@@ -624,10 +616,6 @@ func TestSqlDatastore_ServiceBindingCredentialsDAO(t *testing.T) {
 
 	if _, err := ds.CheckDeletedServiceBindingCredentialsById(testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to check deletion status of a non-existing PK got %v", err)
-	}
-
-	if err := ds.DeleteServiceBindingCredentialsById(testPk); err != gorm.ErrRecordNotFound {
-		t.Errorf("Expected an ErrRecordNotFound trying to delete non-existing PK got %v", err)
 	}
 
 	// Should be able to create the item
@@ -985,10 +973,6 @@ func TestSqlDatastore_ProvisionRequestDetailsDAO(t *testing.T) {
 		t.Errorf("Expected an ErrRecordNotFound trying to check deletion status of a non-existing PK got %v", err)
 	}
 
-	if err := ds.DeleteProvisionRequestDetailsById(testPk); err != gorm.ErrRecordNotFound {
-		t.Errorf("Expected an ErrRecordNotFound trying to delete non-existing PK got %v", err)
-	}
-
 	// Should be able to create the item
 	beforeCreation := time.Now()
 	if err := ds.CreateProvisionRequestDetails(&instance); err != nil {
@@ -1263,10 +1247,6 @@ func TestSqlDatastore_PlanDetailsV1DAO(t *testing.T) {
 
 	if _, err := ds.CheckDeletedPlanDetailsV1ById(testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to check deletion status of a non-existing PK got %v", err)
-	}
-
-	if err := ds.DeletePlanDetailsV1ById(testPk); err != gorm.ErrRecordNotFound {
-		t.Errorf("Expected an ErrRecordNotFound trying to delete non-existing PK got %v", err)
 	}
 
 	// Should be able to create the item

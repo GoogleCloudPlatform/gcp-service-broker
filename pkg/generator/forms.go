@@ -67,19 +67,19 @@ func GenerateForms() TileFormsSections {
 	// in the generated UI and we don't want to mix things up on users.
 	return TileFormsSections{
 		Forms: []Form{
-			GenerateServiceAccountForm(),
-			GenerateDatabaseForm(),
-			GenerateEnableDisableForm(),
-			GenerateRoleWhitelistForm(),
+			generateServiceAccountForm(),
+			generateDatabaseForm(),
+			generateEnableDisableForm(),
+			generateRoleWhitelistForm(),
 			generateCompatibilityForm(),
 		},
 
-		ServicePlanForms: GenerateServicePlanForms(),
+		ServicePlanForms: generateServicePlanForms(),
 	}
 }
 
-// GenerateEnableDisableForm generates the form to enable and disable services.
-func GenerateEnableDisableForm() Form {
+// generateEnableDisableForm generates the form to enable and disable services.
+func generateEnableDisableForm() Form {
 	enablers := []FormProperty{}
 	for _, svc := range broker.GetAllServices() {
 		entry, err := svc.CatalogEntry()
@@ -106,10 +106,10 @@ func GenerateEnableDisableForm() Form {
 	}
 }
 
-// GenerateRoleWhitelistForm generates a form for users to enable/disable the
+// generateRoleWhitelistForm generates a form for users to enable/disable the
 // whitelist validation for new service accounts bound to the service.
 // They are opt-out and on by default for safety.
-func GenerateRoleWhitelistForm() Form {
+func generateRoleWhitelistForm() Form {
 	enablers := []FormProperty{}
 	for _, svc := range broker.GetAllServices() {
 		entry, err := svc.CatalogEntry()
@@ -141,8 +141,8 @@ func GenerateRoleWhitelistForm() Form {
 	}
 }
 
-// GenerateDatabaseForm generates the form for configuring database settings.
-func GenerateDatabaseForm() Form {
+// generateDatabaseForm generates the form for configuring database settings.
+func generateDatabaseForm() Form {
 	return Form{
 		Name:        "database_properties",
 		Label:       "Database Properties",
@@ -160,9 +160,9 @@ func GenerateDatabaseForm() Form {
 	}
 }
 
-// GenerateServiceAccountForm generates the form for configuring the service
+// generateServiceAccountForm generates the form for configuring the service
 // account.
-func GenerateServiceAccountForm() Form {
+func generateServiceAccountForm() Form {
 	return Form{
 		Name:        "root_service_account",
 		Label:       "Root Service Account",
@@ -194,9 +194,9 @@ func generateCompatibilityForm() Form {
 	}
 }
 
-// GenerateServicePlanForms generates customized service plan forms for all
+// generateServicePlanForms generates customized service plan forms for all
 // registered services that have the ability to customize their variables.
-func GenerateServicePlanForms() []Form {
+func generateServicePlanForms() []Form {
 	out := []Form{}
 
 	for _, svc := range broker.GetAllServices() {
@@ -206,7 +206,7 @@ func GenerateServicePlanForms() []Form {
 			continue
 		}
 
-		form, err := GenerateServicePlanForm(svc)
+		form, err := generateServicePlanForm(svc)
 		if err != nil {
 			log.Fatalf("Error generating form for %+v, %s", form, err)
 		}
@@ -217,9 +217,9 @@ func GenerateServicePlanForms() []Form {
 	return out
 }
 
-// GenerateServicePlanForm creates a form for adding additional service plans
+// generateServicePlanForm creates a form for adding additional service plans
 // to the broker for an existing service.
-func GenerateServicePlanForm(svc *broker.BrokerService) (Form, error) {
+func generateServicePlanForm(svc *broker.BrokerService) (Form, error) {
 	entry, err := svc.CatalogEntry()
 	if err != nil {
 		return Form{}, err
