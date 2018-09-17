@@ -185,10 +185,10 @@ func generateCompatibilityForm() Form {
 				Label:        "Compatibility with GCP Service Broker v3.X",
 				Configurable: true,
 				Default:      false,
-				Description: `Enable compatibility with the GCP Service Broker v3.x.
-Before version 4.0, each installation generated its own plan UUIDs, after 4.0 they have been standardized.
-This option installs a compatibility layer which checks if a service is using the correct plan GUID.
-If the service does not use the correct GUID, the request will fail with a message about how to upgrade.`,
+				Description: singleLine(`Enable compatibility with the GCP Service Broker v3.x.
+					Before version 4.0, each installation generated its own plan UUIDs, after 4.0 they have been standardized.
+					This option installs a compatibility layer which checks if a service is using the correct plan GUID.
+					If the service does not use the correct GUID, the request will fail with a message about how to upgrade.`),
 			},
 		},
 	}
@@ -307,4 +307,15 @@ func brokerVariableToFormProperty(v broker.BrokerVariable) FormProperty {
 // human-readable alternative.
 func propertyToLabel(property string) string {
 	return strings.Title(strings.NewReplacer("_", " ").Replace(property))
+}
+
+func singleLine(text string) string {
+	lines := strings.Split(text, "\n")
+
+	var out []string
+	for _, line := range lines {
+		out = append(out, strings.TrimSpace(line))
+	}
+
+	return strings.Join(out, " ")
 }
