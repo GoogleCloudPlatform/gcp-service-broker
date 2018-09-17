@@ -23,7 +23,7 @@ import (
 type ServiceBindingCredentials ServiceBindingCredentialsV1
 
 // GetOtherDetails returns an unmarshaled version of the OtherDetails field
-// or panics.
+// or errors.
 func (sbc ServiceBindingCredentials) GetOtherDetails() (map[string]string, error) {
 	var creds map[string]string
 	err := json.Unmarshal([]byte(sbc.OtherDetails), &creds)
