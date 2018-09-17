@@ -87,11 +87,7 @@ var _ = Describe("AsyncIntegrationTests", func() {
 		fakes.SetUpTestServices()
 
 		brokerConfig, err = config.NewBrokerConfigFromEnv()
-
-		if err != nil {
-			logger.Error("error", err)
-			panic(err.Error())
-		}
+		Expect(err).NotTo(HaveOccurred())
 
 		instance_name = generateInstanceName(brokerConfig.ProjectId, "-")
 

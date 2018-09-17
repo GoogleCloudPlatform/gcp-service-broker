@@ -144,8 +144,16 @@ func (sam *ServiceAccountManager) DeleteCredentials(binding models.ServiceBindin
 }
 
 func (b *ServiceAccountManager) BuildInstanceCredentials(bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error) {
-	bindDetails := bindRecord.GetOtherDetails()
-	instanceDetails := instanceRecord.GetOtherDetails()
+	bindDetails, err := bindRecord.GetOtherDetails()
+	if err != nil {
+		return nil, err
+	}
+
+	instanceDetails, err := instanceRecord.GetOtherDetails()
+	if err != nil {
+		return nil, err
+	}
+
 	return utils.MergeStringMaps(bindDetails, instanceDetails), nil
 }
 
