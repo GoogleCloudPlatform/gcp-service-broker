@@ -437,11 +437,11 @@ func create{{.Type}}Instance() ({{.PrimaryKeyType}}, models.{{.Type}}) {
 }
 
 func ensure{{.Type}}FieldsMatch(t *testing.T, expected, actual *models.{{.Type}}) {
-	{{range $k, $v := .ExampleFields}}
+{{range $k, $v := .ExampleFields}}
 	if expected.{{$k}} != actual.{{$k}} {
 		t.Errorf("Expected field {{$k}} to be %#v, got %#v", expected.{{$k}}, actual.{{$k}})
 	}
-	{{end}}
+{{end}}
 }
 
 func TestSqlDatastore_{{.Type}}DAO(t *testing.T) {

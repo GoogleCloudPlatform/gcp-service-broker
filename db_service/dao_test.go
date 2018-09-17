@@ -58,39 +58,39 @@ func createServiceInstanceDetailsInstance() (string, models.ServiceInstanceDetai
 }
 
 func ensureServiceInstanceDetailsFieldsMatch(t *testing.T, expected, actual *models.ServiceInstanceDetails) {
-	
+
 	if expected.Location != actual.Location {
 		t.Errorf("Expected field Location to be %#v, got %#v", expected.Location, actual.Location)
 	}
-	
+
 	if expected.Name != actual.Name {
 		t.Errorf("Expected field Name to be %#v, got %#v", expected.Name, actual.Name)
 	}
-	
+
 	if expected.OrganizationGuid != actual.OrganizationGuid {
 		t.Errorf("Expected field OrganizationGuid to be %#v, got %#v", expected.OrganizationGuid, actual.OrganizationGuid)
 	}
-	
+
 	if expected.OtherDetails != actual.OtherDetails {
 		t.Errorf("Expected field OtherDetails to be %#v, got %#v", expected.OtherDetails, actual.OtherDetails)
 	}
-	
+
 	if expected.PlanId != actual.PlanId {
 		t.Errorf("Expected field PlanId to be %#v, got %#v", expected.PlanId, actual.PlanId)
 	}
-	
+
 	if expected.ServiceId != actual.ServiceId {
 		t.Errorf("Expected field ServiceId to be %#v, got %#v", expected.ServiceId, actual.ServiceId)
 	}
-	
+
 	if expected.SpaceGuid != actual.SpaceGuid {
 		t.Errorf("Expected field SpaceGuid to be %#v, got %#v", expected.SpaceGuid, actual.SpaceGuid)
 	}
-	
+
 	if expected.Url != actual.Url {
 		t.Errorf("Expected field Url to be %#v, got %#v", expected.Url, actual.Url)
 	}
-	
+
 }
 
 func TestSqlDatastore_ServiceInstanceDetailsDAO(t *testing.T) {
@@ -277,47 +277,47 @@ func createCloudOperationInstance() (uint, models.CloudOperation) {
 }
 
 func ensureCloudOperationFieldsMatch(t *testing.T, expected, actual *models.CloudOperation) {
-	
+
 	if expected.ErrorMessage != actual.ErrorMessage {
 		t.Errorf("Expected field ErrorMessage to be %#v, got %#v", expected.ErrorMessage, actual.ErrorMessage)
 	}
-	
+
 	if expected.InsertTime != actual.InsertTime {
 		t.Errorf("Expected field InsertTime to be %#v, got %#v", expected.InsertTime, actual.InsertTime)
 	}
-	
+
 	if expected.Name != actual.Name {
 		t.Errorf("Expected field Name to be %#v, got %#v", expected.Name, actual.Name)
 	}
-	
+
 	if expected.OperationType != actual.OperationType {
 		t.Errorf("Expected field OperationType to be %#v, got %#v", expected.OperationType, actual.OperationType)
 	}
-	
+
 	if expected.ServiceId != actual.ServiceId {
 		t.Errorf("Expected field ServiceId to be %#v, got %#v", expected.ServiceId, actual.ServiceId)
 	}
-	
+
 	if expected.ServiceInstanceId != actual.ServiceInstanceId {
 		t.Errorf("Expected field ServiceInstanceId to be %#v, got %#v", expected.ServiceInstanceId, actual.ServiceInstanceId)
 	}
-	
+
 	if expected.StartTime != actual.StartTime {
 		t.Errorf("Expected field StartTime to be %#v, got %#v", expected.StartTime, actual.StartTime)
 	}
-	
+
 	if expected.Status != actual.Status {
 		t.Errorf("Expected field Status to be %#v, got %#v", expected.Status, actual.Status)
 	}
-	
+
 	if expected.TargetId != actual.TargetId {
 		t.Errorf("Expected field TargetId to be %#v, got %#v", expected.TargetId, actual.TargetId)
 	}
-	
+
 	if expected.TargetLink != actual.TargetLink {
 		t.Errorf("Expected field TargetLink to be %#v, got %#v", expected.TargetLink, actual.TargetLink)
 	}
-	
+
 }
 
 func TestSqlDatastore_CloudOperationDAO(t *testing.T) {
@@ -582,23 +582,23 @@ func createServiceBindingCredentialsInstance() (uint, models.ServiceBindingCrede
 }
 
 func ensureServiceBindingCredentialsFieldsMatch(t *testing.T, expected, actual *models.ServiceBindingCredentials) {
-	
+
 	if expected.BindingId != actual.BindingId {
 		t.Errorf("Expected field BindingId to be %#v, got %#v", expected.BindingId, actual.BindingId)
 	}
-	
+
 	if expected.OtherDetails != actual.OtherDetails {
 		t.Errorf("Expected field OtherDetails to be %#v, got %#v", expected.OtherDetails, actual.OtherDetails)
 	}
-	
+
 	if expected.ServiceId != actual.ServiceId {
 		t.Errorf("Expected field ServiceId to be %#v, got %#v", expected.ServiceId, actual.ServiceId)
 	}
-	
+
 	if expected.ServiceInstanceId != actual.ServiceInstanceId {
 		t.Errorf("Expected field ServiceInstanceId to be %#v, got %#v", expected.ServiceInstanceId, actual.ServiceInstanceId)
 	}
-	
+
 }
 
 func TestSqlDatastore_ServiceBindingCredentialsDAO(t *testing.T) {
@@ -945,15 +945,15 @@ func createProvisionRequestDetailsInstance() (uint, models.ProvisionRequestDetai
 }
 
 func ensureProvisionRequestDetailsFieldsMatch(t *testing.T, expected, actual *models.ProvisionRequestDetails) {
-	
+
 	if expected.RequestDetails != actual.RequestDetails {
 		t.Errorf("Expected field RequestDetails to be %#v, got %#v", expected.RequestDetails, actual.RequestDetails)
 	}
-	
+
 	if expected.ServiceInstanceId != actual.ServiceInstanceId {
 		t.Errorf("Expected field ServiceInstanceId to be %#v, got %#v", expected.ServiceInstanceId, actual.ServiceInstanceId)
 	}
-	
+
 }
 
 func TestSqlDatastore_ProvisionRequestDetailsDAO(t *testing.T) {
@@ -1217,19 +1217,19 @@ func createPlanDetailsV1Instance() (string, models.PlanDetailsV1) {
 }
 
 func ensurePlanDetailsV1FieldsMatch(t *testing.T, expected, actual *models.PlanDetailsV1) {
-	
+
 	if expected.Features != actual.Features {
 		t.Errorf("Expected field Features to be %#v, got %#v", expected.Features, actual.Features)
 	}
-	
+
 	if expected.Name != actual.Name {
 		t.Errorf("Expected field Name to be %#v, got %#v", expected.Name, actual.Name)
 	}
-	
+
 	if expected.ServiceId != actual.ServiceId {
 		t.Errorf("Expected field ServiceId to be %#v, got %#v", expected.ServiceId, actual.ServiceId)
 	}
-	
+
 }
 
 func TestSqlDatastore_PlanDetailsV1DAO(t *testing.T) {
