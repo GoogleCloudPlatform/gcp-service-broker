@@ -4,8 +4,8 @@
 
 The service broker has both unit and end-to-end tests.
 End to end tests are generated from the documentation and examples and run outside the standard `go test` framework.
-This ensures the auto-generated docs are always up-to-date and the examples work
-while benefiting us by ensuring that the service implements the OSB spec correctly.
+This ensures the auto-generated docs are always up-to-date and the examples work.
+By executing the examples as an OSB client, it also ensures the service broker implements the OSB spec correctly.
 
 To run the suite of end-to-end tests:
 
