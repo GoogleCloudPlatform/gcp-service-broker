@@ -19,8 +19,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><b>Required</b></li>
-
-
 </ul>
 
 
@@ -39,8 +37,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><b>Required</b></li>
-
-
 </ul>
 
 <b><tt>DB_USERNAME</tt></b> - <i>string</i> - Database username
@@ -51,8 +47,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><i>Optional</i></li>
-
-
 </ul>
 
 <b><tt>DB_PASSWORD</tt></b> - <i>secret</i> - Database password
@@ -63,8 +57,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><i>Optional</i></li>
-
-
 </ul>
 
 <b><tt>DB_PORT</tt></b> - <i>string</i> - Database port (defaults to 3306)
@@ -75,8 +67,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>3306</code></li>
 </ul>
 
@@ -88,8 +78,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>servicebroker</code></li>
 </ul>
 
@@ -101,8 +89,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><i>Optional</i></li>
-
-
 </ul>
 
 <b><tt>CLIENT_CERT</tt></b> - <i>text</i> - Client cert
@@ -113,8 +99,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><i>Optional</i></li>
-
-
 </ul>
 
 <b><tt>CLIENT_KEY</tt></b> - <i>text</i> - Client key
@@ -125,8 +109,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><i>Optional</i></li>
-
-
 </ul>
 
 
@@ -145,8 +127,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>true</code></li>
 </ul>
 
@@ -158,8 +138,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>true</code></li>
 </ul>
 
@@ -171,8 +149,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>true</code></li>
 </ul>
 
@@ -184,8 +160,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>true</code></li>
 </ul>
 
@@ -197,8 +171,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>true</code></li>
 </ul>
 
@@ -210,8 +182,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>true</code></li>
 </ul>
 
@@ -223,8 +193,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>true</code></li>
 </ul>
 
@@ -236,8 +204,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>true</code></li>
 </ul>
 
@@ -249,8 +215,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>true</code></li>
 </ul>
 
@@ -262,8 +226,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>true</code></li>
 </ul>
 
@@ -275,8 +237,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>true</code></li>
 </ul>
 
@@ -288,8 +248,6 @@ You can configure the following environment variables:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>true</code></li>
 </ul>
 
@@ -309,8 +267,6 @@ A comma delimited list of roles (minus the role/ prefix) that can be used when c
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>bigquery.dataViewer,bigquery.dataEditor,bigquery.dataOwner,bigquery.user,bigquery.jobUser</code></li>
 </ul>
 
@@ -322,8 +278,6 @@ A comma delimited list of roles (minus the role/ prefix) that can be used when c
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>bigtable.user,bigtable.reader,bigtable.viewer</code></li>
 </ul>
 
@@ -335,8 +289,6 @@ A comma delimited list of roles (minus the role/ prefix) that can be used when c
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>cloudsql.editor,cloudsql.viewer,cloudsql.client</code></li>
 </ul>
 
@@ -348,8 +300,6 @@ A comma delimited list of roles (minus the role/ prefix) that can be used when c
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>cloudsql.editor,cloudsql.viewer,cloudsql.client</code></li>
 </ul>
 
@@ -361,8 +311,6 @@ A comma delimited list of roles (minus the role/ prefix) that can be used when c
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>ml.developer,ml.viewer,ml.modelOwner,ml.modelUser,ml.jobOwner,ml.operationOwner</code></li>
 </ul>
 
@@ -374,8 +322,6 @@ A comma delimited list of roles (minus the role/ prefix) that can be used when c
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>pubsub.publisher,pubsub.subscriber,pubsub.viewer,pubsub.editor</code></li>
 </ul>
 
@@ -387,8 +333,6 @@ A comma delimited list of roles (minus the role/ prefix) that can be used when c
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>spanner.databaseAdmin,spanner.databaseReader,spanner.databaseUser,spanner.viewer</code></li>
 </ul>
 
@@ -400,8 +344,6 @@ A comma delimited list of roles (minus the role/ prefix) that can be used when c
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>storage.objectCreator,storage.objectViewer,storage.objectAdmin</code></li>
 </ul>
 
@@ -421,8 +363,6 @@ Enable compatibility with the GCP Service Broker v3.x. Before version 4.0, each 
 
 <ul>
   <li><b>Required</b></li>
-
-
 </ul>
 
 
@@ -483,8 +423,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
 </ul>
 
 
@@ -501,8 +439,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
 </ul>
 
 
@@ -519,8 +455,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>b8e19880-ac58-42ef-b033-f7cd9c94d1fe</code></li>
   <li>This option _is not_ user configurable. It must be set to the default.</li>
   <li>Valid Values:
@@ -528,7 +462,6 @@ For example:
     <li><tt>b8e19880-ac58-42ef-b033-f7cd9c94d1fe</tt> - Google Bigtable</li>
   </ul>
   </li>
-
 </ul>
 
 
@@ -545,15 +478,12 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>SSD</code></li>
   <li>Valid Values:
   <ul>
-    <li><tt>HDD</tt> - HDD - Hard Disk Drive</li><li><tt>SSD</tt> - SSD - Solid-state Drive</li>
+    <li><tt>SSD</tt> - SSD - Solid-state Drive</li><li><tt>HDD</tt> - HDD - Hard Disk Drive</li>
   </ul>
   </li>
-
 </ul>
 
 
@@ -570,8 +500,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>3</code></li>
 </ul>
 
@@ -628,8 +556,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
 </ul>
 
 
@@ -646,8 +572,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
 </ul>
 
 
@@ -664,8 +588,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>4bc59b9a-8520-409f-85da-1c7552315863</code></li>
   <li>This option _is not_ user configurable. It must be set to the default.</li>
   <li>Valid Values:
@@ -673,7 +595,6 @@ For example:
     <li><tt>4bc59b9a-8520-409f-85da-1c7552315863</tt> - Google CloudSQL MySQL</li>
   </ul>
   </li>
-
 </ul>
 
 
@@ -690,8 +611,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
 </ul>
 
 
@@ -708,15 +627,12 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>PER_USE</code></li>
   <li>Valid Values:
   <ul>
     <li><tt>PER_USE</tt> - Per-Use</li><li><tt>PACKAGE</tt> - Package</li>
   </ul>
   </li>
-
 </ul>
 
 
@@ -733,8 +649,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>10</code></li>
 </ul>
 
@@ -791,8 +705,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
 </ul>
 
 
@@ -809,8 +721,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
 </ul>
 
 
@@ -827,8 +737,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>cbad6d78-a73c-432d-b8ff-b219a17a803a</code></li>
   <li>This option _is not_ user configurable. It must be set to the default.</li>
   <li>Valid Values:
@@ -836,7 +744,6 @@ For example:
     <li><tt>cbad6d78-a73c-432d-b8ff-b219a17a803a</tt> - Google CloudSQL PostgreSQL</li>
   </ul>
   </li>
-
 </ul>
 
 
@@ -853,8 +760,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
 </ul>
 
 
@@ -871,8 +776,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>PER_USE</code></li>
   <li>This option _is not_ user configurable. It must be set to the default.</li>
   <li>Valid Values:
@@ -880,7 +783,6 @@ For example:
     <li><tt>PER_USE</tt> - Per-Use</li>
   </ul>
   </li>
-
 </ul>
 
 
@@ -897,8 +799,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>10</code></li>
 </ul>
 
@@ -955,8 +855,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
 </ul>
 
 
@@ -973,8 +871,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
 </ul>
 
 
@@ -991,8 +887,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>51b3e27e-d323-49ce-8c5f-1211e6409e82</code></li>
   <li>This option _is not_ user configurable. It must be set to the default.</li>
   <li>Valid Values:
@@ -1000,7 +894,6 @@ For example:
     <li><tt>51b3e27e-d323-49ce-8c5f-1211e6409e82</tt> - Google Spanner</li>
   </ul>
   </li>
-
 </ul>
 
 
@@ -1017,8 +910,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-
-
   <li>Default: <code>1</code></li>
 </ul>
 
