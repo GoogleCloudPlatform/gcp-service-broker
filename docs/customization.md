@@ -413,12 +413,9 @@ Legacy Compatibility Options
 
 You can configure the following environment variables:
 
-<b><tt>GSB_COMPATIBILITY_THREE_TO_FOUR</tt></b> - <i>boolean</i> - Compatibility with GCP Service Broker v3.X
+<b><tt>GSB_COMPATIBILITY_THREE_TO_FOUR_LEGACY_PLANS</tt></b> - <i>boolean</i> - Compatibility with GCP Service Broker v3.X plans
 
-Enable compatibility with the GCP Service Broker v3.x.
-Before version 4.0, each installation generated its own plan UUIDs, after 4.0 they have been standardized.
-This option installs a compatibility layer which checks if a service is using the correct plan GUID.
-If the service does not use the correct GUID, the request will fail with a message about how to upgrade.
+Enable compatibility with the GCP Service Broker v3.x. Before version 4.0, each installation generated its own plan UUIDs, after 4.0 they have been standardized. This option installs a compatibility layer which checks if a service is using the correct plan GUID. If the service does not use the correct GUID, the request will fail with a message about how to upgrade.
 
 
 
@@ -553,7 +550,7 @@ For example:
   <li>Default: <code>SSD</code></li>
   <li>Valid Values:
   <ul>
-    <li><tt>SSD</tt> - SSD - Solid-state Drive</li><li><tt>HDD</tt> - HDD - Hard Disk Drive</li>
+    <li><tt>HDD</tt> - HDD - Hard Disk Drive</li><li><tt>SSD</tt> - SSD - Solid-state Drive</li>
   </ul>
   </li>
 
@@ -716,7 +713,7 @@ For example:
   <li>Default: <code>PER_USE</code></li>
   <li>Valid Values:
   <ul>
-    <li><tt>PACKAGE</tt> - Package</li><li><tt>PER_USE</tt> - Per-Use</li>
+    <li><tt>PER_USE</tt> - Per-Use</li><li><tt>PACKAGE</tt> - Package</li>
   </ul>
   </li>
 

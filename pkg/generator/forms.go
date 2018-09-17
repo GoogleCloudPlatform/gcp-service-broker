@@ -180,9 +180,9 @@ func generateCompatibilityForm() Form {
 		Description: "Legacy Compatibility Options",
 		Properties: []FormProperty{
 			{
-				Name:         "gsb_compatibility_three_to_four",
+				Name:         "gsb_compatibility_three_to_four_legacy_plans",
 				Type:         "boolean",
-				Label:        "Compatibility with GCP Service Broker v3.X",
+				Label:        "Compatibility with GCP Service Broker v3.X plans",
 				Configurable: true,
 				Default:      false,
 				Description: singleLine(`Enable compatibility with the GCP Service Broker v3.x.

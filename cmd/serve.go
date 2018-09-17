@@ -34,7 +34,7 @@ const (
 	apiUserProp         = "api.user"
 	apiPasswordProp     = "api.password"
 	apiPortProp         = "api.port"
-	v3CompatibilityProp = "compatibility.three-to-four"
+	v3CompatibilityProp = "compatibility.three-to-four.legacy-plans"
 )
 
 func init() {

@@ -218,10 +218,10 @@ forms:
   label: Compatibility
   description: Legacy Compatibility Options
   properties:
-  - name: gsb_compatibility_three_to_four
+  - name: gsb_compatibility_three_to_four_legacy_plans
     type: boolean
     default: false
-    label: Compatibility with GCP Service Broker v3.X
+    label: Compatibility with GCP Service Broker v3.X plans
     description: Enable compatibility with the GCP Service Broker v3.x. Before version
       4.0, each installation generated its own plan UUIDs, after 4.0 they have been
       standardized. This option installs a compatibility layer which checks if a service
