@@ -180,8 +180,15 @@ func (sam *SqlAccountManager) pollOperationUntilDone(op *googlecloudsql.Operatio
 }
 
 func (b *SqlAccountManager) BuildInstanceCredentials(bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error) {
-	instanceDetails := instanceRecord.GetOtherDetails()
-	bindDetails := bindRecord.GetOtherDetails()
+	instanceDetails, err := instanceRecord.GetOtherDetails()
+	if err != nil {
+		return nil, err
+	}
+
+	bindDetails, err := bindRecord.GetOtherDetails()
+	if err != nil {
+		return nil, err
+	}
 
 	service, err := broker.GetServiceById(instanceRecord.ServiceId)
 	if err != nil {

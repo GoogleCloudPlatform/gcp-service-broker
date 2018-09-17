@@ -396,7 +396,7 @@ func (gcpBroker *GCPServiceBroker) lastOperationAsync(instanceId string, service
 	// no error and we're done! Delete from the SB database if this was a delete flow and return success
 	deleteFlow, err := service.LastOperationWasDelete(instanceId)
 	if err != nil {
-		return brokerapi.LastOperation{State: brokerapi.Succeeded}, fmt.Errorf("Couldn't determine if provision or deprovision flow, this may leave orphaned resources, contact your operator for cleanup")
+		return brokerapi.LastOperation{State: brokerapi.Succeeded}, fmt.Errorf("Couldn't determine if provision or deprovision flow, this may leave orphaned resources, contact your operator for cleanup: %s", err)
 	}
 	if deleteFlow {
 		err = db_service.DeleteServiceInstanceDetailsById(instanceId)

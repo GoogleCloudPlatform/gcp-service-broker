@@ -24,12 +24,10 @@ type ServiceBindingCredentials ServiceBindingCredentialsV1
 
 // GetOtherDetails returns an unmarshaled version of the OtherDetails field
 // or panics.
-func (sbc ServiceBindingCredentials) GetOtherDetails() map[string]string {
+func (sbc ServiceBindingCredentials) GetOtherDetails() (map[string]string, error) {
 	var creds map[string]string
-	if err := json.Unmarshal([]byte(sbc.OtherDetails), &creds); err != nil {
-		panic(err)
-	}
-	return creds
+	err := json.Unmarshal([]byte(sbc.OtherDetails), &creds)
+	return creds, err
 }
 
 // ServiceInstanceDetails returns an unmarshaled version of the OtherDetails field
@@ -37,17 +35,15 @@ func (sbc ServiceBindingCredentials) GetOtherDetails() map[string]string {
 type ServiceInstanceDetails ServiceInstanceDetailsV1
 
 // GetOtherDetails returns an unmarshaled version of the OtherDetails field
-// or panics.
-func (si ServiceInstanceDetails) GetOtherDetails() map[string]string {
+// or errors.
+func (si ServiceInstanceDetails) GetOtherDetails() (map[string]string, error) {
 	var instanceDetails map[string]string
-	// if the instance has access details saved
-	if si.OtherDetails != "" {
-		if err := json.Unmarshal([]byte(si.OtherDetails), &instanceDetails); err != nil {
-			panic(err)
-		}
+	if si.OtherDetails == "" {
+		return instanceDetails, nil
 	}
-	return instanceDetails
 
+	err := json.Unmarshal([]byte(si.OtherDetails), &instanceDetails)
+	return instanceDetails, err
 }
 
 // ProvisionRequestDetails holds user-defined properties passed to a call
