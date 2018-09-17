@@ -1,5 +1,21 @@
 # Testing Locally
 
+## End to End Tests
+
+The service broker has both unit and end-to-end tests.
+End to end tests are generated from the documentation and examples and run outside the standard `go test` framework.
+This ensures the auto-generated docs are always up-to-date and the examples work
+while benefiting us by ensuring that the service implements the OSB spec correctly.
+
+To run the suite of end-to-end tests:
+
+1. Start an instance of the broker `./gcp-service-broker serve`.
+2. In a separate window, run the examples: `./gcp-service-broker client run-examples`
+3. Wait for the examples to run and check the exit code. Exit codes other than 0 mean the end-to-end tests failed.
+
+You can also target specific services in the end-to-end tests using the `--service-name` flag.
+See `./gcp-service-broker client run-examples --help` for more details.
+
 ## Database Setup
 
 You can set up a local MySQL database for testing using Docker:
@@ -11,7 +27,7 @@ $ mysql> CREATE DATABASE servicebroker;
 $ mysql> exit
 ```
 
-Or, you can run the service broker using SQLite3 for development by sepecifying
+Or, you can run the service broker using SQLite3 for development by specifying
 the `db.type` and `db.path` fields:
 
 ```
@@ -68,7 +84,7 @@ api:
 
 Create unbind commands for all bindings:
 
-  ./gcp-service-broker show bindings | jq --raw-output '.[] | "gcp-service-broker client unbind --bindingid \(.BindingId) --instanceid \(.ServiceInstanceId) --planid \(.PlanId) --serviceid \(.ServiceId)"'
+  ./gcp-service-broker show bindings | jq --raw-output '.[] | "./gcp-service-broker client unbind --bindingid \(.BindingId) --instanceid \(.ServiceInstanceId) --planid \(.PlanId) --serviceid \(.ServiceId)"'
 
 Create deprovision commands for all bindings:
 
