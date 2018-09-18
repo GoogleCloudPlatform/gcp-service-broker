@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"context"
 	"net/http"
 	"os"
 
@@ -94,6 +95,12 @@ func serve() {
 
 		serviceBroker = compatibility.NewLegacyPlanUpgrader(serviceBroker)
 	}
+
+	services, err := serviceBroker.Services(context.Background())
+	if err != nil {
+		logger.Error("creating service catalog", err)
+	}
+	logger.Info("service catalog", lager.Data{"catalog": services})
 
 	brokerAPI := brokerapi.New(serviceBroker, logger, credentials)
 	http.Handle("/", brokerAPI)
