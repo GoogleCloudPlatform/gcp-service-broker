@@ -28,7 +28,7 @@ type ApiServiceBroker struct {
 }
 
 // Provision is a no-op call because only service accounts need to be bound/unbound for Google Machine Learning APIs.
-func (b *ApiServiceBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+func (b *ApiServiceBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	return models.ServiceInstanceDetails{}, nil
 }
 

@@ -120,10 +120,10 @@ var _ = Describe("Brokers", func() {
 			gcpBroker.ServiceBrokerMap[k] = &modelsfakes.FakeServiceBrokerHelper{
 				ProvisionsAsyncStub:   func() bool { return async },
 				DeprovisionsAsyncStub: func() bool { return async },
-				ProvisionStub: func(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+				ProvisionStub: func(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 					return models.ServiceInstanceDetails{ID: instanceId, OtherDetails: "{\"mynameis\": \"instancename\"}"}, nil
 				},
-				BindStub: func(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
+				BindStub: func(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 					return models.ServiceBindingCredentials{OtherDetails: "{\"foo\": \"bar\"}"}, nil
 				},
 			}
@@ -469,7 +469,7 @@ var _ = Describe("AccountManagers", func() {
 	Describe("bind", func() {
 		Context("when bind is called on an iam-style broker", func() {
 			It("should call the account manager create account in google method", func() {
-				_, err = iamStyleBroker.Bind("foo", "bar", brokerapi.BindDetails{})
+				_, err = iamStyleBroker.Bind(context.Background(), "foo", "bar", brokerapi.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 			})
@@ -478,7 +478,7 @@ var _ = Describe("AccountManagers", func() {
 		Context("when bind is called on a cloudsql broker after provision", func() {
 			It("should call the account manager create account in google method", func() {
 				db_service.SaveServiceInstanceDetails(&models.ServiceInstanceDetails{ID: "foo"})
-				_, err = iamStyleBroker.Bind("foo", "bar", brokerapi.BindDetails{})
+				_, err = iamStyleBroker.Bind(context.Background(), "foo", "bar", brokerapi.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 			})
@@ -486,7 +486,7 @@ var _ = Describe("AccountManagers", func() {
 
 		Context("when bind is called on a cloudsql broker on a missing service instance", func() {
 			It("should throw an error", func() {
-				_, err = cloudsqlBroker.Bind("foo", "bar", brokerapi.BindDetails{})
+				_, err = cloudsqlBroker.Bind(context.Background(), "foo", "bar", brokerapi.BindDetails{})
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -495,7 +495,7 @@ var _ = Describe("AccountManagers", func() {
 			It("should return a generated username and password", func() {
 				db_service.CreateServiceInstanceDetails(&models.ServiceInstanceDetails{ID: "foo"})
 
-				_, err := cloudsqlBroker.Bind("foo", "bar", brokerapi.BindDetails{})
+				_, err := cloudsqlBroker.Bind(context.Background(), "foo", "bar", brokerapi.BindDetails{})
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
@@ -532,7 +532,7 @@ var _ = Describe("AccountManagers", func() {
 	Describe("unbind", func() {
 		Context("when unbind is called on the broker", func() {
 			It("it should call the account manager delete account from google method", func() {
-				err = iamStyleBroker.Unbind(models.ServiceBindingCredentials{})
+				err = iamStyleBroker.Unbind(context.Background(), models.ServiceBindingCredentials{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.DeleteCredentialsCallCount()).To(Equal(1))
 			})
@@ -540,7 +540,7 @@ var _ = Describe("AccountManagers", func() {
 
 		Context("when unbind is called on a cloudsql broker", func() {
 			It("it should call the account manager delete account from google method", func() {
-				err = cloudsqlBroker.Unbind(models.ServiceBindingCredentials{})
+				err = cloudsqlBroker.Unbind(context.Background(), models.ServiceBindingCredentials{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.DeleteCredentialsCallCount()).To(Equal(1))
 				Expect(sqlAccountManager.DeleteCredentialsCallCount()).To(Equal(1))

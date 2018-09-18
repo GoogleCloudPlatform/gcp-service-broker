@@ -25,12 +25,12 @@ import (
 //go:generate counterfeiter . ServiceAccountManager
 
 type ServiceBrokerHelper interface {
-	Provision(instanceId string, details brokerapi.ProvisionDetails, plan ServicePlan) (ServiceInstanceDetails, error)
-	Bind(instanceID, bindingID string, details brokerapi.BindDetails) (ServiceBindingCredentials, error)
+	Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan ServicePlan) (ServiceInstanceDetails, error)
+	Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (ServiceBindingCredentials, error)
 	BuildInstanceCredentials(bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
-	Unbind(details ServiceBindingCredentials) error
+	Unbind(ctx context.Context, details ServiceBindingCredentials) error
 	Deprovision(ctx context.Context, instance ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error
-	PollInstance(instanceID string) (bool, error)
+	PollInstance(ctx context.Context, instanceID string) (bool, error)
 	LastOperationWasDelete(instanceID string) (bool, error)
 	ProvisionsAsync() bool
 	DeprovisionsAsync() bool

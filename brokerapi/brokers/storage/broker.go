@@ -41,7 +41,7 @@ type InstanceInformation struct {
 }
 
 // Provision creates a new GCS bucket from the settings in the user-provided details and service plan.
-func (b *StorageBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+func (b *StorageBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 
 	storageClass := plan.ServiceProperties["storage_class"]
@@ -59,12 +59,9 @@ func (b *StorageBroker) Provision(instanceId string, details brokerapi.Provision
 	}
 
 	// make a new bucket
-	ctx := context.Background()
-	co := option.WithUserAgent(models.CustomUserAgent)
-	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
-	storageService, err := googlestorage.NewClient(ctx, co, ct)
+	storageService, err := b.createClient(ctx)
 	if err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new storage client: %s", err)
+		return models.ServiceInstanceDetails{}, err
 	}
 
 	bucket := storageService.Bucket(params["name"])
@@ -110,10 +107,9 @@ func (b *StorageBroker) Provision(instanceId string, details brokerapi.Provision
 // Deprovision deletes the bucket associated with the given instance.
 // Note that all objects within the bucket must be deleted first.
 func (b *StorageBroker) Deprovision(ctx context.Context, bucket models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
-	ct := option.WithTokenSource(b.HttpConfig.TokenSource(ctx))
-	storageService, err := googlestorage.NewClient(ctx, ct)
+	storageService, err := b.createClient(ctx)
 	if err != nil {
-		return fmt.Errorf("Error creating storage client: %s", err)
+		return err
 	}
 
 	if err = storageService.Bucket(bucket.Name).Delete(ctx); err != nil {
@@ -121,4 +117,15 @@ func (b *StorageBroker) Deprovision(ctx context.Context, bucket models.ServiceIn
 	}
 
 	return nil
+}
+
+func (b *StorageBroker) createClient(ctx context.Context) (*googlestorage.Client, error) {
+	co := option.WithUserAgent(models.CustomUserAgent)
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(ctx))
+	storageService, err := googlestorage.NewClient(ctx, co, ct)
+	if err != nil {
+		return nil, fmt.Errorf("Couldn't instantiate Cloud Storage API client: %s", err)
+	}
+
+	return storageService, nil
 }

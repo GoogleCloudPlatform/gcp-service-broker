@@ -28,7 +28,7 @@ type DatastoreBroker struct {
 }
 
 // Provision is a no-op call because only service accounts need to be bound/unbound for Datastore.
-func (b *DatastoreBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+func (b *DatastoreBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	return models.ServiceInstanceDetails{}, nil
 }
 
@@ -38,6 +38,6 @@ func (b *DatastoreBroker) Deprovision(ctx context.Context, instance models.Servi
 }
 
 // Bind creates a service account with access to Datastore.
-func (b *DatastoreBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
+func (b *DatastoreBroker) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 	return b.AccountManager.CreateAccountWithRoles(instanceID, []string{"datastore.user"})
 }

@@ -63,7 +63,7 @@ type InstanceInformation struct {
 }
 
 // Provision creates a new CloudSQL instance from the settings in the user-provided details and service plan.
-func (b *CloudSQLBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+func (b *CloudSQLBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	// validate parameters
 	var params map[string]string
 	var err error
@@ -167,11 +167,10 @@ func (b *CloudSQLBroker) Provision(instanceId string, details brokerapi.Provisio
 	di.Settings.IpConfiguration.AuthorizedNetworks = openAcls
 
 	// init sqladmin service
-	sqlService, err := googlecloudsql.New(b.HttpConfig.Client(context.Background()))
+	sqlService, err := b.createClient(ctx)
 	if err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new CloudSQL Client: %s", err)
+		return models.ServiceInstanceDetails{}, err
 	}
-	sqlService.UserAgent = models.CustomUserAgent
 
 	// make insert request
 	op, err := sqlService.Instances.Insert(b.ProjectId, &di).Do()
@@ -313,7 +312,7 @@ func getDiskSize(params, planDetails map[string]string) (int64, error) {
 }
 
 // finishProvisioning completes the second step in provisioning a CloudSQL instance, namely, creating the db.
-func (b *CloudSQLBroker) finishProvisioning(instanceId string, params map[string]string) error {
+func (b *CloudSQLBroker) finishProvisioning(ctx context.Context, instanceId string, params map[string]string) error {
 	// executing this "synchronously" even though technically db creation returns an op - but it's just a db call, so
 	// it should be quick and not actually async.
 	var err error
@@ -323,9 +322,9 @@ func (b *CloudSQLBroker) finishProvisioning(instanceId string, params map[string
 		return brokerapi.ErrInstanceDoesNotExist
 	}
 
-	sqlService, err := googlecloudsql.New(b.HttpConfig.Client(context.Background()))
+	sqlService, err := b.createClient(ctx)
 	if err != nil {
-		return fmt.Errorf("Error creating new CloudSQL Client: %s", err)
+		return err
 	}
 
 	dbService := googlecloudsql.NewInstancesService(sqlService)
@@ -361,7 +360,7 @@ func (b *CloudSQLBroker) finishProvisioning(instanceId string, params map[string
 
 	//poll for the database creation operation to be completed
 	// TODO(cbriant): consider changing this. It isn't strictly needed, though it is unlikely to hurt either.
-	err = b.pollOperationUntilDone(op, b.ProjectId)
+	err = b.pollOperationUntilDone(ctx, op, b.ProjectId)
 	// XXX: return this error exactly as is from the google api
 	if err != nil {
 		return err
@@ -429,7 +428,7 @@ func (b *CloudSQLBroker) ensureUsernamePassword(instanceID, bindingID string, de
 // Bind creates a new username, password, and set of ssl certs for the given instance.
 // The function may be slow to return because CloudSQL operations are asynchronous.
 // The default PCF service broker timeout may need to be raised to 90 or 120 seconds to accommodate the long bind time.
-func (b *CloudSQLBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
+func (b *CloudSQLBroker) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 
 	cloudDb, err := db_service.GetServiceInstanceDetailsById(instanceID)
 	if err != nil {
@@ -507,7 +506,7 @@ func (b *CloudSQLBroker) BuildInstanceCredentials(bindDetails models.ServiceBind
 }
 
 // Unbind deletes the database user, service account and invalidates the ssl certs associated with this binding.
-func (b *CloudSQLBroker) Unbind(creds models.ServiceBindingCredentials) error {
+func (b *CloudSQLBroker) Unbind(ctx context.Context, creds models.ServiceBindingCredentials) error {
 
 	err := b.AccountManager.DeleteCredentials(creds)
 
@@ -525,25 +524,25 @@ func (b *CloudSQLBroker) Unbind(creds models.ServiceBindingCredentials) error {
 }
 
 // PollInstance gets the last operation for this instance and checks its status.
-func (b *CloudSQLBroker) PollInstance(instanceId string) (bool, error) {
+func (b *CloudSQLBroker) PollInstance(ctx context.Context, instanceId string) (bool, error) {
 	op, err := db_service.GetLastOperation(instanceId)
 	if err != nil {
 		return false, err
 	}
 
-	return b.pollOperation(instanceId, op)
+	return b.pollOperation(ctx, instanceId, op)
 }
 
 // pollOperation checks the status of the given CloudSQL operation and determines if it is ready to continue provisioning.
 // If the operation is done it finalizes provisioning and returns true.
-func (b *CloudSQLBroker) pollOperation(instanceId string, op models.CloudOperation) (bool, error) {
+func (b *CloudSQLBroker) pollOperation(ctx context.Context, instanceId string, op models.CloudOperation) (bool, error) {
 	// TODO(cbriant): at least rename, if not restructure, this function
 	// XXX: note that for this function in particular, we are being explicit to return errors from the google api exactly
 	// as we get them, because further up the stack these errors will be evaluated differently and need to be preserved
 	var err error
 
 	// create operation service
-	sqlService, err := googlecloudsql.New(b.HttpConfig.Client(context.Background()))
+	sqlService, err := b.createClient(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -585,7 +584,7 @@ func (b *CloudSQLBroker) pollOperation(instanceId string, op models.CloudOperati
 		}
 
 		// XXX: return error exactly as is from google api
-		err = b.finishProvisioning(instanceId, pd)
+		err = b.finishProvisioning(ctx, instanceId, pd)
 		if err != nil {
 			return false, err
 		}
@@ -598,8 +597,8 @@ func (b *CloudSQLBroker) pollOperation(instanceId string, op models.CloudOperati
 // pollOperationUntilDone loops and waits until a cloudsql operation is done, returning an error if any is encountered
 // XXX: note that for this function in particular, we are being explicit to return errors from the google api exactly
 // as we get them, because further up the stack these errors will be evaluated differently and need to be preserved
-func (b *CloudSQLBroker) pollOperationUntilDone(op *googlecloudsql.Operation, projectId string) error {
-	sqlService, err := googlecloudsql.New(b.HttpConfig.Client(context.Background()))
+func (b *CloudSQLBroker) pollOperationUntilDone(ctx context.Context, op *googlecloudsql.Operation, projectId string) error {
+	sqlService, err := b.createClient(ctx)
 	if err != nil {
 		return err
 	}
@@ -623,7 +622,7 @@ func (b *CloudSQLBroker) pollOperationUntilDone(op *googlecloudsql.Operation, pr
 
 // Deprovision issues a delete call on the database instance.
 func (b *CloudSQLBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
-	sqlService, err := googlecloudsql.New(b.HttpConfig.Client(ctx))
+	sqlService, err := b.createClient(ctx)
 	if err != nil {
 		return fmt.Errorf("Error creating CloudSQL client: %s", err)
 	}
@@ -714,4 +713,14 @@ func (b *CloudSQLBroker) ProvisionsAsync() bool {
 // DeprovisionsAsync indicates that CloudSQL uses asynchronous deprovisioning.
 func (b *CloudSQLBroker) DeprovisionsAsync() bool {
 	return true
+}
+
+func (b *CloudSQLBroker) createClient(ctx context.Context) (*googlecloudsql.Service, error) {
+	client, err := googlecloudsql.New(b.HttpConfig.Client(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("Couldn't instantiate CloudSQL API client: %s", err)
+	}
+
+	client.UserAgent = models.CustomUserAgent
+	return client, nil
 }

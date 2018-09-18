@@ -46,8 +46,7 @@ type InstanceInformation struct {
 
 // Provision creates a new Pub/Sub topic from the settings in the user-provided details and service plan.
 // If a subscription name is supplied, the function will also create a subscription for the topic.
-func (b *PubSubBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
-
+func (b *PubSubBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 	var params map[string]string
 	if len(details.RawParameters) == 0 {
@@ -61,13 +60,9 @@ func (b *PubSubBroker) Provision(instanceId string, details brokerapi.ProvisionD
 		params["topic_name"] = name_generator.Basic.InstanceName()
 	}
 
-	ctx := context.Background()
-	co := option.WithUserAgent(models.CustomUserAgent)
-	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
-	pubsubClient, err := googlepubsub.NewClient(ctx, b.ProjectId, co, ct)
-
+	pubsubClient, err := b.createClient(ctx)
 	if err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new pubsub client: %s", err)
+		return models.ServiceInstanceDetails{}, err
 	}
 
 	t, err := pubsubClient.CreateTopic(ctx, params["topic_name"])
@@ -129,10 +124,9 @@ func (b *PubSubBroker) Provision(instanceId string, details brokerapi.ProvisionD
 
 // Deprovision deletes the topic and subscription associated with the given instance.
 func (b *PubSubBroker) Deprovision(ctx context.Context, topic models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
-	ct := option.WithTokenSource(b.HttpConfig.TokenSource(ctx))
-	service, err := googlepubsub.NewClient(ctx, b.ProjectId, ct)
+	service, err := b.createClient(ctx)
 	if err != nil {
-		return fmt.Errorf("Error creating new pubsub client: %s", err)
+		return err
 	}
 
 	err = service.Topic(topic.Name).Delete(ctx)
@@ -154,4 +148,15 @@ func (b *PubSubBroker) Deprovision(ctx context.Context, topic models.ServiceInst
 	}
 
 	return nil
+}
+
+func (b *PubSubBroker) createClient(ctx context.Context) (*googlepubsub.Client, error) {
+	co := option.WithUserAgent(models.CustomUserAgent)
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(ctx))
+	client, err := googlepubsub.NewClient(ctx, b.ProjectId, co, ct)
+	if err != nil {
+		return nil, fmt.Errorf("Couldn't instantiate Pub/Sub API client: %s", err)
+	}
+
+	return client, nil
 }

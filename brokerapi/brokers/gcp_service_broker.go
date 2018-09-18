@@ -192,7 +192,7 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 	}
 
 	// get instance details
-	instanceDetails, err := service.Provision(instanceID, details, plan)
+	instanceDetails, err := service.Provision(ctx, instanceID, details, plan)
 	if err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, err
 	}
@@ -293,7 +293,7 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 	}
 
 	// create binding
-	newCreds, err := service.Bind(instanceID, bindingID, details)
+	newCreds, err := service.Bind(ctx, instanceID, bindingID, details)
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}
@@ -340,7 +340,7 @@ func (gcpBroker *GCPServiceBroker) Unbind(ctx context.Context, instanceID, bindi
 	}
 
 	// remove binding from Google
-	if err := service.Unbind(*existingBinding); err != nil {
+	if err := service.Unbind(ctx, *existingBinding); err != nil {
 		return err
 	}
 
@@ -370,14 +370,14 @@ func (gcpBroker *GCPServiceBroker) LastOperation(ctx context.Context, instanceID
 	isAsyncService := service.ProvisionsAsync() || service.DeprovisionsAsync()
 
 	if isAsyncService {
-		return gcpBroker.lastOperationAsync(instanceID, service)
+		return gcpBroker.lastOperationAsync(ctx, instanceID, service)
 	}
 
 	return brokerapi.LastOperation{}, brokerapi.ErrAsyncRequired
 }
 
-func (gcpBroker *GCPServiceBroker) lastOperationAsync(instanceId string, service models.ServiceBrokerHelper) (brokerapi.LastOperation, error) {
-	done, err := service.PollInstance(instanceId)
+func (gcpBroker *GCPServiceBroker) lastOperationAsync(ctx context.Context, instanceId string, service models.ServiceBrokerHelper) (brokerapi.LastOperation, error) {
+	done, err := service.PollInstance(ctx, instanceId)
 	if err != nil {
 		// this is a retryable error
 		if gerr, ok := err.(*googleapi.Error); ok {

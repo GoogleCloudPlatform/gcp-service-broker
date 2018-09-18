@@ -15,6 +15,7 @@
 package broker_base
 
 import (
+	"context"
 	"errors"
 
 	"code.cloudfoundry.org/lager"
@@ -35,7 +36,7 @@ type BrokerBase struct {
 
 // Bind creates a service account with access to the provisioned resource with
 // the given instance.
-func (b *BrokerBase) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
+func (b *BrokerBase) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 	return b.AccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
 }
 
@@ -46,13 +47,13 @@ func (b *BrokerBase) BuildInstanceCredentials(bindDetails models.ServiceBindingC
 }
 
 // Unbind deletes the created service account from the GCP Project.
-func (b *BrokerBase) Unbind(creds models.ServiceBindingCredentials) error {
+func (b *BrokerBase) Unbind(ctx context.Context, creds models.ServiceBindingCredentials) error {
 	return b.AccountManager.DeleteCredentials(creds)
 }
 
 // PollInstance does nothing but return an error because Base services are
 // provisioned synchronously so this method should not be called.
-func (b *BrokerBase) PollInstance(instanceID string) (bool, error) {
+func (b *BrokerBase) PollInstance(ctx context.Context, instanceID string) (bool, error) {
 	return true, brokerapi.ErrAsyncRequired
 }
 
