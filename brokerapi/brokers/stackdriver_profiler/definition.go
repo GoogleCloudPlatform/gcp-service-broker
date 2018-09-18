@@ -42,7 +42,7 @@ func init() {
 		          "service_id": "00b9ca4a-7cd6-406a-a5b7-2f43f41ade75",
 		          "name": "default",
 		          "display_name": "Default",
-		          "description": "Stackdriver Profiler default plan",
+		          "description": "Stackdriver Profiler default plan.",
 		          "service_properties": {}
 		        }
 		      ]

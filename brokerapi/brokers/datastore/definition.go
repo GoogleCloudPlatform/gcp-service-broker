@@ -24,7 +24,7 @@ func init() {
 		Name: "google-datastore",
 		DefaultServiceDefinition: `{
       "id": "76d4abb2-fee7-4c8f-aee1-bcea2837f02b",
-      "description": "Google Cloud Datastore is a NoSQL document database service",
+      "description": "Google Cloud Datastore is a NoSQL document database service.",
       "name": "google-datastore",
       "bindable": true,
       "plan_updateable": false,
@@ -42,7 +42,7 @@ func init() {
          "service_id": "76d4abb2-fee7-4c8f-aee1-bcea2837f02b",
          "name": "default",
          "display_name": "Default",
-         "description": "Datastore default plan",
+         "description": "Datastore default plan.",
          "service_properties": {}
         }
       ]

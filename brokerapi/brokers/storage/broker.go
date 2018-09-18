@@ -22,6 +22,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
@@ -77,6 +78,7 @@ func (b *StorageBroker) Provision(instanceId string, details brokerapi.Provision
 		Name:         params["name"],
 		StorageClass: storageClass,
 		Location:     loc,
+		Labels:       utils.ExtractDefaultLabels(instanceId, details),
 	}
 
 	// create the bucket. Nil uses default bucket attributes

@@ -89,7 +89,7 @@ func generateEnableDisableForm() Form {
 
 		enableForm := FormProperty{
 			Name:         strings.ToLower(utils.PropertyToEnv(svc.EnabledProperty())),
-			Label:        fmt.Sprintf("Let the broker create and bind %s instances", entry.Metadata.DisplayName),
+			Label:        fmt.Sprintf("Let the broker create and bind %s instances.", entry.Metadata.DisplayName),
 			Type:         "boolean",
 			Default:      true,
 			Configurable: true,
@@ -101,7 +101,7 @@ func generateEnableDisableForm() Form {
 	return Form{
 		Name:        "enable_disable",
 		Label:       "Enable Services",
-		Description: "Enable or disable services",
+		Description: "Enable or disable services.",
 		Properties:  enablers,
 	}
 }
@@ -123,8 +123,8 @@ func generateRoleWhitelistForm() Form {
 
 		enableForm := FormProperty{
 			Name:         strings.ToLower(utils.PropertyToEnv(svc.RoleWhitelistProperty())),
-			Label:        fmt.Sprintf("Role whitelist for %s instances", entry.Metadata.DisplayName),
-			Description:  "A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service",
+			Label:        fmt.Sprintf("Role whitelist for %s instances.", entry.Metadata.DisplayName),
+			Description:  "A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.",
 			Type:         "string",
 			Default:      strings.Join(svc.DefaultRoleWhitelist, ","),
 			Configurable: true,
@@ -136,7 +136,7 @@ func generateRoleWhitelistForm() Form {
 	return Form{
 		Name:        "role_whitelists",
 		Label:       "Role Whitelisting",
-		Description: "Enable or disable role whitelisting",
+		Description: "Enable or disable role whitelisting.",
 		Properties:  enablers,
 	}
 }
@@ -146,7 +146,7 @@ func generateDatabaseForm() Form {
 	return Form{
 		Name:        "database_properties",
 		Label:       "Database Properties",
-		Description: "Connection details for the backing database for the service broker",
+		Description: "Connection details for the backing database for the service broker.",
 		Properties: []FormProperty{
 			{Name: "db_host", Type: "string", Label: "Database host", Configurable: true},
 			{Name: "db_username", Type: "string", Label: "Database username", Optional: true, Configurable: true},
@@ -166,7 +166,7 @@ func generateServiceAccountForm() Form {
 	return Form{
 		Name:        "root_service_account",
 		Label:       "Root Service Account",
-		Description: "Please paste in the contents of the json keyfile (un-encoded) for your service account with owner credentials",
+		Description: "Please paste in the contents of the json keyfile (un-encoded) for your service account with owner credentials.",
 		Properties: []FormProperty{
 			{Name: "root_service_account_json", Type: "text", Label: "Root Service Account JSON", Configurable: true},
 		},
@@ -228,7 +228,7 @@ func generateServicePlanForm(svc *broker.BrokerService) (Form, error) {
 	displayName := entry.Metadata.DisplayName
 	planForm := Form{
 		Name:        strings.ToLower(svc.TileUserDefinedPlansVariable()),
-		Description: fmt.Sprintf("Generate custom plans for %s", displayName),
+		Description: fmt.Sprintf("Generate custom plans for %s.", displayName),
 		Label:       fmt.Sprintf("%s Custom Plans", displayName),
 		Optional:    true,
 		Properties: []FormProperty{
@@ -236,21 +236,21 @@ func generateServicePlanForm(svc *broker.BrokerService) (Form, error) {
 				Name:         "display_name",
 				Label:        "Display Name",
 				Type:         "string",
-				Description:  "Display name",
+				Description:  "Name of the plan to be displayed to users.",
 				Configurable: true,
 			},
 			{
 				Name:         "description",
 				Label:        "Plan description",
 				Type:         "string",
-				Description:  "Plan description",
+				Description:  "The description of the plan shown to users.",
 				Configurable: true,
 			},
 			{
 				Name:        "service",
 				Label:       "Service",
 				Type:        "dropdown_select",
-				Description: "The service this plan is associated with",
+				Description: "The service this plan is associated with.",
 				Default:     entry.ID,
 				Options: []FormOption{
 					{

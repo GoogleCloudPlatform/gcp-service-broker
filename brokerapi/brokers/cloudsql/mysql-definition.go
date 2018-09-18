@@ -23,13 +23,13 @@ func init() {
 		Name: "google-cloudsql-mysql",
 		DefaultServiceDefinition: `{
 		    "id": "4bc59b9a-8520-409f-85da-1c7552315863",
-		    "description": "Google Cloud SQL is a fully-managed MySQL database service",
+		    "description": "Google Cloud SQL is a fully-managed MySQL database service.",
 		    "name": "google-cloudsql-mysql",
 		    "bindable": true,
 		    "plan_updateable": false,
 		    "metadata": {
 		      "displayName": "Google CloudSQL MySQL",
-		      "longDescription": "Google Cloud SQL is a fully-managed MySQL database service",
+		      "longDescription": "Google Cloud SQL is a fully-managed MySQL database service.",
 		      "documentationUrl": "https://cloud.google.com/sql/docs/",
 		      "supportUrl": "https://cloud.google.com/support/",
 		      "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
@@ -181,13 +181,13 @@ func init() {
 			{
 				FieldName: "tier",
 				Type:      broker.JsonTypeString,
-				Details:   "Case-sensitive tier/machine type name (see https://cloud.google.com/sql/pricing for more information)",
+				Details:   "Case-sensitive tier/machine type name (see https://cloud.google.com/sql/pricing for more information).",
 				Required:  true,
 			},
 			{
 				FieldName: "pricing_plan",
 				Type:      broker.JsonTypeString,
-				Details:   "Select a pricing plan (only for 1st generation instances)",
+				Details:   "Select a pricing plan (only for 1st generation instances).",
 				Default:   "PER_USE",
 				Enum: map[interface{}]string{
 					"PER_USE": "Per-Use",
@@ -198,7 +198,7 @@ func init() {
 			{
 				FieldName: "max_disk_size",
 				Type:      broker.JsonTypeString,
-				Details:   "Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default)",
+				Details:   "Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default).",
 				Default:   "10",
 				Required:  true,
 			},

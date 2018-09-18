@@ -60,7 +60,7 @@ type genericService struct {
 	instanceId             string
 	serviceExistsFn        func(bool) bool
 	cleanupFn              func()
-	serviceMetadataSavedFn func(string) bool
+	serviceMetadataSavedFn func(string) (bool, error)
 }
 
 type iamService struct {
@@ -69,7 +69,7 @@ type iamService struct {
 	planId    string
 }
 
-func getAndUnmarshalInstanceDetails(instanceId string) map[string]string {
+func getAndUnmarshalInstanceDetails(instanceId string) (map[string]string, error) {
 	instanceRecord, _ := db_service.GetServiceInstanceDetailsById(instanceId)
 	return instanceRecord.GetOtherDetails()
 }
@@ -98,7 +98,9 @@ func testGenericService(brokerConfig *config.BrokerConfig, gcpBroker *GCPService
 	if params.serviceExistsFn != nil {
 		Expect(params.serviceExistsFn(true)).To(BeTrue())
 	}
-	Expect(params.serviceMetadataSavedFn(params.instanceId)).To(BeTrue())
+	metadataSaved, err := params.serviceMetadataSavedFn(params.instanceId)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(metadataSaved).To(BeTrue())
 
 	//
 	// Bind
@@ -168,10 +170,10 @@ func testIamBasedService(brokerConfig *config.BrokerConfig, gcpBroker *GCPServic
 		instanceId:       "iam-instance",
 		bindingId:        "iam-instance",
 		rawBindingParams: json.RawMessage{},
-		serviceMetadataSavedFn: func(instanceId string) bool {
+		serviceMetadataSavedFn: func(instanceId string) (bool, error) {
 			// Metadata should be empty, there is no additional information required
-			instanceDetails := getAndUnmarshalInstanceDetails(instanceId)
-			return len(instanceDetails) == 0
+			instanceDetails, err := getAndUnmarshalInstanceDetails(instanceId)
+			return len(instanceDetails) == 0, err
 		},
 	}
 
@@ -288,9 +290,9 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 					return err == nil
 				},
-				serviceMetadataSavedFn: func(instanceId string) bool {
-					instanceDetails := getAndUnmarshalInstanceDetails(instanceId)
-					return instanceDetails["dataset_id"] != ""
+				serviceMetadataSavedFn: func(instanceId string) (bool, error) {
+					instanceDetails, err := getAndUnmarshalInstanceDetails(instanceId)
+					return instanceDetails["dataset_id"] != "", err
 				},
 				cleanupFn: func() {
 					err := service.Datasets.Delete(brokerConfig.ProjectId, instance_name).Do()
@@ -331,9 +333,9 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 					return err == nil && len(instances) == 1 && instances[0].Name == bigtableInstanceName
 				},
-				serviceMetadataSavedFn: func(instanceId string) bool {
-					instanceDetails := getAndUnmarshalInstanceDetails(instanceId)
-					return instanceDetails["instance_id"] != ""
+				serviceMetadataSavedFn: func(instanceId string) (bool, error) {
+					instanceDetails, err := getAndUnmarshalInstanceDetails(instanceId)
+					return instanceDetails["instance_id"] != "", err
 				},
 				cleanupFn: func() {
 					err := service.DeleteInstance(ctx, bigtableInstanceName)
@@ -363,9 +365,9 @@ var _ = Describe("LiveIntegrationTests", func() {
 
 					return err == nil
 				},
-				serviceMetadataSavedFn: func(instanceId string) bool {
-					instanceDetails := getAndUnmarshalInstanceDetails(instanceId)
-					return instanceDetails["bucket_name"] != ""
+				serviceMetadataSavedFn: func(instanceId string) (bool, error) {
+					instanceDetails, err := getAndUnmarshalInstanceDetails(instanceId)
+					return instanceDetails["bucket_name"] != "", err
 				},
 				cleanupFn: func() {
 					bucket := service.Bucket(instance_name)
@@ -396,9 +398,9 @@ var _ = Describe("LiveIntegrationTests", func() {
 					exists, err := topic.Exists(context.Background())
 					return exists && err == nil
 				},
-				serviceMetadataSavedFn: func(instanceId string) bool {
-					instanceDetails := getAndUnmarshalInstanceDetails(instanceId)
-					return instanceDetails["topic_name"] != ""
+				serviceMetadataSavedFn: func(instanceId string) (bool, error) {
+					instanceDetails, err := getAndUnmarshalInstanceDetails(instanceId)
+					return instanceDetails["topic_name"] != "", err
 				},
 				cleanupFn: func() {
 					err := topic.Delete(context.Background())

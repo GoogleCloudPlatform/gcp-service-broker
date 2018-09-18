@@ -62,7 +62,7 @@ You can configure the following environment variables:
 {{ define "customplanform" -}}
 ### {{ .Label }}
 
-{{ .Description }}.
+{{ .Description }}
 To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>{{ upper .Name }}</tt>.
 
 For example:

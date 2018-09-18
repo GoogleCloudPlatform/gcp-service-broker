@@ -30,13 +30,13 @@ func init() {
 		DefaultServiceDefinition: `
 		{
 			"id": "51b3e27e-d323-49ce-8c5f-1211e6409e82",
-			"description": "The first horizontally scalable, globally consistent, relational database service",
+			"description": "The first horizontally scalable, globally consistent, relational database service.",
 			"name": "google-spanner",
 			"bindable": true,
 			"plan_updateable": false,
 			"metadata": {
 				"displayName": "Google Spanner",
-				"longDescription": "The first horizontally scalable, globally consistent, relational database service",
+				"longDescription": "The first horizontally scalable, globally consistent, relational database service.",
 				"documentationUrl": "https://cloud.google.com/spanner/",
 				"supportUrl": "https://cloud.google.com/support/",
 				"imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg"
@@ -46,7 +46,7 @@ func init() {
 				{
 					"id": "44828436-cfbd-47ae-b4bc-48854564347b",
 					"name": "sandbox",
-					"description": "Useful for testing, not eligible for SLA",
+					"description": "Useful for testing, not eligible for SLA.",
 					"free": false,
 					"service_properties": {"num_nodes": "1"}
 				},
@@ -92,7 +92,7 @@ func init() {
 			{
 				FieldName: "num_nodes",
 				Type:      broker.JsonTypeString,
-				Details:   "Number of Nodes, A minimum of 3 nodes is recommended for production environments. (see https://cloud.google.com/spanner/pricing for more information)",
+				Details:   "Number of nodes, a minimum of 3 nodes is recommended for production environments. See: https://cloud.google.com/spanner/pricing for more information.",
 				Default:   "1",
 				Required:  true,
 			},
@@ -100,7 +100,7 @@ func init() {
 		Examples: []broker.ServiceExample{
 			{
 				Name:            "Basic Configuration",
-				Description:     "Create a sandbox environment with a database admin account",
+				Description:     "Create a sandbox environment with a database admin account.",
 				PlanId:          "44828436-cfbd-47ae-b4bc-48854564347b",
 				ProvisionParams: map[string]interface{}{"name": "auth-database"},
 				BindParams:      map[string]interface{}{"role": "spanner.databaseAdmin"},
