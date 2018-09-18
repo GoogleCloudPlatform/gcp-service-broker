@@ -57,7 +57,8 @@ func init() {
 func serve() {
 
 	logger := lager.NewLogger("gcp-service-broker")
-	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
+	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.ERROR))
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
 
 	models.ProductionizeUserAgent()
 

@@ -156,7 +156,10 @@ func (t *ThreeToFour) augmentServiceCatalog(entry brokerapi.Service) brokerapi.S
 
 	if len(compatPlans) > 0 {
 		entry.PlanUpdatable = true
-		entry.Plans = append(entry.Plans, compatPlans...)
+		// IMPORTANT: comptibility plans MUST come first for the Cloud Controller to
+		// upgrade things correctly in its database. If the plans with the old names
+		// and new IDs come first, it won't let the broker register.
+		entry.Plans = append(compatPlans, entry.Plans...)
 	}
 
 	return entry
