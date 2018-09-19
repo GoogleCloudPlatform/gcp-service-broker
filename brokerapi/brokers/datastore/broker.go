@@ -39,5 +39,5 @@ func (b *DatastoreBroker) Deprovision(ctx context.Context, instance models.Servi
 
 // Bind creates a service account with access to Datastore.
 func (b *DatastoreBroker) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
-	return b.AccountManager.CreateAccountWithRoles(instanceID, []string{"datastore.user"})
+	return b.AccountManager.CreateAccountWithRoles(ctx, instanceID, []string{"datastore.user"})
 }

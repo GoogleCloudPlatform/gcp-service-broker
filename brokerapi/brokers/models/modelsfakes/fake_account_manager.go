@@ -2,6 +2,7 @@
 package modelsfakes
 
 import (
+	"context"
 	"sync"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
@@ -9,9 +10,10 @@ import (
 )
 
 type FakeAccountManager struct {
-	CreateCredentialsStub        func(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error)
+	CreateCredentialsStub        func(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error)
 	createCredentialsMutex       sync.RWMutex
 	createCredentialsArgsForCall []struct {
+		ctx        context.Context
 		instanceID string
 		bindingID  string
 		details    brokerapi.BindDetails
@@ -25,9 +27,10 @@ type FakeAccountManager struct {
 		result1 models.ServiceBindingCredentials
 		result2 error
 	}
-	DeleteCredentialsStub        func(creds models.ServiceBindingCredentials) error
+	DeleteCredentialsStub        func(ctx context.Context, creds models.ServiceBindingCredentials) error
 	deleteCredentialsMutex       sync.RWMutex
 	deleteCredentialsArgsForCall []struct {
+		ctx   context.Context
 		creds models.ServiceBindingCredentials
 	}
 	deleteCredentialsReturns struct {
@@ -36,9 +39,10 @@ type FakeAccountManager struct {
 	deleteCredentialsReturnsOnCall map[int]struct {
 		result1 error
 	}
-	BuildInstanceCredentialsStub        func(bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error)
+	BuildInstanceCredentialsStub        func(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error)
 	buildInstanceCredentialsMutex       sync.RWMutex
 	buildInstanceCredentialsArgsForCall []struct {
+		ctx            context.Context
 		bindRecord     models.ServiceBindingCredentials
 		instanceRecord models.ServiceInstanceDetails
 	}
@@ -54,19 +58,20 @@ type FakeAccountManager struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeAccountManager) CreateCredentials(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+func (fake *FakeAccountManager) CreateCredentials(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 	fake.createCredentialsMutex.Lock()
 	ret, specificReturn := fake.createCredentialsReturnsOnCall[len(fake.createCredentialsArgsForCall)]
 	fake.createCredentialsArgsForCall = append(fake.createCredentialsArgsForCall, struct {
+		ctx        context.Context
 		instanceID string
 		bindingID  string
 		details    brokerapi.BindDetails
 		instance   models.ServiceInstanceDetails
-	}{instanceID, bindingID, details, instance})
-	fake.recordInvocation("CreateCredentials", []interface{}{instanceID, bindingID, details, instance})
+	}{ctx, instanceID, bindingID, details, instance})
+	fake.recordInvocation("CreateCredentials", []interface{}{ctx, instanceID, bindingID, details, instance})
 	fake.createCredentialsMutex.Unlock()
 	if fake.CreateCredentialsStub != nil {
-		return fake.CreateCredentialsStub(instanceID, bindingID, details, instance)
+		return fake.CreateCredentialsStub(ctx, instanceID, bindingID, details, instance)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -80,10 +85,10 @@ func (fake *FakeAccountManager) CreateCredentialsCallCount() int {
 	return len(fake.createCredentialsArgsForCall)
 }
 
-func (fake *FakeAccountManager) CreateCredentialsArgsForCall(i int) (string, string, brokerapi.BindDetails, models.ServiceInstanceDetails) {
+func (fake *FakeAccountManager) CreateCredentialsArgsForCall(i int) (context.Context, string, string, brokerapi.BindDetails, models.ServiceInstanceDetails) {
 	fake.createCredentialsMutex.RLock()
 	defer fake.createCredentialsMutex.RUnlock()
-	return fake.createCredentialsArgsForCall[i].instanceID, fake.createCredentialsArgsForCall[i].bindingID, fake.createCredentialsArgsForCall[i].details, fake.createCredentialsArgsForCall[i].instance
+	return fake.createCredentialsArgsForCall[i].ctx, fake.createCredentialsArgsForCall[i].instanceID, fake.createCredentialsArgsForCall[i].bindingID, fake.createCredentialsArgsForCall[i].details, fake.createCredentialsArgsForCall[i].instance
 }
 
 func (fake *FakeAccountManager) CreateCredentialsReturns(result1 models.ServiceBindingCredentials, result2 error) {
@@ -108,16 +113,17 @@ func (fake *FakeAccountManager) CreateCredentialsReturnsOnCall(i int, result1 mo
 	}{result1, result2}
 }
 
-func (fake *FakeAccountManager) DeleteCredentials(creds models.ServiceBindingCredentials) error {
+func (fake *FakeAccountManager) DeleteCredentials(ctx context.Context, creds models.ServiceBindingCredentials) error {
 	fake.deleteCredentialsMutex.Lock()
 	ret, specificReturn := fake.deleteCredentialsReturnsOnCall[len(fake.deleteCredentialsArgsForCall)]
 	fake.deleteCredentialsArgsForCall = append(fake.deleteCredentialsArgsForCall, struct {
+		ctx   context.Context
 		creds models.ServiceBindingCredentials
-	}{creds})
-	fake.recordInvocation("DeleteCredentials", []interface{}{creds})
+	}{ctx, creds})
+	fake.recordInvocation("DeleteCredentials", []interface{}{ctx, creds})
 	fake.deleteCredentialsMutex.Unlock()
 	if fake.DeleteCredentialsStub != nil {
-		return fake.DeleteCredentialsStub(creds)
+		return fake.DeleteCredentialsStub(ctx, creds)
 	}
 	if specificReturn {
 		return ret.result1
@@ -131,10 +137,10 @@ func (fake *FakeAccountManager) DeleteCredentialsCallCount() int {
 	return len(fake.deleteCredentialsArgsForCall)
 }
 
-func (fake *FakeAccountManager) DeleteCredentialsArgsForCall(i int) models.ServiceBindingCredentials {
+func (fake *FakeAccountManager) DeleteCredentialsArgsForCall(i int) (context.Context, models.ServiceBindingCredentials) {
 	fake.deleteCredentialsMutex.RLock()
 	defer fake.deleteCredentialsMutex.RUnlock()
-	return fake.deleteCredentialsArgsForCall[i].creds
+	return fake.deleteCredentialsArgsForCall[i].ctx, fake.deleteCredentialsArgsForCall[i].creds
 }
 
 func (fake *FakeAccountManager) DeleteCredentialsReturns(result1 error) {
@@ -156,17 +162,18 @@ func (fake *FakeAccountManager) DeleteCredentialsReturnsOnCall(i int, result1 er
 	}{result1}
 }
 
-func (fake *FakeAccountManager) BuildInstanceCredentials(bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error) {
+func (fake *FakeAccountManager) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error) {
 	fake.buildInstanceCredentialsMutex.Lock()
 	ret, specificReturn := fake.buildInstanceCredentialsReturnsOnCall[len(fake.buildInstanceCredentialsArgsForCall)]
 	fake.buildInstanceCredentialsArgsForCall = append(fake.buildInstanceCredentialsArgsForCall, struct {
+		ctx            context.Context
 		bindRecord     models.ServiceBindingCredentials
 		instanceRecord models.ServiceInstanceDetails
-	}{bindRecord, instanceRecord})
-	fake.recordInvocation("BuildInstanceCredentials", []interface{}{bindRecord, instanceRecord})
+	}{ctx, bindRecord, instanceRecord})
+	fake.recordInvocation("BuildInstanceCredentials", []interface{}{ctx, bindRecord, instanceRecord})
 	fake.buildInstanceCredentialsMutex.Unlock()
 	if fake.BuildInstanceCredentialsStub != nil {
-		return fake.BuildInstanceCredentialsStub(bindRecord, instanceRecord)
+		return fake.BuildInstanceCredentialsStub(ctx, bindRecord, instanceRecord)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -180,10 +187,10 @@ func (fake *FakeAccountManager) BuildInstanceCredentialsCallCount() int {
 	return len(fake.buildInstanceCredentialsArgsForCall)
 }
 
-func (fake *FakeAccountManager) BuildInstanceCredentialsArgsForCall(i int) (models.ServiceBindingCredentials, models.ServiceInstanceDetails) {
+func (fake *FakeAccountManager) BuildInstanceCredentialsArgsForCall(i int) (context.Context, models.ServiceBindingCredentials, models.ServiceInstanceDetails) {
 	fake.buildInstanceCredentialsMutex.RLock()
 	defer fake.buildInstanceCredentialsMutex.RUnlock()
-	return fake.buildInstanceCredentialsArgsForCall[i].bindRecord, fake.buildInstanceCredentialsArgsForCall[i].instanceRecord
+	return fake.buildInstanceCredentialsArgsForCall[i].ctx, fake.buildInstanceCredentialsArgsForCall[i].bindRecord, fake.buildInstanceCredentialsArgsForCall[i].instanceRecord
 }
 
 func (fake *FakeAccountManager) BuildInstanceCredentialsReturns(result1 map[string]string, result2 error) {

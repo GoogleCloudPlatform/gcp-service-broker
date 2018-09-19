@@ -37,7 +37,7 @@ type SqlAccountManager struct {
 }
 
 // inserts a new user into the database and creates new ssl certs
-func (sam *SqlAccountManager) CreateCredentials(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+func (sam *SqlAccountManager) CreateCredentials(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 
 	bindParameters := map[string]interface{}{}
 	if err := json.Unmarshal(details.RawParameters, &bindParameters); err != nil {
@@ -53,7 +53,7 @@ func (sam *SqlAccountManager) CreateCredentials(instanceID string, bindingID str
 	}
 
 	// create username, pw with grants
-	sqlService, err := googlecloudsql.New(sam.HttpConfig.Client(context.Background()))
+	sqlService, err := googlecloudsql.New(sam.HttpConfig.Client(ctx))
 	if err != nil {
 		return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating CloudSQL client: %s", err)
 	}
@@ -68,7 +68,7 @@ func (sam *SqlAccountManager) CreateCredentials(instanceID string, bindingID str
 	}
 
 	// poll for the user creation operation to be completed
-	err = sam.pollOperationUntilDone(op, sam.ProjectId)
+	err = sam.pollOperationUntilDone(ctx, op, sam.ProjectId)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, fmt.Errorf("Error encountered while polling until operation id %s completes: %s", op.Name, err)
 	}
@@ -108,7 +108,7 @@ func (sam *SqlAccountManager) CreateCredentials(instanceID string, bindingID str
 }
 
 // deletes the user from the database and invalidates the associated ssl certs
-func (sam *SqlAccountManager) DeleteCredentials(binding models.ServiceBindingCredentials) error {
+func (sam *SqlAccountManager) DeleteCredentials(ctx context.Context, binding models.ServiceBindingCredentials) error {
 	var err error
 
 	var sqlCreds SqlAccountInfo
@@ -121,7 +121,7 @@ func (sam *SqlAccountManager) DeleteCredentials(binding models.ServiceBindingCre
 		return fmt.Errorf("Database error retrieving instance details: %s", err)
 	}
 
-	sqlService, err := googlecloudsql.New(sam.HttpConfig.Client(context.Background()))
+	sqlService, err := googlecloudsql.New(sam.HttpConfig.Client(ctx))
 	if err != nil {
 		return fmt.Errorf("Error creating CloudSQL client: %s", err)
 	}
@@ -133,7 +133,7 @@ func (sam *SqlAccountManager) DeleteCredentials(binding models.ServiceBindingCre
 			return fmt.Errorf("Error deleting ssl cert: %s", err)
 		}
 
-		err = sam.pollOperationUntilDone(certOp, sam.ProjectId)
+		err = sam.pollOperationUntilDone(ctx, certOp, sam.ProjectId)
 		if err != nil {
 			return fmt.Errorf("Error encountered while polling until operation id %s completes: %s", certOp.Name, err)
 		}
@@ -145,7 +145,7 @@ func (sam *SqlAccountManager) DeleteCredentials(binding models.ServiceBindingCre
 		return fmt.Errorf("Error deleting user: %s", err)
 	}
 
-	err = sam.pollOperationUntilDone(userOp, sam.ProjectId)
+	err = sam.pollOperationUntilDone(ctx, userOp, sam.ProjectId)
 	if err != nil {
 		return fmt.Errorf("Error encountered while polling until operation id %s completes: %s", userOp.Name, err)
 	}
@@ -155,8 +155,8 @@ func (sam *SqlAccountManager) DeleteCredentials(binding models.ServiceBindingCre
 
 // polls the cloud sql operations service once per second until the given operation is done
 // TODO(cbriant): ensure this stays under api call quota
-func (sam *SqlAccountManager) pollOperationUntilDone(op *googlecloudsql.Operation, projectId string) error {
-	sqlService, err := googlecloudsql.New(sam.HttpConfig.Client(context.Background()))
+func (sam *SqlAccountManager) pollOperationUntilDone(ctx context.Context, op *googlecloudsql.Operation, projectId string) error {
+	sqlService, err := googlecloudsql.New(sam.HttpConfig.Client(ctx))
 	if err != nil {
 		return fmt.Errorf("Error creating new cloudsql client: %s", err)
 	}
@@ -179,7 +179,7 @@ func (sam *SqlAccountManager) pollOperationUntilDone(op *googlecloudsql.Operatio
 	return nil
 }
 
-func (b *SqlAccountManager) BuildInstanceCredentials(bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error) {
+func (b *SqlAccountManager) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error) {
 	instanceDetails, err := instanceRecord.GetOtherDetails()
 	if err != nil {
 		return nil, err

@@ -439,12 +439,12 @@ func (b *CloudSQLBroker) Bind(ctx context.Context, instanceID, bindingID string,
 		return models.ServiceBindingCredentials{}, err
 	}
 
-	sqlCredBytes, err := b.AccountManager.CreateCredentials(instanceID, bindingID, details, *cloudDb)
+	sqlCredBytes, err := b.AccountManager.CreateCredentials(ctx, instanceID, bindingID, details, *cloudDb)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}
 
-	saCredBytes, err := b.SaAccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
+	saCredBytes, err := b.SaAccountManager.CreateCredentials(ctx, instanceID, bindingID, details, models.ServiceInstanceDetails{})
 
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
@@ -481,15 +481,13 @@ func (b *CloudSQLBroker) Bind(ctx context.Context, instanceID, bindingID string,
 }
 
 func combineServiceBindingCreds(sqlCreds models.ServiceBindingCredentials, saCreds models.ServiceBindingCredentials) (map[string]string, error) {
-	var sqlCredsJSON map[string]string
-
-	if err := json.Unmarshal([]byte(sqlCreds.OtherDetails), &sqlCredsJSON); err != nil {
+	sqlCredsJSON, err := sqlCreds.GetOtherDetails()
+	if err != nil {
 		return map[string]string{}, err
 	}
 
-	var saCredsJSON map[string]string
-
-	if err := json.Unmarshal([]byte(saCreds.OtherDetails), &saCredsJSON); err != nil {
+	saCredsJSON, err := saCreds.GetOtherDetails()
+	if err != nil {
 		return map[string]string{}, err
 	}
 
@@ -501,20 +499,20 @@ func combineServiceBindingCreds(sqlCreds models.ServiceBindingCredentials, saCre
 	return sqlCredsJSON, nil
 }
 
-func (b *CloudSQLBroker) BuildInstanceCredentials(bindDetails models.ServiceBindingCredentials, instanceDetails models.ServiceInstanceDetails) (map[string]string, error) {
-	return b.AccountManager.BuildInstanceCredentials(bindDetails, instanceDetails)
+func (b *CloudSQLBroker) BuildInstanceCredentials(ctx context.Context, bindDetails models.ServiceBindingCredentials, instanceDetails models.ServiceInstanceDetails) (map[string]string, error) {
+	return b.AccountManager.BuildInstanceCredentials(ctx, bindDetails, instanceDetails)
 }
 
 // Unbind deletes the database user, service account and invalidates the ssl certs associated with this binding.
 func (b *CloudSQLBroker) Unbind(ctx context.Context, creds models.ServiceBindingCredentials) error {
 
-	err := b.AccountManager.DeleteCredentials(creds)
+	err := b.AccountManager.DeleteCredentials(ctx, creds)
 
 	if err != nil {
 		return err
 	}
 
-	err = b.SaAccountManager.DeleteCredentials(creds)
+	err = b.SaAccountManager.DeleteCredentials(ctx, creds)
 
 	if err != nil {
 		return err
@@ -697,7 +695,7 @@ func updateOperationId(instance models.ServiceInstanceDetails, operationId strin
 }
 
 // LastOperationWasDelete checks if the last async operation was a deletion (as opposed to a provision).
-func (b *CloudSQLBroker) LastOperationWasDelete(instanceId string) (bool, error) {
+func (b *CloudSQLBroker) LastOperationWasDelete(ctx context.Context, instanceId string) (bool, error) {
 	op, err := db_service.GetLastOperation(instanceId)
 	if err != nil {
 		return false, err

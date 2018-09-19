@@ -37,18 +37,18 @@ type BrokerBase struct {
 // Bind creates a service account with access to the provisioned resource with
 // the given instance.
 func (b *BrokerBase) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
-	return b.AccountManager.CreateCredentials(instanceID, bindingID, details, models.ServiceInstanceDetails{})
+	return b.AccountManager.CreateCredentials(ctx, instanceID, bindingID, details, models.ServiceInstanceDetails{})
 }
 
 // BuildInstanceCredentials combines the bind credentials with the connection
 // information in the instance details to get a full set of connection details.
-func (b *BrokerBase) BuildInstanceCredentials(bindDetails models.ServiceBindingCredentials, instanceDetails models.ServiceInstanceDetails) (map[string]string, error) {
-	return b.AccountManager.BuildInstanceCredentials(bindDetails, instanceDetails)
+func (b *BrokerBase) BuildInstanceCredentials(ctx context.Context, bindDetails models.ServiceBindingCredentials, instanceDetails models.ServiceInstanceDetails) (map[string]string, error) {
+	return b.AccountManager.BuildInstanceCredentials(ctx, bindDetails, instanceDetails)
 }
 
 // Unbind deletes the created service account from the GCP Project.
 func (b *BrokerBase) Unbind(ctx context.Context, creds models.ServiceBindingCredentials) error {
-	return b.AccountManager.DeleteCredentials(creds)
+	return b.AccountManager.DeleteCredentials(ctx, creds)
 }
 
 // PollInstance does nothing but return an error because Base services are
@@ -70,6 +70,6 @@ func (b *BrokerBase) DeprovisionsAsync() bool {
 // LastOperationWasDelete is used during polling of async operations to
 // determine if the workflow is a provision or deprovision flow based off the
 // type of the most recent operation.
-func (b *BrokerBase) LastOperationWasDelete(instanceId string) (bool, error) {
+func (b *BrokerBase) LastOperationWasDelete(ctx context.Context, instanceId string) (bool, error) {
 	return false, errors.New("can't check last operation on a synchronous service")
 }

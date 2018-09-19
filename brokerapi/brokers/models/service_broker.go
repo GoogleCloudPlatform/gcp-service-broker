@@ -27,24 +27,24 @@ import (
 type ServiceBrokerHelper interface {
 	Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan ServicePlan) (ServiceInstanceDetails, error)
 	Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (ServiceBindingCredentials, error)
-	BuildInstanceCredentials(bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
+	BuildInstanceCredentials(ctx context.Context, bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
 	Unbind(ctx context.Context, details ServiceBindingCredentials) error
 	Deprovision(ctx context.Context, instance ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error
 	PollInstance(ctx context.Context, instanceID string) (bool, error)
-	LastOperationWasDelete(instanceID string) (bool, error)
+	LastOperationWasDelete(ctx context.Context, instanceID string) (bool, error)
 	ProvisionsAsync() bool
 	DeprovisionsAsync() bool
 }
 
 type AccountManager interface {
-	CreateCredentials(instanceID string, bindingID string, details brokerapi.BindDetails, instance ServiceInstanceDetails) (ServiceBindingCredentials, error)
-	DeleteCredentials(creds ServiceBindingCredentials) error
-	BuildInstanceCredentials(bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
+	CreateCredentials(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance ServiceInstanceDetails) (ServiceBindingCredentials, error)
+	DeleteCredentials(ctx context.Context, creds ServiceBindingCredentials) error
+	BuildInstanceCredentials(ctx context.Context, bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
 }
 
 type ServiceAccountManager interface {
 	AccountManager
-	CreateAccountWithRoles(bindingID string, roles []string) (ServiceBindingCredentials, error)
+	CreateAccountWithRoles(ctx context.Context, bindingID string, roles []string) (ServiceBindingCredentials, error)
 }
 
 // This custom user agent string is added to provision calls so that Google can track the aggregated use of this tool

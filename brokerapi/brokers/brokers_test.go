@@ -437,12 +437,12 @@ var _ = Describe("AccountManagers", func() {
 		name_generator.New()
 
 		accountManager = modelsfakes.FakeServiceAccountManager{
-			CreateCredentialsStub: func(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+			CreateCredentialsStub: func(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 				return models.ServiceBindingCredentials{OtherDetails: "{}"}, nil
 			},
 		}
 		sqlAccountManager = modelsfakes.FakeAccountManager{
-			CreateCredentialsStub: func(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+			CreateCredentialsStub: func(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 				return models.ServiceBindingCredentials{OtherDetails: "{}"}, nil
 			},
 		}
@@ -500,7 +500,7 @@ var _ = Describe("AccountManagers", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 				Expect(sqlAccountManager.CreateCredentialsCallCount()).To(Equal(1))
-				_, _, details, _ := accountManager.CreateCredentialsArgsForCall(0)
+				_, _, _, details, _ := accountManager.CreateCredentialsArgsForCall(0)
 
 				rawparams := details.GetRawParameters()
 				params := make(map[string]interface{})
@@ -522,7 +522,7 @@ var _ = Describe("AccountManagers", func() {
 
 		Context("when MergeCredentialsAndInstanceInfo is called on a broker", func() {
 			It("should call MergeCredentialsAndInstanceInfo on the account manager", func() {
-				_, err = iamStyleBroker.BuildInstanceCredentials(models.ServiceBindingCredentials{}, models.ServiceInstanceDetails{})
+				_, err = iamStyleBroker.BuildInstanceCredentials(context.Background(), models.ServiceBindingCredentials{}, models.ServiceInstanceDetails{})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(accountManager.BuildInstanceCredentialsCallCount()).To(Equal(1))
 			})

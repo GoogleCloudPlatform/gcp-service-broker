@@ -314,7 +314,7 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 		return brokerapi.Binding{}, fmt.Errorf("Error retrieving service instance details: %s", err)
 	}
 
-	updatedCreds, err := service.BuildInstanceCredentials(newCreds, *instanceRecord)
+	updatedCreds, err := service.BuildInstanceCredentials(ctx, newCreds, *instanceRecord)
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}
@@ -394,7 +394,7 @@ func (gcpBroker *GCPServiceBroker) lastOperationAsync(ctx context.Context, insta
 	}
 
 	// no error and we're done! Delete from the SB database if this was a delete flow and return success
-	deleteFlow, err := service.LastOperationWasDelete(instanceId)
+	deleteFlow, err := service.LastOperationWasDelete(ctx, instanceId)
 	if err != nil {
 		return brokerapi.LastOperation{State: brokerapi.Succeeded}, fmt.Errorf("Couldn't determine if provision or deprovision flow, this may leave orphaned resources, contact your operator for cleanup: %s", err)
 	}

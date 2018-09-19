@@ -42,9 +42,10 @@ type FakeServiceBrokerHelper struct {
 		result1 models.ServiceBindingCredentials
 		result2 error
 	}
-	BuildInstanceCredentialsStub        func(bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error)
+	BuildInstanceCredentialsStub        func(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error)
 	buildInstanceCredentialsMutex       sync.RWMutex
 	buildInstanceCredentialsArgsForCall []struct {
+		ctx            context.Context
 		bindRecord     models.ServiceBindingCredentials
 		instanceRecord models.ServiceInstanceDetails
 	}
@@ -95,9 +96,10 @@ type FakeServiceBrokerHelper struct {
 		result1 bool
 		result2 error
 	}
-	LastOperationWasDeleteStub        func(instanceID string) (bool, error)
+	LastOperationWasDeleteStub        func(ctx context.Context, instanceID string) (bool, error)
 	lastOperationWasDeleteMutex       sync.RWMutex
 	lastOperationWasDeleteArgsForCall []struct {
+		ctx        context.Context
 		instanceID string
 	}
 	lastOperationWasDeleteReturns struct {
@@ -238,17 +240,18 @@ func (fake *FakeServiceBrokerHelper) BindReturnsOnCall(i int, result1 models.Ser
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) BuildInstanceCredentials(bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error) {
+func (fake *FakeServiceBrokerHelper) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error) {
 	fake.buildInstanceCredentialsMutex.Lock()
 	ret, specificReturn := fake.buildInstanceCredentialsReturnsOnCall[len(fake.buildInstanceCredentialsArgsForCall)]
 	fake.buildInstanceCredentialsArgsForCall = append(fake.buildInstanceCredentialsArgsForCall, struct {
+		ctx            context.Context
 		bindRecord     models.ServiceBindingCredentials
 		instanceRecord models.ServiceInstanceDetails
-	}{bindRecord, instanceRecord})
-	fake.recordInvocation("BuildInstanceCredentials", []interface{}{bindRecord, instanceRecord})
+	}{ctx, bindRecord, instanceRecord})
+	fake.recordInvocation("BuildInstanceCredentials", []interface{}{ctx, bindRecord, instanceRecord})
 	fake.buildInstanceCredentialsMutex.Unlock()
 	if fake.BuildInstanceCredentialsStub != nil {
-		return fake.BuildInstanceCredentialsStub(bindRecord, instanceRecord)
+		return fake.BuildInstanceCredentialsStub(ctx, bindRecord, instanceRecord)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -262,10 +265,10 @@ func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsCallCount() int {
 	return len(fake.buildInstanceCredentialsArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsArgsForCall(i int) (models.ServiceBindingCredentials, models.ServiceInstanceDetails) {
+func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsArgsForCall(i int) (context.Context, models.ServiceBindingCredentials, models.ServiceInstanceDetails) {
 	fake.buildInstanceCredentialsMutex.RLock()
 	defer fake.buildInstanceCredentialsMutex.RUnlock()
-	return fake.buildInstanceCredentialsArgsForCall[i].bindRecord, fake.buildInstanceCredentialsArgsForCall[i].instanceRecord
+	return fake.buildInstanceCredentialsArgsForCall[i].ctx, fake.buildInstanceCredentialsArgsForCall[i].bindRecord, fake.buildInstanceCredentialsArgsForCall[i].instanceRecord
 }
 
 func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsReturns(result1 map[string]string, result2 error) {
@@ -441,16 +444,17 @@ func (fake *FakeServiceBrokerHelper) PollInstanceReturnsOnCall(i int, result1 bo
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) LastOperationWasDelete(instanceID string) (bool, error) {
+func (fake *FakeServiceBrokerHelper) LastOperationWasDelete(ctx context.Context, instanceID string) (bool, error) {
 	fake.lastOperationWasDeleteMutex.Lock()
 	ret, specificReturn := fake.lastOperationWasDeleteReturnsOnCall[len(fake.lastOperationWasDeleteArgsForCall)]
 	fake.lastOperationWasDeleteArgsForCall = append(fake.lastOperationWasDeleteArgsForCall, struct {
+		ctx        context.Context
 		instanceID string
-	}{instanceID})
-	fake.recordInvocation("LastOperationWasDelete", []interface{}{instanceID})
+	}{ctx, instanceID})
+	fake.recordInvocation("LastOperationWasDelete", []interface{}{ctx, instanceID})
 	fake.lastOperationWasDeleteMutex.Unlock()
 	if fake.LastOperationWasDeleteStub != nil {
-		return fake.LastOperationWasDeleteStub(instanceID)
+		return fake.LastOperationWasDeleteStub(ctx, instanceID)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -464,10 +468,10 @@ func (fake *FakeServiceBrokerHelper) LastOperationWasDeleteCallCount() int {
 	return len(fake.lastOperationWasDeleteArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) LastOperationWasDeleteArgsForCall(i int) string {
+func (fake *FakeServiceBrokerHelper) LastOperationWasDeleteArgsForCall(i int) (context.Context, string) {
 	fake.lastOperationWasDeleteMutex.RLock()
 	defer fake.lastOperationWasDeleteMutex.RUnlock()
-	return fake.lastOperationWasDeleteArgsForCall[i].instanceID
+	return fake.lastOperationWasDeleteArgsForCall[i].ctx, fake.lastOperationWasDeleteArgsForCall[i].instanceID
 }
 
 func (fake *FakeServiceBrokerHelper) LastOperationWasDeleteReturns(result1 bool, result2 error) {
