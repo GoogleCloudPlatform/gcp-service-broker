@@ -102,6 +102,10 @@ user-defined plans.
 		return client.LastOperation(instanceId)
 	})
 
+	updateCmd := newClientCommand("update", "Update the instance details", func(client *client.Client) *client.BrokerResponse {
+		return client.Update(instanceId, serviceId, planId, json.RawMessage(parametersJson))
+	})
+
 	runExamplesCmd := &cobra.Command{
 		Use:   "run-examples",
 		Short: "Run all examples in the use command.",
@@ -121,7 +125,7 @@ user-defined plans.
 		},
 	}
 
-	clientCmd.AddCommand(clientCatalogCmd, provisionCmd, deprovisionCmd, bindCmd, unbindCmd, lastCmd, runExamplesCmd)
+	clientCmd.AddCommand(clientCatalogCmd, provisionCmd, deprovisionCmd, bindCmd, unbindCmd, lastCmd, runExamplesCmd, updateCmd)
 
 	bindFlag := func(dest *string, name, description string, commands ...*cobra.Command) {
 		for _, sc := range commands {
@@ -130,12 +134,12 @@ user-defined plans.
 		}
 	}
 
-	bindFlag(&instanceId, "instanceid", "id of the service instance to operate on (user defined)", provisionCmd, deprovisionCmd, bindCmd, unbindCmd, lastCmd)
-	bindFlag(&serviceId, "serviceid", "GUID of the service instanceid references (see catalog)", provisionCmd, deprovisionCmd, bindCmd, unbindCmd)
-	bindFlag(&planId, "planid", "GUID of the service instanceid references (see catalog entry for the associated serviceid)", provisionCmd, deprovisionCmd, bindCmd, unbindCmd)
+	bindFlag(&instanceId, "instanceid", "id of the service instance to operate on (user defined)", provisionCmd, deprovisionCmd, bindCmd, unbindCmd, lastCmd, updateCmd)
+	bindFlag(&serviceId, "serviceid", "GUID of the service instanceid references (see catalog)", provisionCmd, deprovisionCmd, bindCmd, unbindCmd, updateCmd)
+	bindFlag(&planId, "planid", "GUID of the service instanceid references (see catalog entry for the associated serviceid)", provisionCmd, deprovisionCmd, bindCmd, unbindCmd, updateCmd)
 	bindFlag(&bindingId, "bindingid", "GUID of the binding to work on (user defined)", bindCmd, unbindCmd)
 
-	for _, sc := range []*cobra.Command{provisionCmd, bindCmd} {
+	for _, sc := range []*cobra.Command{provisionCmd, bindCmd, updateCmd} {
 		sc.Flags().StringVarP(&parametersJson, "params", "", "{}", "JSON string of user-defined parameters to pass to the request")
 	}
 

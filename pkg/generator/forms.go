@@ -67,18 +67,19 @@ func GenerateForms() TileFormsSections {
 	// in the generated UI and we don't want to mix things up on users.
 	return TileFormsSections{
 		Forms: []Form{
-			GenerateServiceAccountForm(),
-			GenerateDatabaseForm(),
-			GenerateEnableDisableForm(),
-			GenerateRoleWhitelistForm(),
+			generateServiceAccountForm(),
+			generateDatabaseForm(),
+			generateEnableDisableForm(),
+			generateRoleWhitelistForm(),
+			generateCompatibilityForm(),
 		},
 
-		ServicePlanForms: GenerateServicePlanForms(),
+		ServicePlanForms: generateServicePlanForms(),
 	}
 }
 
-// GenerateEnableDisableForm generates the form to enable and disable services.
-func GenerateEnableDisableForm() Form {
+// generateEnableDisableForm generates the form to enable and disable services.
+func generateEnableDisableForm() Form {
 	enablers := []FormProperty{}
 	for _, svc := range broker.GetAllServices() {
 		entry, err := svc.CatalogEntry()
@@ -105,10 +106,10 @@ func GenerateEnableDisableForm() Form {
 	}
 }
 
-// GenerateRoleWhitelistForm generates a form for users to enable/disable the
+// generateRoleWhitelistForm generates a form for users to enable/disable the
 // whitelist validation for new service accounts bound to the service.
 // They are opt-out and on by default for safety.
-func GenerateRoleWhitelistForm() Form {
+func generateRoleWhitelistForm() Form {
 	enablers := []FormProperty{}
 	for _, svc := range broker.GetAllServices() {
 		entry, err := svc.CatalogEntry()
@@ -140,8 +141,8 @@ func GenerateRoleWhitelistForm() Form {
 	}
 }
 
-// GenerateDatabaseForm generates the form for configuring database settings.
-func GenerateDatabaseForm() Form {
+// generateDatabaseForm generates the form for configuring database settings.
+func generateDatabaseForm() Form {
 	return Form{
 		Name:        "database_properties",
 		Label:       "Database Properties",
@@ -159,9 +160,9 @@ func GenerateDatabaseForm() Form {
 	}
 }
 
-// GenerateServiceAccountForm generates the form for configuring the service
+// generateServiceAccountForm generates the form for configuring the service
 // account.
-func GenerateServiceAccountForm() Form {
+func generateServiceAccountForm() Form {
 	return Form{
 		Name:        "root_service_account",
 		Label:       "Root Service Account",
@@ -172,9 +173,30 @@ func GenerateServiceAccountForm() Form {
 	}
 }
 
-// GenerateServicePlanForms generates customized service plan forms for all
+func generateCompatibilityForm() Form {
+	return Form{
+		Name:        "compatibility",
+		Label:       "Compatibility",
+		Description: "Legacy Compatibility Options",
+		Properties: []FormProperty{
+			{
+				Name:         "gsb_compatibility_three_to_four_legacy_plans",
+				Type:         "boolean",
+				Label:        "Compatibility with GCP Service Broker v3.X plans",
+				Configurable: true,
+				Default:      false,
+				Description: singleLine(`Enable compatibility with the GCP Service Broker v3.x.
+					Before version 4.0, each installation generated its own plan UUIDs, after 4.0 they have been standardized.
+					This option installs a compatibility layer which checks if a service is using the correct plan GUID.
+					If the service does not use the correct GUID, the request will fail with a message about how to upgrade.`),
+			},
+		},
+	}
+}
+
+// generateServicePlanForms generates customized service plan forms for all
 // registered services that have the ability to customize their variables.
-func GenerateServicePlanForms() []Form {
+func generateServicePlanForms() []Form {
 	out := []Form{}
 
 	for _, svc := range broker.GetAllServices() {
@@ -184,7 +206,7 @@ func GenerateServicePlanForms() []Form {
 			continue
 		}
 
-		form, err := GenerateServicePlanForm(svc)
+		form, err := generateServicePlanForm(svc)
 		if err != nil {
 			log.Fatalf("Error generating form for %+v, %s", form, err)
 		}
@@ -195,9 +217,9 @@ func GenerateServicePlanForms() []Form {
 	return out
 }
 
-// GenerateServicePlanForm creates a form for adding additional service plans
+// generateServicePlanForm creates a form for adding additional service plans
 // to the broker for an existing service.
-func GenerateServicePlanForm(svc *broker.BrokerService) (Form, error) {
+func generateServicePlanForm(svc *broker.BrokerService) (Form, error) {
 	entry, err := svc.CatalogEntry()
 	if err != nil {
 		return Form{}, err
@@ -285,4 +307,15 @@ func brokerVariableToFormProperty(v broker.BrokerVariable) FormProperty {
 // human-readable alternative.
 func propertyToLabel(property string) string {
 	return strings.Title(strings.NewReplacer("_", " ").Replace(property))
+}
+
+func singleLine(text string) string {
+	lines := strings.Split(text, "\n")
+
+	var out []string
+	for _, line := range lines {
+		out = append(out, strings.TrimSpace(line))
+	}
+
+	return strings.Join(out, " ")
 }

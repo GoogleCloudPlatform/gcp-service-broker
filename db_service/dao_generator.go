@@ -100,6 +100,22 @@ func main() {
 				"RequestDetails":    `{"some":["json","blob","here"]}`,
 			},
 		},
+		{
+			Type:            "PlanDetailsV1",
+			PrimaryKeyType:  "string",
+			PrimaryKeyField: "id",
+			Keys: []fieldList{
+				{
+					{Type: "string", Column: "service_id"},
+					{Type: "string", Column: "name"},
+				},
+			},
+			ExampleFields: map[string]interface{}{
+				"ServiceId": "2222-2222-2222",
+				"Name":      "service-name",
+				"Features":  `{"some":["json","blob","here"]}`,
+			},
+		},
 	}
 
 	for i, model := range models {
@@ -318,16 +334,16 @@ func (ds *SqlDatastore) {{funcName "Save" .Type}}(ctx context.Context, object *m
 	return ds.db.Save(object).Error
 }
 
-// {{funcName "Delete" .Type .PrimaryKeyField}} soft-deletes the record.
-func {{funcName "Delete" .Type .PrimaryKeyField}}(ctx context.Context, pk {{.PrimaryKeyType}}) error { return defaultDatastore().{{funcName "Delete" .Type .PrimaryKeyField}}(ctx, pk) }
-func (ds *SqlDatastore) {{funcName "Delete" .Type .PrimaryKeyField}}(ctx context.Context, pk {{.PrimaryKeyType}}) error {
-	record, err := ds.{{funcName "Get" .Type .PrimaryKeyField}}(ctx, pk)
-	if err != nil {
-		return err
-	}
-
-	return ds.{{funcName "Delete" .Type}}(ctx, record)
+{{- $type := .Type}}
+{{ range $idx, $key := .Keys -}}
+{{ $fn := (print "Delete" $type $key.FuncName) -}}
+// {{$fn}} soft-deletes the record by its key ({{$key.CallParams}}).
+func {{$fn}}(ctx context.Context, {{ $key.Args }}) error { return defaultDatastore().{{$fn}}(ctx, {{$key.CallParams}}) }
+func (ds *SqlDatastore) {{$fn}}(ctx context.Context, {{ $key.Args }}) error {
+	return ds.db.{{ $key.WhereClause }}.Delete(&models.{{$type}}{}).Error
 }
+
+{{ end }}
 
 // Delete{{.Type}} soft-deletes the record.
 func {{funcName "Delete" .Type}}(ctx context.Context, record *models.{{.Type}}) error { return defaultDatastore().{{funcName "Delete" .Type}}(ctx, record) }
@@ -424,11 +440,11 @@ func create{{.Type}}Instance() ({{.PrimaryKeyType}}, models.{{.Type}}) {
 }
 
 func ensure{{.Type}}FieldsMatch(t *testing.T, expected, actual *models.{{.Type}}) {
-	{{range $k, $v := .ExampleFields}}
+{{range $k, $v := .ExampleFields}}
 	if expected.{{$k}} != actual.{{$k}} {
 		t.Errorf("Expected field {{$k}} to be %#v, got %#v", expected.{{$k}}, actual.{{$k}})
 	}
-	{{end}}
+{{end}}
 }
 
 func TestSqlDatastore_{{.Type}}DAO(t *testing.T) {
@@ -447,10 +463,6 @@ func TestSqlDatastore_{{.Type}}DAO(t *testing.T) {
 
 	if _, err := ds.{{funcName "CheckDeleted" .Type .PrimaryKeyField}}(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to check deletion status of a non-existing PK got %v", err)
-	}
-
-	if err := ds.{{funcName "Delete" .Type .PrimaryKeyField}}(testCtx, testPk); err != gorm.ErrRecordNotFound {
-		t.Errorf("Expected an ErrRecordNotFound trying to delete non-existing PK got %v", err)
 	}
 
 	// Should be able to create the item
