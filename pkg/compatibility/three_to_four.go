@@ -23,6 +23,31 @@ import (
 	"github.com/pivotal-cf/brokerapi"
 )
 
+const (
+	stackdriverDebuggerServiceId        = "83837945-1547-41e0-b661-ea31d76eed11"
+	stackdriverDebuggerNewDefaultPlanId = "10866183-a775-49e8-96e3-4e7a901e4a79"
+
+	cloudMlServiceId        = "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4"
+	cloudMlNewDefaultPlanId = "be7954e1-ecfb-4936-a0b6-db35e6424c7a"
+
+	pubsubServiceId        = "628629e3-79f5-4255-b981-d14c6c7856be"
+	pubsubNewDefaultPlanId = "622f4da3-8731-492a-af29-66a9146f8333"
+
+	stackdriverTraceServiceId        = "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a"
+	stackdriverTraceNewDefaultPlanId = "ab6c2287-b4bc-4ff4-a36a-0575e7910164"
+
+	datastoreServiceId        = "76d4abb2-fee7-4c8f-aee1-bcea2837f02b"
+	datastoreNewDefaultPlanId = "05f1fb6b-b5f0-48a2-9c2b-a5f236507a97"
+
+	bigqueryServiceId        = "f80c0a3e-bd4d-4809-a900-b4e33a6450f1"
+	bigquerynewDefaultPlanid = "10ff4e72-6e84-44eb-851f-bdb38a791914"
+
+	cloudStorageServiceId             = "b9e4332e-b42b-4680-bda5-ea1506797474"
+	cloudStorageNewStandardPlanId     = "e1d11f65-da66-46ad-977c-6d56513baf43"
+	cloudStorageNewReducedAvailPlanId = "1a1f4fe6-1904-44d0-838c-4c87a9490a6b"
+	cloudStorageNewNearlinePlanId     = "a42c1182-d1a0-4d40-82c1-28220518b360"
+)
+
 type upgradePath struct {
 	ServiceId      string
 	LegacyPlanId   string
@@ -46,15 +71,15 @@ func (u *upgradePath) ToServicePlan() brokerapi.ServicePlan {
 // them.
 func NewLegacyPlanUpgrader(wrapped brokerapi.ServiceBroker) *ThreeToFour {
 	legacyPlanUpgrades := []upgradePath{
-		{"83837945-1547-41e0-b661-ea31d76eed11", "", "default", "10866183-a775-49e8-96e3-4e7a901e4a79", "default"},                           // Stackdriver Debugger
-		{"5ad2dce0-51f7-4ede-8b46-293d6df1e8d4", "", "default", "be7954e1-ecfb-4936-a0b6-db35e6424c7a", "default"},                           // Cloud ML APIs
-		{"628629e3-79f5-4255-b981-d14c6c7856be", "", "default", "622f4da3-8731-492a-af29-66a9146f8333", "default"},                           // Pub/Sub
-		{"c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a", "", "default", "ab6c2287-b4bc-4ff4-a36a-0575e7910164", "default"},                           // Stackdriver Trace
-		{"76d4abb2-fee7-4c8f-aee1-bcea2837f02b", "", "default", "05f1fb6b-b5f0-48a2-9c2b-a5f236507a97", "default"},                           // Datastore
-		{"f80c0a3e-bd4d-4809-a900-b4e33a6450f1", "", "default", "10ff4e72-6e84-44eb-851f-bdb38a791914", "default"},                           // BigQuery
-		{"b9e4332e-b42b-4680-bda5-ea1506797474", "", "nearline", "a42c1182-d1a0-4d40-82c1-28220518b360", "nearline"},                         // Cloud Storage
-		{"b9e4332e-b42b-4680-bda5-ea1506797474", "", "reduced_availability", "1a1f4fe6-1904-44d0-838c-4c87a9490a6b", "reduced-availability"}, // Cloud Storage
-		{"b9e4332e-b42b-4680-bda5-ea1506797474", "", "standard", "e1d11f65-da66-46ad-977c-6d56513baf43", "standard"},                         // Cloud Storage
+		{stackdriverDebuggerServiceId, "", "default", stackdriverDebuggerNewDefaultPlanId, "default"},                  // Stackdriver Debugger
+		{cloudMlServiceId, "", "default", cloudMlNewDefaultPlanId, "default"},                                          // Cloud ML APIs
+		{pubsubServiceId, "", "default", pubsubNewDefaultPlanId, "default"},                                            // Pub/Sub
+		{stackdriverTraceServiceId, "", "default", stackdriverTraceNewDefaultPlanId, "default"},                        // Stackdriver Trace
+		{datastoreServiceId, "", "default", datastoreNewDefaultPlanId, "default"},                                      // Datastore
+		{bigqueryServiceId, "", "default", bigquerynewDefaultPlanid, "default"},                                        // BigQuery
+		{cloudStorageServiceId, "", "nearline", cloudStorageNewNearlinePlanId, "nearline"},                             // Cloud Storage
+		{cloudStorageServiceId, "", "reduced_availability", cloudStorageNewReducedAvailPlanId, "reduced-availability"}, // Cloud Storage
+		{cloudStorageServiceId, "", "standard", cloudStorageNewStandardPlanId, "standard"},                             // Cloud Storage
 	}
 
 	var allowedUpgrades []upgradePath
