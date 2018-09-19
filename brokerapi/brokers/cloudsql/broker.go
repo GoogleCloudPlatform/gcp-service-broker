@@ -179,7 +179,7 @@ func (b *CloudSQLBroker) Provision(ctx context.Context, instanceId string, detai
 	}
 
 	// save new cloud operation
-	if err = createCloudOperation(op, instanceId, details.ServiceID); err != nil {
+	if err = createCloudOperation(ctx, op, instanceId, details.ServiceID); err != nil {
 		return models.ServiceInstanceDetails{}, err
 	}
 
@@ -317,7 +317,7 @@ func (b *CloudSQLBroker) finishProvisioning(ctx context.Context, instanceId stri
 	// it should be quick and not actually async.
 	var err error
 
-	instance, err := db_service.GetServiceInstanceDetailsById(instanceId)
+	instance, err := db_service.GetServiceInstanceDetailsById(ctx, instanceId)
 	if err != nil {
 		return brokerapi.ErrInstanceDoesNotExist
 	}
@@ -349,12 +349,12 @@ func (b *CloudSQLBroker) finishProvisioning(ctx context.Context, instanceId stri
 	}
 
 	// Create new operation entry for the database insert
-	if err = createCloudOperation(op, instanceId, instance.ServiceId); err != nil {
+	if err = createCloudOperation(ctx, op, instanceId, instance.ServiceId); err != nil {
 		return err
 	}
 
 	// Save new operation id and database name to instance data
-	if err = updateOperationId(*instance, op.Name); err != nil {
+	if err = updateOperationId(ctx, *instance, op.Name); err != nil {
 		return err
 	}
 
@@ -386,7 +386,7 @@ func (b *CloudSQLBroker) finishProvisioning(ctx context.Context, instanceId stri
 	b.Logger.Debug(fmt.Sprintf("UPDATING OTHER DETAILS FROM %v to %s", instance.OtherDetails, string(otherDetails)))
 	instance.OtherDetails = string(otherDetails)
 
-	if err = db_service.SaveServiceInstanceDetails(instance); err != nil {
+	if err = db_service.SaveServiceInstanceDetails(ctx, instance); err != nil {
 		return fmt.Errorf(`Error saving instance details to database: %s. WARNING: this instance cannot be deprovisioned through cf.
 		Please contact your operator for cleanup`, err)
 	}
@@ -430,7 +430,7 @@ func (b *CloudSQLBroker) ensureUsernamePassword(instanceID, bindingID string, de
 // The default PCF service broker timeout may need to be raised to 90 or 120 seconds to accommodate the long bind time.
 func (b *CloudSQLBroker) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 
-	cloudDb, err := db_service.GetServiceInstanceDetailsById(instanceID)
+	cloudDb, err := db_service.GetServiceInstanceDetailsById(ctx, instanceID)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, brokerapi.ErrInstanceDoesNotExist
 	}
@@ -564,12 +564,12 @@ func (b *CloudSQLBroker) pollOperation(ctx context.Context, instanceId string, o
 			opErr = ""
 		}
 		op.ErrorMessage = string(opErr)
-		db_service.SaveCloudOperation(&op)
+		db_service.SaveCloudOperation(ctx, &op)
 	}
 
 	// we were provisioning and finished the first step
 	if opStatus.Status == "DONE" && op.OperationType == "CREATE" {
-		pr, err := db_service.GetProvisionRequestDetailsByServiceInstanceId(instanceId)
+		pr, err := db_service.GetProvisionRequestDetailsByServiceInstanceId(ctx, instanceId)
 		if err != nil {
 			return false, brokerapi.ErrInstanceDoesNotExist
 		}
@@ -632,19 +632,19 @@ func (b *CloudSQLBroker) Deprovision(ctx context.Context, instance models.Servic
 	}
 
 	// update the service instance state (other details)
-	if err = createCloudOperation(op, instance.ID, details.ServiceID); err != nil {
+	if err = createCloudOperation(ctx, op, instance.ID, details.ServiceID); err != nil {
 		return err
 	}
 
 	// Save new operation id to instance data
-	if err = updateOperationId(instance, op.Name); err != nil {
+	if err = updateOperationId(ctx, instance, op.Name); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func createCloudOperation(op *googlecloudsql.Operation, instanceId string, serviceId string) error {
+func createCloudOperation(ctx context.Context, op *googlecloudsql.Operation, instanceId string, serviceId string) error {
 	var err error
 	var opErr []byte
 
@@ -668,13 +668,13 @@ func createCloudOperation(op *googlecloudsql.Operation, instanceId string, servi
 		ServiceInstanceId: instanceId,
 	}
 
-	if err = db_service.CreateCloudOperation(&currentState); err != nil {
+	if err = db_service.CreateCloudOperation(ctx, &currentState); err != nil {
 		return fmt.Errorf("Error saving operation details to database: %s. Services relying on async deprovisioning will not be able to complete deprovisioning", err)
 	}
 	return nil
 }
 
-func updateOperationId(instance models.ServiceInstanceDetails, operationId string) error {
+func updateOperationId(ctx context.Context, instance models.ServiceInstanceDetails, operationId string) error {
 	var ii InstanceInformation
 	if err := json.Unmarshal([]byte(instance.OtherDetails), &ii); err != nil {
 		return fmt.Errorf("Error unmarshalling instance information.")
@@ -687,7 +687,7 @@ func updateOperationId(instance models.ServiceInstanceDetails, operationId strin
 	}
 	instance.OtherDetails = string(otherDetails)
 
-	if err = db_service.SaveServiceInstanceDetails(&instance); err != nil {
+	if err = db_service.SaveServiceInstanceDetails(ctx, &instance); err != nil {
 		return fmt.Errorf(`Error saving instance details to database: %s. WARNING: this instance cannot be deprovisioned through cf.
 		Please contact your operator for cleanup`, err)
 	}

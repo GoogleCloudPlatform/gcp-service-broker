@@ -116,7 +116,7 @@ func (sam *SqlAccountManager) DeleteCredentials(ctx context.Context, binding mod
 		return fmt.Errorf("Error unmarshalling credentials: %s", err)
 	}
 
-	instance, err := db_service.GetServiceInstanceDetailsById(binding.ServiceInstanceId)
+	instance, err := db_service.GetServiceInstanceDetailsById(ctx, binding.ServiceInstanceId)
 	if err != nil {
 		return fmt.Errorf("Database error retrieving instance details: %s", err)
 	}

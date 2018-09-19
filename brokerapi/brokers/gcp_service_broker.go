@@ -168,7 +168,7 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 	})
 
 	// make sure that instance hasn't already been provisioned
-	count, err := db_service.CountServiceInstanceDetailsById(instanceID)
+	count, err := db_service.CountServiceInstanceDetailsById(ctx, instanceID)
 	if err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("Database error checking for existing instance: %s", err)
 	}
@@ -204,7 +204,7 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 	instanceDetails.SpaceGuid = details.SpaceGUID
 	instanceDetails.OrganizationGuid = details.OrganizationGUID
 
-	err = db_service.CreateServiceInstanceDetails(&instanceDetails)
+	err = db_service.CreateServiceInstanceDetails(ctx, &instanceDetails)
 	if err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("Error saving instance details to database: %s. WARNING: this instance cannot be deprovisioned through cf. Contact your operator for cleanup", err)
 	}
@@ -214,7 +214,7 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 		ServiceInstanceId: instanceID,
 		RequestDetails:    string(details.RawParameters),
 	}
-	if err = db_service.CreateProvisionRequestDetails(&pr); err != nil {
+	if err = db_service.CreateProvisionRequestDetails(ctx, &pr); err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("Error saving provision request details to database: %s. Services relying on async provisioning will not be able to complete provisioning", err)
 	}
 
@@ -235,7 +235,7 @@ func (gcpBroker *GCPServiceBroker) Deprovision(ctx context.Context, instanceID s
 	response := brokerapi.DeprovisionServiceSpec{IsAsync: deprovisionIsAsync}
 
 	// make sure that instance actually exists
-	count, err := db_service.CountServiceInstanceDetailsById(instanceID)
+	count, err := db_service.CountServiceInstanceDetailsById(ctx, instanceID)
 	if err != nil {
 		return response, fmt.Errorf("Database error checking for existing instance: %s", err)
 	}
@@ -249,7 +249,7 @@ func (gcpBroker *GCPServiceBroker) Deprovision(ctx context.Context, instanceID s
 	}
 
 	// deprovision
-	instance, err := db_service.GetServiceInstanceDetailsById(instanceID)
+	instance, err := db_service.GetServiceInstanceDetailsById(ctx, instanceID)
 	if err != nil {
 		return response, brokerapi.NewFailureResponseBuilder(err, http.StatusInternalServerError, "fetching instance from database").Build()
 	}
@@ -262,7 +262,7 @@ func (gcpBroker *GCPServiceBroker) Deprovision(ctx context.Context, instanceID s
 	// if it's an async operation we can't delete from the db until we're sure delete succeeded, so this is
 	// handled internally to LastOperation
 	if !deprovisionIsAsync {
-		err = db_service.DeleteServiceInstanceDetailsById(instanceID)
+		err = db_service.DeleteServiceInstanceDetailsById(ctx, instanceID)
 		if err != nil {
 			return response, fmt.Errorf("Error deleting instance details from database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup", err)
 		}
@@ -284,7 +284,7 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 
 	// check for existing binding
 
-	count, err := db_service.CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(instanceID, bindingID)
+	count, err := db_service.CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, instanceID, bindingID)
 	if err != nil {
 		return brokerapi.Binding{}, fmt.Errorf("Error checking for existing binding: %s", err)
 	}
@@ -303,13 +303,13 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 	newCreds.BindingId = bindingID
 	newCreds.ServiceId = details.ServiceID
 
-	if err := db_service.CreateServiceBindingCredentials(&newCreds); err != nil {
+	if err := db_service.CreateServiceBindingCredentials(ctx, &newCreds); err != nil {
 		return brokerapi.Binding{}, fmt.Errorf("Error saving credentials to database: %s. WARNING: these credentials cannot be unbound through cf. Please contact your operator for cleanup",
 			err)
 	}
 
 	// get existing service instance details
-	instanceRecord, err := db_service.GetServiceInstanceDetailsById(instanceID)
+	instanceRecord, err := db_service.GetServiceInstanceDetailsById(ctx, instanceID)
 	if err != nil {
 		return brokerapi.Binding{}, fmt.Errorf("Error retrieving service instance details: %s", err)
 	}
@@ -334,7 +334,7 @@ func (gcpBroker *GCPServiceBroker) Unbind(ctx context.Context, instanceID, bindi
 	service := gcpBroker.ServiceBrokerMap[details.ServiceID]
 
 	// validate existence of binding
-	existingBinding, err := db_service.GetServiceBindingCredentialsByServiceInstanceIdAndBindingId(instanceID, bindingID)
+	existingBinding, err := db_service.GetServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, instanceID, bindingID)
 	if err != nil {
 		return brokerapi.ErrBindingDoesNotExist
 	}
@@ -345,7 +345,7 @@ func (gcpBroker *GCPServiceBroker) Unbind(ctx context.Context, instanceID, bindi
 	}
 
 	// remove binding from database
-	if err := db_service.DeleteServiceBindingCredentials(existingBinding); err != nil {
+	if err := db_service.DeleteServiceBindingCredentials(ctx, existingBinding); err != nil {
 		return fmt.Errorf("Error soft-deleting credentials from database: %s. WARNING: these credentials will remain visible in cf. Contact your operator for cleanup", err)
 	}
 
@@ -361,7 +361,7 @@ func (gcpBroker *GCPServiceBroker) LastOperation(ctx context.Context, instanceID
 		"operation_data": operationData,
 	})
 
-	instance, err := db_service.GetServiceInstanceDetailsById(instanceID)
+	instance, err := db_service.GetServiceInstanceDetailsById(ctx, instanceID)
 	if err != nil {
 		return brokerapi.LastOperation{}, brokerapi.ErrInstanceDoesNotExist
 	}
@@ -399,7 +399,7 @@ func (gcpBroker *GCPServiceBroker) lastOperationAsync(ctx context.Context, insta
 		return brokerapi.LastOperation{State: brokerapi.Succeeded}, fmt.Errorf("Couldn't determine if provision or deprovision flow, this may leave orphaned resources, contact your operator for cleanup: %s", err)
 	}
 	if deleteFlow {
-		err = db_service.DeleteServiceInstanceDetailsById(instanceId)
+		err = db_service.DeleteServiceInstanceDetailsById(ctx, instanceId)
 		if err != nil {
 			return brokerapi.LastOperation{State: brokerapi.Succeeded}, fmt.Errorf("Error deleting instance details from database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup", err)
 		}

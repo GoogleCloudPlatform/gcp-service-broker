@@ -127,12 +127,12 @@ func (s *SpannerBroker) Provision(ctx context.Context, instanceId string, detail
 // PollInstance gets the last operation for this instance and polls its status.
 func (s *SpannerBroker) PollInstance(ctx context.Context, instanceId string) (bool, error) {
 
-	op, err := db_service.GetCloudOperationByServiceInstanceId(instanceId)
+	op, err := db_service.GetCloudOperationByServiceInstanceId(ctx, instanceId)
 	if err != nil {
 		return false, fmt.Errorf("Could not locate CloudOperation in database: %s", err)
 	}
 
-	if _, err := db_service.GetServiceInstanceDetailsById(instanceId); err != nil {
+	if _, err := db_service.GetServiceInstanceDetailsById(ctx, instanceId); err != nil {
 		return false, brokerapi.ErrInstanceDoesNotExist
 	}
 
@@ -164,7 +164,7 @@ func (s *SpannerBroker) PollInstance(ctx context.Context, instanceId string) (bo
 		op.Status = "FAILED"
 		op.ErrorMessage = err.Error()
 
-		if dberr := db_service.SaveCloudOperation(op); dberr != nil {
+		if dberr := db_service.SaveCloudOperation(ctx, op); dberr != nil {
 			return false, fmt.Errorf(`Error saving operation details to database: %s.`, dberr)
 		}
 
@@ -172,7 +172,7 @@ func (s *SpannerBroker) PollInstance(ctx context.Context, instanceId string) (bo
 	} else if spannerInstance == nil && err == nil && !done {
 		op.Status = string(instancepb.Instance_STATE_UNSPECIFIED)
 
-		if err := db_service.SaveCloudOperation(op); err != nil {
+		if err := db_service.SaveCloudOperation(ctx, op); err != nil {
 			return false, fmt.Errorf(`Error saving operation details to database: %s.`, err)
 		}
 
@@ -180,7 +180,7 @@ func (s *SpannerBroker) PollInstance(ctx context.Context, instanceId string) (bo
 	} else if spannerInstance != nil && err == nil && done {
 		op.Status = spannerInstance.State.String()
 
-		if err := db_service.SaveCloudOperation(op); err != nil {
+		if err := db_service.SaveCloudOperation(ctx, op); err != nil {
 			return false, fmt.Errorf(`Error saving operation details to database: %s.`, err)
 		}
 
@@ -217,7 +217,7 @@ func createCloudOperation(ctx context.Context, op *googlespanner.CreateInstanceO
 		ServiceInstanceId: instanceId,
 	}
 
-	if err = db_service.CreateCloudOperation(&currentState); err != nil {
+	if err = db_service.CreateCloudOperation(ctx, &currentState); err != nil {
 		return fmt.Errorf("Error saving operation details to database: %s. Services relying on async deprovisioning will not be able to complete deprovisioning", err)
 	}
 	return nil
