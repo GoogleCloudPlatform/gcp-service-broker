@@ -28,7 +28,7 @@ See the [installation instructions](https://github.com/GoogleCloudPlatform/gcp-s
 
 ## Upgrading
 
-If you're upgrading, check the [upgrade guide](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/iupgrading.md).
+If you're upgrading, check the [upgrade guide](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/upgrading.md).
 
 ## Usage
 
