@@ -523,7 +523,7 @@ func (b *CloudSQLBroker) Unbind(ctx context.Context, creds models.ServiceBinding
 
 // PollInstance gets the last operation for this instance and checks its status.
 func (b *CloudSQLBroker) PollInstance(ctx context.Context, instanceId string) (bool, error) {
-	op, err := db_service.GetLastOperation(instanceId)
+	op, err := db_service.GetLastOperation(ctx, instanceId)
 	if err != nil {
 		return false, err
 	}
@@ -696,7 +696,7 @@ func updateOperationId(ctx context.Context, instance models.ServiceInstanceDetai
 
 // LastOperationWasDelete checks if the last async operation was a deletion (as opposed to a provision).
 func (b *CloudSQLBroker) LastOperationWasDelete(ctx context.Context, instanceId string) (bool, error) {
-	op, err := db_service.GetLastOperation(instanceId)
+	op, err := db_service.GetLastOperation(ctx, instanceId)
 	if err != nil {
 		return false, err
 	}
