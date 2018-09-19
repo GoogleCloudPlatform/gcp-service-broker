@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unresolved]
 
+## [4.0.0] - 2018-10-01
+
 ### Added
 - New sub-command `plan-info` to dump plan information to the console.
 - New sub-command `client` to execute documentation examples and interact with the broker.
