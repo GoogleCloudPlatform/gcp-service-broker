@@ -128,7 +128,7 @@ For example:
 <ul>
   <li>{{ if .Optional }}<i>Optional</i>{{ else }}<b>Required</b>{{ end }}</li>
 
-{{ if .Default }}
+{{- if .Default }}
   <li>Default: <code>{{ js .Default }}</code></li>
 {{- end }}
 
@@ -142,7 +142,7 @@ For example:
     {{ range .Options }}<li><tt>{{ .Name }}</tt> - {{ .Label }}</li>{{ end }}
   </ul>
   </li>
-{{ end }}
+{{- end }}
 </ul>
 
 {{ end }}

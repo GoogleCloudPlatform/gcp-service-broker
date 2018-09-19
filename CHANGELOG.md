@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - The ability to turn on/off services via environment variable.
 - Default plans for Spanner, BigTable, and CloudSQL.
 - Whitelists for bindings so only certain "safe" roles can be chosen by end-users.
-- Automatic labeling of resources with organizaiton GUID, space GUID, and instance ID to BigQuery, CloudSQL, Spanner, and GCS.
+- Automatic labeling of resources with organization GUID, space GUID, and instance ID to BigQuery, CloudSQL, Spanner, and Cloud Storage.
 
 ### Deprecated
 - Running the service by executing the main executable. Use the `serve` sub-command instead.
@@ -27,13 +27,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed  
 - **Breaking** plan ids are now required and will not be generated if not supplied.
 - **Breaking** changed custom plan id field name from `guid` to `id`.
-- **Breaking** modified `"features"` plan config field name to `"service_properties"`.
+- **Breaking** modified `"features"` plan configuration field name to `"service_properties"`.
 - **Breaking** modified structure of all catalog-related environment variables - `plans` is now a sub-field of the Service object,
-and Service objects are defined individually by setting env variables like `GOOGLE_<SERVICE_NAME>`
+and Service objects are defined individually by setting environment variables like `GOOGLE_<SERVICE_NAME>`
 - You no longer have to specify service information in the manifest.
-- **Breaking** The GCS plan `reduced_availability` was changed to `reduced-availability` to be compliant with the spec and work with Kubernetes.
+- **Breaking** The Cloud Storage plan `reduced_availability` was changed to `reduced-availability` to be compliant with the spec and work with Kubernetes.
 - Tables are created only if they do not exist on migration, fixing [#194](https://github.com/GoogleCloudPlatform/gcp-service-broker/issues/194).
-- The broker now adheres to OSB version 2.13.
+- The broker now adheres to Open Service Broker API version 2.13.
 - Improved ORM migrations and test coverage with SQLite3.
 
 ## [3.6.0] - 2017-01-03
@@ -88,7 +88,7 @@ and Service objects are defined individually by setting env variables like `GOOG
 - Added Spanner support.
 - Added an example Golang application.
 - Added Concourse CI pipeline.
-- Added integration testing for async services.
+- Added integration testing for asynchronous services.
 
 ## [3.1.2] - 2017-02-12
 

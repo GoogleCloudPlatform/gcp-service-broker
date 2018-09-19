@@ -40,17 +40,13 @@ func SaveServiceInstanceDetails(object *models.ServiceInstanceDetails) error { r
 func (ds *SqlDatastore) SaveServiceInstanceDetails(object *models.ServiceInstanceDetails) error {
 	return ds.db.Save(object).Error
 }
-
-// DeleteServiceInstanceDetailsById soft-deletes the record.
-func DeleteServiceInstanceDetailsById(pk string) error { return defaultDatastore().DeleteServiceInstanceDetailsById(pk) }
-func (ds *SqlDatastore) DeleteServiceInstanceDetailsById(pk string) error {
-	record, err := ds.GetServiceInstanceDetailsById(pk)
-	if err != nil {
-		return err
-	}
-
-	return ds.DeleteServiceInstanceDetails(record)
+// DeleteServiceInstanceDetailsById soft-deletes the record by its key (id).
+func DeleteServiceInstanceDetailsById(id string) error { return defaultDatastore().DeleteServiceInstanceDetailsById(id) }
+func (ds *SqlDatastore) DeleteServiceInstanceDetailsById(id string) error {
+	return ds.db.Where("id = ?", id).Delete(&models.ServiceInstanceDetails{}).Error
 }
+
+
 
 // DeleteServiceInstanceDetails soft-deletes the record.
 func DeleteServiceInstanceDetails(record *models.ServiceInstanceDetails) error { return defaultDatastore().DeleteServiceInstanceDetails(record) }
@@ -110,17 +106,19 @@ func SaveCloudOperation(object *models.CloudOperation) error { return defaultDat
 func (ds *SqlDatastore) SaveCloudOperation(object *models.CloudOperation) error {
 	return ds.db.Save(object).Error
 }
-
-// DeleteCloudOperationById soft-deletes the record.
-func DeleteCloudOperationById(pk uint) error { return defaultDatastore().DeleteCloudOperationById(pk) }
-func (ds *SqlDatastore) DeleteCloudOperationById(pk uint) error {
-	record, err := ds.GetCloudOperationById(pk)
-	if err != nil {
-		return err
-	}
-
-	return ds.DeleteCloudOperation(record)
+// DeleteCloudOperationByServiceInstanceId soft-deletes the record by its key (serviceInstanceId).
+func DeleteCloudOperationByServiceInstanceId(serviceInstanceId string) error { return defaultDatastore().DeleteCloudOperationByServiceInstanceId(serviceInstanceId) }
+func (ds *SqlDatastore) DeleteCloudOperationByServiceInstanceId(serviceInstanceId string) error {
+	return ds.db.Where("service_instance_id = ?", serviceInstanceId).Delete(&models.CloudOperation{}).Error
 }
+
+// DeleteCloudOperationById soft-deletes the record by its key (id).
+func DeleteCloudOperationById(id uint) error { return defaultDatastore().DeleteCloudOperationById(id) }
+func (ds *SqlDatastore) DeleteCloudOperationById(id uint) error {
+	return ds.db.Where("id = ?", id).Delete(&models.CloudOperation{}).Error
+}
+
+
 
 // DeleteCloudOperation soft-deletes the record.
 func DeleteCloudOperation(record *models.CloudOperation) error { return defaultDatastore().DeleteCloudOperation(record) }
@@ -211,17 +209,25 @@ func SaveServiceBindingCredentials(object *models.ServiceBindingCredentials) err
 func (ds *SqlDatastore) SaveServiceBindingCredentials(object *models.ServiceBindingCredentials) error {
 	return ds.db.Save(object).Error
 }
-
-// DeleteServiceBindingCredentialsById soft-deletes the record.
-func DeleteServiceBindingCredentialsById(pk uint) error { return defaultDatastore().DeleteServiceBindingCredentialsById(pk) }
-func (ds *SqlDatastore) DeleteServiceBindingCredentialsById(pk uint) error {
-	record, err := ds.GetServiceBindingCredentialsById(pk)
-	if err != nil {
-		return err
-	}
-
-	return ds.DeleteServiceBindingCredentials(record)
+// DeleteServiceBindingCredentialsByServiceInstanceIdAndBindingId soft-deletes the record by its key (serviceInstanceId, bindingId).
+func DeleteServiceBindingCredentialsByServiceInstanceIdAndBindingId(serviceInstanceId string, bindingId string) error { return defaultDatastore().DeleteServiceBindingCredentialsByServiceInstanceIdAndBindingId(serviceInstanceId, bindingId) }
+func (ds *SqlDatastore) DeleteServiceBindingCredentialsByServiceInstanceIdAndBindingId(serviceInstanceId string, bindingId string) error {
+	return ds.db.Where("service_instance_id = ? AND binding_id = ?", serviceInstanceId, bindingId).Delete(&models.ServiceBindingCredentials{}).Error
 }
+
+// DeleteServiceBindingCredentialsByBindingId soft-deletes the record by its key (bindingId).
+func DeleteServiceBindingCredentialsByBindingId(bindingId string) error { return defaultDatastore().DeleteServiceBindingCredentialsByBindingId(bindingId) }
+func (ds *SqlDatastore) DeleteServiceBindingCredentialsByBindingId(bindingId string) error {
+	return ds.db.Where("binding_id = ?", bindingId).Delete(&models.ServiceBindingCredentials{}).Error
+}
+
+// DeleteServiceBindingCredentialsById soft-deletes the record by its key (id).
+func DeleteServiceBindingCredentialsById(id uint) error { return defaultDatastore().DeleteServiceBindingCredentialsById(id) }
+func (ds *SqlDatastore) DeleteServiceBindingCredentialsById(id uint) error {
+	return ds.db.Where("id = ?", id).Delete(&models.ServiceBindingCredentials{}).Error
+}
+
+
 
 // DeleteServiceBindingCredentials soft-deletes the record.
 func DeleteServiceBindingCredentials(record *models.ServiceBindingCredentials) error { return defaultDatastore().DeleteServiceBindingCredentials(record) }
@@ -325,17 +331,19 @@ func SaveProvisionRequestDetails(object *models.ProvisionRequestDetails) error {
 func (ds *SqlDatastore) SaveProvisionRequestDetails(object *models.ProvisionRequestDetails) error {
 	return ds.db.Save(object).Error
 }
-
-// DeleteProvisionRequestDetailsById soft-deletes the record.
-func DeleteProvisionRequestDetailsById(pk uint) error { return defaultDatastore().DeleteProvisionRequestDetailsById(pk) }
-func (ds *SqlDatastore) DeleteProvisionRequestDetailsById(pk uint) error {
-	record, err := ds.GetProvisionRequestDetailsById(pk)
-	if err != nil {
-		return err
-	}
-
-	return ds.DeleteProvisionRequestDetails(record)
+// DeleteProvisionRequestDetailsByServiceInstanceId soft-deletes the record by its key (serviceInstanceId).
+func DeleteProvisionRequestDetailsByServiceInstanceId(serviceInstanceId string) error { return defaultDatastore().DeleteProvisionRequestDetailsByServiceInstanceId(serviceInstanceId) }
+func (ds *SqlDatastore) DeleteProvisionRequestDetailsByServiceInstanceId(serviceInstanceId string) error {
+	return ds.db.Where("service_instance_id = ?", serviceInstanceId).Delete(&models.ProvisionRequestDetails{}).Error
 }
+
+// DeleteProvisionRequestDetailsById soft-deletes the record by its key (id).
+func DeleteProvisionRequestDetailsById(id uint) error { return defaultDatastore().DeleteProvisionRequestDetailsById(id) }
+func (ds *SqlDatastore) DeleteProvisionRequestDetailsById(id uint) error {
+	return ds.db.Where("id = ?", id).Delete(&models.ProvisionRequestDetails{}).Error
+}
+
+
 
 // DeleteProvisionRequestDetails soft-deletes the record.
 func DeleteProvisionRequestDetails(record *models.ProvisionRequestDetails) error { return defaultDatastore().DeleteProvisionRequestDetails(record) }
@@ -379,6 +387,100 @@ func (ds *SqlDatastore) GetProvisionRequestDetailsById(id uint) (*models.Provisi
 func CheckDeletedProvisionRequestDetailsById(id uint) (bool, error) { return defaultDatastore().CheckDeletedProvisionRequestDetailsById(id) }
 func (ds *SqlDatastore) CheckDeletedProvisionRequestDetailsById(id uint) (bool, error) {
 	record := models.ProvisionRequestDetails{}
+	if err := ds.db.Unscoped().Where("id = ?", id).First(&record).Error; err != nil {
+		return false, err
+	}
+
+	return record.DeletedAt != nil, nil
+}
+
+
+
+
+// CountPlanDetailsV1ByServiceIdAndName gets the count of PlanDetailsV1 by its key (serviceId, name) in the datastore (0 or 1)
+func CountPlanDetailsV1ByServiceIdAndName(serviceId string, name string) (int, error) { return defaultDatastore().CountPlanDetailsV1ByServiceIdAndName(serviceId, name) }
+func (ds *SqlDatastore) CountPlanDetailsV1ByServiceIdAndName(serviceId string, name string) (int, error) {
+	var count int
+	err := ds.db.Model(&models.PlanDetailsV1{}).Where("service_id = ? AND name = ?", serviceId, name).Count(&count).Error
+	return count, err
+}
+
+
+// CountPlanDetailsV1ById gets the count of PlanDetailsV1 by its key (id) in the datastore (0 or 1)
+func CountPlanDetailsV1ById(id string) (int, error) { return defaultDatastore().CountPlanDetailsV1ById(id) }
+func (ds *SqlDatastore) CountPlanDetailsV1ById(id string) (int, error) {
+	var count int
+	err := ds.db.Model(&models.PlanDetailsV1{}).Where("id = ?", id).Count(&count).Error
+	return count, err
+}
+
+// CreatePlanDetailsV1 creates a new record in the database and assigns it a primary key.
+func CreatePlanDetailsV1(object *models.PlanDetailsV1) error { return defaultDatastore().CreatePlanDetailsV1(object) }
+func (ds *SqlDatastore) CreatePlanDetailsV1(object *models.PlanDetailsV1) error {
+	return ds.db.Create(object).Error
+}
+
+// SavePlanDetailsV1 updates an existing record in the database.
+func SavePlanDetailsV1(object *models.PlanDetailsV1) error { return defaultDatastore().SavePlanDetailsV1(object) }
+func (ds *SqlDatastore) SavePlanDetailsV1(object *models.PlanDetailsV1) error {
+	return ds.db.Save(object).Error
+}
+// DeletePlanDetailsV1ByServiceIdAndName soft-deletes the record by its key (serviceId, name).
+func DeletePlanDetailsV1ByServiceIdAndName(serviceId string, name string) error { return defaultDatastore().DeletePlanDetailsV1ByServiceIdAndName(serviceId, name) }
+func (ds *SqlDatastore) DeletePlanDetailsV1ByServiceIdAndName(serviceId string, name string) error {
+	return ds.db.Where("service_id = ? AND name = ?", serviceId, name).Delete(&models.PlanDetailsV1{}).Error
+}
+
+// DeletePlanDetailsV1ById soft-deletes the record by its key (id).
+func DeletePlanDetailsV1ById(id string) error { return defaultDatastore().DeletePlanDetailsV1ById(id) }
+func (ds *SqlDatastore) DeletePlanDetailsV1ById(id string) error {
+	return ds.db.Where("id = ?", id).Delete(&models.PlanDetailsV1{}).Error
+}
+
+
+
+// DeletePlanDetailsV1 soft-deletes the record.
+func DeletePlanDetailsV1(record *models.PlanDetailsV1) error { return defaultDatastore().DeletePlanDetailsV1(record) }
+func (ds *SqlDatastore) DeletePlanDetailsV1(record *models.PlanDetailsV1) error {
+	return ds.db.Delete(record).Error
+}
+// GetPlanDetailsV1ByServiceIdAndName gets an instance of PlanDetailsV1 by its key (serviceId, name).
+func GetPlanDetailsV1ByServiceIdAndName(serviceId string, name string) (*models.PlanDetailsV1, error) { return defaultDatastore().GetPlanDetailsV1ByServiceIdAndName(serviceId, name) }
+func (ds *SqlDatastore) GetPlanDetailsV1ByServiceIdAndName(serviceId string, name string) (*models.PlanDetailsV1, error) {
+	record := models.PlanDetailsV1{}
+	if err := ds.db.Where("service_id = ? AND name = ?", serviceId, name).First(&record).Error; err != nil {
+		return nil, err
+	}
+
+	return &record, nil
+}
+
+// CheckDeletedPlanDetailsV1ByServiceIdAndName checks to see if an instance of PlanDetailsV1 was soft deleted by its key (serviceId, name).
+func CheckDeletedPlanDetailsV1ByServiceIdAndName(serviceId string, name string) (bool, error) { return defaultDatastore().CheckDeletedPlanDetailsV1ByServiceIdAndName(serviceId, name) }
+func (ds *SqlDatastore) CheckDeletedPlanDetailsV1ByServiceIdAndName(serviceId string, name string) (bool, error) {
+	record := models.PlanDetailsV1{}
+	if err := ds.db.Unscoped().Where("service_id = ? AND name = ?", serviceId, name).First(&record).Error; err != nil {
+		return false, err
+	}
+
+	return record.DeletedAt != nil, nil
+}
+
+// GetPlanDetailsV1ById gets an instance of PlanDetailsV1 by its key (id).
+func GetPlanDetailsV1ById(id string) (*models.PlanDetailsV1, error) { return defaultDatastore().GetPlanDetailsV1ById(id) }
+func (ds *SqlDatastore) GetPlanDetailsV1ById(id string) (*models.PlanDetailsV1, error) {
+	record := models.PlanDetailsV1{}
+	if err := ds.db.Where("id = ?", id).First(&record).Error; err != nil {
+		return nil, err
+	}
+
+	return &record, nil
+}
+
+// CheckDeletedPlanDetailsV1ById checks to see if an instance of PlanDetailsV1 was soft deleted by its key (id).
+func CheckDeletedPlanDetailsV1ById(id string) (bool, error) { return defaultDatastore().CheckDeletedPlanDetailsV1ById(id) }
+func (ds *SqlDatastore) CheckDeletedPlanDetailsV1ById(id string) (bool, error) {
+	record := models.PlanDetailsV1{}
 	if err := ds.db.Unscoped().Where("id = ?", id).First(&record).Error; err != nil {
 		return false, err
 	}

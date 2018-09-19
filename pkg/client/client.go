@@ -91,6 +91,17 @@ func (client *Client) Unbind(instanceId, bindingId, serviceId, planId string) *B
 	return client.makeRequest(http.MethodDelete, url, nil)
 }
 
+// Update sends a patch request to change the plan
+func (client *Client) Update(instanceId, serviceId, planId string, parameters json.RawMessage) *BrokerResponse {
+	url := fmt.Sprintf("service_instances/%s", instanceId)
+
+	return client.makeRequest(http.MethodPatch, url, brokerapi.UpdateDetails{
+		ServiceID:     serviceId,
+		PlanID:        planId,
+		RawParameters: parameters,
+	})
+}
+
 // LastOperation queries the status of a long-running job on the server
 func (client *Client) LastOperation(instanceId string) *BrokerResponse {
 	url := fmt.Sprintf("service_instances/%s/last_operation", instanceId)
