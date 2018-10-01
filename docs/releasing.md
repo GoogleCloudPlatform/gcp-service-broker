@@ -40,3 +40,4 @@
 - [ ] Fill out the [release form](https://docs.google.com/forms/d/e/1FAIpQLSctLGMU8iOuwq6NqDYI65aMhJ7widDQGo9SawDG0b8TFfq7Ag/viewform).
 - [ ] An ISV Program Manager will make the release available to "All Users" after review. Partner Admins can make the release available to "Admin Users".
 - [ ] Merge the release branch once done.
+- [ ] Make a release announcement in the gcp-service-broker Google Group like [this one](https://groups.google.com/forum/#!topic/gcp-service-broker/7Ae9D2B1AzE).
