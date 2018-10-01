@@ -17,7 +17,7 @@ If you:
   * These will continue to work, but are deprecated.
 * Rely on custom roles:
   * You will need to add the roles to the whitelists for the services they apply to.
-*  Used built-in plans prior to 4.0:
+* Used built-in plans prior to 4.0:
   * Enable **Compatibility with GCP Service Broker v3.X plans** in the **Compatibility** form.
   * You will also need to enable the new plans for your developers so they can upgrade.
   * If you are not using the tile, you can set the `GSB_COMPATIBILITY_THREE_TO_FOUR_LEGACY_PLANS`
