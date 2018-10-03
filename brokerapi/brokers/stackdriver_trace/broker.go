@@ -28,7 +28,7 @@ type StackdriverTraceBroker struct {
 }
 
 // Provision is a no-op call because only service accounts need to be bound/unbound for Stackdriver.
-func (b *StackdriverTraceBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+func (b *StackdriverTraceBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	return models.ServiceInstanceDetails{}, nil
 }
 
@@ -38,6 +38,6 @@ func (b *StackdriverTraceBroker) Deprovision(ctx context.Context, instance model
 }
 
 // Bind creates a service account with access to Stackdriver Trace.
-func (b *StackdriverTraceBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
-	return b.AccountManager.CreateAccountWithRoles(bindingID, []string{"cloudtrace.agent"})
+func (b *StackdriverTraceBroker) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
+	return b.AccountManager.CreateAccountWithRoles(ctx, bindingID, []string{"cloudtrace.agent"})
 }

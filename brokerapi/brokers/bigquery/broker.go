@@ -38,7 +38,7 @@ type InstanceInformation struct {
 }
 
 // Provision creates a new BigQuery dataset from the settings in the user-provided details and service plan.
-func (b *BigQueryBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+func (b *BigQueryBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 	var params map[string]string
 
@@ -53,11 +53,10 @@ func (b *BigQueryBroker) Provision(instanceId string, details brokerapi.Provisio
 		params["name"] = name_generator.Basic.InstanceName()
 	}
 
-	service, err := googlebigquery.New(b.HttpConfig.Client(context.Background()))
+	service, err := b.createClient(ctx)
 	if err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating bigquery client: %s", err)
+		return models.ServiceInstanceDetails{}, err
 	}
-	service.UserAgent = models.CustomUserAgent
 
 	loc := "US"
 	userLoc, locOk := params["location"]
@@ -98,9 +97,9 @@ func (b *BigQueryBroker) Provision(instanceId string, details brokerapi.Provisio
 // Deprovision deletes the dataset associated with the given instance.
 // Note: before deprovisioning you must delete all the tables in the dataset.
 func (b *BigQueryBroker) Deprovision(ctx context.Context, dataset models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
-	service, err := googlebigquery.New(b.HttpConfig.Client(ctx))
+	service, err := b.createClient(ctx)
 	if err != nil {
-		return fmt.Errorf("Error creating BigQuery client: %s", err)
+		return err
 	}
 
 	if err = service.Datasets.Delete(b.ProjectId, dataset.Name).Do(); err != nil {
@@ -108,4 +107,14 @@ func (b *BigQueryBroker) Deprovision(ctx context.Context, dataset models.Service
 	}
 
 	return nil
+}
+
+func (b *BigQueryBroker) createClient(ctx context.Context) (*googlebigquery.Service, error) {
+	service, err := googlebigquery.New(b.HttpConfig.Client(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("Couldn't instantiate BigQuery API client: %s", err)
+	}
+	service.UserAgent = models.CustomUserAgent
+
+	return service, nil
 }

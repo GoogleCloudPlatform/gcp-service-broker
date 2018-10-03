@@ -17,6 +17,7 @@
 package db_service
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -42,7 +43,7 @@ func New(logger lager.Logger) *gorm.DB {
 }
 
 // GetLastOperation gets the most recently created cloud operation for a given service instance id.
-func GetLastOperation(instanceId string) (models.CloudOperation, error) {
+func GetLastOperation(ctx context.Context, instanceId string) (models.CloudOperation, error) {
 	var op models.CloudOperation
 
 	if err := DbConnection.Where("service_instance_id = ?", instanceId).Order("created_at desc").First(&op).Error; err != nil {

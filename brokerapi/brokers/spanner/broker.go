@@ -44,7 +44,7 @@ type InstanceInformation struct {
 }
 
 // Provision creates a new Spanner instance from the settings in the user-provided details and service plan.
-func (s *SpannerBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+func (s *SpannerBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 	var params map[string]string
 
@@ -60,12 +60,9 @@ func (s *SpannerBroker) Provision(instanceId string, details brokerapi.Provision
 	}
 
 	// set up client
-
-	co := option.WithUserAgent(models.CustomUserAgent)
-	ct := option.WithTokenSource(s.HttpConfig.TokenSource(context.Background()))
-	client, err := googlespanner.NewInstanceAdminClient(context.Background(), co, ct)
+	client, err := s.createAdminClient(ctx)
 	if err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating client: %s", err)
+		return models.ServiceInstanceDetails{}, err
 	}
 
 	// set up params
@@ -87,7 +84,7 @@ func (s *SpannerBroker) Provision(instanceId string, details brokerapi.Provision
 	}
 
 	// create instance
-	op, err := client.CreateInstance(context.Background(), &instancepb.CreateInstanceRequest{
+	op, err := client.CreateInstance(ctx, &instancepb.CreateInstanceRequest{
 		Parent:     "projects/" + s.ProjectId,
 		InstanceId: params["name"],
 		Instance: &instancepb.Instance{
@@ -119,7 +116,7 @@ func (s *SpannerBroker) Provision(instanceId string, details brokerapi.Provision
 		OtherDetails: string(otherDetails),
 	}
 
-	err = createCloudOperation(op, instanceId, details.ServiceID)
+	err = createCloudOperation(ctx, op, instanceId, details.ServiceID)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error saving operation to database: %s", err)
 	}
@@ -128,19 +125,19 @@ func (s *SpannerBroker) Provision(instanceId string, details brokerapi.Provision
 }
 
 // PollInstance gets the last operation for this instance and polls its status.
-func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
+func (s *SpannerBroker) PollInstance(ctx context.Context, instanceId string) (bool, error) {
 
-	op, err := db_service.GetCloudOperationByServiceInstanceId(instanceId)
+	op, err := db_service.GetCloudOperationByServiceInstanceId(ctx, instanceId)
 	if err != nil {
 		return false, fmt.Errorf("Could not locate CloudOperation in database: %s", err)
 	}
 
-	if _, err := db_service.GetServiceInstanceDetailsById(instanceId); err != nil {
+	if _, err := db_service.GetServiceInstanceDetailsById(ctx, instanceId); err != nil {
 		return false, brokerapi.ErrInstanceDoesNotExist
 	}
 
 	// we're polling on instance deletion, which is synchronous, unlike creation. Exit early if the instance has been deleted
-	wasDelete, err := s.LastOperationWasDelete(instanceId)
+	wasDelete, err := s.LastOperationWasDelete(ctx, instanceId)
 
 	if err != nil {
 		return false, fmt.Errorf("Can't check last operation type: %s", err)
@@ -149,15 +146,15 @@ func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 		return true, nil
 	}
 
-	ct := option.WithTokenSource(s.HttpConfig.TokenSource(context.Background()))
-	client, err := googlespanner.NewInstanceAdminClient(context.Background(), ct)
+	ct := option.WithTokenSource(s.HttpConfig.TokenSource(ctx))
+	client, err := googlespanner.NewInstanceAdminClient(ctx, ct)
 	if err != nil {
 		return false, fmt.Errorf("Error creating client: %s", err)
 	}
 
 	spannerOp := client.CreateInstanceOperation(op.Name)
 
-	spannerInstance, err := spannerOp.Poll(context.Background())
+	spannerInstance, err := spannerOp.Poll(ctx)
 	done := spannerOp.Done()
 
 	// from https://godoc.org/cloud.google.com/go/spanner/admin/instance/apiv1#InstanceOperation.Poll
@@ -167,7 +164,7 @@ func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 		op.Status = "FAILED"
 		op.ErrorMessage = err.Error()
 
-		if dberr := db_service.SaveCloudOperation(op); dberr != nil {
+		if dberr := db_service.SaveCloudOperation(ctx, op); dberr != nil {
 			return false, fmt.Errorf(`Error saving operation details to database: %s.`, dberr)
 		}
 
@@ -175,7 +172,7 @@ func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 	} else if spannerInstance == nil && err == nil && !done {
 		op.Status = string(instancepb.Instance_STATE_UNSPECIFIED)
 
-		if err := db_service.SaveCloudOperation(op); err != nil {
+		if err := db_service.SaveCloudOperation(ctx, op); err != nil {
 			return false, fmt.Errorf(`Error saving operation details to database: %s.`, err)
 		}
 
@@ -183,7 +180,7 @@ func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 	} else if spannerInstance != nil && err == nil && done {
 		op.Status = spannerInstance.State.String()
 
-		if err := db_service.SaveCloudOperation(op); err != nil {
+		if err := db_service.SaveCloudOperation(ctx, op); err != nil {
 			return false, fmt.Errorf(`Error saving operation details to database: %s.`, err)
 		}
 
@@ -193,9 +190,9 @@ func (s *SpannerBroker) PollInstance(instanceId string) (bool, error) {
 	return false, fmt.Errorf("unknown error")
 }
 
-func createCloudOperation(op *googlespanner.CreateInstanceOperation, instanceId string, serviceId string) error {
+func createCloudOperation(ctx context.Context, op *googlespanner.CreateInstanceOperation, instanceId string, serviceId string) error {
 	errorStr := ""
-	if _, err := op.Poll(context.Background()); err != nil {
+	if _, err := op.Poll(ctx); err != nil {
 		errorStr = err.Error()
 	}
 
@@ -220,7 +217,7 @@ func createCloudOperation(op *googlespanner.CreateInstanceOperation, instanceId 
 		ServiceInstanceId: instanceId,
 	}
 
-	if err = db_service.CreateCloudOperation(&currentState); err != nil {
+	if err = db_service.CreateCloudOperation(ctx, &currentState); err != nil {
 		return fmt.Errorf("Error saving operation details to database: %s. Services relying on async deprovisioning will not be able to complete deprovisioning", err)
 	}
 	return nil
@@ -228,16 +225,13 @@ func createCloudOperation(op *googlespanner.CreateInstanceOperation, instanceId 
 
 // Deprovision deletes the Spanner instance associated with the given instance.
 func (s *SpannerBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
-	// set up client
-	co := option.WithUserAgent(models.CustomUserAgent)
-	ct := option.WithTokenSource(s.HttpConfig.TokenSource(ctx))
-	client, err := googlespanner.NewInstanceAdminClient(ctx, co, ct)
+	client, err := s.createAdminClient(ctx)
 	if err != nil {
-		return fmt.Errorf("Error creating client: %s", err)
+		return err
 	}
 
 	// delete instance
-	err = client.DeleteInstance(context.Background(), &instancepb.DeleteInstanceRequest{
+	err = client.DeleteInstance(ctx, &instancepb.DeleteInstanceRequest{
 		Name: "projects/" + s.ProjectId + "/instances/" + instance.Name,
 	})
 
@@ -258,6 +252,17 @@ func (s *SpannerBroker) ProvisionsAsync() bool {
 // most recent operation
 // since spanner deprovisions synchronously, the last operation will never have
 // been delete
-func (s *SpannerBroker) LastOperationWasDelete(instanceId string) (bool, error) {
+func (s *SpannerBroker) LastOperationWasDelete(ctx context.Context, instanceId string) (bool, error) {
 	return false, nil
+}
+
+func (s *SpannerBroker) createAdminClient(ctx context.Context) (*googlespanner.InstanceAdminClient, error) {
+	co := option.WithUserAgent(models.CustomUserAgent)
+	ct := option.WithTokenSource(s.HttpConfig.TokenSource(ctx))
+	client, err := googlespanner.NewInstanceAdminClient(ctx, co, ct)
+	if err != nil {
+		return nil, fmt.Errorf("Couldn't instantiate Spanner API client: %s", err)
+	}
+
+	return client, nil
 }

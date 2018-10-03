@@ -47,7 +47,7 @@ var storageTypes = map[string]googlebigtable.StorageType{
 }
 
 // Provision creates a new Bigtable instance from the settings in the user-provided details and service plan.
-func (b *BigTableBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+func (b *BigTableBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	var err error
 	var params map[string]string
 
@@ -62,13 +62,9 @@ func (b *BigTableBroker) Provision(instanceId string, details brokerapi.Provisio
 		params["name"] = name_generator.Basic.InstanceNameWithSeparator("-")
 	}
 
-	ctx := context.Background()
-	co := option.WithUserAgent(models.CustomUserAgent)
-	ct := option.WithTokenSource(b.HttpConfig.TokenSource(context.Background()))
-
-	service, err := googlebigtable.NewInstanceAdminClient(ctx, b.ProjectId, co, ct)
+	service, err := b.createClient(ctx)
 	if err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating bigtable client: %s", err)
+		return models.ServiceInstanceDetails{}, err
 	}
 
 	var clusterId string
@@ -131,10 +127,9 @@ func (b *BigTableBroker) Provision(instanceId string, details brokerapi.Provisio
 
 // Deprovision deletes the BigTable associated with the given instance.
 func (b *BigTableBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
-	ct := option.WithTokenSource(b.HttpConfig.TokenSource(ctx))
-	service, err := googlebigtable.NewInstanceAdminClient(ctx, b.ProjectId, ct)
+	service, err := b.createClient(ctx)
 	if err != nil {
-		return fmt.Errorf("Error creating BigQuery client: %s", err)
+		return err
 	}
 
 	if err := service.DeleteInstance(ctx, instance.Name); err != nil {
@@ -142,4 +137,15 @@ func (b *BigTableBroker) Deprovision(ctx context.Context, instance models.Servic
 	}
 
 	return nil
+}
+
+func (b *BigTableBroker) createClient(ctx context.Context) (*googlebigtable.InstanceAdminClient, error) {
+	co := option.WithUserAgent(models.CustomUserAgent)
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(ctx))
+	client, err := googlebigtable.NewInstanceAdminClient(ctx, b.ProjectId, ct, co)
+	if err != nil {
+		return nil, fmt.Errorf("Couldn't instantiate Bigtable API client: %s", err)
+	}
+
+	return client, nil
 }

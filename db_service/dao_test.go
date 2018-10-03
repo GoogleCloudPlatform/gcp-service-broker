@@ -17,6 +17,7 @@
 package db_service
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -96,29 +97,30 @@ func ensureServiceInstanceDetailsFieldsMatch(t *testing.T, expected, actual *mod
 func TestSqlDatastore_ServiceInstanceDetailsDAO(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	testPk, instance := createServiceInstanceDetailsInstance()
+	testCtx := context.Background()
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountServiceInstanceDetailsById(testPk); count != 0 || err != nil {
+	if count, err := ds.CountServiceInstanceDetailsById(testCtx, testPk); count != 0 || err != nil {
 		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
 	}
 
-	if _, err := ds.GetServiceInstanceDetailsById(testPk); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetServiceInstanceDetailsById(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing PK got %v", err)
 	}
 
-	if _, err := ds.CheckDeletedServiceInstanceDetailsById(testPk); err != gorm.ErrRecordNotFound {
+	if _, err := ds.CheckDeletedServiceInstanceDetailsById(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to check deletion status of a non-existing PK got %v", err)
 	}
 
 	// Should be able to create the item
 	beforeCreation := time.Now()
-	if err := ds.CreateServiceInstanceDetails(&instance); err != nil {
+	if err := ds.CreateServiceInstanceDetails(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 	afterCreation := time.Now()
 
 	// after creation we should be able to get the item
-	ret, err := ds.GetServiceInstanceDetailsById(testPk)
+	ret, err := ds.GetServiceInstanceDetailsById(testCtx, testPk)
 	if err != nil {
 		t.Errorf("Expected no error trying to get saved item, got: %v", err)
 	}
@@ -135,7 +137,7 @@ func TestSqlDatastore_ServiceInstanceDetailsDAO(t *testing.T) {
 	ensureServiceInstanceDetailsFieldsMatch(t, &instance, ret)
 
 	// we should be able to update the item and it will have a new updated time
-	if err := ds.SaveServiceInstanceDetails(ret); err != nil {
+	if err := ds.SaveServiceInstanceDetails(testCtx, ret); err != nil {
 		t.Errorf("Expected no error trying to get update %#v , got: %v", ret, err)
 	}
 
@@ -144,7 +146,7 @@ func TestSqlDatastore_ServiceInstanceDetailsDAO(t *testing.T) {
 	}
 
 	// after deleting the item we should not be able to get it
-	deleted, err := ds.CheckDeletedServiceInstanceDetailsById(testPk)
+	deleted, err := ds.CheckDeletedServiceInstanceDetailsById(testCtx, testPk)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -152,12 +154,12 @@ func TestSqlDatastore_ServiceInstanceDetailsDAO(t *testing.T) {
 		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
 	}
 
-	if err := ds.DeleteServiceInstanceDetailsById(testPk); err != nil {
+	if err := ds.DeleteServiceInstanceDetailsById(testCtx, testPk); err != nil {
 		t.Errorf("Expected no error when deleting by pk got: %v", err)
 	}
 
 	// we should be able to see that it was soft-deleted
-	deleted, err = ds.CheckDeletedServiceInstanceDetailsById(testPk)
+	deleted, err = ds.CheckDeletedServiceInstanceDetailsById(testCtx, testPk)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -166,26 +168,27 @@ func TestSqlDatastore_ServiceInstanceDetailsDAO(t *testing.T) {
 	}
 
 	// after deleting the item we should not be able to get it
-	if _, err := ds.GetServiceInstanceDetailsById(testPk); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetServiceInstanceDetailsById(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected ErrRecordNotFound after delete but got %v", err)
 	}
 }
 func TestSqlDatastore_GetServiceInstanceDetailsById(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createServiceInstanceDetailsInstance()
+	testCtx := context.Background()
 
-	if _, err := ds.GetServiceInstanceDetailsById(instance.ID); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetServiceInstanceDetailsById(testCtx, instance.ID); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
 	beforeCreation := time.Now()
-	if err := ds.CreateServiceInstanceDetails(&instance); err != nil {
+	if err := ds.CreateServiceInstanceDetails(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 	afterCreation := time.Now()
 
 	// after creation we should be able to get the item
-	ret, err := ds.GetServiceInstanceDetailsById(instance.ID)
+	ret, err := ds.GetServiceInstanceDetailsById(testCtx, instance.ID)
 	if err != nil {
 		t.Errorf("Expected no error trying to get saved item, got: %v", err)
 	}
@@ -205,16 +208,17 @@ func TestSqlDatastore_GetServiceInstanceDetailsById(t *testing.T) {
 func TestSqlDatastore_CheckDeletedServiceInstanceDetailsById(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createServiceInstanceDetailsInstance()
+	testCtx := context.Background()
 
-	if _, err := ds.CheckDeletedServiceInstanceDetailsById(instance.ID); err != gorm.ErrRecordNotFound {
+	if _, err := ds.CheckDeletedServiceInstanceDetailsById(testCtx, instance.ID); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
-	if err := ds.CreateServiceInstanceDetails(&instance); err != nil {
+	if err := ds.CreateServiceInstanceDetails(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
-	deleted, err := ds.CheckDeletedServiceInstanceDetailsById(instance.ID)
+	deleted, err := ds.CheckDeletedServiceInstanceDetailsById(testCtx, instance.ID)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -222,12 +226,12 @@ func TestSqlDatastore_CheckDeletedServiceInstanceDetailsById(t *testing.T) {
 		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
 	}
 
-	if err := ds.DeleteServiceInstanceDetails(&instance); err != nil {
+	if err := ds.DeleteServiceInstanceDetails(testCtx, &instance); err != nil {
 		t.Errorf("Expected no error when deleting by pk got: %v", err)
 	}
 
 	// we should be able to see that it was soft-deleted
-	deleted, err = ds.CheckDeletedServiceInstanceDetailsById(instance.ID)
+	deleted, err = ds.CheckDeletedServiceInstanceDetailsById(testCtx, instance.ID)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -239,18 +243,19 @@ func TestSqlDatastore_CheckDeletedServiceInstanceDetailsById(t *testing.T) {
 func TestSqlDatastore_CountServiceInstanceDetailsById(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createServiceInstanceDetailsInstance()
+	testCtx := context.Background()
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountServiceInstanceDetailsById(instance.ID); count != 0 || err != nil {
+	if count, err := ds.CountServiceInstanceDetailsById(testCtx, instance.ID); count != 0 || err != nil {
 		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
 	}
 
-	if err := ds.CreateServiceInstanceDetails(&instance); err != nil {
+	if err := ds.CreateServiceInstanceDetails(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountServiceInstanceDetailsById(instance.ID); count != 1 || err != nil {
+	if count, err := ds.CountServiceInstanceDetailsById(testCtx, instance.ID); count != 1 || err != nil {
 		t.Fatalf("Expected count to be 1 and error to be nil got count: %d, err: %v", count, err)
 	}
 }
@@ -323,29 +328,30 @@ func ensureCloudOperationFieldsMatch(t *testing.T, expected, actual *models.Clou
 func TestSqlDatastore_CloudOperationDAO(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	testPk, instance := createCloudOperationInstance()
+	testCtx := context.Background()
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountCloudOperationById(testPk); count != 0 || err != nil {
+	if count, err := ds.CountCloudOperationById(testCtx, testPk); count != 0 || err != nil {
 		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
 	}
 
-	if _, err := ds.GetCloudOperationById(testPk); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetCloudOperationById(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing PK got %v", err)
 	}
 
-	if _, err := ds.CheckDeletedCloudOperationById(testPk); err != gorm.ErrRecordNotFound {
+	if _, err := ds.CheckDeletedCloudOperationById(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to check deletion status of a non-existing PK got %v", err)
 	}
 
 	// Should be able to create the item
 	beforeCreation := time.Now()
-	if err := ds.CreateCloudOperation(&instance); err != nil {
+	if err := ds.CreateCloudOperation(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 	afterCreation := time.Now()
 
 	// after creation we should be able to get the item
-	ret, err := ds.GetCloudOperationById(testPk)
+	ret, err := ds.GetCloudOperationById(testCtx, testPk)
 	if err != nil {
 		t.Errorf("Expected no error trying to get saved item, got: %v", err)
 	}
@@ -362,7 +368,7 @@ func TestSqlDatastore_CloudOperationDAO(t *testing.T) {
 	ensureCloudOperationFieldsMatch(t, &instance, ret)
 
 	// we should be able to update the item and it will have a new updated time
-	if err := ds.SaveCloudOperation(ret); err != nil {
+	if err := ds.SaveCloudOperation(testCtx, ret); err != nil {
 		t.Errorf("Expected no error trying to get update %#v , got: %v", ret, err)
 	}
 
@@ -371,7 +377,7 @@ func TestSqlDatastore_CloudOperationDAO(t *testing.T) {
 	}
 
 	// after deleting the item we should not be able to get it
-	deleted, err := ds.CheckDeletedCloudOperationById(testPk)
+	deleted, err := ds.CheckDeletedCloudOperationById(testCtx, testPk)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -379,12 +385,12 @@ func TestSqlDatastore_CloudOperationDAO(t *testing.T) {
 		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
 	}
 
-	if err := ds.DeleteCloudOperationById(testPk); err != nil {
+	if err := ds.DeleteCloudOperationById(testCtx, testPk); err != nil {
 		t.Errorf("Expected no error when deleting by pk got: %v", err)
 	}
 
 	// we should be able to see that it was soft-deleted
-	deleted, err = ds.CheckDeletedCloudOperationById(testPk)
+	deleted, err = ds.CheckDeletedCloudOperationById(testCtx, testPk)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -393,26 +399,27 @@ func TestSqlDatastore_CloudOperationDAO(t *testing.T) {
 	}
 
 	// after deleting the item we should not be able to get it
-	if _, err := ds.GetCloudOperationById(testPk); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetCloudOperationById(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected ErrRecordNotFound after delete but got %v", err)
 	}
 }
 func TestSqlDatastore_GetCloudOperationByServiceInstanceId(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createCloudOperationInstance()
+	testCtx := context.Background()
 
-	if _, err := ds.GetCloudOperationByServiceInstanceId(instance.ServiceInstanceId); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetCloudOperationByServiceInstanceId(testCtx, instance.ServiceInstanceId); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
 	beforeCreation := time.Now()
-	if err := ds.CreateCloudOperation(&instance); err != nil {
+	if err := ds.CreateCloudOperation(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 	afterCreation := time.Now()
 
 	// after creation we should be able to get the item
-	ret, err := ds.GetCloudOperationByServiceInstanceId(instance.ServiceInstanceId)
+	ret, err := ds.GetCloudOperationByServiceInstanceId(testCtx, instance.ServiceInstanceId)
 	if err != nil {
 		t.Errorf("Expected no error trying to get saved item, got: %v", err)
 	}
@@ -432,16 +439,17 @@ func TestSqlDatastore_GetCloudOperationByServiceInstanceId(t *testing.T) {
 func TestSqlDatastore_CheckDeletedCloudOperationByServiceInstanceId(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createCloudOperationInstance()
+	testCtx := context.Background()
 
-	if _, err := ds.CheckDeletedCloudOperationByServiceInstanceId(instance.ServiceInstanceId); err != gorm.ErrRecordNotFound {
+	if _, err := ds.CheckDeletedCloudOperationByServiceInstanceId(testCtx, instance.ServiceInstanceId); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
-	if err := ds.CreateCloudOperation(&instance); err != nil {
+	if err := ds.CreateCloudOperation(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
-	deleted, err := ds.CheckDeletedCloudOperationByServiceInstanceId(instance.ServiceInstanceId)
+	deleted, err := ds.CheckDeletedCloudOperationByServiceInstanceId(testCtx, instance.ServiceInstanceId)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -449,12 +457,12 @@ func TestSqlDatastore_CheckDeletedCloudOperationByServiceInstanceId(t *testing.T
 		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
 	}
 
-	if err := ds.DeleteCloudOperation(&instance); err != nil {
+	if err := ds.DeleteCloudOperation(testCtx, &instance); err != nil {
 		t.Errorf("Expected no error when deleting by pk got: %v", err)
 	}
 
 	// we should be able to see that it was soft-deleted
-	deleted, err = ds.CheckDeletedCloudOperationByServiceInstanceId(instance.ServiceInstanceId)
+	deleted, err = ds.CheckDeletedCloudOperationByServiceInstanceId(testCtx, instance.ServiceInstanceId)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -466,37 +474,39 @@ func TestSqlDatastore_CheckDeletedCloudOperationByServiceInstanceId(t *testing.T
 func TestSqlDatastore_CountCloudOperationByServiceInstanceId(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createCloudOperationInstance()
+	testCtx := context.Background()
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountCloudOperationByServiceInstanceId(instance.ServiceInstanceId); count != 0 || err != nil {
+	if count, err := ds.CountCloudOperationByServiceInstanceId(testCtx, instance.ServiceInstanceId); count != 0 || err != nil {
 		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
 	}
 
-	if err := ds.CreateCloudOperation(&instance); err != nil {
+	if err := ds.CreateCloudOperation(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountCloudOperationByServiceInstanceId(instance.ServiceInstanceId); count != 1 || err != nil {
+	if count, err := ds.CountCloudOperationByServiceInstanceId(testCtx, instance.ServiceInstanceId); count != 1 || err != nil {
 		t.Fatalf("Expected count to be 1 and error to be nil got count: %d, err: %v", count, err)
 	}
 }
 func TestSqlDatastore_GetCloudOperationById(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createCloudOperationInstance()
+	testCtx := context.Background()
 
-	if _, err := ds.GetCloudOperationById(instance.ID); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetCloudOperationById(testCtx, instance.ID); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
 	beforeCreation := time.Now()
-	if err := ds.CreateCloudOperation(&instance); err != nil {
+	if err := ds.CreateCloudOperation(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 	afterCreation := time.Now()
 
 	// after creation we should be able to get the item
-	ret, err := ds.GetCloudOperationById(instance.ID)
+	ret, err := ds.GetCloudOperationById(testCtx, instance.ID)
 	if err != nil {
 		t.Errorf("Expected no error trying to get saved item, got: %v", err)
 	}
@@ -516,16 +526,17 @@ func TestSqlDatastore_GetCloudOperationById(t *testing.T) {
 func TestSqlDatastore_CheckDeletedCloudOperationById(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createCloudOperationInstance()
+	testCtx := context.Background()
 
-	if _, err := ds.CheckDeletedCloudOperationById(instance.ID); err != gorm.ErrRecordNotFound {
+	if _, err := ds.CheckDeletedCloudOperationById(testCtx, instance.ID); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
-	if err := ds.CreateCloudOperation(&instance); err != nil {
+	if err := ds.CreateCloudOperation(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
-	deleted, err := ds.CheckDeletedCloudOperationById(instance.ID)
+	deleted, err := ds.CheckDeletedCloudOperationById(testCtx, instance.ID)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -533,12 +544,12 @@ func TestSqlDatastore_CheckDeletedCloudOperationById(t *testing.T) {
 		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
 	}
 
-	if err := ds.DeleteCloudOperation(&instance); err != nil {
+	if err := ds.DeleteCloudOperation(testCtx, &instance); err != nil {
 		t.Errorf("Expected no error when deleting by pk got: %v", err)
 	}
 
 	// we should be able to see that it was soft-deleted
-	deleted, err = ds.CheckDeletedCloudOperationById(instance.ID)
+	deleted, err = ds.CheckDeletedCloudOperationById(testCtx, instance.ID)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -550,18 +561,19 @@ func TestSqlDatastore_CheckDeletedCloudOperationById(t *testing.T) {
 func TestSqlDatastore_CountCloudOperationById(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createCloudOperationInstance()
+	testCtx := context.Background()
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountCloudOperationById(instance.ID); count != 0 || err != nil {
+	if count, err := ds.CountCloudOperationById(testCtx, instance.ID); count != 0 || err != nil {
 		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
 	}
 
-	if err := ds.CreateCloudOperation(&instance); err != nil {
+	if err := ds.CreateCloudOperation(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountCloudOperationById(instance.ID); count != 1 || err != nil {
+	if count, err := ds.CountCloudOperationById(testCtx, instance.ID); count != 1 || err != nil {
 		t.Fatalf("Expected count to be 1 and error to be nil got count: %d, err: %v", count, err)
 	}
 }
@@ -604,29 +616,30 @@ func ensureServiceBindingCredentialsFieldsMatch(t *testing.T, expected, actual *
 func TestSqlDatastore_ServiceBindingCredentialsDAO(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	testPk, instance := createServiceBindingCredentialsInstance()
+	testCtx := context.Background()
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountServiceBindingCredentialsById(testPk); count != 0 || err != nil {
+	if count, err := ds.CountServiceBindingCredentialsById(testCtx, testPk); count != 0 || err != nil {
 		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
 	}
 
-	if _, err := ds.GetServiceBindingCredentialsById(testPk); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetServiceBindingCredentialsById(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing PK got %v", err)
 	}
 
-	if _, err := ds.CheckDeletedServiceBindingCredentialsById(testPk); err != gorm.ErrRecordNotFound {
+	if _, err := ds.CheckDeletedServiceBindingCredentialsById(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to check deletion status of a non-existing PK got %v", err)
 	}
 
 	// Should be able to create the item
 	beforeCreation := time.Now()
-	if err := ds.CreateServiceBindingCredentials(&instance); err != nil {
+	if err := ds.CreateServiceBindingCredentials(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 	afterCreation := time.Now()
 
 	// after creation we should be able to get the item
-	ret, err := ds.GetServiceBindingCredentialsById(testPk)
+	ret, err := ds.GetServiceBindingCredentialsById(testCtx, testPk)
 	if err != nil {
 		t.Errorf("Expected no error trying to get saved item, got: %v", err)
 	}
@@ -643,7 +656,7 @@ func TestSqlDatastore_ServiceBindingCredentialsDAO(t *testing.T) {
 	ensureServiceBindingCredentialsFieldsMatch(t, &instance, ret)
 
 	// we should be able to update the item and it will have a new updated time
-	if err := ds.SaveServiceBindingCredentials(ret); err != nil {
+	if err := ds.SaveServiceBindingCredentials(testCtx, ret); err != nil {
 		t.Errorf("Expected no error trying to get update %#v , got: %v", ret, err)
 	}
 
@@ -652,7 +665,7 @@ func TestSqlDatastore_ServiceBindingCredentialsDAO(t *testing.T) {
 	}
 
 	// after deleting the item we should not be able to get it
-	deleted, err := ds.CheckDeletedServiceBindingCredentialsById(testPk)
+	deleted, err := ds.CheckDeletedServiceBindingCredentialsById(testCtx, testPk)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -660,12 +673,12 @@ func TestSqlDatastore_ServiceBindingCredentialsDAO(t *testing.T) {
 		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
 	}
 
-	if err := ds.DeleteServiceBindingCredentialsById(testPk); err != nil {
+	if err := ds.DeleteServiceBindingCredentialsById(testCtx, testPk); err != nil {
 		t.Errorf("Expected no error when deleting by pk got: %v", err)
 	}
 
 	// we should be able to see that it was soft-deleted
-	deleted, err = ds.CheckDeletedServiceBindingCredentialsById(testPk)
+	deleted, err = ds.CheckDeletedServiceBindingCredentialsById(testCtx, testPk)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -674,26 +687,27 @@ func TestSqlDatastore_ServiceBindingCredentialsDAO(t *testing.T) {
 	}
 
 	// after deleting the item we should not be able to get it
-	if _, err := ds.GetServiceBindingCredentialsById(testPk); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetServiceBindingCredentialsById(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected ErrRecordNotFound after delete but got %v", err)
 	}
 }
 func TestSqlDatastore_GetServiceBindingCredentialsByServiceInstanceIdAndBindingId(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createServiceBindingCredentialsInstance()
+	testCtx := context.Background()
 
-	if _, err := ds.GetServiceBindingCredentialsByServiceInstanceIdAndBindingId(instance.ServiceInstanceId, instance.BindingId); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetServiceBindingCredentialsByServiceInstanceIdAndBindingId(testCtx, instance.ServiceInstanceId, instance.BindingId); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
 	beforeCreation := time.Now()
-	if err := ds.CreateServiceBindingCredentials(&instance); err != nil {
+	if err := ds.CreateServiceBindingCredentials(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 	afterCreation := time.Now()
 
 	// after creation we should be able to get the item
-	ret, err := ds.GetServiceBindingCredentialsByServiceInstanceIdAndBindingId(instance.ServiceInstanceId, instance.BindingId)
+	ret, err := ds.GetServiceBindingCredentialsByServiceInstanceIdAndBindingId(testCtx, instance.ServiceInstanceId, instance.BindingId)
 	if err != nil {
 		t.Errorf("Expected no error trying to get saved item, got: %v", err)
 	}
@@ -713,16 +727,17 @@ func TestSqlDatastore_GetServiceBindingCredentialsByServiceInstanceIdAndBindingI
 func TestSqlDatastore_CheckDeletedServiceBindingCredentialsByServiceInstanceIdAndBindingId(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createServiceBindingCredentialsInstance()
+	testCtx := context.Background()
 
-	if _, err := ds.CheckDeletedServiceBindingCredentialsByServiceInstanceIdAndBindingId(instance.ServiceInstanceId, instance.BindingId); err != gorm.ErrRecordNotFound {
+	if _, err := ds.CheckDeletedServiceBindingCredentialsByServiceInstanceIdAndBindingId(testCtx, instance.ServiceInstanceId, instance.BindingId); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
-	if err := ds.CreateServiceBindingCredentials(&instance); err != nil {
+	if err := ds.CreateServiceBindingCredentials(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
-	deleted, err := ds.CheckDeletedServiceBindingCredentialsByServiceInstanceIdAndBindingId(instance.ServiceInstanceId, instance.BindingId)
+	deleted, err := ds.CheckDeletedServiceBindingCredentialsByServiceInstanceIdAndBindingId(testCtx, instance.ServiceInstanceId, instance.BindingId)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -730,12 +745,12 @@ func TestSqlDatastore_CheckDeletedServiceBindingCredentialsByServiceInstanceIdAn
 		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
 	}
 
-	if err := ds.DeleteServiceBindingCredentials(&instance); err != nil {
+	if err := ds.DeleteServiceBindingCredentials(testCtx, &instance); err != nil {
 		t.Errorf("Expected no error when deleting by pk got: %v", err)
 	}
 
 	// we should be able to see that it was soft-deleted
-	deleted, err = ds.CheckDeletedServiceBindingCredentialsByServiceInstanceIdAndBindingId(instance.ServiceInstanceId, instance.BindingId)
+	deleted, err = ds.CheckDeletedServiceBindingCredentialsByServiceInstanceIdAndBindingId(testCtx, instance.ServiceInstanceId, instance.BindingId)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -747,37 +762,39 @@ func TestSqlDatastore_CheckDeletedServiceBindingCredentialsByServiceInstanceIdAn
 func TestSqlDatastore_CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createServiceBindingCredentialsInstance()
+	testCtx := context.Background()
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(instance.ServiceInstanceId, instance.BindingId); count != 0 || err != nil {
+	if count, err := ds.CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(testCtx, instance.ServiceInstanceId, instance.BindingId); count != 0 || err != nil {
 		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
 	}
 
-	if err := ds.CreateServiceBindingCredentials(&instance); err != nil {
+	if err := ds.CreateServiceBindingCredentials(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(instance.ServiceInstanceId, instance.BindingId); count != 1 || err != nil {
+	if count, err := ds.CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(testCtx, instance.ServiceInstanceId, instance.BindingId); count != 1 || err != nil {
 		t.Fatalf("Expected count to be 1 and error to be nil got count: %d, err: %v", count, err)
 	}
 }
 func TestSqlDatastore_GetServiceBindingCredentialsByBindingId(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createServiceBindingCredentialsInstance()
+	testCtx := context.Background()
 
-	if _, err := ds.GetServiceBindingCredentialsByBindingId(instance.BindingId); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetServiceBindingCredentialsByBindingId(testCtx, instance.BindingId); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
 	beforeCreation := time.Now()
-	if err := ds.CreateServiceBindingCredentials(&instance); err != nil {
+	if err := ds.CreateServiceBindingCredentials(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 	afterCreation := time.Now()
 
 	// after creation we should be able to get the item
-	ret, err := ds.GetServiceBindingCredentialsByBindingId(instance.BindingId)
+	ret, err := ds.GetServiceBindingCredentialsByBindingId(testCtx, instance.BindingId)
 	if err != nil {
 		t.Errorf("Expected no error trying to get saved item, got: %v", err)
 	}
@@ -797,16 +814,17 @@ func TestSqlDatastore_GetServiceBindingCredentialsByBindingId(t *testing.T) {
 func TestSqlDatastore_CheckDeletedServiceBindingCredentialsByBindingId(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createServiceBindingCredentialsInstance()
+	testCtx := context.Background()
 
-	if _, err := ds.CheckDeletedServiceBindingCredentialsByBindingId(instance.BindingId); err != gorm.ErrRecordNotFound {
+	if _, err := ds.CheckDeletedServiceBindingCredentialsByBindingId(testCtx, instance.BindingId); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
-	if err := ds.CreateServiceBindingCredentials(&instance); err != nil {
+	if err := ds.CreateServiceBindingCredentials(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
-	deleted, err := ds.CheckDeletedServiceBindingCredentialsByBindingId(instance.BindingId)
+	deleted, err := ds.CheckDeletedServiceBindingCredentialsByBindingId(testCtx, instance.BindingId)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -814,12 +832,12 @@ func TestSqlDatastore_CheckDeletedServiceBindingCredentialsByBindingId(t *testin
 		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
 	}
 
-	if err := ds.DeleteServiceBindingCredentials(&instance); err != nil {
+	if err := ds.DeleteServiceBindingCredentials(testCtx, &instance); err != nil {
 		t.Errorf("Expected no error when deleting by pk got: %v", err)
 	}
 
 	// we should be able to see that it was soft-deleted
-	deleted, err = ds.CheckDeletedServiceBindingCredentialsByBindingId(instance.BindingId)
+	deleted, err = ds.CheckDeletedServiceBindingCredentialsByBindingId(testCtx, instance.BindingId)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -831,37 +849,39 @@ func TestSqlDatastore_CheckDeletedServiceBindingCredentialsByBindingId(t *testin
 func TestSqlDatastore_CountServiceBindingCredentialsByBindingId(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createServiceBindingCredentialsInstance()
+	testCtx := context.Background()
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountServiceBindingCredentialsByBindingId(instance.BindingId); count != 0 || err != nil {
+	if count, err := ds.CountServiceBindingCredentialsByBindingId(testCtx, instance.BindingId); count != 0 || err != nil {
 		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
 	}
 
-	if err := ds.CreateServiceBindingCredentials(&instance); err != nil {
+	if err := ds.CreateServiceBindingCredentials(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountServiceBindingCredentialsByBindingId(instance.BindingId); count != 1 || err != nil {
+	if count, err := ds.CountServiceBindingCredentialsByBindingId(testCtx, instance.BindingId); count != 1 || err != nil {
 		t.Fatalf("Expected count to be 1 and error to be nil got count: %d, err: %v", count, err)
 	}
 }
 func TestSqlDatastore_GetServiceBindingCredentialsById(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createServiceBindingCredentialsInstance()
+	testCtx := context.Background()
 
-	if _, err := ds.GetServiceBindingCredentialsById(instance.ID); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetServiceBindingCredentialsById(testCtx, instance.ID); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
 	beforeCreation := time.Now()
-	if err := ds.CreateServiceBindingCredentials(&instance); err != nil {
+	if err := ds.CreateServiceBindingCredentials(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 	afterCreation := time.Now()
 
 	// after creation we should be able to get the item
-	ret, err := ds.GetServiceBindingCredentialsById(instance.ID)
+	ret, err := ds.GetServiceBindingCredentialsById(testCtx, instance.ID)
 	if err != nil {
 		t.Errorf("Expected no error trying to get saved item, got: %v", err)
 	}
@@ -881,16 +901,17 @@ func TestSqlDatastore_GetServiceBindingCredentialsById(t *testing.T) {
 func TestSqlDatastore_CheckDeletedServiceBindingCredentialsById(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createServiceBindingCredentialsInstance()
+	testCtx := context.Background()
 
-	if _, err := ds.CheckDeletedServiceBindingCredentialsById(instance.ID); err != gorm.ErrRecordNotFound {
+	if _, err := ds.CheckDeletedServiceBindingCredentialsById(testCtx, instance.ID); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
-	if err := ds.CreateServiceBindingCredentials(&instance); err != nil {
+	if err := ds.CreateServiceBindingCredentials(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
-	deleted, err := ds.CheckDeletedServiceBindingCredentialsById(instance.ID)
+	deleted, err := ds.CheckDeletedServiceBindingCredentialsById(testCtx, instance.ID)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -898,12 +919,12 @@ func TestSqlDatastore_CheckDeletedServiceBindingCredentialsById(t *testing.T) {
 		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
 	}
 
-	if err := ds.DeleteServiceBindingCredentials(&instance); err != nil {
+	if err := ds.DeleteServiceBindingCredentials(testCtx, &instance); err != nil {
 		t.Errorf("Expected no error when deleting by pk got: %v", err)
 	}
 
 	// we should be able to see that it was soft-deleted
-	deleted, err = ds.CheckDeletedServiceBindingCredentialsById(instance.ID)
+	deleted, err = ds.CheckDeletedServiceBindingCredentialsById(testCtx, instance.ID)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -915,18 +936,19 @@ func TestSqlDatastore_CheckDeletedServiceBindingCredentialsById(t *testing.T) {
 func TestSqlDatastore_CountServiceBindingCredentialsById(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createServiceBindingCredentialsInstance()
+	testCtx := context.Background()
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountServiceBindingCredentialsById(instance.ID); count != 0 || err != nil {
+	if count, err := ds.CountServiceBindingCredentialsById(testCtx, instance.ID); count != 0 || err != nil {
 		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
 	}
 
-	if err := ds.CreateServiceBindingCredentials(&instance); err != nil {
+	if err := ds.CreateServiceBindingCredentials(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountServiceBindingCredentialsById(instance.ID); count != 1 || err != nil {
+	if count, err := ds.CountServiceBindingCredentialsById(testCtx, instance.ID); count != 1 || err != nil {
 		t.Fatalf("Expected count to be 1 and error to be nil got count: %d, err: %v", count, err)
 	}
 }
@@ -959,29 +981,30 @@ func ensureProvisionRequestDetailsFieldsMatch(t *testing.T, expected, actual *mo
 func TestSqlDatastore_ProvisionRequestDetailsDAO(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	testPk, instance := createProvisionRequestDetailsInstance()
+	testCtx := context.Background()
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountProvisionRequestDetailsById(testPk); count != 0 || err != nil {
+	if count, err := ds.CountProvisionRequestDetailsById(testCtx, testPk); count != 0 || err != nil {
 		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
 	}
 
-	if _, err := ds.GetProvisionRequestDetailsById(testPk); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetProvisionRequestDetailsById(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing PK got %v", err)
 	}
 
-	if _, err := ds.CheckDeletedProvisionRequestDetailsById(testPk); err != gorm.ErrRecordNotFound {
+	if _, err := ds.CheckDeletedProvisionRequestDetailsById(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to check deletion status of a non-existing PK got %v", err)
 	}
 
 	// Should be able to create the item
 	beforeCreation := time.Now()
-	if err := ds.CreateProvisionRequestDetails(&instance); err != nil {
+	if err := ds.CreateProvisionRequestDetails(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 	afterCreation := time.Now()
 
 	// after creation we should be able to get the item
-	ret, err := ds.GetProvisionRequestDetailsById(testPk)
+	ret, err := ds.GetProvisionRequestDetailsById(testCtx, testPk)
 	if err != nil {
 		t.Errorf("Expected no error trying to get saved item, got: %v", err)
 	}
@@ -998,7 +1021,7 @@ func TestSqlDatastore_ProvisionRequestDetailsDAO(t *testing.T) {
 	ensureProvisionRequestDetailsFieldsMatch(t, &instance, ret)
 
 	// we should be able to update the item and it will have a new updated time
-	if err := ds.SaveProvisionRequestDetails(ret); err != nil {
+	if err := ds.SaveProvisionRequestDetails(testCtx, ret); err != nil {
 		t.Errorf("Expected no error trying to get update %#v , got: %v", ret, err)
 	}
 
@@ -1007,7 +1030,7 @@ func TestSqlDatastore_ProvisionRequestDetailsDAO(t *testing.T) {
 	}
 
 	// after deleting the item we should not be able to get it
-	deleted, err := ds.CheckDeletedProvisionRequestDetailsById(testPk)
+	deleted, err := ds.CheckDeletedProvisionRequestDetailsById(testCtx, testPk)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -1015,12 +1038,12 @@ func TestSqlDatastore_ProvisionRequestDetailsDAO(t *testing.T) {
 		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
 	}
 
-	if err := ds.DeleteProvisionRequestDetailsById(testPk); err != nil {
+	if err := ds.DeleteProvisionRequestDetailsById(testCtx, testPk); err != nil {
 		t.Errorf("Expected no error when deleting by pk got: %v", err)
 	}
 
 	// we should be able to see that it was soft-deleted
-	deleted, err = ds.CheckDeletedProvisionRequestDetailsById(testPk)
+	deleted, err = ds.CheckDeletedProvisionRequestDetailsById(testCtx, testPk)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -1029,26 +1052,27 @@ func TestSqlDatastore_ProvisionRequestDetailsDAO(t *testing.T) {
 	}
 
 	// after deleting the item we should not be able to get it
-	if _, err := ds.GetProvisionRequestDetailsById(testPk); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetProvisionRequestDetailsById(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected ErrRecordNotFound after delete but got %v", err)
 	}
 }
 func TestSqlDatastore_GetProvisionRequestDetailsByServiceInstanceId(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createProvisionRequestDetailsInstance()
+	testCtx := context.Background()
 
-	if _, err := ds.GetProvisionRequestDetailsByServiceInstanceId(instance.ServiceInstanceId); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetProvisionRequestDetailsByServiceInstanceId(testCtx, instance.ServiceInstanceId); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
 	beforeCreation := time.Now()
-	if err := ds.CreateProvisionRequestDetails(&instance); err != nil {
+	if err := ds.CreateProvisionRequestDetails(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 	afterCreation := time.Now()
 
 	// after creation we should be able to get the item
-	ret, err := ds.GetProvisionRequestDetailsByServiceInstanceId(instance.ServiceInstanceId)
+	ret, err := ds.GetProvisionRequestDetailsByServiceInstanceId(testCtx, instance.ServiceInstanceId)
 	if err != nil {
 		t.Errorf("Expected no error trying to get saved item, got: %v", err)
 	}
@@ -1068,16 +1092,17 @@ func TestSqlDatastore_GetProvisionRequestDetailsByServiceInstanceId(t *testing.T
 func TestSqlDatastore_CheckDeletedProvisionRequestDetailsByServiceInstanceId(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createProvisionRequestDetailsInstance()
+	testCtx := context.Background()
 
-	if _, err := ds.CheckDeletedProvisionRequestDetailsByServiceInstanceId(instance.ServiceInstanceId); err != gorm.ErrRecordNotFound {
+	if _, err := ds.CheckDeletedProvisionRequestDetailsByServiceInstanceId(testCtx, instance.ServiceInstanceId); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
-	if err := ds.CreateProvisionRequestDetails(&instance); err != nil {
+	if err := ds.CreateProvisionRequestDetails(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
-	deleted, err := ds.CheckDeletedProvisionRequestDetailsByServiceInstanceId(instance.ServiceInstanceId)
+	deleted, err := ds.CheckDeletedProvisionRequestDetailsByServiceInstanceId(testCtx, instance.ServiceInstanceId)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -1085,12 +1110,12 @@ func TestSqlDatastore_CheckDeletedProvisionRequestDetailsByServiceInstanceId(t *
 		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
 	}
 
-	if err := ds.DeleteProvisionRequestDetails(&instance); err != nil {
+	if err := ds.DeleteProvisionRequestDetails(testCtx, &instance); err != nil {
 		t.Errorf("Expected no error when deleting by pk got: %v", err)
 	}
 
 	// we should be able to see that it was soft-deleted
-	deleted, err = ds.CheckDeletedProvisionRequestDetailsByServiceInstanceId(instance.ServiceInstanceId)
+	deleted, err = ds.CheckDeletedProvisionRequestDetailsByServiceInstanceId(testCtx, instance.ServiceInstanceId)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -1102,37 +1127,39 @@ func TestSqlDatastore_CheckDeletedProvisionRequestDetailsByServiceInstanceId(t *
 func TestSqlDatastore_CountProvisionRequestDetailsByServiceInstanceId(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createProvisionRequestDetailsInstance()
+	testCtx := context.Background()
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountProvisionRequestDetailsByServiceInstanceId(instance.ServiceInstanceId); count != 0 || err != nil {
+	if count, err := ds.CountProvisionRequestDetailsByServiceInstanceId(testCtx, instance.ServiceInstanceId); count != 0 || err != nil {
 		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
 	}
 
-	if err := ds.CreateProvisionRequestDetails(&instance); err != nil {
+	if err := ds.CreateProvisionRequestDetails(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountProvisionRequestDetailsByServiceInstanceId(instance.ServiceInstanceId); count != 1 || err != nil {
+	if count, err := ds.CountProvisionRequestDetailsByServiceInstanceId(testCtx, instance.ServiceInstanceId); count != 1 || err != nil {
 		t.Fatalf("Expected count to be 1 and error to be nil got count: %d, err: %v", count, err)
 	}
 }
 func TestSqlDatastore_GetProvisionRequestDetailsById(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createProvisionRequestDetailsInstance()
+	testCtx := context.Background()
 
-	if _, err := ds.GetProvisionRequestDetailsById(instance.ID); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetProvisionRequestDetailsById(testCtx, instance.ID); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
 	beforeCreation := time.Now()
-	if err := ds.CreateProvisionRequestDetails(&instance); err != nil {
+	if err := ds.CreateProvisionRequestDetails(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 	afterCreation := time.Now()
 
 	// after creation we should be able to get the item
-	ret, err := ds.GetProvisionRequestDetailsById(instance.ID)
+	ret, err := ds.GetProvisionRequestDetailsById(testCtx, instance.ID)
 	if err != nil {
 		t.Errorf("Expected no error trying to get saved item, got: %v", err)
 	}
@@ -1152,16 +1179,17 @@ func TestSqlDatastore_GetProvisionRequestDetailsById(t *testing.T) {
 func TestSqlDatastore_CheckDeletedProvisionRequestDetailsById(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createProvisionRequestDetailsInstance()
+	testCtx := context.Background()
 
-	if _, err := ds.CheckDeletedProvisionRequestDetailsById(instance.ID); err != gorm.ErrRecordNotFound {
+	if _, err := ds.CheckDeletedProvisionRequestDetailsById(testCtx, instance.ID); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
-	if err := ds.CreateProvisionRequestDetails(&instance); err != nil {
+	if err := ds.CreateProvisionRequestDetails(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
-	deleted, err := ds.CheckDeletedProvisionRequestDetailsById(instance.ID)
+	deleted, err := ds.CheckDeletedProvisionRequestDetailsById(testCtx, instance.ID)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -1169,12 +1197,12 @@ func TestSqlDatastore_CheckDeletedProvisionRequestDetailsById(t *testing.T) {
 		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
 	}
 
-	if err := ds.DeleteProvisionRequestDetails(&instance); err != nil {
+	if err := ds.DeleteProvisionRequestDetails(testCtx, &instance); err != nil {
 		t.Errorf("Expected no error when deleting by pk got: %v", err)
 	}
 
 	// we should be able to see that it was soft-deleted
-	deleted, err = ds.CheckDeletedProvisionRequestDetailsById(instance.ID)
+	deleted, err = ds.CheckDeletedProvisionRequestDetailsById(testCtx, instance.ID)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -1186,18 +1214,19 @@ func TestSqlDatastore_CheckDeletedProvisionRequestDetailsById(t *testing.T) {
 func TestSqlDatastore_CountProvisionRequestDetailsById(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createProvisionRequestDetailsInstance()
+	testCtx := context.Background()
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountProvisionRequestDetailsById(instance.ID); count != 0 || err != nil {
+	if count, err := ds.CountProvisionRequestDetailsById(testCtx, instance.ID); count != 0 || err != nil {
 		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
 	}
 
-	if err := ds.CreateProvisionRequestDetails(&instance); err != nil {
+	if err := ds.CreateProvisionRequestDetails(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountProvisionRequestDetailsById(instance.ID); count != 1 || err != nil {
+	if count, err := ds.CountProvisionRequestDetailsById(testCtx, instance.ID); count != 1 || err != nil {
 		t.Fatalf("Expected count to be 1 and error to be nil got count: %d, err: %v", count, err)
 	}
 }
@@ -1235,29 +1264,30 @@ func ensurePlanDetailsV1FieldsMatch(t *testing.T, expected, actual *models.PlanD
 func TestSqlDatastore_PlanDetailsV1DAO(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	testPk, instance := createPlanDetailsV1Instance()
+	testCtx := context.Background()
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountPlanDetailsV1ById(testPk); count != 0 || err != nil {
+	if count, err := ds.CountPlanDetailsV1ById(testCtx, testPk); count != 0 || err != nil {
 		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
 	}
 
-	if _, err := ds.GetPlanDetailsV1ById(testPk); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetPlanDetailsV1ById(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing PK got %v", err)
 	}
 
-	if _, err := ds.CheckDeletedPlanDetailsV1ById(testPk); err != gorm.ErrRecordNotFound {
+	if _, err := ds.CheckDeletedPlanDetailsV1ById(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to check deletion status of a non-existing PK got %v", err)
 	}
 
 	// Should be able to create the item
 	beforeCreation := time.Now()
-	if err := ds.CreatePlanDetailsV1(&instance); err != nil {
+	if err := ds.CreatePlanDetailsV1(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 	afterCreation := time.Now()
 
 	// after creation we should be able to get the item
-	ret, err := ds.GetPlanDetailsV1ById(testPk)
+	ret, err := ds.GetPlanDetailsV1ById(testCtx, testPk)
 	if err != nil {
 		t.Errorf("Expected no error trying to get saved item, got: %v", err)
 	}
@@ -1274,7 +1304,7 @@ func TestSqlDatastore_PlanDetailsV1DAO(t *testing.T) {
 	ensurePlanDetailsV1FieldsMatch(t, &instance, ret)
 
 	// we should be able to update the item and it will have a new updated time
-	if err := ds.SavePlanDetailsV1(ret); err != nil {
+	if err := ds.SavePlanDetailsV1(testCtx, ret); err != nil {
 		t.Errorf("Expected no error trying to get update %#v , got: %v", ret, err)
 	}
 
@@ -1283,7 +1313,7 @@ func TestSqlDatastore_PlanDetailsV1DAO(t *testing.T) {
 	}
 
 	// after deleting the item we should not be able to get it
-	deleted, err := ds.CheckDeletedPlanDetailsV1ById(testPk)
+	deleted, err := ds.CheckDeletedPlanDetailsV1ById(testCtx, testPk)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -1291,12 +1321,12 @@ func TestSqlDatastore_PlanDetailsV1DAO(t *testing.T) {
 		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
 	}
 
-	if err := ds.DeletePlanDetailsV1ById(testPk); err != nil {
+	if err := ds.DeletePlanDetailsV1ById(testCtx, testPk); err != nil {
 		t.Errorf("Expected no error when deleting by pk got: %v", err)
 	}
 
 	// we should be able to see that it was soft-deleted
-	deleted, err = ds.CheckDeletedPlanDetailsV1ById(testPk)
+	deleted, err = ds.CheckDeletedPlanDetailsV1ById(testCtx, testPk)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -1305,26 +1335,27 @@ func TestSqlDatastore_PlanDetailsV1DAO(t *testing.T) {
 	}
 
 	// after deleting the item we should not be able to get it
-	if _, err := ds.GetPlanDetailsV1ById(testPk); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetPlanDetailsV1ById(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected ErrRecordNotFound after delete but got %v", err)
 	}
 }
 func TestSqlDatastore_GetPlanDetailsV1ByServiceIdAndName(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createPlanDetailsV1Instance()
+	testCtx := context.Background()
 
-	if _, err := ds.GetPlanDetailsV1ByServiceIdAndName(instance.ServiceId, instance.Name); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetPlanDetailsV1ByServiceIdAndName(testCtx, instance.ServiceId, instance.Name); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
 	beforeCreation := time.Now()
-	if err := ds.CreatePlanDetailsV1(&instance); err != nil {
+	if err := ds.CreatePlanDetailsV1(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 	afterCreation := time.Now()
 
 	// after creation we should be able to get the item
-	ret, err := ds.GetPlanDetailsV1ByServiceIdAndName(instance.ServiceId, instance.Name)
+	ret, err := ds.GetPlanDetailsV1ByServiceIdAndName(testCtx, instance.ServiceId, instance.Name)
 	if err != nil {
 		t.Errorf("Expected no error trying to get saved item, got: %v", err)
 	}
@@ -1344,16 +1375,17 @@ func TestSqlDatastore_GetPlanDetailsV1ByServiceIdAndName(t *testing.T) {
 func TestSqlDatastore_CheckDeletedPlanDetailsV1ByServiceIdAndName(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createPlanDetailsV1Instance()
+	testCtx := context.Background()
 
-	if _, err := ds.CheckDeletedPlanDetailsV1ByServiceIdAndName(instance.ServiceId, instance.Name); err != gorm.ErrRecordNotFound {
+	if _, err := ds.CheckDeletedPlanDetailsV1ByServiceIdAndName(testCtx, instance.ServiceId, instance.Name); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
-	if err := ds.CreatePlanDetailsV1(&instance); err != nil {
+	if err := ds.CreatePlanDetailsV1(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
-	deleted, err := ds.CheckDeletedPlanDetailsV1ByServiceIdAndName(instance.ServiceId, instance.Name)
+	deleted, err := ds.CheckDeletedPlanDetailsV1ByServiceIdAndName(testCtx, instance.ServiceId, instance.Name)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -1361,12 +1393,12 @@ func TestSqlDatastore_CheckDeletedPlanDetailsV1ByServiceIdAndName(t *testing.T) 
 		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
 	}
 
-	if err := ds.DeletePlanDetailsV1(&instance); err != nil {
+	if err := ds.DeletePlanDetailsV1(testCtx, &instance); err != nil {
 		t.Errorf("Expected no error when deleting by pk got: %v", err)
 	}
 
 	// we should be able to see that it was soft-deleted
-	deleted, err = ds.CheckDeletedPlanDetailsV1ByServiceIdAndName(instance.ServiceId, instance.Name)
+	deleted, err = ds.CheckDeletedPlanDetailsV1ByServiceIdAndName(testCtx, instance.ServiceId, instance.Name)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -1378,37 +1410,39 @@ func TestSqlDatastore_CheckDeletedPlanDetailsV1ByServiceIdAndName(t *testing.T) 
 func TestSqlDatastore_CountPlanDetailsV1ByServiceIdAndName(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createPlanDetailsV1Instance()
+	testCtx := context.Background()
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountPlanDetailsV1ByServiceIdAndName(instance.ServiceId, instance.Name); count != 0 || err != nil {
+	if count, err := ds.CountPlanDetailsV1ByServiceIdAndName(testCtx, instance.ServiceId, instance.Name); count != 0 || err != nil {
 		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
 	}
 
-	if err := ds.CreatePlanDetailsV1(&instance); err != nil {
+	if err := ds.CreatePlanDetailsV1(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountPlanDetailsV1ByServiceIdAndName(instance.ServiceId, instance.Name); count != 1 || err != nil {
+	if count, err := ds.CountPlanDetailsV1ByServiceIdAndName(testCtx, instance.ServiceId, instance.Name); count != 1 || err != nil {
 		t.Fatalf("Expected count to be 1 and error to be nil got count: %d, err: %v", count, err)
 	}
 }
 func TestSqlDatastore_GetPlanDetailsV1ById(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createPlanDetailsV1Instance()
+	testCtx := context.Background()
 
-	if _, err := ds.GetPlanDetailsV1ById(instance.ID); err != gorm.ErrRecordNotFound {
+	if _, err := ds.GetPlanDetailsV1ById(testCtx, instance.ID); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
 	beforeCreation := time.Now()
-	if err := ds.CreatePlanDetailsV1(&instance); err != nil {
+	if err := ds.CreatePlanDetailsV1(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 	afterCreation := time.Now()
 
 	// after creation we should be able to get the item
-	ret, err := ds.GetPlanDetailsV1ById(instance.ID)
+	ret, err := ds.GetPlanDetailsV1ById(testCtx, instance.ID)
 	if err != nil {
 		t.Errorf("Expected no error trying to get saved item, got: %v", err)
 	}
@@ -1428,16 +1462,17 @@ func TestSqlDatastore_GetPlanDetailsV1ById(t *testing.T) {
 func TestSqlDatastore_CheckDeletedPlanDetailsV1ById(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createPlanDetailsV1Instance()
+	testCtx := context.Background()
 
-	if _, err := ds.CheckDeletedPlanDetailsV1ById(instance.ID); err != gorm.ErrRecordNotFound {
+	if _, err := ds.CheckDeletedPlanDetailsV1ById(testCtx, instance.ID); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
 	}
 
-	if err := ds.CreatePlanDetailsV1(&instance); err != nil {
+	if err := ds.CreatePlanDetailsV1(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
-	deleted, err := ds.CheckDeletedPlanDetailsV1ById(instance.ID)
+	deleted, err := ds.CheckDeletedPlanDetailsV1ById(testCtx, instance.ID)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -1445,12 +1480,12 @@ func TestSqlDatastore_CheckDeletedPlanDetailsV1ById(t *testing.T) {
 		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
 	}
 
-	if err := ds.DeletePlanDetailsV1(&instance); err != nil {
+	if err := ds.DeletePlanDetailsV1(testCtx, &instance); err != nil {
 		t.Errorf("Expected no error when deleting by pk got: %v", err)
 	}
 
 	// we should be able to see that it was soft-deleted
-	deleted, err = ds.CheckDeletedPlanDetailsV1ById(instance.ID)
+	deleted, err = ds.CheckDeletedPlanDetailsV1ById(testCtx, instance.ID)
 	if err != nil {
 		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
 	}
@@ -1462,18 +1497,19 @@ func TestSqlDatastore_CheckDeletedPlanDetailsV1ById(t *testing.T) {
 func TestSqlDatastore_CountPlanDetailsV1ById(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := createPlanDetailsV1Instance()
+	testCtx := context.Background()
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountPlanDetailsV1ById(instance.ID); count != 0 || err != nil {
+	if count, err := ds.CountPlanDetailsV1ById(testCtx, instance.ID); count != 0 || err != nil {
 		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
 	}
 
-	if err := ds.CreatePlanDetailsV1(&instance); err != nil {
+	if err := ds.CreatePlanDetailsV1(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.CountPlanDetailsV1ById(instance.ID); count != 1 || err != nil {
+	if count, err := ds.CountPlanDetailsV1ById(testCtx, instance.ID); count != 1 || err != nil {
 		t.Fatalf("Expected count to be 1 and error to be nil got count: %d, err: %v", count, err)
 	}
 }

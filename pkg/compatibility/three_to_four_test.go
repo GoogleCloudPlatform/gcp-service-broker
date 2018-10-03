@@ -113,6 +113,7 @@ func TestThreeToFour_Update(t *testing.T) {
 	setup3xDatabase(t)
 	defer os.Remove("test.db")
 
+	testCtx := context.Background()
 	broker := NewLegacyPlanUpgrader(&FakeBroker{})
 
 	cases := map[string]struct {
@@ -139,7 +140,7 @@ func TestThreeToFour_Update(t *testing.T) {
 
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
-			db_service.CreateServiceInstanceDetails(&models.ServiceInstanceDetails{
+			db_service.CreateServiceInstanceDetails(testCtx, &models.ServiceInstanceDetails{
 				ID:        tn,
 				ServiceId: tc.ServiceId,
 				PlanId:    tc.PlanId,
@@ -148,7 +149,7 @@ func TestThreeToFour_Update(t *testing.T) {
 			_, err := broker.Update(context.Background(), tn, brokerapi.UpdateDetails{PlanID: tc.NewPlanId}, true)
 			checkErrorMatches(t, err, tc.ErrContains)
 
-			details, err := db_service.GetServiceInstanceDetailsById(tn)
+			details, err := db_service.GetServiceInstanceDetailsById(testCtx, tn)
 			if err != nil {
 				t.Errorf("Error getting details: %s", err)
 			}
@@ -164,6 +165,7 @@ func TestThreeToFour_Update(t *testing.T) {
 func TestThreeToFour_migrationErrorMessage(t *testing.T) {
 	setup3xDatabase(t)
 	defer os.Remove("test.db")
+	testCtx := context.Background()
 
 	broker := NewLegacyPlanUpgrader(&FakeBroker{})
 
@@ -177,7 +179,7 @@ func TestThreeToFour_migrationErrorMessage(t *testing.T) {
 	}
 
 	for tn, tc := range cases {
-		db_service.CreateServiceInstanceDetails(&models.ServiceInstanceDetails{
+		db_service.CreateServiceInstanceDetails(testCtx, &models.ServiceInstanceDetails{
 			ID:        tn,
 			Name:      "my-service",
 			ServiceId: tc.ServiceId,

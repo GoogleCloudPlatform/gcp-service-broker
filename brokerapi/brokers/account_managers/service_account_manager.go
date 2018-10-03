@@ -45,7 +45,7 @@ type ServiceAccountManager struct {
 
 // If roleWhitelist is specified, then the extracted role is validated against it and an error is returned if
 // the role is not contained within the whitelist
-func (sam *ServiceAccountManager) CreateCredentials(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+func (sam *ServiceAccountManager) CreateCredentials(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 	role, err := extractRole(details)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
@@ -60,7 +60,7 @@ func (sam *ServiceAccountManager) CreateCredentials(instanceID string, bindingID
 		return models.ServiceBindingCredentials{}, fmt.Errorf("The role %s is not allowed for this service. You must use one of %v.", role, bkr.RoleWhitelist())
 	}
 
-	return sam.CreateAccountWithRoles(bindingID, []string{role})
+	return sam.CreateAccountWithRoles(ctx, bindingID, []string{role})
 }
 
 func extractRole(details brokerapi.BindDetails) (string, error) {
@@ -79,9 +79,9 @@ func extractRole(details brokerapi.BindDetails) (string, error) {
 
 // CreateAccountWithRoles creates a service account with a name based on bindingID, JSON key and grants it zero or more roles
 // the roles MUST be missing the roles/ prefix.
-func (sam *ServiceAccountManager) CreateAccountWithRoles(bindingID string, roles []string) (models.ServiceBindingCredentials, error) {
+func (sam *ServiceAccountManager) CreateAccountWithRoles(ctx context.Context, bindingID string, roles []string) (models.ServiceBindingCredentials, error) {
 	// create and save account
-	newSA, err := sam.createServiceAccount(bindingID)
+	newSA, err := sam.createServiceAccount(ctx, bindingID)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}
@@ -89,13 +89,13 @@ func (sam *ServiceAccountManager) CreateAccountWithRoles(bindingID string, roles
 	// adjust account permissions
 	// roles defined here: https://cloud.google.com/iam/docs/understanding-roles?hl=en_US#curated_roles
 	for _, role := range roles {
-		if err := sam.grantRoleToAccount(role, newSA); err != nil {
+		if err := sam.grantRoleToAccount(ctx, role, newSA); err != nil {
 			return models.ServiceBindingCredentials{}, err
 		}
 	}
 
 	// create and save key
-	newSAKey, err := sam.createServiceAccountKey(newSA)
+	newSAKey, err := sam.createServiceAccountKey(ctx, newSA)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating new service account key: %s", err)
 	}
@@ -121,14 +121,14 @@ func (sam *ServiceAccountManager) CreateAccountWithRoles(bindingID string, roles
 }
 
 // deletes the given service account from Google
-func (sam *ServiceAccountManager) DeleteCredentials(binding models.ServiceBindingCredentials) error {
+func (sam *ServiceAccountManager) DeleteCredentials(ctx context.Context, binding models.ServiceBindingCredentials) error {
 
 	var saCreds ServiceAccountInfo
 	if err := json.Unmarshal([]byte(binding.OtherDetails), &saCreds); err != nil {
 		return fmt.Errorf("Error unmarshalling credentials: %s", err)
 	}
 
-	iamService, err := iam.New(sam.HttpConfig.Client(context.Background()))
+	iamService, err := iam.New(sam.HttpConfig.Client(ctx))
 	if err != nil {
 		return fmt.Errorf("Error creating IAM service: %s", err)
 	}
@@ -143,7 +143,7 @@ func (sam *ServiceAccountManager) DeleteCredentials(binding models.ServiceBindin
 	return nil
 }
 
-func (b *ServiceAccountManager) BuildInstanceCredentials(bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error) {
+func (b *ServiceAccountManager) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error) {
 	bindDetails, err := bindRecord.GetOtherDetails()
 	if err != nil {
 		return nil, err
@@ -167,8 +167,8 @@ func ServiceAccountName(bindingId string) string {
 	}
 }
 
-func (sam *ServiceAccountManager) createServiceAccount(bindingID string) (*iam.ServiceAccount, error) {
-	client := sam.HttpConfig.Client(context.Background())
+func (sam *ServiceAccountManager) createServiceAccount(ctx context.Context, bindingID string) (*iam.ServiceAccount, error) {
+	client := sam.HttpConfig.Client(ctx)
 	iamService, err := iam.New(client)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating new IAM service: %s", err)
@@ -188,8 +188,8 @@ func (sam *ServiceAccountManager) createServiceAccount(bindingID string) (*iam.S
 	return iam.NewProjectsServiceAccountsService(iamService).Create(resourceName, &newSARequest).Do()
 }
 
-func (sam *ServiceAccountManager) createServiceAccountKey(account *iam.ServiceAccount) (*iam.ServiceAccountKey, error) {
-	client := sam.HttpConfig.Client(context.Background())
+func (sam *ServiceAccountManager) createServiceAccountKey(ctx context.Context, account *iam.ServiceAccount) (*iam.ServiceAccountKey, error) {
+	client := sam.HttpConfig.Client(ctx)
 	iamService, err := iam.New(client)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating new IAM service: %s", err)
@@ -199,8 +199,8 @@ func (sam *ServiceAccountManager) createServiceAccountKey(account *iam.ServiceAc
 	return saKeyService.Create(account.Name, &iam.CreateServiceAccountKeyRequest{}).Do()
 }
 
-func (sam *ServiceAccountManager) grantRoleToAccount(role string, account *iam.ServiceAccount) error {
-	client := sam.HttpConfig.Client(context.Background())
+func (sam *ServiceAccountManager) grantRoleToAccount(ctx context.Context, role string, account *iam.ServiceAccount) error {
+	client := sam.HttpConfig.Client(ctx)
 
 	cloudresService, err := cloudres.New(client)
 	if err != nil {

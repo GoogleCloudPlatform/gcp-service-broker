@@ -28,7 +28,7 @@ type StackdriverProfilerBroker struct {
 }
 
 // Provision is a no-op call because only service accounts need to be bound/unbound for Stackdriver.
-func (b *StackdriverProfilerBroker) Provision(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+func (b *StackdriverProfilerBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	return models.ServiceInstanceDetails{}, nil
 }
 
@@ -38,6 +38,6 @@ func (b *StackdriverProfilerBroker) Deprovision(ctx context.Context, instance mo
 }
 
 // Bind creates a service account with access to Stackdriver Profiler.
-func (b *StackdriverProfilerBroker) Bind(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
-	return b.AccountManager.CreateAccountWithRoles(bindingID, []string{"cloudprofiler.agent"})
+func (b *StackdriverProfilerBroker) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
+	return b.AccountManager.CreateAccountWithRoles(ctx, bindingID, []string{"cloudprofiler.agent"})
 }

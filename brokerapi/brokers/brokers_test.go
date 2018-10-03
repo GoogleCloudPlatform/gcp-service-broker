@@ -120,10 +120,10 @@ var _ = Describe("Brokers", func() {
 			gcpBroker.ServiceBrokerMap[k] = &modelsfakes.FakeServiceBrokerHelper{
 				ProvisionsAsyncStub:   func() bool { return async },
 				DeprovisionsAsyncStub: func() bool { return async },
-				ProvisionStub: func(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+				ProvisionStub: func(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 					return models.ServiceInstanceDetails{ID: instanceId, OtherDetails: "{\"mynameis\": \"instancename\"}"}, nil
 				},
-				BindStub: func(instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
+				BindStub: func(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 					return models.ServiceBindingCredentials{OtherDetails: "{\"foo\": \"bar\"}"}, nil
 				},
 			}
@@ -424,9 +424,11 @@ var _ = Describe("AccountManagers", func() {
 		accountManager    modelsfakes.FakeServiceAccountManager
 		sqlAccountManager modelsfakes.FakeAccountManager
 		err               error
+		testCtx           context.Context
 	)
 
 	BeforeEach(func() {
+		testCtx = context.Background()
 		logger = lager.NewLogger("brokers_test")
 		logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 
@@ -437,12 +439,12 @@ var _ = Describe("AccountManagers", func() {
 		name_generator.New()
 
 		accountManager = modelsfakes.FakeServiceAccountManager{
-			CreateCredentialsStub: func(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+			CreateCredentialsStub: func(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 				return models.ServiceBindingCredentials{OtherDetails: "{}"}, nil
 			},
 		}
 		sqlAccountManager = modelsfakes.FakeAccountManager{
-			CreateCredentialsStub: func(instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+			CreateCredentialsStub: func(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 				return models.ServiceBindingCredentials{OtherDetails: "{}"}, nil
 			},
 		}
@@ -469,7 +471,7 @@ var _ = Describe("AccountManagers", func() {
 	Describe("bind", func() {
 		Context("when bind is called on an iam-style broker", func() {
 			It("should call the account manager create account in google method", func() {
-				_, err = iamStyleBroker.Bind("foo", "bar", brokerapi.BindDetails{})
+				_, err = iamStyleBroker.Bind(context.Background(), "foo", "bar", brokerapi.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 			})
@@ -477,8 +479,8 @@ var _ = Describe("AccountManagers", func() {
 
 		Context("when bind is called on a cloudsql broker after provision", func() {
 			It("should call the account manager create account in google method", func() {
-				db_service.SaveServiceInstanceDetails(&models.ServiceInstanceDetails{ID: "foo"})
-				_, err = iamStyleBroker.Bind("foo", "bar", brokerapi.BindDetails{})
+				db_service.SaveServiceInstanceDetails(testCtx, &models.ServiceInstanceDetails{ID: "foo"})
+				_, err = iamStyleBroker.Bind(context.Background(), "foo", "bar", brokerapi.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 			})
@@ -486,21 +488,21 @@ var _ = Describe("AccountManagers", func() {
 
 		Context("when bind is called on a cloudsql broker on a missing service instance", func() {
 			It("should throw an error", func() {
-				_, err = cloudsqlBroker.Bind("foo", "bar", brokerapi.BindDetails{})
+				_, err = cloudsqlBroker.Bind(context.Background(), "foo", "bar", brokerapi.BindDetails{})
 				Expect(err).To(HaveOccurred())
 			})
 		})
 
 		Context("when bind is called on a cloudsql broker with no username/password after provision", func() {
 			It("should return a generated username and password", func() {
-				db_service.CreateServiceInstanceDetails(&models.ServiceInstanceDetails{ID: "foo"})
+				db_service.CreateServiceInstanceDetails(testCtx, &models.ServiceInstanceDetails{ID: "foo"})
 
-				_, err := cloudsqlBroker.Bind("foo", "bar", brokerapi.BindDetails{})
+				_, err := cloudsqlBroker.Bind(context.Background(), "foo", "bar", brokerapi.BindDetails{})
 
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 				Expect(sqlAccountManager.CreateCredentialsCallCount()).To(Equal(1))
-				_, _, details, _ := accountManager.CreateCredentialsArgsForCall(0)
+				_, _, _, details, _ := accountManager.CreateCredentialsArgsForCall(0)
 
 				rawparams := details.GetRawParameters()
 				params := make(map[string]interface{})
@@ -522,7 +524,7 @@ var _ = Describe("AccountManagers", func() {
 
 		Context("when MergeCredentialsAndInstanceInfo is called on a broker", func() {
 			It("should call MergeCredentialsAndInstanceInfo on the account manager", func() {
-				_, err = iamStyleBroker.BuildInstanceCredentials(models.ServiceBindingCredentials{}, models.ServiceInstanceDetails{})
+				_, err = iamStyleBroker.BuildInstanceCredentials(context.Background(), models.ServiceBindingCredentials{}, models.ServiceInstanceDetails{})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(accountManager.BuildInstanceCredentialsCallCount()).To(Equal(1))
 			})
@@ -532,7 +534,7 @@ var _ = Describe("AccountManagers", func() {
 	Describe("unbind", func() {
 		Context("when unbind is called on the broker", func() {
 			It("it should call the account manager delete account from google method", func() {
-				err = iamStyleBroker.Unbind(models.ServiceBindingCredentials{})
+				err = iamStyleBroker.Unbind(context.Background(), models.ServiceBindingCredentials{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.DeleteCredentialsCallCount()).To(Equal(1))
 			})
@@ -540,7 +542,7 @@ var _ = Describe("AccountManagers", func() {
 
 		Context("when unbind is called on a cloudsql broker", func() {
 			It("it should call the account manager delete account from google method", func() {
-				err = cloudsqlBroker.Unbind(models.ServiceBindingCredentials{})
+				err = cloudsqlBroker.Unbind(context.Background(), models.ServiceBindingCredentials{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.DeleteCredentialsCallCount()).To(Equal(1))
 				Expect(sqlAccountManager.DeleteCredentialsCallCount()).To(Equal(1))

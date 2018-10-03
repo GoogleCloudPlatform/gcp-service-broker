@@ -86,7 +86,7 @@ func NewLegacyPlanUpgrader(wrapped brokerapi.ServiceBroker) *ThreeToFour {
 	for _, upgrade := range legacyPlanUpgrades {
 		// Check each upgrade in the DB, if it does not exist there then the user
 		// didn't get it from one of their earlier migrations.
-		legacyDefinition, err := db_service.GetPlanDetailsV1ByServiceIdAndName(upgrade.ServiceId, upgrade.LegacyPlanName)
+		legacyDefinition, err := db_service.GetPlanDetailsV1ByServiceIdAndName(context.Background(), upgrade.ServiceId, upgrade.LegacyPlanName)
 		if err != nil {
 			continue // continue on missing, users may not have all legacy plans
 		}
@@ -123,7 +123,7 @@ func (t *ThreeToFour) Provision(ctx context.Context, instanceID string, details 
 // Deprovision calls the wrapped service broker unless the plan is legacy, in which case
 // the user is told how to upgrade first.
 func (t *ThreeToFour) Deprovision(ctx context.Context, instanceID string, details brokerapi.DeprovisionDetails, asyncAllowed bool) (brokerapi.DeprovisionServiceSpec, error) {
-	if err := t.migrationErrorMessage("deprovision", instanceID); err != nil {
+	if err := t.migrationErrorMessage(ctx, "deprovision", instanceID); err != nil {
 		return brokerapi.DeprovisionServiceSpec{}, err
 	}
 
@@ -133,7 +133,7 @@ func (t *ThreeToFour) Deprovision(ctx context.Context, instanceID string, detail
 // Bind calls the wrapped service broker unless the plan is legacy, in which case
 // the user is told how to upgrade first.
 func (t *ThreeToFour) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (brokerapi.Binding, error) {
-	if err := t.migrationErrorMessage("bind", instanceID); err != nil {
+	if err := t.migrationErrorMessage(ctx, "bind", instanceID); err != nil {
 		return brokerapi.Binding{}, err
 	}
 
@@ -143,7 +143,7 @@ func (t *ThreeToFour) Bind(ctx context.Context, instanceID, bindingID string, de
 // Unbind calls the wrapped service broker unless the plan is legacy, in which case
 // the user is told how to upgrade first.
 func (t *ThreeToFour) Unbind(ctx context.Context, instanceID, bindingID string, details brokerapi.UnbindDetails) error {
-	if err := t.migrationErrorMessage("unbind", instanceID); err != nil {
+	if err := t.migrationErrorMessage(ctx, "unbind", instanceID); err != nil {
 		return err
 	}
 
@@ -193,7 +193,7 @@ func (t *ThreeToFour) augmentServiceCatalog(entry brokerapi.Service) brokerapi.S
 // Update checks if the update is for a plan change from legacy to the defined
 // acceptable upgrade plan and modifies the database if so.
 func (t *ThreeToFour) Update(ctx context.Context, instanceID string, details brokerapi.UpdateDetails, asyncAllowed bool) (brokerapi.UpdateServiceSpec, error) {
-	instanceDetails, err := db_service.GetServiceInstanceDetailsById(instanceID)
+	instanceDetails, err := db_service.GetServiceInstanceDetailsById(ctx, instanceID)
 	if err != nil {
 		return brokerapi.UpdateServiceSpec{}, brokerapi.ErrInstanceDoesNotExist
 	}
@@ -207,7 +207,7 @@ func (t *ThreeToFour) Update(ctx context.Context, instanceID string, details bro
 		return brokerapi.UpdateServiceSpec{}, fmt.Errorf("you can only upgrade this legacy plan to %q", path.NewPlanName)
 	}
 
-	return brokerapi.UpdateServiceSpec{}, t.updatePlanId(instanceID, details.PlanID)
+	return brokerapi.UpdateServiceSpec{}, t.updatePlanId(ctx, instanceID, details.PlanID)
 }
 
 func (t *ThreeToFour) getUpgradePath(serviceId, planId string) (upgradePath, bool) {
@@ -220,8 +220,8 @@ func (t *ThreeToFour) getUpgradePath(serviceId, planId string) (upgradePath, boo
 	return upgradePath{}, false
 }
 
-func (t *ThreeToFour) migrationErrorMessage(verb, instanceId string) error {
-	service, err := db_service.GetServiceInstanceDetailsById(instanceId)
+func (t *ThreeToFour) migrationErrorMessage(ctx context.Context, verb, instanceId string) error {
+	service, err := db_service.GetServiceInstanceDetailsById(ctx, instanceId)
 	if err != nil {
 		return brokerapi.ErrInstanceDoesNotExist
 	}
@@ -235,15 +235,15 @@ func (t *ThreeToFour) migrationErrorMessage(verb, instanceId string) error {
 	return fmt.Errorf("The instance you're trying to %s is using an unsupported plan. You must update it first by running `%s`", verb, command)
 }
 
-func (ThreeToFour) updatePlanId(instanceID, newPlanId string) error {
-	instanceDetails, err := db_service.GetServiceInstanceDetailsById(instanceID)
+func (ThreeToFour) updatePlanId(ctx context.Context, instanceID, newPlanId string) error {
+	instanceDetails, err := db_service.GetServiceInstanceDetailsById(ctx, instanceID)
 	if err != nil {
 		return fmt.Errorf("couldn't find instance %q: %s", instanceID, err)
 	}
 
 	instanceDetails.PlanId = newPlanId
 
-	if err := db_service.SaveServiceInstanceDetails(instanceDetails); err != nil {
+	if err := db_service.SaveServiceInstanceDetails(ctx, instanceDetails); err != nil {
 		return fmt.Errorf("updating the existing database record %s", err)
 	}
 
