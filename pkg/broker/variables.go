@@ -17,6 +17,8 @@ package broker
 import (
 	"fmt"
 	"sort"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 )
 
 const (
@@ -67,19 +69,19 @@ func (bv *BrokerVariable) ToSchema() map[string]interface{} {
 			return fmt.Sprintf("%v", enumeration[i]) < fmt.Sprintf("%v", enumeration[j])
 		})
 
-		schema["enum"] = enumeration
+		schema[validation.KeyEnum] = enumeration
 	}
 
 	if bv.Details != "" {
-		schema["description"] = bv.Details
+		schema[validation.KeyDescription] = bv.Details
 	}
 
 	if bv.Type != "" {
-		schema["type"] = bv.Type
+		schema[validation.KeyType] = bv.Type
 	}
 
 	if bv.Default != nil {
-		schema["default"] = bv.Default
+		schema[validation.KeyDefault] = bv.Default
 	}
 
 	return schema
