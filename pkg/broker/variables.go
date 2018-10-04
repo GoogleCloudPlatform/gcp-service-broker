@@ -14,6 +14,11 @@
 
 package broker
 
+import (
+	"fmt"
+	"sort"
+)
+
 const (
 	JsonTypeString  JsonType = "string"
 	JsonTypeNumeric JsonType = "number"
@@ -56,6 +61,11 @@ func (bv *BrokerVariable) ToSchema() map[string]interface{} {
 		for k, _ := range bv.Enum {
 			enumeration = append(enumeration, k)
 		}
+
+		// Sort enumerations lexocographically for documentation consistency.
+		sort.Slice(enumeration, func(i int, j int) bool {
+			return fmt.Sprintf("%v", enumeration[i]) < fmt.Sprintf("%v", enumeration[j])
+		})
 
 		schema["enum"] = enumeration
 	}

@@ -187,8 +187,8 @@ func varNotes(variable broker.BrokerVariable) string {
 
 	bullets := constraintsToDoc(variable.ToSchema())
 	if len(bullets) > 0 {
-		out += "\n  * "
-		out += strings.Join(bullets, "\n  * ")
+		out += "\n    * "
+		out += strings.Join(bullets, "\n    * ")
 	}
 
 	return out

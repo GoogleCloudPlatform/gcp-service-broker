@@ -56,7 +56,7 @@ func TestBrokerVariable_ToSchema(t *testing.T) {
 				Default: "some-value",
 				Type:    JsonTypeString,
 				Details: "more information",
-				Enum:    map[interface{}]string{"a": "description", "b": "description"},
+				Enum:    map[interface{}]string{"b": "description", "a": "description"},
 				Constraints: map[string]interface{}{
 					"examples": []string{"SAMPLEA", "SAMPLEB"},
 				},
