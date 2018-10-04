@@ -47,10 +47,11 @@ type BrokerVariable struct {
 	// Constraints holds JSON Schema validations defined for this variable.
 	// Keys are valid JSON Schema validation keywords, and values are their
 	// associated values.
+	// http://json-schema.org/latest/json-schema-validation.html
 	Constraints map[string]interface{}
 }
 
-// ToSchema converts the BrokerVariable into the value part of a JSON Scheama
+// ToSchema converts the BrokerVariable into the value part of a JSON Schema.
 func (bv *BrokerVariable) ToSchema() map[string]interface{} {
 	schema := map[string]interface{}{}
 

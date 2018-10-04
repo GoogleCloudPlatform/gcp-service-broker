@@ -20,6 +20,7 @@ A fast, economical and fully managed data warehouse for large-scale data analyti
     * The string must match the regular expression `^[A-Za-z0-9_]+$`.
  * `location` _string_ - The location of the BigQuery instance. Default: `US`.
     * Examples: [US EU asia-northeast1].
+    * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
 
 
 ## Binding

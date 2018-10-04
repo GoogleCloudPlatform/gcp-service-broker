@@ -38,7 +38,8 @@ const (
 )
 
 //  NewConstraintBuilder creates a builder for JSON Schema compliant constraint
-// lists.
+// lists. See http://json-schema.org/latest/json-schema-validation.html
+// for types of validation available.
 func NewConstraintBuilder() ConstraintBuilder {
 	return ConstraintBuilder{}
 }

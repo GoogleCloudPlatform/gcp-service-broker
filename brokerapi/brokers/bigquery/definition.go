@@ -73,6 +73,7 @@ func init() {
 				Details:   "The location of the BigQuery instance.",
 				Default:   "US",
 				Constraints: validation.NewConstraintBuilder().
+					Pattern("^[A-Za-z][-a-z0-9A-Z]+$").
 					Examples("US", "EU", "asia-northeast1").
 					Build(),
 			},
