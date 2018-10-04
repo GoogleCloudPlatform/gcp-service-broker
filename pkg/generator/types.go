@@ -185,7 +185,63 @@ func varNotes(variable broker.BrokerVariable) string {
 		out += fmt.Sprintf(" Default: `%v`.", variable.Default)
 	}
 
+	bullets := constraintsToDoc(variable.ToSchema())
+	if len(bullets) > 0 {
+		out += "\n  * "
+		out += strings.Join(bullets, "\n  * ")
+	}
+
 	return out
+}
+
+// constraintsToDoc converts a map of JSON Schema validation key/values to human-readable bullet points.
+func constraintsToDoc(schema map[string]interface{}) []string {
+	// We use an anonymous struct rather than a map to get a strict ordering of
+	// constraints so they are generated consistently in documentation.
+	// Not all JSON Schema constraints can be cleanly expressed in this format,
+	// nor do we use them all so some are missing.
+	constraintFormatters := []struct {
+		SchemaKey string
+		DocString string
+	}{
+		// Schema Annotations
+		{"examples", "Examples: %+v."},
+
+		// Validation for any instance type
+		{"enum", "The value must be one of: %+v."},
+		{"const", "The value must be: `%v`."},
+
+		// Validation keywords for numeric instances
+		{"multipleOf", "The value must be a multiple of %v."},
+		{"maximum", "The value must be less than or equal to %v."},
+		{"exclusiveMaximum", "The value must be strictly less than %v."},
+		{"minimum", "The value must be greater than or equal to %v."},
+		{"exclusiveMinimum", "The value must be strictly greater than %v."},
+
+		// Validation keywords for strings
+		{"maxLength", "The string must have at most %v characters."},
+		{"minLength", "The string must have at least %v characters."},
+		{"pattern", "The string must match the regular expression `%v`."},
+
+		// Validation keywords for arrays
+		{"maxItems", "The array must have at most %v items."},
+		{"minItems", "The array must have at least %v items."},
+
+		// Validation keywords for objects
+		{"maxProperties", "The object must have at most %v properties."},
+		{"minProperties", "The object must have at least %v properties."},
+		{"required", "The following properties are required: %v."},
+		{"propertyNames", "Property names must match the JSON Schema: `%+v`."},
+	}
+
+	var bullets []string
+	for _, formatter := range constraintFormatters {
+		if v, ok := schema[formatter.SchemaKey]; ok {
+			bullets = append(bullets, fmt.Sprintf(formatter.DocString, v))
+		}
+	}
+
+	return bullets
 }
 
 // cleanLines concatenates multiple lines of text, trimming any leading/trailing

@@ -15,7 +15,11 @@ A fast, economical and fully managed data warehouse for large-scale data analyti
 **Request Parameters**
 
 
- * `name` _string_ - The name of the BigQuery dataset. Must be alphanumeric (plus underscores) and must be at most 1024 characters long. Default: `a generated value`.
+ * `name` _string_ - The name of the BigQuery dataset. Default: `a generated value`.
+  * The string must have at most 1024 characters.
+  * The string must match the regular expression `^[A-Za-z0-9_]+$`.
+ * `location` _string_ - The location of the BigQuery instance. Default: `US`.
+  * Examples: [US EU asia-northeast1].
 
 
 ## Binding
@@ -197,8 +201,10 @@ Google Cloud SQL is a fully-managed MySQL database service.
  * `backup_start_time` _string_ - Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM. Default: `06:00`.
  * `binlog` _string_ - Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use.
  * `activation_policy` _string_ - The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE. Default: `ON_DEMAND`.
+  * The value must be one of: [NEVER ON_DEMAND ALWAYS].
  * `authorized_networks` _string_ - A comma separated list without spaces. Default: `none`.
  * `replication_type` _string_ - The type of replication this instance uses. This can be either ASYNCHRONOUS or SYNCHRONOUS. Default: `SYNCHRONOUS`.
+  * The value must be one of: [SYNCHRONOUS ASYNCHRONOUS].
  * `auto_resize` _string_ - (only for 2nd generation instances) Configuration to increase storage size automatically. Default: `false`.
 
 
@@ -324,8 +330,10 @@ Google Cloud SQL is a fully-managed MySQL database service.
  * `backup_start_time` _string_ - Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM. Default: `06:00`.
  * `binlog` _string_ - Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use.
  * `activation_policy` _string_ - The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE. Default: `ON_DEMAND`.
+  * The value must be one of: [ALWAYS NEVER ON_DEMAND].
  * `authorized_networks` _string_ - A comma separated list without spaces. Default: `none`.
  * `replication_type` _string_ - The type of replication this instance uses. This can be either ASYNCHRONOUS or SYNCHRONOUS. Default: `SYNCHRONOUS`.
+  * The value must be one of: [ASYNCHRONOUS SYNCHRONOUS].
  * `auto_resize` _string_ - (only for 2nd generation instances) Configuration to increase storage size automatically. Default: `false`.
 
 
