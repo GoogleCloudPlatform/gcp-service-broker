@@ -14,6 +14,13 @@
 
 package broker
 
+import (
+	"fmt"
+	"sort"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
+)
+
 const (
 	JsonTypeString  JsonType = "string"
 	JsonTypeNumeric JsonType = "number"
@@ -37,4 +44,46 @@ type BrokerVariable struct {
 	// If there are a limited number of valid values for this field then
 	// Enum will hold them in value:friendly name pairs
 	Enum map[interface{}]string
+	// Constraints holds JSON Schema validations defined for this variable.
+	// Keys are valid JSON Schema validation keywords, and values are their
+	// associated values.
+	// http://json-schema.org/latest/json-schema-validation.html
+	Constraints map[string]interface{}
+}
+
+// ToSchema converts the BrokerVariable into the value part of a JSON Schema.
+func (bv *BrokerVariable) ToSchema() map[string]interface{} {
+	schema := map[string]interface{}{}
+
+	for k, v := range bv.Constraints {
+		schema[k] = v
+	}
+
+	if len(bv.Enum) > 0 {
+		enumeration := []interface{}{}
+		for k, _ := range bv.Enum {
+			enumeration = append(enumeration, k)
+		}
+
+		// Sort enumerations lexocographically for documentation consistency.
+		sort.Slice(enumeration, func(i int, j int) bool {
+			return fmt.Sprintf("%v", enumeration[i]) < fmt.Sprintf("%v", enumeration[j])
+		})
+
+		schema[validation.KeyEnum] = enumeration
+	}
+
+	if bv.Details != "" {
+		schema[validation.KeyDescription] = bv.Details
+	}
+
+	if bv.Type != "" {
+		schema[validation.KeyType] = bv.Type
+	}
+
+	if bv.Default != nil {
+		schema[validation.KeyDefault] = bv.Default
+	}
+
+	return schema
 }

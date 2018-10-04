@@ -17,6 +17,7 @@ package bigquery
 import (
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 )
 
 func init() {
@@ -59,8 +60,22 @@ func init() {
 			{
 				FieldName: "name",
 				Type:      broker.JsonTypeString,
-				Details:   "The name of the BigQuery dataset. Must be alphanumeric (plus underscores) and must be at most 1024 characters long.",
+				Details:   "The name of the BigQuery dataset.",
 				Default:   "a generated value",
+				Constraints: validation.NewConstraintBuilder().
+					Pattern("^[A-Za-z0-9_]+$").
+					MaxLength(1024).
+					Build(),
+			},
+			{
+				FieldName: "location",
+				Type:      broker.JsonTypeString,
+				Details:   "The location of the BigQuery instance.",
+				Default:   "US",
+				Constraints: validation.NewConstraintBuilder().
+					Pattern("^[A-Za-z][-a-z0-9A-Z]+$").
+					Examples("US", "EU", "asia-northeast1").
+					Build(),
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
