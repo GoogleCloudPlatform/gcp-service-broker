@@ -119,6 +119,19 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:f63bbfd54a9ebe0f15cd6597d58f404874fd20739faf56170879767db2fe69dc"
+  name = "github.com/hashicorp/hil"
+  packages = [
+    ".",
+    "ast",
+    "parser",
+    "scanner",
+  ]
+  pruneopts = ""
+  revision = "fa9f258a92500514cc8e9c67020487709df92432"
+
+[[projects]]
   digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
@@ -178,6 +191,14 @@
   packages = ["."]
   pruneopts = ""
   revision = "fa473d140ef3c6adf42d6b391fe76707f1f243c8"
+  version = "v1.0.0"
+
+[[projects]]
+  digest = "1:5584c8fba4fbaac85a65c9b86320fdfb6fdd5ce86b3f8fd7ddb5082d20567bd3"
+  name = "github.com/mitchellh/reflectwalk"
+  packages = ["."]
+  pruneopts = ""
+  revision = "eecee6c969c02c8cc2ae48e1e269843ae8590796"
   version = "v1.0.0"
 
 [[projects]]
@@ -518,6 +539,7 @@
     "code.cloudfoundry.org/lager",
     "github.com/go-sql-driver/mysql",
     "github.com/gorilla/mux",
+    "github.com/hashicorp/hil",
     "github.com/jinzhu/gorm",
     "github.com/jinzhu/gorm/dialects/sqlite",
     "github.com/lib/pq",
@@ -525,6 +547,7 @@
     "github.com/onsi/gomega",
     "github.com/pivotal-cf/brokerapi",
     "github.com/pivotal-golang/lager",
+    "github.com/spf13/cast",
     "github.com/spf13/cobra",
     "github.com/spf13/viper",
     "golang.org/x/net/context",

@@ -21,7 +21,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	googlebigquery "google.golang.org/api/bigquery/v2"
@@ -39,18 +39,13 @@ type InstanceInformation struct {
 
 // Provision creates a new BigQuery dataset from the settings in the user-provided details and service plan.
 func (b *BigQueryBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
-	var err error
-	var params map[string]string
+	variableContext, err := varcontext.Builder().
+		MergeDefaults(serviceDefinition().ProvisionInputVariables).
+		MergeJsonObject(details.GetRawParameters()).
+		MergeMap(plan.GetServiceProperties()).Build()
 
-	if len(details.RawParameters) == 0 {
-		params = map[string]string{}
-	} else if err = json.Unmarshal(details.RawParameters, &params); err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling parameters: %s", err)
-	}
-
-	// Ensure there is a name for this instance
-	if _, ok := params["name"]; !ok {
-		params["name"] = name_generator.Basic.InstanceName()
+	if err != nil {
+		return models.ServiceInstanceDetails{}, err
 	}
 
 	service, err := b.createClient(ctx)
@@ -58,25 +53,25 @@ func (b *BigQueryBroker) Provision(ctx context.Context, instanceId string, detai
 		return models.ServiceInstanceDetails{}, err
 	}
 
-	loc := "US"
-	userLoc, locOk := params["location"]
-	if locOk {
-		loc = userLoc
-	}
 	d := googlebigquery.Dataset{
-		Location: loc,
+		Location: variableContext.GetString("location"),
 		DatasetReference: &googlebigquery.DatasetReference{
-			DatasetId: params["name"],
+			DatasetId: variableContext.GetString("name"),
 		},
 		Labels: utils.ExtractDefaultLabels(instanceId, details),
 	}
-	new_dataset, err := service.Datasets.Insert(b.ProjectId, &d).Do()
+
+	if variableContext.HasErrors() {
+		return models.ServiceInstanceDetails{}, variableContext.Error()
+	}
+
+	newDataset, err := service.Datasets.Insert(b.ProjectId, &d).Do()
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error inserting new dataset: %s", err)
 	}
 
 	ii := InstanceInformation{
-		DatasetId: params["name"],
+		DatasetId: newDataset.DatasetReference.DatasetId,
 	}
 
 	otherDetails, err := json.Marshal(ii)
@@ -85,9 +80,9 @@ func (b *BigQueryBroker) Provision(ctx context.Context, instanceId string, detai
 	}
 
 	i := models.ServiceInstanceDetails{
-		Name:         new_dataset.DatasetReference.DatasetId,
-		Url:          new_dataset.SelfLink,
-		Location:     new_dataset.Location,
+		Name:         newDataset.DatasetReference.DatasetId,
+		Url:          newDataset.SelfLink,
+		Location:     newDataset.Location,
 		OtherDetails: string(otherDetails),
 	}
 
