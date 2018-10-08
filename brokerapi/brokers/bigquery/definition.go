@@ -65,7 +65,7 @@ func serviceDefinition() *broker.BrokerService {
 				FieldName: "name",
 				Type:      broker.JsonTypeString,
 				Details:   "The name of the BigQuery dataset.",
-				Default:   "pcf-sb-${counter.next()}-${time.nano()}",
+				Default:   "pcf_sb_${counter.next()}_${time.nano()}",
 				Constraints: validation.NewConstraintBuilder().
 					Pattern("^[A-Za-z0-9_]+$").
 					MaxLength(1024).

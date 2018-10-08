@@ -44,17 +44,25 @@ func (builder *ContextBuilder) MergeDefaults(brokerVariables []broker.BrokerVari
 		}
 
 		if strVal, ok := v.Default.(string); ok {
-			result, err := interpolation.Eval(strVal, builder.context)
-			if err != nil {
-				builder.AddError(fmt.Errorf("couldn't compute the default value for %q, template: %q, %v", v.FieldName, strVal, err))
-				continue
-			}
-
-			builder.context[v.FieldName] = result
+			builder.MergeEvalResult(v.FieldName, strVal)
 		} else {
 			builder.context[v.FieldName] = v.Default
 		}
 	}
+
+	return builder
+}
+
+// MergeEvalResult evaluates the template against the templating engine and
+// merges in the value if the result is not an error.
+func (builder *ContextBuilder) MergeEvalResult(key, template string) *ContextBuilder {
+	result, err := interpolation.Eval(template, builder.context)
+	if err != nil {
+		builder.AddError(fmt.Errorf("couldn't compute the value for %q, template: %q, %v", key, template, err))
+		return builder
+	}
+
+	builder.context[key] = result
 
 	return builder
 }
