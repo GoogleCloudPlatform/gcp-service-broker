@@ -32,6 +32,7 @@ func TestEval(t *testing.T) {
 	}{
 		"Non-Templated String":  {Template: "foo", Expected: "foo"},
 		"Basic Evaluation":      {Template: "${33}", Expected: "33"},
+		"Escaped Evaluation":    {Template: "$${33}", Expected: "${33}"},
 		"Missing Variable":      {Template: "${a}", ErrorContains: "unknown variable accessed: a"},
 		"Variable Substitution": {Template: "${foo}", Variables: map[string]interface{}{"foo": 33}, Expected: "33"},
 		"Bad Template":          {Template: "${", ErrorContains: "expected expression"},

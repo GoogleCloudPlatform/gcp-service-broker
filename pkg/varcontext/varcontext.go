@@ -16,48 +16,54 @@ package varcontext
 
 import (
 	"fmt"
+	"strings"
 
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/spf13/cast"
 )
 
 type VarContext struct {
-	ErrorCollector
-
+	errors  *multierror.Error
 	context map[string]interface{}
 }
 
 func (vc *VarContext) validate(key, typeName string, validator func(interface{}) error) {
 	val, ok := vc.context[key]
 	if !ok {
-		vc.AddError(fmt.Errorf("missing value for key %q", key))
+		vc.errors = multierror.Append(vc.errors, fmt.Errorf("missing value for key %q", key))
 		return
 	}
 
 	if err := validator(val); err != nil {
-		vc.AddError(fmt.Errorf("value for %q must be a %s", key, typeName))
+		vc.errors = multierror.Append(vc.errors, fmt.Errorf("value for %q must be a %s", key, typeName))
 	}
 }
 
 // GetString gets a string from the context, storing an error if the key doesn't
 // exist or the variable couldn't be converted to a string.
 func (vc *VarContext) GetString(key string) string {
+	var res string
+	var err error
 	vc.validate(key, "string", func(val interface{}) error {
-		_, err := cast.ToStringE(val)
+		res, err = cast.ToStringE(val)
 		return err
 	})
 
-	return cast.ToString(vc.context[key])
+	return res
 }
 
 // GetInt gets an integer from the context, storing an error if the key doesn't
 // exist or the variable couldn't be converted to an int.
 func (vc *VarContext) GetInt(key string) int {
+	var res int
+	var err error
+
 	vc.validate(key, "integer", func(val interface{}) error {
-		_, err := cast.ToIntE(val)
+		res, err = cast.ToIntE(val)
 		return err
 	})
 
-	return cast.ToInt(vc.context[key])
+	return res
 }
 
 // ToMap gets the underlying map representaiton of the variable context.
@@ -69,4 +75,23 @@ func (vc *VarContext) ToMap() map[string]interface{} {
 	}
 
 	return output
+}
+
+// Error gets the accumulated error(s) that this VarContext holds.
+func (vc *VarContext) Error() error {
+	if vc.errors == nil {
+		return nil
+	}
+
+	vc.errors.ErrorFormat = lineErrorFormatter
+	return vc.errors
+}
+
+func lineErrorFormatter(es []error) string {
+	points := make([]string, len(es))
+	for i, err := range es {
+		points[i] = err.Error()
+	}
+
+	return fmt.Sprintf("%d error(s) occurred: %s", len(es), strings.Join(points, "; "))
 }
