@@ -21,7 +21,6 @@ import (
 	googlestorage "cloud.google.com/go/storage"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/net/context"
@@ -43,10 +42,7 @@ type InstanceInformation struct {
 // Provision creates a new GCS bucket from the settings in the user-provided details and service plan.
 func (b *StorageBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	// resolve variables
-	variableContext, err := varcontext.Builder().
-		MergeDefaults(serviceDefinition().ProvisionInputVariables).
-		MergeJsonObject(details.GetRawParameters()).
-		MergeMap(plan.GetServiceProperties()).Build()
+	variableContext, err := serviceDefinition().ProvisionVariables(instanceId, details, plan)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, err
 	}
@@ -58,8 +54,8 @@ func (b *StorageBroker) Provision(ctx context.Context, instanceId string, detail
 		Labels:       utils.ExtractDefaultLabels(instanceId, details),
 	}
 
-	if variableContext.HasErrors() {
-		return models.ServiceInstanceDetails{}, variableContext.Error()
+	if err := variableContext.Error(); err != nil {
+		return models.ServiceInstanceDetails{}, err
 	}
 
 	// make a new bucket

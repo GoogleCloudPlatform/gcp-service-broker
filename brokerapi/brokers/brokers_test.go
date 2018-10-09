@@ -173,12 +173,12 @@ var _ = Describe("Brokers", func() {
 			Expect(len(serviceList)).To(Equal(len(broker.GetEnabledServices())))
 		})
 
-		It("should have 3 storage plans available", func() {
+		It("should have 4 storage plans available", func() {
 			serviceList, err := gcpBroker.Services(context.Background())
 			Expect(err).ToNot(HaveOccurred())
 			for _, s := range serviceList {
 				if s.ID == serviceNameToId[models.StorageName] {
-					Expect(len(s.Plans)).To(Equal(3))
+					Expect(len(s.Plans)).To(Equal(4))
 				}
 			}
 
