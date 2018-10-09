@@ -19,8 +19,6 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
 func TestContextBuilder(t *testing.T) {
@@ -40,37 +38,39 @@ func TestContextBuilder(t *testing.T) {
 			Builder:  Builder().MergeMap(map[string]interface{}{}),
 			Expected: map[string]interface{}{},
 		},
-
 		"MergeMap multi-key": {
 			Builder:  Builder().MergeMap(map[string]interface{}{"a": "a", "b": "b"}),
 			Expected: map[string]interface{}{"a": "a", "b": "b"},
 		},
-
 		"MergeMap overwrite": {
 			Builder:  Builder().MergeMap(map[string]interface{}{"a": "a"}).MergeMap(map[string]interface{}{"a": "aaa"}),
 			Expected: map[string]interface{}{"a": "aaa"},
 		},
 
-		// nil default, non-string default, string default
-		// func (builder *ContextBuilder) MergeDefaults(brokerVariables []broker.BrokerVariable) *ContextBuilder {
+		// MergeDefaults
 		"MergeDefaults no defaults": {
-			Builder:  Builder().MergeDefaults([]broker.BrokerVariable{{FieldName: "foo"}}),
+			Builder:  Builder().MergeDefaults([]DefaultVariable{{Name: "foo"}}),
 			Expected: map[string]interface{}{},
 		},
-
 		"MergeDefaults non-string": {
-			Builder:  Builder().MergeDefaults([]broker.BrokerVariable{{FieldName: "h2g2", Default: 42}}),
+			Builder:  Builder().MergeDefaults([]DefaultVariable{{Name: "h2g2", Default: 42}}),
 			Expected: map[string]interface{}{"h2g2": 42},
 		},
-
 		"MergeDefaults basic-string": {
-			Builder:  Builder().MergeDefaults([]broker.BrokerVariable{{FieldName: "a", Default: "no-template"}}),
+			Builder:  Builder().MergeDefaults([]DefaultVariable{{Name: "a", Default: "no-template"}}),
 			Expected: map[string]interface{}{"a": "no-template"},
 		},
-
 		"MergeDefaults template string": {
-			Builder:  Builder().MergeDefaults([]broker.BrokerVariable{{FieldName: "a", Default: "a"}, {FieldName: "b", Default: "${a}"}}),
+			Builder:  Builder().MergeDefaults([]DefaultVariable{{Name: "a", Default: "a"}, {Name: "b", Default: "${a}"}}),
 			Expected: map[string]interface{}{"a": "a", "b": "a"},
+		},
+		"MergeDefaults no-overwrite": {
+			Builder:  Builder().MergeDefaults([]DefaultVariable{{Name: "a", Default: "a"}, {Name: "a", Default: "b", Overwrite: false}}),
+			Expected: map[string]interface{}{"a": "a"},
+		},
+		"MergeDefaults overwrite": {
+			Builder:  Builder().MergeDefaults([]DefaultVariable{{Name: "a", Default: "a"}, {Name: "a", Default: "b", Overwrite: true}}),
+			Expected: map[string]interface{}{"a": "b"},
 		},
 
 		// MergeEvalResult

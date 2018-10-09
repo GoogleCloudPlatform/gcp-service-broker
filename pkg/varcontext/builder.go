@@ -18,13 +18,13 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext/interpolation"
+	multierror "github.com/hashicorp/go-multierror"
 )
 
 // ContextBuilder is a builder for VariableContexts.
 type ContextBuilder struct {
-	ErrorCollector
+	errors  *multierror.Error
 	context map[string]interface{}
 }
 
@@ -35,18 +35,30 @@ func Builder() *ContextBuilder {
 	}
 }
 
+// DefaultVariable holds a value that may or may not be evaluated.
+// If the value is a string then it will be evaluated.
+type DefaultVariable struct {
+	Name      string      `json:"name"`
+	Default   interface{} `json:"default"`
+	Overwrite bool        `json:"overwrite"`
+}
+
 // MergeDefaults gets the default values from the given BrokerVariables and
 // if they're a string, it tries to evaluet it in the built up context.
-func (builder *ContextBuilder) MergeDefaults(brokerVariables []broker.BrokerVariable) *ContextBuilder {
+func (builder *ContextBuilder) MergeDefaults(brokerVariables []DefaultVariable) *ContextBuilder {
 	for _, v := range brokerVariables {
 		if v.Default == nil {
 			continue
 		}
 
+		if _, exists := builder.context[v.Name]; exists && !v.Overwrite {
+			continue
+		}
+
 		if strVal, ok := v.Default.(string); ok {
-			builder.MergeEvalResult(v.FieldName, strVal)
+			builder.MergeEvalResult(v.Name, strVal)
 		} else {
-			builder.context[v.FieldName] = v.Default
+			builder.context[v.Name] = v.Default
 		}
 	}
 
@@ -58,7 +70,7 @@ func (builder *ContextBuilder) MergeDefaults(brokerVariables []broker.BrokerVari
 func (builder *ContextBuilder) MergeEvalResult(key, template string) *ContextBuilder {
 	result, err := interpolation.Eval(template, builder.context)
 	if err != nil {
-		builder.AddError(fmt.Errorf("couldn't compute the value for %q, template: %q, %v", key, template, err))
+		builder.errors = multierror.Append(fmt.Errorf("couldn't compute the value for %q, template: %q, %v", key, template, err))
 		return builder
 	}
 
@@ -85,7 +97,9 @@ func (builder *ContextBuilder) MergeJsonObject(data json.RawMessage) *ContextBui
 	}
 
 	out := map[string]interface{}{}
-	builder.AddError(json.Unmarshal(data, &out))
+	if err := json.Unmarshal(data, &out); err != nil {
+		builder.errors = multierror.Append(builder.errors, err)
+	}
 	builder.MergeMap(out)
 
 	return builder
@@ -94,8 +108,9 @@ func (builder *ContextBuilder) MergeJsonObject(data json.RawMessage) *ContextBui
 // Build generates a finalized VarContext based on the state of the builder.
 // Exactly one of VarContext and error will be nil.
 func (builder *ContextBuilder) Build() (*VarContext, error) {
-	if builder.HasErrors() {
-		return nil, builder.Error()
+	if builder.errors != nil {
+		builder.errors.ErrorFormat = lineErrorFormatter
+		return nil, builder.errors
 	}
 
 	return &VarContext{context: builder.context}, nil

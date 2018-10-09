@@ -46,7 +46,8 @@ func TestVarContext_GetString(t *testing.T) {
 			}
 
 			expectedErrors := tc.Error != ""
-			if vc.HasErrors() != expectedErrors {
+			hasError := vc.Error() != nil
+			if hasError != expectedErrors {
 				t.Error("Got error when not expecting or missing error that was expected")
 			}
 
@@ -84,7 +85,8 @@ func TestVarContext_GetInt(t *testing.T) {
 			}
 
 			expectedErrors := tc.Error != ""
-			if vc.HasErrors() != expectedErrors {
+			hasError := vc.Error() != nil
+			if hasError != expectedErrors {
 				t.Errorf("Got error when not expecting or missing error that was expected: %v", vc.Error())
 			}
 
