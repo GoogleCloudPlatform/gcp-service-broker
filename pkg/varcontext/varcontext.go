@@ -49,18 +49,21 @@ func (vc *VarContext) GetString(key string) string {
 		return err
 	})
 
-	return cast.ToString(vc.context[key])
+	return res
 }
 
 // GetInt gets an integer from the context, storing an error if the key doesn't
 // exist or the variable couldn't be converted to an int.
 func (vc *VarContext) GetInt(key string) int {
+	var res int
+	var err error
+
 	vc.validate(key, "integer", func(val interface{}) error {
-		_, err := cast.ToIntE(val)
+		res, err = cast.ToIntE(val)
 		return err
 	})
 
-	return cast.ToInt(vc.context[key])
+	return res
 }
 
 // ToMap gets the underlying map representaiton of the variable context.
