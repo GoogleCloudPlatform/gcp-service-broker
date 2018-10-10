@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unresolved]
 
+### Added
+- Pub/Sub now adds default labels to created topics and subscriptions.
+- New validation documentation for Pub/Sub.
+
 ## [4.0.0] - 2018-10-01
 
 ### Added
