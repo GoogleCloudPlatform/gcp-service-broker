@@ -96,3 +96,52 @@ func TestVarContext_GetInt(t *testing.T) {
 		})
 	}
 }
+
+func TestVarContext_GetBool(t *testing.T) {
+	// The following tests operate on the following example map
+	testContext := map[string]interface{}{
+		"anInt":   42,
+		"zero":    0,
+		"tsBool":  "true",
+		"fsBool":  "false",
+		"tBool":   true,
+		"fBool":   false,
+		"aString": "value",
+	}
+
+	tests := map[string]struct {
+		Key      string
+		Expected bool
+		Error    string
+	}{
+		"true bool":         {"tBool", true, ""},
+		"false bool":        {"fBool", false, ""},
+		"true string bool":  {"tsBool", true, ""},
+		"false string bool": {"fsBool", false, ""},
+		"int":               {"anInt", true, ""},
+		"zero":              {"zero", false, ""},
+		"string":            {"aString", false, `value for "aString" must be a boolean`},
+		"missing key":       {"DNE", false, `missing value for key "DNE"`},
+	}
+
+	for tn, tc := range tests {
+		t.Run(tn, func(t *testing.T) {
+			vc := &VarContext{context: testContext}
+
+			result := vc.GetBool(tc.Key)
+			if result != tc.Expected {
+				t.Errorf("Expected to get: %v actual: %v", tc.Expected, result)
+			}
+
+			expectedErrors := tc.Error != ""
+			hasError := vc.Error() != nil
+			if hasError != expectedErrors {
+				t.Errorf("Got error when not expecting or missing error that was expected: %v", vc.Error())
+			}
+
+			if tc.Error != "" && !strings.Contains(vc.Error().Error(), tc.Error) {
+				t.Errorf("Expected error to contain %q, but got: %v", tc.Error, vc.Error())
+			}
+		})
+	}
+}

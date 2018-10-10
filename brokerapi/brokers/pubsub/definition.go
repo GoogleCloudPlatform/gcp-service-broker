@@ -16,8 +16,13 @@ package pubsub
 
 import "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 import accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+import "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 
 func init() {
+	broker.Register(serviceDefinition())
+}
+
+func serviceDefinition() *broker.BrokerService {
 	roleWhitelist := []string{
 		"pubsub.publisher",
 		"pubsub.subscriber",
@@ -25,7 +30,7 @@ func init() {
 		"pubsub.editor",
 	}
 
-	bs := &broker.BrokerService{
+	return &broker.BrokerService{
 		Name: "google-pubsub",
 		DefaultServiceDefinition: `{
       "id": "628629e3-79f5-4255-b981-d14c6c7856be",
@@ -56,25 +61,39 @@ func init() {
 			{
 				FieldName: "topic_name",
 				Type:      broker.JsonTypeString,
-				Details:   "Name of the topic.",
-				Default:   "a generated value",
+				Details:   `Name of the topic. Must not start with "goog".`,
+				Default:   "pcf_sb_${counter.next()}_${time.nano()}",
+				Constraints: validation.NewConstraintBuilder().
+					MinLength(3).
+					MaxLength(255).
+					Pattern(`^[a-zA-Z][a-zA-Z0-9\d\-_~%\.\+]+$`). // adapted from the Pub/Sub create topic page's validator
+					Build(),
 			},
 			{
-				Required:  true,
 				FieldName: "subscription_name",
 				Type:      broker.JsonTypeString,
-				Details:   `Name of the subscription.`,
+				Details:   `Name of the subscription. Blank means no subscription will be created. Must not start with "goog".`,
+				Default:   "",
+				Constraints: validation.NewConstraintBuilder().
+					MinLength(3).
+					MaxLength(255).
+					Pattern(`^[a-zA-Z][a-zA-Z0-9\d\-_~%\.\+]+`). // adapted from the Pub/Sub create subscription page's validator
+					Build(),
 			},
 			{
 				FieldName: "is_push",
 				Type:      broker.JsonTypeString,
 				Details:   `Are events handled by POSTing to a URL?`,
 				Default:   "false",
+				Enum: map[interface{}]string{
+					"true":  "The subscription will POST the events to a URL.",
+					"false": "Events will be pulled from the subscription.",
+				},
 			},
 			{
 				FieldName: "endpoint",
 				Type:      broker.JsonTypeString,
-				Details:   "If `is_push` == 'true', then this is the URL that will be pused to.",
+				Details:   "If `is_push` == 'true', then this is the URL that will be pushed to.",
 				Default:   "",
 			},
 			{
@@ -118,8 +137,30 @@ again during that time (on a best-effort basis).
 					"role": "pubsub.publisher",
 				},
 			},
+			{
+				Name:        "No Subscription",
+				Description: "Create a topic without a subscription.",
+				PlanId:      "622f4da3-8731-492a-af29-66a9146f8333",
+				ProvisionParams: map[string]interface{}{
+					"topic_name": "example_topic",
+				},
+				BindParams: map[string]interface{}{
+					"role": "pubsub.publisher",
+				},
+			},
+			{
+				Name:        "Custom Timeout",
+				Description: "Create a subscription with a custom deadline for long processess.",
+				PlanId:      "622f4da3-8731-492a-af29-66a9146f8333",
+				ProvisionParams: map[string]interface{}{
+					"topic_name":        "long_deadline_topic",
+					"subscription_name": "long_deadline_subscription",
+					"ack_deadline":      "200",
+				},
+				BindParams: map[string]interface{}{
+					"role": "pubsub.publisher",
+				},
+			},
 		},
 	}
-
-	broker.Register(bs)
 }

@@ -61,6 +61,19 @@ func (vc *VarContext) GetInt(key string) (res int) {
 	return
 }
 
+// GetBool gets a boolean from the context, storing an error if the key doesn't
+// exist or the variable couldn't be converted to a bool.
+// Integers can behave like bools in C style, 0 is false.
+// The strings "true" and "false" are also cast to their bool values.
+func (vc *VarContext) GetBool(key string) (res bool) {
+	vc.validate(key, "boolean", func(val interface{}) (err error) {
+		res, err = cast.ToBoolE(val)
+		return err
+	})
+
+	return
+}
+
 // ToMap gets the underlying map representaiton of the variable context.
 func (vc *VarContext) ToMap() map[string]interface{} {
 	output := make(map[string]interface{})
