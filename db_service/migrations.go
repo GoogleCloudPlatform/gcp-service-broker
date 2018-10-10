@@ -142,7 +142,6 @@ func RunMigrations(db *gorm.DB) error {
 	}
 
 	migrations[3] = func() error {
-		fmt.Errorf("Upgrading service instance details")
 		return autoMigrateTables(db, &models.ServiceInstanceDetailsV2{})
 	}
 
