@@ -41,29 +41,24 @@ func (vc *VarContext) validate(key, typeName string, validator func(interface{})
 
 // GetString gets a string from the context, storing an error if the key doesn't
 // exist or the variable couldn't be converted to a string.
-func (vc *VarContext) GetString(key string) string {
-	var res string
-	var err error
-	vc.validate(key, "string", func(val interface{}) error {
+func (vc *VarContext) GetString(key string) (res string) {
+	vc.validate(key, "string", func(val interface{}) (err error) {
 		res, err = cast.ToStringE(val)
 		return err
 	})
 
-	return res
+	return
 }
 
 // GetInt gets an integer from the context, storing an error if the key doesn't
 // exist or the variable couldn't be converted to an int.
-func (vc *VarContext) GetInt(key string) int {
-	var res int
-	var err error
-
-	vc.validate(key, "integer", func(val interface{}) error {
+func (vc *VarContext) GetInt(key string) (res int) {
+	vc.validate(key, "integer", func(val interface{}) (err error) {
 		res, err = cast.ToIntE(val)
 		return err
 	})
 
-	return res
+	return
 }
 
 // ToMap gets the underlying map representaiton of the variable context.
