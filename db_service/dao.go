@@ -80,100 +80,6 @@ func (ds *SqlDatastore) CheckDeletedServiceInstanceDetailsById(ctx context.Conte
 
 
 
-// CountCloudOperationByServiceInstanceId gets the count of CloudOperation by its key (serviceInstanceId) in the datastore (0 or 1)
-func CountCloudOperationByServiceInstanceId(ctx context.Context, serviceInstanceId string) (int, error) { return defaultDatastore().CountCloudOperationByServiceInstanceId(ctx, serviceInstanceId) }
-func (ds *SqlDatastore) CountCloudOperationByServiceInstanceId(ctx context.Context, serviceInstanceId string) (int, error) {
-	var count int
-	err := ds.db.Model(&models.CloudOperation{}).Where("service_instance_id = ?", serviceInstanceId).Count(&count).Error
-	return count, err
-}
-
-
-// CountCloudOperationById gets the count of CloudOperation by its key (id) in the datastore (0 or 1)
-func CountCloudOperationById(ctx context.Context, id uint) (int, error) { return defaultDatastore().CountCloudOperationById(ctx, id) }
-func (ds *SqlDatastore) CountCloudOperationById(ctx context.Context, id uint) (int, error) {
-	var count int
-	err := ds.db.Model(&models.CloudOperation{}).Where("id = ?", id).Count(&count).Error
-	return count, err
-}
-
-// CreateCloudOperation creates a new record in the database and assigns it a primary key.
-func CreateCloudOperation(ctx context.Context, object *models.CloudOperation) error { return defaultDatastore().CreateCloudOperation(ctx, object) }
-func (ds *SqlDatastore) CreateCloudOperation(ctx context.Context, object *models.CloudOperation) error {
-	return ds.db.Create(object).Error
-}
-
-// SaveCloudOperation updates an existing record in the database.
-func SaveCloudOperation(ctx context.Context, object *models.CloudOperation) error { return defaultDatastore().SaveCloudOperation(ctx, object) }
-func (ds *SqlDatastore) SaveCloudOperation(ctx context.Context, object *models.CloudOperation) error {
-	return ds.db.Save(object).Error
-}
-// DeleteCloudOperationByServiceInstanceId soft-deletes the record by its key (serviceInstanceId).
-func DeleteCloudOperationByServiceInstanceId(ctx context.Context, serviceInstanceId string) error { return defaultDatastore().DeleteCloudOperationByServiceInstanceId(ctx, serviceInstanceId) }
-func (ds *SqlDatastore) DeleteCloudOperationByServiceInstanceId(ctx context.Context, serviceInstanceId string) error {
-	return ds.db.Where("service_instance_id = ?", serviceInstanceId).Delete(&models.CloudOperation{}).Error
-}
-
-// DeleteCloudOperationById soft-deletes the record by its key (id).
-func DeleteCloudOperationById(ctx context.Context, id uint) error { return defaultDatastore().DeleteCloudOperationById(ctx, id) }
-func (ds *SqlDatastore) DeleteCloudOperationById(ctx context.Context, id uint) error {
-	return ds.db.Where("id = ?", id).Delete(&models.CloudOperation{}).Error
-}
-
-
-
-// DeleteCloudOperation soft-deletes the record.
-func DeleteCloudOperation(ctx context.Context, record *models.CloudOperation) error { return defaultDatastore().DeleteCloudOperation(ctx, record) }
-func (ds *SqlDatastore) DeleteCloudOperation(ctx context.Context, record *models.CloudOperation) error {
-	return ds.db.Delete(record).Error
-}
-// GetCloudOperationByServiceInstanceId gets an instance of CloudOperation by its key (serviceInstanceId).
-func GetCloudOperationByServiceInstanceId(ctx context.Context, serviceInstanceId string) (*models.CloudOperation, error) { return defaultDatastore().GetCloudOperationByServiceInstanceId(ctx, serviceInstanceId) }
-func (ds *SqlDatastore) GetCloudOperationByServiceInstanceId(ctx context.Context, serviceInstanceId string) (*models.CloudOperation, error) {
-	record := models.CloudOperation{}
-	if err := ds.db.Where("service_instance_id = ?", serviceInstanceId).First(&record).Error; err != nil {
-		return nil, err
-	}
-
-	return &record, nil
-}
-
-// CheckDeletedCloudOperationByServiceInstanceId checks to see if an instance of CloudOperation was soft deleted by its key (serviceInstanceId).
-func CheckDeletedCloudOperationByServiceInstanceId(ctx context.Context, serviceInstanceId string) (bool, error) { return defaultDatastore().CheckDeletedCloudOperationByServiceInstanceId(ctx, serviceInstanceId) }
-func (ds *SqlDatastore) CheckDeletedCloudOperationByServiceInstanceId(ctx context.Context, serviceInstanceId string) (bool, error) {
-	record := models.CloudOperation{}
-	if err := ds.db.Unscoped().Where("service_instance_id = ?", serviceInstanceId).First(&record).Error; err != nil {
-		return false, err
-	}
-
-	return record.DeletedAt != nil, nil
-}
-
-// GetCloudOperationById gets an instance of CloudOperation by its key (id).
-func GetCloudOperationById(ctx context.Context, id uint) (*models.CloudOperation, error) { return defaultDatastore().GetCloudOperationById(ctx, id) }
-func (ds *SqlDatastore) GetCloudOperationById(ctx context.Context, id uint) (*models.CloudOperation, error) {
-	record := models.CloudOperation{}
-	if err := ds.db.Where("id = ?", id).First(&record).Error; err != nil {
-		return nil, err
-	}
-
-	return &record, nil
-}
-
-// CheckDeletedCloudOperationById checks to see if an instance of CloudOperation was soft deleted by its key (id).
-func CheckDeletedCloudOperationById(ctx context.Context, id uint) (bool, error) { return defaultDatastore().CheckDeletedCloudOperationById(ctx, id) }
-func (ds *SqlDatastore) CheckDeletedCloudOperationById(ctx context.Context, id uint) (bool, error) {
-	record := models.CloudOperation{}
-	if err := ds.db.Unscoped().Where("id = ?", id).First(&record).Error; err != nil {
-		return false, err
-	}
-
-	return record.DeletedAt != nil, nil
-}
-
-
-
-
 // CountServiceBindingCredentialsByServiceInstanceIdAndBindingId gets the count of ServiceBindingCredentials by its key (serviceInstanceId, bindingId) in the datastore (0 or 1)
 func CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx context.Context, serviceInstanceId string, bindingId string) (int, error) { return defaultDatastore().CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, serviceInstanceId, bindingId) }
 func (ds *SqlDatastore) CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx context.Context, serviceInstanceId string, bindingId string) (int, error) {
@@ -305,15 +211,6 @@ func (ds *SqlDatastore) CheckDeletedServiceBindingCredentialsById(ctx context.Co
 
 
 
-// CountProvisionRequestDetailsByServiceInstanceId gets the count of ProvisionRequestDetails by its key (serviceInstanceId) in the datastore (0 or 1)
-func CountProvisionRequestDetailsByServiceInstanceId(ctx context.Context, serviceInstanceId string) (int, error) { return defaultDatastore().CountProvisionRequestDetailsByServiceInstanceId(ctx, serviceInstanceId) }
-func (ds *SqlDatastore) CountProvisionRequestDetailsByServiceInstanceId(ctx context.Context, serviceInstanceId string) (int, error) {
-	var count int
-	err := ds.db.Model(&models.ProvisionRequestDetails{}).Where("service_instance_id = ?", serviceInstanceId).Count(&count).Error
-	return count, err
-}
-
-
 // CountProvisionRequestDetailsById gets the count of ProvisionRequestDetails by its key (id) in the datastore (0 or 1)
 func CountProvisionRequestDetailsById(ctx context.Context, id uint) (int, error) { return defaultDatastore().CountProvisionRequestDetailsById(ctx, id) }
 func (ds *SqlDatastore) CountProvisionRequestDetailsById(ctx context.Context, id uint) (int, error) {
@@ -333,12 +230,6 @@ func SaveProvisionRequestDetails(ctx context.Context, object *models.ProvisionRe
 func (ds *SqlDatastore) SaveProvisionRequestDetails(ctx context.Context, object *models.ProvisionRequestDetails) error {
 	return ds.db.Save(object).Error
 }
-// DeleteProvisionRequestDetailsByServiceInstanceId soft-deletes the record by its key (serviceInstanceId).
-func DeleteProvisionRequestDetailsByServiceInstanceId(ctx context.Context, serviceInstanceId string) error { return defaultDatastore().DeleteProvisionRequestDetailsByServiceInstanceId(ctx, serviceInstanceId) }
-func (ds *SqlDatastore) DeleteProvisionRequestDetailsByServiceInstanceId(ctx context.Context, serviceInstanceId string) error {
-	return ds.db.Where("service_instance_id = ?", serviceInstanceId).Delete(&models.ProvisionRequestDetails{}).Error
-}
-
 // DeleteProvisionRequestDetailsById soft-deletes the record by its key (id).
 func DeleteProvisionRequestDetailsById(ctx context.Context, id uint) error { return defaultDatastore().DeleteProvisionRequestDetailsById(ctx, id) }
 func (ds *SqlDatastore) DeleteProvisionRequestDetailsById(ctx context.Context, id uint) error {
@@ -352,28 +243,6 @@ func DeleteProvisionRequestDetails(ctx context.Context, record *models.Provision
 func (ds *SqlDatastore) DeleteProvisionRequestDetails(ctx context.Context, record *models.ProvisionRequestDetails) error {
 	return ds.db.Delete(record).Error
 }
-// GetProvisionRequestDetailsByServiceInstanceId gets an instance of ProvisionRequestDetails by its key (serviceInstanceId).
-func GetProvisionRequestDetailsByServiceInstanceId(ctx context.Context, serviceInstanceId string) (*models.ProvisionRequestDetails, error) { return defaultDatastore().GetProvisionRequestDetailsByServiceInstanceId(ctx, serviceInstanceId) }
-func (ds *SqlDatastore) GetProvisionRequestDetailsByServiceInstanceId(ctx context.Context, serviceInstanceId string) (*models.ProvisionRequestDetails, error) {
-	record := models.ProvisionRequestDetails{}
-	if err := ds.db.Where("service_instance_id = ?", serviceInstanceId).First(&record).Error; err != nil {
-		return nil, err
-	}
-
-	return &record, nil
-}
-
-// CheckDeletedProvisionRequestDetailsByServiceInstanceId checks to see if an instance of ProvisionRequestDetails was soft deleted by its key (serviceInstanceId).
-func CheckDeletedProvisionRequestDetailsByServiceInstanceId(ctx context.Context, serviceInstanceId string) (bool, error) { return defaultDatastore().CheckDeletedProvisionRequestDetailsByServiceInstanceId(ctx, serviceInstanceId) }
-func (ds *SqlDatastore) CheckDeletedProvisionRequestDetailsByServiceInstanceId(ctx context.Context, serviceInstanceId string) (bool, error) {
-	record := models.ProvisionRequestDetails{}
-	if err := ds.db.Unscoped().Where("service_instance_id = ?", serviceInstanceId).First(&record).Error; err != nil {
-		return false, err
-	}
-
-	return record.DeletedAt != nil, nil
-}
-
 // GetProvisionRequestDetailsById gets an instance of ProvisionRequestDetails by its key (id).
 func GetProvisionRequestDetailsById(ctx context.Context, id uint) (*models.ProvisionRequestDetails, error) { return defaultDatastore().GetProvisionRequestDetailsById(ctx, id) }
 func (ds *SqlDatastore) GetProvisionRequestDetailsById(ctx context.Context, id uint) (*models.ProvisionRequestDetails, error) {

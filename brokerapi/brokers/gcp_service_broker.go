@@ -369,15 +369,13 @@ func (gcpBroker *GCPServiceBroker) LastOperation(ctx context.Context, instanceID
 	service := gcpBroker.ServiceBrokerMap[instance.ServiceId]
 	isAsyncService := service.ProvisionsAsync() || service.DeprovisionsAsync()
 
-	if isAsyncService {
-		return gcpBroker.lastOperationAsync(ctx, instanceID, service)
+	if !isAsyncService {
+		return brokerapi.LastOperation{}, brokerapi.ErrAsyncRequired
 	}
 
-	return brokerapi.LastOperation{}, brokerapi.ErrAsyncRequired
-}
+	lastOperationType := instance.OperationType
 
-func (gcpBroker *GCPServiceBroker) lastOperationAsync(ctx context.Context, instanceId string, service models.ServiceBrokerHelper) (brokerapi.LastOperation, error) {
-	done, err := service.PollInstance(ctx, instanceId)
+	done, err := service.PollInstance(ctx, instanceID)
 	if err != nil {
 		// this is a retryable error
 		if gerr, ok := err.(*googleapi.Error); ok {
@@ -394,13 +392,8 @@ func (gcpBroker *GCPServiceBroker) lastOperationAsync(ctx context.Context, insta
 	}
 
 	// no error and we're done! Delete from the SB database if this was a delete flow and return success
-	deleteFlow, err := service.LastOperationWasDelete(ctx, instanceId)
-	if err != nil {
-		return brokerapi.LastOperation{State: brokerapi.Succeeded}, fmt.Errorf("Couldn't determine if provision or deprovision flow, this may leave orphaned resources, contact your operator for cleanup: %s", err)
-	}
-	if deleteFlow {
-		err = db_service.DeleteServiceInstanceDetailsById(ctx, instanceId)
-		if err != nil {
+	if lastOperationType == models.DeprovisionOperationType {
+		if err := db_service.DeleteServiceInstanceDetailsById(ctx, instanceID); err != nil {
 			return brokerapi.LastOperation{State: brokerapi.Succeeded}, fmt.Errorf("Error deleting instance details from database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup", err)
 		}
 	}

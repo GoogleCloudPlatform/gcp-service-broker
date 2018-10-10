@@ -173,15 +173,6 @@ func (s *SpannerBroker) qualifiedInstanceName(instanceName string) string {
 	return fmt.Sprintf("projects/%s/instances/%s", s.ProjectId, instanceName)
 }
 
-// LastOperationWasDelete is used during polling of async operations to check
-// if the workflow is a provision or deprovision flow based off the type of the
-// most recent operation
-// since spanner deprovisions synchronously, the last operation will never have
-// been delete
-func (s *SpannerBroker) LastOperationWasDelete(ctx context.Context, instanceId string) (bool, error) {
-	return false, nil
-}
-
 func (s *SpannerBroker) createAdminClient(ctx context.Context) (*googlespanner.InstanceAdminClient, error) {
 	co := option.WithUserAgent(models.CustomUserAgent)
 	ct := option.WithTokenSource(s.HttpConfig.TokenSource(ctx))

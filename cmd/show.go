@@ -40,7 +40,7 @@ func init() {
 	addDumpTableCommand(showCmd, "bindings", &[]models.ServiceBindingCredentials{})
 	addDumpTableCommand(showCmd, "instances", &[]models.ServiceInstanceDetails{})
 	addDumpTableCommand(showCmd, "migrations", &[]models.Migration{})
-	addDumpTableCommand(showCmd, "operations", &[]models.CloudOperation{})
+	addDumpTableCommand(showCmd, "operations", &[]models.CloudOperationV1{})
 	addDumpTableCommand(showCmd, "provisions", &[]models.ProvisionRequestDetails{})
 }
 

@@ -96,20 +96,6 @@ type FakeServiceBrokerHelper struct {
 		result1 bool
 		result2 error
 	}
-	LastOperationWasDeleteStub        func(ctx context.Context, instanceID string) (bool, error)
-	lastOperationWasDeleteMutex       sync.RWMutex
-	lastOperationWasDeleteArgsForCall []struct {
-		ctx        context.Context
-		instanceID string
-	}
-	lastOperationWasDeleteReturns struct {
-		result1 bool
-		result2 error
-	}
-	lastOperationWasDeleteReturnsOnCall map[int]struct {
-		result1 bool
-		result2 error
-	}
 	ProvisionsAsyncStub        func() bool
 	provisionsAsyncMutex       sync.RWMutex
 	provisionsAsyncArgsForCall []struct{}
@@ -444,58 +430,6 @@ func (fake *FakeServiceBrokerHelper) PollInstanceReturnsOnCall(i int, result1 bo
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) LastOperationWasDelete(ctx context.Context, instanceID string) (bool, error) {
-	fake.lastOperationWasDeleteMutex.Lock()
-	ret, specificReturn := fake.lastOperationWasDeleteReturnsOnCall[len(fake.lastOperationWasDeleteArgsForCall)]
-	fake.lastOperationWasDeleteArgsForCall = append(fake.lastOperationWasDeleteArgsForCall, struct {
-		ctx        context.Context
-		instanceID string
-	}{ctx, instanceID})
-	fake.recordInvocation("LastOperationWasDelete", []interface{}{ctx, instanceID})
-	fake.lastOperationWasDeleteMutex.Unlock()
-	if fake.LastOperationWasDeleteStub != nil {
-		return fake.LastOperationWasDeleteStub(ctx, instanceID)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.lastOperationWasDeleteReturns.result1, fake.lastOperationWasDeleteReturns.result2
-}
-
-func (fake *FakeServiceBrokerHelper) LastOperationWasDeleteCallCount() int {
-	fake.lastOperationWasDeleteMutex.RLock()
-	defer fake.lastOperationWasDeleteMutex.RUnlock()
-	return len(fake.lastOperationWasDeleteArgsForCall)
-}
-
-func (fake *FakeServiceBrokerHelper) LastOperationWasDeleteArgsForCall(i int) (context.Context, string) {
-	fake.lastOperationWasDeleteMutex.RLock()
-	defer fake.lastOperationWasDeleteMutex.RUnlock()
-	return fake.lastOperationWasDeleteArgsForCall[i].ctx, fake.lastOperationWasDeleteArgsForCall[i].instanceID
-}
-
-func (fake *FakeServiceBrokerHelper) LastOperationWasDeleteReturns(result1 bool, result2 error) {
-	fake.LastOperationWasDeleteStub = nil
-	fake.lastOperationWasDeleteReturns = struct {
-		result1 bool
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeServiceBrokerHelper) LastOperationWasDeleteReturnsOnCall(i int, result1 bool, result2 error) {
-	fake.LastOperationWasDeleteStub = nil
-	if fake.lastOperationWasDeleteReturnsOnCall == nil {
-		fake.lastOperationWasDeleteReturnsOnCall = make(map[int]struct {
-			result1 bool
-			result2 error
-		})
-	}
-	fake.lastOperationWasDeleteReturnsOnCall[i] = struct {
-		result1 bool
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *FakeServiceBrokerHelper) ProvisionsAsync() bool {
 	fake.provisionsAsyncMutex.Lock()
 	ret, specificReturn := fake.provisionsAsyncReturnsOnCall[len(fake.provisionsAsyncArgsForCall)]
@@ -591,8 +525,6 @@ func (fake *FakeServiceBrokerHelper) Invocations() map[string][][]interface{} {
 	defer fake.deprovisionMutex.RUnlock()
 	fake.pollInstanceMutex.RLock()
 	defer fake.pollInstanceMutex.RUnlock()
-	fake.lastOperationWasDeleteMutex.RLock()
-	defer fake.lastOperationWasDeleteMutex.RUnlock()
 	fake.provisionsAsyncMutex.RLock()
 	defer fake.provisionsAsyncMutex.RUnlock()
 	fake.deprovisionsAsyncMutex.RLock()

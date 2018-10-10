@@ -45,28 +45,6 @@ func main() {
 			},
 		},
 		{
-			Type:            "CloudOperation",
-			PrimaryKeyType:  "uint",
-			PrimaryKeyField: "id",
-			Keys: []fieldList{
-				{
-					{Type: "string", Column: "service_instance_id"},
-				},
-			},
-			ExampleFields: map[string]interface{}{
-				"Name":              "cloud-operation-name",
-				"Status":            "DELETED",
-				"OperationType":     "Delete",
-				"ErrorMessage":      "<empty>",
-				"InsertTime":        "1970-01-01T01:01:01Z",
-				"StartTime":         "1980-01-01T01:01:01Z",
-				"TargetId":          "some-uuid-here",
-				"TargetLink":        "https://cloud.google.com/my/target/instance",
-				"ServiceId":         "1111-1111-1111",
-				"ServiceInstanceId": "2222-2222-2222",
-			},
-		},
-		{
 			Type:            "ServiceBindingCredentials",
 			PrimaryKeyType:  "uint",
 			PrimaryKeyField: "id",
@@ -90,11 +68,6 @@ func main() {
 			Type:            "ProvisionRequestDetails",
 			PrimaryKeyType:  "uint",
 			PrimaryKeyField: "id",
-			Keys: []fieldList{
-				{
-					{Type: "string", Column: "service_instance_id"},
-				},
-			},
 			ExampleFields: map[string]interface{}{
 				"ServiceInstanceId": "2222-2222-2222",
 				"RequestDetails":    `{"some":["json","blob","here"]}`,

@@ -17,12 +17,10 @@
 package db_service
 
 import (
-	"context"
 	"fmt"
 	"sync"
 
 	"code.cloudfoundry.org/lager"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/jinzhu/gorm"
 
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
@@ -40,16 +38,6 @@ func New(logger lager.Logger) *gorm.DB {
 		}
 	})
 	return DbConnection
-}
-
-// GetLastOperation gets the most recently created cloud operation for a given service instance id.
-func GetLastOperation(ctx context.Context, instanceId string) (models.CloudOperation, error) {
-	var op models.CloudOperation
-
-	if err := DbConnection.Where("service_instance_id = ?", instanceId).Order("created_at desc").First(&op).Error; err != nil {
-		return models.CloudOperation{}, err
-	}
-	return op, nil
 }
 
 // defaultDatastore gets the default datastore for the given default database
