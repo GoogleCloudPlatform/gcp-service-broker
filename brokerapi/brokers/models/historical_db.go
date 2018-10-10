@@ -71,6 +71,42 @@ func (ServiceInstanceDetailsV1) TableName() string {
 	return "service_instance_details"
 }
 
+// ServiceInstanceDetailsV2 holds information about provisioned services.
+type ServiceInstanceDetailsV2 struct {
+	ID        string `gorm:"primary_key;type:varchar(255);not null"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
+
+	Name         string
+	Location     string
+	Url          string
+	OtherDetails string `gorm:"type:text"`
+
+	ServiceId        string
+	PlanId           string
+	SpaceGuid        string
+	OrganizationGuid string
+
+	// OperationType holds a string corresponding to what kind of operation
+	// OperationId is referencing. The object is "locked" for editing if
+	// an operation is pending.
+	OperationType string
+
+	// OperationId holds a string referencing an operation specific to a broker.
+	// Operations in GCP all have a unique ID.
+	// The OperationId will be cleared after a successful operation.
+	// This string MAY be sent to users and MUST NOT leak confidential information.
+	OperationId string `gorm:"type:varchar(1024)"`
+}
+
+// TableName returns a consistent table name (`service_instance_details`) for
+// gorm so multiple structs from different versions of the database all operate
+// on the same table.
+func (ServiceInstanceDetailsV2) TableName() string {
+	return "service_instance_details"
+}
+
 // ProvisionRequestDetailsV1 holds user-defined properties passed to a call
 // to provision a service.
 type ProvisionRequestDetailsV1 struct {

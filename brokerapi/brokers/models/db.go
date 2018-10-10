@@ -18,6 +18,17 @@ import (
 	"encoding/json"
 )
 
+const (
+	// The following operation types are used as part of the OSB process.
+	// The types correspond to asynchronous provision/deprovision/update calls
+	// and will exist on a ServiceInstanceDetails with an operation ID that can be
+	// used to look up the state of an operation.
+	ProvisionOperationType   = "provision"
+	DeprovisionOperationType = "deprovision"
+	UpdateOperationType      = "update"
+	ClearOperationType       = ""
+)
+
 // ServiceBindingCredentials holds credentials returned to the users after
 // binding to a service.
 type ServiceBindingCredentials ServiceBindingCredentialsV1
@@ -30,8 +41,8 @@ func (sbc ServiceBindingCredentials) GetOtherDetails() (map[string]string, error
 	return creds, err
 }
 
-// ServiceInstanceDetails holds information about provisioned services 
-type ServiceInstanceDetails ServiceInstanceDetailsV1
+// ServiceInstanceDetails holds information about provisioned services
+type ServiceInstanceDetails ServiceInstanceDetailsV2
 
 // GetOtherDetails returns an unmarshaled version of the OtherDetails field
 // or errors.
