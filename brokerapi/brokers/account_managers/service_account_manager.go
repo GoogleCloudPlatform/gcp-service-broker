@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -133,11 +134,12 @@ func (sam *ServiceAccountManager) DeleteCredentials(ctx context.Context, binding
 		return fmt.Errorf("Error creating IAM service: %s", err)
 	}
 	saService := iam.NewProjectsServiceAccountsService(iamService)
+	resourceName := projectResourcePrefix + sam.ProjectId + "/serviceAccounts/" + saCreds.UniqueId
+	if _, err = saService.Delete(resourceName).Do(); err != nil {
+		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
+			return nil
+		}
 
-	var resourceName = projectResourcePrefix + sam.ProjectId + "/serviceAccounts/" + saCreds.UniqueId
-
-	_, err = saService.Delete(resourceName).Do()
-	if err != nil {
 		return fmt.Errorf("error deleting service account: %s", err)
 	}
 	return nil
