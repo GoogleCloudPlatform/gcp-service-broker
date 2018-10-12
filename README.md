@@ -35,7 +35,8 @@ If you're upgrading, check the [upgrade guide](https://github.com/GoogleCloudPla
 For operators: see [docs/customization.md](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/customization.md) for details about configuring the service broker.
 
 For developers: see [docs/use.md](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/use.md) for information about creating and binding specific GCP services with the broker.
-See the [examples](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/examples/) folder to understand how to use services once they are created and bound.
+Complete Spring Boot sample applications which use services can be found in the [service-broker-samples repository](https://github.com/GoogleCloudPlatform/service-broker-samples).
+
 
 ## Commands
 
