@@ -21,6 +21,10 @@ import (
 )
 
 func init() {
+	broker.Register(serviceDefinition())
+}
+
+func serviceDefinition() *broker.BrokerService {
 	roleWhitelist := []string{
 		"bigquery.dataViewer",
 		"bigquery.dataEditor",
@@ -29,7 +33,7 @@ func init() {
 		"bigquery.jobUser",
 	}
 
-	bs := &broker.BrokerService{
+	return &broker.BrokerService{
 		Name: "google-bigquery",
 		DefaultServiceDefinition: `{
         "id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
@@ -61,7 +65,7 @@ func init() {
 				FieldName: "name",
 				Type:      broker.JsonTypeString,
 				Details:   "The name of the BigQuery dataset.",
-				Default:   "a generated value",
+				Default:   "pcf_sb_${counter.next()}_${time.nano()}",
 				Constraints: validation.NewConstraintBuilder().
 					Pattern("^[A-Za-z0-9_]+$").
 					MaxLength(1024).
@@ -101,6 +105,4 @@ func init() {
 			},
 		},
 	}
-
-	broker.Register(bs)
 }

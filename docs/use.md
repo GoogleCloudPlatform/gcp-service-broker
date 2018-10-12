@@ -15,7 +15,7 @@ A fast, economical and fully managed data warehouse for large-scale data analyti
 **Request Parameters**
 
 
- * `name` _string_ - The name of the BigQuery dataset. Default: `a generated value`.
+ * `name` _string_ - The name of the BigQuery dataset. Default: `pcf_sb_${counter.next()}_${time.nano()}`.
     * The string must have at most 1024 characters.
     * The string must match the regular expression `^[A-Za-z0-9_]+$`.
  * `location` _string_ - The location of the BigQuery instance. Default: `US`.

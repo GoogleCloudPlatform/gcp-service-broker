@@ -22,7 +22,9 @@ import (
 	"strings"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/viper"
 )
 
@@ -100,14 +102,16 @@ func GetServiceById(id string) (*BrokerService, error) {
 }
 
 type BrokerService struct {
-	Name                     string
-	DefaultServiceDefinition string
-	ProvisionInputVariables  []BrokerVariable
-	BindInputVariables       []BrokerVariable
-	BindOutputVariables      []BrokerVariable
-	PlanVariables            []BrokerVariable
-	Examples                 []ServiceExample
-	DefaultRoleWhitelist     []string
+	Name                       string
+	DefaultServiceDefinition   string
+	ProvisionInputVariables    []BrokerVariable
+	ProvisionComputedVariables []varcontext.DefaultVariable
+	BindInputVariables         []BrokerVariable
+	BindOutputVariables        []BrokerVariable
+	BindComputedVariables      []varcontext.DefaultVariable
+	PlanVariables              []BrokerVariable
+	Examples                   []ServiceExample
+	DefaultRoleWhitelist       []string
 }
 
 // EnabledProperty computes the Viper property name for the boolean the user
@@ -289,4 +293,40 @@ func (svc *BrokerService) ServiceDefinition() (*models.Service, error) {
 		return nil, fmt.Errorf("Error parsing service definition for %q: %s", svc.Name, err)
 	}
 	return &defn, err
+}
+
+func (svc *BrokerService) provisionDefaults() []varcontext.DefaultVariable {
+	var out []varcontext.DefaultVariable
+	for _, provisionVar := range svc.ProvisionInputVariables {
+		out = append(out, varcontext.DefaultVariable{Name: provisionVar.FieldName, Default: provisionVar.Default, Overwrite: false})
+	}
+	return out
+}
+
+// ProvisionVariables gets the variable resolution context for a provision request.
+// Variables have a very specific resolution order, and this function populates the context to preserve that.
+// The variable resolution order is the following:
+//
+// 1. Variables defined in your `computed_variables` JSON list.
+// 2. Variables defined by the selected service plan in its `service_properties` map.
+// 3. User defined variables (in `provision_input_variables` or `bind_input_variables`)
+// 4. (eventually) Operator default variables loaded from the environment.
+// 5. Default variables (in `provision_input_variables` or `bind_input_variables`).
+//
+// Loading into the map occurs slightly differently.
+// Default variables and computed_variables get executed by interpolation.
+// User defined varaibles are not to prevent side-channel attacks.
+// Default variables may reference user provided variables.
+// For example, to create a default database name based on a user-provided instance name.
+// Therefore, they get executed conditionally if a user-provided variable does not exist.
+// Computed variables get executed either unconditionally or conditionally for greater flexibility.
+func (svc *BrokerService) ProvisionVariables(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (*varcontext.VarContext, error) {
+	defaults := svc.provisionDefaults()
+
+	return varcontext.Builder().
+		MergeJsonObject(details.GetRawParameters()).
+		MergeDefaults(defaults).
+		MergeMap(plan.GetServiceProperties()).
+		MergeDefaults(svc.ProvisionComputedVariables).
+		Build()
 }

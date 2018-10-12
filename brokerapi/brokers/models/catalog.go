@@ -45,3 +45,13 @@ type ServicePlan struct {
 
 	ServiceProperties map[string]string `json:"service_properties"`
 }
+
+// GetServiceProperties gets the plan settings variables as a string->interface map.
+func (sp *ServicePlan) GetServiceProperties() map[string]interface{} {
+	props := make(map[string]interface{})
+	for k, v := range sp.ServiceProperties {
+		props[k] = v
+	}
+
+	return props
+}

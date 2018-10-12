@@ -15,9 +15,14 @@
 package broker
 
 import (
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"testing"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/viper"
 )
 
@@ -321,4 +326,104 @@ func TestBrokerService_CatalogEntry(t *testing.T) {
 
 	viper.Set(service.DefinitionProperty(), nil)
 	viper.Set(service.UserDefinedPlansProperty(), nil)
+}
+
+func TestBrokerService_ProvisionVariables(t *testing.T) {
+	service := BrokerService{
+		Name: "left-handed-smoke-sifter",
+		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
+		ProvisionInputVariables: []BrokerVariable{
+			{
+				FieldName: "location",
+				Type:      JsonTypeString,
+				Default:   "us",
+			},
+			{
+				FieldName: "name",
+				Type:      JsonTypeString,
+				Default:   "name-${location}",
+			},
+		},
+		ProvisionComputedVariables: []varcontext.DefaultVariable{
+			{
+				Name:      "location",
+				Default:   "${str.truncate(10, location)}",
+				Overwrite: true,
+			},
+			{
+				Name:      "maybe-missing",
+				Default:   "default",
+				Overwrite: false,
+			},
+		},
+	}
+
+	cases := map[string]struct {
+		UserParams        string
+		ServiceProperties map[string]string
+		ExpectedContext   map[string]interface{}
+	}{
+		"empty": {
+			UserParams:        "",
+			ServiceProperties: map[string]string{},
+			ExpectedContext: map[string]interface{}{
+				"location":      "us",
+				"name":          "name-us",
+				"maybe-missing": "default",
+			},
+		},
+		"service has missing param": {
+			UserParams:        "",
+			ServiceProperties: map[string]string{"maybe-missing": "custom"},
+			ExpectedContext: map[string]interface{}{
+				"location":      "us",
+				"name":          "name-us",
+				"maybe-missing": "custom",
+			},
+		},
+		"location gets truncated": {
+			UserParams:        `{"location": "averylonglocation"}`,
+			ServiceProperties: map[string]string{},
+			ExpectedContext: map[string]interface{}{
+				"location":      "averylongl",
+				"name":          "name-averylonglocation",
+				"maybe-missing": "default",
+			},
+		},
+		"user location and name": {
+			UserParams:        `{"location": "eu", "name":"foo"}`,
+			ServiceProperties: map[string]string{},
+			ExpectedContext: map[string]interface{}{
+				"location":      "eu",
+				"name":          "foo",
+				"maybe-missing": "default",
+			},
+		},
+		"user tries to overwrite service var": {
+			UserParams:        `{"location": "eu", "name":"foo", "service-provided":"test"}`,
+			ServiceProperties: map[string]string{"service-provided": "custom"},
+			ExpectedContext: map[string]interface{}{
+				"location":         "eu",
+				"name":             "foo",
+				"maybe-missing":    "default",
+				"service-provided": "custom",
+			},
+		},
+	}
+
+	for tn, tc := range cases {
+		t.Run(tn, func(t *testing.T) {
+			details := brokerapi.ProvisionDetails{RawParameters: json.RawMessage(tc.UserParams)}
+			plan := models.ServicePlan{ServiceProperties: tc.ServiceProperties}
+			vars, err := service.ProvisionVariables("instance-id-here", details, plan)
+
+			if err != nil {
+				t.Errorf("got error while creating provision variables: %v", err)
+			}
+
+			if !reflect.DeepEqual(vars.ToMap(), tc.ExpectedContext) {
+				t.Errorf("Expected context: %v got %v", tc.ExpectedContext, vars.ToMap())
+			}
+		})
+	}
 }
