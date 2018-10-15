@@ -52,7 +52,7 @@ func (b *BrokerBase) Unbind(ctx context.Context, creds models.ServiceBindingCred
 
 // PollInstance does nothing but return an error because Base services are
 // provisioned synchronously so this method should not be called.
-func (b *BrokerBase) PollInstance(ctx context.Context, instanceID string) (bool, error) {
+func (b *BrokerBase) PollInstance(ctx context.Context, instance models.ServiceInstanceDetails) (bool, error) {
 	return true, brokerapi.ErrAsyncRequired
 }
 

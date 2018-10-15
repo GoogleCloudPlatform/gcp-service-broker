@@ -375,7 +375,7 @@ func (gcpBroker *GCPServiceBroker) LastOperation(ctx context.Context, instanceID
 
 	lastOperationType := instance.OperationType
 
-	done, err := service.PollInstance(ctx, instanceID)
+	done, err := service.PollInstance(ctx, *instance)
 	if err != nil {
 		// this is a retryable error
 		if gerr, ok := err.(*googleapi.Error); ok {
@@ -391,13 +391,36 @@ func (gcpBroker *GCPServiceBroker) LastOperation(ctx context.Context, instanceID
 		return brokerapi.LastOperation{State: brokerapi.InProgress}, nil
 	}
 
-	// no error and we're done! Delete from the SB database if this was a delete flow and return success
+	// the instance may have been invalidated, so we pass its primary key rather than the
+	// instance directly.
+	updateErr := gcpBroker.updateStateOnOperationCompletion(ctx, lastOperationType, instanceID)
+	return brokerapi.LastOperation{State: brokerapi.Succeeded}, updateErr
+}
+
+// updateStateOnOperationCompletion handles updating/cleaning-up resources that need to be changed
+// once lastOperation finishes successfully.
+func (gcpBroker *GCPServiceBroker) updateStateOnOperationCompletion(ctx context.Context, lastOperationType, instanceID string) error {
 	if lastOperationType == models.DeprovisionOperationType {
 		if err := db_service.DeleteServiceInstanceDetailsById(ctx, instanceID); err != nil {
-			return brokerapi.LastOperation{State: brokerapi.Succeeded}, fmt.Errorf("Error deleting instance details from database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup", err)
+			return fmt.Errorf("Error deleting instance details from database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup", err)
 		}
+
+		return nil
 	}
-	return brokerapi.LastOperation{State: brokerapi.Succeeded}, nil
+
+	// If the operation was not a delete, clear out the ID and type.
+	details, err := db_service.GetServiceInstanceDetailsById(ctx, instanceID)
+	if err != nil {
+		return fmt.Errorf("Error getting instance details from database %v", err)
+	}
+
+	details.OperationId = ""
+	details.OperationType = models.ClearOperationType
+	if err := db_service.SaveServiceInstanceDetails(ctx, details); err != nil {
+		return fmt.Errorf("Error saving instance details to database %v", err)
+	}
+
+	return nil
 }
 
 // Update a service instance plan.

@@ -436,14 +436,9 @@ func (b *CloudSQLBroker) Unbind(ctx context.Context, creds models.ServiceBinding
 }
 
 // PollInstance gets the last operation for this instance and checks its status.
-func (b *CloudSQLBroker) PollInstance(ctx context.Context, instanceId string) (bool, error) {
-	instance, err := db_service.GetServiceInstanceDetailsById(ctx, instanceId)
-	if err != nil {
-		return false, err
-	}
-
+func (b *CloudSQLBroker) PollInstance(ctx context.Context, instance models.ServiceInstanceDetails) (bool, error) {
 	b.Logger.Info("PollInstance", lager.Data{
-		"instance":       instanceId,
+		"instance":       instance.Name,
 		"operation_type": instance.OperationType,
 		"operation_id":   instance.OperationId,
 	})
@@ -458,15 +453,12 @@ func (b *CloudSQLBroker) PollInstance(ctx context.Context, instanceId string) (b
 	}
 
 	if instance.OperationType == models.ProvisionOperationType {
-		if err := b.refreshServiceInstanceDetails(ctx, instance); err != nil {
+		if err := b.refreshServiceInstanceDetails(ctx, &instance); err != nil {
 			return true, err
 		}
 
-		return true, b.createDatabase(ctx, instance)
+		return true, b.createDatabase(ctx, &instance)
 	}
-
-	instance.OperationId = ""
-	instance.OperationType = models.ClearOperationType
 
 	return true, nil
 }

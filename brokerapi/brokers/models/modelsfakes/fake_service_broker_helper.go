@@ -82,11 +82,11 @@ type FakeServiceBrokerHelper struct {
 	deprovisionReturnsOnCall map[int]struct {
 		result1 error
 	}
-	PollInstanceStub        func(ctx context.Context, instanceID string) (bool, error)
+	PollInstanceStub        func(ctx context.Context, instance models.ServiceInstanceDetails) (bool, error)
 	pollInstanceMutex       sync.RWMutex
 	pollInstanceArgsForCall []struct {
-		ctx        context.Context
-		instanceID string
+		ctx      context.Context
+		instance models.ServiceInstanceDetails
 	}
 	pollInstanceReturns struct {
 		result1 bool
@@ -378,17 +378,17 @@ func (fake *FakeServiceBrokerHelper) DeprovisionReturnsOnCall(i int, result1 err
 	}{result1}
 }
 
-func (fake *FakeServiceBrokerHelper) PollInstance(ctx context.Context, instanceID string) (bool, error) {
+func (fake *FakeServiceBrokerHelper) PollInstance(ctx context.Context, instance models.ServiceInstanceDetails) (bool, error) {
 	fake.pollInstanceMutex.Lock()
 	ret, specificReturn := fake.pollInstanceReturnsOnCall[len(fake.pollInstanceArgsForCall)]
 	fake.pollInstanceArgsForCall = append(fake.pollInstanceArgsForCall, struct {
-		ctx        context.Context
-		instanceID string
-	}{ctx, instanceID})
-	fake.recordInvocation("PollInstance", []interface{}{ctx, instanceID})
+		ctx      context.Context
+		instance models.ServiceInstanceDetails
+	}{ctx, instance})
+	fake.recordInvocation("PollInstance", []interface{}{ctx, instance})
 	fake.pollInstanceMutex.Unlock()
 	if fake.PollInstanceStub != nil {
-		return fake.PollInstanceStub(ctx, instanceID)
+		return fake.PollInstanceStub(ctx, instance)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -402,10 +402,10 @@ func (fake *FakeServiceBrokerHelper) PollInstanceCallCount() int {
 	return len(fake.pollInstanceArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) PollInstanceArgsForCall(i int) (context.Context, string) {
+func (fake *FakeServiceBrokerHelper) PollInstanceArgsForCall(i int) (context.Context, models.ServiceInstanceDetails) {
 	fake.pollInstanceMutex.RLock()
 	defer fake.pollInstanceMutex.RUnlock()
-	return fake.pollInstanceArgsForCall[i].ctx, fake.pollInstanceArgsForCall[i].instanceID
+	return fake.pollInstanceArgsForCall[i].ctx, fake.pollInstanceArgsForCall[i].instance
 }
 
 func (fake *FakeServiceBrokerHelper) PollInstanceReturns(result1 bool, result2 error) {
