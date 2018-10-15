@@ -58,7 +58,6 @@ func (vc *VarContext) GetInt(key string) (res int) {
 		return err
 	})
 
-
 	return
 }
 

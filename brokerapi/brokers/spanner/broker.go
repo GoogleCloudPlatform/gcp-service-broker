@@ -134,7 +134,7 @@ func (s *SpannerBroker) PollInstance(ctx context.Context, instanceId string) (bo
 		instance.OperationId = ""
 		instance.OperationType = models.ClearOperationType
 		if err := db_service.SaveServiceInstanceDetails(ctx, instance); err != nil {
-			s.Logger.Error("updating instance after provision", err)
+			return true, fmt.Errorf("Error updating instance state: %v", err)
 		}
 		return true, nil
 

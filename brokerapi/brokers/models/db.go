@@ -41,7 +41,7 @@ func (sbc ServiceBindingCredentials) GetOtherDetails() (map[string]string, error
 	return creds, err
 }
 
-// ServiceInstanceDetails holds information about provisioned services
+// ServiceInstanceDetails holds information about provisioned services.
 type ServiceInstanceDetails ServiceInstanceDetailsV2
 
 // GetOtherDetails returns an unmarshaled version of the OtherDetails field
