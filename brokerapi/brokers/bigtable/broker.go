@@ -16,6 +16,7 @@ package bigtable
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	googlebigtable "cloud.google.com/go/bigtable"
@@ -64,6 +65,11 @@ func (b *BigTableBroker) Provision(ctx context.Context, instanceId string, detai
 
 	if err := provisionContext.Error(); err != nil {
 		return models.ServiceInstanceDetails{}, err
+	}
+
+	// custom constraints
+	if instanceName == "" {
+		return models.ServiceInstanceDetails{}, errors.New("name must not be empty")
 	}
 
 	service, err := b.createClient(ctx)
