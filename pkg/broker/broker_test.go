@@ -361,6 +361,7 @@ func TestBrokerService_ProvisionVariables(t *testing.T) {
 	cases := map[string]struct {
 		UserParams        string
 		ServiceProperties map[string]string
+		DefaultOverride   string
 		ExpectedContext   map[string]interface{}
 	}{
 		"empty": {
@@ -409,10 +410,41 @@ func TestBrokerService_ProvisionVariables(t *testing.T) {
 				"service-provided": "custom",
 			},
 		},
+		"operator defaults override computed defaults": {
+			UserParams:        "",
+			DefaultOverride:   `{"location":"eu"}`,
+			ServiceProperties: map[string]string{},
+			ExpectedContext: map[string]interface{}{
+				"location":      "eu",
+				"name":          "name-eu",
+				"maybe-missing": "default",
+			},
+		},
+		"user values override operator defaults": {
+			UserParams:        `{"location":"nz"}`,
+			DefaultOverride:   `{"location":"eu"}`,
+			ServiceProperties: map[string]string{},
+			ExpectedContext: map[string]interface{}{
+				"location":      "nz",
+				"name":          "name-nz",
+				"maybe-missing": "default",
+			},
+		},
+		"operator defaults are not evaluated": {
+			UserParams:        `{"location":"us"}`,
+			DefaultOverride:   `{"name":"foo-${location}"}`,
+			ServiceProperties: map[string]string{},
+			ExpectedContext: map[string]interface{}{
+				"location":      "us",
+				"name":          "foo-${location}",
+				"maybe-missing": "default",
+			},
+		},
 	}
 
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
+			viper.Set(service.ProvisionDefaultOverrideProperty(), tc.DefaultOverride)
 			details := brokerapi.ProvisionDetails{RawParameters: json.RawMessage(tc.UserParams)}
 			plan := models.ServicePlan{ServiceProperties: tc.ServiceProperties}
 			vars, err := service.ProvisionVariables("instance-id-here", details, plan)

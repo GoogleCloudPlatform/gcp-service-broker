@@ -138,6 +138,18 @@ func (svc *BrokerService) RoleWhitelistProperty() string {
 	return fmt.Sprintf("service.%s.whitelist", svc.Name)
 }
 
+// ProvisionDefaultOverrideProperty returns the Viper property name for the
+// object users can set to override the default values on provision.
+func (svc *BrokerService) ProvisionDefaultOverrideProperty() string {
+	return fmt.Sprintf("service.%s.provision.defaults", svc.Name)
+}
+
+// ProvisionDefaultOverrides returns the deserialized JSON object for the
+// operator-provided property overrides.
+func (svc *BrokerService) ProvisionDefaultOverrides() map[string]interface{} {
+	return viper.GetStringMap(svc.ProvisionDefaultOverrideProperty())
+}
+
 // RoleWhitelist returns the whitelist of roles the operator has allowed or the
 // default if it is blank.
 func (svc *BrokerService) RoleWhitelist() []string {
@@ -324,6 +336,7 @@ func (svc *BrokerService) ProvisionVariables(instanceId string, details brokerap
 	defaults := svc.provisionDefaults()
 
 	return varcontext.Builder().
+		MergeMap(svc.ProvisionDefaultOverrides()).
 		MergeJsonObject(details.GetRawParameters()).
 		MergeDefaults(defaults).
 		MergeMap(plan.GetServiceProperties()).

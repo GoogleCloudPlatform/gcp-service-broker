@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unresolved]
 
 ### Added
+- Ability for operators to override the provision defaults with fixed values.
+- New form to let operators set provision defaults.
 - New `coldline` Cloud Storage plan.
 - Ability to create custom Cloud Storage plans.
 - New tile form for creating custom Cloud Storage plans.
