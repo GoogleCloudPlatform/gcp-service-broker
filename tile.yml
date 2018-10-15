@@ -45,7 +45,7 @@ forms:
 - name: root_service_account
   label: Root Service Account
   description: Please paste in the contents of the json keyfile (un-encoded) for your
-    service account with owner credentials
+    service account with owner credentials.
   properties:
   - name: root_service_account_json
     type: text
@@ -53,7 +53,7 @@ forms:
     configurable: true
 - name: database_properties
   label: Database Properties
-  description: Connection details for the backing database for the service broker
+  description: Connection details for the backing database for the service broker.
   properties:
   - name: db_host
     type: string
@@ -96,127 +96,127 @@ forms:
     optional: true
 - name: enable_disable
   label: Enable Services
-  description: Enable or disable services
+  description: Enable or disable services.
   properties:
   - name: gsb_service_google_bigquery_enabled
     type: boolean
     default: true
-    label: Let the broker create and bind Google BigQuery instances
+    label: Let the broker create and bind Google BigQuery instances.
     configurable: true
   - name: gsb_service_google_bigtable_enabled
     type: boolean
     default: true
-    label: Let the broker create and bind Google Bigtable instances
+    label: Let the broker create and bind Google Bigtable instances.
     configurable: true
   - name: gsb_service_google_cloudsql_mysql_enabled
     type: boolean
     default: true
-    label: Let the broker create and bind Google CloudSQL MySQL instances
+    label: Let the broker create and bind Google CloudSQL MySQL instances.
     configurable: true
   - name: gsb_service_google_cloudsql_postgres_enabled
     type: boolean
     default: true
-    label: Let the broker create and bind Google CloudSQL PostgreSQL instances
+    label: Let the broker create and bind Google CloudSQL PostgreSQL instances.
     configurable: true
   - name: gsb_service_google_datastore_enabled
     type: boolean
     default: true
-    label: Let the broker create and bind Google Cloud Datastore instances
+    label: Let the broker create and bind Google Cloud Datastore instances.
     configurable: true
   - name: gsb_service_google_ml_apis_enabled
     type: boolean
     default: true
-    label: Let the broker create and bind Google Machine Learning APIs instances
+    label: Let the broker create and bind Google Machine Learning APIs instances.
     configurable: true
   - name: gsb_service_google_pubsub_enabled
     type: boolean
     default: true
-    label: Let the broker create and bind Google PubSub instances
+    label: Let the broker create and bind Google PubSub instances.
     configurable: true
   - name: gsb_service_google_spanner_enabled
     type: boolean
     default: true
-    label: Let the broker create and bind Google Spanner instances
+    label: Let the broker create and bind Google Spanner instances.
     configurable: true
   - name: gsb_service_google_stackdriver_debugger_enabled
     type: boolean
     default: true
-    label: Let the broker create and bind Stackdriver Debugger instances
+    label: Let the broker create and bind Stackdriver Debugger instances.
     configurable: true
   - name: gsb_service_google_stackdriver_profiler_enabled
     type: boolean
     default: true
-    label: Let the broker create and bind Stackdriver Profiler instances
+    label: Let the broker create and bind Stackdriver Profiler instances.
     configurable: true
   - name: gsb_service_google_stackdriver_trace_enabled
     type: boolean
     default: true
-    label: Let the broker create and bind Stackdriver Trace instances
+    label: Let the broker create and bind Stackdriver Trace instances.
     configurable: true
   - name: gsb_service_google_storage_enabled
     type: boolean
     default: true
-    label: Let the broker create and bind Google Cloud Storage instances
+    label: Let the broker create and bind Google Cloud Storage instances.
     configurable: true
 - name: role_whitelists
   label: Role Whitelisting
-  description: Enable or disable role whitelisting
+  description: Enable or disable role whitelisting.
   properties:
   - name: gsb_service_google_bigquery_whitelist
     type: string
     default: bigquery.dataViewer,bigquery.dataEditor,bigquery.dataOwner,bigquery.user,bigquery.jobUser
-    label: Role whitelist for Google BigQuery instances
+    label: Role whitelist for Google BigQuery instances.
     description: A comma delimited list of roles (minus the role/ prefix) that can
-      be used when creating bound users for this service
+      be used when creating bound users for this service.
     configurable: true
   - name: gsb_service_google_bigtable_whitelist
     type: string
     default: bigtable.user,bigtable.reader,bigtable.viewer
-    label: Role whitelist for Google Bigtable instances
+    label: Role whitelist for Google Bigtable instances.
     description: A comma delimited list of roles (minus the role/ prefix) that can
-      be used when creating bound users for this service
+      be used when creating bound users for this service.
     configurable: true
   - name: gsb_service_google_cloudsql_mysql_whitelist
     type: string
     default: cloudsql.editor,cloudsql.viewer,cloudsql.client
-    label: Role whitelist for Google CloudSQL MySQL instances
+    label: Role whitelist for Google CloudSQL MySQL instances.
     description: A comma delimited list of roles (minus the role/ prefix) that can
-      be used when creating bound users for this service
+      be used when creating bound users for this service.
     configurable: true
   - name: gsb_service_google_cloudsql_postgres_whitelist
     type: string
     default: cloudsql.editor,cloudsql.viewer,cloudsql.client
-    label: Role whitelist for Google CloudSQL PostgreSQL instances
+    label: Role whitelist for Google CloudSQL PostgreSQL instances.
     description: A comma delimited list of roles (minus the role/ prefix) that can
-      be used when creating bound users for this service
+      be used when creating bound users for this service.
     configurable: true
   - name: gsb_service_google_ml_apis_whitelist
     type: string
     default: ml.developer,ml.viewer,ml.modelOwner,ml.modelUser,ml.jobOwner,ml.operationOwner
-    label: Role whitelist for Google Machine Learning APIs instances
+    label: Role whitelist for Google Machine Learning APIs instances.
     description: A comma delimited list of roles (minus the role/ prefix) that can
-      be used when creating bound users for this service
+      be used when creating bound users for this service.
     configurable: true
   - name: gsb_service_google_pubsub_whitelist
     type: string
     default: pubsub.publisher,pubsub.subscriber,pubsub.viewer,pubsub.editor
-    label: Role whitelist for Google PubSub instances
+    label: Role whitelist for Google PubSub instances.
     description: A comma delimited list of roles (minus the role/ prefix) that can
-      be used when creating bound users for this service
+      be used when creating bound users for this service.
     configurable: true
   - name: gsb_service_google_spanner_whitelist
     type: string
     default: spanner.databaseAdmin,spanner.databaseReader,spanner.databaseUser,spanner.viewer
-    label: Role whitelist for Google Spanner instances
+    label: Role whitelist for Google Spanner instances.
     description: A comma delimited list of roles (minus the role/ prefix) that can
-      be used when creating bound users for this service
+      be used when creating bound users for this service.
     configurable: true
   - name: gsb_service_google_storage_whitelist
     type: string
     default: storage.objectCreator,storage.objectViewer,storage.objectAdmin
-    label: Role whitelist for Google Cloud Storage instances
+    label: Role whitelist for Google Cloud Storage instances.
     description: A comma delimited list of roles (minus the role/ prefix) that can
-      be used when creating bound users for this service
+      be used when creating bound users for this service.
     configurable: true
 - name: compatibility
   label: Compatibility
@@ -235,24 +235,24 @@ forms:
 service_plan_forms:
 - name: bigtable_custom_plans
   label: Google Bigtable Custom Plans
-  description: Generate custom plans for Google Bigtable
+  description: Generate custom plans for Google Bigtable.
   optional: true
   properties:
   - name: display_name
     type: string
     label: Display Name
-    description: Display name
+    description: Name of the plan to be displayed to users.
     configurable: true
   - name: description
     type: string
     label: Plan description
-    description: Plan description
+    description: The description of the plan shown to users.
     configurable: true
   - name: service
     type: dropdown_select
     default: b8e19880-ac58-42ef-b033-f7cd9c94d1fe
     label: Service
-    description: The service this plan is associated with
+    description: The service this plan is associated with.
     options:
     - name: b8e19880-ac58-42ef-b033-f7cd9c94d1fe
       label: Google Bigtable
@@ -260,8 +260,8 @@ service_plan_forms:
     type: dropdown_select
     default: SSD
     label: Storage Type
-    description: Either HDD or SSD (see https://cloud.google.com/bigtable/pricing
-      for more information)
+    description: 'Either HDD or SSD. See: https://cloud.google.com/bigtable/pricing
+      for more information.'
     configurable: true
     options:
     - name: SSD
@@ -272,29 +272,29 @@ service_plan_forms:
     type: string
     default: "3"
     label: Num Nodes
-    description: Number of Nodes, Between 3 and 30 (see https://cloud.google.com/bigtable/pricing
-      for more information)
+    description: 'Number of nodes, between 3 and 30. See: https://cloud.google.com/bigtable/pricing
+      for more information.'
     configurable: true
 - name: cloudsql_mysql_custom_plans
   label: Google CloudSQL MySQL Custom Plans
-  description: Generate custom plans for Google CloudSQL MySQL
+  description: Generate custom plans for Google CloudSQL MySQL.
   optional: true
   properties:
   - name: display_name
     type: string
     label: Display Name
-    description: Display name
+    description: Name of the plan to be displayed to users.
     configurable: true
   - name: description
     type: string
     label: Plan description
-    description: Plan description
+    description: The description of the plan shown to users.
     configurable: true
   - name: service
     type: dropdown_select
     default: 4bc59b9a-8520-409f-85da-1c7552315863
     label: Service
-    description: The service this plan is associated with
+    description: The service this plan is associated with.
     options:
     - name: 4bc59b9a-8520-409f-85da-1c7552315863
       label: Google CloudSQL MySQL
@@ -302,13 +302,13 @@ service_plan_forms:
     type: string
     label: Tier
     description: Case-sensitive tier/machine type name (see https://cloud.google.com/sql/pricing
-      for more information)
+      for more information).
     configurable: true
   - name: pricing_plan
     type: dropdown_select
     default: PER_USE
     label: Pricing Plan
-    description: Select a pricing plan (only for 1st generation instances)
+    description: Select a pricing plan (only for 1st generation instances).
     configurable: true
     options:
     - name: PER_USE
@@ -320,28 +320,28 @@ service_plan_forms:
     default: "10"
     label: Max Disk Size
     description: Maximum disk size in GB (applicable only to Second Generation instances,
-      10 minimum/default)
+      10 minimum/default).
     configurable: true
 - name: cloudsql_postgres_custom_plans
   label: Google CloudSQL PostgreSQL Custom Plans
-  description: Generate custom plans for Google CloudSQL PostgreSQL
+  description: Generate custom plans for Google CloudSQL PostgreSQL.
   optional: true
   properties:
   - name: display_name
     type: string
     label: Display Name
-    description: Display name
+    description: Name of the plan to be displayed to users.
     configurable: true
   - name: description
     type: string
     label: Plan description
-    description: Plan description
+    description: The description of the plan shown to users.
     configurable: true
   - name: service
     type: dropdown_select
     default: cbad6d78-a73c-432d-b8ff-b219a17a803a
     label: Service
-    description: The service this plan is associated with
+    description: The service this plan is associated with.
     options:
     - name: cbad6d78-a73c-432d-b8ff-b219a17a803a
       label: Google CloudSQL PostgreSQL
@@ -349,13 +349,13 @@ service_plan_forms:
     type: string
     label: Tier
     description: A string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory
-      is at least 3840
+      is at least 3840.
     configurable: true
   - name: pricing_plan
     type: dropdown_select
     default: PER_USE
     label: Pricing Plan
-    description: The pricing plan
+    description: The pricing plan.
     options:
     - name: PER_USE
       label: Per-Use
@@ -363,28 +363,28 @@ service_plan_forms:
     type: string
     default: "10"
     label: Max Disk Size
-    description: Maximum disk size in GB (10 minimum/default)
+    description: Maximum disk size in GB, 10 is the minimum.
     configurable: true
 - name: spanner_custom_plans
   label: Google Spanner Custom Plans
-  description: Generate custom plans for Google Spanner
+  description: Generate custom plans for Google Spanner.
   optional: true
   properties:
   - name: display_name
     type: string
     label: Display Name
-    description: Display name
+    description: Name of the plan to be displayed to users.
     configurable: true
   - name: description
     type: string
     label: Plan description
-    description: Plan description
+    description: The description of the plan shown to users.
     configurable: true
   - name: service
     type: dropdown_select
     default: 51b3e27e-d323-49ce-8c5f-1211e6409e82
     label: Service
-    description: The service this plan is associated with
+    description: The service this plan is associated with.
     options:
     - name: 51b3e27e-d323-49ce-8c5f-1211e6409e82
       label: Google Spanner
@@ -392,7 +392,34 @@ service_plan_forms:
     type: string
     default: "1"
     label: Num Nodes
-    description: Number of Nodes, A minimum of 3 nodes is recommended for production
-      environments. (see https://cloud.google.com/spanner/pricing for more information)
+    description: 'Number of nodes, a minimum of 3 nodes is recommended for production
+      environments. See: https://cloud.google.com/spanner/pricing for more information.'
     configurable: true
-
+- name: storage_custom_plans
+  label: Google Cloud Storage Custom Plans
+  description: Generate custom plans for Google Cloud Storage.
+  optional: true
+  properties:
+  - name: display_name
+    type: string
+    label: Display Name
+    description: Name of the plan to be displayed to users.
+    configurable: true
+  - name: description
+    type: string
+    label: Plan description
+    description: The description of the plan shown to users.
+    configurable: true
+  - name: service
+    type: dropdown_select
+    default: b9e4332e-b42b-4680-bda5-ea1506797474
+    label: Service
+    description: The service this plan is associated with.
+    options:
+    - name: b9e4332e-b42b-4680-bda5-ea1506797474
+      label: Google Cloud Storage
+  - name: storage_class
+    type: string
+    label: Storage Class
+    description: 'The storage class of the bucket. See: https://cloud.google.com/storage/docs/storage-classes.'
+    configurable: true

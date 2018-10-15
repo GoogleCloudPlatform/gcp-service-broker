@@ -21,7 +21,6 @@ import (
 	googlestorage "cloud.google.com/go/storage"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/net/context"
@@ -42,20 +41,21 @@ type InstanceInformation struct {
 
 // Provision creates a new GCS bucket from the settings in the user-provided details and service plan.
 func (b *StorageBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
-	var err error
-
-	storageClass := plan.ServiceProperties["storage_class"]
-
-	var params map[string]string
-	if len(details.RawParameters) == 0 {
-		params = map[string]string{}
-	} else if err = json.Unmarshal(details.RawParameters, &params); err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling parameters: %s", err)
+	// resolve variables
+	variableContext, err := serviceDefinition().ProvisionVariables(instanceId, details, plan)
+	if err != nil {
+		return models.ServiceInstanceDetails{}, err
 	}
 
-	// Ensure there is a name for this instance
-	if _, ok := params["name"]; !ok {
-		params["name"] = name_generator.Basic.InstanceName()
+	attrs := googlestorage.BucketAttrs{
+		Name:         variableContext.GetString("name"),
+		StorageClass: variableContext.GetString("storage_class"),
+		Location:     variableContext.GetString("location"),
+		Labels:       utils.ExtractDefaultLabels(instanceId, details),
+	}
+
+	if err := variableContext.Error(); err != nil {
+		return models.ServiceInstanceDetails{}, err
 	}
 
 	// make a new bucket
@@ -64,29 +64,13 @@ func (b *StorageBroker) Provision(ctx context.Context, instanceId string, detail
 		return models.ServiceInstanceDetails{}, err
 	}
 
-	bucket := storageService.Bucket(params["name"])
-
-	loc := "US"
-	userLoc, locOk := params["location"]
-	if locOk {
-		loc = userLoc
-	}
-	attrs := googlestorage.BucketAttrs{
-		Name:         params["name"],
-		StorageClass: storageClass,
-		Location:     loc,
-		Labels:       utils.ExtractDefaultLabels(instanceId, details),
-	}
-
 	// create the bucket. Nil uses default bucket attributes
-	err = bucket.Create(ctx, b.ProjectId, &attrs)
-	if err != nil {
+	if err := storageService.Bucket(attrs.Name).Create(ctx, b.ProjectId, &attrs); err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new bucket: %s", err)
-
 	}
 
 	ii := InstanceInformation{
-		BucketName: params["name"],
+		BucketName: attrs.Name,
 	}
 
 	otherDetails, err := json.Marshal(ii)
@@ -94,14 +78,12 @@ func (b *StorageBroker) Provision(ctx context.Context, instanceId string, detail
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling json: %s", err)
 	}
 
-	i := models.ServiceInstanceDetails{
+	return models.ServiceInstanceDetails{
 		Name:         attrs.Name,
 		Url:          "",
 		Location:     attrs.Location,
 		OtherDetails: string(otherDetails),
-	}
-
-	return i, nil
+	}, nil
 }
 
 // Deprovision deletes the bucket associated with the given instance.
