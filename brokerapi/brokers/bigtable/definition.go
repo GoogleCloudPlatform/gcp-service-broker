@@ -17,16 +17,21 @@ package bigtable
 import (
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 )
 
 func init() {
+	broker.Register(serviceDefinition())
+}
+
+func serviceDefinition() *broker.BrokerService {
 	roleWhitelist := []string{
 		"bigtable.user",
 		"bigtable.reader",
 		"bigtable.viewer",
 	}
 
-	bs := &broker.BrokerService{
+	return &broker.BrokerService{
 		Name: "google-bigtable",
 		DefaultServiceDefinition: `{
       "id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe",
@@ -71,26 +76,44 @@ func init() {
 			{
 				FieldName: "name",
 				Type:      broker.JsonTypeString,
-				Details:   "The name of the dataset. Should match `[a-z][a-z0-9\\-]+[a-z0-9]`.",
-				Default:   "a generated value",
+				Details:   "The name of the Cloud Bigtable instance.",
+				Default:   "pcf-sb-${counter.next()}-${time.nano()}",
+				Constraints: validation.NewConstraintBuilder().
+					MinLength(6).
+					MaxLength(33).
+					Pattern("^[a-z][-0-9a-z]+$").
+					Build(),
 			},
 			{
 				FieldName: "cluster_id",
 				Type:      broker.JsonTypeString,
-				Details:   "The name of the cluster.",
-				Default:   "a generated value",
+				Details:   "The ID of the Cloud Bigtable cluster.",
+				Default:   "${str.truncate(20, name)}-cluster",
+				Constraints: validation.NewConstraintBuilder().
+					MinLength(6).
+					MaxLength(30).
+					Pattern("^[a-z][-0-9a-z]+[a-z]$").
+					Build(),
 			},
 			{
 				FieldName: "display_name",
 				Type:      broker.JsonTypeString,
-				Details:   "The human-readable name of the dataset.",
-				Default:   "a generated value",
+				Details:   "The human-readable display name of the Bigtable instance.",
+				Default:   "${name}",
+				Constraints: validation.NewConstraintBuilder().
+					MinLength(4).
+					MaxLength(30).
+					Build(),
 			},
 			{
 				FieldName: "zone",
 				Type:      broker.JsonTypeString,
-				Details:   "The zone the data will reside in.",
+				Details:   "The zone to create the Cloud Bigtable cluster in. Zones that support Bigtable instances are noted on the Cloud Bigtable locations page: https://cloud.google.com/bigtable/docs/locations.",
 				Default:   "us-east1-b",
+				Constraints: validation.NewConstraintBuilder().
+					Pattern("^[A-Za-z][-a-z0-9A-Z]+$").
+					Examples("us-central1-a", "europe-west2-b", "asia-northeast1-a", "australia-southeast1-c").
+					Build(),
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
@@ -136,6 +159,4 @@ func init() {
 			},
 		},
 	}
-
-	broker.Register(bs)
 }
