@@ -997,8 +997,13 @@ Unified object storage for developers and enterprises. Cloud Storage allows worl
 **Request Parameters**
 
 
- * `name` _string_ - The name of the bucket. There is a single global namespace shared by all buckets so it MUST be unique. Default: `a generated value`.
+ * `name` _string_ - The name of the bucket. There is a single global namespace shared by all buckets so it MUST be unique. Default: `pcf_sb_${counter.next()}_${time.nano()}`.
+    * The string must have at most 222 characters.
+    * The string must have at least 3 characters.
+    * The string must match the regular expression `^[A-Za-z0-9_\.]+$`.
  * `location` _string_ - The location of the bucket. Object data for objects in the bucket resides in physical storage within this region. See: https://cloud.google.com/storage/docs/bucket-locations Default: `US`.
+    * Examples: [US EU southamerica-east1].
+    * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
 
 
 ## Binding
@@ -1026,6 +1031,7 @@ or disabled by the broker administrator.
   * **standard**: Standard storage class. Plan ID: `e1d11f65-da66-46ad-977c-6d56513baf43`.
   * **nearline**: Nearline storage class. Plan ID: `a42c1182-d1a0-4d40-82c1-28220518b360`.
   * **reduced-availability**: Durable Reduced Availability storage class. Plan ID: `1a1f4fe6-1904-44d0-838c-4c87a9490a6b`.
+  * **coldline**: Google Cloud Storage Coldline is a very-low-cost, highly durable storage service for data archiving, online backup, and disaster recovery. Plan ID: `c8538397-8f15-45e3-a229-8bb349c3a98f`.
 
 
 ## Examples

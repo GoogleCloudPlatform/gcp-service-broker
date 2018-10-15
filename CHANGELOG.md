@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unresolved]
 
+### Added
+- New `coldline` Cloud Storage plan.
+- Ability to create custom Cloud Storage plans.
+- New tile form for creating custom Cloud Storage plans.
+
 ## [4.0.0] - 2018-10-01
 
 ### Added
