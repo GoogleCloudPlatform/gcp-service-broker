@@ -455,4 +455,31 @@ service_plan_forms:
     description: 'Number of nodes, a minimum of 3 nodes is recommended for production
       environments. See: https://cloud.google.com/spanner/pricing for more information.'
     configurable: true
-
+- name: storage_custom_plans
+  label: Google Cloud Storage Custom Plans
+  description: Generate custom plans for Google Cloud Storage.
+  optional: true
+  properties:
+  - name: display_name
+    type: string
+    label: Display Name
+    description: Name of the plan to be displayed to users.
+    configurable: true
+  - name: description
+    type: string
+    label: Plan description
+    description: The description of the plan shown to users.
+    configurable: true
+  - name: service
+    type: dropdown_select
+    default: b9e4332e-b42b-4680-bda5-ea1506797474
+    label: Service
+    description: The service this plan is associated with.
+    options:
+    - name: b9e4332e-b42b-4680-bda5-ea1506797474
+      label: Google Cloud Storage
+  - name: storage_class
+    type: string
+    label: Storage Class
+    description: 'The storage class of the bucket. See: https://cloud.google.com/storage/docs/storage-classes.'
+    configurable: true

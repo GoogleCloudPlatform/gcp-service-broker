@@ -1015,6 +1015,116 @@ For example:
 
 </table>
 
+### Google Cloud Storage Custom Plans
+
+Generate custom plans for Google Cloud Storage.
+To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>STORAGE_CUSTOM_PLANS</tt>.
+
+For example:
+<code>
+[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "display_name": setme, "description": setme, "service": setme, "storage_class": setme},...]
+</code>
+
+<table>
+<tr>
+  <th>JSON Property</th>
+  <th>Type</th>
+  <th>Label</th>
+  <th>Details</th>
+</tr>
+<tr>
+  <td><tt>id</tt></td>
+  <td><i>string</i></td>
+  <td>Plan UUID</td>
+  <td>
+    The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
+    <ul><li><b>Required</b></li></ul>
+  </td>
+</tr>
+<tr>
+  <td><tt>name</tt></td>
+  <td><i>string</i></td>
+  <td>Plan CLI Name</td>
+  <td>
+    The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
+    <ul><li><b>Required</b></li></ul>
+  </td>
+</tr>
+
+
+<tr>
+  <td><tt>display_name</tt></td>
+  <td><i>string</i></td>
+  <td>Display Name</td>
+  <td>
+  Name of the plan to be displayed to users.
+
+
+<ul>
+  <li><b>Required</b></li>
+</ul>
+
+
+  </td>
+</tr>
+
+<tr>
+  <td><tt>description</tt></td>
+  <td><i>string</i></td>
+  <td>Plan description</td>
+  <td>
+  The description of the plan shown to users.
+
+
+<ul>
+  <li><b>Required</b></li>
+</ul>
+
+
+  </td>
+</tr>
+
+<tr>
+  <td><tt>service</tt></td>
+  <td><i>dropdown_select</i></td>
+  <td>Service</td>
+  <td>
+  The service this plan is associated with.
+
+
+<ul>
+  <li><b>Required</b></li>
+  <li>Default: <code>b9e4332e-b42b-4680-bda5-ea1506797474</code></li>
+  <li>This option _is not_ user configurable. It must be set to the default.</li>
+  <li>Valid Values:
+  <ul>
+    <li><tt>b9e4332e-b42b-4680-bda5-ea1506797474</tt> - Google Cloud Storage</li>
+  </ul>
+  </li>
+</ul>
+
+
+  </td>
+</tr>
+
+<tr>
+  <td><tt>storage_class</tt></td>
+  <td><i>string</i></td>
+  <td>Storage Class</td>
+  <td>
+  The storage class of the bucket. See: https://cloud.google.com/storage/docs/storage-classes.
+
+
+<ul>
+  <li><b>Required</b></li>
+</ul>
+
+
+  </td>
+</tr>
+
+</table>
+
 
 
 ---------------------------------------
