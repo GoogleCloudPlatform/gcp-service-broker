@@ -16,6 +16,7 @@ package pubsub
 
 import (
 	"encoding/json"
+	"errors"
 
 	googlepubsub "cloud.google.com/go/pubsub"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
@@ -39,7 +40,9 @@ type PubSubBroker struct {
 // InstanceInformation holds the details needed to connect to a PubSub instance
 // after it has been provisioned.
 type InstanceInformation struct {
-	TopicName        string `json:"topic_name"`
+	TopicName string `json:"topic_name"`
+
+	// SubscriptionName is optional, if non-empty then a susbcription was created.
 	SubscriptionName string `json:"subscription_name"`
 }
 
@@ -70,6 +73,11 @@ func (b *PubSubBroker) Provision(ctx context.Context, instanceId string, details
 
 	if err := variableContext.Error(); err != nil {
 		return models.ServiceInstanceDetails{}, err
+	}
+
+	// Check special-cases
+	if topicName == "" {
+		return models.ServiceInstanceDetails{}, errors.New("topic_name must not be blank")
 	}
 
 	// Create
