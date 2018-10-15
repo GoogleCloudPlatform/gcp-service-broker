@@ -26,10 +26,12 @@ import (
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 )
 
+const numMigrations = 4
+
 // runs schema migrations on the provided service broker database to get it up to date
 func RunMigrations(db *gorm.DB) error {
 
-	migrations := make([]func() error, 4)
+	migrations := make([]func() error, numMigrations)
 
 	// initial migration - creates tables
 	migrations[0] = func() error {

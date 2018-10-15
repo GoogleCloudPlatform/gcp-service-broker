@@ -95,9 +95,9 @@ func serviceDefinition() *broker.BrokerService {
 				Details: `A configuration for a Cloud Spanner instance.
 				 Configurations define the geographic placement of nodes and their replication and are slightly different from zones.
 				 There are single region configurations, multi-region configurations, and multi-continent configurations.
-				 See the instance docs for a list of configurations: https://cloud.google.com/spanner/docs/instances.`,
+				 See the instance docs https://cloud.google.com/spanner/docs/instances for a list of configurations.`,
 				Constraints: validation.NewConstraintBuilder().
-					Examples("regional-asia-east1	", "nam3", "nam-eur-asia1").
+					Examples("regional-asia-east1", "nam3", "nam-eur-asia1").
 					Pattern("^[a-z][-a-z0-9]*[a-z0-9]$").
 					Build(),
 			},
