@@ -14,17 +14,24 @@
 
 package storage
 
-import "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
-import accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+import (
+	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
+)
 
 func init() {
+	broker.Register(serviceDefinition())
+}
+
+func serviceDefinition() *broker.BrokerService {
 	roleWhitelist := []string{
 		"storage.objectCreator",
 		"storage.objectViewer",
 		"storage.objectAdmin",
 	}
 
-	bs := &broker.BrokerService{
+	return &broker.BrokerService{
 		Name: "google-storage",
 		DefaultServiceDefinition: `{
 	        "id": "b9e4332e-b42b-4680-bda5-ea1506797474",
@@ -64,6 +71,13 @@ func init() {
 	            "display_name": "Durable Reduced Availability",
 	            "description": "Durable Reduced Availability storage class.",
 	            "service_properties": {"storage_class": "DURABLE_REDUCED_AVAILABILITY"}
+	          },
+	          {
+	            "id": "c8538397-8f15-45e3-a229-8bb349c3a98f",
+	            "name": "coldline",
+	            "display_name": "Coldline Storage",
+	            "description": "Google Cloud Storage Coldline is a very-low-cost, highly durable storage service for data archiving, online backup, and disaster recovery.",
+	            "service_properties": {"storage_class": "COLDLINE"}
 	          }
 	        ]
 	      }`,
@@ -72,13 +86,22 @@ func init() {
 				FieldName: "name",
 				Type:      broker.JsonTypeString,
 				Details:   "The name of the bucket. There is a single global namespace shared by all buckets so it MUST be unique.",
-				Default:   "a generated value",
+				Default:   "pcf_sb_${counter.next()}_${time.nano()}",
+				Constraints: validation.NewConstraintBuilder(). // https://cloud.google.com/storage/docs/naming
+										Pattern("^[A-Za-z0-9_\\.]+$").
+										MinLength(3).
+										MaxLength(222).
+										Build(),
 			},
 			{
 				FieldName: "location",
 				Type:      broker.JsonTypeString,
 				Default:   "US",
 				Details:   `The location of the bucket. Object data for objects in the bucket resides in physical storage within this region. See: https://cloud.google.com/storage/docs/bucket-locations`,
+				Constraints: validation.NewConstraintBuilder().
+					Pattern("^[A-Za-z][-a-z0-9A-Z]+$").
+					Examples("US", "EU", "southamerica-east1").
+					Build(),
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
@@ -90,7 +113,14 @@ func init() {
 				Details:   "Name of the bucket this binding is for",
 			},
 		),
-
+		PlanVariables: []broker.BrokerVariable{
+			{
+				FieldName: "storage_class",
+				Type:      broker.JsonTypeString,
+				Details:   "The storage class of the bucket. See: https://cloud.google.com/storage/docs/storage-classes.",
+				Required:  true,
+			},
+		},
 		Examples: []broker.ServiceExample{
 			{
 				Name:            "Basic Configuration",
@@ -101,8 +131,16 @@ func init() {
 					"role": "storage.objectAdmin",
 				},
 			},
+			{
+				Name:            "Cold Storage",
+				Description:     "Create a coldline bucket with a service account that can create/read/delete the objects in it.",
+				PlanId:          "c8538397-8f15-45e3-a229-8bb349c3a98f",
+				ProvisionParams: map[string]interface{}{"location": "us"},
+				BindParams: map[string]interface{}{
+					"role":     "storage.objectAdmin",
+					"location": "us-west1",
+				},
+			},
 		},
 	}
-
-	broker.Register(bs)
 }
