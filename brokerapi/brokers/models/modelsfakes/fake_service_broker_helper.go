@@ -69,7 +69,7 @@ type FakeServiceBrokerHelper struct {
 	unbindReturnsOnCall map[int]struct {
 		result1 error
 	}
-	DeprovisionStub        func(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error
+	DeprovisionStub        func(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (operationId *string, err error)
 	deprovisionMutex       sync.RWMutex
 	deprovisionArgsForCall []struct {
 		ctx      context.Context
@@ -77,10 +77,12 @@ type FakeServiceBrokerHelper struct {
 		details  brokerapi.DeprovisionDetails
 	}
 	deprovisionReturns struct {
-		result1 error
+		result1 *string
+		result2 error
 	}
 	deprovisionReturnsOnCall map[int]struct {
-		result1 error
+		result1 *string
+		result2 error
 	}
 	PollInstanceStub        func(ctx context.Context, instance models.ServiceInstanceDetails) (bool, error)
 	pollInstanceMutex       sync.RWMutex
@@ -328,7 +330,7 @@ func (fake *FakeServiceBrokerHelper) UnbindReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeServiceBrokerHelper) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
+func (fake *FakeServiceBrokerHelper) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (operationId *string, err error) {
 	fake.deprovisionMutex.Lock()
 	ret, specificReturn := fake.deprovisionReturnsOnCall[len(fake.deprovisionArgsForCall)]
 	fake.deprovisionArgsForCall = append(fake.deprovisionArgsForCall, struct {
@@ -342,9 +344,9 @@ func (fake *FakeServiceBrokerHelper) Deprovision(ctx context.Context, instance m
 		return fake.DeprovisionStub(ctx, instance, details)
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.deprovisionReturns.result1
+	return fake.deprovisionReturns.result1, fake.deprovisionReturns.result2
 }
 
 func (fake *FakeServiceBrokerHelper) DeprovisionCallCount() int {
@@ -359,23 +361,26 @@ func (fake *FakeServiceBrokerHelper) DeprovisionArgsForCall(i int) (context.Cont
 	return fake.deprovisionArgsForCall[i].ctx, fake.deprovisionArgsForCall[i].instance, fake.deprovisionArgsForCall[i].details
 }
 
-func (fake *FakeServiceBrokerHelper) DeprovisionReturns(result1 error) {
+func (fake *FakeServiceBrokerHelper) DeprovisionReturns(result1 *string, result2 error) {
 	fake.DeprovisionStub = nil
 	fake.deprovisionReturns = struct {
-		result1 error
-	}{result1}
+		result1 *string
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) DeprovisionReturnsOnCall(i int, result1 error) {
+func (fake *FakeServiceBrokerHelper) DeprovisionReturnsOnCall(i int, result1 *string, result2 error) {
 	fake.DeprovisionStub = nil
 	if fake.deprovisionReturnsOnCall == nil {
 		fake.deprovisionReturnsOnCall = make(map[int]struct {
-			result1 error
+			result1 *string
+			result2 error
 		})
 	}
 	fake.deprovisionReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
+		result1 *string
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeServiceBrokerHelper) PollInstance(ctx context.Context, instance models.ServiceInstanceDetails) (bool, error) {

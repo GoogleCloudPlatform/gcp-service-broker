@@ -576,26 +576,19 @@ func (b *CloudSQLBroker) pollOperationUntilDone(ctx context.Context, op *googlec
 }
 
 // Deprovision issues a delete call on the database instance.
-func (b *CloudSQLBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
+func (b *CloudSQLBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (*string, error) {
 	sqlService, err := b.createClient(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// delete the instance from google
 	op, err := sqlService.Instances.Delete(b.ProjectId, instance.Name).Do()
 	if err != nil {
-		return fmt.Errorf("Error deleting instance: %s", err)
+		return nil, fmt.Errorf("Error deleting instance: %s", err)
 	}
 
-	instance.OperationType = models.DeprovisionOperationType
-	instance.OperationId = op.Name
-
-	if err := db_service.SaveServiceInstanceDetails(ctx, &instance); err != nil {
-		return fmt.Errorf("Error saving delete instance operation: %s", err)
-	}
-
-	return nil
+	return &op.Name, nil
 }
 
 // ProvisionsAsync indicates that CloudSQL uses asynchronous provisioning.

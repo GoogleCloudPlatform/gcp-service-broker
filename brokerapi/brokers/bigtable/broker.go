@@ -99,17 +99,17 @@ func (b *BigTableBroker) Provision(ctx context.Context, instanceId string, detai
 }
 
 // Deprovision deletes the BigTable associated with the given instance.
-func (b *BigTableBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
+func (b *BigTableBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (*string, error) {
 	service, err := b.createClient(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := service.DeleteInstance(ctx, instance.Name); err != nil {
-		return fmt.Errorf("Error deleting Bigtable instance: %s", err)
+		return nil, fmt.Errorf("Error deleting Bigtable instance: %s", err)
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (b *BigTableBroker) createClient(ctx context.Context) (*googlebigtable.InstanceAdminClient, error) {

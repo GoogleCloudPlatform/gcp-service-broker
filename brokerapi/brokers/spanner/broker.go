@@ -133,10 +133,10 @@ func (s *SpannerBroker) PollInstance(ctx context.Context, instance models.Servic
 }
 
 // Deprovision deletes the Spanner instance associated with the given instance.
-func (s *SpannerBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
+func (s *SpannerBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (*string, error) {
 	client, err := s.createAdminClient(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// delete instance
@@ -145,10 +145,10 @@ func (s *SpannerBroker) Deprovision(ctx context.Context, instance models.Service
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error deleting instance: %s", err)
+		return nil, fmt.Errorf("Error deleting instance: %s", err)
 	}
 
-	return nil
+	return nil, nil
 }
 
 // ProvisionsAsync indicates that Spanner uses asynchronous provisioning

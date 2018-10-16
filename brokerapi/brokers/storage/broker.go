@@ -88,17 +88,17 @@ func (b *StorageBroker) Provision(ctx context.Context, instanceId string, detail
 
 // Deprovision deletes the bucket associated with the given instance.
 // Note that all objects within the bucket must be deleted first.
-func (b *StorageBroker) Deprovision(ctx context.Context, bucket models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
+func (b *StorageBroker) Deprovision(ctx context.Context, bucket models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (*string, error) {
 	storageService, err := b.createClient(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if err = storageService.Bucket(bucket.Name).Delete(ctx); err != nil {
-		return fmt.Errorf("Error deleting bucket: %s", err)
+		return nil, fmt.Errorf("Error deleting bucket: %s", err)
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (b *StorageBroker) createClient(ctx context.Context) (*googlestorage.Client, error) {

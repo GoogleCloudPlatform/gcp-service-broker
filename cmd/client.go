@@ -122,6 +122,8 @@ user-defined plans.
 			if err := client.RunExamplesForService(apiClient, serviceName); err != nil {
 				log.Fatalf("Error executing examples: %v", err)
 			}
+
+			log.Println("Success")
 		},
 	}
 
