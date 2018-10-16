@@ -16,15 +16,15 @@ package pubsub
 
 import (
 	"encoding/json"
+	"errors"
 
 	googlepubsub "cloud.google.com/go/pubsub"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/net/context"
 
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
@@ -40,86 +40,86 @@ type PubSubBroker struct {
 // InstanceInformation holds the details needed to connect to a PubSub instance
 // after it has been provisioned.
 type InstanceInformation struct {
-	TopicName        string `json:"topic_name"`
+	TopicName string `json:"topic_name"`
+
+	// SubscriptionName is optional, if non-empty then a susbcription was created.
 	SubscriptionName string `json:"subscription_name"`
 }
 
 // Provision creates a new Pub/Sub topic from the settings in the user-provided details and service plan.
 // If a subscription name is supplied, the function will also create a subscription for the topic.
 func (b *PubSubBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
-	var err error
-	var params map[string]string
-	if len(details.RawParameters) == 0 {
-		params = map[string]string{}
-	} else if err := json.Unmarshal(details.RawParameters, &params); err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling provision details: %s", err)
+	variableContext, err := serviceDefinition().ProvisionVariables(instanceId, details, plan)
+	if err != nil {
+		return models.ServiceInstanceDetails{}, err
 	}
 
-	// Ensure there is a name for this topic
-	if _, ok := params["topic_name"]; !ok {
-		params["topic_name"] = name_generator.Basic.InstanceName()
+	// Extract and validate all the params exist and are the right types
+	defaultLabels := utils.ExtractDefaultLabels(instanceId, details)
+	topicName := variableContext.GetString("topic_name")
+	subscriptionName := variableContext.GetString("subscription_name")
+	endpoint := ""
+	if variableContext.GetBool("is_push") {
+		endpoint = variableContext.GetString("endpoint")
 	}
 
+	subscriptionConfig := googlepubsub.SubscriptionConfig{
+		PushConfig: googlepubsub.PushConfig{
+			Endpoint: endpoint,
+		},
+		AckDeadline: time.Duration(variableContext.GetInt("ack_deadline")) * time.Second,
+		Labels:      defaultLabels,
+	}
+
+	if err := variableContext.Error(); err != nil {
+		return models.ServiceInstanceDetails{}, err
+	}
+
+	// Check special-cases
+	if topicName == "" {
+		return models.ServiceInstanceDetails{}, errors.New("topic_name must not be blank")
+	}
+
+	// Create
 	pubsubClient, err := b.createClient(ctx)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, err
 	}
 
-	t, err := pubsubClient.CreateTopic(ctx, params["topic_name"])
+	topic, err := pubsubClient.CreateTopic(ctx, topicName)
 	if err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new pubsub topic: %s", err)
+		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new Pub/Sub topic: %s", err)
 	}
 
-	i := models.ServiceInstanceDetails{
-		Name:         params["topic_name"],
-		Url:          "",
-		Location:     "",
-		OtherDetails: "{}",
-	}
-	ii := InstanceInformation{
-		TopicName: params["topic_name"],
+	// This service needs labels to be set after creation
+	if _, err := topic.Update(ctx, googlepubsub.TopicConfigToUpdate{Labels: defaultLabels}); err != nil {
+		return models.ServiceInstanceDetails{}, fmt.Errorf("Error setting labels on new Pub/Sub topic: %s", err)
 	}
 
-	if subscriptionName, ok := params["subscription_name"]; ok {
-		var pushConfig googlepubsub.PushConfig
-		var ackDeadline = 10
+	if subscriptionName != "" {
+		subscriptionConfig.Topic = topic
 
-		if ackd, ok := params["ack_deadline"]; ok {
-			ackDeadline, err = strconv.Atoi(ackd)
-			if err != nil {
-				return models.ServiceInstanceDetails{}, fmt.Errorf("Error converting ack deadline to int: %s", err)
-			}
-		}
-
-		if isPush, ok := params["is_push"]; ok {
-			if isPush == "true" {
-				pushConfig = googlepubsub.PushConfig{
-					Endpoint: params["endpoint"],
-				}
-			}
-		}
-
-		subsConfig := googlepubsub.SubscriptionConfig{
-			PushConfig:  pushConfig,
-			Topic:       t,
-			AckDeadline: time.Duration(ackDeadline) * time.Second,
-		}
-
-		_, err = pubsubClient.CreateSubscription(ctx, subscriptionName, subsConfig)
-		if err != nil {
+		if _, err := pubsubClient.CreateSubscription(ctx, subscriptionName, subscriptionConfig); err != nil {
 			return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating subscription: %s", err)
 		}
+	}
 
-		ii.SubscriptionName = params["subscription_name"]
+	ii := InstanceInformation{
+		TopicName:        topicName,
+		SubscriptionName: subscriptionName,
 	}
 
 	otherDetails, err := json.Marshal(ii)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling json: %s", err)
 	}
-	i.OtherDetails = string(otherDetails)
 
-	return i, nil
+	return models.ServiceInstanceDetails{
+		Name:         topicName,
+		Url:          "",
+		Location:     "",
+		OtherDetails: string(otherDetails),
+	}, nil
 }
 
 // Deprovision deletes the topic and subscription associated with the given instance.
@@ -129,20 +129,17 @@ func (b *PubSubBroker) Deprovision(ctx context.Context, topic models.ServiceInst
 		return err
 	}
 
-	err = service.Topic(topic.Name).Delete(ctx)
-	if err != nil {
+	if err := service.Topic(topic.Name).Delete(ctx); err != nil {
 		return fmt.Errorf("Error deleting pubsub topic: %s", err)
 	}
 
-	otherD := make(map[string]string)
-	err = json.Unmarshal([]byte(topic.OtherDetails), &otherD)
+	otherDetails, err := topic.GetOtherDetails()
 	if err != nil {
-		return fmt.Errorf("Error unmarshalling service instance other details: %s", err)
+		return err
 	}
 
-	if subscriptionName := otherD["subscription_name"]; subscriptionName != "" {
-		err = service.Subscription(subscriptionName).Delete(ctx)
-		if err != nil {
+	if subscriptionName := otherDetails["subscription_name"]; subscriptionName != "" {
+		if err := service.Subscription(subscriptionName).Delete(ctx); err != nil {
 			return fmt.Errorf("Error deleting subscription: %s", err)
 		}
 	}
