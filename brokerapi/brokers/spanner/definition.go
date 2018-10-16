@@ -14,10 +14,17 @@
 
 package spanner
 
-import "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
-import accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+import (
+	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
+)
 
 func init() {
+	broker.Register(serviceDefinition())
+}
+
+func serviceDefinition() *broker.BrokerService {
 	roleWhitelist := []string{
 		"spanner.databaseAdmin",
 		"spanner.databaseReader",
@@ -25,7 +32,7 @@ func init() {
 		"spanner.viewer",
 	}
 
-	bs := &broker.BrokerService{
+	return &broker.BrokerService{
 		Name: "google-spanner",
 		DefaultServiceDefinition: `
 		{
@@ -63,20 +70,36 @@ func init() {
 			{
 				FieldName: "name",
 				Type:      broker.JsonTypeString,
-				Details:   "The name of the instance.",
-				Default:   "a generated value",
+				Details:   "A unique identifier for the instance, which cannot be changed after the instance is created.",
+				Default:   "pcf-sb-${counter.next()}-${time.nano()}",
+				Constraints: validation.NewConstraintBuilder().
+					MinLength(6).
+					MaxLength(30).
+					Pattern("^[a-z][-a-z0-9]*[a-z0-9]$").
+					Build(),
 			},
 			{
 				FieldName: "display_name",
 				Type:      broker.JsonTypeString,
-				Details:   "A human-readable name for the instance.",
-				Default:   "a generated value",
+				Details:   "The name of this instance configuration as it appears in UIs.",
+				Default:   "${name}",
+				Constraints: validation.NewConstraintBuilder().
+					MinLength(4).
+					MaxLength(30).
+					Build(),
 			},
 			{
 				FieldName: "location",
 				Type:      broker.JsonTypeString,
 				Default:   "regional-us-central1",
-				Details:   `The location of the Spanner instance.`,
+				Details: `A configuration for a Cloud Spanner instance.
+				 Configurations define the geographic placement of nodes and their replication and are slightly different from zones.
+				 There are single region configurations, multi-region configurations, and multi-continent configurations.
+				 See the instance docs https://cloud.google.com/spanner/docs/instances for a list of configurations.`,
+				Constraints: validation.NewConstraintBuilder().
+					Examples("regional-asia-east1", "nam3", "nam-eur-asia1").
+					Pattern("^[a-z][-a-z0-9]*[a-z0-9]$").
+					Build(),
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
@@ -105,8 +128,13 @@ func init() {
 				ProvisionParams: map[string]interface{}{"name": "auth-database"},
 				BindParams:      map[string]interface{}{"role": "spanner.databaseAdmin"},
 			},
+			{
+				Name:            "99.999% availability",
+				Description:     "Create a spanner instance spanning North America.",
+				PlanId:          "44828436-cfbd-47ae-b4bc-48854564347b",
+				ProvisionParams: map[string]interface{}{"name": "auth-database", "location": "nam3"},
+				BindParams:      map[string]interface{}{"role": "spanner.databaseAdmin"},
+			},
 		},
 	}
-
-	broker.Register(bs)
 }

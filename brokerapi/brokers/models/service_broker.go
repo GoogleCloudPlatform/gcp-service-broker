@@ -30,8 +30,7 @@ type ServiceBrokerHelper interface {
 	BuildInstanceCredentials(ctx context.Context, bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
 	Unbind(ctx context.Context, details ServiceBindingCredentials) error
 	Deprovision(ctx context.Context, instance ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error
-	PollInstance(ctx context.Context, instanceID string) (bool, error)
-	LastOperationWasDelete(ctx context.Context, instanceID string) (bool, error)
+	PollInstance(ctx context.Context, instance ServiceInstanceDetails) (bool, error)
 	ProvisionsAsync() bool
 	DeprovisionsAsync() bool
 }

@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -69,12 +70,11 @@ func extractRole(details brokerapi.BindDetails) (string, error) {
 		return "", err
 	}
 
-	role, ok := bindParameters["role"].(string)
-	if !ok {
-		return "", errors.New("Error getting role as string from request")
+	if role, ok := bindParameters["role"].(string); ok {
+		return role, nil
 	}
 
-	return role, nil
+	return "", errors.New("Error getting role as string from request")
 }
 
 // CreateAccountWithRoles creates a service account with a name based on bindingID, JSON key and grants it zero or more roles
@@ -132,14 +132,16 @@ func (sam *ServiceAccountManager) DeleteCredentials(ctx context.Context, binding
 	if err != nil {
 		return fmt.Errorf("Error creating IAM service: %s", err)
 	}
-	saService := iam.NewProjectsServiceAccountsService(iamService)
 
-	var resourceName = projectResourcePrefix + sam.ProjectId + "/serviceAccounts/" + saCreds.UniqueId
+	resourceName := projectResourcePrefix + sam.ProjectId + "/serviceAccounts/" + saCreds.UniqueId
+	if _, err := iam.NewProjectsServiceAccountsService(iamService).Delete(resourceName).Do(); err != nil {
+		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
+			return nil
+		}
 
-	_, err = saService.Delete(resourceName).Do()
-	if err != nil {
 		return fmt.Errorf("error deleting service account: %s", err)
 	}
+
 	return nil
 }
 
