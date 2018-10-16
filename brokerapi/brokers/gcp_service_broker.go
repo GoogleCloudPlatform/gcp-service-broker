@@ -223,6 +223,7 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 
 // Deprovision destroys an existing instance of a service.
 // It is bound to the `DELETE /v2/service_instances/:instance_id` endpoint and can be called using the `cf delete-service` command.
+// If a deprovision is asynchronous, the returned DeprovisionServiceSpec will contain the operation ID for tracking its progress.
 func (gcpBroker *GCPServiceBroker) Deprovision(ctx context.Context, instanceID string, details brokerapi.DeprovisionDetails, clientSupportsAsync bool) (response brokerapi.DeprovisionServiceSpec, err error) {
 	gcpBroker.Logger.Info("Deprovisioning", lager.Data{
 		"instance_id":        instanceID,
@@ -271,7 +272,10 @@ func (gcpBroker *GCPServiceBroker) Deprovision(ctx context.Context, instanceID s
 
 		instance.OperationType = models.DeprovisionOperationType
 		instance.OperationId = *operationId
-		return response, db_service.SaveServiceInstanceDetails(ctx, instance)
+		if err := db_service.SaveServiceInstanceDetails(ctx, instance); err != nil {
+			return response, fmt.Errorf("Error saving instance details to database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup.", err)
+		}
+		return response, nil
 	}
 }
 

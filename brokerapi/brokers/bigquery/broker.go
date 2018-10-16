@@ -92,7 +92,7 @@ func (b *BigQueryBroker) Deprovision(ctx context.Context, dataset models.Service
 		return nil, err
 	}
 
-	if err = service.Datasets.Delete(b.ProjectId, dataset.Name).Do(); err != nil {
+	if err := service.Datasets.Delete(b.ProjectId, dataset.Name).Do(); err != nil {
 		return nil, fmt.Errorf("Error deleting dataset: %s", err)
 	}
 
