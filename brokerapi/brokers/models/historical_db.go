@@ -141,6 +141,7 @@ func (MigrationV1) TableName() string {
 
 // CloudOperationV1 holds information about the status of Google Cloud
 // long-running operations.
+// As-of version 4.1.0, this table is no longer necessary.
 type CloudOperationV1 struct {
 	gorm.Model
 

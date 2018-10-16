@@ -82,31 +82,17 @@ type FakeServiceBrokerHelper struct {
 	deprovisionReturnsOnCall map[int]struct {
 		result1 error
 	}
-	PollInstanceStub        func(ctx context.Context, instanceID string) (bool, error)
+	PollInstanceStub        func(ctx context.Context, instance models.ServiceInstanceDetails) (bool, error)
 	pollInstanceMutex       sync.RWMutex
 	pollInstanceArgsForCall []struct {
-		ctx        context.Context
-		instanceID string
+		ctx      context.Context
+		instance models.ServiceInstanceDetails
 	}
 	pollInstanceReturns struct {
 		result1 bool
 		result2 error
 	}
 	pollInstanceReturnsOnCall map[int]struct {
-		result1 bool
-		result2 error
-	}
-	LastOperationWasDeleteStub        func(ctx context.Context, instanceID string) (bool, error)
-	lastOperationWasDeleteMutex       sync.RWMutex
-	lastOperationWasDeleteArgsForCall []struct {
-		ctx        context.Context
-		instanceID string
-	}
-	lastOperationWasDeleteReturns struct {
-		result1 bool
-		result2 error
-	}
-	lastOperationWasDeleteReturnsOnCall map[int]struct {
 		result1 bool
 		result2 error
 	}
@@ -392,17 +378,17 @@ func (fake *FakeServiceBrokerHelper) DeprovisionReturnsOnCall(i int, result1 err
 	}{result1}
 }
 
-func (fake *FakeServiceBrokerHelper) PollInstance(ctx context.Context, instanceID string) (bool, error) {
+func (fake *FakeServiceBrokerHelper) PollInstance(ctx context.Context, instance models.ServiceInstanceDetails) (bool, error) {
 	fake.pollInstanceMutex.Lock()
 	ret, specificReturn := fake.pollInstanceReturnsOnCall[len(fake.pollInstanceArgsForCall)]
 	fake.pollInstanceArgsForCall = append(fake.pollInstanceArgsForCall, struct {
-		ctx        context.Context
-		instanceID string
-	}{ctx, instanceID})
-	fake.recordInvocation("PollInstance", []interface{}{ctx, instanceID})
+		ctx      context.Context
+		instance models.ServiceInstanceDetails
+	}{ctx, instance})
+	fake.recordInvocation("PollInstance", []interface{}{ctx, instance})
 	fake.pollInstanceMutex.Unlock()
 	if fake.PollInstanceStub != nil {
-		return fake.PollInstanceStub(ctx, instanceID)
+		return fake.PollInstanceStub(ctx, instance)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -416,10 +402,10 @@ func (fake *FakeServiceBrokerHelper) PollInstanceCallCount() int {
 	return len(fake.pollInstanceArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) PollInstanceArgsForCall(i int) (context.Context, string) {
+func (fake *FakeServiceBrokerHelper) PollInstanceArgsForCall(i int) (context.Context, models.ServiceInstanceDetails) {
 	fake.pollInstanceMutex.RLock()
 	defer fake.pollInstanceMutex.RUnlock()
-	return fake.pollInstanceArgsForCall[i].ctx, fake.pollInstanceArgsForCall[i].instanceID
+	return fake.pollInstanceArgsForCall[i].ctx, fake.pollInstanceArgsForCall[i].instance
 }
 
 func (fake *FakeServiceBrokerHelper) PollInstanceReturns(result1 bool, result2 error) {
@@ -439,58 +425,6 @@ func (fake *FakeServiceBrokerHelper) PollInstanceReturnsOnCall(i int, result1 bo
 		})
 	}
 	fake.pollInstanceReturnsOnCall[i] = struct {
-		result1 bool
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeServiceBrokerHelper) LastOperationWasDelete(ctx context.Context, instanceID string) (bool, error) {
-	fake.lastOperationWasDeleteMutex.Lock()
-	ret, specificReturn := fake.lastOperationWasDeleteReturnsOnCall[len(fake.lastOperationWasDeleteArgsForCall)]
-	fake.lastOperationWasDeleteArgsForCall = append(fake.lastOperationWasDeleteArgsForCall, struct {
-		ctx        context.Context
-		instanceID string
-	}{ctx, instanceID})
-	fake.recordInvocation("LastOperationWasDelete", []interface{}{ctx, instanceID})
-	fake.lastOperationWasDeleteMutex.Unlock()
-	if fake.LastOperationWasDeleteStub != nil {
-		return fake.LastOperationWasDeleteStub(ctx, instanceID)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.lastOperationWasDeleteReturns.result1, fake.lastOperationWasDeleteReturns.result2
-}
-
-func (fake *FakeServiceBrokerHelper) LastOperationWasDeleteCallCount() int {
-	fake.lastOperationWasDeleteMutex.RLock()
-	defer fake.lastOperationWasDeleteMutex.RUnlock()
-	return len(fake.lastOperationWasDeleteArgsForCall)
-}
-
-func (fake *FakeServiceBrokerHelper) LastOperationWasDeleteArgsForCall(i int) (context.Context, string) {
-	fake.lastOperationWasDeleteMutex.RLock()
-	defer fake.lastOperationWasDeleteMutex.RUnlock()
-	return fake.lastOperationWasDeleteArgsForCall[i].ctx, fake.lastOperationWasDeleteArgsForCall[i].instanceID
-}
-
-func (fake *FakeServiceBrokerHelper) LastOperationWasDeleteReturns(result1 bool, result2 error) {
-	fake.LastOperationWasDeleteStub = nil
-	fake.lastOperationWasDeleteReturns = struct {
-		result1 bool
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeServiceBrokerHelper) LastOperationWasDeleteReturnsOnCall(i int, result1 bool, result2 error) {
-	fake.LastOperationWasDeleteStub = nil
-	if fake.lastOperationWasDeleteReturnsOnCall == nil {
-		fake.lastOperationWasDeleteReturnsOnCall = make(map[int]struct {
-			result1 bool
-			result2 error
-		})
-	}
-	fake.lastOperationWasDeleteReturnsOnCall[i] = struct {
 		result1 bool
 		result2 error
 	}{result1, result2}
@@ -591,8 +525,6 @@ func (fake *FakeServiceBrokerHelper) Invocations() map[string][][]interface{} {
 	defer fake.deprovisionMutex.RUnlock()
 	fake.pollInstanceMutex.RLock()
 	defer fake.pollInstanceMutex.RUnlock()
-	fake.lastOperationWasDeleteMutex.RLock()
-	defer fake.lastOperationWasDeleteMutex.RUnlock()
 	fake.provisionsAsyncMutex.RLock()
 	defer fake.provisionsAsyncMutex.RUnlock()
 	fake.deprovisionsAsyncMutex.RLock()

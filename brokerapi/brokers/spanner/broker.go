@@ -22,7 +22,6 @@ import (
 	googlespanner "cloud.google.com/go/spanner/admin/instance/apiv1"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	"google.golang.org/api/option"
@@ -99,12 +98,7 @@ func (s *SpannerBroker) Provision(ctx context.Context, instanceId string, detail
 }
 
 // PollInstance gets the last operation for this instance and polls its status.
-func (s *SpannerBroker) PollInstance(ctx context.Context, instanceId string) (bool, error) {
-	instance, err := db_service.GetServiceInstanceDetailsById(ctx, instanceId)
-	if err != nil {
-		return false, brokerapi.ErrInstanceDoesNotExist
-	}
-
+func (s *SpannerBroker) PollInstance(ctx context.Context, instance models.ServiceInstanceDetails) (bool, error) {
 	if instance.OperationType == models.ClearOperationType {
 		return false, fmt.Errorf("No pending operations could be found for this Spanner instance.")
 	}
@@ -131,11 +125,6 @@ func (s *SpannerBroker) PollInstance(ctx context.Context, instanceId string) (bo
 		return true, fmt.Errorf("Error provisioning instance: %v", err)
 
 	case err == nil && done: // The operation was successful
-		instance.OperationId = ""
-		instance.OperationType = models.ClearOperationType
-		if err := db_service.SaveServiceInstanceDetails(ctx, instance); err != nil {
-			return true, fmt.Errorf("Error updating instance state: %v", err)
-		}
 		return true, nil
 
 	default: // The operation hasn't completed yet
@@ -171,15 +160,6 @@ func (s *SpannerBroker) ProvisionsAsync() bool {
 // regards to the project id.
 func (s *SpannerBroker) qualifiedInstanceName(instanceName string) string {
 	return fmt.Sprintf("projects/%s/instances/%s", s.ProjectId, instanceName)
-}
-
-// LastOperationWasDelete is used during polling of async operations to check
-// if the workflow is a provision or deprovision flow based off the type of the
-// most recent operation
-// since spanner deprovisions synchronously, the last operation will never have
-// been delete
-func (s *SpannerBroker) LastOperationWasDelete(ctx context.Context, instanceId string) (bool, error) {
-	return false, nil
 }
 
 func (s *SpannerBroker) createAdminClient(ctx context.Context) (*googlespanner.InstanceAdminClient, error) {

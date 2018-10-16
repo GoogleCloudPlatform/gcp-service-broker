@@ -16,7 +16,6 @@ package broker_base
 
 import (
 	"context"
-	"errors"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
@@ -53,7 +52,7 @@ func (b *BrokerBase) Unbind(ctx context.Context, creds models.ServiceBindingCred
 
 // PollInstance does nothing but return an error because Base services are
 // provisioned synchronously so this method should not be called.
-func (b *BrokerBase) PollInstance(ctx context.Context, instanceID string) (bool, error) {
+func (b *BrokerBase) PollInstance(ctx context.Context, instance models.ServiceInstanceDetails) (bool, error) {
 	return true, brokerapi.ErrAsyncRequired
 }
 
@@ -65,11 +64,4 @@ func (b *BrokerBase) ProvisionsAsync() bool {
 // DeprovisionsAsync indicates if deprovisioning must be done asynchronously.
 func (b *BrokerBase) DeprovisionsAsync() bool {
 	return false
-}
-
-// LastOperationWasDelete is used during polling of async operations to
-// determine if the workflow is a provision or deprovision flow based off the
-// type of the most recent operation.
-func (b *BrokerBase) LastOperationWasDelete(ctx context.Context, instanceId string) (bool, error) {
-	return false, errors.New("can't check last operation on a synchronous service")
 }
