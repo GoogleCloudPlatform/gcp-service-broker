@@ -114,6 +114,18 @@ type FakeServiceBrokerHelper struct {
 	deprovisionsAsyncReturnsOnCall map[int]struct {
 		result1 bool
 	}
+	UpdateInstanceDetailsStub        func(ctx context.Context, instance *models.ServiceInstanceDetails) error
+	updateInstanceDetailsMutex       sync.RWMutex
+	updateInstanceDetailsArgsForCall []struct {
+		ctx      context.Context
+		instance *models.ServiceInstanceDetails
+	}
+	updateInstanceDetailsReturns struct {
+		result1 error
+	}
+	updateInstanceDetailsReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -510,6 +522,55 @@ func (fake *FakeServiceBrokerHelper) DeprovisionsAsyncReturnsOnCall(i int, resul
 	}{result1}
 }
 
+func (fake *FakeServiceBrokerHelper) UpdateInstanceDetails(ctx context.Context, instance *models.ServiceInstanceDetails) error {
+	fake.updateInstanceDetailsMutex.Lock()
+	ret, specificReturn := fake.updateInstanceDetailsReturnsOnCall[len(fake.updateInstanceDetailsArgsForCall)]
+	fake.updateInstanceDetailsArgsForCall = append(fake.updateInstanceDetailsArgsForCall, struct {
+		ctx      context.Context
+		instance *models.ServiceInstanceDetails
+	}{ctx, instance})
+	fake.recordInvocation("UpdateInstanceDetails", []interface{}{ctx, instance})
+	fake.updateInstanceDetailsMutex.Unlock()
+	if fake.UpdateInstanceDetailsStub != nil {
+		return fake.UpdateInstanceDetailsStub(ctx, instance)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.updateInstanceDetailsReturns.result1
+}
+
+func (fake *FakeServiceBrokerHelper) UpdateInstanceDetailsCallCount() int {
+	fake.updateInstanceDetailsMutex.RLock()
+	defer fake.updateInstanceDetailsMutex.RUnlock()
+	return len(fake.updateInstanceDetailsArgsForCall)
+}
+
+func (fake *FakeServiceBrokerHelper) UpdateInstanceDetailsArgsForCall(i int) (context.Context, *models.ServiceInstanceDetails) {
+	fake.updateInstanceDetailsMutex.RLock()
+	defer fake.updateInstanceDetailsMutex.RUnlock()
+	return fake.updateInstanceDetailsArgsForCall[i].ctx, fake.updateInstanceDetailsArgsForCall[i].instance
+}
+
+func (fake *FakeServiceBrokerHelper) UpdateInstanceDetailsReturns(result1 error) {
+	fake.UpdateInstanceDetailsStub = nil
+	fake.updateInstanceDetailsReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeServiceBrokerHelper) UpdateInstanceDetailsReturnsOnCall(i int, result1 error) {
+	fake.UpdateInstanceDetailsStub = nil
+	if fake.updateInstanceDetailsReturnsOnCall == nil {
+		fake.updateInstanceDetailsReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.updateInstanceDetailsReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeServiceBrokerHelper) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -529,6 +590,8 @@ func (fake *FakeServiceBrokerHelper) Invocations() map[string][][]interface{} {
 	defer fake.provisionsAsyncMutex.RUnlock()
 	fake.deprovisionsAsyncMutex.RLock()
 	defer fake.deprovisionsAsyncMutex.RUnlock()
+	fake.updateInstanceDetailsMutex.RLock()
+	defer fake.updateInstanceDetailsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

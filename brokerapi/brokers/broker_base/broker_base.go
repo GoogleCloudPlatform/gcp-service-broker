@@ -65,3 +65,9 @@ func (b *BrokerBase) ProvisionsAsync() bool {
 func (b *BrokerBase) DeprovisionsAsync() bool {
 	return false
 }
+
+// UpdateInstanceDetails updates the ServiceInstanceDetails with the most recent state from GCP.
+// This instance is a no-op method.
+func (b *BrokerBase) UpdateInstanceDetails(ctx context.Context, instance *models.ServiceInstanceDetails) error {
+	return nil
+}

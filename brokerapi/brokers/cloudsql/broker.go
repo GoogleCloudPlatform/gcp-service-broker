@@ -453,19 +453,20 @@ func (b *CloudSQLBroker) PollInstance(ctx context.Context, instance models.Servi
 	}
 
 	if instance.OperationType == models.ProvisionOperationType {
-		if err := b.refreshServiceInstanceDetails(ctx, &instance); err != nil {
+		instancePtr := &instance
+		if err := b.UpdateInstanceDetails(ctx, instancePtr); err != nil {
 			return true, err
 		}
 
-		return true, b.createDatabase(ctx, &instance)
+		return true, b.createDatabase(ctx, instancePtr)
 	}
 
 	return true, nil
 }
 
 // refreshServiceInstanceDetails fetches the settings for the instance from GCP
-// and upates the service with the refreshed info.
-func (b *CloudSQLBroker) refreshServiceInstanceDetails(ctx context.Context, instance *models.ServiceInstanceDetails) error {
+// and upates the provided instance with the refreshed info.
+func (b *CloudSQLBroker) UpdateInstanceDetails(ctx context.Context, instance *models.ServiceInstanceDetails) error {
 	var instanceInfo InstanceInformation
 	if err := json.Unmarshal([]byte(instance.OtherDetails), &instanceInfo); err != nil {
 		return fmt.Errorf("Error unmarshalling instance information.")
@@ -494,7 +495,7 @@ func (b *CloudSQLBroker) refreshServiceInstanceDetails(ctx context.Context, inst
 	}
 	instance.OtherDetails = string(otherDetails)
 
-	return db_service.SaveServiceInstanceDetails(ctx, instance)
+	return nil
 }
 
 // createDatabase creates tha database on the instance referenced by ServiceInstanceDetails.
