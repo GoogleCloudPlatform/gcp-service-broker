@@ -107,32 +107,22 @@ func ValidateVariables(parameters map[string]interface{}, schemaVariables []Brok
 			if variable.Required {
 				multierror.Append(allErrors, fmt.Errorf("missing required parameter \"%s\"", variable.FieldName))
 				continue
+			} else if variable.Default != nil {
+				// Insert the default value into the parameters
+				value = variable.Default
+				parameters[variable.FieldName] = value
 			}
-
-			if variable.Default == nil {
-				continue
-			}
-
-			// Insert the default value into the parameters
-			value = variable.Default
-			parameters[variable.FieldName] = value
 		}
 
 		result, err := gojsonschema.Validate(gojsonschema.NewGoLoader(variable.ToSchema()), gojsonschema.NewGoLoader(value))
 		if err != nil {
 			multierror.Append(allErrors, err)
-			continue
-		}
-
-		if len(result.Errors()) > 0 {
+		} else if len(result.Errors()) > 0 {
 			for _, r := range result.Errors() {
 				// For better output, replace the "root" keyword for the root json object to the variable name.
 				multierror.Append(allErrors, errors.New(strings.Replace(r.String(), "(root)", fmt.Sprintf("(%s)", variable.FieldName), -1)))
 			}
-
-			continue
 		}
-
 	}
 
 	if len(allErrors.Errors) == 0 {
