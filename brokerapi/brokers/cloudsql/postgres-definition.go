@@ -17,6 +17,7 @@ package cloudsql
 import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 )
 
 func init() {
@@ -180,9 +181,21 @@ func postgresServiceDefinition() *broker.BrokerService {
 				},
 			},
 		}, commonProvisionVariables()...),
-		DefaultRoleWhitelist: roleWhitelist(),
-		BindInputVariables:   commonBindVariables(),
-		BindOutputVariables:  commonBindOutputVariables(),
+		ProvisionComputedVariables: []varcontext.DefaultVariable{
+			// legacy behavior dictates that empty values get defaults
+			{Name: "instance_name", Default: `${instance_name == "" ? "pcf-sb-${counter.next()}-${time.nano()}" : instance_name}`, Overwrite: true},
+			{Name: "database_name", Default: `${database_name == "" ? "pcf-sb-${counter.next()}-${time.nano()}" : database_name}`, Overwrite: true},
+
+			{Name: "is_first_gen", Default: `false`, Overwrite: true},
+
+			// validation
+			{Name: "_", Default: `${assert(disk_size <= max_disk_size, "disk size (${disk_size}) is greater than max allowed disk size for this plan (${max_disk_size})")}`, Overwrite: true},
+		},
+
+		DefaultRoleWhitelist:  roleWhitelist(),
+		BindInputVariables:    commonBindVariables(),
+		BindOutputVariables:   commonBindOutputVariables(),
+		BindComputedVariables: commonBindComputedVariables(),
 		PlanVariables: []broker.BrokerVariable{
 			{
 				FieldName: "tier",

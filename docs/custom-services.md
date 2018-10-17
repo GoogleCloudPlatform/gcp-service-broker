@@ -59,7 +59,6 @@ When you're creating a new service for the broker you're designing for three sep
 * The operators, the people who are responsible for approving services and plans for developers to use.
 * Yourself, the person who has to maintain the service, strike the right balance of power between the operators and users, and make sure and make sure the new plans/services work as intended.
 
-
 The following sections contain guidelines to help you out.
 
 ### Deciding what to include
@@ -89,7 +88,6 @@ In general, properties which have monetary cost or affect the security of the pl
 
 In our static site bucket example the operator would create plans for different domain names (security) and bucket locations/durabilities (pricing) and the developer would get to set the parameters for the default index/error pages and maybe hostname. A full CNAME would be calculated from the hostname and domain name combination. It isn't clear who would get control over the Pub/Sub endpoint. On one hand, the developers might need it to update a search engine index but on the other the operator might to conduct ongoing security audits.
 
-
 ### Deciding on sensible defaults
 
 The GCP Service Broker operates under the model that the users are benign but fallible.
@@ -97,7 +95,6 @@ Sensible defaults are secure and work well in the average use-case.
 This highly depends on your target audience.
 
 For example, a Pub/Sub instance with one-to-many semantics might default to a read-only role, assuming the default consumer is just going to be a worker node whereas a Pub/Sub instance with many-to-many semantics might default to a read/write role even if some consumers want to be read-only.
-
 
 ### Deciding on what your default plans will look like
 

@@ -239,13 +239,10 @@ func mysqlServiceDefinition() *broker.BrokerService {
 			// validation
 			{Name: "_", Default: `${assert(disk_size <= max_disk_size, "disk size (${disk_size}) is greater than max allowed disk size for this plan (${max_disk_size})")}`, Overwrite: true},
 		},
-		DefaultRoleWhitelist: roleWhitelist(),
-		BindInputVariables:   commonBindVariables(),
-		BindOutputVariables:  commonBindOutputVariables(),
-		BindComputedVariables: []varcontext.DefaultVariable{
-			{Name: "password", Default: `${password == "" ? rand.base64(32) : password}`, Overwrite: true},
-			{Name: "username", Default: `${username == "" ? "sb${str.truncate(14, time.nano())}" : username}`, Overwrite: true},
-		},
+		DefaultRoleWhitelist:  roleWhitelist(),
+		BindInputVariables:    commonBindVariables(),
+		BindOutputVariables:   commonBindOutputVariables(),
+		BindComputedVariables: commonBindComputedVariables(),
 		PlanVariables: []broker.BrokerVariable{
 			{
 				FieldName: "tier",

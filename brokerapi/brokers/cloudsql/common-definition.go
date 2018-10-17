@@ -18,6 +18,7 @@ import (
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 )
 
 func roleWhitelist() []string {
@@ -53,6 +54,14 @@ func commonBindVariables() []broker.BrokerVariable {
 			Default:   "${rand.base64(32)}",
 		},
 	)
+}
+
+func commonBindComputedVariables() []varcontext.DefaultVariable {
+	return []varcontext.DefaultVariable{
+		// legacy behavior dictates that empty values get defaults
+		{Name: "password", Default: `${password == "" ? rand.base64(32) : password}`, Overwrite: true},
+		{Name: "username", Default: `${username == "" ? "sb${str.truncate(14, time.nano())}" : username}`, Overwrite: true},
+	}
 }
 
 func commonProvisionVariables() []broker.BrokerVariable {
