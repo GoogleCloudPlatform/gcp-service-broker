@@ -21,7 +21,6 @@ import (
 )
 
 //go:generate counterfeiter . ServiceBrokerHelper
-//go:generate counterfeiter . AccountManager
 //go:generate counterfeiter . ServiceAccountManager
 
 type ServiceBrokerHelper interface {
@@ -44,14 +43,10 @@ type ServiceBrokerHelper interface {
 	UpdateInstanceDetails(ctx context.Context, instance *ServiceInstanceDetails) error
 }
 
-type AccountManager interface {
+type ServiceAccountManager interface {
 	CreateCredentials(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance ServiceInstanceDetails) (ServiceBindingCredentials, error)
 	DeleteCredentials(ctx context.Context, creds ServiceBindingCredentials) error
 	BuildInstanceCredentials(ctx context.Context, bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
-}
-
-type ServiceAccountManager interface {
-	AccountManager
 	CreateAccountWithRoles(ctx context.Context, bindingID string, roles []string) (ServiceBindingCredentials, error)
 }
 

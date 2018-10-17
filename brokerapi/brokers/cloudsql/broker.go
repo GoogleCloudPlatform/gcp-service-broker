@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
@@ -33,7 +34,6 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	multierror "github.com/hashicorp/go-multierror"
-	"golang.org/x/oauth2/jwt"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 )
 
@@ -46,11 +46,11 @@ const (
 
 // CloudSQLBroker is the service-broker back-end for creating and binding CloudSQL instances.
 type CloudSQLBroker struct {
-	HttpConfig       *jwt.Config
-	ProjectId        string
-	Logger           lager.Logger
-	AccountManager   models.AccountManager
-	SaAccountManager models.AccountManager
+	broker_base.BrokerBase
+}
+
+func (broker *CloudSQLBroker) sqlAccountManager() *SqlAccountManager {
+	return &SqlAccountManager{HttpConfig: broker.HttpConfig, ProjectId: broker.ProjectId}
 }
 
 // InstanceInformation holds the details needed to bind a service account to a CloudSQL instance after it has been provisioned.
@@ -359,12 +359,12 @@ func (b *CloudSQLBroker) Bind(ctx context.Context, instanceID, bindingID string,
 		return models.ServiceBindingCredentials{}, err
 	}
 
-	sqlCredBytes, err := b.AccountManager.CreateCredentials(ctx, instanceID, bindingID, details, *cloudDb)
+	sqlCredBytes, err := b.sqlAccountManager().CreateCredentials(ctx, instanceID, bindingID, details, *cloudDb)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}
 
-	saCredBytes, err := b.SaAccountManager.CreateCredentials(ctx, instanceID, bindingID, details, models.ServiceInstanceDetails{})
+	saCredBytes, err := b.AccountManager.CreateCredentials(ctx, instanceID, bindingID, details, models.ServiceInstanceDetails{})
 	if err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}
@@ -417,18 +417,18 @@ func combineServiceBindingCreds(sqlCreds models.ServiceBindingCredentials, saCre
 }
 
 func (b *CloudSQLBroker) BuildInstanceCredentials(ctx context.Context, bindDetails models.ServiceBindingCredentials, instanceDetails models.ServiceInstanceDetails) (map[string]string, error) {
-	return b.AccountManager.BuildInstanceCredentials(ctx, bindDetails, instanceDetails)
+	return b.sqlAccountManager().BuildInstanceCredentials(ctx, bindDetails, instanceDetails)
 }
 
 // Unbind deletes the database user, service account and invalidates the ssl certs associated with this binding.
 func (b *CloudSQLBroker) Unbind(ctx context.Context, creds models.ServiceBindingCredentials) error {
 	var accumulator error
 
-	if err := b.AccountManager.DeleteCredentials(ctx, creds); err != nil {
+	if err := b.sqlAccountManager().DeleteCredentials(ctx, creds); err != nil {
 		accumulator = multierror.Append(accumulator, err)
 	}
 
-	if err := b.SaAccountManager.DeleteCredentials(ctx, creds); err != nil {
+	if err := b.AccountManager.DeleteCredentials(ctx, creds); err != nil {
 		accumulator = multierror.Append(accumulator, err)
 	}
 
@@ -454,7 +454,7 @@ func (b *CloudSQLBroker) PollInstance(ctx context.Context, instance models.Servi
 
 	if instance.OperationType == models.ProvisionOperationType {
 		// Update the instance information from the server side before
-		// creating the database. The modification happens _only_ to 
+		// creating the database. The modification happens _only_ to
 		// this instance of the details and is not persisted to the db.
 		if err := b.UpdateInstanceDetails(ctx, &instance); err != nil {
 			return true, err

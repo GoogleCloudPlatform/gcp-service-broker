@@ -62,11 +62,6 @@ func New(cfg *config.BrokerConfig, logger lager.Logger) (*GCPServiceBroker, erro
 		ProjectId:  cfg.ProjectId,
 	}
 
-	sqlManager := &account_managers.SqlAccountManager{
-		HttpConfig: cfg.HttpConfig,
-		ProjectId:  cfg.ProjectId,
-	}
-
 	bb := broker_base.BrokerBase{
 		AccountManager: saManager,
 		HttpConfig:     cfg.HttpConfig,
@@ -98,18 +93,10 @@ func New(cfg *config.BrokerConfig, logger lager.Logger) (*GCPServiceBroker, erro
 			BrokerBase: bb,
 		},
 		models.CloudsqlMySQLName: &cloudsql.CloudSQLBroker{
-			HttpConfig:       cfg.HttpConfig,
-			ProjectId:        cfg.ProjectId,
-			Logger:           self.Logger,
-			AccountManager:   sqlManager,
-			SaAccountManager: saManager,
+			BrokerBase: bb,
 		},
 		models.CloudsqlPostgresName: &cloudsql.CloudSQLBroker{
-			HttpConfig:       cfg.HttpConfig,
-			ProjectId:        cfg.ProjectId,
-			Logger:           self.Logger,
-			AccountManager:   sqlManager,
-			SaAccountManager: saManager,
+			BrokerBase: bb,
 		},
 		models.BigtableName: &bigtable.BigTableBroker{
 			BrokerBase: bb,
