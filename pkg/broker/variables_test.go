@@ -17,6 +17,8 @@ package broker
 import (
 	"reflect"
 	"testing"
+	"errors"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 )
 
 func TestBrokerVariable_ToSchema(t *testing.T) {
@@ -79,4 +81,165 @@ func TestBrokerVariable_ToSchema(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestBrokerVariable_ValidateVariables(t *testing.T) {
+	cases := map[string]struct {
+		Parameters map[string]interface{}
+		Variables []BrokerVariable
+		Expected  error
+	} {
+		"nil check": {
+			Parameters: nil,
+			Variables: nil,
+			Expected: nil,
+		},
+		"integer": {
+			Parameters: map[string]interface{}{
+				"test":12,
+			},
+			Variables: []BrokerVariable{
+				{
+					Required:true,
+					FieldName:"test",
+					Type:JsonTypeInteger,
+				},
+			},
+			Expected: nil,
+		},
+		"unexpected type": {
+			Parameters: map[string]interface{}{
+				"test":"didn't see that coming",
+			},
+			Variables: []BrokerVariable{
+				{
+					Required:true,
+					FieldName:"test",
+					Type:JsonTypeInteger,
+				},
+			},
+			Expected: errors.New("1 error(s) occurred:\n(test): Invalid type. Expected: integer, given: string"),
+		},
+		"double trouble": {
+			Parameters: map[string]interface{}{
+				"test":"didn't see that coming",
+				"test2":"I am no good",
+			},
+			Variables: []BrokerVariable{
+				{
+					Required:true,
+					FieldName:"test",
+					Type:JsonTypeInteger,
+				},
+				{
+					Required:true,
+					FieldName:"test2",
+					Type:JsonTypeInteger,
+				},
+			},
+			Expected: errors.New("2 error(s) occurred:\n(test): Invalid type. Expected: integer, given: string\n(test2): Invalid type. Expected: integer, given: string"),
+		},
+		"test constraints": {
+			Parameters: map[string]interface{}{
+				"test":0,
+			},
+			Variables: []BrokerVariable{
+				{
+					Required:true,
+					FieldName:"test",
+					Type:JsonTypeInteger,
+					Constraints: validation.NewConstraintBuilder().
+						Minimum(10).
+						Build(),
+				},
+			},
+			Expected: errors.New("1 error(s) occurred:\n(test): Must be greater than or equal to 10"),
+		},
+		"test enum": {
+			Parameters: map[string]interface{}{
+				"test":"not this one",
+			},
+			Variables: []BrokerVariable{
+				{
+					Required:true,
+					FieldName:"test",
+					Type:JsonTypeString,
+					Enum: map[interface{}]string {
+						"one": "it's either this one",
+						"theother": "or this one",
+					},
+				},
+			},
+			Expected: errors.New("1 error(s) occurred:\n(test): (test) must be one of the following: \"one\", \"theother\""),
+		},
+		"test missing": {
+			Parameters: map[string]interface{}{},
+			Variables: []BrokerVariable{
+				{
+					Required:true,
+					FieldName:"test",
+					Type:JsonTypeString,
+					Enum: map[interface{}]string {
+						"one": "it's either this one",
+						"theother": "or this one",
+					},
+				},
+			},
+			Expected: errors.New("1 error(s) occurred:\nmissing required parameter \"test\""),
+		},
+		"test bad default": {
+			Parameters: map[string]interface{}{},
+			Variables: []BrokerVariable{
+				{
+					FieldName:"test",
+					Type:JsonTypeString,
+					Default:123,
+				},
+			},
+			Expected: errors.New("1 error(s) occurred:\n(test): Invalid type. Expected: string, given: integer"),
+		},
+	}
+
+	for tn, tc := range cases {
+		t.Run(tn, func(t *testing.T) {
+			actual := ValidateVariables(tc.Parameters, tc.Variables)
+
+			if !reflect.DeepEqual(actual, tc.Expected) {
+
+				if actual == nil {
+					t.Errorf("Expected ValidateVariables to be: %v, got: %v", tc.Expected, actual)
+				} else if actual.Error() != tc.Expected.Error() {
+					t.Errorf("Expected ValidateVariables to be: %v, got: %v", tc.Expected, actual.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestBrokerVariable_ValidateVariables_AddsDefaults(t *testing.T) {
+	parameters := make(map[string]interface{})
+  variables := []BrokerVariable{
+		{
+			FieldName:"test",
+			Type:JsonTypeString,
+			Default:"abc",
+		},
+	}
+
+	if err := ValidateVariables(parameters, variables); err != nil {
+		t.Errorf("ValidateVariables returned an unexpected error: %s", err.Error())
+		return
+	}
+
+	value, ok := parameters["test"]
+	if !ok {
+		t.Errorf("ValidateVariables did not add the default value \"abc\" for \"test\"")
+		return
+	}
+
+	if value != "abc" {
+		t.Errorf("ValidateVariables added the wrong value")
+		return
+	}
+
 }

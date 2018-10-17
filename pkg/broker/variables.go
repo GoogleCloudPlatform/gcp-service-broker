@@ -19,6 +19,10 @@ import (
 	"sort"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
+	"github.com/xeipuuv/gojsonschema"
+	"github.com/hashicorp/go-multierror"
+	"errors"
+	"strings"
 )
 
 const (
@@ -86,4 +90,63 @@ func (bv *BrokerVariable) ToSchema() map[string]interface{} {
 	}
 
 	return schema
+}
+
+// ValidateVariables validates a list of BrokerVariables adhere to their JSONSchema.
+func ValidateVariables(parameters map[string]interface{}, schemaVariables []BrokerVariable) error {
+
+	allErrors := &multierror.Error{
+		ErrorFormat:lineErrorFormatter,
+	}
+
+	for _, variable := range schemaVariables {
+
+		value, ok := parameters[variable.FieldName]
+		if !ok {
+			// According to json schema, the required property trumps the default value.
+			if variable.Required {
+				multierror.Append(allErrors, fmt.Errorf("missing required parameter \"%s\"", variable.FieldName))
+				continue
+			}
+
+			if variable.Default == nil {
+				continue
+			}
+
+			// Insert the default value into the parameters
+			value = variable.Default
+			parameters[variable.FieldName] = value
+		}
+
+		result, err := gojsonschema.Validate(gojsonschema.NewGoLoader(variable.ToSchema()), gojsonschema.NewGoLoader(value))
+		if err != nil {
+			multierror.Append(allErrors, err)
+			continue
+		}
+
+		if len(result.Errors()) > 0 {
+			for _, r := range result.Errors() {
+				// For better output, replace the "root" keyword for the root json object to the variable name.
+				multierror.Append(allErrors, errors.New(strings.Replace(r.String(), "(root)", fmt.Sprintf("(%s)", variable.FieldName), -1)))
+			}
+
+			continue
+		}
+
+	}
+
+	if len(allErrors.Errors) == 0 {
+		return nil
+	}
+
+	return allErrors
+}
+
+func lineErrorFormatter(es []error) string {
+	points := make([]string, len(es))
+	for i, err := range es {
+		points[i] = err.Error()
+	}
+
+	return fmt.Sprintf("%d error(s) occurred:\n%s", len(es), strings.Join(points, "\n"))
 }
