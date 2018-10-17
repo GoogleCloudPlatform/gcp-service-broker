@@ -18,6 +18,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"regexp"
 	"sync/atomic"
 	"time"
 
@@ -31,10 +32,12 @@ var hilStandardLibrary = createStandardLibrary()
 // to their names in a lookup table for our standard library.
 func createStandardLibrary() map[string]ast.Function {
 	return map[string]ast.Function{
-		"time.nano":    hilFuncTimeNano(),
-		"str.truncate": hilFuncStrTruncate(),
-		"counter.next": hilFuncCounterNext(),
-		"rand.base64":  hilFuncRandBase64(),
+		"time.nano":      hilFuncTimeNano(),
+		"str.truncate":   hilFuncStrTruncate(),
+		"regexp.matches": hilFuncRegexpMatches(),
+		"counter.next":   hilFuncCounterNext(),
+		"rand.base64":    hilFuncRandBase64(),
+		"assert":         hilFuncAssert(),
 	}
 }
 
@@ -64,6 +67,18 @@ func hilFuncStrTruncate() ast.Function {
 			}
 
 			return str, nil
+		},
+	}
+}
+
+// hilfuncRegexpMatches creates a hil function that checks if a string matches a given
+// regular expression. regexp.matches("^d[0-9]+$", "d2)
+func hilFuncRegexpMatches() ast.Function {
+	return ast.Function{
+		ArgTypes:   []ast.Type{ast.TypeString, ast.TypeString},
+		ReturnType: ast.TypeBool,
+		Callback: func(args []interface{}) (interface{}, error) {
+			return regexp.MatchString(args[0].(string), args[1].(string))
 		},
 	}
 }
@@ -98,6 +113,24 @@ func hilFuncRandBase64() ast.Function {
 			}
 
 			return base64.URLEncoding.EncodeToString(rb), nil
+		},
+	}
+}
+
+// hilFuncAssert throws an error with the second param if the first param is falsy.
+func hilFuncAssert() ast.Function {
+	return ast.Function{
+		ArgTypes:   []ast.Type{ast.TypeBool, ast.TypeString},
+		ReturnType: ast.TypeBool,
+		Callback: func(args []interface{}) (interface{}, error) {
+			condition := args[0].(bool)
+			message := args[1].(string)
+
+			if !condition {
+				return false, fmt.Errorf("Assertion failed: %s", message)
+			}
+
+			return true, nil
 		},
 	}
 }

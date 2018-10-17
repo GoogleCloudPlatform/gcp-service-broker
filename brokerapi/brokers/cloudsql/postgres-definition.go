@@ -16,10 +16,15 @@ package cloudsql
 
 import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 )
 
 func init() {
-	bs := &broker.BrokerService{
+	broker.Register(postgresServiceDefinition())
+}
+
+func postgresServiceDefinition() *broker.BrokerService {
+	return &broker.BrokerService{
 		Name: "google-cloudsql-postgres",
 		DefaultServiceDefinition: `{
         "id": "cbad6d78-a73c-432d-b8ff-b219a17a803a",
@@ -128,10 +133,56 @@ func init() {
 				    }
 				]
     }`,
-		ProvisionInputVariables: commonProvisionVariables,
-		DefaultRoleWhitelist:    roleWhitelist,
-		BindInputVariables:      commonBindVariables,
-		BindOutputVariables:     commonBindOutputVariables,
+		ProvisionInputVariables: append([]broker.BrokerVariable{
+			{
+				FieldName: "instance_name",
+				Type:      broker.JsonTypeString,
+				Details:   "Name of the CloudSQL instance.",
+				Default:   "pcf-sb-${counter.next()}-${time.nano()}",
+				Constraints: validation.NewConstraintBuilder().
+					Pattern("^[a-z][a-z0-9-]+$").
+					MaxLength(75).
+					Build(),
+			},
+			{
+				FieldName: "database_name",
+				Type:      broker.JsonTypeString,
+				Details:   "Name of the database inside of the instance. Must be a valid identifier for your chosen database type.",
+				Default:   "pcf-sb-${counter.next()}-${time.nano()}",
+			},
+			{
+				FieldName: "version",
+				Type:      broker.JsonTypeString,
+				Details:   "The database engine type and version.",
+				Default:   "POSTGRES_9_6",
+				Enum: map[interface{}]string{
+					"POSTGRES_9_6": "PostgreSQL 9.6.X",
+				},
+			},
+			{
+				FieldName: "failover_replica_name",
+				Type:      broker.JsonTypeString,
+				Details:   "(only for 2nd generation instances) If specified, creates a failover replica with the given name.",
+				Default:   "",
+				Constraints: validation.NewConstraintBuilder().
+					Pattern("^[a-z][a-z0-9-]+$").
+					MaxLength(75).
+					Build(),
+			},
+			{
+				FieldName: "activation_policy",
+				Type:      broker.JsonTypeString,
+				Details:   "The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE.",
+				Default:   "ALWAYS",
+				Enum: map[interface{}]string{
+					"ALWAYS": "Always, instance is always on.",
+					"NEVER":  "Never, instance does not turn on if a request arrives.",
+				},
+			},
+		}, commonProvisionVariables()...),
+		DefaultRoleWhitelist: roleWhitelist(),
+		BindInputVariables:   commonBindVariables(),
+		BindOutputVariables:  commonBindOutputVariables(),
 		PlanVariables: []broker.BrokerVariable{
 			{
 				FieldName: "tier",
@@ -172,6 +223,4 @@ func init() {
 			},
 		},
 	}
-
-	broker.Register(bs)
 }
