@@ -97,7 +97,7 @@ func (bv *BrokerVariable) ToSchema() map[string]interface{} {
 func ValidateVariables(parameters map[string]interface{}, schemaVariables []BrokerVariable) error {
 
 	allErrors := &multierror.Error{
-		ErrorFormat:utils.LineErrorFormatter,
+		ErrorFormat:utils.SingleLineErrorFormatter,
 	}
 
 	for _, variable := range schemaVariables {

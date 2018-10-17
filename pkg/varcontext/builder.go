@@ -110,7 +110,7 @@ func (builder *ContextBuilder) MergeJsonObject(data json.RawMessage) *ContextBui
 // Exactly one of VarContext and error will be nil.
 func (builder *ContextBuilder) Build() (*VarContext, error) {
 	if builder.errors != nil {
-		builder.errors.ErrorFormat = utils.LineErrorFormatter
+		builder.errors.ErrorFormat = utils.SingleLineErrorFormatter
 		return nil, builder.errors
 	}
 

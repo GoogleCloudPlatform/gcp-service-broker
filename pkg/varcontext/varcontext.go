@@ -90,6 +90,6 @@ func (vc *VarContext) Error() error {
 		return nil
 	}
 
-	vc.errors.ErrorFormat = utils.LineErrorFormatter
+	vc.errors.ErrorFormat = utils.SingleLineErrorFormatter
 	return vc.errors
 }
