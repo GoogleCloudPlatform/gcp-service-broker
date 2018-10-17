@@ -238,6 +238,7 @@ func (gcpBroker *GCPServiceBroker) validateProvisionVariables(serviceId string, 
 		return err
 	}
 
+	broker.ApplyDefaults(params, brokerService.ProvisionInputVariables)
 	return broker.ValidateVariables(params, brokerService.ProvisionInputVariables)
 }
 

@@ -22,7 +22,6 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 	"github.com/hashicorp/go-multierror"
 	"errors"
-	"strings"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 )
 
@@ -93,36 +92,32 @@ func (bv *BrokerVariable) ToSchema() map[string]interface{} {
 	return schema
 }
 
+// Apply defaults adds default values for missing broker variables.
+func ApplyDefaults(parameters map[string]interface{}, variables []BrokerVariable) {
+
+	for _, v := range variables {
+		if _, ok := parameters[v.FieldName]; !ok && v.Default != nil {
+			parameters[v.FieldName] = v.Default
+		}
+	}
+
+}
+
 // ValidateVariables validates a list of BrokerVariables adhere to their JSONSchema.
-func ValidateVariables(parameters map[string]interface{}, schemaVariables []BrokerVariable) error {
+func ValidateVariables(parameters map[string]interface{}, variables []BrokerVariable) error {
 
 	allErrors := &multierror.Error{
 		ErrorFormat:utils.SingleLineErrorFormatter,
 	}
 
-	for _, variable := range schemaVariables {
+	schema := createJsonSchema(variables)
+	result, err := gojsonschema.Validate(gojsonschema.NewGoLoader(schema), gojsonschema.NewGoLoader(parameters))
 
-		value, ok := parameters[variable.FieldName]
-		if !ok {
-			// According to json schema, the required property trumps the default value.
-			if variable.Required {
-				multierror.Append(allErrors, fmt.Errorf("missing required parameter \"%s\"", variable.FieldName))
-				continue
-			} else if variable.Default != nil {
-				// Insert the default value into the parameters
-				value = variable.Default
-				parameters[variable.FieldName] = value
-			}
-		}
-
-		result, err := gojsonschema.Validate(gojsonschema.NewGoLoader(variable.ToSchema()), gojsonschema.NewGoLoader(value))
-		if err != nil {
-			multierror.Append(allErrors, err)
-		} else if len(result.Errors()) > 0 {
-			for _, r := range result.Errors() {
-				// For better output, replace the "root" keyword for the root json object to the variable name.
-				multierror.Append(allErrors, errors.New(strings.Replace(r.String(), "(root)", fmt.Sprintf("(%s)", variable.FieldName), -1)))
-			}
+	if err != nil {
+		multierror.Append(allErrors, err)
+	} else if len(result.Errors()) > 0 {
+		for _, r := range result.Errors() {
+			multierror.Append(allErrors, errors.New(r.String()))
 		}
 	}
 
@@ -131,4 +126,26 @@ func ValidateVariables(parameters map[string]interface{}, schemaVariables []Brok
 	}
 
 	return allErrors
+}
+
+func createJsonSchema(schemaVariables []BrokerVariable) map[string]interface{} {
+	var required []string
+	properties := make(map[string]interface{})
+
+	for _, variable := range schemaVariables {
+		properties[variable.FieldName] = variable.ToSchema()
+		if variable.Required {
+			required = append(required, variable.FieldName)
+		}
+	}
+
+	schema :=  map[string]interface{}{
+		"properties": properties,
+	}
+
+	if required != nil {
+		schema["required"] = required
+	}
+
+	return schema
 }
