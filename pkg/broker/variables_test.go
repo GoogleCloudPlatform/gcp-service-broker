@@ -118,7 +118,7 @@ func TestBrokerVariable_ValidateVariables(t *testing.T) {
 					Type:JsonTypeInteger,
 				},
 			},
-			Expected: errors.New("1 error(s) occurred:\n(test): Invalid type. Expected: integer, given: string"),
+			Expected: errors.New("1 error(s) occurred: (test): Invalid type. Expected: integer, given: string"),
 		},
 		"double trouble": {
 			Parameters: map[string]interface{}{
@@ -137,7 +137,7 @@ func TestBrokerVariable_ValidateVariables(t *testing.T) {
 					Type:JsonTypeInteger,
 				},
 			},
-			Expected: errors.New("2 error(s) occurred:\n(test): Invalid type. Expected: integer, given: string\n(test2): Invalid type. Expected: integer, given: string"),
+			Expected: errors.New("2 error(s) occurred: (test): Invalid type. Expected: integer, given: string; (test2): Invalid type. Expected: integer, given: string"),
 		},
 		"test constraints": {
 			Parameters: map[string]interface{}{
@@ -153,7 +153,7 @@ func TestBrokerVariable_ValidateVariables(t *testing.T) {
 						Build(),
 				},
 			},
-			Expected: errors.New("1 error(s) occurred:\n(test): Must be greater than or equal to 10"),
+			Expected: errors.New("1 error(s) occurred: (test): Must be greater than or equal to 10"),
 		},
 		"test enum": {
 			Parameters: map[string]interface{}{
@@ -170,7 +170,7 @@ func TestBrokerVariable_ValidateVariables(t *testing.T) {
 					},
 				},
 			},
-			Expected: errors.New("1 error(s) occurred:\n(test): (test) must be one of the following: \"one\", \"theother\""),
+			Expected: errors.New("1 error(s) occurred: (test): (test) must be one of the following: \"one\", \"theother\""),
 		},
 		"test missing": {
 			Parameters: map[string]interface{}{},
@@ -185,7 +185,7 @@ func TestBrokerVariable_ValidateVariables(t *testing.T) {
 					},
 				},
 			},
-			Expected: errors.New("1 error(s) occurred:\nmissing required parameter \"test\""),
+			Expected: errors.New("1 error(s) occurred: missing required parameter \"test\""),
 		},
 		"test bad default": {
 			Parameters: map[string]interface{}{},
@@ -196,7 +196,7 @@ func TestBrokerVariable_ValidateVariables(t *testing.T) {
 					Default:123,
 				},
 			},
-			Expected: errors.New("1 error(s) occurred:\n(test): Invalid type. Expected: string, given: integer"),
+			Expected: errors.New("1 error(s) occurred: (test): Invalid type. Expected: string, given: integer"),
 		},
 	}
 

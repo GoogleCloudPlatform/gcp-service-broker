@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"errors"
 	"strings"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 )
 
 const (
@@ -96,7 +97,7 @@ func (bv *BrokerVariable) ToSchema() map[string]interface{} {
 func ValidateVariables(parameters map[string]interface{}, schemaVariables []BrokerVariable) error {
 
 	allErrors := &multierror.Error{
-		ErrorFormat:lineErrorFormatter,
+		ErrorFormat:utils.LineErrorFormatter,
 	}
 
 	for _, variable := range schemaVariables {
@@ -130,13 +131,4 @@ func ValidateVariables(parameters map[string]interface{}, schemaVariables []Brok
 	}
 
 	return allErrors
-}
-
-func lineErrorFormatter(es []error) string {
-	points := make([]string, len(es))
-	for i, err := range es {
-		points[i] = err.Error()
-	}
-
-	return fmt.Sprintf("%d error(s) occurred:\n%s", len(es), strings.Join(points, "\n"))
 }
