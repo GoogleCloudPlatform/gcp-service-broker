@@ -86,17 +86,17 @@ func (b *BigQueryBroker) Provision(ctx context.Context, instanceId string, detai
 
 // Deprovision deletes the dataset associated with the given instance.
 // Note: before deprovisioning you must delete all the tables in the dataset.
-func (b *BigQueryBroker) Deprovision(ctx context.Context, dataset models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
+func (b *BigQueryBroker) Deprovision(ctx context.Context, dataset models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (*string, error) {
 	service, err := b.createClient(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if err = service.Datasets.Delete(b.ProjectId, dataset.Name).Do(); err != nil {
-		return fmt.Errorf("Error deleting dataset: %s", err)
+	if err := service.Datasets.Delete(b.ProjectId, dataset.Name).Do(); err != nil {
+		return nil, fmt.Errorf("Error deleting dataset: %s", err)
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (b *BigQueryBroker) createClient(ctx context.Context) (*googlebigquery.Service, error) {

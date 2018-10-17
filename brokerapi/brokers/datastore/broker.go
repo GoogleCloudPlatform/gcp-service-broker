@@ -33,8 +33,8 @@ func (b *DatastoreBroker) Provision(ctx context.Context, instanceId string, deta
 }
 
 // Deprovision is a no-op call because only service accounts need to be bound/unbound for Datastore.
-func (b *DatastoreBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
-	return nil
+func (b *DatastoreBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (*string, error) {
+	return nil, nil
 }
 
 // Bind creates a service account with access to Datastore.

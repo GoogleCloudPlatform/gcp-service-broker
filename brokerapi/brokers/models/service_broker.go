@@ -29,7 +29,10 @@ type ServiceBrokerHelper interface {
 	Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (ServiceBindingCredentials, error)
 	BuildInstanceCredentials(ctx context.Context, bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
 	Unbind(ctx context.Context, details ServiceBindingCredentials) error
-	Deprovision(ctx context.Context, instance ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error
+	// Deprovision deprovisions the service.
+	// If the deprovision is asynchronous (results in a long-running job), then operationId is returned.
+	// If no error and no operationId are returned, then the deprovision is expected to have been completed successfully.
+	Deprovision(ctx context.Context, instance ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (operationId *string, err error)
 	PollInstance(ctx context.Context, instance ServiceInstanceDetails) (bool, error)
 	ProvisionsAsync() bool
 	DeprovisionsAsync() bool

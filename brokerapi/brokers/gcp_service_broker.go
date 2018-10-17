@@ -223,7 +223,8 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 
 // Deprovision destroys an existing instance of a service.
 // It is bound to the `DELETE /v2/service_instances/:instance_id` endpoint and can be called using the `cf delete-service` command.
-func (gcpBroker *GCPServiceBroker) Deprovision(ctx context.Context, instanceID string, details brokerapi.DeprovisionDetails, clientSupportsAsync bool) (brokerapi.DeprovisionServiceSpec, error) {
+// If a deprovision is asynchronous, the returned DeprovisionServiceSpec will contain the operation ID for tracking its progress.
+func (gcpBroker *GCPServiceBroker) Deprovision(ctx context.Context, instanceID string, details brokerapi.DeprovisionDetails, clientSupportsAsync bool) (response brokerapi.DeprovisionServiceSpec, err error) {
 	gcpBroker.Logger.Info("Deprovisioning", lager.Data{
 		"instance_id":        instanceID,
 		"accepts_incomplete": clientSupportsAsync,
@@ -231,8 +232,6 @@ func (gcpBroker *GCPServiceBroker) Deprovision(ctx context.Context, instanceID s
 	})
 
 	service := gcpBroker.ServiceBrokerMap[details.ServiceID]
-	deprovisionIsAsync := service.DeprovisionsAsync()
-	response := brokerapi.DeprovisionServiceSpec{IsAsync: deprovisionIsAsync}
 
 	// make sure that instance actually exists
 	count, err := db_service.CountServiceInstanceDetailsById(ctx, instanceID)
@@ -244,8 +243,8 @@ func (gcpBroker *GCPServiceBroker) Deprovision(ctx context.Context, instanceID s
 	}
 
 	// if async deprovisioning isn't allowed but this service needs it, throw an error
-	if deprovisionIsAsync && !clientSupportsAsync {
-		return brokerapi.DeprovisionServiceSpec{}, brokerapi.ErrAsyncRequired
+	if service.DeprovisionsAsync() && !clientSupportsAsync {
+		return response, brokerapi.ErrAsyncRequired
 	}
 
 	// deprovision
@@ -254,21 +253,30 @@ func (gcpBroker *GCPServiceBroker) Deprovision(ctx context.Context, instanceID s
 		return response, brokerapi.NewFailureResponseBuilder(err, http.StatusInternalServerError, "fetching instance from database").Build()
 	}
 
-	if err := service.Deprovision(ctx, *instance, details); err != nil {
+	operationId, err := service.Deprovision(ctx, *instance, details)
+	if err != nil {
 		return response, err
 	}
 
-	// soft-delete instance details from the db if this is a synchronous operation
-	// if it's an async operation we can't delete from the db until we're sure delete succeeded, so this is
-	// handled internally to LastOperation
-	if !deprovisionIsAsync {
-		err = db_service.DeleteServiceInstanceDetailsById(ctx, instanceID)
-		if err != nil {
+	if operationId == nil {
+		// soft-delete instance details from the db if this is a synchronous operation
+		// if it's an async operation we can't delete from the db until we're sure delete succeeded, so this is
+		// handled internally to LastOperation
+		if err := db_service.DeleteServiceInstanceDetailsById(ctx, instanceID); err != nil {
 			return response, fmt.Errorf("Error deleting instance details from database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup", err)
 		}
-	}
+		return response, nil
+	} else {
+		response.IsAsync = true
+		response.OperationData = *operationId
 
-	return response, nil
+		instance.OperationType = models.DeprovisionOperationType
+		instance.OperationId = *operationId
+		if err := db_service.SaveServiceInstanceDetails(ctx, instance); err != nil {
+			return response, fmt.Errorf("Error saving instance details to database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup.", err)
+		}
+		return response, nil
+	}
 }
 
 // Bind creates an account with credentials to access an instance of a service.

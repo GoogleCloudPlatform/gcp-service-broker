@@ -123,28 +123,28 @@ func (b *PubSubBroker) Provision(ctx context.Context, instanceId string, details
 }
 
 // Deprovision deletes the topic and subscription associated with the given instance.
-func (b *PubSubBroker) Deprovision(ctx context.Context, topic models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
+func (b *PubSubBroker) Deprovision(ctx context.Context, topic models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (*string, error) {
 	service, err := b.createClient(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := service.Topic(topic.Name).Delete(ctx); err != nil {
-		return fmt.Errorf("Error deleting pubsub topic: %s", err)
+		return nil, fmt.Errorf("Error deleting pubsub topic: %s", err)
 	}
 
 	otherDetails, err := topic.GetOtherDetails()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if subscriptionName := otherDetails["subscription_name"]; subscriptionName != "" {
 		if err := service.Subscription(subscriptionName).Delete(ctx); err != nil {
-			return fmt.Errorf("Error deleting subscription: %s", err)
+			return nil, fmt.Errorf("Error deleting subscription: %s", err)
 		}
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (b *PubSubBroker) createClient(ctx context.Context) (*googlepubsub.Client, error) {

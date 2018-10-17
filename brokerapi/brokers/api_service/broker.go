@@ -33,6 +33,6 @@ func (b *ApiServiceBroker) Provision(ctx context.Context, instanceId string, det
 }
 
 // Deprovision is a no-op call because only service accounts need to be bound/unbound for Google Machine Learning APIs.
-func (b *ApiServiceBroker) Deprovision(ctx context.Context, dataset models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) error {
-	return nil
+func (b *ApiServiceBroker) Deprovision(ctx context.Context, dataset models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (*string, error) {
+	return nil, nil
 }
