@@ -453,12 +453,14 @@ func (b *CloudSQLBroker) PollInstance(ctx context.Context, instance models.Servi
 	}
 
 	if instance.OperationType == models.ProvisionOperationType {
-		instancePtr := &instance
-		if err := b.UpdateInstanceDetails(ctx, instancePtr); err != nil {
+		// Update the instance information from the server side before
+		// creating the database. The modification happens _only_ to 
+		// this instance of the details and is not persisted to the db.
+		if err := b.UpdateInstanceDetails(ctx, &instance); err != nil {
 			return true, err
 		}
 
-		return true, b.createDatabase(ctx, instancePtr)
+		return true, b.createDatabase(ctx, &instance)
 	}
 
 	return true, nil
