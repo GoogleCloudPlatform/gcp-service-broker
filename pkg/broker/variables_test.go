@@ -86,68 +86,68 @@ func TestBrokerVariable_ToSchema(t *testing.T) {
 func TestBrokerVariable_ValidateVariables(t *testing.T) {
 	cases := map[string]struct {
 		Parameters map[string]interface{}
-		Variables []BrokerVariable
-		Expected  error
-	} {
+		Variables  []BrokerVariable
+		Expected   error
+	}{
 		"nil check": {
 			Parameters: nil,
-			Variables: nil,
-			Expected: nil,
+			Variables:  nil,
+			Expected:   nil,
 		},
 		"integer": {
 			Parameters: map[string]interface{}{
-				"test":12,
+				"test": 12,
 			},
 			Variables: []BrokerVariable{
 				{
-					Required:true,
-					FieldName:"test",
-					Type:JsonTypeInteger,
+					Required:  true,
+					FieldName: "test",
+					Type:      JsonTypeInteger,
 				},
 			},
 			Expected: nil,
 		},
 		"unexpected type": {
 			Parameters: map[string]interface{}{
-				"test":"didn't see that coming",
+				"test": "didn't see that coming",
 			},
 			Variables: []BrokerVariable{
 				{
-					Required:true,
-					FieldName:"test",
-					Type:JsonTypeInteger,
+					Required:  true,
+					FieldName: "test",
+					Type:      JsonTypeInteger,
 				},
 			},
 			Expected: errors.New("1 error(s) occurred: test: Invalid type. Expected: integer, given: string"),
 		},
 		"double trouble": {
 			Parameters: map[string]interface{}{
-				"test":"didn't see that coming",
-				"test2":"I am no good",
+				"test":  "didn't see that coming",
+				"test2": "I am no good",
 			},
 			Variables: []BrokerVariable{
 				{
-					Required:true,
-					FieldName:"test",
-					Type:JsonTypeInteger,
+					Required:  true,
+					FieldName: "test",
+					Type:      JsonTypeInteger,
 				},
 				{
-					Required:true,
-					FieldName:"test2",
-					Type:JsonTypeInteger,
+					Required:  true,
+					FieldName: "test2",
+					Type:      JsonTypeInteger,
 				},
 			},
 			Expected: errors.New("2 error(s) occurred: test: Invalid type. Expected: integer, given: string; test2: Invalid type. Expected: integer, given: string"),
 		},
 		"test constraints": {
 			Parameters: map[string]interface{}{
-				"test":0,
+				"test": 0,
 			},
 			Variables: []BrokerVariable{
 				{
-					Required:true,
-					FieldName:"test",
-					Type:JsonTypeInteger,
+					Required:  true,
+					FieldName: "test",
+					Type:      JsonTypeInteger,
 					Constraints: validation.NewConstraintBuilder().
 						Minimum(10).
 						Build(),
@@ -157,15 +157,15 @@ func TestBrokerVariable_ValidateVariables(t *testing.T) {
 		},
 		"test enum": {
 			Parameters: map[string]interface{}{
-				"test":"not this one",
+				"test": "not this one",
 			},
 			Variables: []BrokerVariable{
 				{
-					Required:true,
-					FieldName:"test",
-					Type:JsonTypeString,
-					Enum: map[interface{}]string {
-						"one": "it's either this one",
+					Required:  true,
+					FieldName: "test",
+					Type:      JsonTypeString,
+					Enum: map[interface{}]string{
+						"one":      "it's either this one",
 						"theother": "or this one",
 					},
 				},
@@ -176,16 +176,25 @@ func TestBrokerVariable_ValidateVariables(t *testing.T) {
 			Parameters: map[string]interface{}{},
 			Variables: []BrokerVariable{
 				{
-					Required:true,
-					FieldName:"test",
-					Type:JsonTypeString,
-					Enum: map[interface{}]string {
-						"one": "it's either this one",
+					Required:  true,
+					FieldName: "test",
+					Type:      JsonTypeString,
+					Enum: map[interface{}]string{
+						"one":      "it's either this one",
 						"theother": "or this one",
 					},
 				},
 			},
 			Expected: errors.New("1 error(s) occurred: test: test is required"),
+		},
+		"test incorrect schema": {
+			Parameters: map[string]interface{}{},
+			Variables: []BrokerVariable{
+				{
+					Type: "garbage",
+				},
+			},
+			Expected: errors.New("has a primitive type that is NOT VALID -- given: /garbage/ Expected valid values are:[array boolean integer number null object string]"),
 		},
 	}
 
@@ -207,40 +216,40 @@ func TestBrokerVariable_ValidateVariables(t *testing.T) {
 func TestBrokerVariable_ApplyDefaults(t *testing.T) {
 	cases := map[string]struct {
 		Parameters map[string]interface{}
-		Variables []BrokerVariable
-		Expected  map[string]interface{}
-	} {
+		Variables  []BrokerVariable
+		Expected   map[string]interface{}
+	}{
 		"nil check": {
 			Parameters: nil,
-			Variables: nil,
-			Expected: nil,
+			Variables:  nil,
+			Expected:   nil,
 		},
 		"simple": {
 			Parameters: map[string]interface{}{},
 			Variables: []BrokerVariable{
 				{
-					FieldName:"test",
-					Type:JsonTypeInteger,
-					Default:123,
+					FieldName: "test",
+					Type:      JsonTypeInteger,
+					Default:   123,
 				},
 			},
 			Expected: map[string]interface{}{
-				"test":123,
+				"test": 123,
 			},
 		},
 		"do not replace": {
 			Parameters: map[string]interface{}{
-				"test":123,
+				"test": 123,
 			},
 			Variables: []BrokerVariable{
 				{
-					FieldName:"test",
-					Type:JsonTypeInteger,
-					Default:456,
+					FieldName: "test",
+					Type:      JsonTypeInteger,
+					Default:   456,
 				},
 			},
 			Expected: map[string]interface{}{
-				"test":123,
+				"test": 123,
 			},
 		},
 	}
@@ -250,7 +259,6 @@ func TestBrokerVariable_ApplyDefaults(t *testing.T) {
 			ApplyDefaults(tc.Parameters, tc.Variables)
 
 			if !reflect.DeepEqual(tc.Parameters, tc.Expected) {
-
 				t.Errorf("Expected ValidateVariables to be: %v, got: %v", tc.Expected, tc.Parameters)
 			}
 		})

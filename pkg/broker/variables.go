@@ -21,8 +21,8 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/xeipuuv/gojsonschema"
 	"github.com/hashicorp/go-multierror"
-	"errors"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"errors"
 )
 
 const (
@@ -103,26 +103,26 @@ func ApplyDefaults(parameters map[string]interface{}, variables []BrokerVariable
 
 }
 
-// ValidateVariables validates a list of BrokerVariables adhere to their JSONSchema.
+// ValidateVariables validates a list of BrokerVariables are adhering to their JSONSchema.
 func ValidateVariables(parameters map[string]interface{}, variables []BrokerVariable) error {
-
-	allErrors := &multierror.Error{
-		ErrorFormat:utils.SingleLineErrorFormatter,
-	}
 
 	schema := createJsonSchema(variables)
 	result, err := gojsonschema.Validate(gojsonschema.NewGoLoader(schema), gojsonschema.NewGoLoader(parameters))
-
 	if err != nil {
-		multierror.Append(allErrors, err)
-	} else if len(result.Errors()) > 0 {
-		for _, r := range result.Errors() {
-			multierror.Append(allErrors, errors.New(r.String()))
-		}
+		return err
 	}
 
-	if len(allErrors.Errors) == 0 {
+	resultErrors := result.Errors()
+	if len(resultErrors) == 0 {
 		return nil
+	}
+
+	allErrors := &multierror.Error{
+		ErrorFormat: utils.SingleLineErrorFormatter,
+	}
+
+	for _, r := range resultErrors {
+		multierror.Append(allErrors, errors.New(r.String()))
 	}
 
 	return allErrors
@@ -139,7 +139,7 @@ func createJsonSchema(schemaVariables []BrokerVariable) map[string]interface{} {
 		}
 	}
 
-	schema :=  map[string]interface{}{
+	schema := map[string]interface{}{
 		"properties": properties,
 	}
 
