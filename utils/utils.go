@@ -209,3 +209,13 @@ func ExtractDefaultLabels(instanceId string, details brokerapi.ProvisionDetails)
 
 	return sanitized
 }
+
+// SingleLineErrorFormatter creates a single line error string from an array of errors.
+func SingleLineErrorFormatter(es []error) string {
+	points := make([]string, len(es))
+	for i, err := range es {
+		points[i] = err.Error()
+	}
+
+	return fmt.Sprintf("%d error(s) occurred: %s", len(es), strings.Join(points, "; "))
+}

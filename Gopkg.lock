@@ -340,6 +340,30 @@
   version = "v1.1.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:e6338f2518362ff701a556bd76afd90a2168d1c658ec5d1ea1e9c5ef30a7d157"
+  name = "github.com/xeipuuv/gojsonpointer"
+  packages = ["."]
+  pruneopts = ""
+  revision = "4e3ac2762d5f479393488629ee9370b50873b3a6"
+
+[[projects]]
+  branch = "master"
+  digest = "1:604f98a38394d2805a78c462396a4992b93fdd5b7306130add330f1a99ac6b0a"
+  name = "github.com/xeipuuv/gojsonreference"
+  packages = ["."]
+  pruneopts = ""
+  revision = "bd5ef7bd5415a7ac448318e64f11a24cd21e594b"
+
+[[projects]]
+  digest = "1:9e65b375612baea90191a1b92d91089f7535c9ccbc76cc55387608a3ce4cde9a"
+  name = "github.com/xeipuuv/gojsonschema"
+  packages = ["."]
+  pruneopts = ""
+  revision = "da425ebb7609ba06a0f395fc8a254d1c303364a0"
+  version = "v1.0"
+
+[[projects]]
   digest = "1:8778190ba18941ba540ea3a065bfe3e6c4126ab16aa2f8a240076ef51af9ab75"
   name = "go.opencensus.io"
   packages = [
@@ -568,6 +592,7 @@
     "github.com/spf13/cast",
     "github.com/spf13/cobra",
     "github.com/spf13/viper",
+    "github.com/xeipuuv/gojsonschema",
     "golang.org/x/net/context",
     "golang.org/x/oauth2/google",
     "golang.org/x/oauth2/jwt",
