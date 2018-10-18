@@ -139,7 +139,7 @@ func postgresServiceDefinition() *broker.BrokerService {
 				FieldName: "instance_name",
 				Type:      broker.JsonTypeString,
 				Details:   "Name of the CloudSQL instance.",
-				Default:   "pcf-sb-${counter.next()}-${time.nano()}",
+				Default:   identifierTemplate,
 				Constraints: validation.NewConstraintBuilder().
 					Pattern("^[a-z][a-z0-9-]+$").
 					MaxLength(75).
@@ -149,7 +149,7 @@ func postgresServiceDefinition() *broker.BrokerService {
 				FieldName: "database_name",
 				Type:      broker.JsonTypeString,
 				Details:   "Name of the database inside of the instance. Must be a valid identifier for your chosen database type.",
-				Default:   "pcf-sb-${counter.next()}-${time.nano()}",
+				Default:   identifierTemplate,
 			},
 			{
 				FieldName: "version",
@@ -183,8 +183,8 @@ func postgresServiceDefinition() *broker.BrokerService {
 		}, commonProvisionVariables()...),
 		ProvisionComputedVariables: []varcontext.DefaultVariable{
 			// legacy behavior dictates that empty values get defaults
-			{Name: "instance_name", Default: `${instance_name == "" ? "pcf-sb-${counter.next()}-${time.nano()}" : instance_name}`, Overwrite: true},
-			{Name: "database_name", Default: `${database_name == "" ? "pcf-sb-${counter.next()}-${time.nano()}" : database_name}`, Overwrite: true},
+			{Name: "instance_name", Default: `${instance_name == "" ? "` + identifierTemplate + `" : instance_name}`, Overwrite: true},
+			{Name: "database_name", Default: `${database_name == "" ? "` + identifierTemplate + `" : database_name}`, Overwrite: true},
 
 			{Name: "is_first_gen", Default: `false`, Overwrite: true},
 

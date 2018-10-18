@@ -21,6 +21,12 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 )
 
+const (
+	passwordTemplate   = "${rand.base64(32)}"
+	usernameTemplate   = `sb${str.truncate(14, time.nano())}`
+	identifierTemplate = `pcf-sb-${counter.next()}-${time.nano()}`
+)
+
 func roleWhitelist() []string {
 	return []string{
 		"cloudsql.editor",
@@ -59,8 +65,8 @@ func commonBindVariables() []broker.BrokerVariable {
 func commonBindComputedVariables() []varcontext.DefaultVariable {
 	return []varcontext.DefaultVariable{
 		// legacy behavior dictates that empty values get defaults
-		{Name: "password", Default: `${password == "" ? rand.base64(32) : password}`, Overwrite: true},
-		{Name: "username", Default: `${username == "" ? "sb${str.truncate(14, time.nano())}" : username}`, Overwrite: true},
+		{Name: "password", Default: `${password == "" ? "` + passwordTemplate + `" : password}`, Overwrite: true},
+		{Name: "username", Default: `${username == "" ? "` + usernameTemplate + `" : username}`, Overwrite: true},
 	}
 }
 
@@ -117,7 +123,7 @@ func commonProvisionVariables() []broker.BrokerVariable {
 		{
 			FieldName: "maintenance_window_day",
 			Type:      broker.JsonTypeString,
-			Details:   "(only for 2nd generation instances) This specifies when a v2 CloudSQL instance should preferably be restarted for system maintenance puruposes. Day of week (1-7), starting on Monday.",
+			Details:   "(only for 2nd generation instances) This specifies when a v2 CloudSQL instance should preferably be restarted for system maintenance purposes. Day of week (1-7), starting on Monday.",
 			Default:   "1",
 			Enum: map[interface{}]string{
 				"1": "Monday",
@@ -189,10 +195,10 @@ func commonProvisionVariables() []broker.BrokerVariable {
 func commonBindOutputVariables() []broker.BrokerVariable {
 	return []broker.BrokerVariable{
 		// Service account credentials (Note: they're a subset of the service account fields returned in a normal request)
-		{FieldName: "Email", Type: broker.JsonTypeString, Details: "Email address of the service account"},
+		{FieldName: "Email", Type: broker.JsonTypeString, Details: "Email address of the service account."},
 		{FieldName: "PrivateKeyData", Type: broker.JsonTypeString, Details: "Service account private key data. Base-64 encoded JSON."},
-		{FieldName: "ProjectId", Type: broker.JsonTypeString, Details: "ID of the project that owns the service account"},
-		{FieldName: "UniqueId", Type: broker.JsonTypeString, Details: "Unique and stable id of the service account"},
+		{FieldName: "ProjectId", Type: broker.JsonTypeString, Details: "ID of the project that owns the service account."},
+		{FieldName: "UniqueId", Type: broker.JsonTypeString, Details: "Unique and stable id of the service account."},
 
 		// Certificate
 		{FieldName: "CaCert", Type: broker.JsonTypeString, Details: "The server Certificate Authority's certificate."},
@@ -201,12 +207,12 @@ func commonBindOutputVariables() []broker.BrokerVariable {
 		{FieldName: "Sha1Fingerprint", Type: broker.JsonTypeString, Details: "The SHA1 fingerprint of the client certificate."},
 
 		// Connection URI
-		{FieldName: "UriPrefix", Type: broker.JsonTypeString, Details: "The connection prefix e.g. `mysql` or `postgres`"},
-		{FieldName: "Username", Type: broker.JsonTypeString, Details: "The name of the SQL user provisioned"},
-		{FieldName: "database_name", Type: broker.JsonTypeString, Details: "The name of the database on the instance"},
-		{FieldName: "host", Type: broker.JsonTypeString, Details: "The hostname or ip of the database instance"},
-		{FieldName: "instance_name", Type: broker.JsonTypeString, Details: "The name of the database instance"},
-		{FieldName: "uri", Type: broker.JsonTypeString, Details: "A database connection string"},
+		{FieldName: "UriPrefix", Type: broker.JsonTypeString, Details: "The connection prefix e.g. `mysql` or `postgres`."},
+		{FieldName: "Username", Type: broker.JsonTypeString, Details: "The name of the SQL user provisioned."},
+		{FieldName: "database_name", Type: broker.JsonTypeString, Details: "The name of the database on the instance."},
+		{FieldName: "host", Type: broker.JsonTypeString, Details: "The hostname or ip of the database instance."},
+		{FieldName: "instance_name", Type: broker.JsonTypeString, Details: "The name of the database instance."},
+		{FieldName: "uri", Type: broker.JsonTypeString, Details: "A database connection string."},
 
 		{FieldName: "last_master_operation_id", Type: broker.JsonTypeString, Details: "(GCP internals) The id of the last operation on the database."},
 		{FieldName: "region", Type: broker.JsonTypeString, Details: "The region the database is in."},
