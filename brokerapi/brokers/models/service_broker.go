@@ -21,13 +21,12 @@ import (
 )
 
 //go:generate counterfeiter . ServiceBrokerHelper
-//go:generate counterfeiter . AccountManager
 //go:generate counterfeiter . ServiceAccountManager
 
 type ServiceBrokerHelper interface {
 	Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan ServicePlan) (ServiceInstanceDetails, error)
 	Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (ServiceBindingCredentials, error)
-	BuildInstanceCredentials(ctx context.Context, bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
+	BuildInstanceCredentials(ctx context.Context, bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]interface{}, error)
 	Unbind(ctx context.Context, details ServiceBindingCredentials) error
 	// Deprovision deprovisions the service.
 	// If the deprovision is asynchronous (results in a long-running job), then operationId is returned.
@@ -44,14 +43,10 @@ type ServiceBrokerHelper interface {
 	UpdateInstanceDetails(ctx context.Context, instance *ServiceInstanceDetails) error
 }
 
-type AccountManager interface {
+type ServiceAccountManager interface {
 	CreateCredentials(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance ServiceInstanceDetails) (ServiceBindingCredentials, error)
 	DeleteCredentials(ctx context.Context, creds ServiceBindingCredentials) error
-	BuildInstanceCredentials(ctx context.Context, bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]string, error)
-}
-
-type ServiceAccountManager interface {
-	AccountManager
+	BuildInstanceCredentials(ctx context.Context, bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]interface{}, error)
 	CreateAccountWithRoles(ctx context.Context, bindingID string, roles []string) (ServiceBindingCredentials, error)
 }
 

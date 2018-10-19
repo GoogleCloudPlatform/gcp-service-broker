@@ -19,8 +19,8 @@ import (
 	"fmt"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext/interpolation"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	multierror "github.com/hashicorp/go-multierror"
 )
 
 // ContextBuilder is a builder for VariableContexts.
@@ -106,6 +106,17 @@ func (builder *ContextBuilder) MergeJsonObject(data json.RawMessage) *ContextBui
 	return builder
 }
 
+// MergeStruct merges the given struct using its JSON field names.
+func (builder *ContextBuilder) MergeStruct(data interface{}) *ContextBuilder {
+	if jo, err := json.Marshal(data); err != nil {
+		builder.errors = multierror.Append(builder.errors, err)
+	} else {
+		builder.MergeJsonObject(jo)
+	}
+
+	return builder
+}
+
 // Build generates a finalized VarContext based on the state of the builder.
 // Exactly one of VarContext and error will be nil.
 func (builder *ContextBuilder) Build() (*VarContext, error) {
@@ -115,4 +126,15 @@ func (builder *ContextBuilder) Build() (*VarContext, error) {
 	}
 
 	return &VarContext{context: builder.context}, nil
+}
+
+// BuildMap is a shorthand of calling build then turning the returned varcontext
+// into a map. Exactly one of map and error will be nil.
+func (builder *ContextBuilder) BuildMap() (map[string]interface{}, error) {
+	vc, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+
+	return vc.ToMap(), nil
 }

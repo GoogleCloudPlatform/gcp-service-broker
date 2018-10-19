@@ -16,6 +16,7 @@ package varcontext
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -96,6 +97,18 @@ func TestContextBuilder(t *testing.T) {
 			Builder:     Builder().MergeJsonObject(json.RawMessage(`{{{}}}`)),
 			ErrContains: "invalid character '{'",
 		},
+
+		// MergeStruct
+		"MergeStruct without JSON Tags": {
+			Builder:  Builder().MergeStruct(struct{ Name string }{Name: "Foo"}),
+			Expected: map[string]interface{}{"Name": "Foo"},
+		},
+		"MergeStruct with JSON Tags": {
+			Builder: Builder().MergeStruct(struct {
+				Name string `json:"username"`
+			}{Name: "Foo"}),
+			Expected: map[string]interface{}{"username": "Foo"},
+		},
 	}
 
 	for tn, tc := range cases {
@@ -123,4 +136,15 @@ func TestContextBuilder(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ExampleContextBuilder_BuildMap() {
+	_, e := Builder().MergeEvalResult("a", "${assert(false, \"failure!\")}").BuildMap()
+	fmt.Printf("Error: %v\n", e)
+
+	m, _ := Builder().MergeEvalResult("a", "a").MergeEvalResult("b", "${a}").BuildMap()
+	fmt.Printf("Map: %v\n", m)
+
+	//Output: Error: 1 error(s) occurred: couldn't compute the value for "a", template: "${assert(false, \"failure!\")}", assert: Assertion failed: failure!
+	// Map: map[a:a b:a]
 }

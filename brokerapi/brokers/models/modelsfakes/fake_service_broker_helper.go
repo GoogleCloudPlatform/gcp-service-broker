@@ -42,7 +42,7 @@ type FakeServiceBrokerHelper struct {
 		result1 models.ServiceBindingCredentials
 		result2 error
 	}
-	BuildInstanceCredentialsStub        func(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error)
+	BuildInstanceCredentialsStub        func(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]interface{}, error)
 	buildInstanceCredentialsMutex       sync.RWMutex
 	buildInstanceCredentialsArgsForCall []struct {
 		ctx            context.Context
@@ -50,11 +50,11 @@ type FakeServiceBrokerHelper struct {
 		instanceRecord models.ServiceInstanceDetails
 	}
 	buildInstanceCredentialsReturns struct {
-		result1 map[string]string
+		result1 map[string]interface{}
 		result2 error
 	}
 	buildInstanceCredentialsReturnsOnCall map[int]struct {
-		result1 map[string]string
+		result1 map[string]interface{}
 		result2 error
 	}
 	UnbindStub        func(ctx context.Context, details models.ServiceBindingCredentials) error
@@ -240,7 +240,7 @@ func (fake *FakeServiceBrokerHelper) BindReturnsOnCall(i int, result1 models.Ser
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error) {
+func (fake *FakeServiceBrokerHelper) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]interface{}, error) {
 	fake.buildInstanceCredentialsMutex.Lock()
 	ret, specificReturn := fake.buildInstanceCredentialsReturnsOnCall[len(fake.buildInstanceCredentialsArgsForCall)]
 	fake.buildInstanceCredentialsArgsForCall = append(fake.buildInstanceCredentialsArgsForCall, struct {
@@ -271,24 +271,24 @@ func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsArgsForCall(i int) 
 	return fake.buildInstanceCredentialsArgsForCall[i].ctx, fake.buildInstanceCredentialsArgsForCall[i].bindRecord, fake.buildInstanceCredentialsArgsForCall[i].instanceRecord
 }
 
-func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsReturns(result1 map[string]string, result2 error) {
+func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsReturns(result1 map[string]interface{}, result2 error) {
 	fake.BuildInstanceCredentialsStub = nil
 	fake.buildInstanceCredentialsReturns = struct {
-		result1 map[string]string
+		result1 map[string]interface{}
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsReturnsOnCall(i int, result1 map[string]string, result2 error) {
+func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsReturnsOnCall(i int, result1 map[string]interface{}, result2 error) {
 	fake.BuildInstanceCredentialsStub = nil
 	if fake.buildInstanceCredentialsReturnsOnCall == nil {
 		fake.buildInstanceCredentialsReturnsOnCall = make(map[int]struct {
-			result1 map[string]string
+			result1 map[string]interface{}
 			result2 error
 		})
 	}
 	fake.buildInstanceCredentialsReturnsOnCall[i] = struct {
-		result1 map[string]string
+		result1 map[string]interface{}
 		result2 error
 	}{result1, result2}
 }

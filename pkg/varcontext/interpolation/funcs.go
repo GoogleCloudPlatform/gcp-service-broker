@@ -18,6 +18,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"net/url"
 	"regexp"
 	"sync/atomic"
 	"time"
@@ -34,6 +35,7 @@ func createStandardLibrary() map[string]ast.Function {
 	return map[string]ast.Function{
 		"time.nano":      hilFuncTimeNano(),
 		"str.truncate":   hilFuncStrTruncate(),
+		"str.queryEscape": hilFuncStrQueryEscape(),
 		"regexp.matches": hilFuncRegexpMatches(),
 		"counter.next":   hilFuncCounterNext(),
 		"rand.base64":    hilFuncRandBase64(),
@@ -113,6 +115,17 @@ func hilFuncRandBase64() ast.Function {
 			}
 
 			return base64.URLEncoding.EncodeToString(rb), nil
+		},
+	}
+}
+
+// hilFuncStrQueryEscape escapes a string suitable for embedding in a URL.
+func hilFuncStrQueryEscape() ast.Function {
+	return ast.Function{
+		ArgTypes:   []ast.Type{ast.TypeString},
+		ReturnType: ast.TypeString,
+		Callback: func(args []interface{}) (interface{}, error) {
+			return url.QueryEscape(args[0].(string)), nil
 		},
 	}
 }

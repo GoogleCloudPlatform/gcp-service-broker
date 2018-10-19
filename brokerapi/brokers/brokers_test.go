@@ -21,7 +21,6 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
 	. "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/cloudsql"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models/modelsfakes"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
@@ -416,14 +415,12 @@ var _ = Describe("Brokers", func() {
 var _ = Describe("AccountManagers", func() {
 
 	var (
-		logger            lager.Logger
-		iamStyleBroker    models.ServiceBrokerHelper
-		spannerBroker     models.ServiceBrokerHelper
-		cloudsqlBroker    models.ServiceBrokerHelper
-		accountManager    modelsfakes.FakeServiceAccountManager
-		sqlAccountManager modelsfakes.FakeAccountManager
-		err               error
-		testCtx           context.Context
+		logger         lager.Logger
+		iamStyleBroker models.ServiceBrokerHelper
+		spannerBroker  models.ServiceBrokerHelper
+		accountManager modelsfakes.FakeServiceAccountManager
+		err            error
+		testCtx        context.Context
 	)
 
 	BeforeEach(func() {
@@ -442,22 +439,11 @@ var _ = Describe("AccountManagers", func() {
 				return models.ServiceBindingCredentials{OtherDetails: "{}"}, nil
 			},
 		}
-		sqlAccountManager = modelsfakes.FakeAccountManager{
-			CreateCredentialsStub: func(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
-				return models.ServiceBindingCredentials{OtherDetails: "{}"}, nil
-			},
-		}
 
 		iamStyleBroker = &pubsub.PubSubBroker{
 			BrokerBase: broker_base.BrokerBase{
 				AccountManager: &accountManager,
 			},
-		}
-
-		cloudsqlBroker = &cloudsql.CloudSQLBroker{
-			Logger:           logger,
-			AccountManager:   &sqlAccountManager,
-			SaAccountManager: &accountManager,
 		}
 
 		spannerBroker = &spanner.SpannerBroker{
@@ -476,52 +462,13 @@ var _ = Describe("AccountManagers", func() {
 			})
 		})
 
-		Context("when bind is called on a cloudsql broker after provision", func() {
+		Context("when bind is called on an iam-style broker after provision", func() {
 			It("should call the account manager create account in google method", func() {
 				db_service.SaveServiceInstanceDetails(testCtx, &models.ServiceInstanceDetails{ID: "foo"})
 				_, err = iamStyleBroker.Bind(context.Background(), "foo", "bar", brokerapi.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 			})
-		})
-
-		Context("when bind is called on a cloudsql broker on a missing service instance", func() {
-			It("should throw an error", func() {
-				_, err = cloudsqlBroker.Bind(context.Background(), "foo", "bar", brokerapi.BindDetails{})
-				Expect(err).To(HaveOccurred())
-			})
-		})
-
-		Context("when bind is called on a cloudsql broker with no username/password after provision", func() {
-			// BUG(jlewisiii): this test has a race condition with using the
-			// database. It's only hanging around so we can reference it for future
-			// tests.
-			// It("should return a generated username and password", func() {
-			// 	db_service.CreateServiceInstanceDetails(testCtx, &models.ServiceInstanceDetails{ID: "foo"})
-			//
-			// 	_, err := cloudsqlBroker.Bind(testCtx, "foo", "bar", brokerapi.BindDetails{})
-			//
-			// 	Expect(err).NotTo(HaveOccurred())
-			// 	Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
-			// 	Expect(sqlAccountManager.CreateCredentialsCallCount()).To(Equal(1))
-			// 	_, _, _, details, _ := accountManager.CreateCredentialsArgsForCall(0)
-			//
-			// 	rawparams := details.GetRawParameters()
-			// 	params := make(map[string]interface{})
-			// 	err = json.Unmarshal(rawparams, &params)
-			// 	Expect(err).NotTo(HaveOccurred())
-			//
-			// 	Expect(params).NotTo(BeEmpty())
-			//
-			// 	username, usernameOk := params["username"].(string)
-			// 	password, passwordOk := params["password"].(string)
-			//
-			// 	Expect(usernameOk).To(BeTrue())
-			// 	Expect(passwordOk).To(BeTrue())
-			// 	Expect(username).NotTo(BeEmpty())
-			// 	Expect(password).NotTo(BeEmpty())
-			// })
-
 		})
 
 		Context("when MergeCredentialsAndInstanceInfo is called on a broker", func() {
@@ -541,15 +488,6 @@ var _ = Describe("AccountManagers", func() {
 				Expect(accountManager.DeleteCredentialsCallCount()).To(Equal(1))
 			})
 		})
-
-		Context("when unbind is called on a cloudsql broker", func() {
-			It("it should call the account manager delete account from google method", func() {
-				err = cloudsqlBroker.Unbind(context.Background(), models.ServiceBindingCredentials{})
-				Expect(err).NotTo(HaveOccurred())
-				Expect(accountManager.DeleteCredentialsCallCount()).To(Equal(1))
-				Expect(sqlAccountManager.DeleteCredentialsCallCount()).To(Equal(1))
-			})
-		})
 	})
 
 	Describe("async", func() {
@@ -557,13 +495,6 @@ var _ = Describe("AccountManagers", func() {
 			It("should return false", func() {
 				Expect(iamStyleBroker.ProvisionsAsync()).To(Equal(false))
 				Expect(iamStyleBroker.DeprovisionsAsync()).To(Equal(false))
-			})
-		})
-
-		Context("with a cloudsql broker", func() {
-			It("should return true", func() {
-				Expect(cloudsqlBroker.ProvisionsAsync()).To(Equal(true))
-				Expect(cloudsqlBroker.DeprovisionsAsync()).To(Equal(true))
 			})
 		})
 

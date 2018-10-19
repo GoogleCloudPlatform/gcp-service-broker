@@ -193,18 +193,12 @@ func commonProvisionVariables() []broker.BrokerVariable {
 }
 
 func commonBindOutputVariables() []broker.BrokerVariable {
-	return []broker.BrokerVariable{
-		// Service account credentials (Note: they're a subset of the service account fields returned in a normal request)
-		{FieldName: "Email", Type: broker.JsonTypeString, Details: "Email address of the service account."},
-		{FieldName: "PrivateKeyData", Type: broker.JsonTypeString, Details: "Service account private key data. Base-64 encoded JSON."},
-		{FieldName: "ProjectId", Type: broker.JsonTypeString, Details: "ID of the project that owns the service account."},
-		{FieldName: "UniqueId", Type: broker.JsonTypeString, Details: "Unique and stable id of the service account."},
-
-		// Certificate
-		{FieldName: "CaCert", Type: broker.JsonTypeString, Details: "The server Certificate Authority's certificate."},
-		{FieldName: "ClientCert", Type: broker.JsonTypeString, Details: "The client certificate. For First Generation instances, the new certificate does not take effect until the instance is restarted."},
-		{FieldName: "ClientKey", Type: broker.JsonTypeString, Details: "The client certificate key."},
-		{FieldName: "Sha1Fingerprint", Type: broker.JsonTypeString, Details: "The SHA1 fingerprint of the client certificate."},
+  return append(accountmanagers.ServiceAccountBindOutputVariables(), []broker.BrokerVariable{
+	  // Certificate
+	  {FieldName: "CaCert", Type: broker.JsonTypeString, Details: "The server Certificate Authority's certificate."},
+	  {FieldName: "ClientCert", Type: broker.JsonTypeString, Details: "The client certificate. For First Generation instances, the new certificate does not take effect until the instance is restarted."},
+	  {FieldName: "ClientKey", Type: broker.JsonTypeString, Details: "The client certificate key."},
+	  {FieldName: "Sha1Fingerprint", Type: broker.JsonTypeString, Details: "The SHA1 fingerprint of the client certificate."},
 
 		// Connection URI
 		{FieldName: "UriPrefix", Type: broker.JsonTypeString, Details: "The connection prefix e.g. `mysql` or `postgres`."},
@@ -214,7 +208,7 @@ func commonBindOutputVariables() []broker.BrokerVariable {
 		{FieldName: "instance_name", Type: broker.JsonTypeString, Details: "The name of the database instance."},
 		{FieldName: "uri", Type: broker.JsonTypeString, Details: "A database connection string."},
 
-		{FieldName: "last_master_operation_id", Type: broker.JsonTypeString, Details: "(GCP internals) The id of the last operation on the database."},
-		{FieldName: "region", Type: broker.JsonTypeString, Details: "The region the database is in."},
-	}
+	  {FieldName: "last_master_operation_id", Type: broker.JsonTypeString, Details: "(GCP internals) The id of the last operation on the database."},
+	  {FieldName: "region", Type: broker.JsonTypeString, Details: "The region the database is in."},
+  }...)
 }

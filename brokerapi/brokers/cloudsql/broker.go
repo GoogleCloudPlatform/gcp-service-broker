@@ -22,18 +22,20 @@ import (
 	"strings"
 	"time"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
+	"github.com/spf13/cast"
 
 	"context"
 
 	"code.cloudfoundry.org/lager"
 	multierror "github.com/hashicorp/go-multierror"
-	"golang.org/x/oauth2/jwt"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 )
 
@@ -46,11 +48,7 @@ const (
 
 // CloudSQLBroker is the service-broker back-end for creating and binding CloudSQL instances.
 type CloudSQLBroker struct {
-	HttpConfig       *jwt.Config
-	ProjectId        string
-	Logger           lager.Logger
-	AccountManager   models.AccountManager
-	SaAccountManager models.AccountManager
+	broker_base.BrokerBase
 }
 
 // InstanceInformation holds the details needed to bind a service account to a CloudSQL instance after it has been provisioned.
@@ -349,29 +347,10 @@ func (b *CloudSQLBroker) ensureUsernamePassword(instanceID, bindingID string, de
 // The function may be slow to return because CloudSQL operations are asynchronous.
 // The default PCF service broker timeout may need to be raised to 90 or 120 seconds to accommodate the long bind time.
 func (b *CloudSQLBroker) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
-
+	// get context before trying to create anything to catch errors early
 	cloudDb, err := db_service.GetServiceInstanceDetailsById(ctx, instanceID)
 	if err != nil {
 		return models.ServiceBindingCredentials{}, brokerapi.ErrInstanceDoesNotExist
-	}
-
-	if err := b.ensureUsernamePassword(instanceID, bindingID, &details); err != nil {
-		return models.ServiceBindingCredentials{}, err
-	}
-
-	sqlCredBytes, err := b.AccountManager.CreateCredentials(ctx, instanceID, bindingID, details, *cloudDb)
-	if err != nil {
-		return models.ServiceBindingCredentials{}, err
-	}
-
-	saCredBytes, err := b.SaAccountManager.CreateCredentials(ctx, instanceID, bindingID, details, models.ServiceInstanceDetails{})
-	if err != nil {
-		return models.ServiceBindingCredentials{}, err
-	}
-
-	credsJSON, err := combineServiceBindingCreds(sqlCredBytes, saCredBytes)
-	if err != nil {
-		return models.ServiceBindingCredentials{}, err
 	}
 
 	params := make(map[string]interface{})
@@ -379,56 +358,90 @@ func (b *CloudSQLBroker) Bind(ctx context.Context, instanceID, bindingID string,
 		return models.ServiceBindingCredentials{}, fmt.Errorf("Error unmarshalling parameters: %s", err)
 	}
 
-	jdbcUriFormat, jdbcUriFormatOk := params["jdbc_uri_format"].(string)
-	credsJSON["UriPrefix"] = ""
-	if jdbcUriFormatOk && jdbcUriFormat == "true" {
-		credsJSON["UriPrefix"] = "jdbc:"
-	}
-
-	credBytes, err := json.Marshal(&credsJSON)
-	if err != nil {
+	if err := b.ensureUsernamePassword(instanceID, bindingID, &details); err != nil {
 		return models.ServiceBindingCredentials{}, err
 	}
 
-	newBinding := models.ServiceBindingCredentials{
-		OtherDetails: string(credBytes),
+	combinedCreds := varcontext.Builder()
+
+	// Create the service account
+	saCreds, err := b.BrokerBase.Bind(ctx, instanceID, bindingID, details)
+	if err != nil {
+		return saCreds, err
 	}
 
-	return newBinding, nil
+	combinedCreds.MergeJsonObject(json.RawMessage(saCreds.OtherDetails))
+
+	sqlCreds, err := b.createSqlCredentials(ctx, instanceID, bindingID, details, *cloudDb)
+	if err != nil {
+		return saCreds, err
+	}
+	combinedCreds.MergeMap(sqlCreds)
+
+	uriPrefix := ""
+	if cast.ToBool(params["jdbc_uri_format"]) {
+		uriPrefix = "jdbc:"
+	}
+	combinedCreds.MergeMap(map[string]interface{}{"UriPrefix": uriPrefix})
+
+	builtCreds, err := combinedCreds.Build()
+	if err != nil {
+		return saCreds, err
+	}
+
+	credBytes, err := builtCreds.ToJson()
+	if err != nil {
+		return saCreds, err
+	}
+
+	saCreds.OtherDetails = string(credBytes)
+	return saCreds, nil
 }
 
-func combineServiceBindingCreds(sqlCreds models.ServiceBindingCredentials, saCreds models.ServiceBindingCredentials) (map[string]string, error) {
-	sqlCredsJSON, err := sqlCreds.GetOtherDetails()
+func (b *CloudSQLBroker) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]interface{}, error) {
+	service, err := broker.GetServiceById(instanceRecord.ServiceId)
 	if err != nil {
-		return map[string]string{}, err
+		return nil, err
+	}
+	uriFormat := ""
+	switch service.Name {
+	case models.CloudsqlMySQLName:
+		uriFormat = `${str.queryEscape(UriPrefix)}mysql://${str.queryEscape(Username)}:${str.queryEscape(Password)}@${str.queryEscape(host)}/${str.queryEscape(database_name)}?ssl_mode=required`
+	case models.CloudsqlPostgresName:
+		uriFormat = `${str.queryEscape(UriPrefix)}postgres://${str.queryEscape(Username)}:${str.queryEscape(Password)}@${str.queryEscape(host)}/${str.queryEscape(database_name)}?sslmode=require&sslcert=${str.queryEscape(ClientCert)}&sslkey=${str.queryEscape(ClientKey)}&sslrootcert=${str.queryEscape(CaCert)}`
+	default:
+		return map[string]interface{}{}, errors.New("Unknown service")
 	}
 
-	saCredsJSON, err := saCreds.GetOtherDetails()
+	combinedCreds, err := b.BrokerBase.BuildInstanceCredentials(ctx, bindRecord, instanceRecord)
 	if err != nil {
-		return map[string]string{}, err
+		return nil, err
 	}
 
-	sqlCredsJSON["PrivateKeyData"] = saCredsJSON["PrivateKeyData"]
-	sqlCredsJSON["ProjectId"] = saCredsJSON["ProjectId"]
-	sqlCredsJSON["Email"] = saCredsJSON["Email"]
-	sqlCredsJSON["UniqueId"] = saCredsJSON["UniqueId"]
-
-	return sqlCredsJSON, nil
-}
-
-func (b *CloudSQLBroker) BuildInstanceCredentials(ctx context.Context, bindDetails models.ServiceBindingCredentials, instanceDetails models.ServiceInstanceDetails) (map[string]string, error) {
-	return b.AccountManager.BuildInstanceCredentials(ctx, bindDetails, instanceDetails)
+	return varcontext.Builder().
+		MergeMap(combinedCreds).
+		MergeEvalResult("uri", uriFormat).
+		BuildMap()
 }
 
 // Unbind deletes the database user, service account and invalidates the ssl certs associated with this binding.
-func (b *CloudSQLBroker) Unbind(ctx context.Context, creds models.ServiceBindingCredentials) error {
+func (b *CloudSQLBroker) Unbind(ctx context.Context, binding models.ServiceBindingCredentials) error {
+	instance, err := db_service.GetServiceInstanceDetailsById(ctx, binding.ServiceInstanceId)
+	if err != nil {
+		return fmt.Errorf("Database error retrieving instance details: %s", err)
+	}
+
 	var accumulator error
 
-	if err := b.AccountManager.DeleteCredentials(ctx, creds); err != nil {
+	if err := b.deleteSqlSslCert(ctx, binding, *instance); err != nil {
 		accumulator = multierror.Append(accumulator, err)
 	}
 
-	if err := b.SaAccountManager.DeleteCredentials(ctx, creds); err != nil {
+	if err := b.deleteSqlUserAccount(ctx, binding, *instance); err != nil {
+		accumulator = multierror.Append(accumulator, err)
+	}
+
+	if err := b.BrokerBase.Unbind(ctx, binding); err != nil {
 		accumulator = multierror.Append(accumulator, err)
 	}
 
@@ -454,7 +467,7 @@ func (b *CloudSQLBroker) PollInstance(ctx context.Context, instance models.Servi
 
 	if instance.OperationType == models.ProvisionOperationType {
 		// Update the instance information from the server side before
-		// creating the database. The modification happens _only_ to 
+		// creating the database. The modification happens _only_ to
 		// this instance of the details and is not persisted to the db.
 		if err := b.UpdateInstanceDetails(ctx, &instance); err != nil {
 			return true, err

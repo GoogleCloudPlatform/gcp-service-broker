@@ -15,6 +15,7 @@
 package varcontext
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cast"
@@ -82,6 +83,11 @@ func (vc *VarContext) ToMap() map[string]interface{} {
 	}
 
 	return output
+}
+
+// ToJson gets the underlying JSON representaiton of the variable context.
+func (vc *VarContext) ToJson() (json.RawMessage, error) {
+	return json.Marshal(vc.ToMap())
 }
 
 // Error gets the accumulated error(s) that this VarContext holds.

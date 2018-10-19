@@ -41,7 +41,7 @@ func (b *BrokerBase) Bind(ctx context.Context, instanceID, bindingID string, det
 
 // BuildInstanceCredentials combines the bind credentials with the connection
 // information in the instance details to get a full set of connection details.
-func (b *BrokerBase) BuildInstanceCredentials(ctx context.Context, bindDetails models.ServiceBindingCredentials, instanceDetails models.ServiceInstanceDetails) (map[string]string, error) {
+func (b *BrokerBase) BuildInstanceCredentials(ctx context.Context, bindDetails models.ServiceBindingCredentials, instanceDetails models.ServiceInstanceDetails) (map[string]interface{}, error) {
 	return b.AccountManager.BuildInstanceCredentials(ctx, bindDetails, instanceDetails)
 }
 
