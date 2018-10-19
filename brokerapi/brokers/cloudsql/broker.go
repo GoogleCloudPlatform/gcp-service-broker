@@ -64,6 +64,9 @@ type InstanceInformation struct {
 // Provision creates a new CloudSQL instance from the settings in the user-provided details and service plan.
 func (b *CloudSQLBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	di, ii, err := createProvisionRequest(instanceId, details, plan)
+	if err != nil {
+		return models.ServiceInstanceDetails{}, err
+	}
 
 	// init sqladmin service
 	sqlService, err := b.createClient(ctx)
@@ -72,7 +75,7 @@ func (b *CloudSQLBroker) Provision(ctx context.Context, instanceId string, detai
 	}
 
 	// make insert request
-	op, err := sqlService.Instances.Insert(b.ProjectId, &di).Do()
+	op, err := sqlService.Instances.Insert(b.ProjectId, di).Do()
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new CloudSQL instance: %s", err)
 	}
@@ -94,13 +97,13 @@ func (b *CloudSQLBroker) Provision(ctx context.Context, instanceId string, detai
 	}, nil
 }
 
-func createProvisionRequest(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (di googlecloudsql.DatabaseInstance, ii InstanceInformation, err error) {
+func createProvisionRequest(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (*googlecloudsql.DatabaseInstance, *InstanceInformation, error) {
 	var params map[string]string
 
 	if len(details.RawParameters) == 0 {
 		params = map[string]string{}
-	} else if err = json.Unmarshal(details.RawParameters, &params); err != nil {
-		return di, ii, fmt.Errorf("Error unmarshalling parameters: %s", err)
+	} else if err := json.Unmarshal(details.RawParameters, &params); err != nil {
+		return nil, nil, fmt.Errorf("Error unmarshalling parameters: %s", err)
 	}
 
 	if v, ok := params["instance_name"]; !ok || v == "" {
@@ -123,7 +126,7 @@ func createProvisionRequest(instanceId string, details brokerapi.ProvisionDetail
 
 	svc, err := broker.GetServiceById(details.ServiceID)
 	if err != nil {
-		return di, ii, err
+		return nil, nil, err
 	}
 
 	_, versionOk := params["version"]
@@ -147,7 +150,7 @@ func createProvisionRequest(instanceId string, details brokerapi.ProvisionDetail
 		if binlogOk {
 			binlogEnabled, err = strconv.ParseBool(binlog)
 			if err != nil {
-				return di, ii, fmt.Errorf("%s is not a valid value for binlog", binlog)
+				return nil, nil, fmt.Errorf("%s is not a valid value for binlog", binlog)
 			}
 		}
 	}
@@ -174,12 +177,13 @@ func createProvisionRequest(instanceId string, details brokerapi.ProvisionDetail
 		backupStartTime = startTime
 	}
 
+	var di googlecloudsql.DatabaseInstance
 	if isFirstGen {
 		di = createFirstGenRequest(plan.ServiceProperties, params, labels)
 	} else {
 		di, err = createInstanceRequest(plan.ServiceProperties, params, labels)
 		if err != nil {
-			return di, ii, err
+			return nil, nil, err
 		}
 	}
 	di.Name = instanceName
@@ -195,12 +199,12 @@ func createProvisionRequest(instanceId string, details brokerapi.ProvisionDetail
 	}
 
 	// update instance information on instancedetails object
-	ii = InstanceInformation{
+	ii := InstanceInformation{
 		InstanceName: instanceName,
 		DatabaseName: params["database_name"],
 	}
 
-	return di, ii, nil
+	return &di, &ii, nil
 }
 
 func createFirstGenRequest(planDetails, params, labels map[string]string) googlecloudsql.DatabaseInstance {

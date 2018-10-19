@@ -255,7 +255,7 @@ func TestCreateProvisionRequest(t *testing.T) {
 				t.Fatalf("Expected error containing %q, but got none.", tc.ErrContains)
 			}
 
-			tc.Validate(t, request, instanceInfo)
+			tc.Validate(t, *request, *instanceInfo)
 		})
 	}
 }
