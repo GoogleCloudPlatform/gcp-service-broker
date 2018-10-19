@@ -39,6 +39,8 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver_trace"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/storage"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"encoding/json"
 )
 
 // GCPServiceBroker is a brokerapi.ServiceBroker that can be used to generate an OSB compatible service broker.
@@ -178,6 +180,10 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrAsyncRequired
 	}
 
+	if err := gcpBroker.validateProvisionVariables(instanceID, details); err != nil {
+		return brokerapi.ProvisionedServiceSpec{}, err
+	}
+
 	// get instance details
 	instanceDetails, err := service.Provision(ctx, instanceID, details, plan)
 	if err != nil {
@@ -206,6 +212,21 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 	}
 
 	return brokerapi.ProvisionedServiceSpec{IsAsync: shouldProvisionAsync, DashboardURL: "", OperationData: instanceDetails.OperationId}, nil
+}
+
+func (gcpBroker *GCPServiceBroker) validateProvisionVariables(serviceId string, details brokerapi.ProvisionDetails) error {
+	brokerService, err := broker.GetServiceById(serviceId)
+	if err != nil {
+		return err
+	}
+
+	params := make(map[string]interface{})
+	if err := json.Unmarshal([]byte(details.RawParameters), &params); err != nil {
+		return err
+	}
+
+	broker.ApplyDefaults(params, brokerService.ProvisionInputVariables)
+	return broker.ValidateVariables(params, brokerService.ProvisionInputVariables)
 }
 
 // Deprovision destroys an existing instance of a service.

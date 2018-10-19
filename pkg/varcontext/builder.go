@@ -20,6 +20,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext/interpolation"
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 )
 
 // ContextBuilder is a builder for VariableContexts.
@@ -109,7 +110,7 @@ func (builder *ContextBuilder) MergeJsonObject(data json.RawMessage) *ContextBui
 // Exactly one of VarContext and error will be nil.
 func (builder *ContextBuilder) Build() (*VarContext, error) {
 	if builder.errors != nil {
-		builder.errors.ErrorFormat = lineErrorFormatter
+		builder.errors.ErrorFormat = utils.SingleLineErrorFormatter
 		return nil, builder.errors
 	}
 

@@ -16,10 +16,16 @@ package cloudsql
 
 import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 )
 
 func init() {
-	bs := &broker.BrokerService{
+	broker.Register(mysqlServiceDefinition())
+}
+
+func mysqlServiceDefinition() *broker.BrokerService {
+	return &broker.BrokerService{
 		Name: "google-cloudsql-mysql",
 		DefaultServiceDefinition: `{
 		    "id": "4bc59b9a-8520-409f-85da-1c7552315863",
@@ -173,10 +179,70 @@ func init() {
 				    }
 				]
 		}`,
-		ProvisionInputVariables: commonProvisionVariables,
-		DefaultRoleWhitelist:    roleWhitelist,
-		BindInputVariables:      commonBindVariables,
-		BindOutputVariables:     commonBindOutputVariables,
+		ProvisionInputVariables: append([]broker.BrokerVariable{
+			{
+				FieldName: "instance_name",
+				Type:      broker.JsonTypeString,
+				Details:   "Name of the Cloud SQL instance.",
+				Default:   identifierTemplate,
+				Constraints: validation.NewConstraintBuilder().
+					Pattern("^[a-z][a-z0-9-]+$").
+					MaxLength(84).
+					Build(),
+			},
+			{
+				FieldName: "database_name",
+				Type:      broker.JsonTypeString,
+				Details:   "Name of the database inside of the instance. Must be a valid identifier for your chosen database type.",
+				Default:   identifierTemplate,
+			},
+			{
+				FieldName: "version",
+				Type:      broker.JsonTypeString,
+				Details:   "The database engine type and version. Defaults to `MYSQL_5_6` for 1st gen MySQL instances or `MYSQL_5_7` for 2nd gen MySQL instances.",
+				Enum: map[interface{}]string{
+					"MYSQL_5_5": "MySQL 5.5.X",
+					"MYSQL_5_6": "MySQL 5.6.X",
+					"MYSQL_5_7": "MySQL 5.7.X",
+				},
+			},
+			{
+				FieldName: "failover_replica_name",
+				Type:      broker.JsonTypeString,
+				Details:   "(only for 2nd generation instances) If specified, creates a failover replica with the given name.",
+				Default:   "",
+				Constraints: validation.NewConstraintBuilder().
+					Pattern("^[a-z][a-z0-9-]+$").
+					MaxLength(84).
+					Build(),
+			},
+			{
+				FieldName: "activation_policy",
+				Type:      broker.JsonTypeString,
+				Details:   "The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE.",
+				Default:   "ALWAYS",
+				Enum: map[interface{}]string{
+					"ALWAYS":    "Always, instance is always on.",
+					"NEVER":     "Never, instance does not turn on if a request arrives.",
+					"ON_DEMAND": "On Demand, instance responds to incoming requests and turns off when not in use.",
+				},
+			},
+		}, commonProvisionVariables()...),
+		ProvisionComputedVariables: []varcontext.DefaultVariable{
+			// legacy behavior dictates that empty values get defaults
+			{Name: "instance_name", Default: `${instance_name == "" ? "` + identifierTemplate + `" : instance_name}`, Overwrite: true},
+			{Name: "database_name", Default: `${database_name == "" ? "` + identifierTemplate + `" : database_name}`, Overwrite: true},
+
+			{Name: "is_first_gen", Default: `${str.matches(tier, "^(d|D)[0-9]+$")}`, Overwrite: true},
+			{Name: "version", Default: `${is_first_gen ? "MYSQL_5_6" : "MYSQL_5_7"}`, Overwrite: false},
+
+			// validation
+			{Name: "_", Default: `${assert(disk_size <= max_disk_size, "disk size (${disk_size}) is greater than max allowed disk size for this plan (${max_disk_size})")}`, Overwrite: true},
+		},
+		DefaultRoleWhitelist:  roleWhitelist(),
+		BindInputVariables:    commonBindVariables(),
+		BindOutputVariables:   commonBindOutputVariables(),
+		BindComputedVariables: commonBindComputedVariables(),
 		PlanVariables: []broker.BrokerVariable{
 			{
 				FieldName: "tier",
@@ -219,6 +285,4 @@ func init() {
 			},
 		},
 	}
-
-	broker.Register(bs)
 }

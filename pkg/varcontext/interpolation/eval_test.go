@@ -41,6 +41,14 @@ func TestEval(t *testing.T) {
 		"Counter":               {Template: "${counter.next()},${counter.next()},${counter.next()}", Expected: "1,2,3"},
 		"Query Escape":          {Template: `${str.queryEscape("hello world")}`, Expected: "hello+world"},
 		"Query Amp":             {Template: `${str.queryEscape("hello&world")}`, Expected: "hello%26world"},
+		"Regex":                 {Template: `${regexp.matches("^(D|d)[0-9]+$", "d12345")}`, Expected: "true"},
+		"Bad Regex":             {Template: `${regexp.matches("^($", "d12345")}`, ErrorContains: "error parsing regexp"},
+		"Conditionals True":     {Template: `${true ? "foo" : "bar"}`, Expected: "foo"},
+		"Conditionals False":    {Template: `${false ? "foo" : "bar"}`, Expected: "bar"},
+		"No Short Circuit":      {Template: `${false ? counter.next() : counter.next()}`, Expected: "2"},
+		"assert success":        {Template: `${assert(true, "nothing should happen")}`, Expected: "true"},
+		"assert failure":        {Template: `${assert(false, "failure message")}`, ErrorContains: "failure message"},
+		"assert message":        {Template: `${assert(false, "failure message ${1+1}")}`, ErrorContains: "failure message 2"},
 	}
 
 	for tn, tc := range tests {

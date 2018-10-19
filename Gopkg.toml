@@ -68,3 +68,7 @@
 [[constraint]]
   name = "github.com/hashicorp/go-multierror"
   version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/xeipuuv/gojsonschema"
+  version = "v1.0"

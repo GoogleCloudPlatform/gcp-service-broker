@@ -19,6 +19,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/url"
+	"regexp"
 	"sync/atomic"
 	"time"
 
@@ -32,11 +33,13 @@ var hilStandardLibrary = createStandardLibrary()
 // to their names in a lookup table for our standard library.
 func createStandardLibrary() map[string]ast.Function {
 	return map[string]ast.Function{
-		"time.nano":       hilFuncTimeNano(),
-		"str.truncate":    hilFuncStrTruncate(),
+		"time.nano":      hilFuncTimeNano(),
+		"str.truncate":   hilFuncStrTruncate(),
 		"str.queryEscape": hilFuncStrQueryEscape(),
-		"counter.next":    hilFuncCounterNext(),
-		"rand.base64":     hilFuncRandBase64(),
+		"regexp.matches": hilFuncRegexpMatches(),
+		"counter.next":   hilFuncCounterNext(),
+		"rand.base64":    hilFuncRandBase64(),
+		"assert":         hilFuncAssert(),
 	}
 }
 
@@ -66,6 +69,18 @@ func hilFuncStrTruncate() ast.Function {
 			}
 
 			return str, nil
+		},
+	}
+}
+
+// hilfuncRegexpMatches creates a hil function that checks if a string matches a given
+// regular expression. regexp.matches("^d[0-9]+$", "d2)
+func hilFuncRegexpMatches() ast.Function {
+	return ast.Function{
+		ArgTypes:   []ast.Type{ast.TypeString, ast.TypeString},
+		ReturnType: ast.TypeBool,
+		Callback: func(args []interface{}) (interface{}, error) {
+			return regexp.MatchString(args[0].(string), args[1].(string))
 		},
 	}
 }
@@ -111,6 +126,24 @@ func hilFuncStrQueryEscape() ast.Function {
 		ReturnType: ast.TypeString,
 		Callback: func(args []interface{}) (interface{}, error) {
 			return url.QueryEscape(args[0].(string)), nil
+		},
+	}
+}
+
+// hilFuncAssert throws an error with the second param if the first param is falsy.
+func hilFuncAssert() ast.Function {
+	return ast.Function{
+		ArgTypes:   []ast.Type{ast.TypeBool, ast.TypeString},
+		ReturnType: ast.TypeBool,
+		Callback: func(args []interface{}) (interface{}, error) {
+			condition := args[0].(bool)
+			message := args[1].(string)
+
+			if !condition {
+				return false, fmt.Errorf("Assertion failed: %s", message)
+			}
+
+			return true, nil
 		},
 	}
 }

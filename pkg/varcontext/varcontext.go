@@ -17,10 +17,9 @@ package varcontext
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
-
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cast"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 )
 
 type VarContext struct {
@@ -97,15 +96,6 @@ func (vc *VarContext) Error() error {
 		return nil
 	}
 
-	vc.errors.ErrorFormat = lineErrorFormatter
+	vc.errors.ErrorFormat = utils.SingleLineErrorFormatter
 	return vc.errors
-}
-
-func lineErrorFormatter(es []error) string {
-	points := make([]string, len(es))
-	for i, err := range es {
-		points[i] = err.Error()
-	}
-
-	return fmt.Sprintf("%d error(s) occurred: %s", len(es), strings.Join(points, "; "))
 }
