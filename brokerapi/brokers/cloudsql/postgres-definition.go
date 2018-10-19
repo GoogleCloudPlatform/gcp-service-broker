@@ -186,7 +186,9 @@ func postgresServiceDefinition() *broker.BrokerService {
 			{Name: "instance_name", Default: `${instance_name == "" ? "` + identifierTemplate + `" : instance_name}`, Overwrite: true},
 			{Name: "database_name", Default: `${database_name == "" ? "` + identifierTemplate + `" : database_name}`, Overwrite: true},
 
+			// these variables are fixed for PostgreSQL
 			{Name: "is_first_gen", Default: `false`, Overwrite: true},
+			{Name: "binlog", Default: `false`, Overwrite: true},
 
 			// validation
 			{Name: "_", Default: `${assert(disk_size <= max_disk_size, "disk size (${disk_size}) is greater than max allowed disk size for this plan (${max_disk_size})")}`, Overwrite: true},
