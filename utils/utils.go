@@ -54,17 +54,6 @@ func GetAuthedConfig() (*jwt.Config, error) {
 	return conf, nil
 }
 
-func MergeStringMaps(map1 map[string]string, map2 map[string]string) map[string]string {
-	combined := make(map[string]string)
-	for key, val := range map1 {
-		combined[key] = val
-	}
-	for key, val := range map2 {
-		combined[key] = val
-	}
-	return combined
-}
-
 // PrettyPrintOrExit writes a JSON serialized version of the content to stdout.
 // If a failure occurs during marshaling, the error is logged along with a
 // formatted version of the object and the program exits with a failure status.

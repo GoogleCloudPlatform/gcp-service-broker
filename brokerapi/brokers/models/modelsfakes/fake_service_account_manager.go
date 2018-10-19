@@ -39,7 +39,7 @@ type FakeServiceAccountManager struct {
 	deleteCredentialsReturnsOnCall map[int]struct {
 		result1 error
 	}
-	BuildInstanceCredentialsStub        func(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error)
+	BuildInstanceCredentialsStub        func(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]interface{}, error)
 	buildInstanceCredentialsMutex       sync.RWMutex
 	buildInstanceCredentialsArgsForCall []struct {
 		ctx            context.Context
@@ -47,11 +47,11 @@ type FakeServiceAccountManager struct {
 		instanceRecord models.ServiceInstanceDetails
 	}
 	buildInstanceCredentialsReturns struct {
-		result1 map[string]string
+		result1 map[string]interface{}
 		result2 error
 	}
 	buildInstanceCredentialsReturnsOnCall map[int]struct {
-		result1 map[string]string
+		result1 map[string]interface{}
 		result2 error
 	}
 	CreateAccountWithRolesStub        func(ctx context.Context, bindingID string, roles []string) (models.ServiceBindingCredentials, error)
@@ -177,7 +177,7 @@ func (fake *FakeServiceAccountManager) DeleteCredentialsReturnsOnCall(i int, res
 	}{result1}
 }
 
-func (fake *FakeServiceAccountManager) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error) {
+func (fake *FakeServiceAccountManager) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]interface{}, error) {
 	fake.buildInstanceCredentialsMutex.Lock()
 	ret, specificReturn := fake.buildInstanceCredentialsReturnsOnCall[len(fake.buildInstanceCredentialsArgsForCall)]
 	fake.buildInstanceCredentialsArgsForCall = append(fake.buildInstanceCredentialsArgsForCall, struct {
@@ -208,24 +208,24 @@ func (fake *FakeServiceAccountManager) BuildInstanceCredentialsArgsForCall(i int
 	return fake.buildInstanceCredentialsArgsForCall[i].ctx, fake.buildInstanceCredentialsArgsForCall[i].bindRecord, fake.buildInstanceCredentialsArgsForCall[i].instanceRecord
 }
 
-func (fake *FakeServiceAccountManager) BuildInstanceCredentialsReturns(result1 map[string]string, result2 error) {
+func (fake *FakeServiceAccountManager) BuildInstanceCredentialsReturns(result1 map[string]interface{}, result2 error) {
 	fake.BuildInstanceCredentialsStub = nil
 	fake.buildInstanceCredentialsReturns = struct {
-		result1 map[string]string
+		result1 map[string]interface{}
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeServiceAccountManager) BuildInstanceCredentialsReturnsOnCall(i int, result1 map[string]string, result2 error) {
+func (fake *FakeServiceAccountManager) BuildInstanceCredentialsReturnsOnCall(i int, result1 map[string]interface{}, result2 error) {
 	fake.BuildInstanceCredentialsStub = nil
 	if fake.buildInstanceCredentialsReturnsOnCall == nil {
 		fake.buildInstanceCredentialsReturnsOnCall = make(map[int]struct {
-			result1 map[string]string
+			result1 map[string]interface{}
 			result2 error
 		})
 	}
 	fake.buildInstanceCredentialsReturnsOnCall[i] = struct {
-		result1 map[string]string
+		result1 map[string]interface{}
 		result2 error
 	}{result1, result2}
 }

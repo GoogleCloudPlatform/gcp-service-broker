@@ -15,6 +15,8 @@
 package varcontext
 
 import (
+	"encoding/json"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -143,5 +145,24 @@ func TestVarContext_GetBool(t *testing.T) {
 				t.Errorf("Expected error to contain %q, but got: %v", tc.Error, vc.Error())
 			}
 		})
+	}
+}
+
+func TestVarContext_ToJson(t *testing.T) {
+	vc := &VarContext{context: map[string]interface{}{
+		"t": true,
+		"f": false,
+		"s": "a string",
+		"a": []interface{}{"an", "array"},
+		"F": 123.45,
+	}}
+	expected := vc.ToMap()
+
+	serialized, _ := vc.ToJson()
+	actual := make(map[string]interface{})
+	json.Unmarshal(serialized, &actual)
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Fatalf("Expected: %#v, Got: %#v", expected, actual)
 	}
 }

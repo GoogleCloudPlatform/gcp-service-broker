@@ -24,7 +24,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
 
 	"golang.org/x/net/context"
@@ -145,18 +145,16 @@ func (sam *ServiceAccountManager) DeleteCredentials(ctx context.Context, binding
 	return nil
 }
 
-func (b *ServiceAccountManager) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error) {
-	bindDetails, err := bindRecord.GetOtherDetails()
+func (b *ServiceAccountManager) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]interface{}, error) {
+	vc, err := varcontext.Builder().
+		MergeJsonObject(json.RawMessage(bindRecord.OtherDetails)).
+		MergeJsonObject(json.RawMessage(instanceRecord.OtherDetails)).
+		Build()
 	if err != nil {
 		return nil, err
 	}
 
-	instanceDetails, err := instanceRecord.GetOtherDetails()
-	if err != nil {
-		return nil, err
-	}
-
-	return utils.MergeStringMaps(bindDetails, instanceDetails), nil
+	return vc.ToMap(), nil
 }
 
 // XXX names are truncated to 20 characters because of a bug in the IAM service

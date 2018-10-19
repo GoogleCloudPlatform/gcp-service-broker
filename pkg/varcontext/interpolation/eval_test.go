@@ -39,6 +39,8 @@ func TestEval(t *testing.T) {
 		"Truncate Required":     {Template: `${str.truncate(2, "expression")}`, Expected: "ex"},
 		"Truncate Not Required": {Template: `${str.truncate(200, "expression")}`, Expected: "expression"},
 		"Counter":               {Template: "${counter.next()},${counter.next()},${counter.next()}", Expected: "1,2,3"},
+		"Query Escape":          {Template: `${str.queryEscape("hello world")}`, Expected: "hello+world"},
+		"Query Amp":             {Template: `${str.queryEscape("hello&world")}`, Expected: "hello%26world"},
 	}
 
 	for tn, tc := range tests {

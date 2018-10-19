@@ -17,207 +17,187 @@ package cloudsql
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"net/url"
-	"time"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
-	"golang.org/x/oauth2/jwt"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 )
 
-type SqlAccountManager struct {
-	HttpConfig *jwt.Config
-	ProjectId  string
-}
-
 // inserts a new user into the database and creates new ssl certs
-func (sam *SqlAccountManager) CreateCredentials(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
-
-	bindParameters := map[string]interface{}{}
-	if err := json.Unmarshal(details.RawParameters, &bindParameters); err != nil {
-		return models.ServiceBindingCredentials{}, err
+func (broker *CloudSQLBroker) createSqlCredentials(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (map[string]interface{}, error) {
+	vars, err := varcontext.Builder().
+		MergeJsonObject(details.GetRawParameters()).
+		MergeMap(map[string]interface{}{"bindingid": bindingID}).
+		MergeEvalResult("certname", `${str.truncate(10, bindingid)}cert`).
+		Build()
+	if err != nil {
+		return nil, err
 	}
 
-	var err error
-	username, usernameOk := bindParameters["username"].(string)
-	password, passwordOk := bindParameters["password"].(string)
+	userAccount, err := broker.createSqlUserAccount(ctx, vars, instance)
+	if err != nil {
+		return nil, err
+	}
 
-	if !passwordOk || !usernameOk {
-		return models.ServiceBindingCredentials{}, errors.New("Error binding, missing parameters. Required parameters are username and password")
+	sslCert, err := broker.createSqlSslCert(ctx, vars, instance)
+	if err != nil {
+		return nil, err
+	}
+
+	return mergeJsonProperties(userAccount, sslCert)
+}
+
+type sqlUserAccount struct {
+	Username string `json:"Username"`
+	Password string `json:"Password"`
+}
+
+type sqlSslCert struct {
+	CaCert          string `json:"CaCert"`
+	ClientCert      string `json:"ClientCert"`
+	ClientKey       string `json:"ClientKey"`
+	Sha1Fingerprint string `json:"Sha1Fingerprint"`
+}
+
+func (broker *CloudSQLBroker) createSqlUserAccount(ctx context.Context, vars *varcontext.VarContext, instance models.ServiceInstanceDetails) (*sqlUserAccount, error) {
+	request := &googlecloudsql.User{
+		Name:     vars.GetString("username"),
+		Password: vars.GetString("password"),
+	}
+
+	if err := vars.Error(); err != nil {
+		return nil, err
 	}
 
 	// create username, pw with grants
-	sqlService, err := googlecloudsql.New(sam.HttpConfig.Client(ctx))
+	client, err := broker.createClient(ctx)
 	if err != nil {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating CloudSQL client: %s", err)
+		return nil, err
 	}
 
-	op, err := sqlService.Users.Insert(sam.ProjectId, instance.Name, &googlecloudsql.User{
-		Name:     username,
-		Password: password,
-	}).Do()
-
+	op, err := client.Users.Insert(broker.ProjectId, instance.Name, request).Do()
 	if err != nil {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("Error inserting new database user: %s", err)
+		return nil, fmt.Errorf("Error creating new database user: %s", err)
 	}
 
 	// poll for the user creation operation to be completed
-	err = sam.pollOperationUntilDone(ctx, op, sam.ProjectId)
-	if err != nil {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("Error encountered while polling until operation id %s completes: %s", op.Name, err)
+	if err := broker.pollOperationUntilDone(ctx, op, broker.ProjectId); err != nil {
+		return nil, fmt.Errorf("Error encountered waiting for operation %q to finish: %s", op.Name, err)
 	}
 
-	var creds SqlAccountInfo
-	// create ssl certs
-	certname := bindingID + "cert"
-	if len(bindingID) >= 10 {
-		certname = bindingID[:10] + "cert"
-	}
-	newCert, err := sqlService.SslCerts.Insert(sam.ProjectId, instance.Name, &googlecloudsql.SslCertsInsertRequest{
-		CommonName: certname,
-	}).Do()
-	if err != nil {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("Error creating ssl certs: %s", err)
-	}
-
-	creds = SqlAccountInfo{
-		Username:        username,
-		Password:        password,
-		Sha1Fingerprint: newCert.ClientCert.CertInfo.Sha1Fingerprint,
-		CaCert:          newCert.ServerCaCert.Cert,
-		ClientCert:      newCert.ClientCert.CertInfo.Cert,
-		ClientKey:       newCert.ClientCert.CertPrivateKey,
-	}
-
-	credBytes, err := json.Marshal(&creds)
-	if err != nil {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("Error marshalling credentials: %s", err)
-	}
-
-	newBinding := models.ServiceBindingCredentials{
-		OtherDetails: string(credBytes),
-	}
-
-	return newBinding, nil
+	return &sqlUserAccount{
+		Username: request.Name,
+		Password: request.Password,
+	}, nil
 }
 
-// deletes the user from the database and invalidates the associated ssl certs
-func (sam *SqlAccountManager) DeleteCredentials(ctx context.Context, binding models.ServiceBindingCredentials) error {
-	var err error
-
-	var sqlCreds SqlAccountInfo
-	if err := json.Unmarshal([]byte(binding.OtherDetails), &sqlCreds); err != nil {
+func (broker *CloudSQLBroker) deleteSqlUserAccount(ctx context.Context, binding models.ServiceBindingCredentials, instance models.ServiceInstanceDetails) error {
+	var creds sqlUserAccount
+	if err := json.Unmarshal([]byte(binding.OtherDetails), &creds); err != nil {
 		return fmt.Errorf("Error unmarshalling credentials: %s", err)
 	}
 
-	instance, err := db_service.GetServiceInstanceDetailsById(ctx, binding.ServiceInstanceId)
+	client, err := broker.createClient(ctx)
 	if err != nil {
-		return fmt.Errorf("Database error retrieving instance details: %s", err)
+		return err
 	}
 
-	sqlService, err := googlecloudsql.New(sam.HttpConfig.Client(ctx))
-	if err != nil {
-		return fmt.Errorf("Error creating CloudSQL client: %s", err)
-	}
-
-	// If we didn't generate ssl certs for this binding, then we cannot delete them
-	if sqlCreds.CaCert != "" {
-		certOp, err := sqlService.SslCerts.Delete(sam.ProjectId, instance.Name, sqlCreds.Sha1Fingerprint).Do()
-		if err != nil {
-			return fmt.Errorf("Error deleting ssl cert: %s", err)
-		}
-
-		err = sam.pollOperationUntilDone(ctx, certOp, sam.ProjectId)
-		if err != nil {
-			return fmt.Errorf("Error encountered while polling until operation id %s completes: %s", certOp.Name, err)
-		}
-	}
-
-	// delete our user
-	userOp, err := sqlService.Users.Delete(sam.ProjectId, instance.Name, "", sqlCreds.Username).Do()
+	op, err := client.Users.Delete(broker.ProjectId, instance.Name, "", creds.Username).Do()
 	if err != nil {
 		return fmt.Errorf("Error deleting user: %s", err)
 	}
 
-	err = sam.pollOperationUntilDone(ctx, userOp, sam.ProjectId)
-	if err != nil {
-		return fmt.Errorf("Error encountered while polling until operation id %s completes: %s", userOp.Name, err)
+	if err := broker.pollOperationUntilDone(ctx, op, broker.ProjectId); err != nil {
+		return fmt.Errorf("Error encountered waiting for operation %q to finish: %s", op.Name, err)
 	}
 
 	return nil
 }
 
-// polls the cloud sql operations service once per second until the given operation is done
-// TODO(cbriant): ensure this stays under api call quota
-func (sam *SqlAccountManager) pollOperationUntilDone(ctx context.Context, op *googlecloudsql.Operation, projectId string) error {
-	sqlService, err := googlecloudsql.New(sam.HttpConfig.Client(ctx))
-	if err != nil {
-		return fmt.Errorf("Error creating new cloudsql client: %s", err)
+func (broker *CloudSQLBroker) createSqlSslCert(ctx context.Context, vars *varcontext.VarContext, instance models.ServiceInstanceDetails) (*sqlSslCert, error) {
+	request := &googlecloudsql.SslCertsInsertRequest{
+		CommonName: vars.GetString("certname"),
 	}
 
-	opsService := googlecloudsql.NewOperationsService(sqlService)
-	done := false
-	for done == false {
-		status, err := opsService.Get(projectId, op.Name).Do()
+	if err := vars.Error(); err != nil {
+		return nil, err
+	}
+
+	// create username, pw with grants
+	client, err := broker.createClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	newCert, err := client.SslCerts.Insert(broker.ProjectId, instance.Name, request).Do()
+	if err != nil {
+		return nil, fmt.Errorf("Error creating SSL certs: %s", err)
+	}
+
+	// poll for the user creation operation to be completed
+	return &sqlSslCert{
+		Sha1Fingerprint: newCert.ClientCert.CertInfo.Sha1Fingerprint,
+		CaCert:          newCert.ServerCaCert.Cert,
+		ClientCert:      newCert.ClientCert.CertInfo.Cert,
+		ClientKey:       newCert.ClientCert.CertPrivateKey,
+	}, nil
+}
+
+func (broker *CloudSQLBroker) deleteSqlSslCert(ctx context.Context, binding models.ServiceBindingCredentials, instance models.ServiceInstanceDetails) error {
+	var creds sqlSslCert
+	if err := json.Unmarshal([]byte(binding.OtherDetails), &creds); err != nil {
+		return fmt.Errorf("Error unmarshalling credentials: %s", err)
+	}
+
+	client, err := broker.createClient(ctx)
+	if err != nil {
+		return err
+	}
+
+	// If we didn't generate SSL certs for this binding, then we cannot delete them
+	if creds.CaCert == "" {
+		return nil
+	}
+
+	op, err := client.SslCerts.Delete(broker.ProjectId, instance.Name, creds.Sha1Fingerprint).Do()
+	if err != nil {
+		return fmt.Errorf("Error deleting ssl cert: %s", err)
+	}
+
+	if err := broker.pollOperationUntilDone(ctx, op, broker.ProjectId); err != nil {
+		return fmt.Errorf("Error encountered waiting for operation %q to finish: %s", op.Name, err)
+	}
+
+	return nil
+}
+
+func toJsonMap(obj interface{}) (map[string]interface{}, error) {
+	raw, err := json.Marshal(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make(map[string]interface{})
+	err = json.Unmarshal(raw, &out)
+
+	return out, err
+}
+
+func mergeJsonProperties(toMerge ...interface{}) (map[string]interface{}, error) {
+	out := make(map[string]interface{})
+
+	for _, obj := range toMerge {
+		m, err := toJsonMap(obj)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		if status.EndTime != "" {
-			done = true
-		} else {
-			println("still waiting for it to be done")
+
+		for k, v := range m {
+			out[k] = v
 		}
-		// sleep for 1 second between polling so we don't hit our rate limit
-		time.Sleep(time.Second)
-	}
-	return nil
-}
-
-func (b *SqlAccountManager) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]string, error) {
-	instanceDetails, err := instanceRecord.GetOtherDetails()
-	if err != nil {
-		return nil, err
 	}
 
-	bindDetails, err := bindRecord.GetOtherDetails()
-	if err != nil {
-		return nil, err
-	}
-
-	service, err := broker.GetServiceById(instanceRecord.ServiceId)
-	if err != nil {
-		return nil, err
-	}
-
-	combinedCreds := utils.MergeStringMaps(bindDetails, instanceDetails)
-
-	if service.Name == models.CloudsqlMySQLName {
-		combinedCreds["uri"] = fmt.Sprintf("%smysql://%s:%s@%s/%s?ssl_mode=required",
-			combinedCreds["UriPrefix"], url.QueryEscape(combinedCreds["Username"]), url.QueryEscape(combinedCreds["Password"]), combinedCreds["host"], combinedCreds["database_name"])
-	} else if service.Name == models.CloudsqlPostgresName {
-		combinedCreds["uri"] = fmt.Sprintf("%spostgres://%s:%s@%s/%s?sslmode=require&sslcert=%s&sslkey=%s&sslrootcert=%s",
-			combinedCreds["UriPrefix"], url.QueryEscape(combinedCreds["Username"]), url.QueryEscape(combinedCreds["Password"]), combinedCreds["host"], combinedCreds["database_name"], url.QueryEscape(combinedCreds["ClientCert"]), url.QueryEscape(combinedCreds["ClientKey"]), url.QueryEscape(combinedCreds["CaCert"]))
-	} else {
-		return map[string]string{}, errors.New("Unknown service")
-	}
-
-	return combinedCreds, nil
-}
-
-type SqlAccountInfo struct {
-	// the bits to return
-	Username   string `json:"Username"`
-	Password   string `json:"Password"`
-	CaCert     string `json:"CaCert"`
-	ClientCert string `json:"ClientCert"`
-	ClientKey  string `json:"ClientKey"`
-
-	// the bits to save
-	Sha1Fingerprint string `json:"Sha1Fingerprint"`
+	return out, nil
 }
