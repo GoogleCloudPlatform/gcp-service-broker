@@ -30,6 +30,8 @@ import (
 	"github.com/pivotal-cf/brokerapi"
 	"google.golang.org/api/googleapi"
 
+	"encoding/json"
+
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/config"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/datastore"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
@@ -40,7 +42,6 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/storage"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
-	"encoding/json"
 )
 
 // GCPServiceBroker is a brokerapi.ServiceBroker that can be used to generate an OSB compatible service broker.
@@ -180,7 +181,7 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrAsyncRequired
 	}
 
-	if err := gcpBroker.validateProvisionVariables(instanceID, details); err != nil {
+	if err := gcpBroker.validateProvisionVariables(serviceId, details); err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, err
 	}
 
@@ -221,11 +222,12 @@ func (gcpBroker *GCPServiceBroker) validateProvisionVariables(serviceId string, 
 	}
 
 	params := make(map[string]interface{})
-	if err := json.Unmarshal([]byte(details.RawParameters), &params); err != nil {
-		return err
+	if len(details.RawParameters) > 0 {
+		if err := json.Unmarshal([]byte(details.RawParameters), &params); err != nil {
+			return err
+		}
 	}
 
-	broker.ApplyDefaults(params, brokerService.ProvisionInputVariables)
 	return broker.ValidateVariables(params, brokerService.ProvisionInputVariables)
 }
 
