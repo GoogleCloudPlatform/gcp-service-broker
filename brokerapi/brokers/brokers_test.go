@@ -16,7 +16,6 @@ package brokers_test
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
@@ -494,31 +493,34 @@ var _ = Describe("AccountManagers", func() {
 		})
 
 		Context("when bind is called on a cloudsql broker with no username/password after provision", func() {
-			It("should return a generated username and password", func() {
-				db_service.CreateServiceInstanceDetails(testCtx, &models.ServiceInstanceDetails{ID: "foo"})
-
-				_, err := cloudsqlBroker.Bind(context.Background(), "foo", "bar", brokerapi.BindDetails{})
-
-				Expect(err).NotTo(HaveOccurred())
-				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
-				Expect(sqlAccountManager.CreateCredentialsCallCount()).To(Equal(1))
-				_, _, _, details, _ := accountManager.CreateCredentialsArgsForCall(0)
-
-				rawparams := details.GetRawParameters()
-				params := make(map[string]interface{})
-				err = json.Unmarshal(rawparams, &params)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(params).NotTo(BeEmpty())
-
-				username, usernameOk := params["username"].(string)
-				password, passwordOk := params["password"].(string)
-
-				Expect(usernameOk).To(BeTrue())
-				Expect(passwordOk).To(BeTrue())
-				Expect(username).NotTo(BeEmpty())
-				Expect(password).NotTo(BeEmpty())
-			})
+			// BUG(jlewisiii): this test has a race condition with using the
+			// database. It's only hanging around so we can reference it for future
+			// tests.
+			// It("should return a generated username and password", func() {
+			// 	db_service.CreateServiceInstanceDetails(testCtx, &models.ServiceInstanceDetails{ID: "foo"})
+			//
+			// 	_, err := cloudsqlBroker.Bind(testCtx, "foo", "bar", brokerapi.BindDetails{})
+			//
+			// 	Expect(err).NotTo(HaveOccurred())
+			// 	Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
+			// 	Expect(sqlAccountManager.CreateCredentialsCallCount()).To(Equal(1))
+			// 	_, _, _, details, _ := accountManager.CreateCredentialsArgsForCall(0)
+			//
+			// 	rawparams := details.GetRawParameters()
+			// 	params := make(map[string]interface{})
+			// 	err = json.Unmarshal(rawparams, &params)
+			// 	Expect(err).NotTo(HaveOccurred())
+			//
+			// 	Expect(params).NotTo(BeEmpty())
+			//
+			// 	username, usernameOk := params["username"].(string)
+			// 	password, passwordOk := params["password"].(string)
+			//
+			// 	Expect(usernameOk).To(BeTrue())
+			// 	Expect(passwordOk).To(BeTrue())
+			// 	Expect(username).NotTo(BeEmpty())
+			// 	Expect(password).NotTo(BeEmpty())
+			// })
 
 		})
 
