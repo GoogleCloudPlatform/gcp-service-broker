@@ -67,10 +67,6 @@ func (b *CloudSQLBroker) Provision(ctx context.Context, instanceId string, detai
 		return models.ServiceInstanceDetails{}, err
 	}
 
-	b.Logger.Info("provision request", lager.Data{
-		"reqeust": di,
-	})
-
 	// init sqladmin service
 	sqlService, err := b.createClient(ctx)
 	if err != nil {
@@ -78,7 +74,7 @@ func (b *CloudSQLBroker) Provision(ctx context.Context, instanceId string, detai
 	}
 
 	// make insert request
-	op, err := sqlService.Instances.Insert(b.ProjectId, &di).Do()
+	op, err := sqlService.Instances.Insert(b.ProjectId, di).Do()
 	if err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new CloudSQL instance: %s", err)
 	}
@@ -100,15 +96,15 @@ func (b *CloudSQLBroker) Provision(ctx context.Context, instanceId string, detai
 	}, nil
 }
 
-func createProvisionRequest(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (di googlecloudsql.DatabaseInstance, ii InstanceInformation, err error) {
+func createProvisionRequest(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (*googlecloudsql.DatabaseInstance, *InstanceInformation, error) {
 	svc, err := broker.GetServiceById(details.ServiceID)
 	if err != nil {
-		return di, ii, err
+		return nil, nil, err
 	}
 
 	vars, err := svc.ProvisionVariables(instanceId, details, plan)
 	if err != nil {
-		return di, ii, err
+		return nil, nil, err
 	}
 
 	// set up database information
@@ -130,10 +126,12 @@ func createProvisionRequest(instanceId string, details brokerapi.ProvisionDetail
 	di.Settings.UserLabels = utils.ExtractDefaultLabels(instanceId, details)
 
 	// Set up instance information
-	ii.InstanceName = instanceName
-	ii.DatabaseName = vars.GetString("database_name")
+	ii := InstanceInformation{
+		InstanceName: instanceName,
+		DatabaseName: vars.GetString("database_name"),
+	}
 
-	return di, ii, vars.Error()
+	return &di, &ii, vars.Error()
 }
 
 func varctxGetAcls(vars *varcontext.VarContext) []*googlecloudsql.AclEntry {
