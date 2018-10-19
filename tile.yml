@@ -232,6 +232,17 @@ forms:
       is using the correct plan GUID. If the service does not use the correct GUID,
       the request will fail with a message about how to upgrade.
     configurable: true
+- name: validation
+  label: Validation
+  description: Input parameter validation
+  properties:
+  - name: gsb_flags_enable_input_validation
+    type: boolean
+    default: true
+    label: Enables input variable JSON Schema validation checks
+    description: Enable input variable validation against the JSON Schema definitions
+      for brokered services.
+    configurable: true
 - name: default_override
   label: Default Overrides
   description: Override the default values your users get when provisioning.

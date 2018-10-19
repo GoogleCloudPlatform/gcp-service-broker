@@ -22,9 +22,10 @@ import (
 )
 
 type BrokerConfig struct {
-	Catalog    map[string]models.Service
-	HttpConfig *jwt.Config
-	ProjectId  string
+	Catalog               map[string]models.Service
+	HttpConfig            *jwt.Config
+	ProjectId             string
+	EnableInputValidation bool
 }
 
 func NewBrokerConfigFromEnv() (*BrokerConfig, error) {

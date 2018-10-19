@@ -38,6 +38,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"golang.org/x/oauth2/jwt"
+	"encoding/json"
 )
 
 var _ = Describe("Brokers", func() {
@@ -82,6 +83,7 @@ var _ = Describe("Brokers", func() {
 		os.Setenv("SECURITY_USER_PASSWORD", "password")
 
 		brokerConfig, err = config.NewBrokerConfigFromEnv()
+		brokerConfig.EnableInputValidation = true
 		if err != nil {
 			logger.Error("error", err)
 		}
@@ -138,9 +140,14 @@ var _ = Describe("Brokers", func() {
 			PlanID:    someCloudSQLPlanId,
 		}
 
+		storageBindParameters, _ := json.Marshal(map[string]interface{}{
+			"role": "ninja",
+		})
+
 		storageBindDetails = brokerapi.BindDetails{
 			ServiceID: serviceNameToId[models.StorageName],
 			PlanID:    someStoragePlanId,
+			RawParameters: storageBindParameters,
 		}
 
 		storageUnbindDetails = brokerapi.UnbindDetails{

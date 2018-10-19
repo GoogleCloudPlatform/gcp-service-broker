@@ -367,6 +367,25 @@ Enable compatibility with the GCP Service Broker v3.x. Before version 4.0, each 
 
 
 
+## Validation
+
+Input parameter validation
+
+You can configure the following environment variables:
+
+<b><tt>GSB_FLAGS_ENABLE_INPUT_VALIDATION</tt></b> - <i>boolean</i> - Enables input variable JSON Schema validation checks
+
+Enable input variable validation against the JSON Schema definitions for brokered services.
+
+
+
+<ul>
+  <li><b>Required</b></li>
+  <li>Default: <code>true</code></li>
+</ul>
+
+
+
 ## Default Overrides
 
 Override the default values your users get when provisioning.
@@ -577,7 +596,7 @@ For example:
   <li>Default: <code>SSD</code></li>
   <li>Valid Values:
   <ul>
-    <li><tt>SSD</tt> - SSD - Solid-state Drive</li><li><tt>HDD</tt> - HDD - Hard Disk Drive</li>
+    <li><tt>HDD</tt> - HDD - Hard Disk Drive</li><li><tt>SSD</tt> - SSD - Solid-state Drive</li>
   </ul>
   </li>
 </ul>
@@ -726,7 +745,7 @@ For example:
   <li>Default: <code>PER_USE</code></li>
   <li>Valid Values:
   <ul>
-    <li><tt>PER_USE</tt> - Per-Use</li><li><tt>PACKAGE</tt> - Package</li>
+    <li><tt>PACKAGE</tt> - Package</li><li><tt>PER_USE</tt> - Per-Use</li>
   </ul>
   </li>
 </ul>

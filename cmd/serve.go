@@ -36,6 +36,7 @@ const (
 	apiPasswordProp     = "api.password"
 	apiPortProp         = "api.port"
 	v3CompatibilityProp = "compatibility.three-to-four.legacy-plans"
+	inputValidationProp = "flags.enable-input-validation"
 )
 
 func init() {
@@ -90,6 +91,11 @@ func serve() {
 		"port":     port,
 		"username": username,
 	})
+
+	if viper.GetBool(inputValidationProp) {
+		logger.Info("Enabling input schema validation")
+		cfg.EnableInputValidation = true
+	}
 
 	if viper.GetBool(v3CompatibilityProp) {
 		logger.Info("Enabling v3 Compatibility Mode")
