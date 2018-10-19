@@ -64,17 +64,25 @@ The following sections contain guidelines to help you out.
 ### Deciding what to include
 
 Services don't need to map one-to-one with cloud products, and probably shouldn't.
-Ideally a service will allow you to get a single, useful, task done and use plans to decide what kind of scale you want it done at.
+Instead, services should be focused around particular workflows, allowing you to get a single, useful, task done.
+Service plans allow you to scale that up or down.
+
+For example, Google CloudSQL contains options for high availability, PostgreSQL and MySQL servers, managing on-prem servers, and read-only replication architectures.
+These features all exist for different audiences, and a generic service trying to fit all the use-cases won't give a good experience to the users, operators, or maintainers.
 
 If you find yourself wishing you could selectively enable or disable variables based on flags, it's a sign you should break down your code into another service.
 For example, a Cloud Storage bucket can be configured to have a retention policy, a public-facing URL, and/or push file-change updates to a Pub/Sub queue.
-It would be a good idea to break those features into two separate services.
-One for hosting a static website with settings for URL, index/error pages, and CNAME.
-And the other for general storage that has retention policies.
-Both could make use of a single variable for a queue.
-This helps while creating plans for them too.
-The static site plans could be simple, maybe containing different domain names and regions.
-The archive bucket plans could be for different retention policies and object durability.
+It would be a good idea to break those features into multiple distinct services:
+
+* One for hosting a static website with settings for URL, index/error pages, and CNAME.
+* Another the other for general storage that has retention policies.
+* A third that also provisions a Pub/Sub queue and acts as a staging area for data.
+
+Breaking things down like this makes it easier to figure out what variables you need to expose, what risks they entail and what kind of plans you'll want:
+
+* The static site plans could be simple, maybe containing different domain names and regions.
+* The archive bucket plans could be for different retention policies and object durability.
+* The staging bucket plans could include options for setting up alerting and the queue at the same time as the bucket is created.
 
 Each cloud service you expose will have a plethora of tunable parameters to choose from.
 Ideally, you should expose enough to be useful to developers and secure, but few enough that your service has a well defined use-case.
@@ -96,7 +104,7 @@ This highly depends on your target audience.
 
 For example, a Pub/Sub instance with one-to-many semantics might default to a read-only role, assuming the default consumer is just going to be a worker node whereas a Pub/Sub instance with many-to-many semantics might default to a read/write role even if some consumers want to be read-only.
 
-### Deciding on what your default plans will look like
+### Deciding on what your default plans will be
 
 If you've gotten to this point, you should have a clear understanding of what your service is trying to accomplish, who the users are, and what variables are configurable in your plans.
 It can be tempting to include every permutation of the variables for plans.
