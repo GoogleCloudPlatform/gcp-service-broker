@@ -365,17 +365,9 @@ Enable compatibility with the GCP Service Broker v3.x. Before version 4.0, each 
   <li><b>Required</b></li>
 </ul>
 
+<b><tt>GSB_COMPATIBILITY_ENABLE_INPUT_VALIDATION</tt></b> - <i>boolean</i> - Enables input variable JSON Schema validation checks
 
-
-## Validation
-
-Input parameter validation
-
-You can configure the following environment variables:
-
-<b><tt>GSB_FLAGS_ENABLE_INPUT_VALIDATION</tt></b> - <i>boolean</i> - Enables input variable JSON Schema validation checks
-
-Enable input variable validation against the JSON Schema definitions for brokered services.
+Enables validating user input variables against JSON Schema definitions.
 
 
 
@@ -596,7 +588,7 @@ For example:
   <li>Default: <code>SSD</code></li>
   <li>Valid Values:
   <ul>
-    <li><tt>HDD</tt> - HDD - Hard Disk Drive</li><li><tt>SSD</tt> - SSD - Solid-state Drive</li>
+    <li><tt>SSD</tt> - SSD - Solid-state Drive</li><li><tt>HDD</tt> - HDD - Hard Disk Drive</li>
   </ul>
   </li>
 </ul>
@@ -745,7 +737,7 @@ For example:
   <li>Default: <code>PER_USE</code></li>
   <li>Valid Values:
   <ul>
-    <li><tt>PACKAGE</tt> - Package</li><li><tt>PER_USE</tt> - Per-Use</li>
+    <li><tt>PER_USE</tt> - Per-Use</li><li><tt>PACKAGE</tt> - Package</li>
   </ul>
   </li>
 </ul>

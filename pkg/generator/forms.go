@@ -72,7 +72,6 @@ func GenerateForms() TileFormsSections {
 			generateEnableDisableForm(),
 			generateRoleWhitelistForm(),
 			generateCompatibilityForm(),
-			generateValidationForm(),
 			generateDefaultOverrideForm(),
 		},
 
@@ -226,23 +225,13 @@ func generateCompatibilityForm() Form {
 					This option installs a compatibility layer which checks if a service is using the correct plan GUID.
 					If the service does not use the correct GUID, the request will fail with a message about how to upgrade.`),
 			},
-		},
-	}
-}
-
-func generateValidationForm() Form {
-	return Form{
-		Name:        "validation",
-		Label:       "Validation",
-		Description: "Input parameter validation",
-		Properties: []FormProperty{
 			{
-				Name:         "gsb_flags_enable_input_validation",
+				Name:         "gsb_compatibility_enable_input_validation",
 				Type:         "boolean",
 				Label:        "Enables input variable JSON Schema validation checks",
 				Configurable: true,
 				Default:      true,
-				Description: singleLine(`Enable input variable validation against the JSON Schema definitions for brokered services.`),
+				Description: singleLine(`Enables validating user input variables against JSON Schema definitions.`),
 			},
 		},
 	}

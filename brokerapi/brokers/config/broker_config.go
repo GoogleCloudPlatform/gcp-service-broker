@@ -19,7 +19,16 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"golang.org/x/oauth2/jwt"
+	"github.com/spf13/viper"
 )
+
+const (
+	inputValidationProp = "compatibility.enable-input-validation"
+)
+
+func init() {
+	viper.SetDefault(inputValidationProp, true)
+}
 
 type BrokerConfig struct {
 	Catalog               map[string]models.Service
@@ -48,6 +57,7 @@ func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
 		Catalog:    catalog,
 		ProjectId:  projectId,
 		HttpConfig: conf,
+		EnableInputValidation: viper.GetBool(inputValidationProp),
 	}, nil
 }
 

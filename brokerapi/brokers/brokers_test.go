@@ -83,7 +83,6 @@ var _ = Describe("Brokers", func() {
 		os.Setenv("SECURITY_USER_PASSWORD", "password")
 
 		brokerConfig, err = config.NewBrokerConfigFromEnv()
-		brokerConfig.EnableInputValidation = true
 		if err != nil {
 			logger.Error("error", err)
 		}
