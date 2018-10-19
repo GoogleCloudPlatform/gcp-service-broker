@@ -63,6 +63,13 @@ type InstanceInformation struct {
 // Provision creates a new CloudSQL instance from the settings in the user-provided details and service plan.
 func (b *CloudSQLBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	di, ii, err := createProvisionRequest(instanceId, details, plan)
+	if err != nil {
+		return models.ServiceInstanceDetails{}, err
+	}
+
+	b.Logger.Info("provision request", lager.Data{
+		"reqeust": di,
+	})
 
 	// init sqladmin service
 	sqlService, err := b.createClient(ctx)
@@ -178,9 +185,10 @@ func createInstanceRequest(vars *varcontext.VarContext) googlecloudsql.DatabaseI
 			},
 			DataDiskType: vars.GetString("disk_type"),
 			MaintenanceWindow: &googlecloudsql.MaintenanceWindow{
-				Day:         int64(vars.GetInt("maintenance_window_day")),
-				Hour:        int64(vars.GetInt("maintenance_window_hour")),
-				UpdateTrack: "stable",
+				Day:             int64(vars.GetInt("maintenance_window_day")),
+				Hour:            int64(vars.GetInt("maintenance_window_hour")),
+				UpdateTrack:     "stable",
+				ForceSendFields: []string{"Day", "Hour"},
 			},
 			PricingPlan:       secondGenPricingPlan,
 			ActivationPolicy:  vars.GetString("activation_policy"),
