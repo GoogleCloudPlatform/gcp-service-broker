@@ -108,6 +108,7 @@ func createProvisionRequest(instanceId string, details brokerapi.ProvisionDetail
 	}
 
 	// set up database information
+	var di *googlecloudsql.DatabaseInstance
 	if vars.GetBool("is_first_gen") {
 		di = createFirstGenRequest(vars)
 	} else {
@@ -131,7 +132,7 @@ func createProvisionRequest(instanceId string, details brokerapi.ProvisionDetail
 		DatabaseName: vars.GetString("database_name"),
 	}
 
-	return &di, &ii, vars.Error()
+	return di, &ii, vars.Error()
 }
 
 func varctxGetAcls(vars *varcontext.VarContext) []*googlecloudsql.AclEntry {
@@ -148,9 +149,9 @@ func varctxGetAcls(vars *varcontext.VarContext) []*googlecloudsql.AclEntry {
 	return openAcls
 }
 
-func createFirstGenRequest(vars *varcontext.VarContext) googlecloudsql.DatabaseInstance {
+func createFirstGenRequest(vars *varcontext.VarContext) *googlecloudsql.DatabaseInstance {
 	// set up instance resource
-	return googlecloudsql.DatabaseInstance{
+	return &googlecloudsql.DatabaseInstance{
 		Settings: &googlecloudsql.Settings{
 			IpConfiguration: &googlecloudsql.IpConfiguration{
 				RequireSsl:  true,
@@ -166,11 +167,11 @@ func createFirstGenRequest(vars *varcontext.VarContext) googlecloudsql.DatabaseI
 	}
 }
 
-func createInstanceRequest(vars *varcontext.VarContext) googlecloudsql.DatabaseInstance {
+func createInstanceRequest(vars *varcontext.VarContext) *googlecloudsql.DatabaseInstance {
 	autoResize := vars.GetBool("auto_resize")
 
 	// set up instance resource
-	return googlecloudsql.DatabaseInstance{
+	return &googlecloudsql.DatabaseInstance{
 		Settings: &googlecloudsql.Settings{
 			IpConfiguration: &googlecloudsql.IpConfiguration{
 				RequireSsl:  true,
