@@ -418,16 +418,10 @@ func (b *CloudSQLBroker) BuildInstanceCredentials(ctx context.Context, bindRecor
 		return nil, err
 	}
 
-	vc, err := varcontext.Builder().
+	return varcontext.Builder().
 		MergeMap(combinedCreds).
 		MergeEvalResult("uri", uriFormat).
-		Build()
-
-	if err != nil {
-		return nil, err
-	}
-
-	return vc.ToMap(), nil
+		BuildMap()
 }
 
 // Unbind deletes the database user, service account and invalidates the ssl certs associated with this binding.

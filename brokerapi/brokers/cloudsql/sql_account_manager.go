@@ -46,7 +46,7 @@ func (broker *CloudSQLBroker) createSqlCredentials(ctx context.Context, instance
 		return nil, err
 	}
 
-	return mergeJsonProperties(userAccount, sslCert)
+	return varcontext.Builder().MergeStruct(userAccount).MergeStruct(sslCert).BuildMap()
 }
 
 type sqlUserAccount struct {
@@ -171,33 +171,4 @@ func (broker *CloudSQLBroker) deleteSqlSslCert(ctx context.Context, binding mode
 	}
 
 	return nil
-}
-
-func toJsonMap(obj interface{}) (map[string]interface{}, error) {
-	raw, err := json.Marshal(obj)
-	if err != nil {
-		return nil, err
-	}
-
-	out := make(map[string]interface{})
-	err = json.Unmarshal(raw, &out)
-
-	return out, err
-}
-
-func mergeJsonProperties(toMerge ...interface{}) (map[string]interface{}, error) {
-	out := make(map[string]interface{})
-
-	for _, obj := range toMerge {
-		m, err := toJsonMap(obj)
-		if err != nil {
-			return nil, err
-		}
-
-		for k, v := range m {
-			out[k] = v
-		}
-	}
-
-	return out, nil
 }
