@@ -232,6 +232,12 @@ forms:
       is using the correct plan GUID. If the service does not use the correct GUID,
       the request will fail with a message about how to upgrade.
     configurable: true
+  - name: gsb_compatibility_enable_input_validation
+    type: boolean
+    default: true
+    label: Enables input variable JSON Schema validation checks
+    description: Enables validating user input variables against JSON Schema definitions.
+    configurable: true
 - name: default_override
   label: Default Overrides
   description: Override the default values your users get when provisioning.
@@ -371,10 +377,10 @@ service_plan_forms:
     description: Select a pricing plan (only for 1st generation instances).
     configurable: true
     options:
-    - name: PER_USE
-      label: Per-Use
     - name: PACKAGE
       label: Package
+    - name: PER_USE
+      label: Per-Use
   - name: max_disk_size
     type: string
     default: "10"

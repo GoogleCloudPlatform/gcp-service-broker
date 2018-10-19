@@ -225,6 +225,14 @@ func generateCompatibilityForm() Form {
 					This option installs a compatibility layer which checks if a service is using the correct plan GUID.
 					If the service does not use the correct GUID, the request will fail with a message about how to upgrade.`),
 			},
+			{
+				Name:         "gsb_compatibility_enable_input_validation",
+				Type:         "boolean",
+				Label:        "Enables input variable JSON Schema validation checks",
+				Configurable: true,
+				Default:      true,
+				Description: singleLine(`Enables validating user input variables against JSON Schema definitions.`),
+			},
 		},
 	}
 }

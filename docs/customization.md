@@ -365,6 +365,17 @@ Enable compatibility with the GCP Service Broker v3.x. Before version 4.0, each 
   <li><b>Required</b></li>
 </ul>
 
+<b><tt>GSB_COMPATIBILITY_ENABLE_INPUT_VALIDATION</tt></b> - <i>boolean</i> - Enables input variable JSON Schema validation checks
+
+Enables validating user input variables against JSON Schema definitions.
+
+
+
+<ul>
+  <li><b>Required</b></li>
+  <li>Default: <code>true</code></li>
+</ul>
+
 
 
 ## Default Overrides

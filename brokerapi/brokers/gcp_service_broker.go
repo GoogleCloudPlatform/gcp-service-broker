@@ -46,8 +46,9 @@ import (
 
 // GCPServiceBroker is a brokerapi.ServiceBroker that can be used to generate an OSB compatible service broker.
 type GCPServiceBroker struct {
-	Catalog          map[string]models.Service
-	ServiceBrokerMap map[string]models.ServiceBrokerHelper
+	Catalog               map[string]models.Service
+	ServiceBrokerMap      map[string]models.ServiceBrokerHelper
+	enableInputValidation bool
 
 	Logger lager.Logger
 }
@@ -59,6 +60,7 @@ func New(cfg *config.BrokerConfig, logger lager.Logger) (*GCPServiceBroker, erro
 	self := GCPServiceBroker{}
 	self.Logger = logger
 	self.Catalog = cfg.Catalog
+	self.enableInputValidation = cfg.EnableInputValidation
 
 	saManager := &account_managers.ServiceAccountManager{
 		HttpConfig: cfg.HttpConfig,
@@ -181,8 +183,11 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrAsyncRequired
 	}
 
-	if err := gcpBroker.validateProvisionVariables(serviceId, details); err != nil {
-		return brokerapi.ProvisionedServiceSpec{}, err
+	if gcpBroker.enableInputValidation {
+		// validate parameters meet the service's schema
+		if err := validateProvisionVariables(details); err != nil {
+			return brokerapi.ProvisionedServiceSpec{}, err
+		}
 	}
 
 	// get instance details
@@ -215,8 +220,8 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 	return brokerapi.ProvisionedServiceSpec{IsAsync: shouldProvisionAsync, DashboardURL: "", OperationData: instanceDetails.OperationId}, nil
 }
 
-func (gcpBroker *GCPServiceBroker) validateProvisionVariables(serviceId string, details brokerapi.ProvisionDetails) error {
-	brokerService, err := broker.GetServiceById(serviceId)
+func validateProvisionVariables(details brokerapi.ProvisionDetails) error {
+	brokerService, err := broker.GetServiceById(details.ServiceID)
 	if err != nil {
 		return err
 	}
@@ -229,6 +234,22 @@ func (gcpBroker *GCPServiceBroker) validateProvisionVariables(serviceId string, 
 	}
 
 	return broker.ValidateVariables(params, brokerService.ProvisionInputVariables)
+}
+
+func validateBindVariables(details brokerapi.BindDetails) error {
+	brokerService, err := broker.GetServiceById(details.ServiceID)
+	if err != nil {
+		return err
+	}
+
+	params := make(map[string]interface{})
+	if len(details.RawParameters) > 0 {
+		if err := json.Unmarshal([]byte(details.RawParameters), &params); err != nil {
+			return err
+		}
+	}
+
+	return broker.ValidateVariables(params, brokerService.BindInputVariables)
 }
 
 // Deprovision destroys an existing instance of a service.
@@ -301,13 +322,19 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 	service := gcpBroker.ServiceBrokerMap[details.ServiceID]
 
 	// check for existing binding
-
 	count, err := db_service.CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, instanceID, bindingID)
 	if err != nil {
 		return brokerapi.Binding{}, fmt.Errorf("Error checking for existing binding: %s", err)
 	}
 	if count > 0 {
 		return brokerapi.Binding{}, brokerapi.ErrBindingAlreadyExists
+	}
+
+	if gcpBroker.enableInputValidation {
+		// validate parameters meet the service's schema
+		if err := validateBindVariables(details); err != nil {
+			return brokerapi.Binding{}, err
+		}
 	}
 
 	// create binding
