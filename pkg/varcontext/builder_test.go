@@ -109,6 +109,21 @@ func TestContextBuilder(t *testing.T) {
 			}{Name: "Foo"}),
 			Expected: map[string]interface{}{"username": "Foo"},
 		},
+
+		// constants
+		"Basic constants": {
+			Builder: Builder().
+				SetEvalConstants(map[string]interface{}{"PI": 3.14}).
+				MergeEvalResult("out", "${PI}"),
+			Expected: map[string]interface{}{"out": "3.14"},
+		},
+		"User overrides constant": {
+			Builder: Builder().
+				SetEvalConstants(map[string]interface{}{"PI": 3.14}).
+				MergeMap(map[string]interface{}{"PI": 3.2}). // reassign incorrectly, https://en.wikipedia.org/wiki/Indiana_Pi_Bill
+				MergeEvalResult("PI", "${PI}"),              // test which PI gets referenced
+			Expected: map[string]interface{}{"PI": "3.14"},
+		},
 	}
 
 	for tn, tc := range cases {

@@ -25,15 +25,26 @@ import (
 
 // ContextBuilder is a builder for VariableContexts.
 type ContextBuilder struct {
-	errors  *multierror.Error
-	context map[string]interface{}
+	errors    *multierror.Error
+	context   map[string]interface{}
+	constants map[string]interface{}
 }
 
 // Builder creates a new ContextBuilder for constructing VariableContexts.
 func Builder() *ContextBuilder {
 	return &ContextBuilder{
-		context: make(map[string]interface{}),
+		context:   make(map[string]interface{}),
+		constants: make(map[string]interface{}),
 	}
+}
+
+// SetEvalConstants sets constants that will be available to evaluation contexts
+// but not in the final output produced by the Build() call.
+// These can be used to set values users can't overwrite mistakenly or maliciously.
+func (builder *ContextBuilder) SetEvalConstants(constants map[string]interface{}) *ContextBuilder {
+	builder.constants = constants
+
+	return builder
 }
 
 // DefaultVariable holds a value that may or may not be evaluated.
@@ -69,7 +80,15 @@ func (builder *ContextBuilder) MergeDefaults(brokerVariables []DefaultVariable) 
 // MergeEvalResult evaluates the template against the templating engine and
 // merges in the value if the result is not an error.
 func (builder *ContextBuilder) MergeEvalResult(key, template string) *ContextBuilder {
-	result, err := interpolation.Eval(template, builder.context)
+	evaluationContext := make(map[string]interface{})
+	for k, v := range builder.context {
+		evaluationContext[k] = v
+	}
+	for k, v := range builder.constants {
+		evaluationContext[k] = v
+	}
+
+	result, err := interpolation.Eval(template, evaluationContext)
 	if err != nil {
 		builder.errors = multierror.Append(fmt.Errorf("couldn't compute the value for %q, template: %q, %v", key, template, err))
 		return builder
