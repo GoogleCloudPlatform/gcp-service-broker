@@ -106,6 +106,7 @@ func commonProvisionVariables() []broker.BrokerVariable {
 			FieldName: "zone",
 			Type:      broker.JsonTypeString,
 			Details:   "(only for 2nd generation instances)",
+			Default:   "",
 			Constraints: validation.NewConstraintBuilder().
 				Pattern("^[A-Za-z][-a-z0-9A-Z]+$").
 				Build(),
@@ -193,12 +194,12 @@ func commonProvisionVariables() []broker.BrokerVariable {
 }
 
 func commonBindOutputVariables() []broker.BrokerVariable {
-  return append(accountmanagers.ServiceAccountBindOutputVariables(), []broker.BrokerVariable{
-	  // Certificate
-	  {FieldName: "CaCert", Type: broker.JsonTypeString, Details: "The server Certificate Authority's certificate."},
-	  {FieldName: "ClientCert", Type: broker.JsonTypeString, Details: "The client certificate. For First Generation instances, the new certificate does not take effect until the instance is restarted."},
-	  {FieldName: "ClientKey", Type: broker.JsonTypeString, Details: "The client certificate key."},
-	  {FieldName: "Sha1Fingerprint", Type: broker.JsonTypeString, Details: "The SHA1 fingerprint of the client certificate."},
+	return append(accountmanagers.ServiceAccountBindOutputVariables(), []broker.BrokerVariable{
+		// Certificate
+		{FieldName: "CaCert", Type: broker.JsonTypeString, Details: "The server Certificate Authority's certificate."},
+		{FieldName: "ClientCert", Type: broker.JsonTypeString, Details: "The client certificate. For First Generation instances, the new certificate does not take effect until the instance is restarted."},
+		{FieldName: "ClientKey", Type: broker.JsonTypeString, Details: "The client certificate key."},
+		{FieldName: "Sha1Fingerprint", Type: broker.JsonTypeString, Details: "The SHA1 fingerprint of the client certificate."},
 
 		// Connection URI
 		{FieldName: "UriPrefix", Type: broker.JsonTypeString, Details: "The connection prefix e.g. `mysql` or `postgres`."},
@@ -208,7 +209,7 @@ func commonBindOutputVariables() []broker.BrokerVariable {
 		{FieldName: "instance_name", Type: broker.JsonTypeString, Details: "The name of the database instance."},
 		{FieldName: "uri", Type: broker.JsonTypeString, Details: "A database connection string."},
 
-	  {FieldName: "last_master_operation_id", Type: broker.JsonTypeString, Details: "(GCP internals) The id of the last operation on the database."},
-	  {FieldName: "region", Type: broker.JsonTypeString, Details: "The region the database is in."},
-  }...)
+		{FieldName: "last_master_operation_id", Type: broker.JsonTypeString, Details: "(GCP internals) The id of the last operation on the database."},
+		{FieldName: "region", Type: broker.JsonTypeString, Details: "The region the database is in."},
+	}...)
 }

@@ -233,8 +233,9 @@ func mysqlServiceDefinition() *broker.BrokerService {
 			{Name: "instance_name", Default: `${instance_name == "" ? "` + identifierTemplate + `" : instance_name}`, Overwrite: true},
 			{Name: "database_name", Default: `${database_name == "" ? "` + identifierTemplate + `" : database_name}`, Overwrite: true},
 
-			{Name: "is_first_gen", Default: `${str.matches(tier, "^(d|D)[0-9]+$")}`, Overwrite: true},
+			{Name: "is_first_gen", Default: `${regexp.matches("^(d|D)[0-9]+$", tier)}`, Overwrite: true},
 			{Name: "version", Default: `${is_first_gen ? "MYSQL_5_6" : "MYSQL_5_7"}`, Overwrite: false},
+			{Name: "binlog", Default: `${is_first_gen ? false : true}`, Overwrite: false},
 
 			// validation
 			{Name: "_", Default: `${assert(disk_size <= max_disk_size, "disk size (${disk_size}) is greater than max allowed disk size for this plan (${max_disk_size})")}`, Overwrite: true},

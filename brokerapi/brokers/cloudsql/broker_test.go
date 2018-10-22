@@ -124,8 +124,8 @@ func TestCreateProvisionRequest(t *testing.T) {
 					t.Error("instance name wasn't generated")
 				}
 
-				if di.Settings.MaintenanceWindow != nil {
-					t.Error("Expected no maintenance window by default")
+				if di.Settings.MaintenanceWindow == nil {
+					t.Error("Expected maintenance window by default")
 				}
 			},
 		},
@@ -146,8 +146,8 @@ func TestCreateProvisionRequest(t *testing.T) {
 					t.Error("instance name wasn't generated")
 				}
 
-				if di.Settings.MaintenanceWindow != nil {
-					t.Error("Expected no maintenance window by default")
+				if di.Settings.MaintenanceWindow == nil {
+					t.Error("Expected maintenance window by default")
 				}
 			},
 		},
@@ -157,8 +157,12 @@ func TestCreateProvisionRequest(t *testing.T) {
 			PlanId:     mysqlSecondGenPlan,
 			UserParams: `{"maintenance_window_day":"4"}`,
 			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
-				if di.Settings.MaintenanceWindow != nil {
-					t.Error("Expected no maintenance window on partial fill")
+				if di.Settings.MaintenanceWindow == nil {
+					t.Error("Expected maintenance window on partial fill")
+				}
+
+				if di.Settings.MaintenanceWindow.Day != 4 {
+					t.Errorf("Expected maintenance window day to be 4, got %v", di.Settings.MaintenanceWindow.Day)
 				}
 			},
 		},
@@ -168,8 +172,12 @@ func TestCreateProvisionRequest(t *testing.T) {
 			PlanId:     mysqlSecondGenPlan,
 			UserParams: `{"maintenance_window_hour":"23"}`,
 			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
-				if di.Settings.MaintenanceWindow != nil {
-					t.Error("Expected no maintenance window on partial fill")
+				if di.Settings.MaintenanceWindow == nil {
+					t.Error("Expected maintenance window on partial fill")
+				}
+
+				if di.Settings.MaintenanceWindow.Hour != 23 {
+					t.Errorf("Expected maintenance window day to be 4, got %v", di.Settings.MaintenanceWindow.Hour)
 				}
 			},
 		},
@@ -181,6 +189,14 @@ func TestCreateProvisionRequest(t *testing.T) {
 			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
 				if di.Settings.MaintenanceWindow == nil {
 					t.Error("Expected maintenance window")
+				}
+
+				if di.Settings.MaintenanceWindow.Day != 4 {
+					t.Errorf("Expected maintenance window day to be 4, got %v", di.Settings.MaintenanceWindow.Day)
+				}
+
+				if di.Settings.MaintenanceWindow.Hour != 23 {
+					t.Errorf("Expected maintenance window day to be 4, got %v", di.Settings.MaintenanceWindow.Hour)
 				}
 			},
 		},
