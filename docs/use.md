@@ -102,10 +102,20 @@ A high performance NoSQL database service for large analytical and operational w
 **Request Parameters**
 
 
- * `name` _string_ - The name of the dataset. Should match `[a-z][a-z0-9\-]+[a-z0-9]`. Default: `a generated value`.
- * `cluster_id` _string_ - The name of the cluster. Default: `a generated value`.
- * `display_name` _string_ - The human-readable name of the dataset. Default: `a generated value`.
- * `zone` _string_ - The zone the data will reside in. Default: `us-east1-b`.
+ * `name` _string_ - The name of the Cloud Bigtable instance. Default: `pcf-sb-${counter.next()}-${time.nano()}`.
+    * The string must have at most 33 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z][-0-9a-z]+$`.
+ * `cluster_id` _string_ - The ID of the Cloud Bigtable cluster. Default: `${str.truncate(20, name)}-cluster`.
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z][-0-9a-z]+[a-z]$`.
+ * `display_name` _string_ - The human-readable display name of the Bigtable instance. Default: `${name}`.
+    * The string must have at most 30 characters.
+    * The string must have at least 4 characters.
+ * `zone` _string_ - The zone to create the Cloud Bigtable cluster in. Zones that support Bigtable instances are noted on the Cloud Bigtable locations page: https://cloud.google.com/bigtable/docs/locations. Default: `us-east1-b`.
+    * Examples: [us-central1-a europe-west2-b asia-northeast1-a australia-southeast1-c].
+    * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
 
 
 ## Binding
@@ -188,25 +198,43 @@ Google Cloud SQL is a fully-managed MySQL database service.
 **Request Parameters**
 
 
- * `instance_name` _string_ - Name of the Cloud SQL instance. Default: `a generated value`.
- * `database_name` _string_ - Name of the database inside of the instance. Default: `a generated value`.
- * `version` _string_ - The database engine type and version. Defaults to `MYSQL_5_6` for 1st gen MySQL instances, `MYSQL_5_7` for 2nd gen MySQL instances, or `POSTGRES_9_6` for PostgreSQL instances.
- * `disk_size` _string_ - In GB (only for 2nd generation instances). Default: `10`.
- * `region` _string_ - The geographical region. Default: `us-central`.
- * `zone` _string_ - (only for 2nd generation instances)
- * `disk_type` _string_ - (only for 2nd generation instances) Default: `ssd`.
+ * `instance_name` _string_ - Name of the Cloud SQL instance. Default: `pcf-sb-${counter.next()}-${time.nano()}`.
+    * The string must have at most 84 characters.
+    * The string must match the regular expression `^[a-z][a-z0-9-]+$`.
+ * `database_name` _string_ - Name of the database inside of the instance. Must be a valid identifier for your chosen database type. Default: `pcf-sb-${counter.next()}-${time.nano()}`.
+ * `version` _string_ - The database engine type and version. Defaults to `MYSQL_5_6` for 1st gen MySQL instances or `MYSQL_5_7` for 2nd gen MySQL instances.
+    * The value must be one of: [MYSQL_5_5 MYSQL_5_6 MYSQL_5_7].
  * `failover_replica_name` _string_ - (only for 2nd generation instances) If specified, creates a failover replica with the given name. Default: ``.
- * `maintenance_window_day` _string_ - (only for 2nd generation instances) The day when disruptive updates (updates that require an instance restart) to this CloudSQL instance can be made. Day of week (1-7), starting on Monday. Default: `1`.
- * `maintenance_window_hour` _string_ - (only for 2nd generation instances) The hour of the day when disruptive updates (updates that require an instance restart) to this CloudSQL instance can be made. Hour of day 0-23. Default: `0`.
- * `backups_enabled` _string_ - Should daily backups be enabled for the service? Default: `true`.
- * `backup_start_time` _string_ - Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM. Default: `06:00`.
- * `binlog` _string_ - Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use.
- * `activation_policy` _string_ - The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE. Default: `ON_DEMAND`.
+    * The string must have at most 84 characters.
+    * The string must match the regular expression `^[a-z][a-z0-9-]+$`.
+ * `activation_policy` _string_ - The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE. Default: `ALWAYS`.
     * The value must be one of: [ALWAYS NEVER ON_DEMAND].
- * `authorized_networks` _string_ - A comma separated list without spaces. Default: `none`.
+ * `binlog` _string_ - Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use.
+    * The value must be one of: [false true].
+ * `disk_size` _string_ - In GB (only for 2nd generation instances). Default: `10`.
+    * Examples: [10 500 10230].
+    * The string must have at most 5 characters.
+    * The string must match the regular expression `^[1-9][0-9]+$`.
+ * `region` _string_ - The geographical region. See the instance locations list https://cloud.google.com/sql/docs/mysql/instance-locations for which regions support which databases. Default: `us-central`.
+    * Examples: [northamerica-northeast1 southamerica-east1 us-east1].
+    * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
+ * `zone` _string_ - (only for 2nd generation instances)
+    * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
+ * `disk_type` _string_ - (only for 2nd generation instances) Default: `PD_SSD`.
+    * The value must be one of: [PD_HDD PD_SSD].
+ * `maintenance_window_day` _string_ - (only for 2nd generation instances) This specifies when a v2 CloudSQL instance should preferably be restarted for system maintenance purposes. Day of week (1-7), starting on Monday. Default: `1`.
+    * The value must be one of: [1 2 3 4 5 6 7].
+ * `maintenance_window_hour` _string_ - (only for 2nd generation instances) The hour of the day when disruptive updates (updates that require an instance restart) to this CloudSQL instance can be made. Hour of day 0-23. Default: `0`.
+    * The string must match the regular expression `^([0-9]|1[0-9]|2[0-3])$`.
+ * `backups_enabled` _string_ - Should daily backups be enabled for the service? Default: `true`.
+    * The value must be one of: [false true].
+ * `backup_start_time` _string_ - Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM. Default: `06:00`.
+    * The string must match the regular expression `^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$`.
+ * `authorized_networks` _string_ - A comma separated list without spaces. Default: ``.
  * `replication_type` _string_ - The type of replication this instance uses. This can be either ASYNCHRONOUS or SYNCHRONOUS. Default: `SYNCHRONOUS`.
     * The value must be one of: [ASYNCHRONOUS SYNCHRONOUS].
  * `auto_resize` _string_ - (only for 2nd generation instances) Configuration to increase storage size automatically. Default: `false`.
+    * The value must be one of: [false true].
 
 
 ## Binding
@@ -216,25 +244,26 @@ Google Cloud SQL is a fully-managed MySQL database service.
 
  * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. The following roles are available by default but may be overridden by your operator: 'cloudsql.editor', 'cloudsql.viewer', 'cloudsql.client'.
  * `jdbc_uri_format` _string_ - If `true`, `uri` field will contain a JDBC formatted URI. Default: `false`.
- * `username` _string_ - The SQL username for the account. Default: `a generated value`.
- * `password` _string_ - The SQL password for the account. Default: `a generated value`.
+    * The value must be one of: [false true].
+ * `username` _string_ - The SQL username for the account. Default: `sb${str.truncate(14, time.nano())}`.
+ * `password` _string_ - The SQL password for the account. Default: `${rand.base64(32)}`.
 
 **Response Parameters**
 
- * `Email` _string_ - Email address of the service account
+ * `Email` _string_ - Email address of the service account.
  * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
- * `ProjectId` _string_ - ID of the project that owns the service account
- * `UniqueId` _string_ - Unique and stable id of the service account
+ * `ProjectId` _string_ - ID of the project that owns the service account.
+ * `UniqueId` _string_ - Unique and stable id of the service account.
  * `CaCert` _string_ - The server Certificate Authority's certificate.
  * `ClientCert` _string_ - The client certificate. For First Generation instances, the new certificate does not take effect until the instance is restarted.
  * `ClientKey` _string_ - The client certificate key.
  * `Sha1Fingerprint` _string_ - The SHA1 fingerprint of the client certificate.
- * `UriPrefix` _string_ - The connection prefix e.g. `mysql` or `postgres`
- * `Username` _string_ - The name of the SQL user provisioned
- * `database_name` _string_ - The name of the database on the instance
- * `host` _string_ - The hostname or ip of the database instance
- * `instance_name` _string_ - The name of the database instance
- * `uri` _string_ - A database connection string
+ * `UriPrefix` _string_ - The connection prefix e.g. `mysql` or `postgres`.
+ * `Username` _string_ - The name of the SQL user provisioned.
+ * `database_name` _string_ - The name of the database on the instance.
+ * `host` _string_ - The hostname or ip of the database instance.
+ * `instance_name` _string_ - The name of the database instance.
+ * `uri` _string_ - A database connection string.
  * `last_master_operation_id` _string_ - (GCP internals) The id of the last operation on the database.
  * `region` _string_ - The region the database is in.
 
@@ -317,25 +346,43 @@ Google Cloud SQL is a fully-managed MySQL database service.
 **Request Parameters**
 
 
- * `instance_name` _string_ - Name of the Cloud SQL instance. Default: `a generated value`.
- * `database_name` _string_ - Name of the database inside of the instance. Default: `a generated value`.
- * `version` _string_ - The database engine type and version. Defaults to `MYSQL_5_6` for 1st gen MySQL instances, `MYSQL_5_7` for 2nd gen MySQL instances, or `POSTGRES_9_6` for PostgreSQL instances.
- * `disk_size` _string_ - In GB (only for 2nd generation instances). Default: `10`.
- * `region` _string_ - The geographical region. Default: `us-central`.
- * `zone` _string_ - (only for 2nd generation instances)
- * `disk_type` _string_ - (only for 2nd generation instances) Default: `ssd`.
+ * `instance_name` _string_ - Name of the CloudSQL instance. Default: `pcf-sb-${counter.next()}-${time.nano()}`.
+    * The string must have at most 75 characters.
+    * The string must match the regular expression `^[a-z][a-z0-9-]+$`.
+ * `database_name` _string_ - Name of the database inside of the instance. Must be a valid identifier for your chosen database type. Default: `pcf-sb-${counter.next()}-${time.nano()}`.
+ * `version` _string_ - The database engine type and version. Default: `POSTGRES_9_6`.
+    * The value must be one of: [POSTGRES_9_6].
  * `failover_replica_name` _string_ - (only for 2nd generation instances) If specified, creates a failover replica with the given name. Default: ``.
- * `maintenance_window_day` _string_ - (only for 2nd generation instances) The day when disruptive updates (updates that require an instance restart) to this CloudSQL instance can be made. Day of week (1-7), starting on Monday. Default: `1`.
- * `maintenance_window_hour` _string_ - (only for 2nd generation instances) The hour of the day when disruptive updates (updates that require an instance restart) to this CloudSQL instance can be made. Hour of day 0-23. Default: `0`.
- * `backups_enabled` _string_ - Should daily backups be enabled for the service? Default: `true`.
- * `backup_start_time` _string_ - Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM. Default: `06:00`.
+    * The string must have at most 75 characters.
+    * The string must match the regular expression `^[a-z][a-z0-9-]+$`.
+ * `activation_policy` _string_ - The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE. Default: `ALWAYS`.
+    * The value must be one of: [ALWAYS NEVER].
  * `binlog` _string_ - Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use.
- * `activation_policy` _string_ - The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE. Default: `ON_DEMAND`.
-    * The value must be one of: [ALWAYS NEVER ON_DEMAND].
- * `authorized_networks` _string_ - A comma separated list without spaces. Default: `none`.
+    * The value must be one of: [false true].
+ * `disk_size` _string_ - In GB (only for 2nd generation instances). Default: `10`.
+    * Examples: [10 500 10230].
+    * The string must have at most 5 characters.
+    * The string must match the regular expression `^[1-9][0-9]+$`.
+ * `region` _string_ - The geographical region. See the instance locations list https://cloud.google.com/sql/docs/mysql/instance-locations for which regions support which databases. Default: `us-central`.
+    * Examples: [northamerica-northeast1 southamerica-east1 us-east1].
+    * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
+ * `zone` _string_ - (only for 2nd generation instances)
+    * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
+ * `disk_type` _string_ - (only for 2nd generation instances) Default: `PD_SSD`.
+    * The value must be one of: [PD_HDD PD_SSD].
+ * `maintenance_window_day` _string_ - (only for 2nd generation instances) This specifies when a v2 CloudSQL instance should preferably be restarted for system maintenance purposes. Day of week (1-7), starting on Monday. Default: `1`.
+    * The value must be one of: [1 2 3 4 5 6 7].
+ * `maintenance_window_hour` _string_ - (only for 2nd generation instances) The hour of the day when disruptive updates (updates that require an instance restart) to this CloudSQL instance can be made. Hour of day 0-23. Default: `0`.
+    * The string must match the regular expression `^([0-9]|1[0-9]|2[0-3])$`.
+ * `backups_enabled` _string_ - Should daily backups be enabled for the service? Default: `true`.
+    * The value must be one of: [false true].
+ * `backup_start_time` _string_ - Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM. Default: `06:00`.
+    * The string must match the regular expression `^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$`.
+ * `authorized_networks` _string_ - A comma separated list without spaces. Default: ``.
  * `replication_type` _string_ - The type of replication this instance uses. This can be either ASYNCHRONOUS or SYNCHRONOUS. Default: `SYNCHRONOUS`.
     * The value must be one of: [ASYNCHRONOUS SYNCHRONOUS].
  * `auto_resize` _string_ - (only for 2nd generation instances) Configuration to increase storage size automatically. Default: `false`.
+    * The value must be one of: [false true].
 
 
 ## Binding
@@ -345,25 +392,26 @@ Google Cloud SQL is a fully-managed MySQL database service.
 
  * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. The following roles are available by default but may be overridden by your operator: 'cloudsql.editor', 'cloudsql.viewer', 'cloudsql.client'.
  * `jdbc_uri_format` _string_ - If `true`, `uri` field will contain a JDBC formatted URI. Default: `false`.
- * `username` _string_ - The SQL username for the account. Default: `a generated value`.
- * `password` _string_ - The SQL password for the account. Default: `a generated value`.
+    * The value must be one of: [false true].
+ * `username` _string_ - The SQL username for the account. Default: `sb${str.truncate(14, time.nano())}`.
+ * `password` _string_ - The SQL password for the account. Default: `${rand.base64(32)}`.
 
 **Response Parameters**
 
- * `Email` _string_ - Email address of the service account
+ * `Email` _string_ - Email address of the service account.
  * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
- * `ProjectId` _string_ - ID of the project that owns the service account
- * `UniqueId` _string_ - Unique and stable id of the service account
+ * `ProjectId` _string_ - ID of the project that owns the service account.
+ * `UniqueId` _string_ - Unique and stable id of the service account.
  * `CaCert` _string_ - The server Certificate Authority's certificate.
  * `ClientCert` _string_ - The client certificate. For First Generation instances, the new certificate does not take effect until the instance is restarted.
  * `ClientKey` _string_ - The client certificate key.
  * `Sha1Fingerprint` _string_ - The SHA1 fingerprint of the client certificate.
- * `UriPrefix` _string_ - The connection prefix e.g. `mysql` or `postgres`
- * `Username` _string_ - The name of the SQL user provisioned
- * `database_name` _string_ - The name of the database on the instance
- * `host` _string_ - The hostname or ip of the database instance
- * `instance_name` _string_ - The name of the database instance
- * `uri` _string_ - A database connection string
+ * `UriPrefix` _string_ - The connection prefix e.g. `mysql` or `postgres`.
+ * `Username` _string_ - The name of the SQL user provisioned.
+ * `database_name` _string_ - The name of the database on the instance.
+ * `host` _string_ - The hostname or ip of the database instance.
+ * `instance_name` _string_ - The name of the database instance.
+ * `uri` _string_ - A database connection string.
  * `last_master_operation_id` _string_ - (GCP internals) The id of the last operation on the database.
  * `region` _string_ - The region the database is in.
 
@@ -599,10 +647,17 @@ A global service for real-time and reliable messaging and streaming data.
 **Request Parameters**
 
 
- * `topic_name` _string_ - Name of the topic. Default: `a generated value`.
- * `subscription_name` _string_ - **Required** Name of the subscription.
+ * `topic_name` _string_ - Name of the topic. Must not start with "goog". Default: `pcf_sb_${counter.next()}_${time.nano()}`.
+    * The string must have at most 255 characters.
+    * The string must have at least 3 characters.
+    * The string must match the regular expression `^[a-zA-Z][a-zA-Z0-9\d\-_~%\.\+]+$`.
+ * `subscription_name` _string_ - Name of the subscription. Blank means no subscription will be created. Must not start with "goog". Default: ``.
+    * The string must have at most 255 characters.
+    * The string must have at least 3 characters.
+    * The string must match the regular expression `^[a-zA-Z][a-zA-Z0-9\d\-_~%\.\+]+`.
  * `is_push` _string_ - Are events handled by POSTing to a URL? Default: `false`.
- * `endpoint` _string_ - If `is_push` == 'true', then this is the URL that will be pused to. Default: ``.
+    * The value must be one of: [false true].
+ * `endpoint` _string_ - If `is_push` == 'true', then this is the URL that will be pushed to. Default: ``.
  * `ack_deadline` _string_ - Value is in seconds. Max: 600 This is the maximum time after a subscriber receives a message before the subscriber should acknowledge the message. After message delivery but before the ack deadline expires and before the message is acknowledged, it is an outstanding message and will not be delivered again during that time (on a best-effort basis).  Default: `10`.
 
 
@@ -668,6 +723,68 @@ $ cf bind-service my-app my-google-pubsub-example -c `{"role":"pubsub.publisher"
 </pre>
 
 
+### No Subscription
+
+
+Create a topic without a subscription.
+Uses plan: `622f4da3-8731-492a-af29-66a9146f8333`.
+
+**Provision**
+
+```javascript
+{
+    "topic_name": "example_topic"
+}
+```
+
+**Bind**
+
+```javascript
+{
+    "role": "pubsub.publisher"
+}
+```
+
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-pubsub default my-google-pubsub-example -c `{"topic_name":"example_topic"}`
+$ cf bind-service my-app my-google-pubsub-example -c `{"role":"pubsub.publisher"}`
+</pre>
+
+
+### Custom Timeout
+
+
+Create a subscription with a custom deadline for long processess.
+Uses plan: `622f4da3-8731-492a-af29-66a9146f8333`.
+
+**Provision**
+
+```javascript
+{
+    "ack_deadline": "200",
+    "subscription_name": "long_deadline_subscription",
+    "topic_name": "long_deadline_topic"
+}
+```
+
+**Bind**
+
+```javascript
+{
+    "role": "pubsub.publisher"
+}
+```
+
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-pubsub default my-google-pubsub-example -c `{"ack_deadline":"200","subscription_name":"long_deadline_subscription","topic_name":"long_deadline_topic"}`
+$ cf bind-service my-app my-google-pubsub-example -c `{"role":"pubsub.publisher"}`
+</pre>
+
+
 
 
 --------------------------------------------------------------------------------
@@ -687,9 +804,16 @@ The first horizontally scalable, globally consistent, relational database servic
 **Request Parameters**
 
 
- * `name` _string_ - The name of the instance. Default: `a generated value`.
- * `display_name` _string_ - A human-readable name for the instance. Default: `a generated value`.
- * `location` _string_ - The location of the Spanner instance. Default: `regional-us-central1`.
+ * `name` _string_ - A unique identifier for the instance, which cannot be changed after the instance is created. Default: `pcf-sb-${counter.next()}-${time.nano()}`.
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z][-a-z0-9]*[a-z0-9]$`.
+ * `display_name` _string_ - The name of this instance configuration as it appears in UIs. Default: `${name}`.
+    * The string must have at most 30 characters.
+    * The string must have at least 4 characters.
+ * `location` _string_ - A configuration for a Cloud Spanner instance. Configurations define the geographic placement of nodes and their replication and are slightly different from zones. There are single region configurations, multi-region configurations, and multi-continent configurations. See the instance docs https://cloud.google.com/spanner/docs/instances for a list of configurations. Default: `regional-us-central1`.
+    * Examples: [regional-asia-east1 nam3 nam-eur-asia1].
+    * The string must match the regular expression `^[a-z][-a-z0-9]*[a-z0-9]$`.
 
 
 ## Binding
@@ -749,6 +873,37 @@ Uses plan: `44828436-cfbd-47ae-b4bc-48854564347b`.
 
 <pre>
 $ cf create-service google-spanner sandbox my-google-spanner-example -c `{"name":"auth-database"}`
+$ cf bind-service my-app my-google-spanner-example -c `{"role":"spanner.databaseAdmin"}`
+</pre>
+
+
+### 99.999% availability
+
+
+Create a spanner instance spanning North America.
+Uses plan: `44828436-cfbd-47ae-b4bc-48854564347b`.
+
+**Provision**
+
+```javascript
+{
+    "location": "nam3",
+    "name": "auth-database"
+}
+```
+
+**Bind**
+
+```javascript
+{
+    "role": "spanner.databaseAdmin"
+}
+```
+
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-spanner sandbox my-google-spanner-example -c `{"location":"nam3","name":"auth-database"}`
 $ cf bind-service my-app my-google-spanner-example -c `{"role":"spanner.databaseAdmin"}`
 </pre>
 
@@ -1066,4 +1221,35 @@ Uses plan: `a42c1182-d1a0-4d40-82c1-28220518b360`.
 <pre>
 $ cf create-service google-storage nearline my-google-storage-example -c `{"location":"us"}`
 $ cf bind-service my-app my-google-storage-example -c `{"role":"storage.objectAdmin"}`
+</pre>
+
+
+### Cold Storage
+
+
+Create a coldline bucket with a service account that can create/read/delete the objects in it.
+Uses plan: `c8538397-8f15-45e3-a229-8bb349c3a98f`.
+
+**Provision**
+
+```javascript
+{
+    "location": "us"
+}
+```
+
+**Bind**
+
+```javascript
+{
+    "location": "us-west1",
+    "role": "storage.objectAdmin"
+}
+```
+
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-storage coldline my-google-storage-example -c `{"location":"us"}`
+$ cf bind-service my-app my-google-storage-example -c `{"location":"us-west1","role":"storage.objectAdmin"}`
 </pre>
