@@ -160,6 +160,10 @@ func TestCreateProvisionRequest(t *testing.T) {
 				if di.Settings.MaintenanceWindow == nil {
 					t.Error("Expected maintenance window on partial fill")
 				}
+
+				if di.Settings.MaintenanceWindow.Day != 4 {
+					t.Errorf("Expected maintenance window day to be 4, got %v", di.Settings.MaintenanceWindow.Day)
+				}
 			},
 		},
 
@@ -171,6 +175,10 @@ func TestCreateProvisionRequest(t *testing.T) {
 				if di.Settings.MaintenanceWindow == nil {
 					t.Error("Expected maintenance window on partial fill")
 				}
+
+				if di.Settings.MaintenanceWindow.Hour != 23 {
+					t.Errorf("Expected maintenance window day to be 4, got %v", di.Settings.MaintenanceWindow.Hour)
+				}
 			},
 		},
 
@@ -181,6 +189,14 @@ func TestCreateProvisionRequest(t *testing.T) {
 			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
 				if di.Settings.MaintenanceWindow == nil {
 					t.Error("Expected maintenance window")
+				}
+
+				if di.Settings.MaintenanceWindow.Day != 4 {
+					t.Errorf("Expected maintenance window day to be 4, got %v", di.Settings.MaintenanceWindow.Day)
+				}
+
+				if di.Settings.MaintenanceWindow.Hour != 23 {
+					t.Errorf("Expected maintenance window day to be 4, got %v", di.Settings.MaintenanceWindow.Hour)
 				}
 			},
 		},
