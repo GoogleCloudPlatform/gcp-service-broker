@@ -63,16 +63,47 @@ type InstanceInformation struct {
 
 // Provision creates a new CloudSQL instance from the settings in the user-provided details and service plan.
 func (b *CloudSQLBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
-	// validate parameters
-	var params map[string]string
-	var err error
+	di, ii, err := createProvisionRequest(instanceId, details, plan)
+	if err != nil {
+		return models.ServiceInstanceDetails{}, err
+	}
 
-	// validate parameters
+	// init sqladmin service
+	sqlService, err := b.createClient(ctx)
+	if err != nil {
+		return models.ServiceInstanceDetails{}, err
+	}
+
+	// make insert request
+	op, err := sqlService.Instances.Insert(b.ProjectId, di).Do()
+	if err != nil {
+		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new CloudSQL instance: %s", err)
+	}
+
+	otherDetails, err := json.Marshal(ii)
+	if err != nil {
+		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling instance information: %s", err)
+	}
+
+	b.Logger.Debug("updating details", lager.Data{"from": "{}", "to": otherDetails})
+	return models.ServiceInstanceDetails{
+		Name:         di.Name,
+		Url:          "",
+		Location:     "",
+		OtherDetails: string(otherDetails),
+
+		OperationType: models.ProvisionOperationType,
+		OperationId:   op.Name,
+	}, nil
+}
+
+func createProvisionRequest(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (*googlecloudsql.DatabaseInstance, *InstanceInformation, error) {
+	var params map[string]string
 
 	if len(details.RawParameters) == 0 {
 		params = map[string]string{}
-	} else if err = json.Unmarshal(details.RawParameters, &params); err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error unmarshalling parameters: %s", err)
+	} else if err := json.Unmarshal(details.RawParameters, &params); err != nil {
+		return nil, nil, fmt.Errorf("Error unmarshalling parameters: %s", err)
 	}
 
 	if v, ok := params["instance_name"]; !ok || v == "" {
@@ -95,7 +126,7 @@ func (b *CloudSQLBroker) Provision(ctx context.Context, instanceId string, detai
 
 	svc, err := broker.GetServiceById(details.ServiceID)
 	if err != nil {
-		return models.ServiceInstanceDetails{}, err
+		return nil, nil, err
 	}
 
 	_, versionOk := params["version"]
@@ -119,7 +150,7 @@ func (b *CloudSQLBroker) Provision(ctx context.Context, instanceId string, detai
 		if binlogOk {
 			binlogEnabled, err = strconv.ParseBool(binlog)
 			if err != nil {
-				return models.ServiceInstanceDetails{}, fmt.Errorf("%s is not a valid value for binlog", binlog)
+				return nil, nil, fmt.Errorf("%s is not a valid value for binlog", binlog)
 			}
 		}
 	}
@@ -148,14 +179,12 @@ func (b *CloudSQLBroker) Provision(ctx context.Context, instanceId string, detai
 
 	var di googlecloudsql.DatabaseInstance
 	if isFirstGen {
-
 		di = createFirstGenRequest(plan.ServiceProperties, params, labels)
 	} else {
 		di, err = createInstanceRequest(plan.ServiceProperties, params, labels)
 		if err != nil {
-			return models.ServiceInstanceDetails{}, err
+			return nil, nil, err
 		}
-
 	}
 	di.Name = instanceName
 	di.Settings.BackupConfiguration = &googlecloudsql.BackupConfiguration{
@@ -164,18 +193,6 @@ func (b *CloudSQLBroker) Provision(ctx context.Context, instanceId string, detai
 		BinaryLogEnabled: binlogEnabled,
 	}
 	di.Settings.IpConfiguration.AuthorizedNetworks = openAcls
-
-	// init sqladmin service
-	sqlService, err := b.createClient(ctx)
-	if err != nil {
-		return models.ServiceInstanceDetails{}, err
-	}
-
-	// make insert request
-	op, err := sqlService.Instances.Insert(b.ProjectId, &di).Do()
-	if err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new CloudSQL instance: %s", err)
-	}
 
 	if v, ok := params["database_name"]; !ok || v == "" {
 		params["database_name"] = name_generator.Sql.DatabaseName()
@@ -187,23 +204,7 @@ func (b *CloudSQLBroker) Provision(ctx context.Context, instanceId string, detai
 		DatabaseName: params["database_name"],
 	}
 
-	otherDetails, err := json.Marshal(ii)
-	if err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling instance information: %s", err)
-	}
-	b.Logger.Debug("updating details", lager.Data{"from": "{}", "to": otherDetails})
-	i := models.ServiceInstanceDetails{
-		Name:         params["instance_name"],
-		Url:          "",
-		Location:     "",
-		OtherDetails: string(otherDetails),
-
-		OperationType: models.ProvisionOperationType,
-		OperationId:   op.Name,
-	}
-
-	return i, nil
-
+	return &di, &ii, nil
 }
 
 func createFirstGenRequest(planDetails, params, labels map[string]string) googlecloudsql.DatabaseInstance {
