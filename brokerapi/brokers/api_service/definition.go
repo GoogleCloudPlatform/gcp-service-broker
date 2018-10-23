@@ -16,6 +16,7 @@ package api_service
 
 import (
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
@@ -30,7 +31,7 @@ func init() {
 	}
 
 	bs := &broker.BrokerService{
-		Name: "google-ml-apis",
+		Name: models.MlName,
 		DefaultServiceDefinition: `
 		{
       "id": "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4",
@@ -60,7 +61,7 @@ func init() {
 		`,
 		ProvisionInputVariables: []broker.BrokerVariable{},
 		DefaultRoleWhitelist:    roleWhitelist,
-		BindInputVariables:      accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
+		BindInputVariables:      accountmanagers.ServiceAccountBindInputVariables(models.MlName, roleWhitelist),
 		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
 		Examples: []broker.ServiceExample{
 			{

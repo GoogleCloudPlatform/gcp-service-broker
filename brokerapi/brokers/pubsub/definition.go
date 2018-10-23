@@ -14,9 +14,12 @@
 
 package pubsub
 
-import "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
-import accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
-import "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
+import (
+	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
+)
 
 func init() {
 	broker.Register(serviceDefinition())
@@ -31,7 +34,7 @@ func serviceDefinition() *broker.BrokerService {
 	}
 
 	return &broker.BrokerService{
-		Name: "google-pubsub",
+		Name: models.PubsubName,
 		DefaultServiceDefinition: `{
       "id": "628629e3-79f5-4255-b981-d14c6c7856be",
       "description": "A global service for real-time and reliable messaging and streaming data.",
@@ -110,7 +113,7 @@ again during that time (on a best-effort basis).
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
+		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.PubsubName, roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "subscription_name",

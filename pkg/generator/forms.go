@@ -19,6 +19,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 )
@@ -123,7 +124,7 @@ func generateRoleWhitelistForm() Form {
 		}
 
 		enableForm := FormProperty{
-			Name:         strings.ToLower(utils.PropertyToEnv(svc.RoleWhitelistProperty())),
+			Name:         strings.ToLower(utils.PropertyToEnv(account_managers.RoleWhitelistProperty(svc.Name))),
 			Label:        fmt.Sprintf("Role whitelist for %s instances.", entry.Metadata.DisplayName),
 			Description:  "A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.",
 			Type:         "string",
@@ -231,7 +232,7 @@ func generateCompatibilityForm() Form {
 				Label:        "Enables input variable JSON Schema validation checks",
 				Configurable: true,
 				Default:      true,
-				Description: singleLine(`Enables validating user input variables against JSON Schema definitions.`),
+				Description:  singleLine(`Enables validating user input variables against JSON Schema definitions.`),
 			},
 		},
 	}

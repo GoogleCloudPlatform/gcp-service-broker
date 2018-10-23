@@ -16,6 +16,7 @@ package brokers_test
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
@@ -31,8 +32,6 @@ import (
 	"github.com/pivotal-cf/brokerapi"
 
 	"code.cloudfoundry.org/lager"
-
-	"encoding/json"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/config"
 	"github.com/jinzhu/gorm"
@@ -51,6 +50,7 @@ var _ = Describe("Brokers", func() {
 		bqProvisionDetails       brokerapi.ProvisionDetails
 		cloudSqlProvisionDetails brokerapi.ProvisionDetails
 		storageBindDetails       brokerapi.BindDetails
+		storageBadBindDetails    brokerapi.BindDetails
 		storageUnbindDetails     brokerapi.UnbindDetails
 		instanceId               string
 		bindingId                string
@@ -139,14 +139,16 @@ var _ = Describe("Brokers", func() {
 			PlanID:    someCloudSQLPlanId,
 		}
 
-		storageBindParameters, _ := json.Marshal(map[string]interface{}{
-			"role": "ninja",
-		})
-
 		storageBindDetails = brokerapi.BindDetails{
 			ServiceID:     serviceNameToId[models.StorageName],
 			PlanID:        someStoragePlanId,
-			RawParameters: storageBindParameters,
+			RawParameters: json.RawMessage(`{"role":"storage.objectAdmin"}`),
+		}
+
+		storageBadBindDetails = brokerapi.BindDetails{
+			ServiceID:     serviceNameToId[models.StorageName],
+			PlanID:        someStoragePlanId,
+			RawParameters: json.RawMessage(`{"role":"storage.admin"}`),
 		}
 
 		storageUnbindDetails = brokerapi.UnbindDetails{
@@ -332,6 +334,13 @@ var _ = Describe("Brokers", func() {
 				_, err = gcpBroker.Bind(context.Background(), instanceId, bindingId, storageBindDetails)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*modelsfakes.FakeServiceBrokerHelper).BindCallCount()).To(Equal(1))
+			})
+
+			It("it should reject bad roles", func() {
+				_, err = gcpBroker.Provision(context.Background(), instanceId, bqProvisionDetails, true)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = gcpBroker.Bind(context.Background(), instanceId, bindingId, storageBadBindDetails)
+				Expect(err).To(HaveOccurred())
 			})
 		})
 
