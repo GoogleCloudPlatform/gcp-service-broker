@@ -2,7 +2,7 @@
 
 This documentation is for an **UNRELEASED** upcoming feature for the GCP Service Broker and should not be considered complete.
 
-## Provision variable resolution
+## Variable resolution
 
 The variables fed into your Terraform services file are resolved in the following order:
 
