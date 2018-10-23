@@ -23,14 +23,19 @@ import (
 //go:generate counterfeiter . ServiceBrokerHelper
 //go:generate counterfeiter . ServiceAccountManager
 
+// ServiceBrokerHelper performs the actual provisoning/deprovisioning part of a service broker request.
+// The broker will handle storing state and validating inputs while a ServiceBrokerHelper changes GCP to match the desired state.
+// ServiceBrokerHelpers are expected to interact with the state of the system entirely through their inputs and outputs.
+// Specifically, they MUST NOT modify any general state of the broker in the database.
 type ServiceBrokerHelper interface {
 	Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan ServicePlan) (ServiceInstanceDetails, error)
 	// Bind provisions the necessary resources for a user to be able to connect to the provisioned service.
 	// This may include creating service accounts, granting permissions, and adding users to services e.g. a SQL database user.
-	// It stores information necessary to access the service _and_ delete the binding in the returned map.	
+	// It stores information necessary to access the service _and_ delete the binding in the returned map.
 	Bind(ctx context.Context, instance ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error)
-	BuildInstanceCredentials(ctx context.Context, bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]interface{}, error)
-	Unbind(ctx context.Context, details ServiceBindingCredentials) error
+	BuildInstanceCredentials(ctx context.Context, bindRecord ServiceBindingCredentials, instance ServiceInstanceDetails) (map[string]interface{}, error)
+	// Unbind deprovisions the resources created with Bind.
+	Unbind(ctx context.Context, instance ServiceInstanceDetails, details ServiceBindingCredentials) error
 	// Deprovision deprovisions the service.
 	// If the deprovision is asynchronous (results in a long-running job), then operationId is returned.
 	// If no error and no operationId are returned, then the deprovision is expected to have been completed successfully.

@@ -24,7 +24,6 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
@@ -298,23 +297,18 @@ func (b *CloudSQLBroker) BuildInstanceCredentials(ctx context.Context, bindRecor
 }
 
 // Unbind deletes the database user, service account and invalidates the ssl certs associated with this binding.
-func (b *CloudSQLBroker) Unbind(ctx context.Context, binding models.ServiceBindingCredentials) error {
-	instance, err := db_service.GetServiceInstanceDetailsById(ctx, binding.ServiceInstanceId)
-	if err != nil {
-		return fmt.Errorf("Database error retrieving instance details: %s", err)
-	}
-
+func (b *CloudSQLBroker) Unbind(ctx context.Context, instance models.ServiceInstanceDetails, binding models.ServiceBindingCredentials) error {
 	var accumulator error
 
-	if err := b.deleteSqlSslCert(ctx, binding, *instance); err != nil {
+	if err := b.deleteSqlSslCert(ctx, binding, instance); err != nil {
 		accumulator = multierror.Append(accumulator, err)
 	}
 
-	if err := b.deleteSqlUserAccount(ctx, binding, *instance); err != nil {
+	if err := b.deleteSqlUserAccount(ctx, binding, instance); err != nil {
 		accumulator = multierror.Append(accumulator, err)
 	}
 
-	if err := b.BrokerBase.Unbind(ctx, binding); err != nil {
+	if err := b.BrokerBase.Unbind(ctx, instance, binding); err != nil {
 		accumulator = multierror.Append(accumulator, err)
 	}
 

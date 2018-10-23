@@ -392,8 +392,14 @@ func (gcpBroker *GCPServiceBroker) Unbind(ctx context.Context, instanceID, bindi
 		return brokerapi.ErrBindingDoesNotExist
 	}
 
+	// get existing service instance details
+	instance, err := db_service.GetServiceInstanceDetailsById(ctx, instanceID)
+	if err != nil {
+		return fmt.Errorf("Error retrieving service instance details: %s", err)
+	}
+
 	// remove binding from Google
-	if err := service.Unbind(ctx, *existingBinding); err != nil {
+	if err := service.Unbind(ctx, *instance, *existingBinding); err != nil {
 		return err
 	}
 
