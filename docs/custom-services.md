@@ -51,6 +51,18 @@ The following string interpolation functions are available for use:
   * Generates `count` bytes of cryptographically secure randomness and converts it to [URL Encoded Base64](https://tools.ietf.org/html/rfc4648).
   * The randomness makes it suitable for using as passwords.
 
+## Variable reference
+
+The broker makes additional variables available to be used during provision and bind calls.
+
+### Provision
+
+* `request.service.id` - _string_ The GUID of the requested service.
+* `request.plan.id` - _string_ The ID of the requested plan. Plan IDs are unique within an instance.
+* `request.instance.id` - _string_ The ID of the requested instance. Instance IDs are unique within a service.
+* `request.default_labels` - _map[string]string_ A map of labels that should be applied to the created infrastructure for billing/accounting/tracking purposes.
+
+
 ## Design guidelines
 
 When you're creating a new service for the broker you're designing for three separate sets of people:

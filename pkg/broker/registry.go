@@ -335,7 +335,15 @@ func (svc *BrokerService) provisionDefaults() []varcontext.DefaultVariable {
 func (svc *BrokerService) ProvisionVariables(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (*varcontext.VarContext, error) {
 	defaults := svc.provisionDefaults()
 
+	constants := map[string]interface{}{
+		"request.plan.id":        details.PlanID,
+		"request.service.id":     details.ServiceID,
+		"request.instance.id":    details.ServiceID,
+		"request.default_labels": utils.ExtractDefaultLabels(instanceId, details),
+	}
+
 	return varcontext.Builder().
+		SetEvalConstants(constants).
 		MergeMap(svc.ProvisionDefaultOverrides()).
 		MergeJsonObject(details.GetRawParameters()).
 		MergeDefaults(defaults).
