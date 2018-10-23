@@ -249,12 +249,26 @@ forms:
     description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
       provision property and values are the alternative default.
     configurable: true
+  - name: gsb_service_google_bigquery_bind_defaults
+    type: text
+    default: '{}'
+    label: Bind default override Google BigQuery instances.
+    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
+      bind property and values are the alternative default.
+    configurable: true
   - name: gsb_service_google_bigtable_provision_defaults
     type: text
     default: '{}'
     label: Provision default override Google Bigtable instances.
     description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
       provision property and values are the alternative default.
+    configurable: true
+  - name: gsb_service_google_bigtable_bind_defaults
+    type: text
+    default: '{}'
+    label: Bind default override Google Bigtable instances.
+    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
+      bind property and values are the alternative default.
     configurable: true
   - name: gsb_service_google_cloudsql_mysql_provision_defaults
     type: text
@@ -263,12 +277,26 @@ forms:
     description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
       provision property and values are the alternative default.
     configurable: true
+  - name: gsb_service_google_cloudsql_mysql_bind_defaults
+    type: text
+    default: '{}'
+    label: Bind default override Google CloudSQL MySQL instances.
+    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
+      bind property and values are the alternative default.
+    configurable: true
   - name: gsb_service_google_cloudsql_postgres_provision_defaults
     type: text
     default: '{}'
     label: Provision default override Google CloudSQL PostgreSQL instances.
     description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
       provision property and values are the alternative default.
+    configurable: true
+  - name: gsb_service_google_cloudsql_postgres_bind_defaults
+    type: text
+    default: '{}'
+    label: Bind default override Google CloudSQL PostgreSQL instances.
+    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
+      bind property and values are the alternative default.
     configurable: true
   - name: gsb_service_google_ml_apis_provision_defaults
     type: text
@@ -277,12 +305,26 @@ forms:
     description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
       provision property and values are the alternative default.
     configurable: true
+  - name: gsb_service_google_ml_apis_bind_defaults
+    type: text
+    default: '{}'
+    label: Bind default override Google Machine Learning APIs instances.
+    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
+      bind property and values are the alternative default.
+    configurable: true
   - name: gsb_service_google_pubsub_provision_defaults
     type: text
     default: '{}'
     label: Provision default override Google PubSub instances.
     description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
       provision property and values are the alternative default.
+    configurable: true
+  - name: gsb_service_google_pubsub_bind_defaults
+    type: text
+    default: '{}'
+    label: Bind default override Google PubSub instances.
+    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
+      bind property and values are the alternative default.
     configurable: true
   - name: gsb_service_google_spanner_provision_defaults
     type: text
@@ -291,12 +333,26 @@ forms:
     description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
       provision property and values are the alternative default.
     configurable: true
+  - name: gsb_service_google_spanner_bind_defaults
+    type: text
+    default: '{}'
+    label: Bind default override Google Spanner instances.
+    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
+      bind property and values are the alternative default.
+    configurable: true
   - name: gsb_service_google_storage_provision_defaults
     type: text
     default: '{}'
     label: Provision default override Google Cloud Storage instances.
     description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
       provision property and values are the alternative default.
+    configurable: true
+  - name: gsb_service_google_storage_bind_defaults
+    type: text
+    default: '{}'
+    label: Bind default override Google Cloud Storage instances.
+    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
+      bind property and values are the alternative default.
     configurable: true
 service_plan_forms:
 - name: bigtable_custom_plans
@@ -377,10 +433,10 @@ service_plan_forms:
     description: Select a pricing plan (only for 1st generation instances).
     configurable: true
     options:
-    - name: PACKAGE
-      label: Package
     - name: PER_USE
       label: Per-Use
+    - name: PACKAGE
+      label: Package
   - name: max_disk_size
     type: string
     default: "10"
