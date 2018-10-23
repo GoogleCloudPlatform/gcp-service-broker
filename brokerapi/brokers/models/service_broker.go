@@ -25,7 +25,9 @@ import (
 
 type ServiceBrokerHelper interface {
 	Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan ServicePlan) (ServiceInstanceDetails, error)
-	Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (ServiceBindingCredentials, error)
+	// Bind creates credentials for accessing the service and stores information necessary to
+	// access the service _and_ delete the binding in the returned map.
+	Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error)
 	BuildInstanceCredentials(ctx context.Context, bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]interface{}, error)
 	Unbind(ctx context.Context, details ServiceBindingCredentials) error
 	// Deprovision deprovisions the service.
@@ -44,10 +46,9 @@ type ServiceBrokerHelper interface {
 }
 
 type ServiceAccountManager interface {
-	CreateCredentials(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance ServiceInstanceDetails) (ServiceBindingCredentials, error)
+	CreateCredentials(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance ServiceInstanceDetails) (map[string]interface{}, error)
 	DeleteCredentials(ctx context.Context, creds ServiceBindingCredentials) error
-	BuildInstanceCredentials(ctx context.Context, bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]interface{}, error)
-	CreateAccountWithRoles(ctx context.Context, bindingID string, roles []string) (ServiceBindingCredentials, error)
+	CreateAccountWithRoles(ctx context.Context, bindingID string, roles []string) (map[string]interface{}, error)
 }
 
 // This custom user agent string is added to provision calls so that Google can track the aggregated use of this tool

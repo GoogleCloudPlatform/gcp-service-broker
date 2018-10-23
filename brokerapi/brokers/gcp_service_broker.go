@@ -338,15 +338,23 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 	}
 
 	// create binding
-	newCreds, err := service.Bind(ctx, instanceID, bindingID, details)
+	credsDetails, err := service.Bind(ctx, instanceID, bindingID, details)
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}
 
+	serializedCreds, err := json.Marshal(credsDetails)
+	if err != nil {
+		return brokerapi.Binding{}, fmt.Errorf("Error serializing credentials: %s. WARNING: these credentials cannot be unbound through cf. Please contact your operator for cleanup", err)
+	}
+
 	// save binding to database
-	newCreds.ServiceInstanceId = instanceID
-	newCreds.BindingId = bindingID
-	newCreds.ServiceId = details.ServiceID
+	newCreds := models.ServiceBindingCredentials{
+		ServiceInstanceId: instanceID,
+		BindingId:         bindingID,
+		ServiceId:         details.ServiceID,
+		OtherDetails:      string(serializedCreds),
+	}
 
 	if err := db_service.CreateServiceBindingCredentials(ctx, &newCreds); err != nil {
 		return brokerapi.Binding{}, fmt.Errorf("Error saving credentials to database: %s. WARNING: these credentials cannot be unbound through cf. Please contact your operator for cleanup",

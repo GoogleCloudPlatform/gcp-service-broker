@@ -236,20 +236,20 @@ func (b *CloudSQLBroker) ensureUsernamePassword(instanceID, bindingID string, de
 // Bind creates a new username, password, and set of ssl certs for the given instance.
 // The function may be slow to return because CloudSQL operations are asynchronous.
 // The default PCF service broker timeout may need to be raised to 90 or 120 seconds to accommodate the long bind time.
-func (b *CloudSQLBroker) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
+func (b *CloudSQLBroker) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error) {
 	// get context before trying to create anything to catch errors early
 	cloudDb, err := db_service.GetServiceInstanceDetailsById(ctx, instanceID)
 	if err != nil {
-		return models.ServiceBindingCredentials{}, brokerapi.ErrInstanceDoesNotExist
+		return nil, brokerapi.ErrInstanceDoesNotExist
 	}
 
 	params := make(map[string]interface{})
 	if err := json.Unmarshal(details.RawParameters, &params); err != nil {
-		return models.ServiceBindingCredentials{}, fmt.Errorf("Error unmarshalling parameters: %s", err)
+		return nil, fmt.Errorf("Error unmarshalling parameters: %s", err)
 	}
 
 	if err := b.ensureUsernamePassword(instanceID, bindingID, &details); err != nil {
-		return models.ServiceBindingCredentials{}, err
+		return nil, err
 	}
 
 	combinedCreds := varcontext.Builder()
@@ -259,8 +259,7 @@ func (b *CloudSQLBroker) Bind(ctx context.Context, instanceID, bindingID string,
 	if err != nil {
 		return saCreds, err
 	}
-
-	combinedCreds.MergeJsonObject(json.RawMessage(saCreds.OtherDetails))
+	combinedCreds.MergeMap(saCreds)
 
 	sqlCreds, err := b.createSqlCredentials(ctx, instanceID, bindingID, details, *cloudDb)
 	if err != nil {
@@ -274,18 +273,7 @@ func (b *CloudSQLBroker) Bind(ctx context.Context, instanceID, bindingID string,
 	}
 	combinedCreds.MergeMap(map[string]interface{}{"UriPrefix": uriPrefix})
 
-	builtCreds, err := combinedCreds.Build()
-	if err != nil {
-		return saCreds, err
-	}
-
-	credBytes, err := builtCreds.ToJson()
-	if err != nil {
-		return saCreds, err
-	}
-
-	saCreds.OtherDetails = string(credBytes)
-	return saCreds, nil
+	return combinedCreds.BuildMap()
 }
 
 func (b *CloudSQLBroker) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]interface{}, error) {
