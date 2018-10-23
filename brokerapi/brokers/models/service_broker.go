@@ -25,7 +25,9 @@ import (
 
 type ServiceBrokerHelper interface {
 	Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan ServicePlan) (ServiceInstanceDetails, error)
-	Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (ServiceBindingCredentials, error)
+	// Bind provisions the necessary resources for a user to be able to connect to the provisioned service.
+	// This may include creating service accounts, granting permissions, and adding users to services e.g. a SQL database user.
+	Bind(ctx context.Context, instance ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (ServiceBindingCredentials, error)
 	BuildInstanceCredentials(ctx context.Context, bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]interface{}, error)
 	Unbind(ctx context.Context, details ServiceBindingCredentials) error
 	// Deprovision deprovisions the service.
@@ -44,7 +46,7 @@ type ServiceBrokerHelper interface {
 }
 
 type ServiceAccountManager interface {
-	CreateCredentials(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance ServiceInstanceDetails) (ServiceBindingCredentials, error)
+	CreateCredentials(ctx context.Context, bindingID string, details brokerapi.BindDetails, instance ServiceInstanceDetails) (ServiceBindingCredentials, error)
 	DeleteCredentials(ctx context.Context, creds ServiceBindingCredentials) error
 	BuildInstanceCredentials(ctx context.Context, bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]interface{}, error)
 	CreateAccountWithRoles(ctx context.Context, bindingID string, roles []string) (ServiceBindingCredentials, error)

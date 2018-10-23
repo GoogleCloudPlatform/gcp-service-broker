@@ -32,12 +32,13 @@ import (
 
 	"code.cloudfoundry.org/lager"
 
+	"encoding/json"
+
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/config"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"golang.org/x/oauth2/jwt"
-	"encoding/json"
 )
 
 var _ = Describe("Brokers", func() {
@@ -122,7 +123,7 @@ var _ = Describe("Brokers", func() {
 				ProvisionStub: func(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 					return models.ServiceInstanceDetails{ID: instanceId, OtherDetails: "{\"mynameis\": \"instancename\"}"}, nil
 				},
-				BindStub: func(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
+				BindStub: func(ctx context.Context, instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
 					return models.ServiceBindingCredentials{OtherDetails: "{\"foo\": \"bar\"}"}, nil
 				},
 			}
@@ -143,8 +144,8 @@ var _ = Describe("Brokers", func() {
 		})
 
 		storageBindDetails = brokerapi.BindDetails{
-			ServiceID: serviceNameToId[models.StorageName],
-			PlanID:    someStoragePlanId,
+			ServiceID:     serviceNameToId[models.StorageName],
+			PlanID:        someStoragePlanId,
 			RawParameters: storageBindParameters,
 		}
 
@@ -441,7 +442,7 @@ var _ = Describe("AccountManagers", func() {
 		name_generator.New()
 
 		accountManager = modelsfakes.FakeServiceAccountManager{
-			CreateCredentialsStub: func(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
+			CreateCredentialsStub: func(ctx context.Context, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
 				return models.ServiceBindingCredentials{OtherDetails: "{}"}, nil
 			},
 		}
@@ -462,7 +463,8 @@ var _ = Describe("AccountManagers", func() {
 	Describe("bind", func() {
 		Context("when bind is called on an iam-style broker", func() {
 			It("should call the account manager create account in google method", func() {
-				_, err = iamStyleBroker.Bind(context.Background(), "foo", "bar", brokerapi.BindDetails{})
+				instance := models.ServiceInstanceDetails{ID: "foo"}
+				_, err = iamStyleBroker.Bind(context.Background(), instance, "bar", brokerapi.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 			})
@@ -470,8 +472,9 @@ var _ = Describe("AccountManagers", func() {
 
 		Context("when bind is called on an iam-style broker after provision", func() {
 			It("should call the account manager create account in google method", func() {
-				db_service.SaveServiceInstanceDetails(testCtx, &models.ServiceInstanceDetails{ID: "foo"})
-				_, err = iamStyleBroker.Bind(context.Background(), "foo", "bar", brokerapi.BindDetails{})
+				instance := models.ServiceInstanceDetails{ID: "foo"}
+				db_service.SaveServiceInstanceDetails(testCtx, &instance)
+				_, err = iamStyleBroker.Bind(context.Background(), instance, "bar", brokerapi.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 			})

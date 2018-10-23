@@ -26,7 +26,7 @@ import (
 )
 
 // inserts a new user into the database and creates new ssl certs
-func (broker *CloudSQLBroker) createSqlCredentials(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (map[string]interface{}, error) {
+func (broker *CloudSQLBroker) createSqlCredentials(ctx context.Context, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (map[string]interface{}, error) {
 	vars, err := varcontext.Builder().
 		MergeJsonObject(details.GetRawParameters()).
 		MergeMap(map[string]interface{}{"bindingid": bindingID}).

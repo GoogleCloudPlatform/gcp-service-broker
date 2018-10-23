@@ -330,6 +330,12 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 		return brokerapi.Binding{}, brokerapi.ErrBindingAlreadyExists
 	}
 
+	// get existing service instance details
+	instanceRecord, err := db_service.GetServiceInstanceDetailsById(ctx, instanceID)
+	if err != nil {
+		return brokerapi.Binding{}, fmt.Errorf("Error retrieving service instance details: %s", err)
+	}
+
 	if gcpBroker.enableInputValidation {
 		// validate parameters meet the service's schema
 		if err := validateBindVariables(details); err != nil {
@@ -338,7 +344,7 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 	}
 
 	// create binding
-	newCreds, err := service.Bind(ctx, instanceID, bindingID, details)
+	newCreds, err := service.Bind(ctx, *instanceRecord, bindingID, details)
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}
@@ -351,12 +357,6 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 	if err := db_service.CreateServiceBindingCredentials(ctx, &newCreds); err != nil {
 		return brokerapi.Binding{}, fmt.Errorf("Error saving credentials to database: %s. WARNING: these credentials cannot be unbound through cf. Please contact your operator for cleanup",
 			err)
-	}
-
-	// get existing service instance details
-	instanceRecord, err := db_service.GetServiceInstanceDetailsById(ctx, instanceID)
-	if err != nil {
-		return brokerapi.Binding{}, fmt.Errorf("Error retrieving service instance details: %s", err)
 	}
 
 	updatedCreds, err := service.BuildInstanceCredentials(ctx, newCreds, *instanceRecord)
