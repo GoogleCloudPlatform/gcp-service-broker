@@ -38,6 +38,6 @@ func (b *StackdriverTraceBroker) Deprovision(ctx context.Context, instance model
 }
 
 // Bind creates a service account with access to Stackdriver Trace.
-func (b *StackdriverTraceBroker) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error) {
+func (b *StackdriverTraceBroker) Bind(ctx context.Context, instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error) {
 	return b.AccountManager.CreateAccountWithRoles(ctx, bindingID, []string{"cloudtrace.agent"})
 }

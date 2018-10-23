@@ -10,14 +10,13 @@ import (
 )
 
 type FakeServiceAccountManager struct {
-	CreateCredentialsStub        func(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (map[string]interface{}, error)
+	CreateCredentialsStub        func(ctx context.Context, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (map[string]interface{}, error)
 	createCredentialsMutex       sync.RWMutex
 	createCredentialsArgsForCall []struct {
-		ctx        context.Context
-		instanceID string
-		bindingID  string
-		details    brokerapi.BindDetails
-		instance   models.ServiceInstanceDetails
+		ctx       context.Context
+		bindingID string
+		details   brokerapi.BindDetails
+		instance  models.ServiceInstanceDetails
 	}
 	createCredentialsReturns struct {
 		result1 map[string]interface{}
@@ -58,20 +57,19 @@ type FakeServiceAccountManager struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeServiceAccountManager) CreateCredentials(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (map[string]interface{}, error) {
+func (fake *FakeServiceAccountManager) CreateCredentials(ctx context.Context, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (map[string]interface{}, error) {
 	fake.createCredentialsMutex.Lock()
 	ret, specificReturn := fake.createCredentialsReturnsOnCall[len(fake.createCredentialsArgsForCall)]
 	fake.createCredentialsArgsForCall = append(fake.createCredentialsArgsForCall, struct {
-		ctx        context.Context
-		instanceID string
-		bindingID  string
-		details    brokerapi.BindDetails
-		instance   models.ServiceInstanceDetails
-	}{ctx, instanceID, bindingID, details, instance})
-	fake.recordInvocation("CreateCredentials", []interface{}{ctx, instanceID, bindingID, details, instance})
+		ctx       context.Context
+		bindingID string
+		details   brokerapi.BindDetails
+		instance  models.ServiceInstanceDetails
+	}{ctx, bindingID, details, instance})
+	fake.recordInvocation("CreateCredentials", []interface{}{ctx, bindingID, details, instance})
 	fake.createCredentialsMutex.Unlock()
 	if fake.CreateCredentialsStub != nil {
-		return fake.CreateCredentialsStub(ctx, instanceID, bindingID, details, instance)
+		return fake.CreateCredentialsStub(ctx, bindingID, details, instance)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -85,10 +83,10 @@ func (fake *FakeServiceAccountManager) CreateCredentialsCallCount() int {
 	return len(fake.createCredentialsArgsForCall)
 }
 
-func (fake *FakeServiceAccountManager) CreateCredentialsArgsForCall(i int) (context.Context, string, string, brokerapi.BindDetails, models.ServiceInstanceDetails) {
+func (fake *FakeServiceAccountManager) CreateCredentialsArgsForCall(i int) (context.Context, string, brokerapi.BindDetails, models.ServiceInstanceDetails) {
 	fake.createCredentialsMutex.RLock()
 	defer fake.createCredentialsMutex.RUnlock()
-	return fake.createCredentialsArgsForCall[i].ctx, fake.createCredentialsArgsForCall[i].instanceID, fake.createCredentialsArgsForCall[i].bindingID, fake.createCredentialsArgsForCall[i].details, fake.createCredentialsArgsForCall[i].instance
+	return fake.createCredentialsArgsForCall[i].ctx, fake.createCredentialsArgsForCall[i].bindingID, fake.createCredentialsArgsForCall[i].details, fake.createCredentialsArgsForCall[i].instance
 }
 
 func (fake *FakeServiceAccountManager) CreateCredentialsReturns(result1 map[string]interface{}, result2 error) {

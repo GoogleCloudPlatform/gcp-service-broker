@@ -26,13 +26,13 @@ type FakeServiceBrokerHelper struct {
 		result1 models.ServiceInstanceDetails
 		result2 error
 	}
-	BindStub        func(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error)
+	BindStub        func(ctx context.Context, instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error)
 	bindMutex       sync.RWMutex
 	bindArgsForCall []struct {
-		ctx        context.Context
-		instanceID string
-		bindingID  string
-		details    brokerapi.BindDetails
+		ctx       context.Context
+		instance  models.ServiceInstanceDetails
+		bindingID string
+		details   brokerapi.BindDetails
 	}
 	bindReturns struct {
 		result1 map[string]interface{}
@@ -186,19 +186,19 @@ func (fake *FakeServiceBrokerHelper) ProvisionReturnsOnCall(i int, result1 model
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) Bind(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error) {
+func (fake *FakeServiceBrokerHelper) Bind(ctx context.Context, instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error) {
 	fake.bindMutex.Lock()
 	ret, specificReturn := fake.bindReturnsOnCall[len(fake.bindArgsForCall)]
 	fake.bindArgsForCall = append(fake.bindArgsForCall, struct {
-		ctx        context.Context
-		instanceID string
-		bindingID  string
-		details    brokerapi.BindDetails
-	}{ctx, instanceID, bindingID, details})
-	fake.recordInvocation("Bind", []interface{}{ctx, instanceID, bindingID, details})
+		ctx       context.Context
+		instance  models.ServiceInstanceDetails
+		bindingID string
+		details   brokerapi.BindDetails
+	}{ctx, instance, bindingID, details})
+	fake.recordInvocation("Bind", []interface{}{ctx, instance, bindingID, details})
 	fake.bindMutex.Unlock()
 	if fake.BindStub != nil {
-		return fake.BindStub(ctx, instanceID, bindingID, details)
+		return fake.BindStub(ctx, instance, bindingID, details)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -212,10 +212,10 @@ func (fake *FakeServiceBrokerHelper) BindCallCount() int {
 	return len(fake.bindArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) BindArgsForCall(i int) (context.Context, string, string, brokerapi.BindDetails) {
+func (fake *FakeServiceBrokerHelper) BindArgsForCall(i int) (context.Context, models.ServiceInstanceDetails, string, brokerapi.BindDetails) {
 	fake.bindMutex.RLock()
 	defer fake.bindMutex.RUnlock()
-	return fake.bindArgsForCall[i].ctx, fake.bindArgsForCall[i].instanceID, fake.bindArgsForCall[i].bindingID, fake.bindArgsForCall[i].details
+	return fake.bindArgsForCall[i].ctx, fake.bindArgsForCall[i].instance, fake.bindArgsForCall[i].bindingID, fake.bindArgsForCall[i].details
 }
 
 func (fake *FakeServiceBrokerHelper) BindReturns(result1 map[string]interface{}, result2 error) {

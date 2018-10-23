@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Role whitelists are now validated through JSON Schema checks.
 
+### Fixed
+- Fixed issue where Cloud Datastore service accounts were getting the same name.
+
 ## [4.0.0] - 2018-10-01
 
 ### Added

@@ -25,9 +25,10 @@ import (
 
 type ServiceBrokerHelper interface {
 	Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan ServicePlan) (ServiceInstanceDetails, error)
-	// Bind creates credentials for accessing the service and stores information necessary to
-	// access the service _and_ delete the binding in the returned map.
-	Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error)
+	// Bind provisions the necessary resources for a user to be able to connect to the provisioned service.
+	// This may include creating service accounts, granting permissions, and adding users to services e.g. a SQL database user.
+	// It stores information necessary to access the service _and_ delete the binding in the returned map.	
+	Bind(ctx context.Context, instance ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error)
 	BuildInstanceCredentials(ctx context.Context, bindRecord ServiceBindingCredentials, instanceRecord ServiceInstanceDetails) (map[string]interface{}, error)
 	Unbind(ctx context.Context, details ServiceBindingCredentials) error
 	// Deprovision deprovisions the service.
@@ -46,7 +47,7 @@ type ServiceBrokerHelper interface {
 }
 
 type ServiceAccountManager interface {
-	CreateCredentials(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance ServiceInstanceDetails) (map[string]interface{}, error)
+	CreateCredentials(ctx context.Context, bindingID string, details brokerapi.BindDetails, instance ServiceInstanceDetails) (map[string]interface{}, error)
 	DeleteCredentials(ctx context.Context, creds ServiceBindingCredentials) error
 	CreateAccountWithRoles(ctx context.Context, bindingID string, roles []string) (map[string]interface{}, error)
 }

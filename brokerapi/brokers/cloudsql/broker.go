@@ -236,32 +236,27 @@ func (b *CloudSQLBroker) ensureUsernamePassword(instanceID, bindingID string, de
 // Bind creates a new username, password, and set of ssl certs for the given instance.
 // The function may be slow to return because CloudSQL operations are asynchronous.
 // The default PCF service broker timeout may need to be raised to 90 or 120 seconds to accommodate the long bind time.
-func (b *CloudSQLBroker) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error) {
+func (b *CloudSQLBroker) Bind(ctx context.Context, instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error) {
 	// get context before trying to create anything to catch errors early
-	cloudDb, err := db_service.GetServiceInstanceDetailsById(ctx, instanceID)
-	if err != nil {
-		return nil, brokerapi.ErrInstanceDoesNotExist
-	}
-
 	params := make(map[string]interface{})
 	if err := json.Unmarshal(details.RawParameters, &params); err != nil {
 		return nil, fmt.Errorf("Error unmarshalling parameters: %s", err)
 	}
 
-	if err := b.ensureUsernamePassword(instanceID, bindingID, &details); err != nil {
+	if err := b.ensureUsernamePassword(instance.ID, bindingID, &details); err != nil {
 		return nil, err
 	}
 
 	combinedCreds := varcontext.Builder()
 
 	// Create the service account
-	saCreds, err := b.BrokerBase.Bind(ctx, instanceID, bindingID, details)
+	saCreds, err := b.BrokerBase.Bind(ctx, instance, bindingID, details)
 	if err != nil {
 		return saCreds, err
 	}
 	combinedCreds.MergeMap(saCreds)
 
-	sqlCreds, err := b.createSqlCredentials(ctx, instanceID, bindingID, details, *cloudDb)
+	sqlCreds, err := b.createSqlCredentials(ctx, bindingID, details, instance)
 	if err != nil {
 		return saCreds, err
 	}
