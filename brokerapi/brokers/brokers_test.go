@@ -123,8 +123,8 @@ var _ = Describe("Brokers", func() {
 				ProvisionStub: func(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 					return models.ServiceInstanceDetails{ID: instanceId, OtherDetails: "{\"mynameis\": \"instancename\"}"}, nil
 				},
-				BindStub: func(ctx context.Context, instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
-					return models.ServiceBindingCredentials{OtherDetails: "{\"foo\": \"bar\"}"}, nil
+				BindStub: func(ctx context.Context, instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error) {
+					return map[string]interface{}{"foo": "bar"}, nil
 				},
 			}
 		}
@@ -442,8 +442,8 @@ var _ = Describe("AccountManagers", func() {
 		name_generator.New()
 
 		accountManager = modelsfakes.FakeServiceAccountManager{
-			CreateCredentialsStub: func(ctx context.Context, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (models.ServiceBindingCredentials, error) {
-				return models.ServiceBindingCredentials{OtherDetails: "{}"}, nil
+			CreateCredentialsStub: func(ctx context.Context, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (map[string]interface{}, error) {
+				return map[string]interface{}{}, nil
 			},
 		}
 
@@ -477,14 +477,6 @@ var _ = Describe("AccountManagers", func() {
 				_, err = iamStyleBroker.Bind(context.Background(), instance, "bar", brokerapi.BindDetails{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
-			})
-		})
-
-		Context("when MergeCredentialsAndInstanceInfo is called on a broker", func() {
-			It("should call MergeCredentialsAndInstanceInfo on the account manager", func() {
-				_, err = iamStyleBroker.BuildInstanceCredentials(context.Background(), models.ServiceBindingCredentials{}, models.ServiceInstanceDetails{})
-				Expect(err).ToNot(HaveOccurred())
-				Expect(accountManager.BuildInstanceCredentialsCallCount()).To(Equal(1))
 			})
 		})
 	})

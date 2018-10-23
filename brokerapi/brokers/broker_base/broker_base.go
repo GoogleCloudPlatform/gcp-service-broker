@@ -16,9 +16,11 @@ package broker_base
 
 import (
 	"context"
+	"encoding/json"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
@@ -35,14 +37,22 @@ type BrokerBase struct {
 
 // Bind creates a service account with access to the provisioned resource with
 // the given instance.
-func (b *BrokerBase) Bind(ctx context.Context, instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
+func (b *BrokerBase) Bind(ctx context.Context, instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error) {
 	return b.AccountManager.CreateCredentials(ctx, bindingID, details, instance)
 }
 
 // BuildInstanceCredentials combines the bind credentials with the connection
 // information in the instance details to get a full set of connection details.
-func (b *BrokerBase) BuildInstanceCredentials(ctx context.Context, bindDetails models.ServiceBindingCredentials, instanceDetails models.ServiceInstanceDetails) (map[string]interface{}, error) {
-	return b.AccountManager.BuildInstanceCredentials(ctx, bindDetails, instanceDetails)
+func (b *BrokerBase) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]interface{}, error) {
+	vc, err := varcontext.Builder().
+		MergeJsonObject(json.RawMessage(bindRecord.OtherDetails)).
+		MergeJsonObject(json.RawMessage(instanceRecord.OtherDetails)).
+		Build()
+	if err != nil {
+		return nil, err
+	}
+
+	return vc.ToMap(), nil
 }
 
 // Unbind deletes the created service account from the GCP Project.

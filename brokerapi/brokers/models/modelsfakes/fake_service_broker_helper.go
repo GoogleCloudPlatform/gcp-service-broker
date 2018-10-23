@@ -26,7 +26,7 @@ type FakeServiceBrokerHelper struct {
 		result1 models.ServiceInstanceDetails
 		result2 error
 	}
-	BindStub        func(ctx context.Context, instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error)
+	BindStub        func(ctx context.Context, instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error)
 	bindMutex       sync.RWMutex
 	bindArgsForCall []struct {
 		ctx       context.Context
@@ -35,11 +35,11 @@ type FakeServiceBrokerHelper struct {
 		details   brokerapi.BindDetails
 	}
 	bindReturns struct {
-		result1 models.ServiceBindingCredentials
+		result1 map[string]interface{}
 		result2 error
 	}
 	bindReturnsOnCall map[int]struct {
-		result1 models.ServiceBindingCredentials
+		result1 map[string]interface{}
 		result2 error
 	}
 	BuildInstanceCredentialsStub        func(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]interface{}, error)
@@ -186,7 +186,7 @@ func (fake *FakeServiceBrokerHelper) ProvisionReturnsOnCall(i int, result1 model
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) Bind(ctx context.Context, instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (models.ServiceBindingCredentials, error) {
+func (fake *FakeServiceBrokerHelper) Bind(ctx context.Context, instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error) {
 	fake.bindMutex.Lock()
 	ret, specificReturn := fake.bindReturnsOnCall[len(fake.bindArgsForCall)]
 	fake.bindArgsForCall = append(fake.bindArgsForCall, struct {
@@ -218,24 +218,24 @@ func (fake *FakeServiceBrokerHelper) BindArgsForCall(i int) (context.Context, mo
 	return fake.bindArgsForCall[i].ctx, fake.bindArgsForCall[i].instance, fake.bindArgsForCall[i].bindingID, fake.bindArgsForCall[i].details
 }
 
-func (fake *FakeServiceBrokerHelper) BindReturns(result1 models.ServiceBindingCredentials, result2 error) {
+func (fake *FakeServiceBrokerHelper) BindReturns(result1 map[string]interface{}, result2 error) {
 	fake.BindStub = nil
 	fake.bindReturns = struct {
-		result1 models.ServiceBindingCredentials
+		result1 map[string]interface{}
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) BindReturnsOnCall(i int, result1 models.ServiceBindingCredentials, result2 error) {
+func (fake *FakeServiceBrokerHelper) BindReturnsOnCall(i int, result1 map[string]interface{}, result2 error) {
 	fake.BindStub = nil
 	if fake.bindReturnsOnCall == nil {
 		fake.bindReturnsOnCall = make(map[int]struct {
-			result1 models.ServiceBindingCredentials
+			result1 map[string]interface{}
 			result2 error
 		})
 	}
 	fake.bindReturnsOnCall[i] = struct {
-		result1 models.ServiceBindingCredentials
+		result1 map[string]interface{}
 		result2 error
 	}{result1, result2}
 }
