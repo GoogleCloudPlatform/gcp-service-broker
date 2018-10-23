@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Ability to create custom Cloud Storage plans.
 - New tile form for creating custom Cloud Storage plans.
 
+### Fixed
+- Fixed issue where Cloud Datastore service accounts were getting the same name.
+
 ## [4.0.0] - 2018-10-01
 
 ### Added

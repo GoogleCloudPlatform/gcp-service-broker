@@ -46,7 +46,7 @@ type ServiceAccountManager struct {
 
 // If roleWhitelist is specified, then the extracted role is validated against it and an error is returned if
 // the role is not contained within the whitelist
-func (sam *ServiceAccountManager) CreateCredentials(ctx context.Context, instanceID string, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (map[string]interface{}, error) {
+func (sam *ServiceAccountManager) CreateCredentials(ctx context.Context, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (map[string]interface{}, error) {
 	role, err := extractRole(details)
 	if err != nil {
 		return nil, err

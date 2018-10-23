@@ -38,6 +38,6 @@ func (b *StackdriverDebuggerBroker) Deprovision(ctx context.Context, instance mo
 }
 
 // Bind creates a service account with access to Stackdriver Debugger.
-func (b *StackdriverDebuggerBroker) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error) {
+func (b *StackdriverDebuggerBroker) Bind(ctx context.Context, instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error) {
 	return b.AccountManager.CreateAccountWithRoles(ctx, bindingID, []string{"clouddebugger.agent"})
 }
