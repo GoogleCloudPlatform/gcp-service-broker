@@ -162,18 +162,6 @@ func (svc *BrokerService) BindDefaultOverrides() map[string]interface{} {
 	return viper.GetStringMap(svc.BindDefaultOverrideProperty())
 }
 
-// RoleWhitelist returns the whitelist of roles the operator has allowed or the
-// default if it is blank.
-func (svc *BrokerService) RoleWhitelist() []string {
-	rawWhitelist := viper.GetString(svc.RoleWhitelistProperty())
-	wl := strings.Split(rawWhitelist, ",")
-	if strings.TrimSpace(rawWhitelist) != "" {
-		return wl
-	}
-
-	return svc.DefaultRoleWhitelist
-}
-
 // TileUserDefinedPlansVariable returns the name of the user defined plans
 // variable for the broker tile.
 func (svc *BrokerService) TileUserDefinedPlansVariable() string {
