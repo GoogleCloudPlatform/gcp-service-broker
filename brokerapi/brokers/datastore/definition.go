@@ -49,6 +49,7 @@ func init() {
     }`,
 		ProvisionInputVariables: []broker.BrokerVariable{},
 		BindInputVariables:      []broker.BrokerVariable{},
+		BindComputedVariables:   accountmanagers.FixedRoleBindComputedVariables("datastore.user"),
 		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
 		Examples: []broker.ServiceExample{
 			{

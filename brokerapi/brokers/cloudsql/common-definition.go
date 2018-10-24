@@ -63,11 +63,18 @@ func commonBindVariables(serviceName string) []broker.BrokerVariable {
 }
 
 func commonBindComputedVariables() []varcontext.DefaultVariable {
-	return []varcontext.DefaultVariable{
+	serviceAccountComputed := accountmanagers.ServiceAccountBindComputedVariables()
+	sqlComputed := []varcontext.DefaultVariable{
 		// legacy behavior dictates that empty values get defaults
 		{Name: "password", Default: `${password == "" ? "` + passwordTemplate + `" : password}`, Overwrite: true},
 		{Name: "username", Default: `${username == "" ? "` + usernameTemplate + `" : username}`, Overwrite: true},
+
+		// necessary additions
+		{Name: "certname", Default: `${str.truncate(10, request.binding_id)}cert`, Overwrite: true},
+		{Name: "db_name", Default: `${instance.name}`, Overwrite: true},
 	}
+
+	return append(serviceAccountComputed, sqlComputed...)
 }
 
 func commonProvisionVariables() []broker.BrokerVariable {

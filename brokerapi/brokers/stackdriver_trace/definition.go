@@ -50,6 +50,7 @@ func init() {
 		`,
 		ProvisionInputVariables: []broker.BrokerVariable{},
 		BindInputVariables:      []broker.BrokerVariable{},
+		BindComputedVariables:   accountmanagers.FixedRoleBindComputedVariables("cloudtrace.agent"),
 		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
 		Examples: []broker.ServiceExample{
 			{

@@ -36,8 +36,3 @@ func (b *StackdriverProfilerBroker) Provision(ctx context.Context, instanceId st
 func (b *StackdriverProfilerBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (*string, error) {
 	return nil, nil
 }
-
-// Bind creates a service account with access to Stackdriver Profiler.
-func (b *StackdriverProfilerBroker) Bind(ctx context.Context, instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error) {
-	return b.AccountManager.CreateAccountWithRoles(ctx, bindingID, []string{"cloudprofiler.agent"})
-}

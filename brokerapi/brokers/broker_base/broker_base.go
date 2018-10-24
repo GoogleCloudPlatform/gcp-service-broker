@@ -37,8 +37,8 @@ type BrokerBase struct {
 
 // Bind creates a service account with access to the provisioned resource with
 // the given instance.
-func (b *BrokerBase) Bind(ctx context.Context, instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error) {
-	return b.AccountManager.CreateCredentials(ctx, bindingID, details, instance)
+func (b *BrokerBase) Bind(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error) {
+	return b.AccountManager.CreateCredentials(ctx, vc)
 }
 
 // BuildInstanceCredentials combines the bind credentials with the connection
