@@ -196,20 +196,114 @@ func commonProvisionVariables() []broker.BrokerVariable {
 func commonBindOutputVariables() []broker.BrokerVariable {
 	return append(accountmanagers.ServiceAccountBindOutputVariables(), []broker.BrokerVariable{
 		// Certificate
-		{FieldName: "CaCert", Type: broker.JsonTypeString, Details: "The server Certificate Authority's certificate."},
-		{FieldName: "ClientCert", Type: broker.JsonTypeString, Details: "The client certificate. For First Generation instances, the new certificate does not take effect until the instance is restarted."},
-		{FieldName: "ClientKey", Type: broker.JsonTypeString, Details: "The client certificate key."},
-		{FieldName: "Sha1Fingerprint", Type: broker.JsonTypeString, Details: "The SHA1 fingerprint of the client certificate."},
+		{
+			FieldName: "CaCert",
+			Type:      broker.JsonTypeString,
+			Details:   "The server Certificate Authority's certificate.",
+			Required:  true,
+			Constraints: validation.NewConstraintBuilder().
+				Examples("-----BEGIN CERTIFICATE-----BASE64 Certificate Text-----END CERTIFICATE-----").
+				Build(),
+		},
+		{
+			FieldName: "ClientCert",
+			Type:      broker.JsonTypeString,
+			Details:   "The client certificate. For First Generation instances, the new certificate does not take effect until the instance is restarted.",
+			Required:  true,
+			Constraints: validation.NewConstraintBuilder().
+				Examples("-----BEGIN CERTIFICATE-----BASE64 Certificate Text-----END CERTIFICATE-----").
+				Build(),
+		},
+		{
+			FieldName: "ClientKey",
+			Type:      broker.JsonTypeString,
+			Details:   "The client certificate key.",
+			Required:  true,
+			Constraints: validation.NewConstraintBuilder().
+				Examples("-----BEGIN RSA PRIVATE KEY-----BASE64 Key Text-----END RSA PRIVATE KEY-----").
+				Build(),
+		},
+		{
+			FieldName: "Sha1Fingerprint",
+			Type:      broker.JsonTypeString,
+			Details:   "The SHA1 fingerprint of the client certificate.",
+			Required:  true,
+			Constraints: validation.NewConstraintBuilder().
+				Examples("e6d0c68f35032c6c2132217d1f1fb06b12ed32e2").
+				Pattern(`^[0-9a-f]{40}$`).
+				Build(),
+		},
 
 		// Connection URI
-		{FieldName: "UriPrefix", Type: broker.JsonTypeString, Details: "The connection prefix e.g. `mysql` or `postgres`."},
-		{FieldName: "Username", Type: broker.JsonTypeString, Details: "The name of the SQL user provisioned."},
-		{FieldName: "database_name", Type: broker.JsonTypeString, Details: "The name of the database on the instance."},
-		{FieldName: "host", Type: broker.JsonTypeString, Details: "The hostname or ip of the database instance."},
-		{FieldName: "instance_name", Type: broker.JsonTypeString, Details: "The name of the database instance."},
-		{FieldName: "uri", Type: broker.JsonTypeString, Details: "A database connection string."},
-
-		{FieldName: "last_master_operation_id", Type: broker.JsonTypeString, Details: "(GCP internals) The id of the last operation on the database."},
-		{FieldName: "region", Type: broker.JsonTypeString, Details: "The region the database is in."},
+		{
+			FieldName:   "UriPrefix",
+			Type:        broker.JsonTypeString,
+			Details:     "The connection prefix.",
+			Required:    false,
+			Constraints: validation.NewConstraintBuilder().Examples("jdbc:", "").Build(),
+		},
+		{
+			FieldName:   "Username",
+			Type:        broker.JsonTypeString,
+			Details:     "The name of the SQL user provisioned.",
+			Required:    true,
+			Constraints: validation.NewConstraintBuilder().Examples("sb15404128767777").Build(),
+		},
+		{
+			FieldName:   "Password",
+			Type:        broker.JsonTypeString,
+			Details:     "The database password for the SQL user.",
+			Required:    true,
+			Constraints: validation.NewConstraintBuilder().Examples("N-JPz7h2RHPZ81jB5gDHdnluddnIFMWG4nd5rKjR_8A=").Build(),
+		},
+		{
+			FieldName:   "database_name",
+			Type:        broker.JsonTypeString,
+			Details:     "The name of the database on the instance.",
+			Required:    true,
+			Constraints: validation.NewConstraintBuilder().Examples("pcf-sb-2-1540412407295372465").Build(),
+		},
+		{
+			FieldName:   "host",
+			Type:        broker.JsonTypeString,
+			Details:     "The hostname or IP address of the database instance.",
+			Required:    true,
+			Constraints: validation.NewConstraintBuilder().Examples("127.0.0.1").Build(),
+		},
+		{
+			FieldName: "instance_name",
+			Type:      broker.JsonTypeString,
+			Details:   "The name of the database instance.",
+			Required:  true,
+			Constraints: validation.NewConstraintBuilder().
+				Examples("pcf-sb-1-1540412407295273023").
+				Pattern("^[a-z][a-z0-9-]+$").
+				MaxLength(84).
+				Build(),
+		},
+		{
+			FieldName:   "uri",
+			Type:        broker.JsonTypeString,
+			Details:     "A database connection string.",
+			Required:    true,
+			Constraints: validation.NewConstraintBuilder().Examples("mysql://user:pass@127.0.0.1/pcf-sb-2-1540412407295372465?ssl_mode=required").Build(),
+		},
+		{
+			FieldName:   "last_master_operation_id",
+			Type:        broker.JsonTypeString,
+			Details:     "(deprecated) The id of the last operation on the database.",
+			Required:    false,
+			Constraints: validation.NewConstraintBuilder().Examples("mysql://user:pass@127.0.0.1/pcf-sb-2-1540412407295372465?ssl_mode=required").Build(),
+		},
+		{
+			FieldName: "region",
+			Type:      broker.JsonTypeString,
+			Details:   "The region the database is in.",
+			Required:  true,
+			Constraints: validation.NewConstraintBuilder().
+				Pattern("^[A-Za-z][-a-z0-9A-Z]+$").
+				Examples("northamerica-northeast1", "southamerica-east1", "us-east1").
+				Build(),
+		},
 	}...)
 }

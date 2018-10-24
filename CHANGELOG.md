@@ -14,9 +14,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - New `coldline` Cloud Storage plan.
 - Ability to create custom Cloud Storage plans.
 - New tile form for creating custom Cloud Storage plans.
+- Examples of binding variables to the docs.
+- Constraints/validation of the binding variables to the docs.
 
 ### Changed
 - Role whitelists are now validated through JSON Schema checks.
+- The `run-examples` sub-command now evaluates the credentials against the JSON Schema, improving robustness.
 
 ### Fixed
 - Fixed issue where Cloud Datastore service accounts were getting the same name.

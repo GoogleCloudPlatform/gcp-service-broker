@@ -111,7 +111,13 @@ func serviceDefinition() *broker.BrokerService {
 			broker.BrokerVariable{
 				FieldName: "bucket_name",
 				Type:      broker.JsonTypeString,
-				Details:   "Name of the bucket this binding is for",
+				Details:   "Name of the bucket this binding is for.",
+				Required:  true,
+				Constraints: validation.NewConstraintBuilder(). // https://cloud.google.com/storage/docs/naming
+										Pattern("^[A-Za-z0-9_\\.]+$").
+										MinLength(3).
+										MaxLength(222).
+										Build(),
 			},
 		),
 		PlanVariables: []broker.BrokerVariable{
