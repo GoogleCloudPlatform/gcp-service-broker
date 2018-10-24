@@ -15,6 +15,7 @@
 package cloudsql
 
 import (
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
@@ -26,7 +27,7 @@ func init() {
 
 func mysqlServiceDefinition() *broker.BrokerService {
 	return &broker.BrokerService{
-		Name: "google-cloudsql-mysql",
+		Name: models.CloudsqlMySQLName,
 		DefaultServiceDefinition: `{
 		    "id": "4bc59b9a-8520-409f-85da-1c7552315863",
 		    "description": "Google Cloud SQL is a fully-managed MySQL database service.",
@@ -241,7 +242,7 @@ func mysqlServiceDefinition() *broker.BrokerService {
 			{Name: "_", Default: `${assert(disk_size <= max_disk_size, "disk size (${disk_size}) is greater than max allowed disk size for this plan (${max_disk_size})")}`, Overwrite: true},
 		},
 		DefaultRoleWhitelist:  roleWhitelist(),
-		BindInputVariables:    commonBindVariables(),
+		BindInputVariables:    commonBindVariables(models.CloudsqlMySQLName),
 		BindOutputVariables:   commonBindOutputVariables(),
 		BindComputedVariables: commonBindComputedVariables(),
 		PlanVariables: []broker.BrokerVariable{

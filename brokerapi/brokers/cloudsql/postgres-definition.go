@@ -15,6 +15,7 @@
 package cloudsql
 
 import (
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
@@ -26,7 +27,7 @@ func init() {
 
 func postgresServiceDefinition() *broker.BrokerService {
 	return &broker.BrokerService{
-		Name: "google-cloudsql-postgres",
+		Name: models.CloudsqlPostgresName,
 		DefaultServiceDefinition: `{
         "id": "cbad6d78-a73c-432d-b8ff-b219a17a803a",
         "description": "Google Cloud SQL is a fully-managed PostgreSQL database service.",
@@ -195,7 +196,7 @@ func postgresServiceDefinition() *broker.BrokerService {
 		},
 
 		DefaultRoleWhitelist:  roleWhitelist(),
-		BindInputVariables:    commonBindVariables(),
+		BindInputVariables:    commonBindVariables(models.CloudsqlPostgresName),
 		BindOutputVariables:   commonBindOutputVariables(),
 		BindComputedVariables: commonBindComputedVariables(),
 		PlanVariables: []broker.BrokerVariable{

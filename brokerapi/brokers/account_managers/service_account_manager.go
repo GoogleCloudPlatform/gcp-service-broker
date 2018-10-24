@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
+	"github.com/spf13/viper"
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/jwt"
@@ -50,15 +51,6 @@ func (sam *ServiceAccountManager) CreateCredentials(ctx context.Context, binding
 	role, err := extractRole(details)
 	if err != nil {
 		return nil, err
-	}
-
-	bkr, err := broker.GetServiceById(details.ServiceID)
-	if err != nil {
-		return nil, err
-	}
-
-	if bkr.IsRoleWhitelistEnabled() && !whitelistAllows(bkr.RoleWhitelist(), role) {
-		return nil, fmt.Errorf("The role %s is not allowed for this service. You must use one of %v.", role, bkr.RoleWhitelist())
 	}
 
 	return sam.CreateAccountWithRoles(ctx, bindingID, []string{role})
@@ -232,11 +224,16 @@ type ServiceAccountInfo struct {
 	PrivateKeyData string `json:"PrivateKeyData"`
 }
 
-func ServiceAccountBindInputVariables(roleWhitelist []string) []broker.BrokerVariable {
-	defaultRoles := strings.Join(roleWhitelist, "', '")
+func ServiceAccountBindInputVariables(serviceName string, defaultWhitelist []string) []broker.BrokerVariable {
 	details := fmt.Sprintf(`The role for the account without the "roles/" prefix.
 		See: https://cloud.google.com/iam/docs/understanding-roles for more details.
-		The following roles are available by default but may be overridden by your operator: '%s'.`, defaultRoles)
+		Note: The default enumeration may be overridden by your operator.`)
+
+	whitelist := roleWhitelist(serviceName, defaultWhitelist)
+	whitelistEnum := make(map[interface{}]string)
+	for _, val := range whitelist {
+		whitelistEnum[val] = roleResourcePrefix + val
+	}
 
 	return []broker.BrokerVariable{
 		{
@@ -244,6 +241,7 @@ func ServiceAccountBindInputVariables(roleWhitelist []string) []broker.BrokerVar
 			FieldName: "role",
 			Type:      broker.JsonTypeString,
 			Details:   details,
+			Enum:      whitelistEnum,
 		},
 	}
 }
@@ -281,4 +279,22 @@ func ServiceAccountBindOutputVariables() []broker.BrokerVariable {
 
 func whitelistAllows(whitelist []string, role string) bool {
 	return NewStringSet(whitelist...).Contains(role)
+}
+
+// RoleWhitelistProperty computes the Viper property name for the boolean the user
+// can set to enable or disable the role whitelist.
+func RoleWhitelistProperty(serviceName string) string {
+	return fmt.Sprintf("service.%s.whitelist", serviceName)
+}
+
+// roleWhitelist returns the whitelist of roles the operator has allowed or the
+// default if it is blank.
+func roleWhitelist(serviceName string, defaultRoleWhitelist []string) []string {
+	rawWhitelist := viper.GetString(RoleWhitelistProperty(serviceName))
+	wl := strings.Split(rawWhitelist, ",")
+	if strings.TrimSpace(rawWhitelist) != "" {
+		return wl
+	}
+
+	return defaultRoleWhitelist
 }

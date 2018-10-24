@@ -15,9 +15,11 @@
 package account_managers
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/pivotal-cf/brokerapi"
+	"github.com/spf13/viper"
 )
 
 func TestWhitelistAllows(t *testing.T) {
@@ -76,4 +78,26 @@ func TestExtractRole(t *testing.T) {
 			t.Errorf("%s) expected error? %v got: %s", name, testcase.ShouldError, err)
 		}
 	}
+}
+
+func ExampleRoleWhitelistProperty() {
+	serviceName := "left-handed-smoke-sifter"
+
+	fmt.Println(RoleWhitelistProperty(serviceName))
+
+	// Output: service.left-handed-smoke-sifter.whitelist
+}
+
+func ExampleroleWhitelist() {
+	serviceName := "my-service"
+	defaultRoleWhitelist := []string{"a", "b", "c"}
+
+	viper.Set(RoleWhitelistProperty(serviceName), "")
+	fmt.Println(roleWhitelist(serviceName, defaultRoleWhitelist))
+
+	viper.Set(RoleWhitelistProperty(serviceName), "x,y,z")
+	fmt.Println(roleWhitelist(serviceName, defaultRoleWhitelist))
+
+	// Output: [a b c]
+	// [x y z]
 }

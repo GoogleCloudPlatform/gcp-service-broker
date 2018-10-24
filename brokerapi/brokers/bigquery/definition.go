@@ -16,6 +16,7 @@ package bigquery
 
 import (
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 )
@@ -34,7 +35,7 @@ func serviceDefinition() *broker.BrokerService {
 	}
 
 	return &broker.BrokerService{
-		Name: "google-bigquery",
+		Name: models.BigqueryName,
 		DefaultServiceDefinition: `{
         "id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
         "description": "A fast, economical and fully managed data warehouse for large-scale data analytics.",
@@ -83,7 +84,7 @@ func serviceDefinition() *broker.BrokerService {
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
+		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.BigqueryName, roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "dataset_id",

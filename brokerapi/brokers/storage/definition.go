@@ -16,6 +16,7 @@ package storage
 
 import (
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 )
@@ -32,7 +33,7 @@ func serviceDefinition() *broker.BrokerService {
 	}
 
 	return &broker.BrokerService{
-		Name: "google-storage",
+		Name: models.StorageName,
 		DefaultServiceDefinition: `{
 	        "id": "b9e4332e-b42b-4680-bda5-ea1506797474",
 	        "description": "Unified object storage for developers and enterprises. Cloud Storage allows world-wide storage and retrieval of any amount of data at any time.",
@@ -105,7 +106,7 @@ func serviceDefinition() *broker.BrokerService {
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
+		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.StorageName, roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "bucket_name",

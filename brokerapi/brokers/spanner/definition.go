@@ -16,6 +16,7 @@ package spanner
 
 import (
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 )
@@ -33,7 +34,7 @@ func serviceDefinition() *broker.BrokerService {
 	}
 
 	return &broker.BrokerService{
-		Name: "google-spanner",
+		Name: models.SpannerName,
 		DefaultServiceDefinition: `
 		{
 			"id": "51b3e27e-d323-49ce-8c5f-1211e6409e82",
@@ -103,7 +104,7 @@ func serviceDefinition() *broker.BrokerService {
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
+		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.SpannerName, roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "instance_id",

@@ -16,6 +16,7 @@ package bigtable
 
 import (
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 )
@@ -32,7 +33,7 @@ func serviceDefinition() *broker.BrokerService {
 	}
 
 	return &broker.BrokerService{
-		Name: "google-bigtable",
+		Name: models.BigtableName,
 		DefaultServiceDefinition: `{
       "id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe",
       "description": "A high performance NoSQL database service for large analytical and operational workloads.",
@@ -117,7 +118,7 @@ func serviceDefinition() *broker.BrokerService {
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(roleWhitelist),
+		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.BigtableName, roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "instance_id",

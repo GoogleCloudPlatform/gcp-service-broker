@@ -56,16 +56,6 @@ func ExampleBrokerService_UserDefinedPlansProperty() {
 	// Output: service.left-handed-smoke-sifter.plans
 }
 
-func ExampleBrokerService_RoleWhitelistProperty() {
-	service := BrokerService{
-		Name: "left-handed-smoke-sifter",
-	}
-
-	fmt.Println(service.RoleWhitelistProperty())
-
-	// Output: service.left-handed-smoke-sifter.whitelist
-}
-
 func ExampleBrokerService_IsEnabled() {
 	service := BrokerService{
 		Name: "left-handed-smoke-sifter",
@@ -93,21 +83,6 @@ func ExampleBrokerService_IsRoleWhitelistEnabled() {
 
 	// Output: true
 	// false
-}
-
-func ExampleBrokerService_RoleWhitelist() {
-	service := BrokerService{
-		Name:                 "my-service",
-		DefaultRoleWhitelist: []string{"a", "b", "c"},
-	}
-	viper.Set(service.RoleWhitelistProperty(), "")
-	fmt.Println(service.RoleWhitelist())
-
-	viper.Set(service.RoleWhitelistProperty(), "x,y,z")
-	fmt.Println(service.RoleWhitelist())
-
-	// Output: [a b c]
-	// [x y z]
 }
 
 func ExampleBrokerService_TileUserDefinedPlansVariable() {
