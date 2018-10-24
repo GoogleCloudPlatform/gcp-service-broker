@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
@@ -40,6 +41,7 @@ const projectResourcePrefix = "projects/"
 type ServiceAccountManager struct {
 	ProjectId  string
 	HttpConfig *jwt.Config
+	Logger     lager.Logger
 }
 
 // If roleWhitelist is specified, then the extracted role is validated against it and an error is returned if
@@ -52,6 +54,12 @@ func (sam *ServiceAccountManager) CreateCredentials(ctx context.Context, vc *var
 	if err := vc.Error(); err != nil {
 		return nil, err
 	}
+
+	sam.Logger.Info("create-service-account", lager.Data{
+		"role":                         role,
+		"service_account_name":         accountId,
+		"service_account_display_name": displayName,
+	})
 
 	// create and save account
 	newSA, err := sam.createServiceAccount(ctx, accountId, displayName)

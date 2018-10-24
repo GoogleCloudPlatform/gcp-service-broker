@@ -65,6 +65,7 @@ func New(cfg *config.BrokerConfig, logger lager.Logger) (*GCPServiceBroker, erro
 	saManager := &account_managers.ServiceAccountManager{
 		HttpConfig: cfg.HttpConfig,
 		ProjectId:  cfg.ProjectId,
+		Logger:     self.Logger,
 	}
 
 	bb := broker_base.BrokerBase{

@@ -24,7 +24,6 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models/modelsfakes"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
@@ -65,8 +64,6 @@ var _ = Describe("Brokers", func() {
 		Expect(err).NotTo(HaveOccurred())
 		db_service.RunMigrations(testDb)
 		db_service.DbConnection = testDb
-
-		name_generator.New()
 
 		os.Setenv("ROOT_SERVICE_ACCOUNT_JSON", `{
 			"type": "service_account",
@@ -449,7 +446,6 @@ var _ = Describe("AccountManagers", func() {
 		Expect(err).NotTo(HaveOccurred())
 		db_service.RunMigrations(testDb)
 		db_service.DbConnection = testDb
-		name_generator.New()
 
 		accountManager = modelsfakes.FakeServiceAccountManager{
 			CreateCredentialsStub: func(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error) {
