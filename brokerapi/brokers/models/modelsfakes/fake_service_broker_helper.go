@@ -42,12 +42,12 @@ type FakeServiceBrokerHelper struct {
 		result1 map[string]interface{}
 		result2 error
 	}
-	BuildInstanceCredentialsStub        func(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]interface{}, error)
+	BuildInstanceCredentialsStub        func(ctx context.Context, bindRecord models.ServiceBindingCredentials, instance models.ServiceInstanceDetails) (map[string]interface{}, error)
 	buildInstanceCredentialsMutex       sync.RWMutex
 	buildInstanceCredentialsArgsForCall []struct {
-		ctx            context.Context
-		bindRecord     models.ServiceBindingCredentials
-		instanceRecord models.ServiceInstanceDetails
+		ctx        context.Context
+		bindRecord models.ServiceBindingCredentials
+		instance   models.ServiceInstanceDetails
 	}
 	buildInstanceCredentialsReturns struct {
 		result1 map[string]interface{}
@@ -57,11 +57,12 @@ type FakeServiceBrokerHelper struct {
 		result1 map[string]interface{}
 		result2 error
 	}
-	UnbindStub        func(ctx context.Context, details models.ServiceBindingCredentials) error
+	UnbindStub        func(ctx context.Context, instance models.ServiceInstanceDetails, details models.ServiceBindingCredentials) error
 	unbindMutex       sync.RWMutex
 	unbindArgsForCall []struct {
-		ctx     context.Context
-		details models.ServiceBindingCredentials
+		ctx      context.Context
+		instance models.ServiceInstanceDetails
+		details  models.ServiceBindingCredentials
 	}
 	unbindReturns struct {
 		result1 error
@@ -240,18 +241,18 @@ func (fake *FakeServiceBrokerHelper) BindReturnsOnCall(i int, result1 map[string
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]interface{}, error) {
+func (fake *FakeServiceBrokerHelper) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instance models.ServiceInstanceDetails) (map[string]interface{}, error) {
 	fake.buildInstanceCredentialsMutex.Lock()
 	ret, specificReturn := fake.buildInstanceCredentialsReturnsOnCall[len(fake.buildInstanceCredentialsArgsForCall)]
 	fake.buildInstanceCredentialsArgsForCall = append(fake.buildInstanceCredentialsArgsForCall, struct {
-		ctx            context.Context
-		bindRecord     models.ServiceBindingCredentials
-		instanceRecord models.ServiceInstanceDetails
-	}{ctx, bindRecord, instanceRecord})
-	fake.recordInvocation("BuildInstanceCredentials", []interface{}{ctx, bindRecord, instanceRecord})
+		ctx        context.Context
+		bindRecord models.ServiceBindingCredentials
+		instance   models.ServiceInstanceDetails
+	}{ctx, bindRecord, instance})
+	fake.recordInvocation("BuildInstanceCredentials", []interface{}{ctx, bindRecord, instance})
 	fake.buildInstanceCredentialsMutex.Unlock()
 	if fake.BuildInstanceCredentialsStub != nil {
-		return fake.BuildInstanceCredentialsStub(ctx, bindRecord, instanceRecord)
+		return fake.BuildInstanceCredentialsStub(ctx, bindRecord, instance)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -268,7 +269,7 @@ func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsCallCount() int {
 func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsArgsForCall(i int) (context.Context, models.ServiceBindingCredentials, models.ServiceInstanceDetails) {
 	fake.buildInstanceCredentialsMutex.RLock()
 	defer fake.buildInstanceCredentialsMutex.RUnlock()
-	return fake.buildInstanceCredentialsArgsForCall[i].ctx, fake.buildInstanceCredentialsArgsForCall[i].bindRecord, fake.buildInstanceCredentialsArgsForCall[i].instanceRecord
+	return fake.buildInstanceCredentialsArgsForCall[i].ctx, fake.buildInstanceCredentialsArgsForCall[i].bindRecord, fake.buildInstanceCredentialsArgsForCall[i].instance
 }
 
 func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsReturns(result1 map[string]interface{}, result2 error) {
@@ -293,17 +294,18 @@ func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsReturnsOnCall(i int
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) Unbind(ctx context.Context, details models.ServiceBindingCredentials) error {
+func (fake *FakeServiceBrokerHelper) Unbind(ctx context.Context, instance models.ServiceInstanceDetails, details models.ServiceBindingCredentials) error {
 	fake.unbindMutex.Lock()
 	ret, specificReturn := fake.unbindReturnsOnCall[len(fake.unbindArgsForCall)]
 	fake.unbindArgsForCall = append(fake.unbindArgsForCall, struct {
-		ctx     context.Context
-		details models.ServiceBindingCredentials
-	}{ctx, details})
-	fake.recordInvocation("Unbind", []interface{}{ctx, details})
+		ctx      context.Context
+		instance models.ServiceInstanceDetails
+		details  models.ServiceBindingCredentials
+	}{ctx, instance, details})
+	fake.recordInvocation("Unbind", []interface{}{ctx, instance, details})
 	fake.unbindMutex.Unlock()
 	if fake.UnbindStub != nil {
-		return fake.UnbindStub(ctx, details)
+		return fake.UnbindStub(ctx, instance, details)
 	}
 	if specificReturn {
 		return ret.result1
@@ -317,10 +319,10 @@ func (fake *FakeServiceBrokerHelper) UnbindCallCount() int {
 	return len(fake.unbindArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) UnbindArgsForCall(i int) (context.Context, models.ServiceBindingCredentials) {
+func (fake *FakeServiceBrokerHelper) UnbindArgsForCall(i int) (context.Context, models.ServiceInstanceDetails, models.ServiceBindingCredentials) {
 	fake.unbindMutex.RLock()
 	defer fake.unbindMutex.RUnlock()
-	return fake.unbindArgsForCall[i].ctx, fake.unbindArgsForCall[i].details
+	return fake.unbindArgsForCall[i].ctx, fake.unbindArgsForCall[i].instance, fake.unbindArgsForCall[i].details
 }
 
 func (fake *FakeServiceBrokerHelper) UnbindReturns(result1 error) {
