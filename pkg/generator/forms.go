@@ -157,7 +157,7 @@ func generateDefaultOverrideForm() Form {
 			continue
 		}
 
-		formElement := FormProperty{
+		provisionForm := FormProperty{
 			Name:         strings.ToLower(utils.PropertyToEnv(svc.ProvisionDefaultOverrideProperty())),
 			Label:        fmt.Sprintf("Provision default override %s instances.", entry.Metadata.DisplayName),
 			Description:  "A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default.",
@@ -165,8 +165,17 @@ func generateDefaultOverrideForm() Form {
 			Default:      "{}",
 			Configurable: true,
 		}
+		formElements = append(formElements, provisionForm)
 
-		formElements = append(formElements, formElement)
+		bindForm := FormProperty{
+			Name:         strings.ToLower(utils.PropertyToEnv(svc.BindDefaultOverrideProperty())),
+			Label:        fmt.Sprintf("Bind default override %s instances.", entry.Metadata.DisplayName),
+			Description:  "A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default.",
+			Type:         "text",
+			Default:      "{}",
+			Configurable: true,
+		}
+		formElements = append(formElements, bindForm)
 	}
 
 	return Form{

@@ -493,7 +493,7 @@ var _ = Describe("AccountManagers", func() {
 	Describe("unbind", func() {
 		Context("when unbind is called on the broker", func() {
 			It("it should call the account manager delete account from google method", func() {
-				err = iamStyleBroker.Unbind(context.Background(), models.ServiceBindingCredentials{})
+				err = iamStyleBroker.Unbind(context.Background(), models.ServiceInstanceDetails{}, models.ServiceBindingCredentials{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.DeleteCredentialsCallCount()).To(Equal(1))
 			})

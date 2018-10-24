@@ -150,6 +150,30 @@ func (svc *BrokerService) IsRoleWhitelistEnabled() bool {
 	return len(svc.DefaultRoleWhitelist) > 0
 }
 
+// BindDefaultOverrideProperty returns the Viper property name for the
+// object users can set to override the default values on bind.
+func (svc *BrokerService) BindDefaultOverrideProperty() string {
+	return fmt.Sprintf("service.%s.bind.defaults", svc.Name)
+}
+
+// BindDefaultOverrides returns the deserialized JSON object for the
+// operator-provided property overrides.
+func (svc *BrokerService) BindDefaultOverrides() map[string]interface{} {
+	return viper.GetStringMap(svc.BindDefaultOverrideProperty())
+}
+
+// RoleWhitelist returns the whitelist of roles the operator has allowed or the
+// default if it is blank.
+func (svc *BrokerService) RoleWhitelist() []string {
+	rawWhitelist := viper.GetString(svc.RoleWhitelistProperty())
+	wl := strings.Split(rawWhitelist, ",")
+	if strings.TrimSpace(rawWhitelist) != "" {
+		return wl
+	}
+
+	return svc.DefaultRoleWhitelist
+}
+
 // TileUserDefinedPlansVariable returns the name of the user defined plans
 // variable for the broker tile.
 func (svc *BrokerService) TileUserDefinedPlansVariable() string {
@@ -297,6 +321,14 @@ func (svc *BrokerService) provisionDefaults() []varcontext.DefaultVariable {
 	return out
 }
 
+func (svc *BrokerService) bindDefaults() []varcontext.DefaultVariable {
+	var out []varcontext.DefaultVariable
+	for _, v := range svc.BindInputVariables {
+		out = append(out, varcontext.DefaultVariable{Name: v.FieldName, Default: v.Default, Overwrite: false})
+	}
+	return out
+}
+
 // ProvisionVariables gets the variable resolution context for a provision request.
 // Variables have a very specific resolution order, and this function populates the context to preserve that.
 // The variable resolution order is the following:
@@ -304,7 +336,7 @@ func (svc *BrokerService) provisionDefaults() []varcontext.DefaultVariable {
 // 1. Variables defined in your `computed_variables` JSON list.
 // 2. Variables defined by the selected service plan in its `service_properties` map.
 // 3. User defined variables (in `provision_input_variables` or `bind_input_variables`)
-// 4. (eventually) Operator default variables loaded from the environment.
+// 4. Operator default variables loaded from the environment.
 // 5. Default variables (in `provision_input_variables` or `bind_input_variables`).
 //
 // Loading into the map occurs slightly differently.
@@ -317,10 +349,11 @@ func (svc *BrokerService) provisionDefaults() []varcontext.DefaultVariable {
 func (svc *BrokerService) ProvisionVariables(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (*varcontext.VarContext, error) {
 	defaults := svc.provisionDefaults()
 
+	// The namespaces of these values roughly align with the OSB spec.
 	constants := map[string]interface{}{
-		"request.plan.id":        details.PlanID,
-		"request.service.id":     details.ServiceID,
-		"request.instance.id":    details.ServiceID,
+		"request.plan_id":        details.PlanID,
+		"request.service_id":     details.ServiceID,
+		"request.instance_id":    instanceId,
 		"request.default_labels": utils.ExtractDefaultLabels(instanceId, details),
 	}
 
@@ -331,5 +364,57 @@ func (svc *BrokerService) ProvisionVariables(instanceId string, details brokerap
 		MergeDefaults(defaults).
 		MergeMap(plan.GetServiceProperties()).
 		MergeDefaults(svc.ProvisionComputedVariables).
+		Build()
+}
+
+// BindVariables gets the variable resolution context for a bind request.
+// Variables have a very specific resolution order, and this function populates the context to preserve that.
+// The variable resolution order is the following:
+//
+// 1. Variables defined in your `computed_variables` JSON list.
+// 3. User defined variables (in `bind_input_variables`)
+// 4. Operator default variables loaded from the environment.
+// 5. Default variables (in `bind_input_variables`).
+//
+func (svc *BrokerService) BindVariables(instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (*varcontext.VarContext, error) {
+	defaults := svc.bindDefaults()
+
+	otherDetails := make(map[string]interface{})
+	if instance.OtherDetails != "" {
+		if err := json.Unmarshal(json.RawMessage(instance.OtherDetails), &otherDetails); err != nil {
+			return nil, err
+		}
+	}
+
+	appGuid := ""
+	if details.BindResource != nil {
+		appGuid = details.BindResource.AppGuid
+	}
+
+	// The namespaces of these values roughly align with the OSB spec.
+	constants := map[string]interface{}{
+		// specified in the URL
+		"request.binding_id":  bindingID,
+		"request.instance_id": instance.ID,
+
+		// specified in the request body
+		// Note: the value in instance is considered the official record so values
+		// are pulled from there rather than the request. In a future version of OSB
+		// the duplicate sending of fields is likely to be removed.
+		"request.plan_id":    instance.PlanId,
+		"request.service_id": instance.ServiceId,
+		"request.app_guid":   appGuid,
+
+		// specified by the existing instance
+		"instance.name":    instance.Name,
+		"instance.details": otherDetails,
+	}
+
+	return varcontext.Builder().
+		SetEvalConstants(constants).
+		MergeMap(svc.BindDefaultOverrides()).
+		MergeJsonObject(details.GetRawParameters()).
+		MergeDefaults(defaults).
+		MergeDefaults(svc.BindComputedVariables).
 		Build()
 }

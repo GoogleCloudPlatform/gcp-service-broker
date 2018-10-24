@@ -56,7 +56,7 @@ func (b *BrokerBase) BuildInstanceCredentials(ctx context.Context, bindRecord mo
 }
 
 // Unbind deletes the created service account from the GCP Project.
-func (b *BrokerBase) Unbind(ctx context.Context, creds models.ServiceBindingCredentials) error {
+func (b *BrokerBase) Unbind(ctx context.Context, instance models.ServiceInstanceDetails, creds models.ServiceBindingCredentials) error {
 	return b.AccountManager.DeleteCredentials(ctx, creds)
 }
 

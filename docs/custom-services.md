@@ -7,14 +7,14 @@ This documentation is for an **UNRELEASED** upcoming feature for the GCP Service
 The variables fed into your Terraform services file are resolved in the following order:
 
 * Variables defined in your `computed_variables` JSON list.
-* Variables defined by the selected service plan in its `service_properties` map.
+* (Only for Provision) Variables defined by the selected service plan in its `service_properties` map.
 * User defined variables (in `provision_input_variables` or `bind_input_variables`)
-* **TODO** Operator default variables loaded from the environment.
+* Operator default variables loaded from the environment.
 * Default variables (in `provision_input_variables` or `bind_input_variables`).
 
 Note that the order the variables are combined in code is slightly different.
 
-* **TODO** Operator default variables loaded from the environment.
+* Operator default variables loaded from the environment.
 * User defined variables (in `provision_input_variables` or `bind_input_variables`)
 * **If the variables are not defined yet** default variables (in `provision_input_variables` or `bind_input_variables`).
 * Variables defined by the selected service plan in its `service_properties` map.
@@ -57,11 +57,20 @@ The broker makes additional variables available to be used during provision and 
 
 ### Provision
 
-* `request.service.id` - _string_ The GUID of the requested service.
-* `request.plan.id` - _string_ The ID of the requested plan. Plan IDs are unique within an instance.
-* `request.instance.id` - _string_ The ID of the requested instance. Instance IDs are unique within a service.
+* `request.service_id` - _string_ The GUID of the requested service.
+* `request.plan_id` - _string_ The ID of the requested plan. Plan IDs are unique within an instance.
+* `request.instance_id` - _string_ The ID of the requested instance. Instance IDs are unique within a service.
 * `request.default_labels` - _map[string]string_ A map of labels that should be applied to the created infrastructure for billing/accounting/tracking purposes.
 
+### Bind
+
+* `request.binding_id` - _string_ The ID of the new binding.
+* `request.instance_id` - _string_ The ID of the existing instance to bind to.
+* `request.service_id` - _string_ The GUID of the service this binding is for.
+* `request.plan_id` - _string_ The ID of plan the instance was created with.
+* `request.app_guid` - _string_ The ID of the application this binding is for.
+* `instance.name` - _string_ The name of the instance.
+* `instance.details` - _map[string]any_ Output variables of the instance as specified by ProvisionOutputVariables.
 
 ## Design guidelines
 
