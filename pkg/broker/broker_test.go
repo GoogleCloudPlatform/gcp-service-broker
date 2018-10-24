@@ -459,3 +459,125 @@ func TestBrokerService_ProvisionVariables(t *testing.T) {
 		})
 	}
 }
+
+func TestBrokerService_BindVariables(t *testing.T) {
+	service := BrokerService{
+		Name: "left-handed-smoke-sifter",
+		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
+		BindInputVariables: []BrokerVariable{
+			{
+				FieldName: "location",
+				Type:      JsonTypeString,
+				Default:   "us",
+			},
+			{
+				FieldName: "name",
+				Type:      JsonTypeString,
+				Default:   "name-${location}",
+			},
+		},
+		BindComputedVariables: []varcontext.DefaultVariable{
+			{
+				Name:      "location",
+				Default:   "${str.truncate(10, location)}",
+				Overwrite: true,
+			},
+			{
+				Name:      "instance-foo",
+				Default:   `${instance.details["foo"]}`,
+				Overwrite: true,
+			},
+		},
+	}
+
+	cases := map[string]struct {
+		UserParams      string
+		DefaultOverride string
+		ExpectedContext map[string]interface{}
+		InstanceVars    string
+	}{
+		"empty": {
+			UserParams:   "",
+			InstanceVars: `{"foo":""}`,
+			ExpectedContext: map[string]interface{}{
+				"location":     "us",
+				"name":         "name-us",
+				"instance-foo": "",
+			},
+		},
+		"location gets truncated": {
+			UserParams:   `{"location": "averylonglocation"}`,
+			InstanceVars: `{"foo":"default"}`,
+			ExpectedContext: map[string]interface{}{
+				"location":     "averylongl",
+				"name":         "name-averylonglocation",
+				"instance-foo": "default",
+			},
+		},
+		"user location and name": {
+			UserParams:   `{"location": "eu", "name":"foo"}`,
+			InstanceVars: `{"foo":"default"}`,
+			ExpectedContext: map[string]interface{}{
+				"location":     "eu",
+				"name":         "foo",
+				"instance-foo": "default",
+			},
+		},
+		"operator defaults override computed defaults": {
+			UserParams:      "",
+			InstanceVars:    `{"foo":"default"}`,
+			DefaultOverride: `{"location":"eu"}`,
+			ExpectedContext: map[string]interface{}{
+				"location":     "eu",
+				"name":         "name-eu",
+				"instance-foo": "default",
+			},
+		},
+		"user values override operator defaults": {
+			UserParams:      `{"location":"nz"}`,
+			InstanceVars:    `{"foo":"default"}`,
+			DefaultOverride: `{"location":"eu"}`,
+			ExpectedContext: map[string]interface{}{
+				"location":     "nz",
+				"name":         "name-nz",
+				"instance-foo": "default",
+			},
+		},
+		"operator defaults are not evaluated": {
+			UserParams:      `{"location":"us"}`,
+			InstanceVars:    `{"foo":"default"}`,
+			DefaultOverride: `{"name":"foo-${location}"}`,
+			ExpectedContext: map[string]interface{}{
+				"location":     "us",
+				"name":         "foo-${location}",
+				"instance-foo": "default",
+			},
+		},
+		"instance info can get parsed": {
+			UserParams:   `{"location":"us"}`,
+			InstanceVars: `{"foo":"bar"}`,
+			ExpectedContext: map[string]interface{}{
+				"location":     "us",
+				"name":         "name-us",
+				"instance-foo": "bar",
+			},
+		},
+	}
+
+	for tn, tc := range cases {
+		t.Run(tn, func(t *testing.T) {
+			viper.Set(service.BindDefaultOverrideProperty(), tc.DefaultOverride)
+			details := brokerapi.BindDetails{RawParameters: json.RawMessage(tc.UserParams)}
+			instance := models.ServiceInstanceDetails{OtherDetails: tc.InstanceVars}
+			vars, err := service.BindVariables(instance, "binding-id-here", details)
+
+			if err != nil {
+				t.Fatalf("got error while creating provision variables: %v", err)
+			}
+
+			if !reflect.DeepEqual(vars.ToMap(), tc.ExpectedContext) {
+				t.Errorf("Expected context: %v got %v", tc.ExpectedContext, vars.ToMap())
+			}
+		})
+	}
+}
