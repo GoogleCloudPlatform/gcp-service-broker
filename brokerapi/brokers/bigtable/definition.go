@@ -132,6 +132,7 @@ func serviceDefinition() *broker.BrokerService {
 					Build(),
 			},
 		),
+		BindComputedVariables: accountmanagers.ServiceAccountBindComputedVariables(),
 		PlanVariables: []broker.BrokerVariable{
 			{
 				FieldName: "storage_type",

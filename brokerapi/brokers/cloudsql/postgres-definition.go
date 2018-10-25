@@ -183,6 +183,8 @@ func postgresServiceDefinition() *broker.BrokerService {
 			},
 		}, commonProvisionVariables()...),
 		ProvisionComputedVariables: []varcontext.DefaultVariable{
+			{Name: "labels", Default: `${json.marshal(request.default_labels)}`, Overwrite: true},
+
 			// legacy behavior dictates that empty values get defaults
 			{Name: "instance_name", Default: `${instance_name == "" ? "` + identifierTemplate + `" : instance_name}`, Overwrite: true},
 			{Name: "database_name", Default: `${database_name == "" ? "` + identifierTemplate + `" : database_name}`, Overwrite: true},

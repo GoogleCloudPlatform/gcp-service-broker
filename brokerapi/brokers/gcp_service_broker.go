@@ -169,17 +169,22 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrInstanceAlreadyExists
 	}
 
+	brokerService, err := broker.GetServiceById(details.ServiceID)
+	if err != nil {
+		return brokerapi.ProvisionedServiceSpec{}, err
+	}
+
 	serviceId := details.ServiceID
 
 	// verify the service exists and
-	plan, err := gcpBroker.getPlanFromId(serviceId, details.PlanID)
+	plan, err := brokerService.GetPlanById(details.PlanID)
 	if err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, err
 	}
 
 	// verify async provisioning is allowed if it is required
-	service := gcpBroker.ServiceBrokerMap[serviceId]
-	shouldProvisionAsync := service.ProvisionsAsync()
+	serviceHelper := gcpBroker.ServiceBrokerMap[serviceId]
+	shouldProvisionAsync := serviceHelper.ProvisionsAsync()
 	if shouldProvisionAsync && !clientSupportsAsync {
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrAsyncRequired
 	}
@@ -191,8 +196,13 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 		}
 	}
 
+	vars, err := brokerService.ProvisionVariables(instanceID, details, *plan)
+	if err != nil {
+		return brokerapi.ProvisionedServiceSpec{}, err
+	}
+
 	// get instance details
-	instanceDetails, err := service.Provision(ctx, instanceID, details, plan)
+	instanceDetails, err := serviceHelper.Provision(ctx, vars)
 	if err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, err
 	}

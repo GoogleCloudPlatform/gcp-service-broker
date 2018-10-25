@@ -17,12 +17,14 @@ package interpolation
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"regexp"
 	"sync/atomic"
 	"time"
 
+	"github.com/hashicorp/hil"
 	"github.com/hashicorp/hil/ast"
 	"github.com/spf13/cast"
 )
@@ -33,13 +35,14 @@ var hilStandardLibrary = createStandardLibrary()
 // to their names in a lookup table for our standard library.
 func createStandardLibrary() map[string]ast.Function {
 	return map[string]ast.Function{
-		"time.nano":      hilFuncTimeNano(),
-		"str.truncate":   hilFuncStrTruncate(),
+		"time.nano":       hilFuncTimeNano(),
+		"str.truncate":    hilFuncStrTruncate(),
 		"str.queryEscape": hilFuncStrQueryEscape(),
-		"regexp.matches": hilFuncRegexpMatches(),
-		"counter.next":   hilFuncCounterNext(),
-		"rand.base64":    hilFuncRandBase64(),
-		"assert":         hilFuncAssert(),
+		"regexp.matches":  hilFuncRegexpMatches(),
+		"counter.next":    hilFuncCounterNext(),
+		"rand.base64":     hilFuncRandBase64(),
+		"assert":          hilFuncAssert(),
+		"json.marshal":    hilFuncJsonMarshal(),
 	}
 }
 
@@ -145,5 +148,59 @@ func hilFuncAssert() ast.Function {
 
 			return true, nil
 		},
+	}
+}
+
+// hilFuncJsonMarshal marshals a value as JSON.
+func hilFuncJsonMarshal() ast.Function {
+	return ast.Function{
+		ArgTypes:   []ast.Type{ast.TypeAny},
+		ReturnType: ast.TypeString,
+		Callback: func(args []interface{}) (interface{}, error) {
+
+			unwrapped, err := hilToInterface(args[0])
+			if err != nil {
+				return nil, err
+			}
+			bytes, err := json.Marshal(unwrapped)
+			if err != nil {
+				return nil, fmt.Errorf("couldn't convert: %v to JSON %s", args[0], err)
+			}
+			return string(bytes), nil
+		},
+	}
+}
+
+func hilToInterface(arg interface{}) (interface{}, error) {
+	// The types here cover what HIL supports.
+	switch arg.(type) {
+	case map[string]ast.Variable:
+		out := make(map[string]interface{})
+		for key, v := range arg.(map[string]ast.Variable) {
+			val, verr := hilToInterface(v)
+			if verr != nil {
+				return nil, verr
+			}
+
+			out[key] = val
+		}
+		return out, nil
+
+	case []ast.Variable:
+		var out []interface{}
+		for _, v := range arg.([]ast.Variable) {
+			unwrapped, err := hil.VariableToInterface(v)
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, unwrapped)
+		}
+		return out, nil
+
+	case ast.Variable:
+		return hil.VariableToInterface(arg.(ast.Variable))
+
+	default:
+		return arg, nil
 	}
 }

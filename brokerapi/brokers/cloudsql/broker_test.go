@@ -256,11 +256,18 @@ func TestCreateProvisionRequest(t *testing.T) {
 			if plan == nil {
 				t.Fatalf("Expected plan with id %s to not be nil", tc.PlanId)
 			}
-			request, instanceInfo, err := createProvisionRequest("instance-id-here", details, *plan)
+
+			vars, err := tc.Service.ProvisionVariables("instance-id-here", details, *plan)
 			if err != nil {
 				if tc.ErrContains != "" && strings.Contains(err.Error(), tc.ErrContains) {
 					return
 				}
+
+				t.Fatalf("got error trying to get provision details %s %v", tc.PlanId, err)
+			}
+
+			request, instanceInfo, err := createProvisionRequest(vars)
+			if err != nil {
 
 				t.Fatalf("got unexpected error while creating provision request: %v", err)
 			}

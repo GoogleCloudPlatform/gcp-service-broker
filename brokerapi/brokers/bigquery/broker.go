@@ -21,7 +21,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
 	googlebigquery "google.golang.org/api/bigquery/v2"
 )
@@ -37,26 +37,21 @@ type InstanceInformation struct {
 }
 
 // Provision creates a new BigQuery dataset from the settings in the user-provided details and service plan.
-func (b *BigQueryBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
-	variableContext, err := serviceDefinition().ProvisionVariables(instanceId, details, plan)
-	if err != nil {
-		return models.ServiceInstanceDetails{}, err
-	}
-
+func (b *BigQueryBroker) Provision(ctx context.Context, provisionContext *varcontext.VarContext) (models.ServiceInstanceDetails, error) {
 	service, err := b.createClient(ctx)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, err
 	}
 
 	d := googlebigquery.Dataset{
-		Location: variableContext.GetString("location"),
+		Location: provisionContext.GetString("location"),
 		DatasetReference: &googlebigquery.DatasetReference{
-			DatasetId: variableContext.GetString("name"),
+			DatasetId: provisionContext.GetString("name"),
 		},
-		Labels: utils.ExtractDefaultLabels(instanceId, details),
+		Labels: provisionContext.GetStringMapString("labels"),
 	}
 
-	if err := variableContext.Error(); err != nil {
+	if err := provisionContext.Error(); err != nil {
 		return models.ServiceInstanceDetails{}, err
 	}
 

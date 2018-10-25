@@ -19,6 +19,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 )
 
 func init() {
@@ -112,6 +113,9 @@ again during that time (on a best-effort basis).
 				Default: "10",
 			},
 		},
+		ProvisionComputedVariables: []varcontext.DefaultVariable{
+			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
+		},
 		DefaultRoleWhitelist: roleWhitelist,
 		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.PubsubName, roleWhitelist),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
@@ -138,7 +142,7 @@ again during that time (on a best-effort basis).
 					Build(),
 			},
 		),
-
+		BindComputedVariables: accountmanagers.ServiceAccountBindComputedVariables(),
 		Examples: []broker.ServiceExample{
 			{
 				Name:        "Basic Configuration",

@@ -49,6 +49,8 @@ func TestEval(t *testing.T) {
 		"assert success":        {Template: `${assert(true, "nothing should happen")}`, Expected: "true"},
 		"assert failure":        {Template: `${assert(false, "failure message")}`, ErrorContains: "failure message"},
 		"assert message":        {Template: `${assert(false, "failure message ${1+1}")}`, ErrorContains: "failure message 2"},
+		"json marshal":          {Template: "${json.marshal(mapval)}", Variables: map[string]interface{}{"mapval": map[string]string{"hello": "world"}}, Expected: `{"hello":"world"}`},
+		"json marshal array":    {Template: "${json.marshal(list)}", Variables: map[string]interface{}{"list": []string{"a", "b", "c"}}, Expected: `["a","b","c"]`},
 	}
 
 	for tn, tc := range tests {

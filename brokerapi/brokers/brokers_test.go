@@ -118,8 +118,8 @@ var _ = Describe("Brokers", func() {
 			gcpBroker.ServiceBrokerMap[k] = &modelsfakes.FakeServiceBrokerHelper{
 				ProvisionsAsyncStub:   func() bool { return async },
 				DeprovisionsAsyncStub: func() bool { return async },
-				ProvisionStub: func(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
-					return models.ServiceInstanceDetails{ID: instanceId, OtherDetails: "{\"mynameis\": \"instancename\"}"}, nil
+				ProvisionStub: func(ctx context.Context, vc *varcontext.VarContext) (models.ServiceInstanceDetails, error) {
+					return models.ServiceInstanceDetails{OtherDetails: "{\"mynameis\": \"instancename\"}"}, nil
 				},
 				BindStub: func(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error) {
 					return map[string]interface{}{"foo": "bar"}, nil

@@ -148,6 +148,46 @@ func TestVarContext_GetBool(t *testing.T) {
 	}
 }
 
+func TestVarContext_GetStringMapString(t *testing.T) {
+	// The following tests operate on the following example map
+	testContext := map[string]interface{}{
+		"single":  map[string]string{"foo": "bar"},
+		"aString": "value",
+		"json":    `{"foo":"bar"}`,
+	}
+
+	tests := map[string]struct {
+		Key      string
+		Expected map[string]string
+		Error    string
+	}{
+		"single map": {"single", map[string]string{"foo": "bar"}, ""},
+		"json map":   {"json", map[string]string{"foo": "bar"}, ""},
+		"string":     {"aString", map[string]string{}, `value for "aString" must be a map[string]string`},
+	}
+
+	for tn, tc := range tests {
+		t.Run(tn, func(t *testing.T) {
+			vc := &VarContext{context: testContext}
+
+			result := vc.GetStringMapString(tc.Key)
+			if !reflect.DeepEqual(result, tc.Expected) {
+				t.Errorf("Expected to get: %v actual: %v", tc.Expected, result)
+			}
+
+			expectedErrors := tc.Error != ""
+			hasError := vc.Error() != nil
+			if hasError != expectedErrors {
+				t.Fatalf("Got error when not expecting or missing error that was expected: %v", vc.Error())
+			}
+
+			if tc.Error != "" && !strings.Contains(vc.Error().Error(), tc.Error) {
+				t.Errorf("Expected error to contain %q, but got: %v", tc.Error, vc.Error())
+			}
+		})
+	}
+}
+
 func TestVarContext_ToJson(t *testing.T) {
 	vc := &VarContext{context: map[string]interface{}{
 		"t": true,

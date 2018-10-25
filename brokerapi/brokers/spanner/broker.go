@@ -22,7 +22,7 @@ import (
 	googlespanner "cloud.google.com/go/spanner/admin/instance/apiv1"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
 	"google.golang.org/api/option"
 	instancepb "google.golang.org/genproto/googleapis/spanner/admin/instance/v1"
@@ -41,29 +41,24 @@ type InstanceInformation struct {
 }
 
 // Provision creates a new Spanner instance from the settings in the user-provided details and service plan.
-func (s *SpannerBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
-	variableContext, err := serviceDefinition().ProvisionVariables(instanceId, details, plan)
-	if err != nil {
-		return models.ServiceInstanceDetails{}, err
-	}
-
+func (s *SpannerBroker) Provision(ctx context.Context, provisionContext *varcontext.VarContext) (models.ServiceInstanceDetails, error) {
 	// create instance provision request
-	instanceName := variableContext.GetString("name")
-	instanceLocation := fmt.Sprintf("projects/%s/instanceConfigs/%s", s.ProjectId, variableContext.GetString("location"))
+	instanceName := provisionContext.GetString("name")
+	instanceLocation := fmt.Sprintf("projects/%s/instanceConfigs/%s", s.ProjectId, provisionContext.GetString("location"))
 
 	creationRequest := instancepb.CreateInstanceRequest{
 		Parent:     "projects/" + s.ProjectId,
 		InstanceId: instanceName,
 		Instance: &instancepb.Instance{
 			Name:        s.qualifiedInstanceName(instanceName),
-			DisplayName: variableContext.GetString("display_name"),
-			NodeCount:   int32(variableContext.GetInt("num_nodes")),
+			DisplayName: provisionContext.GetString("display_name"),
+			NodeCount:   int32(provisionContext.GetInt("num_nodes")),
 			Config:      instanceLocation,
-			Labels:      utils.ExtractDefaultLabels(instanceId, details),
+			Labels:      provisionContext.GetStringMapString("labels"),
 		},
 	}
 
-	if err := variableContext.Error(); err != nil {
+	if err := provisionContext.Error(); err != nil {
 		return models.ServiceInstanceDetails{}, err
 	}
 

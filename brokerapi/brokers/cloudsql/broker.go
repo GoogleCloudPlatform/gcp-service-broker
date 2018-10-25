@@ -25,7 +25,6 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 
 	"context"
@@ -58,8 +57,8 @@ type InstanceInformation struct {
 }
 
 // Provision creates a new CloudSQL instance from the settings in the user-provided details and service plan.
-func (b *CloudSQLBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
-	di, ii, err := createProvisionRequest(instanceId, details, plan)
+func (b *CloudSQLBroker) Provision(ctx context.Context, provisionContext *varcontext.VarContext) (models.ServiceInstanceDetails, error) {
+	di, ii, err := createProvisionRequest(provisionContext)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, err
 	}
@@ -93,16 +92,7 @@ func (b *CloudSQLBroker) Provision(ctx context.Context, instanceId string, detai
 	}, nil
 }
 
-func createProvisionRequest(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (*googlecloudsql.DatabaseInstance, *InstanceInformation, error) {
-	svc, err := broker.GetServiceById(details.ServiceID)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	vars, err := svc.ProvisionVariables(instanceId, details, plan)
-	if err != nil {
-		return nil, nil, err
-	}
+func createProvisionRequest(vars *varcontext.VarContext) (*googlecloudsql.DatabaseInstance, *InstanceInformation, error) {
 
 	// set up database information
 	var di *googlecloudsql.DatabaseInstance
@@ -121,7 +111,7 @@ func createProvisionRequest(instanceId string, details brokerapi.ProvisionDetail
 		BinaryLogEnabled: vars.GetBool("binlog"),
 	}
 	di.Settings.IpConfiguration.AuthorizedNetworks = varctxGetAcls(vars)
-	di.Settings.UserLabels = utils.ExtractDefaultLabels(instanceId, details)
+	di.Settings.UserLabels = vars.GetStringMapString("labels")
 
 	// Set up instance information
 	ii := InstanceInformation{

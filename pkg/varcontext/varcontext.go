@@ -17,9 +17,10 @@ package varcontext
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cast"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 )
 
 type VarContext struct {
@@ -68,6 +69,17 @@ func (vc *VarContext) GetInt(key string) (res int) {
 func (vc *VarContext) GetBool(key string) (res bool) {
 	vc.validate(key, "boolean", func(val interface{}) (err error) {
 		res, err = cast.ToBoolE(val)
+		return err
+	})
+
+	return
+}
+
+// GetStringMapString gets map[string]string from the context,
+// storing an error if the key doesn't exist or the variable couldn't be cast.
+func (vc *VarContext) GetStringMapString(key string) (res map[string]string) {
+	vc.validate(key, "map[string]string", func(val interface{}) (err error) {
+		res, err = cast.ToStringMapStringE(val)
 		return err
 	})
 

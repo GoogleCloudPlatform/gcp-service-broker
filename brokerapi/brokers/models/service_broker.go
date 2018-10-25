@@ -29,7 +29,10 @@ import (
 // ServiceBrokerHelpers are expected to interact with the state of the system entirely through their inputs and outputs.
 // Specifically, they MUST NOT modify any general state of the broker in the database.
 type ServiceBrokerHelper interface {
-	Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan ServicePlan) (ServiceInstanceDetails, error)
+	// Provision creates the necessary resources that an instance of this service
+	// needs to operate.
+	Provision(ctx context.Context, provisionContext *varcontext.VarContext) (ServiceInstanceDetails, error)
+
 	// Bind provisions the necessary resources for a user to be able to connect to the provisioned service.
 	// This may include creating service accounts, granting permissions, and adding users to services e.g. a SQL database user.
 	// It stores information necessary to access the service _and_ delete the binding in the returned map.
