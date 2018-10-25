@@ -15,7 +15,6 @@
 package pubsub
 
 import (
-	"encoding/json"
 	"errors"
 
 	googlepubsub "cloud.google.com/go/pubsub"
@@ -109,17 +108,17 @@ func (b *PubSubBroker) Provision(ctx context.Context, instanceId string, details
 		SubscriptionName: subscriptionName,
 	}
 
-	otherDetails, err := json.Marshal(ii)
-	if err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling json: %s", err)
+	id := models.ServiceInstanceDetails{
+		Name:     topicName,
+		Url:      "",
+		Location: "",
 	}
 
-	return models.ServiceInstanceDetails{
-		Name:         topicName,
-		Url:          "",
-		Location:     "",
-		OtherDetails: string(otherDetails),
-	}, nil
+	if err := id.SetOtherDetails(ii); err != nil {
+		return models.ServiceInstanceDetails{}, err
+	}
+
+	return id, err
 }
 
 // Deprovision deletes the topic and subscription associated with the given instance.
@@ -133,13 +132,13 @@ func (b *PubSubBroker) Deprovision(ctx context.Context, topic models.ServiceInst
 		return nil, fmt.Errorf("Error deleting pubsub topic: %s", err)
 	}
 
-	otherDetails, err := topic.GetOtherDetails()
-	if err != nil {
+	otherDetails := InstanceInformation{}
+	if err := topic.GetOtherDetails(&otherDetails); err != nil {
 		return nil, err
 	}
 
-	if subscriptionName := otherDetails["subscription_name"]; subscriptionName != "" {
-		if err := service.Subscription(subscriptionName).Delete(ctx); err != nil {
+	if otherDetails.SubscriptionName != "" {
+		if err := service.Subscription(otherDetails.SubscriptionName).Delete(ctx); err != nil {
 			return nil, fmt.Errorf("Error deleting subscription: %s", err)
 		}
 	}

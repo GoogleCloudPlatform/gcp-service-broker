@@ -78,21 +78,19 @@ func (b *CloudSQLBroker) Provision(ctx context.Context, instanceId string, detai
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new CloudSQL instance: %s", err)
 	}
 
-	otherDetails, err := json.Marshal(ii)
-	if err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling instance information: %s", err)
-	}
-
-	b.Logger.Debug("updating details", lager.Data{"from": "{}", "to": otherDetails})
-	return models.ServiceInstanceDetails{
-		Name:         di.Name,
-		Url:          "",
-		Location:     "",
-		OtherDetails: string(otherDetails),
+	b.Logger.Debug("updating details", lager.Data{"from": "{}", "to": ii})
+	id := models.ServiceInstanceDetails{
+		Name: di.Name,
 
 		OperationType: models.ProvisionOperationType,
 		OperationId:   op.Name,
-	}, nil
+	}
+
+	if err := id.SetOtherDetails(ii); err != nil {
+		return models.ServiceInstanceDetails{}, err
+	}
+
+	return id, nil
 }
 
 func createProvisionRequest(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (*googlecloudsql.DatabaseInstance, *InstanceInformation, error) {
@@ -350,8 +348,8 @@ func (b *CloudSQLBroker) PollInstance(ctx context.Context, instance models.Servi
 // and upates the provided instance with the refreshed info.
 func (b *CloudSQLBroker) UpdateInstanceDetails(ctx context.Context, instance *models.ServiceInstanceDetails) error {
 	var instanceInfo InstanceInformation
-	if err := json.Unmarshal([]byte(instance.OtherDetails), &instanceInfo); err != nil {
-		return fmt.Errorf("Error unmarshalling instance information.")
+	if err := instance.GetOtherDetails(&instanceInfo); err != nil {
+		return err
 	}
 
 	client, err := b.createClient(ctx)
@@ -371,13 +369,8 @@ func (b *CloudSQLBroker) UpdateInstanceDetails(ctx context.Context, instance *mo
 	// update instance information
 	instanceInfo.Host = clouddb.IpAddresses[0].IpAddress
 	instanceInfo.Region = clouddb.Region
-	otherDetails, err := json.Marshal(instanceInfo)
-	if err != nil {
-		return fmt.Errorf("Error marshalling instance information: %s.", err)
-	}
-	instance.OtherDetails = string(otherDetails)
 
-	return nil
+	return instance.SetOtherDetails(instanceInfo)
 }
 
 // createDatabase creates tha database on the instance referenced by ServiceInstanceDetails.

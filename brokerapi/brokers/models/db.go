@@ -33,27 +33,29 @@ const (
 // binding to a service.
 type ServiceBindingCredentials ServiceBindingCredentialsV1
 
-// GetOtherDetails returns an unmarshaled version of the OtherDetails field
-// or errors.
-func (sbc ServiceBindingCredentials) GetOtherDetails() (map[string]string, error) {
-	var creds map[string]string
-	err := json.Unmarshal([]byte(sbc.OtherDetails), &creds)
-	return creds, err
-}
-
 // ServiceInstanceDetails holds information about provisioned services.
 type ServiceInstanceDetails ServiceInstanceDetailsV2
 
-// GetOtherDetails returns an unmarshaled version of the OtherDetails field
-// or errors.
-func (si ServiceInstanceDetails) GetOtherDetails() (map[string]string, error) {
-	var instanceDetails map[string]string
-	if si.OtherDetails == "" {
-		return instanceDetails, nil
+// SetOtherDetails marshals the value passed in into a JSON string and sets
+// OtherDetails to it if marshalling was successful.
+func (si *ServiceInstanceDetails) SetOtherDetails(toSet interface{}) error {
+	out, err := json.Marshal(toSet)
+	if err != nil {
+		return err
 	}
 
-	err := json.Unmarshal([]byte(si.OtherDetails), &instanceDetails)
-	return instanceDetails, err
+	si.OtherDetails = string(out)
+	return nil
+}
+
+// GetOtherDetails returns an unmarshalls the OtherDetails field into the given
+// struct. An empty OtherDetails field does not get unmarshalled and does not error.
+func (si ServiceInstanceDetails) GetOtherDetails(v interface{}) error {
+	if si.OtherDetails == "" {
+		return nil
+	}
+
+	return json.Unmarshal([]byte(si.OtherDetails), v)
 }
 
 // ProvisionRequestDetails holds user-defined properties passed to a call
