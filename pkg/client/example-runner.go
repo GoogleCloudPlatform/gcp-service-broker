@@ -99,18 +99,9 @@ func RunExample(client *Client, example broker.ServiceExample, service *broker.B
 	}
 
 	credentialsEntry := binding.Credentials.(map[string]interface{})
-
-	allContained := true
-	for _, v := range service.BindOutputVariables {
-		_, ok := credentialsEntry[v.FieldName]
-		if !ok {
-			allContained = false
-			log.Printf("Error: credentials were missing property: %q", v.FieldName)
-		}
-	}
-
-	if !allContained {
-		return errors.New("Not all properties were found in the bound credentials")
+	if err := broker.ValidateVariables(credentialsEntry, service.BindOutputVariables); err != nil {
+		log.Printf("Error: results don't match JSON Schema: %v", err)
+		return err
 	}
 
 	return nil

@@ -24,6 +24,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/spf13/viper"
 
@@ -245,26 +246,51 @@ func ServiceAccountBindOutputVariables() []broker.BrokerVariable {
 			FieldName: "Email",
 			Type:      broker.JsonTypeString,
 			Details:   "Email address of the service account.",
+			Required:  true,
+			Constraints: validation.NewConstraintBuilder().
+				Examples("pcf-binding-ex312029@my-project.iam.gserviceaccount.com").
+				Pattern(`^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`).
+				Build(),
 		},
 		{
 			FieldName: "Name",
 			Type:      broker.JsonTypeString,
 			Details:   "The name of the service account.",
+			Required:  true,
+			Constraints: validation.NewConstraintBuilder().
+				Examples("pcf-binding-ex312029").
+				Build(),
 		},
 		{
 			FieldName: "PrivateKeyData",
 			Type:      broker.JsonTypeString,
-			Details:   "Service account private key data. Base-64 encoded JSON.",
+			Details:   "Service account private key data. Base64 encoded JSON.",
+			Required:  true,
+			Constraints: validation.NewConstraintBuilder().
+				MinLength(512).                // absolute lower bound
+				Pattern(`^[A-Za-z0-9+/]*=*$`). // very rough Base64 regex
+				Build(),
 		},
 		{
 			FieldName: "ProjectId",
 			Type:      broker.JsonTypeString,
 			Details:   "ID of the project that owns the service account.",
+			Required:  true,
+			Constraints: validation.NewConstraintBuilder().
+				Examples("my-project").
+				Pattern(`^[a-z0-9-]+$`).
+				MinLength(6).
+				MaxLength(30).
+				Build(),
 		},
 		{
 			FieldName: "UniqueId",
 			Type:      broker.JsonTypeString,
-			Details:   "Unique and stable id of the service account.",
+			Details:   "Unique and stable ID of the service account.",
+			Required:  true,
+			Constraints: validation.NewConstraintBuilder().
+				Examples("112447814736626230844").
+				Build(),
 		},
 	}
 }

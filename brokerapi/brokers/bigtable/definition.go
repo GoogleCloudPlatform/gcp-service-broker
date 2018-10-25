@@ -124,6 +124,12 @@ func serviceDefinition() *broker.BrokerService {
 				FieldName: "instance_id",
 				Type:      broker.JsonTypeString,
 				Details:   "The name of the BigTable dataset.",
+				Required:  true,
+				Constraints: validation.NewConstraintBuilder().
+					MinLength(6).
+					MaxLength(33).
+					Pattern("^[a-z][-0-9a-z]+$").
+					Build(),
 			},
 		),
 		PlanVariables: []broker.BrokerVariable{

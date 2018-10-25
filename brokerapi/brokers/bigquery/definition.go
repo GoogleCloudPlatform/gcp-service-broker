@@ -90,6 +90,11 @@ func serviceDefinition() *broker.BrokerService {
 				FieldName: "dataset_id",
 				Type:      broker.JsonTypeString,
 				Details:   "The name of the BigQuery dataset.",
+				Required:  true,
+				Constraints: validation.NewConstraintBuilder().
+					Pattern("^[A-Za-z0-9_]+$").
+					MaxLength(1024).
+					Build(),
 			},
 		),
 		Examples: []broker.ServiceExample{

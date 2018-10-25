@@ -119,11 +119,23 @@ again during that time (on a best-effort basis).
 				FieldName: "subscription_name",
 				Type:      broker.JsonTypeString,
 				Details:   "Name of the subscription.",
+				Required:  false,
+				Constraints: validation.NewConstraintBuilder().
+					MinLength(0). // subscription name could be blank on return
+					MaxLength(255).
+					Pattern(`^(|[a-zA-Z][a-zA-Z0-9\d\-_~%\.\+]+)`). // adapted from the Pub/Sub create subscription page's validator
+					Build(),
 			},
 			broker.BrokerVariable{
 				FieldName: "topic_name",
 				Type:      broker.JsonTypeString,
 				Details:   "Name of the topic.",
+				Required:  true,
+				Constraints: validation.NewConstraintBuilder().
+					MinLength(3).
+					MaxLength(255).
+					Pattern(`^[a-zA-Z][a-zA-Z0-9\d\-_~%\.\+]+$`). // adapted from the Pub/Sub create topic page's validator
+					Build(),
 			},
 		),
 

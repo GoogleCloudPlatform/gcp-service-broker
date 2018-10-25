@@ -33,12 +33,24 @@ A fast, economical and fully managed data warehouse for large-scale data analyti
 
 **Response Parameters**
 
- * `Email` _string_ - Email address of the service account.
- * `Name` _string_ - The name of the service account.
- * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
- * `ProjectId` _string_ - ID of the project that owns the service account.
- * `UniqueId` _string_ - Unique and stable id of the service account.
- * `dataset_id` _string_ - The name of the BigQuery dataset.
+ * `Email` _string_ - **Required** Email address of the service account.
+    * Examples: [pcf-binding-ex312029@my-project.iam.gserviceaccount.com].
+    * The string must match the regular expression `^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`.
+ * `Name` _string_ - **Required** The name of the service account.
+    * Examples: [pcf-binding-ex312029].
+ * `PrivateKeyData` _string_ - **Required** Service account private key data. Base64 encoded JSON.
+    * The string must have at least 512 characters.
+    * The string must match the regular expression `^[A-Za-z0-9+/]*=*$`.
+ * `ProjectId` _string_ - **Required** ID of the project that owns the service account.
+    * Examples: [my-project].
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z0-9-]+$`.
+ * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
+    * Examples: [112447814736626230844].
+ * `dataset_id` _string_ - **Required** The name of the BigQuery dataset.
+    * The string must have at most 1024 characters.
+    * The string must match the regular expression `^[A-Za-z0-9_]+$`.
 
 ## Plans
 
@@ -129,12 +141,25 @@ A high performance NoSQL database service for large analytical and operational w
 
 **Response Parameters**
 
- * `Email` _string_ - Email address of the service account.
- * `Name` _string_ - The name of the service account.
- * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
- * `ProjectId` _string_ - ID of the project that owns the service account.
- * `UniqueId` _string_ - Unique and stable id of the service account.
- * `instance_id` _string_ - The name of the BigTable dataset.
+ * `Email` _string_ - **Required** Email address of the service account.
+    * Examples: [pcf-binding-ex312029@my-project.iam.gserviceaccount.com].
+    * The string must match the regular expression `^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`.
+ * `Name` _string_ - **Required** The name of the service account.
+    * Examples: [pcf-binding-ex312029].
+ * `PrivateKeyData` _string_ - **Required** Service account private key data. Base64 encoded JSON.
+    * The string must have at least 512 characters.
+    * The string must match the regular expression `^[A-Za-z0-9+/]*=*$`.
+ * `ProjectId` _string_ - **Required** ID of the project that owns the service account.
+    * Examples: [my-project].
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z0-9-]+$`.
+ * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
+    * Examples: [112447814736626230844].
+ * `instance_id` _string_ - **Required** The name of the BigTable dataset.
+    * The string must have at most 33 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z][-0-9a-z]+$`.
 
 ## Plans
 
@@ -253,23 +278,51 @@ Google Cloud SQL is a fully-managed MySQL database service.
 
 **Response Parameters**
 
- * `Email` _string_ - Email address of the service account.
- * `Name` _string_ - The name of the service account.
- * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
- * `ProjectId` _string_ - ID of the project that owns the service account.
- * `UniqueId` _string_ - Unique and stable id of the service account.
- * `CaCert` _string_ - The server Certificate Authority's certificate.
- * `ClientCert` _string_ - The client certificate. For First Generation instances, the new certificate does not take effect until the instance is restarted.
- * `ClientKey` _string_ - The client certificate key.
- * `Sha1Fingerprint` _string_ - The SHA1 fingerprint of the client certificate.
- * `UriPrefix` _string_ - The connection prefix e.g. `mysql` or `postgres`.
- * `Username` _string_ - The name of the SQL user provisioned.
- * `database_name` _string_ - The name of the database on the instance.
- * `host` _string_ - The hostname or ip of the database instance.
- * `instance_name` _string_ - The name of the database instance.
- * `uri` _string_ - A database connection string.
- * `last_master_operation_id` _string_ - (GCP internals) The id of the last operation on the database.
- * `region` _string_ - The region the database is in.
+ * `Email` _string_ - **Required** Email address of the service account.
+    * Examples: [pcf-binding-ex312029@my-project.iam.gserviceaccount.com].
+    * The string must match the regular expression `^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`.
+ * `Name` _string_ - **Required** The name of the service account.
+    * Examples: [pcf-binding-ex312029].
+ * `PrivateKeyData` _string_ - **Required** Service account private key data. Base64 encoded JSON.
+    * The string must have at least 512 characters.
+    * The string must match the regular expression `^[A-Za-z0-9+/]*=*$`.
+ * `ProjectId` _string_ - **Required** ID of the project that owns the service account.
+    * Examples: [my-project].
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z0-9-]+$`.
+ * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
+    * Examples: [112447814736626230844].
+ * `CaCert` _string_ - **Required** The server Certificate Authority's certificate.
+    * Examples: [-----BEGIN CERTIFICATE-----BASE64 Certificate Text-----END CERTIFICATE-----].
+ * `ClientCert` _string_ - **Required** The client certificate. For First Generation instances, the new certificate does not take effect until the instance is restarted.
+    * Examples: [-----BEGIN CERTIFICATE-----BASE64 Certificate Text-----END CERTIFICATE-----].
+ * `ClientKey` _string_ - **Required** The client certificate key.
+    * Examples: [-----BEGIN RSA PRIVATE KEY-----BASE64 Key Text-----END RSA PRIVATE KEY-----].
+ * `Sha1Fingerprint` _string_ - **Required** The SHA1 fingerprint of the client certificate.
+    * Examples: [e6d0c68f35032c6c2132217d1f1fb06b12ed32e2].
+    * The string must match the regular expression `^[0-9a-f]{40}$`.
+ * `UriPrefix` _string_ - The connection prefix.
+    * Examples: [jdbc: ].
+ * `Username` _string_ - **Required** The name of the SQL user provisioned.
+    * Examples: [sb15404128767777].
+ * `Password` _string_ - **Required** The database password for the SQL user.
+    * Examples: [N-JPz7h2RHPZ81jB5gDHdnluddnIFMWG4nd5rKjR_8A=].
+ * `database_name` _string_ - **Required** The name of the database on the instance.
+    * Examples: [pcf-sb-2-1540412407295372465].
+ * `host` _string_ - **Required** The hostname or IP address of the database instance.
+    * Examples: [127.0.0.1].
+ * `instance_name` _string_ - **Required** The name of the database instance.
+    * Examples: [pcf-sb-1-1540412407295273023].
+    * The string must have at most 84 characters.
+    * The string must match the regular expression `^[a-z][a-z0-9-]+$`.
+ * `uri` _string_ - **Required** A database connection string.
+    * Examples: [mysql://user:pass@127.0.0.1/pcf-sb-2-1540412407295372465?ssl_mode=required].
+ * `last_master_operation_id` _string_ - (deprecated) The id of the last operation on the database.
+    * Examples: [mysql://user:pass@127.0.0.1/pcf-sb-2-1540412407295372465?ssl_mode=required].
+ * `region` _string_ - **Required** The region the database is in.
+    * Examples: [northamerica-northeast1 southamerica-east1 us-east1].
+    * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
 
 ## Plans
 
@@ -403,23 +456,51 @@ Google Cloud SQL is a fully-managed MySQL database service.
 
 **Response Parameters**
 
- * `Email` _string_ - Email address of the service account.
- * `Name` _string_ - The name of the service account.
- * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
- * `ProjectId` _string_ - ID of the project that owns the service account.
- * `UniqueId` _string_ - Unique and stable id of the service account.
- * `CaCert` _string_ - The server Certificate Authority's certificate.
- * `ClientCert` _string_ - The client certificate. For First Generation instances, the new certificate does not take effect until the instance is restarted.
- * `ClientKey` _string_ - The client certificate key.
- * `Sha1Fingerprint` _string_ - The SHA1 fingerprint of the client certificate.
- * `UriPrefix` _string_ - The connection prefix e.g. `mysql` or `postgres`.
- * `Username` _string_ - The name of the SQL user provisioned.
- * `database_name` _string_ - The name of the database on the instance.
- * `host` _string_ - The hostname or ip of the database instance.
- * `instance_name` _string_ - The name of the database instance.
- * `uri` _string_ - A database connection string.
- * `last_master_operation_id` _string_ - (GCP internals) The id of the last operation on the database.
- * `region` _string_ - The region the database is in.
+ * `Email` _string_ - **Required** Email address of the service account.
+    * Examples: [pcf-binding-ex312029@my-project.iam.gserviceaccount.com].
+    * The string must match the regular expression `^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`.
+ * `Name` _string_ - **Required** The name of the service account.
+    * Examples: [pcf-binding-ex312029].
+ * `PrivateKeyData` _string_ - **Required** Service account private key data. Base64 encoded JSON.
+    * The string must have at least 512 characters.
+    * The string must match the regular expression `^[A-Za-z0-9+/]*=*$`.
+ * `ProjectId` _string_ - **Required** ID of the project that owns the service account.
+    * Examples: [my-project].
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z0-9-]+$`.
+ * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
+    * Examples: [112447814736626230844].
+ * `CaCert` _string_ - **Required** The server Certificate Authority's certificate.
+    * Examples: [-----BEGIN CERTIFICATE-----BASE64 Certificate Text-----END CERTIFICATE-----].
+ * `ClientCert` _string_ - **Required** The client certificate. For First Generation instances, the new certificate does not take effect until the instance is restarted.
+    * Examples: [-----BEGIN CERTIFICATE-----BASE64 Certificate Text-----END CERTIFICATE-----].
+ * `ClientKey` _string_ - **Required** The client certificate key.
+    * Examples: [-----BEGIN RSA PRIVATE KEY-----BASE64 Key Text-----END RSA PRIVATE KEY-----].
+ * `Sha1Fingerprint` _string_ - **Required** The SHA1 fingerprint of the client certificate.
+    * Examples: [e6d0c68f35032c6c2132217d1f1fb06b12ed32e2].
+    * The string must match the regular expression `^[0-9a-f]{40}$`.
+ * `UriPrefix` _string_ - The connection prefix.
+    * Examples: [jdbc: ].
+ * `Username` _string_ - **Required** The name of the SQL user provisioned.
+    * Examples: [sb15404128767777].
+ * `Password` _string_ - **Required** The database password for the SQL user.
+    * Examples: [N-JPz7h2RHPZ81jB5gDHdnluddnIFMWG4nd5rKjR_8A=].
+ * `database_name` _string_ - **Required** The name of the database on the instance.
+    * Examples: [pcf-sb-2-1540412407295372465].
+ * `host` _string_ - **Required** The hostname or IP address of the database instance.
+    * Examples: [127.0.0.1].
+ * `instance_name` _string_ - **Required** The name of the database instance.
+    * Examples: [pcf-sb-1-1540412407295273023].
+    * The string must have at most 84 characters.
+    * The string must match the regular expression `^[a-z][a-z0-9-]+$`.
+ * `uri` _string_ - **Required** A database connection string.
+    * Examples: [mysql://user:pass@127.0.0.1/pcf-sb-2-1540412407295372465?ssl_mode=required].
+ * `last_master_operation_id` _string_ - (deprecated) The id of the last operation on the database.
+    * Examples: [mysql://user:pass@127.0.0.1/pcf-sb-2-1540412407295372465?ssl_mode=required].
+ * `region` _string_ - **Required** The region the database is in.
+    * Examples: [northamerica-northeast1 southamerica-east1 us-east1].
+    * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
 
 ## Plans
 
@@ -510,11 +591,21 @@ _No parameters supported._
 
 **Response Parameters**
 
- * `Email` _string_ - Email address of the service account.
- * `Name` _string_ - The name of the service account.
- * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
- * `ProjectId` _string_ - ID of the project that owns the service account.
- * `UniqueId` _string_ - Unique and stable id of the service account.
+ * `Email` _string_ - **Required** Email address of the service account.
+    * Examples: [pcf-binding-ex312029@my-project.iam.gserviceaccount.com].
+    * The string must match the regular expression `^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`.
+ * `Name` _string_ - **Required** The name of the service account.
+    * Examples: [pcf-binding-ex312029].
+ * `PrivateKeyData` _string_ - **Required** Service account private key data. Base64 encoded JSON.
+    * The string must have at least 512 characters.
+    * The string must match the regular expression `^[A-Za-z0-9+/]*=*$`.
+ * `ProjectId` _string_ - **Required** ID of the project that owns the service account.
+    * Examples: [my-project].
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z0-9-]+$`.
+ * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
+    * Examples: [112447814736626230844].
 
 ## Plans
 
@@ -587,11 +678,21 @@ _No parameters supported._
 
 **Response Parameters**
 
- * `Email` _string_ - Email address of the service account.
- * `Name` _string_ - The name of the service account.
- * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
- * `ProjectId` _string_ - ID of the project that owns the service account.
- * `UniqueId` _string_ - Unique and stable id of the service account.
+ * `Email` _string_ - **Required** Email address of the service account.
+    * Examples: [pcf-binding-ex312029@my-project.iam.gserviceaccount.com].
+    * The string must match the regular expression `^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`.
+ * `Name` _string_ - **Required** The name of the service account.
+    * Examples: [pcf-binding-ex312029].
+ * `PrivateKeyData` _string_ - **Required** Service account private key data. Base64 encoded JSON.
+    * The string must have at least 512 characters.
+    * The string must match the regular expression `^[A-Za-z0-9+/]*=*$`.
+ * `ProjectId` _string_ - **Required** ID of the project that owns the service account.
+    * Examples: [my-project].
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z0-9-]+$`.
+ * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
+    * Examples: [112447814736626230844].
 
 ## Plans
 
@@ -678,13 +779,29 @@ A global service for real-time and reliable messaging and streaming data.
 
 **Response Parameters**
 
- * `Email` _string_ - Email address of the service account.
- * `Name` _string_ - The name of the service account.
- * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
- * `ProjectId` _string_ - ID of the project that owns the service account.
- * `UniqueId` _string_ - Unique and stable id of the service account.
+ * `Email` _string_ - **Required** Email address of the service account.
+    * Examples: [pcf-binding-ex312029@my-project.iam.gserviceaccount.com].
+    * The string must match the regular expression `^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`.
+ * `Name` _string_ - **Required** The name of the service account.
+    * Examples: [pcf-binding-ex312029].
+ * `PrivateKeyData` _string_ - **Required** Service account private key data. Base64 encoded JSON.
+    * The string must have at least 512 characters.
+    * The string must match the regular expression `^[A-Za-z0-9+/]*=*$`.
+ * `ProjectId` _string_ - **Required** ID of the project that owns the service account.
+    * Examples: [my-project].
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z0-9-]+$`.
+ * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
+    * Examples: [112447814736626230844].
  * `subscription_name` _string_ - Name of the subscription.
- * `topic_name` _string_ - Name of the topic.
+    * The string must have at most 255 characters.
+    * The string must have at least 0 characters.
+    * The string must match the regular expression `^[a-zA-Z][a-zA-Z0-9\d\-_~%\.\+]+`.
+ * `topic_name` _string_ - **Required** Name of the topic.
+    * The string must have at most 255 characters.
+    * The string must have at least 3 characters.
+    * The string must match the regular expression `^[a-zA-Z][a-zA-Z0-9\d\-_~%\.\+]+$`.
 
 ## Plans
 
@@ -834,12 +951,25 @@ The first horizontally scalable, globally consistent, relational database servic
 
 **Response Parameters**
 
- * `Email` _string_ - Email address of the service account.
- * `Name` _string_ - The name of the service account.
- * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
- * `ProjectId` _string_ - ID of the project that owns the service account.
- * `UniqueId` _string_ - Unique and stable id of the service account.
- * `instance_id` _string_ - Name of the spanner instance the account can connect to.
+ * `Email` _string_ - **Required** Email address of the service account.
+    * Examples: [pcf-binding-ex312029@my-project.iam.gserviceaccount.com].
+    * The string must match the regular expression `^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`.
+ * `Name` _string_ - **Required** The name of the service account.
+    * Examples: [pcf-binding-ex312029].
+ * `PrivateKeyData` _string_ - **Required** Service account private key data. Base64 encoded JSON.
+    * The string must have at least 512 characters.
+    * The string must match the regular expression `^[A-Za-z0-9+/]*=*$`.
+ * `ProjectId` _string_ - **Required** ID of the project that owns the service account.
+    * Examples: [my-project].
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z0-9-]+$`.
+ * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
+    * Examples: [112447814736626230844].
+ * `instance_id` _string_ - **Required** Name of the Spanner instance the account can connect to.
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z][-a-z0-9]*[a-z0-9]$`.
 
 ## Plans
 
@@ -946,11 +1076,21 @@ _No parameters supported._
 
 **Response Parameters**
 
- * `Email` _string_ - Email address of the service account.
- * `Name` _string_ - The name of the service account.
- * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
- * `ProjectId` _string_ - ID of the project that owns the service account.
- * `UniqueId` _string_ - Unique and stable id of the service account.
+ * `Email` _string_ - **Required** Email address of the service account.
+    * Examples: [pcf-binding-ex312029@my-project.iam.gserviceaccount.com].
+    * The string must match the regular expression `^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`.
+ * `Name` _string_ - **Required** The name of the service account.
+    * Examples: [pcf-binding-ex312029].
+ * `PrivateKeyData` _string_ - **Required** Service account private key data. Base64 encoded JSON.
+    * The string must have at least 512 characters.
+    * The string must match the regular expression `^[A-Za-z0-9+/]*=*$`.
+ * `ProjectId` _string_ - **Required** ID of the project that owns the service account.
+    * Examples: [my-project].
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z0-9-]+$`.
+ * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
+    * Examples: [112447814736626230844].
 
 ## Plans
 
@@ -1021,11 +1161,21 @@ _No parameters supported._
 
 **Response Parameters**
 
- * `Email` _string_ - Email address of the service account.
- * `Name` _string_ - The name of the service account.
- * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
- * `ProjectId` _string_ - ID of the project that owns the service account.
- * `UniqueId` _string_ - Unique and stable id of the service account.
+ * `Email` _string_ - **Required** Email address of the service account.
+    * Examples: [pcf-binding-ex312029@my-project.iam.gserviceaccount.com].
+    * The string must match the regular expression `^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`.
+ * `Name` _string_ - **Required** The name of the service account.
+    * Examples: [pcf-binding-ex312029].
+ * `PrivateKeyData` _string_ - **Required** Service account private key data. Base64 encoded JSON.
+    * The string must have at least 512 characters.
+    * The string must match the regular expression `^[A-Za-z0-9+/]*=*$`.
+ * `ProjectId` _string_ - **Required** ID of the project that owns the service account.
+    * Examples: [my-project].
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z0-9-]+$`.
+ * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
+    * Examples: [112447814736626230844].
 
 ## Plans
 
@@ -1096,11 +1246,21 @@ _No parameters supported._
 
 **Response Parameters**
 
- * `Email` _string_ - Email address of the service account.
- * `Name` _string_ - The name of the service account.
- * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
- * `ProjectId` _string_ - ID of the project that owns the service account.
- * `UniqueId` _string_ - Unique and stable id of the service account.
+ * `Email` _string_ - **Required** Email address of the service account.
+    * Examples: [pcf-binding-ex312029@my-project.iam.gserviceaccount.com].
+    * The string must match the regular expression `^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`.
+ * `Name` _string_ - **Required** The name of the service account.
+    * Examples: [pcf-binding-ex312029].
+ * `PrivateKeyData` _string_ - **Required** Service account private key data. Base64 encoded JSON.
+    * The string must have at least 512 characters.
+    * The string must match the regular expression `^[A-Za-z0-9+/]*=*$`.
+ * `ProjectId` _string_ - **Required** ID of the project that owns the service account.
+    * Examples: [my-project].
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z0-9-]+$`.
+ * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
+    * Examples: [112447814736626230844].
 
 ## Plans
 
@@ -1180,12 +1340,25 @@ Unified object storage for developers and enterprises. Cloud Storage allows worl
 
 **Response Parameters**
 
- * `Email` _string_ - Email address of the service account.
- * `Name` _string_ - The name of the service account.
- * `PrivateKeyData` _string_ - Service account private key data. Base-64 encoded JSON.
- * `ProjectId` _string_ - ID of the project that owns the service account.
- * `UniqueId` _string_ - Unique and stable id of the service account.
- * `bucket_name` _string_ - Name of the bucket this binding is for
+ * `Email` _string_ - **Required** Email address of the service account.
+    * Examples: [pcf-binding-ex312029@my-project.iam.gserviceaccount.com].
+    * The string must match the regular expression `^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`.
+ * `Name` _string_ - **Required** The name of the service account.
+    * Examples: [pcf-binding-ex312029].
+ * `PrivateKeyData` _string_ - **Required** Service account private key data. Base64 encoded JSON.
+    * The string must have at least 512 characters.
+    * The string must match the regular expression `^[A-Za-z0-9+/]*=*$`.
+ * `ProjectId` _string_ - **Required** ID of the project that owns the service account.
+    * Examples: [my-project].
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z0-9-]+$`.
+ * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
+    * Examples: [112447814736626230844].
+ * `bucket_name` _string_ - **Required** Name of the bucket this binding is for.
+    * The string must have at most 222 characters.
+    * The string must have at least 3 characters.
+    * The string must match the regular expression `^[A-Za-z0-9_\.]+$`.
 
 ## Plans
 

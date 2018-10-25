@@ -109,7 +109,13 @@ func serviceDefinition() *broker.BrokerService {
 			broker.BrokerVariable{
 				FieldName: "instance_id",
 				Type:      broker.JsonTypeString,
-				Details:   "Name of the spanner instance the account can connect to.",
+				Details:   "Name of the Spanner instance the account can connect to.",
+				Required:  true,
+				Constraints: validation.NewConstraintBuilder().
+					MinLength(6).
+					MaxLength(30).
+					Pattern("^[a-z][-a-z0-9]*[a-z0-9]$").
+					Build(),
 			},
 		),
 		PlanVariables: []broker.BrokerVariable{
