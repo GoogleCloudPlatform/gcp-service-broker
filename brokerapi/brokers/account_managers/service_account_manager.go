@@ -16,16 +16,15 @@ package account_managers
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
+	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
-	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/viper"
 
 	"golang.org/x/net/context"
@@ -37,53 +36,41 @@ import (
 
 const roleResourcePrefix = "roles/"
 const saResourcePrefix = "serviceAccount:"
-const saPrefix = "pcf-binding-"
 const projectResourcePrefix = "projects/"
 
 type ServiceAccountManager struct {
 	ProjectId  string
 	HttpConfig *jwt.Config
+	Logger     lager.Logger
 }
 
 // If roleWhitelist is specified, then the extracted role is validated against it and an error is returned if
 // the role is not contained within the whitelist
-func (sam *ServiceAccountManager) CreateCredentials(ctx context.Context, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (map[string]interface{}, error) {
-	role, err := extractRole(details)
-	if err != nil {
+func (sam *ServiceAccountManager) CreateCredentials(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error) {
+	role := vc.GetString("role")
+	accountId := vc.GetString("service_account_name")
+	displayName := vc.GetString("service_account_display_name")
+
+	if err := vc.Error(); err != nil {
 		return nil, err
 	}
 
-	return sam.CreateAccountWithRoles(ctx, bindingID, []string{role})
-}
+	sam.Logger.Info("create-service-account", lager.Data{
+		"role":                         role,
+		"service_account_name":         accountId,
+		"service_account_display_name": displayName,
+	})
 
-func extractRole(details brokerapi.BindDetails) (string, error) {
-	bindParameters := map[string]interface{}{}
-	if err := json.Unmarshal(details.RawParameters, &bindParameters); err != nil {
-		return "", err
-	}
-
-	if role, ok := bindParameters["role"].(string); ok {
-		return role, nil
-	}
-
-	return "", errors.New("Error getting role as string from request")
-}
-
-// CreateAccountWithRoles creates a service account with a name based on bindingID, JSON key and grants it zero or more roles
-// the roles MUST be missing the roles/ prefix.
-func (sam *ServiceAccountManager) CreateAccountWithRoles(ctx context.Context, bindingID string, roles []string) (map[string]interface{}, error) {
 	// create and save account
-	newSA, err := sam.createServiceAccount(ctx, bindingID)
+	newSA, err := sam.createServiceAccount(ctx, accountId, displayName)
 	if err != nil {
 		return nil, err
 	}
 
 	// adjust account permissions
 	// roles defined here: https://cloud.google.com/iam/docs/understanding-roles?hl=en_US#curated_roles
-	for _, role := range roles {
-		if err := sam.grantRoleToAccount(ctx, role, newSA); err != nil {
-			return nil, err
-		}
+	if err := sam.grantRoleToAccount(ctx, role, newSA); err != nil {
+		return nil, err
 	}
 
 	// create and save key
@@ -128,31 +115,20 @@ func (sam *ServiceAccountManager) DeleteCredentials(ctx context.Context, binding
 	return nil
 }
 
-// XXX names are truncated to 20 characters because of a bug in the IAM service
-func ServiceAccountName(bindingId string) string {
-	name := saPrefix + bindingId
-	if len(name) > 20 {
-		return name[:20]
-	} else {
-		return name
-	}
-}
-
-func (sam *ServiceAccountManager) createServiceAccount(ctx context.Context, bindingID string) (*iam.ServiceAccount, error) {
+func (sam *ServiceAccountManager) createServiceAccount(ctx context.Context, accountId, displayName string) (*iam.ServiceAccount, error) {
 	client := sam.HttpConfig.Client(ctx)
 	iamService, err := iam.New(client)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating new IAM service: %s", err)
 	}
 
-	someName := ServiceAccountName(bindingID)
 	resourceName := projectResourcePrefix + sam.ProjectId
 
 	// create and save account
 	newSARequest := iam.CreateServiceAccountRequest{
-		AccountId: someName,
+		AccountId: accountId,
 		ServiceAccount: &iam.ServiceAccount{
-			DisplayName: someName,
+			DisplayName: displayName,
 		},
 	}
 
@@ -244,6 +220,22 @@ func ServiceAccountBindInputVariables(serviceName string, defaultWhitelist []str
 			Enum:      whitelistEnum,
 		},
 	}
+}
+
+// ServiceAccountBindComputedVariables holds computed variables required to provision service accounts, label them and ensure they are unique.
+func ServiceAccountBindComputedVariables() []varcontext.DefaultVariable {
+	return []varcontext.DefaultVariable{
+		// XXX names are truncated to 20 characters because of a bug in the IAM service
+		{Name: "service_account_name", Default: `${str.truncate(20, "pcf-binding-${request.binding_id}")}`, Overwrite: true},
+		{Name: "service_account_display_name", Default: "${service_account_name}", Overwrite: true},
+	}
+}
+
+// FixedRoleBindComputedVariables allows you to create a service account with a
+// fixed role.
+func FixedRoleBindComputedVariables(role string) []varcontext.DefaultVariable {
+	fixedRoleVar := varcontext.DefaultVariable{Name: "role", Default: role, Overwrite: true}
+	return append(ServiceAccountBindComputedVariables(), fixedRoleVar)
 }
 
 // Variables output by all brokers that return service account info

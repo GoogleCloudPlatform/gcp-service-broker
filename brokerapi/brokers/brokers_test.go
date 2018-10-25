@@ -24,11 +24,11 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models/modelsfakes"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
 
 	"code.cloudfoundry.org/lager"
@@ -64,8 +64,6 @@ var _ = Describe("Brokers", func() {
 		Expect(err).NotTo(HaveOccurred())
 		db_service.RunMigrations(testDb)
 		db_service.DbConnection = testDb
-
-		name_generator.New()
 
 		os.Setenv("ROOT_SERVICE_ACCOUNT_JSON", `{
 			"type": "service_account",
@@ -123,7 +121,7 @@ var _ = Describe("Brokers", func() {
 				ProvisionStub: func(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 					return models.ServiceInstanceDetails{ID: instanceId, OtherDetails: "{\"mynameis\": \"instancename\"}"}, nil
 				},
-				BindStub: func(ctx context.Context, instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error) {
+				BindStub: func(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error) {
 					return map[string]interface{}{"foo": "bar"}, nil
 				},
 			}
@@ -448,10 +446,9 @@ var _ = Describe("AccountManagers", func() {
 		Expect(err).NotTo(HaveOccurred())
 		db_service.RunMigrations(testDb)
 		db_service.DbConnection = testDb
-		name_generator.New()
 
 		accountManager = modelsfakes.FakeServiceAccountManager{
-			CreateCredentialsStub: func(ctx context.Context, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (map[string]interface{}, error) {
+			CreateCredentialsStub: func(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error) {
 				return map[string]interface{}{}, nil
 			},
 		}
@@ -472,8 +469,7 @@ var _ = Describe("AccountManagers", func() {
 	Describe("bind", func() {
 		Context("when bind is called on an iam-style broker", func() {
 			It("should call the account manager create account in google method", func() {
-				instance := models.ServiceInstanceDetails{ID: "foo"}
-				_, err = iamStyleBroker.Bind(context.Background(), instance, "bar", brokerapi.BindDetails{})
+				_, err = iamStyleBroker.Bind(context.Background(), &varcontext.VarContext{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 			})
@@ -483,7 +479,7 @@ var _ = Describe("AccountManagers", func() {
 			It("should call the account manager create account in google method", func() {
 				instance := models.ServiceInstanceDetails{ID: "foo"}
 				db_service.SaveServiceInstanceDetails(testCtx, &instance)
-				_, err = iamStyleBroker.Bind(context.Background(), instance, "bar", brokerapi.BindDetails{})
+				_, err = iamStyleBroker.Bind(context.Background(), &varcontext.VarContext{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(accountManager.CreateCredentialsCallCount()).To(Equal(1))
 			})

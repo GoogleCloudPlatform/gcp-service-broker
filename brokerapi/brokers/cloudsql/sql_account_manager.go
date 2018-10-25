@@ -21,27 +21,18 @@ import (
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
-	"github.com/pivotal-cf/brokerapi"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 )
 
 // inserts a new user into the database and creates new ssl certs
-func (broker *CloudSQLBroker) createSqlCredentials(ctx context.Context, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (map[string]interface{}, error) {
-	vars, err := varcontext.Builder().
-		MergeJsonObject(details.GetRawParameters()).
-		MergeMap(map[string]interface{}{"bindingid": bindingID}).
-		MergeEvalResult("certname", `${str.truncate(10, bindingid)}cert`).
-		Build()
+func (broker *CloudSQLBroker) createSqlCredentials(ctx context.Context, vars *varcontext.VarContext) (map[string]interface{}, error) {
+
+	userAccount, err := broker.createSqlUserAccount(ctx, vars)
 	if err != nil {
 		return nil, err
 	}
 
-	userAccount, err := broker.createSqlUserAccount(ctx, vars, instance)
-	if err != nil {
-		return nil, err
-	}
-
-	sslCert, err := broker.createSqlSslCert(ctx, vars, instance)
+	sslCert, err := broker.createSqlSslCert(ctx, vars)
 	if err != nil {
 		return nil, err
 	}
@@ -61,11 +52,12 @@ type sqlSslCert struct {
 	Sha1Fingerprint string `json:"Sha1Fingerprint"`
 }
 
-func (broker *CloudSQLBroker) createSqlUserAccount(ctx context.Context, vars *varcontext.VarContext, instance models.ServiceInstanceDetails) (*sqlUserAccount, error) {
+func (broker *CloudSQLBroker) createSqlUserAccount(ctx context.Context, vars *varcontext.VarContext) (*sqlUserAccount, error) {
 	request := &googlecloudsql.User{
 		Name:     vars.GetString("username"),
 		Password: vars.GetString("password"),
 	}
+	instanceName := vars.GetString("db_name")
 
 	if err := vars.Error(); err != nil {
 		return nil, err
@@ -77,7 +69,7 @@ func (broker *CloudSQLBroker) createSqlUserAccount(ctx context.Context, vars *va
 		return nil, err
 	}
 
-	op, err := client.Users.Insert(broker.ProjectId, instance.Name, request).Do()
+	op, err := client.Users.Insert(broker.ProjectId, instanceName, request).Do()
 	if err != nil {
 		return nil, fmt.Errorf("Error creating new database user: %s", err)
 	}
@@ -116,10 +108,11 @@ func (broker *CloudSQLBroker) deleteSqlUserAccount(ctx context.Context, binding 
 	return nil
 }
 
-func (broker *CloudSQLBroker) createSqlSslCert(ctx context.Context, vars *varcontext.VarContext, instance models.ServiceInstanceDetails) (*sqlSslCert, error) {
+func (broker *CloudSQLBroker) createSqlSslCert(ctx context.Context, vars *varcontext.VarContext) (*sqlSslCert, error) {
 	request := &googlecloudsql.SslCertsInsertRequest{
 		CommonName: vars.GetString("certname"),
 	}
+	instanceName := vars.GetString("db_name")
 
 	if err := vars.Error(); err != nil {
 		return nil, err
@@ -131,7 +124,7 @@ func (broker *CloudSQLBroker) createSqlSslCert(ctx context.Context, vars *varcon
 		return nil, err
 	}
 
-	newCert, err := client.SslCerts.Insert(broker.ProjectId, instance.Name, request).Do()
+	newCert, err := client.SslCerts.Insert(broker.ProjectId, instanceName, request).Do()
 	if err != nil {
 		return nil, fmt.Errorf("Error creating SSL certs: %s", err)
 	}

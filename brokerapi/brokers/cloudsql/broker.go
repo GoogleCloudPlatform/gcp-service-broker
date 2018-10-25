@@ -23,12 +23,10 @@ import (
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
-	"github.com/spf13/cast"
 
 	"context"
 
@@ -201,68 +199,32 @@ func createInstanceRequest(vars *varcontext.VarContext) *googlecloudsql.Database
 	}
 }
 
-// generate a new username, password if not provided
-func (b *CloudSQLBroker) ensureUsernamePassword(instanceID, bindingID string, details *brokerapi.BindDetails) error {
-	if details.RawParameters == nil {
-		details.RawParameters = []byte("{}")
-	}
-
-	tempParams := map[string]interface{}{}
-	err := json.Unmarshal(details.RawParameters, &tempParams)
-	if err != nil {
-		return err
-	}
-
-	if v, ok := tempParams["username"].(string); !ok || v == "" {
-		username, err := name_generator.Sql.GenerateUsername(instanceID, bindingID)
-		if err != nil {
-			return err
-		}
-		tempParams["username"] = username
-	}
-	if v, ok := tempParams["password"].(string); !ok || v == "" {
-		password, err := name_generator.Sql.GeneratePassword()
-		if err != nil {
-			return err
-		}
-		tempParams["password"] = password
-	}
-
-	details.RawParameters, err = json.Marshal(tempParams)
-	return err
-}
-
 // Bind creates a new username, password, and set of ssl certs for the given instance.
 // The function may be slow to return because CloudSQL operations are asynchronous.
 // The default PCF service broker timeout may need to be raised to 90 or 120 seconds to accommodate the long bind time.
-func (b *CloudSQLBroker) Bind(ctx context.Context, instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error) {
+func (b *CloudSQLBroker) Bind(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error) {
 	// get context before trying to create anything to catch errors early
-	params := make(map[string]interface{})
-	if err := json.Unmarshal(details.RawParameters, &params); err != nil {
-		return nil, fmt.Errorf("Error unmarshalling parameters: %s", err)
-	}
-
-	if err := b.ensureUsernamePassword(instance.ID, bindingID, &details); err != nil {
+	combinedCreds := varcontext.Builder()
+	useJdbcFormat := vc.GetBool("jdbc_uri_format")
+	if err := vc.Error(); err != nil {
 		return nil, err
 	}
 
-	combinedCreds := varcontext.Builder()
-
 	// Create the service account
-	saCreds, err := b.BrokerBase.Bind(ctx, instance, bindingID, details)
+	saCreds, err := b.BrokerBase.Bind(ctx, vc)
 	if err != nil {
 		return saCreds, err
 	}
 	combinedCreds.MergeMap(saCreds)
 
-	sqlCreds, err := b.createSqlCredentials(ctx, bindingID, details, instance)
+	sqlCreds, err := b.createSqlCredentials(ctx, vc)
 	if err != nil {
 		return saCreds, err
 	}
 	combinedCreds.MergeMap(sqlCreds)
 
 	uriPrefix := ""
-	if cast.ToBool(params["jdbc_uri_format"]) {
+	if useJdbcFormat {
 		uriPrefix = "jdbc:"
 	}
 	combinedCreds.MergeMap(map[string]interface{}{"UriPrefix": uriPrefix})

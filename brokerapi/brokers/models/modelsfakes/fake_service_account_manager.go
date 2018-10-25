@@ -6,17 +6,15 @@ import (
 	"sync"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/pivotal-cf/brokerapi"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 )
 
 type FakeServiceAccountManager struct {
-	CreateCredentialsStub        func(ctx context.Context, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (map[string]interface{}, error)
+	CreateCredentialsStub        func(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error)
 	createCredentialsMutex       sync.RWMutex
 	createCredentialsArgsForCall []struct {
-		ctx       context.Context
-		bindingID string
-		details   brokerapi.BindDetails
-		instance  models.ServiceInstanceDetails
+		ctx context.Context
+		vc  *varcontext.VarContext
 	}
 	createCredentialsReturns struct {
 		result1 map[string]interface{}
@@ -38,38 +36,21 @@ type FakeServiceAccountManager struct {
 	deleteCredentialsReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CreateAccountWithRolesStub        func(ctx context.Context, bindingID string, roles []string) (map[string]interface{}, error)
-	createAccountWithRolesMutex       sync.RWMutex
-	createAccountWithRolesArgsForCall []struct {
-		ctx       context.Context
-		bindingID string
-		roles     []string
-	}
-	createAccountWithRolesReturns struct {
-		result1 map[string]interface{}
-		result2 error
-	}
-	createAccountWithRolesReturnsOnCall map[int]struct {
-		result1 map[string]interface{}
-		result2 error
-	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeServiceAccountManager) CreateCredentials(ctx context.Context, bindingID string, details brokerapi.BindDetails, instance models.ServiceInstanceDetails) (map[string]interface{}, error) {
+func (fake *FakeServiceAccountManager) CreateCredentials(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error) {
 	fake.createCredentialsMutex.Lock()
 	ret, specificReturn := fake.createCredentialsReturnsOnCall[len(fake.createCredentialsArgsForCall)]
 	fake.createCredentialsArgsForCall = append(fake.createCredentialsArgsForCall, struct {
-		ctx       context.Context
-		bindingID string
-		details   brokerapi.BindDetails
-		instance  models.ServiceInstanceDetails
-	}{ctx, bindingID, details, instance})
-	fake.recordInvocation("CreateCredentials", []interface{}{ctx, bindingID, details, instance})
+		ctx context.Context
+		vc  *varcontext.VarContext
+	}{ctx, vc})
+	fake.recordInvocation("CreateCredentials", []interface{}{ctx, vc})
 	fake.createCredentialsMutex.Unlock()
 	if fake.CreateCredentialsStub != nil {
-		return fake.CreateCredentialsStub(ctx, bindingID, details, instance)
+		return fake.CreateCredentialsStub(ctx, vc)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -83,10 +64,10 @@ func (fake *FakeServiceAccountManager) CreateCredentialsCallCount() int {
 	return len(fake.createCredentialsArgsForCall)
 }
 
-func (fake *FakeServiceAccountManager) CreateCredentialsArgsForCall(i int) (context.Context, string, brokerapi.BindDetails, models.ServiceInstanceDetails) {
+func (fake *FakeServiceAccountManager) CreateCredentialsArgsForCall(i int) (context.Context, *varcontext.VarContext) {
 	fake.createCredentialsMutex.RLock()
 	defer fake.createCredentialsMutex.RUnlock()
-	return fake.createCredentialsArgsForCall[i].ctx, fake.createCredentialsArgsForCall[i].bindingID, fake.createCredentialsArgsForCall[i].details, fake.createCredentialsArgsForCall[i].instance
+	return fake.createCredentialsArgsForCall[i].ctx, fake.createCredentialsArgsForCall[i].vc
 }
 
 func (fake *FakeServiceAccountManager) CreateCredentialsReturns(result1 map[string]interface{}, result2 error) {
@@ -160,64 +141,6 @@ func (fake *FakeServiceAccountManager) DeleteCredentialsReturnsOnCall(i int, res
 	}{result1}
 }
 
-func (fake *FakeServiceAccountManager) CreateAccountWithRoles(ctx context.Context, bindingID string, roles []string) (map[string]interface{}, error) {
-	var rolesCopy []string
-	if roles != nil {
-		rolesCopy = make([]string, len(roles))
-		copy(rolesCopy, roles)
-	}
-	fake.createAccountWithRolesMutex.Lock()
-	ret, specificReturn := fake.createAccountWithRolesReturnsOnCall[len(fake.createAccountWithRolesArgsForCall)]
-	fake.createAccountWithRolesArgsForCall = append(fake.createAccountWithRolesArgsForCall, struct {
-		ctx       context.Context
-		bindingID string
-		roles     []string
-	}{ctx, bindingID, rolesCopy})
-	fake.recordInvocation("CreateAccountWithRoles", []interface{}{ctx, bindingID, rolesCopy})
-	fake.createAccountWithRolesMutex.Unlock()
-	if fake.CreateAccountWithRolesStub != nil {
-		return fake.CreateAccountWithRolesStub(ctx, bindingID, roles)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.createAccountWithRolesReturns.result1, fake.createAccountWithRolesReturns.result2
-}
-
-func (fake *FakeServiceAccountManager) CreateAccountWithRolesCallCount() int {
-	fake.createAccountWithRolesMutex.RLock()
-	defer fake.createAccountWithRolesMutex.RUnlock()
-	return len(fake.createAccountWithRolesArgsForCall)
-}
-
-func (fake *FakeServiceAccountManager) CreateAccountWithRolesArgsForCall(i int) (context.Context, string, []string) {
-	fake.createAccountWithRolesMutex.RLock()
-	defer fake.createAccountWithRolesMutex.RUnlock()
-	return fake.createAccountWithRolesArgsForCall[i].ctx, fake.createAccountWithRolesArgsForCall[i].bindingID, fake.createAccountWithRolesArgsForCall[i].roles
-}
-
-func (fake *FakeServiceAccountManager) CreateAccountWithRolesReturns(result1 map[string]interface{}, result2 error) {
-	fake.CreateAccountWithRolesStub = nil
-	fake.createAccountWithRolesReturns = struct {
-		result1 map[string]interface{}
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeServiceAccountManager) CreateAccountWithRolesReturnsOnCall(i int, result1 map[string]interface{}, result2 error) {
-	fake.CreateAccountWithRolesStub = nil
-	if fake.createAccountWithRolesReturnsOnCall == nil {
-		fake.createAccountWithRolesReturnsOnCall = make(map[int]struct {
-			result1 map[string]interface{}
-			result2 error
-		})
-	}
-	fake.createAccountWithRolesReturnsOnCall[i] = struct {
-		result1 map[string]interface{}
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *FakeServiceAccountManager) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -225,8 +148,6 @@ func (fake *FakeServiceAccountManager) Invocations() map[string][][]interface{} 
 	defer fake.createCredentialsMutex.RUnlock()
 	fake.deleteCredentialsMutex.RLock()
 	defer fake.deleteCredentialsMutex.RUnlock()
-	fake.createAccountWithRolesMutex.RLock()
-	defer fake.createAccountWithRolesMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

@@ -65,6 +65,7 @@ func New(cfg *config.BrokerConfig, logger lager.Logger) (*GCPServiceBroker, erro
 	saManager := &account_managers.ServiceAccountManager{
 		HttpConfig: cfg.HttpConfig,
 		ProjectId:  cfg.ProjectId,
+		Logger:     self.Logger,
 	}
 
 	bb := broker_base.BrokerBase{
@@ -319,7 +320,12 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 		"details":     details,
 	})
 
-	service := gcpBroker.ServiceBrokerMap[details.ServiceID]
+	brokerService, err := broker.GetServiceById(details.ServiceID)
+	if err != nil {
+		return brokerapi.Binding{}, err
+	}
+
+	serviceHelper := gcpBroker.ServiceBrokerMap[details.ServiceID]
 
 	// check for existing binding
 	count, err := db_service.CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, instanceID, bindingID)
@@ -343,8 +349,13 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 		}
 	}
 
+	vars, err := brokerService.BindVariables(*instanceRecord, bindingID, details)
+	if err != nil {
+		return brokerapi.Binding{}, err
+	}
+
 	// create binding
-	credsDetails, err := service.Bind(ctx, *instanceRecord, bindingID, details)
+	credsDetails, err := serviceHelper.Bind(ctx, vars)
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}
@@ -367,7 +378,7 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 			err)
 	}
 
-	updatedCreds, err := service.BuildInstanceCredentials(ctx, newCreds, *instanceRecord)
+	updatedCreds, err := serviceHelper.BuildInstanceCredentials(ctx, newCreds, *instanceRecord)
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}

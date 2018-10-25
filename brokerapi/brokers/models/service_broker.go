@@ -17,6 +17,7 @@ package models
 import (
 	"context"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
 )
 
@@ -32,7 +33,7 @@ type ServiceBrokerHelper interface {
 	// Bind provisions the necessary resources for a user to be able to connect to the provisioned service.
 	// This may include creating service accounts, granting permissions, and adding users to services e.g. a SQL database user.
 	// It stores information necessary to access the service _and_ delete the binding in the returned map.
-	Bind(ctx context.Context, instance ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (map[string]interface{}, error)
+	Bind(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error)
 	BuildInstanceCredentials(ctx context.Context, bindRecord ServiceBindingCredentials, instance ServiceInstanceDetails) (map[string]interface{}, error)
 	// Unbind deprovisions the resources created with Bind.
 	Unbind(ctx context.Context, instance ServiceInstanceDetails, details ServiceBindingCredentials) error
@@ -52,9 +53,8 @@ type ServiceBrokerHelper interface {
 }
 
 type ServiceAccountManager interface {
-	CreateCredentials(ctx context.Context, bindingID string, details brokerapi.BindDetails, instance ServiceInstanceDetails) (map[string]interface{}, error)
+	CreateCredentials(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error)
 	DeleteCredentials(ctx context.Context, creds ServiceBindingCredentials) error
-	CreateAccountWithRoles(ctx context.Context, bindingID string, roles []string) (map[string]interface{}, error)
 }
 
 // This custom user agent string is added to provision calls so that Google can track the aggregated use of this tool
@@ -66,7 +66,6 @@ func ProductionizeUserAgent() {
 	CustomUserAgent = "cf-gcp-service-broker 4.0.0"
 }
 
-const CloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
 const StorageName = "google-storage"
 const BigqueryName = "google-bigquery"
 const BigtableName = "google-bigtable"

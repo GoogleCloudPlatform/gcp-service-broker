@@ -21,7 +21,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2/google"
@@ -31,6 +30,7 @@ import (
 const (
 	EnvironmentVarPrefix = "gsb"
 	rootSaEnvVar         = "ROOT_SERVICE_ACCOUNT_JSON"
+	cloudPlatformScope   = "https://www.googleapis.com/auth/cloud-platform"
 )
 
 var (
@@ -47,7 +47,7 @@ func init() {
 
 func GetAuthedConfig() (*jwt.Config, error) {
 	rootCreds := getServiceAccountJson()
-	conf, err := google.JWTConfigFromJSON([]byte(rootCreds), models.CloudPlatformScope)
+	conf, err := google.JWTConfigFromJSON([]byte(rootCreds), cloudPlatformScope)
 	if err != nil {
 		return nil, fmt.Errorf("Error initializing config from credentials: %s", err)
 	}

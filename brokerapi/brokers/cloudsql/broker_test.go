@@ -19,7 +19,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/viper"
@@ -27,8 +26,6 @@ import (
 )
 
 func TestCreateProvisionRequest(t *testing.T) {
-
-	name_generator.New()
 
 	viper.Set("service.google-cloudsql-mysql.plans", `[{
       "tier": "db-n1-standard-1",

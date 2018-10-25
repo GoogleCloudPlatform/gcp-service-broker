@@ -23,7 +23,6 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/config"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/name_generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/compatibility"
 	"github.com/pivotal-cf/brokerapi"
@@ -63,7 +62,6 @@ func serve() {
 	models.ProductionizeUserAgent()
 
 	db_service.New(logger)
-	name_generator.New()
 
 	// init broker
 	cfg, err := config.NewBrokerConfigFromEnv()
