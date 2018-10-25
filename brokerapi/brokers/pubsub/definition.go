@@ -123,7 +123,7 @@ again during that time (on a best-effort basis).
 				Constraints: validation.NewConstraintBuilder().
 					MinLength(0). // subscription name could be blank on return
 					MaxLength(255).
-					Pattern(`^[a-zA-Z][a-zA-Z0-9\d\-_~%\.\+]+`). // adapted from the Pub/Sub create subscription page's validator
+					Pattern(`^(|[a-zA-Z][a-zA-Z0-9\d\-_~%\.\+]+)`). // adapted from the Pub/Sub create subscription page's validator
 					Build(),
 			},
 			broker.BrokerVariable{
