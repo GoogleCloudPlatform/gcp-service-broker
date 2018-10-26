@@ -25,8 +25,8 @@ func init() {
 	broker.Register(mysqlServiceDefinition())
 }
 
-func mysqlServiceDefinition() *broker.BrokerService {
-	return &broker.BrokerService{
+func mysqlServiceDefinition() *broker.ServiceDefinition {
+	return &broker.ServiceDefinition{
 		Name: models.CloudsqlMySQLName,
 		DefaultServiceDefinition: `{
 		    "id": "4bc59b9a-8520-409f-85da-1c7552315863",

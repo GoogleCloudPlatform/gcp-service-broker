@@ -41,7 +41,7 @@ func CatalogDocumentation() string {
 }
 
 // generateServiceDocumentation creates documentation for a single catalog entry
-func generateServiceDocumentation(svc *broker.BrokerService) string {
+func generateServiceDocumentation(svc *broker.ServiceDefinition) string {
 	catalog, err := svc.CatalogEntry()
 	if err != nil {
 		log.Fatalf("Error getting catalog entry for service %s, %v", svc.Name, err)

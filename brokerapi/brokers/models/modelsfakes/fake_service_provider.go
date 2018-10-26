@@ -10,7 +10,7 @@ import (
 	"github.com/pivotal-cf/brokerapi"
 )
 
-type FakeServiceBrokerHelper struct {
+type FakeServiceProvider struct {
 	ProvisionStub        func(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error)
 	provisionMutex       sync.RWMutex
 	provisionArgsForCall []struct {
@@ -132,7 +132,7 @@ type FakeServiceBrokerHelper struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeServiceBrokerHelper) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+func (fake *FakeServiceProvider) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
 	fake.provisionMutex.Lock()
 	ret, specificReturn := fake.provisionReturnsOnCall[len(fake.provisionArgsForCall)]
 	fake.provisionArgsForCall = append(fake.provisionArgsForCall, struct {
@@ -152,19 +152,19 @@ func (fake *FakeServiceBrokerHelper) Provision(ctx context.Context, instanceId s
 	return fake.provisionReturns.result1, fake.provisionReturns.result2
 }
 
-func (fake *FakeServiceBrokerHelper) ProvisionCallCount() int {
+func (fake *FakeServiceProvider) ProvisionCallCount() int {
 	fake.provisionMutex.RLock()
 	defer fake.provisionMutex.RUnlock()
 	return len(fake.provisionArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) ProvisionArgsForCall(i int) (context.Context, string, brokerapi.ProvisionDetails, models.ServicePlan) {
+func (fake *FakeServiceProvider) ProvisionArgsForCall(i int) (context.Context, string, brokerapi.ProvisionDetails, models.ServicePlan) {
 	fake.provisionMutex.RLock()
 	defer fake.provisionMutex.RUnlock()
 	return fake.provisionArgsForCall[i].ctx, fake.provisionArgsForCall[i].instanceId, fake.provisionArgsForCall[i].details, fake.provisionArgsForCall[i].plan
 }
 
-func (fake *FakeServiceBrokerHelper) ProvisionReturns(result1 models.ServiceInstanceDetails, result2 error) {
+func (fake *FakeServiceProvider) ProvisionReturns(result1 models.ServiceInstanceDetails, result2 error) {
 	fake.ProvisionStub = nil
 	fake.provisionReturns = struct {
 		result1 models.ServiceInstanceDetails
@@ -172,7 +172,7 @@ func (fake *FakeServiceBrokerHelper) ProvisionReturns(result1 models.ServiceInst
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) ProvisionReturnsOnCall(i int, result1 models.ServiceInstanceDetails, result2 error) {
+func (fake *FakeServiceProvider) ProvisionReturnsOnCall(i int, result1 models.ServiceInstanceDetails, result2 error) {
 	fake.ProvisionStub = nil
 	if fake.provisionReturnsOnCall == nil {
 		fake.provisionReturnsOnCall = make(map[int]struct {
@@ -186,7 +186,7 @@ func (fake *FakeServiceBrokerHelper) ProvisionReturnsOnCall(i int, result1 model
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) Bind(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error) {
+func (fake *FakeServiceProvider) Bind(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error) {
 	fake.bindMutex.Lock()
 	ret, specificReturn := fake.bindReturnsOnCall[len(fake.bindArgsForCall)]
 	fake.bindArgsForCall = append(fake.bindArgsForCall, struct {
@@ -204,19 +204,19 @@ func (fake *FakeServiceBrokerHelper) Bind(ctx context.Context, vc *varcontext.Va
 	return fake.bindReturns.result1, fake.bindReturns.result2
 }
 
-func (fake *FakeServiceBrokerHelper) BindCallCount() int {
+func (fake *FakeServiceProvider) BindCallCount() int {
 	fake.bindMutex.RLock()
 	defer fake.bindMutex.RUnlock()
 	return len(fake.bindArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) BindArgsForCall(i int) (context.Context, *varcontext.VarContext) {
+func (fake *FakeServiceProvider) BindArgsForCall(i int) (context.Context, *varcontext.VarContext) {
 	fake.bindMutex.RLock()
 	defer fake.bindMutex.RUnlock()
 	return fake.bindArgsForCall[i].ctx, fake.bindArgsForCall[i].vc
 }
 
-func (fake *FakeServiceBrokerHelper) BindReturns(result1 map[string]interface{}, result2 error) {
+func (fake *FakeServiceProvider) BindReturns(result1 map[string]interface{}, result2 error) {
 	fake.BindStub = nil
 	fake.bindReturns = struct {
 		result1 map[string]interface{}
@@ -224,7 +224,7 @@ func (fake *FakeServiceBrokerHelper) BindReturns(result1 map[string]interface{},
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) BindReturnsOnCall(i int, result1 map[string]interface{}, result2 error) {
+func (fake *FakeServiceProvider) BindReturnsOnCall(i int, result1 map[string]interface{}, result2 error) {
 	fake.BindStub = nil
 	if fake.bindReturnsOnCall == nil {
 		fake.bindReturnsOnCall = make(map[int]struct {
@@ -238,7 +238,7 @@ func (fake *FakeServiceBrokerHelper) BindReturnsOnCall(i int, result1 map[string
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instance models.ServiceInstanceDetails) (map[string]interface{}, error) {
+func (fake *FakeServiceProvider) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instance models.ServiceInstanceDetails) (map[string]interface{}, error) {
 	fake.buildInstanceCredentialsMutex.Lock()
 	ret, specificReturn := fake.buildInstanceCredentialsReturnsOnCall[len(fake.buildInstanceCredentialsArgsForCall)]
 	fake.buildInstanceCredentialsArgsForCall = append(fake.buildInstanceCredentialsArgsForCall, struct {
@@ -257,19 +257,19 @@ func (fake *FakeServiceBrokerHelper) BuildInstanceCredentials(ctx context.Contex
 	return fake.buildInstanceCredentialsReturns.result1, fake.buildInstanceCredentialsReturns.result2
 }
 
-func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsCallCount() int {
+func (fake *FakeServiceProvider) BuildInstanceCredentialsCallCount() int {
 	fake.buildInstanceCredentialsMutex.RLock()
 	defer fake.buildInstanceCredentialsMutex.RUnlock()
 	return len(fake.buildInstanceCredentialsArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsArgsForCall(i int) (context.Context, models.ServiceBindingCredentials, models.ServiceInstanceDetails) {
+func (fake *FakeServiceProvider) BuildInstanceCredentialsArgsForCall(i int) (context.Context, models.ServiceBindingCredentials, models.ServiceInstanceDetails) {
 	fake.buildInstanceCredentialsMutex.RLock()
 	defer fake.buildInstanceCredentialsMutex.RUnlock()
 	return fake.buildInstanceCredentialsArgsForCall[i].ctx, fake.buildInstanceCredentialsArgsForCall[i].bindRecord, fake.buildInstanceCredentialsArgsForCall[i].instance
 }
 
-func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsReturns(result1 map[string]interface{}, result2 error) {
+func (fake *FakeServiceProvider) BuildInstanceCredentialsReturns(result1 map[string]interface{}, result2 error) {
 	fake.BuildInstanceCredentialsStub = nil
 	fake.buildInstanceCredentialsReturns = struct {
 		result1 map[string]interface{}
@@ -277,7 +277,7 @@ func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsReturns(result1 map
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsReturnsOnCall(i int, result1 map[string]interface{}, result2 error) {
+func (fake *FakeServiceProvider) BuildInstanceCredentialsReturnsOnCall(i int, result1 map[string]interface{}, result2 error) {
 	fake.BuildInstanceCredentialsStub = nil
 	if fake.buildInstanceCredentialsReturnsOnCall == nil {
 		fake.buildInstanceCredentialsReturnsOnCall = make(map[int]struct {
@@ -291,7 +291,7 @@ func (fake *FakeServiceBrokerHelper) BuildInstanceCredentialsReturnsOnCall(i int
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) Unbind(ctx context.Context, instance models.ServiceInstanceDetails, details models.ServiceBindingCredentials) error {
+func (fake *FakeServiceProvider) Unbind(ctx context.Context, instance models.ServiceInstanceDetails, details models.ServiceBindingCredentials) error {
 	fake.unbindMutex.Lock()
 	ret, specificReturn := fake.unbindReturnsOnCall[len(fake.unbindArgsForCall)]
 	fake.unbindArgsForCall = append(fake.unbindArgsForCall, struct {
@@ -310,26 +310,26 @@ func (fake *FakeServiceBrokerHelper) Unbind(ctx context.Context, instance models
 	return fake.unbindReturns.result1
 }
 
-func (fake *FakeServiceBrokerHelper) UnbindCallCount() int {
+func (fake *FakeServiceProvider) UnbindCallCount() int {
 	fake.unbindMutex.RLock()
 	defer fake.unbindMutex.RUnlock()
 	return len(fake.unbindArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) UnbindArgsForCall(i int) (context.Context, models.ServiceInstanceDetails, models.ServiceBindingCredentials) {
+func (fake *FakeServiceProvider) UnbindArgsForCall(i int) (context.Context, models.ServiceInstanceDetails, models.ServiceBindingCredentials) {
 	fake.unbindMutex.RLock()
 	defer fake.unbindMutex.RUnlock()
 	return fake.unbindArgsForCall[i].ctx, fake.unbindArgsForCall[i].instance, fake.unbindArgsForCall[i].details
 }
 
-func (fake *FakeServiceBrokerHelper) UnbindReturns(result1 error) {
+func (fake *FakeServiceProvider) UnbindReturns(result1 error) {
 	fake.UnbindStub = nil
 	fake.unbindReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeServiceBrokerHelper) UnbindReturnsOnCall(i int, result1 error) {
+func (fake *FakeServiceProvider) UnbindReturnsOnCall(i int, result1 error) {
 	fake.UnbindStub = nil
 	if fake.unbindReturnsOnCall == nil {
 		fake.unbindReturnsOnCall = make(map[int]struct {
@@ -341,7 +341,7 @@ func (fake *FakeServiceBrokerHelper) UnbindReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeServiceBrokerHelper) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (operationId *string, err error) {
+func (fake *FakeServiceProvider) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (operationId *string, err error) {
 	fake.deprovisionMutex.Lock()
 	ret, specificReturn := fake.deprovisionReturnsOnCall[len(fake.deprovisionArgsForCall)]
 	fake.deprovisionArgsForCall = append(fake.deprovisionArgsForCall, struct {
@@ -360,19 +360,19 @@ func (fake *FakeServiceBrokerHelper) Deprovision(ctx context.Context, instance m
 	return fake.deprovisionReturns.result1, fake.deprovisionReturns.result2
 }
 
-func (fake *FakeServiceBrokerHelper) DeprovisionCallCount() int {
+func (fake *FakeServiceProvider) DeprovisionCallCount() int {
 	fake.deprovisionMutex.RLock()
 	defer fake.deprovisionMutex.RUnlock()
 	return len(fake.deprovisionArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) DeprovisionArgsForCall(i int) (context.Context, models.ServiceInstanceDetails, brokerapi.DeprovisionDetails) {
+func (fake *FakeServiceProvider) DeprovisionArgsForCall(i int) (context.Context, models.ServiceInstanceDetails, brokerapi.DeprovisionDetails) {
 	fake.deprovisionMutex.RLock()
 	defer fake.deprovisionMutex.RUnlock()
 	return fake.deprovisionArgsForCall[i].ctx, fake.deprovisionArgsForCall[i].instance, fake.deprovisionArgsForCall[i].details
 }
 
-func (fake *FakeServiceBrokerHelper) DeprovisionReturns(result1 *string, result2 error) {
+func (fake *FakeServiceProvider) DeprovisionReturns(result1 *string, result2 error) {
 	fake.DeprovisionStub = nil
 	fake.deprovisionReturns = struct {
 		result1 *string
@@ -380,7 +380,7 @@ func (fake *FakeServiceBrokerHelper) DeprovisionReturns(result1 *string, result2
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) DeprovisionReturnsOnCall(i int, result1 *string, result2 error) {
+func (fake *FakeServiceProvider) DeprovisionReturnsOnCall(i int, result1 *string, result2 error) {
 	fake.DeprovisionStub = nil
 	if fake.deprovisionReturnsOnCall == nil {
 		fake.deprovisionReturnsOnCall = make(map[int]struct {
@@ -394,7 +394,7 @@ func (fake *FakeServiceBrokerHelper) DeprovisionReturnsOnCall(i int, result1 *st
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) PollInstance(ctx context.Context, instance models.ServiceInstanceDetails) (bool, error) {
+func (fake *FakeServiceProvider) PollInstance(ctx context.Context, instance models.ServiceInstanceDetails) (bool, error) {
 	fake.pollInstanceMutex.Lock()
 	ret, specificReturn := fake.pollInstanceReturnsOnCall[len(fake.pollInstanceArgsForCall)]
 	fake.pollInstanceArgsForCall = append(fake.pollInstanceArgsForCall, struct {
@@ -412,19 +412,19 @@ func (fake *FakeServiceBrokerHelper) PollInstance(ctx context.Context, instance 
 	return fake.pollInstanceReturns.result1, fake.pollInstanceReturns.result2
 }
 
-func (fake *FakeServiceBrokerHelper) PollInstanceCallCount() int {
+func (fake *FakeServiceProvider) PollInstanceCallCount() int {
 	fake.pollInstanceMutex.RLock()
 	defer fake.pollInstanceMutex.RUnlock()
 	return len(fake.pollInstanceArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) PollInstanceArgsForCall(i int) (context.Context, models.ServiceInstanceDetails) {
+func (fake *FakeServiceProvider) PollInstanceArgsForCall(i int) (context.Context, models.ServiceInstanceDetails) {
 	fake.pollInstanceMutex.RLock()
 	defer fake.pollInstanceMutex.RUnlock()
 	return fake.pollInstanceArgsForCall[i].ctx, fake.pollInstanceArgsForCall[i].instance
 }
 
-func (fake *FakeServiceBrokerHelper) PollInstanceReturns(result1 bool, result2 error) {
+func (fake *FakeServiceProvider) PollInstanceReturns(result1 bool, result2 error) {
 	fake.PollInstanceStub = nil
 	fake.pollInstanceReturns = struct {
 		result1 bool
@@ -432,7 +432,7 @@ func (fake *FakeServiceBrokerHelper) PollInstanceReturns(result1 bool, result2 e
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) PollInstanceReturnsOnCall(i int, result1 bool, result2 error) {
+func (fake *FakeServiceProvider) PollInstanceReturnsOnCall(i int, result1 bool, result2 error) {
 	fake.PollInstanceStub = nil
 	if fake.pollInstanceReturnsOnCall == nil {
 		fake.pollInstanceReturnsOnCall = make(map[int]struct {
@@ -446,7 +446,7 @@ func (fake *FakeServiceBrokerHelper) PollInstanceReturnsOnCall(i int, result1 bo
 	}{result1, result2}
 }
 
-func (fake *FakeServiceBrokerHelper) ProvisionsAsync() bool {
+func (fake *FakeServiceProvider) ProvisionsAsync() bool {
 	fake.provisionsAsyncMutex.Lock()
 	ret, specificReturn := fake.provisionsAsyncReturnsOnCall[len(fake.provisionsAsyncArgsForCall)]
 	fake.provisionsAsyncArgsForCall = append(fake.provisionsAsyncArgsForCall, struct{}{})
@@ -461,20 +461,20 @@ func (fake *FakeServiceBrokerHelper) ProvisionsAsync() bool {
 	return fake.provisionsAsyncReturns.result1
 }
 
-func (fake *FakeServiceBrokerHelper) ProvisionsAsyncCallCount() int {
+func (fake *FakeServiceProvider) ProvisionsAsyncCallCount() int {
 	fake.provisionsAsyncMutex.RLock()
 	defer fake.provisionsAsyncMutex.RUnlock()
 	return len(fake.provisionsAsyncArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) ProvisionsAsyncReturns(result1 bool) {
+func (fake *FakeServiceProvider) ProvisionsAsyncReturns(result1 bool) {
 	fake.ProvisionsAsyncStub = nil
 	fake.provisionsAsyncReturns = struct {
 		result1 bool
 	}{result1}
 }
 
-func (fake *FakeServiceBrokerHelper) ProvisionsAsyncReturnsOnCall(i int, result1 bool) {
+func (fake *FakeServiceProvider) ProvisionsAsyncReturnsOnCall(i int, result1 bool) {
 	fake.ProvisionsAsyncStub = nil
 	if fake.provisionsAsyncReturnsOnCall == nil {
 		fake.provisionsAsyncReturnsOnCall = make(map[int]struct {
@@ -486,7 +486,7 @@ func (fake *FakeServiceBrokerHelper) ProvisionsAsyncReturnsOnCall(i int, result1
 	}{result1}
 }
 
-func (fake *FakeServiceBrokerHelper) DeprovisionsAsync() bool {
+func (fake *FakeServiceProvider) DeprovisionsAsync() bool {
 	fake.deprovisionsAsyncMutex.Lock()
 	ret, specificReturn := fake.deprovisionsAsyncReturnsOnCall[len(fake.deprovisionsAsyncArgsForCall)]
 	fake.deprovisionsAsyncArgsForCall = append(fake.deprovisionsAsyncArgsForCall, struct{}{})
@@ -501,20 +501,20 @@ func (fake *FakeServiceBrokerHelper) DeprovisionsAsync() bool {
 	return fake.deprovisionsAsyncReturns.result1
 }
 
-func (fake *FakeServiceBrokerHelper) DeprovisionsAsyncCallCount() int {
+func (fake *FakeServiceProvider) DeprovisionsAsyncCallCount() int {
 	fake.deprovisionsAsyncMutex.RLock()
 	defer fake.deprovisionsAsyncMutex.RUnlock()
 	return len(fake.deprovisionsAsyncArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) DeprovisionsAsyncReturns(result1 bool) {
+func (fake *FakeServiceProvider) DeprovisionsAsyncReturns(result1 bool) {
 	fake.DeprovisionsAsyncStub = nil
 	fake.deprovisionsAsyncReturns = struct {
 		result1 bool
 	}{result1}
 }
 
-func (fake *FakeServiceBrokerHelper) DeprovisionsAsyncReturnsOnCall(i int, result1 bool) {
+func (fake *FakeServiceProvider) DeprovisionsAsyncReturnsOnCall(i int, result1 bool) {
 	fake.DeprovisionsAsyncStub = nil
 	if fake.deprovisionsAsyncReturnsOnCall == nil {
 		fake.deprovisionsAsyncReturnsOnCall = make(map[int]struct {
@@ -526,7 +526,7 @@ func (fake *FakeServiceBrokerHelper) DeprovisionsAsyncReturnsOnCall(i int, resul
 	}{result1}
 }
 
-func (fake *FakeServiceBrokerHelper) UpdateInstanceDetails(ctx context.Context, instance *models.ServiceInstanceDetails) error {
+func (fake *FakeServiceProvider) UpdateInstanceDetails(ctx context.Context, instance *models.ServiceInstanceDetails) error {
 	fake.updateInstanceDetailsMutex.Lock()
 	ret, specificReturn := fake.updateInstanceDetailsReturnsOnCall[len(fake.updateInstanceDetailsArgsForCall)]
 	fake.updateInstanceDetailsArgsForCall = append(fake.updateInstanceDetailsArgsForCall, struct {
@@ -544,26 +544,26 @@ func (fake *FakeServiceBrokerHelper) UpdateInstanceDetails(ctx context.Context, 
 	return fake.updateInstanceDetailsReturns.result1
 }
 
-func (fake *FakeServiceBrokerHelper) UpdateInstanceDetailsCallCount() int {
+func (fake *FakeServiceProvider) UpdateInstanceDetailsCallCount() int {
 	fake.updateInstanceDetailsMutex.RLock()
 	defer fake.updateInstanceDetailsMutex.RUnlock()
 	return len(fake.updateInstanceDetailsArgsForCall)
 }
 
-func (fake *FakeServiceBrokerHelper) UpdateInstanceDetailsArgsForCall(i int) (context.Context, *models.ServiceInstanceDetails) {
+func (fake *FakeServiceProvider) UpdateInstanceDetailsArgsForCall(i int) (context.Context, *models.ServiceInstanceDetails) {
 	fake.updateInstanceDetailsMutex.RLock()
 	defer fake.updateInstanceDetailsMutex.RUnlock()
 	return fake.updateInstanceDetailsArgsForCall[i].ctx, fake.updateInstanceDetailsArgsForCall[i].instance
 }
 
-func (fake *FakeServiceBrokerHelper) UpdateInstanceDetailsReturns(result1 error) {
+func (fake *FakeServiceProvider) UpdateInstanceDetailsReturns(result1 error) {
 	fake.UpdateInstanceDetailsStub = nil
 	fake.updateInstanceDetailsReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeServiceBrokerHelper) UpdateInstanceDetailsReturnsOnCall(i int, result1 error) {
+func (fake *FakeServiceProvider) UpdateInstanceDetailsReturnsOnCall(i int, result1 error) {
 	fake.UpdateInstanceDetailsStub = nil
 	if fake.updateInstanceDetailsReturnsOnCall == nil {
 		fake.updateInstanceDetailsReturnsOnCall = make(map[int]struct {
@@ -575,7 +575,7 @@ func (fake *FakeServiceBrokerHelper) UpdateInstanceDetailsReturnsOnCall(i int, r
 	}{result1}
 }
 
-func (fake *FakeServiceBrokerHelper) Invocations() map[string][][]interface{} {
+func (fake *FakeServiceProvider) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.provisionMutex.RLock()
@@ -603,7 +603,7 @@ func (fake *FakeServiceBrokerHelper) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *FakeServiceBrokerHelper) recordInvocation(key string, args []interface{}) {
+func (fake *FakeServiceProvider) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -615,4 +615,4 @@ func (fake *FakeServiceBrokerHelper) recordInvocation(key string, args []interfa
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ models.ServiceBrokerHelper = new(FakeServiceBrokerHelper)
+var _ models.ServiceProvider = new(FakeServiceProvider)

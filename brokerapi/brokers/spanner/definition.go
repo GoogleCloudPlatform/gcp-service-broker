@@ -25,7 +25,7 @@ func init() {
 	broker.Register(serviceDefinition())
 }
 
-func serviceDefinition() *broker.BrokerService {
+func serviceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"spanner.databaseAdmin",
 		"spanner.databaseReader",
@@ -33,7 +33,7 @@ func serviceDefinition() *broker.BrokerService {
 		"spanner.viewer",
 	}
 
-	return &broker.BrokerService{
+	return &broker.ServiceDefinition{
 		Name: models.SpannerName,
 		DefaultServiceDefinition: `
 		{

@@ -26,8 +26,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-func ExampleBrokerService_EnabledProperty() {
-	service := BrokerService{
+func ExampleServiceDefinition_EnabledProperty() {
+	service := ServiceDefinition{
 		Name: "left-handed-smoke-sifter",
 	}
 
@@ -36,8 +36,8 @@ func ExampleBrokerService_EnabledProperty() {
 	// Output: service.left-handed-smoke-sifter.enabled
 }
 
-func ExampleBrokerService_DefinitionProperty() {
-	service := BrokerService{
+func ExampleServiceDefinition_DefinitionProperty() {
+	service := ServiceDefinition{
 		Name: "left-handed-smoke-sifter",
 	}
 
@@ -46,8 +46,8 @@ func ExampleBrokerService_DefinitionProperty() {
 	// Output: service.left-handed-smoke-sifter.definition
 }
 
-func ExampleBrokerService_UserDefinedPlansProperty() {
-	service := BrokerService{
+func ExampleServiceDefinition_UserDefinedPlansProperty() {
+	service := ServiceDefinition{
 		Name: "left-handed-smoke-sifter",
 	}
 
@@ -56,8 +56,8 @@ func ExampleBrokerService_UserDefinedPlansProperty() {
 	// Output: service.left-handed-smoke-sifter.plans
 }
 
-func ExampleBrokerService_IsEnabled() {
-	service := BrokerService{
+func ExampleServiceDefinition_IsEnabled() {
+	service := ServiceDefinition{
 		Name: "left-handed-smoke-sifter",
 	}
 
@@ -71,8 +71,8 @@ func ExampleBrokerService_IsEnabled() {
 	// false
 }
 
-func ExampleBrokerService_IsRoleWhitelistEnabled() {
-	service := BrokerService{
+func ExampleServiceDefinition_IsRoleWhitelistEnabled() {
+	service := ServiceDefinition{
 		Name:                 "left-handed-smoke-sifter",
 		DefaultRoleWhitelist: []string{"a", "b", "c"},
 	}
@@ -85,8 +85,8 @@ func ExampleBrokerService_IsRoleWhitelistEnabled() {
 	// false
 }
 
-func ExampleBrokerService_TileUserDefinedPlansVariable() {
-	service := BrokerService{
+func ExampleServiceDefinition_TileUserDefinedPlansVariable() {
+	service := ServiceDefinition{
 		Name: "google-spanner",
 	}
 
@@ -95,8 +95,8 @@ func ExampleBrokerService_TileUserDefinedPlansVariable() {
 	// Output: SPANNER_CUSTOM_PLANS
 }
 
-func ExampleBrokerService_ServiceDefinition() {
-	service := BrokerService{
+func ExampleServiceDefinition_ServiceDefinition() {
+	service := ServiceDefinition{
 		Name: "left-handed-smoke-sifter",
 		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl"}`,
 	}
@@ -123,8 +123,8 @@ func ExampleBrokerService_ServiceDefinition() {
 	// Error parsing service definition for "left-handed-smoke-sifter": invalid character 'i' in literal null (expecting 'u')
 }
 
-func ExampleBrokerService_GetPlanById() {
-	service := BrokerService{
+func ExampleServiceDefinition_GetPlanById() {
+	service := ServiceDefinition{
 		Name: "left-handed-smoke-sifter",
 		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
 	}
@@ -146,7 +146,7 @@ func ExampleBrokerService_GetPlanById() {
 	// missing-plan: Plan ID "missing-plan" could not be found
 }
 
-func TestBrokerService_UserDefinedPlans(t *testing.T) {
+func TestServiceDefinition_UserDefinedPlans(t *testing.T) {
 	cases := map[string]struct {
 		Value       interface{}
 		PlanIds     map[string]bool
@@ -189,7 +189,7 @@ func TestBrokerService_UserDefinedPlans(t *testing.T) {
 		},
 	}
 
-	service := BrokerService{
+	service := ServiceDefinition{
 		Name: "left-handed-smoke-sifter",
 		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "name":"lhss"}`,
 		PlanVariables: []BrokerVariable{
@@ -228,7 +228,7 @@ func TestBrokerService_UserDefinedPlans(t *testing.T) {
 	}
 }
 
-func TestBrokerService_CatalogEntry(t *testing.T) {
+func TestServiceDefinition_CatalogEntry(t *testing.T) {
 	cases := map[string]struct {
 		UserDefinition interface{}
 		UserPlans      interface{}
@@ -273,7 +273,7 @@ func TestBrokerService_CatalogEntry(t *testing.T) {
 		},
 	}
 
-	service := BrokerService{
+	service := ServiceDefinition{
 		Name: "left-handed-smoke-sifter",
 		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl"}`,
 	}
@@ -303,8 +303,8 @@ func TestBrokerService_CatalogEntry(t *testing.T) {
 	viper.Set(service.UserDefinedPlansProperty(), nil)
 }
 
-func TestBrokerService_ProvisionVariables(t *testing.T) {
-	service := BrokerService{
+func TestServiceDefinition_ProvisionVariables(t *testing.T) {
+	service := ServiceDefinition{
 		Name: "left-handed-smoke-sifter",
 		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
 		ProvisionInputVariables: []BrokerVariable{
@@ -435,8 +435,8 @@ func TestBrokerService_ProvisionVariables(t *testing.T) {
 	}
 }
 
-func TestBrokerService_BindVariables(t *testing.T) {
-	service := BrokerService{
+func TestServiceDefinition_BindVariables(t *testing.T) {
+	service := ServiceDefinition{
 		Name: "left-handed-smoke-sifter",
 		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
 		BindInputVariables: []BrokerVariable{

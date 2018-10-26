@@ -25,14 +25,14 @@ func init() {
 	broker.Register(serviceDefinition())
 }
 
-func serviceDefinition() *broker.BrokerService {
+func serviceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"storage.objectCreator",
 		"storage.objectViewer",
 		"storage.objectAdmin",
 	}
 
-	return &broker.BrokerService{
+	return &broker.ServiceDefinition{
 		Name: models.StorageName,
 		DefaultServiceDefinition: `{
 	        "id": "b9e4332e-b42b-4680-bda5-ea1506797474",
