@@ -47,7 +47,7 @@ import (
 // GCPServiceBroker is a brokerapi.ServiceBroker that can be used to generate an OSB compatible service broker.
 type GCPServiceBroker struct {
 	Catalog               map[string]models.Service
-	ServiceBrokerMap      map[string]models.ServiceBrokerHelper
+	ServiceBrokerMap      map[string]models.ServiceProvider
 	enableInputValidation bool
 
 	Logger lager.Logger
@@ -76,7 +76,7 @@ func New(cfg *config.BrokerConfig, logger lager.Logger) (*GCPServiceBroker, erro
 	}
 
 	// map service specific brokers to general broker
-	self.ServiceBrokerMap = map[string]models.ServiceBrokerHelper{
+	self.ServiceBrokerMap = map[string]models.ServiceProvider{
 		models.StorageName: &storage.StorageBroker{
 			BrokerBase: bb,
 		},
@@ -232,7 +232,7 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 }
 
 func validateProvisionVariables(details brokerapi.ProvisionDetails) error {
-	brokerService, err := broker.GetServiceById(details.ServiceID)
+	ServiceDefinition, err := broker.GetServiceById(details.ServiceID)
 	if err != nil {
 		return err
 	}
@@ -244,11 +244,11 @@ func validateProvisionVariables(details brokerapi.ProvisionDetails) error {
 		}
 	}
 
-	return broker.ValidateVariables(params, brokerService.ProvisionInputVariables)
+	return broker.ValidateVariables(params, ServiceDefinition.ProvisionInputVariables)
 }
 
 func validateBindVariables(details brokerapi.BindDetails) error {
-	brokerService, err := broker.GetServiceById(details.ServiceID)
+	ServiceDefinition, err := broker.GetServiceById(details.ServiceID)
 	if err != nil {
 		return err
 	}
@@ -260,7 +260,7 @@ func validateBindVariables(details brokerapi.BindDetails) error {
 		}
 	}
 
-	return broker.ValidateVariables(params, brokerService.BindInputVariables)
+	return broker.ValidateVariables(params, ServiceDefinition.BindInputVariables)
 }
 
 // Deprovision destroys an existing instance of a service.
@@ -330,7 +330,7 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 		"details":     details,
 	})
 
-	brokerService, err := broker.GetServiceById(details.ServiceID)
+	ServiceDefinition, err := broker.GetServiceById(details.ServiceID)
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}
@@ -359,7 +359,7 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 		}
 	}
 
-	vars, err := brokerService.BindVariables(*instanceRecord, bindingID, details)
+	vars, err := ServiceDefinition.BindVariables(*instanceRecord, bindingID, details)
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}
@@ -479,7 +479,7 @@ func (gcpBroker *GCPServiceBroker) LastOperation(ctx context.Context, instanceID
 
 // updateStateOnOperationCompletion handles updating/cleaning-up resources that need to be changed
 // once lastOperation finishes successfully.
-func (gcpBroker *GCPServiceBroker) updateStateOnOperationCompletion(ctx context.Context, service models.ServiceBrokerHelper, lastOperationType, instanceID string) error {
+func (gcpBroker *GCPServiceBroker) updateStateOnOperationCompletion(ctx context.Context, service models.ServiceProvider, lastOperationType, instanceID string) error {
 	if lastOperationType == models.DeprovisionOperationType {
 		if err := db_service.DeleteServiceInstanceDetailsById(ctx, instanceID); err != nil {
 			return fmt.Errorf("Error deleting instance details from database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup", err)

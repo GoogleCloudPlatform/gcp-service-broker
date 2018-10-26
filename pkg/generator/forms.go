@@ -272,7 +272,7 @@ func generateServicePlanForms() []Form {
 
 // generateServicePlanForm creates a form for adding additional service plans
 // to the broker for an existing service.
-func generateServicePlanForm(svc *broker.BrokerService) (Form, error) {
+func generateServicePlanForm(svc *broker.ServiceDefinition) (Form, error) {
 	entry, err := svc.CatalogEntry()
 	if err != nil {
 		return Form{}, err

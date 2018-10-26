@@ -16,7 +16,6 @@ package spanner
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	googlespanner "cloud.google.com/go/spanner/admin/instance/apiv1"
@@ -77,19 +76,19 @@ func (s *SpannerBroker) Provision(ctx context.Context, provisionContext *varcont
 		InstanceId: instanceName,
 	}
 
-	otherDetails, err := json.Marshal(ii)
-	if err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling other details: %s", err)
-	}
-
-	return models.ServiceInstanceDetails{
+	id := models.ServiceInstanceDetails{
 		Name:          instanceName,
 		Url:           "",
 		Location:      instanceLocation,
-		OtherDetails:  string(otherDetails),
 		OperationType: models.ProvisionOperationType,
 		OperationId:   op.Name(),
-	}, nil
+	}
+
+	if err := id.SetOtherDetails(ii); err != nil {
+		return models.ServiceInstanceDetails{}, err
+	}
+
+	return id, nil
 }
 
 // PollInstance gets the last operation for this instance and polls its status.

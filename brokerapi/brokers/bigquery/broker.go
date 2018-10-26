@@ -16,7 +16,6 @@ package bigquery
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
@@ -64,19 +63,17 @@ func (b *BigQueryBroker) Provision(ctx context.Context, provisionContext *varcon
 		DatasetId: newDataset.DatasetReference.DatasetId,
 	}
 
-	otherDetails, err := json.Marshal(ii)
-	if err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling other details: %s", err)
+	id := models.ServiceInstanceDetails{
+		Name:     newDataset.DatasetReference.DatasetId,
+		Url:      newDataset.SelfLink,
+		Location: newDataset.Location,
 	}
 
-	i := models.ServiceInstanceDetails{
-		Name:         newDataset.DatasetReference.DatasetId,
-		Url:          newDataset.SelfLink,
-		Location:     newDataset.Location,
-		OtherDetails: string(otherDetails),
+	if err := id.SetOtherDetails(ii); err != nil {
+		return models.ServiceInstanceDetails{}, err
 	}
 
-	return i, nil
+	return id, nil
 }
 
 // Deprovision deletes the dataset associated with the given instance.

@@ -26,7 +26,7 @@ func init() {
 	broker.Register(serviceDefinition())
 }
 
-func serviceDefinition() *broker.BrokerService {
+func serviceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"bigquery.dataViewer",
 		"bigquery.dataEditor",
@@ -35,7 +35,7 @@ func serviceDefinition() *broker.BrokerService {
 		"bigquery.jobUser",
 	}
 
-	return &broker.BrokerService{
+	return &broker.ServiceDefinition{
 		Name: models.BigqueryName,
 		DefaultServiceDefinition: `{
         "id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",

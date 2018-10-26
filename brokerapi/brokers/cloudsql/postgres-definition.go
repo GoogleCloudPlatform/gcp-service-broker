@@ -25,8 +25,8 @@ func init() {
 	broker.Register(postgresServiceDefinition())
 }
 
-func postgresServiceDefinition() *broker.BrokerService {
-	return &broker.BrokerService{
+func postgresServiceDefinition() *broker.ServiceDefinition {
+	return &broker.ServiceDefinition{
 		Name: models.CloudsqlPostgresName,
 		DefaultServiceDefinition: `{
         "id": "cbad6d78-a73c-432d-b8ff-b219a17a803a",

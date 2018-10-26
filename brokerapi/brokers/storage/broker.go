@@ -15,7 +15,6 @@
 package storage
 
 import (
-	"encoding/json"
 	"fmt"
 
 	googlestorage "cloud.google.com/go/storage"
@@ -67,17 +66,16 @@ func (b *StorageBroker) Provision(ctx context.Context, provisionContext *varcont
 		BucketName: attrs.Name,
 	}
 
-	otherDetails, err := json.Marshal(ii)
-	if err != nil {
+	id := models.ServiceInstanceDetails{
+		Name:     attrs.Name,
+		Location: attrs.Location,
+	}
+
+	if err := id.SetOtherDetails(ii); err != nil {
 		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling json: %s", err)
 	}
 
-	return models.ServiceInstanceDetails{
-		Name:         attrs.Name,
-		Url:          "",
-		Location:     attrs.Location,
-		OtherDetails: string(otherDetails),
-	}, nil
+	return id, nil
 }
 
 // Deprovision deletes the bucket associated with the given instance.

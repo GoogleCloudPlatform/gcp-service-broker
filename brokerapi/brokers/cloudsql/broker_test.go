@@ -54,7 +54,7 @@ func TestCreateProvisionRequest(t *testing.T) {
 	postgresPlan := "c4e68ab5-34ca-4d02-857d-3e6b3ab079a7"
 
 	cases := map[string]struct {
-		Service     *broker.BrokerService
+		Service     *broker.ServiceDefinition
 		PlanId      string
 		UserParams  string
 		Validate    func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation)

@@ -115,7 +115,7 @@ var _ = Describe("Brokers", func() {
 			if k == serviceNameToId[models.CloudsqlMySQLName] {
 				async = true
 			}
-			gcpBroker.ServiceBrokerMap[k] = &modelsfakes.FakeServiceBrokerHelper{
+			gcpBroker.ServiceBrokerMap[k] = &modelsfakes.FakeServiceProvider{
 				ProvisionsAsyncStub:   func() bool { return async },
 				DeprovisionsAsyncStub: func() bool { return async },
 				ProvisionStub: func(ctx context.Context, vc *varcontext.VarContext) (models.ServiceInstanceDetails, error) {
@@ -248,7 +248,7 @@ var _ = Describe("Brokers", func() {
 				bqId := serviceNameToId[models.BigqueryName]
 				_, err := gcpBroker.Provision(context.Background(), instanceId, bqProvisionDetails, true)
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(gcpBroker.ServiceBrokerMap[bqId].(*modelsfakes.FakeServiceBrokerHelper).ProvisionCallCount()).To(Equal(1))
+				Expect(gcpBroker.ServiceBrokerMap[bqId].(*modelsfakes.FakeServiceProvider).ProvisionCallCount()).To(Equal(1))
 			})
 
 		})
@@ -301,7 +301,7 @@ var _ = Describe("Brokers", func() {
 					ServiceID: bqId,
 				}, true)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(gcpBroker.ServiceBrokerMap[bqId].(*modelsfakes.FakeServiceBrokerHelper).DeprovisionCallCount()).To(Equal(1))
+				Expect(gcpBroker.ServiceBrokerMap[bqId].(*modelsfakes.FakeServiceProvider).DeprovisionCallCount()).To(Equal(1))
 			})
 		})
 
@@ -331,7 +331,7 @@ var _ = Describe("Brokers", func() {
 				Expect(err).NotTo(HaveOccurred())
 				_, err = gcpBroker.Bind(context.Background(), instanceId, bindingId, storageBindDetails)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*modelsfakes.FakeServiceBrokerHelper).BindCallCount()).To(Equal(1))
+				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*modelsfakes.FakeServiceProvider).BindCallCount()).To(Equal(1))
 			})
 
 			It("it should reject bad roles", func() {
@@ -359,7 +359,7 @@ var _ = Describe("Brokers", func() {
 				Expect(err).NotTo(HaveOccurred())
 				_, err := gcpBroker.Bind(context.Background(), instanceId, bindingId, storageBindDetails)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*modelsfakes.FakeServiceBrokerHelper).BuildInstanceCredentialsCallCount()).To(Equal(1))
+				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*modelsfakes.FakeServiceProvider).BuildInstanceCredentialsCallCount()).To(Equal(1))
 			})
 		})
 
@@ -374,7 +374,7 @@ var _ = Describe("Brokers", func() {
 				Expect(err).NotTo(HaveOccurred())
 				err = gcpBroker.Unbind(context.Background(), instanceId, bindingId, storageUnbindDetails)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*modelsfakes.FakeServiceBrokerHelper).UnbindCallCount()).To(Equal(1))
+				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*modelsfakes.FakeServiceProvider).UnbindCallCount()).To(Equal(1))
 			})
 		})
 
@@ -415,7 +415,7 @@ var _ = Describe("Brokers", func() {
 				Expect(err).NotTo(HaveOccurred())
 				_, err = gcpBroker.LastOperation(context.Background(), instanceId, "operationtoken")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.CloudsqlMySQLName]].(*modelsfakes.FakeServiceBrokerHelper).PollInstanceCallCount()).To(Equal(1))
+				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.CloudsqlMySQLName]].(*modelsfakes.FakeServiceProvider).PollInstanceCallCount()).To(Equal(1))
 			})
 		})
 
@@ -430,8 +430,8 @@ var _ = Describe("AccountManagers", func() {
 
 	var (
 		logger         lager.Logger
-		iamStyleBroker models.ServiceBrokerHelper
-		spannerBroker  models.ServiceBrokerHelper
+		iamStyleBroker models.ServiceProvider
+		spannerBroker  models.ServiceProvider
 		accountManager modelsfakes.FakeServiceAccountManager
 		err            error
 		testCtx        context.Context

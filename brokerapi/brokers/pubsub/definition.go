@@ -26,7 +26,7 @@ func init() {
 	broker.Register(serviceDefinition())
 }
 
-func serviceDefinition() *broker.BrokerService {
+func serviceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"pubsub.publisher",
 		"pubsub.subscriber",
@@ -34,7 +34,7 @@ func serviceDefinition() *broker.BrokerService {
 		"pubsub.editor",
 	}
 
-	return &broker.BrokerService{
+	return &broker.ServiceDefinition{
 		Name: models.PubsubName,
 		DefaultServiceDefinition: `{
       "id": "628629e3-79f5-4255-b981-d14c6c7856be",
