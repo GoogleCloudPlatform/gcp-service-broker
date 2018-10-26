@@ -15,7 +15,6 @@
 package bigtable
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -85,17 +84,15 @@ func (b *BigTableBroker) Provision(ctx context.Context, instanceId string, detai
 		InstanceId: instanceName,
 	}
 
-	otherDetails, err := json.Marshal(ii)
-	if err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling other details: %s", err)
+	id := models.ServiceInstanceDetails{
+		Name: instanceName,
 	}
 
-	return models.ServiceInstanceDetails{
-		Name:         instanceName,
-		Url:          "",
-		Location:     "",
-		OtherDetails: string(otherDetails),
-	}, nil
+	if err := id.SetOtherDetails(ii); err != nil {
+		return models.ServiceInstanceDetails{}, err
+	}
+
+	return id, nil
 }
 
 // Deprovision deletes the BigTable associated with the given instance.
