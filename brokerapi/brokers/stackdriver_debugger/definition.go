@@ -20,7 +20,7 @@ import (
 )
 
 func init() {
-	bs := &broker.BrokerService{
+	bs := &broker.ServiceDefinition{
 		Name: "google-stackdriver-debugger",
 		DefaultServiceDefinition: `{
 		      "id": "83837945-1547-41e0-b661-ea31d76eed11",

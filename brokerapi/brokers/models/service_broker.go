@@ -21,14 +21,14 @@ import (
 	"github.com/pivotal-cf/brokerapi"
 )
 
-//go:generate counterfeiter . ServiceBrokerHelper
+//go:generate counterfeiter . ServiceProvider
 //go:generate counterfeiter . ServiceAccountManager
 
-// ServiceBrokerHelper performs the actual provisoning/deprovisioning part of a service broker request.
-// The broker will handle storing state and validating inputs while a ServiceBrokerHelper changes GCP to match the desired state.
-// ServiceBrokerHelpers are expected to interact with the state of the system entirely through their inputs and outputs.
+// ServiceProvider performs the actual provisoning/deprovisioning part of a service broker request.
+// The broker will handle storing state and validating inputs while a ServiceProvider changes GCP to match the desired state.
+// ServiceProviders are expected to interact with the state of the system entirely through their inputs and outputs.
 // Specifically, they MUST NOT modify any general state of the broker in the database.
-type ServiceBrokerHelper interface {
+type ServiceProvider interface {
 	Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan ServicePlan) (ServiceInstanceDetails, error)
 	// Bind provisions the necessary resources for a user to be able to connect to the provisioned service.
 	// This may include creating service accounts, granting permissions, and adding users to services e.g. a SQL database user.

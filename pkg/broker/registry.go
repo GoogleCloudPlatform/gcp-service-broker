@@ -28,11 +28,11 @@ import (
 	"github.com/spf13/viper"
 )
 
-var brokerRegistry = make(map[string]*BrokerService)
+var brokerRegistry = make(map[string]*ServiceDefinition)
 
-// Registers a BrokerService with the service registry that various commands
+// Registers a ServiceDefinition with the service registry that various commands
 // poll to create the catalog, documentation, etc.
-func Register(service *BrokerService) {
+func Register(service *ServiceDefinition) {
 	name := service.Name
 
 	if _, ok := brokerRegistry[name]; ok {
@@ -57,8 +57,8 @@ func Register(service *BrokerService) {
 
 // GetEnabledServices returns a list of all registered brokers that the user
 // has enabled the use of.
-func GetEnabledServices() []*BrokerService {
-	var out []*BrokerService
+func GetEnabledServices() []*ServiceDefinition {
+	var out []*ServiceDefinition
 
 	for _, svc := range GetAllServices() {
 		if svc.IsEnabled() {
@@ -72,8 +72,8 @@ func GetEnabledServices() []*BrokerService {
 // GetAllServices returns a list of all registered brokers whether or not the
 // user has enabled them. The brokers are sorted in lexocographic order based
 // on name.
-func GetAllServices() []*BrokerService {
-	var out []*BrokerService
+func GetAllServices() []*ServiceDefinition {
+	var out []*ServiceDefinition
 
 	for _, svc := range brokerRegistry {
 		out = append(out, svc)
@@ -87,7 +87,7 @@ func GetAllServices() []*BrokerService {
 
 // GetServiceById returns the service with the given ID, if it does not exist
 // or one of the services has a parse error then an error is returned.
-func GetServiceById(id string) (*BrokerService, error) {
+func GetServiceById(id string) (*ServiceDefinition, error) {
 	for _, svc := range brokerRegistry {
 		if entry, err := svc.CatalogEntry(); err != nil {
 			return nil, err
@@ -101,7 +101,7 @@ func GetServiceById(id string) (*BrokerService, error) {
 	return nil, fmt.Errorf("Unknown service ID: %q", id)
 }
 
-type BrokerService struct {
+type ServiceDefinition struct {
 	Name                       string
 	DefaultServiceDefinition   string
 	ProvisionInputVariables    []BrokerVariable
@@ -116,55 +116,55 @@ type BrokerService struct {
 
 // EnabledProperty computes the Viper property name for the boolean the user
 // can set to disable or enable this service.
-func (svc *BrokerService) EnabledProperty() string {
+func (svc *ServiceDefinition) EnabledProperty() string {
 	return fmt.Sprintf("service.%s.enabled", svc.Name)
 }
 
 // DefinitionProperty computes the Viper property name for the JSON service
 // definition.
-func (svc *BrokerService) DefinitionProperty() string {
+func (svc *ServiceDefinition) DefinitionProperty() string {
 	return fmt.Sprintf("service.%s.definition", svc.Name)
 }
 
 // UserDefinedPlansProperty computes the Viper property name for the JSON list
 // of user-defined service plans.
-func (svc *BrokerService) UserDefinedPlansProperty() string {
+func (svc *ServiceDefinition) UserDefinedPlansProperty() string {
 	return fmt.Sprintf("service.%s.plans", svc.Name)
 }
 
 // ProvisionDefaultOverrideProperty returns the Viper property name for the
 // object users can set to override the default values on provision.
-func (svc *BrokerService) ProvisionDefaultOverrideProperty() string {
+func (svc *ServiceDefinition) ProvisionDefaultOverrideProperty() string {
 	return fmt.Sprintf("service.%s.provision.defaults", svc.Name)
 }
 
 // ProvisionDefaultOverrides returns the deserialized JSON object for the
 // operator-provided property overrides.
-func (svc *BrokerService) ProvisionDefaultOverrides() map[string]interface{} {
+func (svc *ServiceDefinition) ProvisionDefaultOverrides() map[string]interface{} {
 	return viper.GetStringMap(svc.ProvisionDefaultOverrideProperty())
 }
 
 // IsRoleWhitelistEnabled returns false if the service has no default whitelist
 // meaning it does not allow any roles.
-func (svc *BrokerService) IsRoleWhitelistEnabled() bool {
+func (svc *ServiceDefinition) IsRoleWhitelistEnabled() bool {
 	return len(svc.DefaultRoleWhitelist) > 0
 }
 
 // BindDefaultOverrideProperty returns the Viper property name for the
 // object users can set to override the default values on bind.
-func (svc *BrokerService) BindDefaultOverrideProperty() string {
+func (svc *ServiceDefinition) BindDefaultOverrideProperty() string {
 	return fmt.Sprintf("service.%s.bind.defaults", svc.Name)
 }
 
 // BindDefaultOverrides returns the deserialized JSON object for the
 // operator-provided property overrides.
-func (svc *BrokerService) BindDefaultOverrides() map[string]interface{} {
+func (svc *ServiceDefinition) BindDefaultOverrides() map[string]interface{} {
 	return viper.GetStringMap(svc.BindDefaultOverrideProperty())
 }
 
 // TileUserDefinedPlansVariable returns the name of the user defined plans
 // variable for the broker tile.
-func (svc *BrokerService) TileUserDefinedPlansVariable() string {
+func (svc *ServiceDefinition) TileUserDefinedPlansVariable() string {
 	prefix := "GOOGLE_"
 
 	v := utils.PropertyToEnvUnprefixed(svc.Name)
@@ -177,14 +177,14 @@ func (svc *BrokerService) TileUserDefinedPlansVariable() string {
 
 // IsEnabled returns false if the operator has explicitly disabled this service
 // or true otherwise.
-func (svc *BrokerService) IsEnabled() bool {
+func (svc *ServiceDefinition) IsEnabled() bool {
 	return viper.GetBool(svc.EnabledProperty())
 }
 
 // CatalogEntry returns the service broker catalog entry for this service, it
 // has metadata about the service so operators and programmers know which
 // service and plan will work best for their purposes.
-func (svc *BrokerService) CatalogEntry() (*models.Service, error) {
+func (svc *ServiceDefinition) CatalogEntry() (*models.Service, error) {
 	sd, err := svc.ServiceDefinition()
 	if err != nil {
 		return nil, err
@@ -201,7 +201,7 @@ func (svc *BrokerService) CatalogEntry() (*models.Service, error) {
 }
 
 // GetPlanById finds a plan in this service by its UUID.
-func (svc *BrokerService) GetPlanById(planId string) (*models.ServicePlan, error) {
+func (svc *ServiceDefinition) GetPlanById(planId string) (*models.ServicePlan, error) {
 	catalogEntry, err := svc.CatalogEntry()
 	if err != nil {
 		return nil, err
@@ -218,7 +218,7 @@ func (svc *BrokerService) GetPlanById(planId string) (*models.ServicePlan, error
 
 // UserDefinedPlans extracts user defined plans from the environment, failing if
 // the plans were not valid JSON or were missing required properties/variables.
-func (svc *BrokerService) UserDefinedPlans() ([]models.ServicePlan, error) {
+func (svc *ServiceDefinition) UserDefinedPlans() ([]models.ServicePlan, error) {
 	plans := []models.ServicePlan{}
 
 	userPlanJson := viper.GetString(svc.UserDefinedPlansProperty())
@@ -259,7 +259,7 @@ func (svc *BrokerService) UserDefinedPlans() ([]models.ServicePlan, error) {
 	return plans, nil
 }
 
-func (svc *BrokerService) validatePlan(plan models.ServicePlan) error {
+func (svc *ServiceDefinition) validatePlan(plan models.ServicePlan) error {
 	if plan.ID == "" {
 		return fmt.Errorf("%s custom plan %+v is missing an id", svc.Name, plan)
 	}
@@ -287,7 +287,7 @@ func (svc *BrokerService) validatePlan(plan models.ServicePlan) error {
 
 // ServiceDefinition extracts service definition from the environment, failing
 // if the definition was not valid JSON.
-func (svc *BrokerService) ServiceDefinition() (*models.Service, error) {
+func (svc *ServiceDefinition) ServiceDefinition() (*models.Service, error) {
 	jsonDefinition := viper.GetString(svc.DefinitionProperty())
 	if jsonDefinition == "" {
 		jsonDefinition = svc.DefaultServiceDefinition
@@ -301,7 +301,7 @@ func (svc *BrokerService) ServiceDefinition() (*models.Service, error) {
 	return &defn, err
 }
 
-func (svc *BrokerService) provisionDefaults() []varcontext.DefaultVariable {
+func (svc *ServiceDefinition) provisionDefaults() []varcontext.DefaultVariable {
 	var out []varcontext.DefaultVariable
 	for _, provisionVar := range svc.ProvisionInputVariables {
 		out = append(out, varcontext.DefaultVariable{Name: provisionVar.FieldName, Default: provisionVar.Default, Overwrite: false})
@@ -309,7 +309,7 @@ func (svc *BrokerService) provisionDefaults() []varcontext.DefaultVariable {
 	return out
 }
 
-func (svc *BrokerService) bindDefaults() []varcontext.DefaultVariable {
+func (svc *ServiceDefinition) bindDefaults() []varcontext.DefaultVariable {
 	var out []varcontext.DefaultVariable
 	for _, v := range svc.BindInputVariables {
 		out = append(out, varcontext.DefaultVariable{Name: v.FieldName, Default: v.Default, Overwrite: false})
@@ -334,7 +334,7 @@ func (svc *BrokerService) bindDefaults() []varcontext.DefaultVariable {
 // For example, to create a default database name based on a user-provided instance name.
 // Therefore, they get executed conditionally if a user-provided variable does not exist.
 // Computed variables get executed either unconditionally or conditionally for greater flexibility.
-func (svc *BrokerService) ProvisionVariables(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (*varcontext.VarContext, error) {
+func (svc *ServiceDefinition) ProvisionVariables(instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (*varcontext.VarContext, error) {
 	defaults := svc.provisionDefaults()
 
 	// The namespaces of these values roughly align with the OSB spec.
@@ -364,7 +364,7 @@ func (svc *BrokerService) ProvisionVariables(instanceId string, details brokerap
 // 4. Operator default variables loaded from the environment.
 // 5. Default variables (in `bind_input_variables`).
 //
-func (svc *BrokerService) BindVariables(instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (*varcontext.VarContext, error) {
+func (svc *ServiceDefinition) BindVariables(instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (*varcontext.VarContext, error) {
 	defaults := svc.bindDefaults()
 
 	otherDetails := make(map[string]interface{})

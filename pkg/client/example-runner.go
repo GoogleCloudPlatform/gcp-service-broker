@@ -59,7 +59,7 @@ func RunExamplesForService(client *Client, serviceName string) error {
 
 // RunExample runs a single example against the given service on the broker
 // pointed to by client.
-func RunExample(client *Client, example broker.ServiceExample, service *broker.BrokerService) error {
+func RunExample(client *Client, example broker.ServiceExample, service *broker.ServiceDefinition) error {
 	executor, err := newExampleExecutor(client, example, service)
 	if err != nil {
 		return err
@@ -159,7 +159,7 @@ func pollUntilFinished(client *Client, instanceId string) error {
 	})
 }
 
-func newExampleExecutor(client *Client, example broker.ServiceExample, service *broker.BrokerService) (*exampleExecutor, error) {
+func newExampleExecutor(client *Client, example broker.ServiceExample, service *broker.ServiceDefinition) (*exampleExecutor, error) {
 	provisionParams, err := json.Marshal(example.ProvisionParams)
 	if err != nil {
 		return nil, err

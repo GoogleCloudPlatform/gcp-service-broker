@@ -25,14 +25,14 @@ func init() {
 	broker.Register(serviceDefinition())
 }
 
-func serviceDefinition() *broker.BrokerService {
+func serviceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"bigtable.user",
 		"bigtable.reader",
 		"bigtable.viewer",
 	}
 
-	return &broker.BrokerService{
+	return &broker.ServiceDefinition{
 		Name: models.BigtableName,
 		DefaultServiceDefinition: `{
       "id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe",

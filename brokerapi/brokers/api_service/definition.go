@@ -30,7 +30,7 @@ func init() {
 		"ml.operationOwner",
 	}
 
-	bs := &broker.BrokerService{
+	bs := &broker.ServiceDefinition{
 		Name: models.MlName,
 		DefaultServiceDefinition: `
 		{
