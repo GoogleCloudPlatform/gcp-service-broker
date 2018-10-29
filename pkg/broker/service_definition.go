@@ -19,11 +19,13 @@ import (
 	"fmt"
 	"strings"
 
+	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/viper"
+	"golang.org/x/oauth2/jwt"
 )
 
 // ServiceDefinition holds the necessary details to describe an OSB service and
@@ -39,6 +41,9 @@ type ServiceDefinition struct {
 	PlanVariables              []BrokerVariable
 	Examples                   []ServiceExample
 	DefaultRoleWhitelist       []string
+
+	// ProviderBuilder creates a new provider given the project, auth, and logger.
+	ProviderBuilder func(projectId string, auth *jwt.Config, logger lager.Logger) ServiceProvider
 }
 
 // EnabledProperty computes the Viper property name for the boolean the user

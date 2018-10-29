@@ -23,11 +23,16 @@ import (
 	"github.com/spf13/viper"
 )
 
-var brokerRegistry = make(map[string]*ServiceDefinition)
+// BrokerRegistry holds the list of ServiceDefinitions that can be provisioned
+// by the GCP Service Broker.
+type BrokerRegistry map[string]*ServiceDefinition
+
+var DefaultRegistry = BrokerRegistry{}
 
 // Registers a ServiceDefinition with the service registry that various commands
 // poll to create the catalog, documentation, etc.
-func Register(service *ServiceDefinition) {
+func Register(service *ServiceDefinition) { DefaultRegistry.Register(service) }
+func (brokerRegistry BrokerRegistry) Register(service *ServiceDefinition) {
 	name := service.Name
 
 	if _, ok := brokerRegistry[name]; ok {
@@ -52,10 +57,11 @@ func Register(service *ServiceDefinition) {
 
 // GetEnabledServices returns a list of all registered brokers that the user
 // has enabled the use of.
-func GetEnabledServices() []*ServiceDefinition {
+func GetEnabledServices() []*ServiceDefinition { return DefaultRegistry.GetEnabledServices() }
+func (brokerRegistry *BrokerRegistry) GetEnabledServices() []*ServiceDefinition {
 	var out []*ServiceDefinition
 
-	for _, svc := range GetAllServices() {
+	for _, svc := range brokerRegistry.GetAllServices() {
 		if svc.IsEnabled() {
 			out = append(out, svc)
 		}
@@ -67,7 +73,8 @@ func GetEnabledServices() []*ServiceDefinition {
 // GetAllServices returns a list of all registered brokers whether or not the
 // user has enabled them. The brokers are sorted in lexocographic order based
 // on name.
-func GetAllServices() []*ServiceDefinition {
+func GetAllServices() []*ServiceDefinition { return DefaultRegistry.GetAllServices() }
+func (brokerRegistry BrokerRegistry) GetAllServices() []*ServiceDefinition {
 	var out []*ServiceDefinition
 
 	for _, svc := range brokerRegistry {
@@ -82,7 +89,8 @@ func GetAllServices() []*ServiceDefinition {
 
 // GetServiceById returns the service with the given ID, if it does not exist
 // or one of the services has a parse error then an error is returned.
-func GetServiceById(id string) (*ServiceDefinition, error) {
+func GetServiceById(id string) (*ServiceDefinition, error) { return DefaultRegistry.GetServiceById(id) }
+func (brokerRegistry BrokerRegistry) GetServiceById(id string) (*ServiceDefinition, error) {
 	for _, svc := range brokerRegistry {
 		if entry, err := svc.CatalogEntry(); err != nil {
 			return nil, err

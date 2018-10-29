@@ -15,8 +15,11 @@
 package stackdriver_profiler
 
 import (
+	"code.cloudfoundry.org/lager"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"golang.org/x/oauth2/jwt"
 )
 
 func init() {
@@ -60,6 +63,10 @@ func init() {
 				ProvisionParams: map[string]interface{}{},
 				BindParams:      map[string]interface{}{},
 			},
+		},
+		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
+			bb := broker_base.NewBrokerBase(projectId, auth, logger)
+			return &StackdriverProfilerBroker{BrokerBase: bb}
 		},
 	}
 

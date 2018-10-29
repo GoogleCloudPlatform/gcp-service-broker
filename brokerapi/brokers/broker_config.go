@@ -34,6 +34,7 @@ type BrokerConfig struct {
 	HttpConfig            *jwt.Config
 	ProjectId             string
 	EnableInputValidation bool
+	Registry              broker.BrokerRegistry
 }
 
 func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
@@ -57,6 +58,7 @@ func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
 		ProjectId:             projectId,
 		HttpConfig:            conf,
 		EnableInputValidation: viper.GetBool(inputValidationProp),
+		Registry:              broker.DefaultRegistry,
 	}, nil
 }
 

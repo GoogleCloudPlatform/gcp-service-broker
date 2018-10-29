@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 
 	"code.cloudfoundry.org/lager"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 
@@ -31,6 +32,23 @@ import (
 type ServiceAccountManager interface {
 	CreateCredentials(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error)
 	DeleteCredentials(ctx context.Context, creds models.ServiceBindingCredentials) error
+}
+
+// NewBrokerBase creates a new broker base and account manager it uses from the
+// given settings.
+func NewBrokerBase(projectId string, auth *jwt.Config, logger lager.Logger) BrokerBase {
+	saManager := &account_managers.ServiceAccountManager{
+		HttpConfig: auth,
+		ProjectId:  projectId,
+		Logger:     logger,
+	}
+
+	return BrokerBase{
+		AccountManager: saManager,
+		HttpConfig:     auth,
+		ProjectId:      projectId,
+		Logger:         logger,
+	}
 }
 
 // BrokerBase is the reference bind and unbind implementation for brokers that
