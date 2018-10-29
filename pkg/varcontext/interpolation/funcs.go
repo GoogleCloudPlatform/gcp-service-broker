@@ -157,11 +157,11 @@ func hilFuncJsonMarshal() ast.Function {
 		ArgTypes:   []ast.Type{ast.TypeAny},
 		ReturnType: ast.TypeString,
 		Callback: func(args []interface{}) (interface{}, error) {
-
 			unwrapped, err := hilToInterface(args[0])
 			if err != nil {
 				return nil, err
 			}
+
 			bytes, err := json.Marshal(unwrapped)
 			if err != nil {
 				return nil, fmt.Errorf("couldn't convert: %v to JSON %s", args[0], err)

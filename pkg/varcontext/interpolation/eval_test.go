@@ -20,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/hil"
 	"github.com/spf13/cast"
 )
 
@@ -51,6 +52,10 @@ func TestEval(t *testing.T) {
 		"assert message":        {Template: `${assert(false, "failure message ${1+1}")}`, ErrorContains: "failure message 2"},
 		"json marshal":          {Template: "${json.marshal(mapval)}", Variables: map[string]interface{}{"mapval": map[string]string{"hello": "world"}}, Expected: `{"hello":"world"}`},
 		"json marshal array":    {Template: "${json.marshal(list)}", Variables: map[string]interface{}{"list": []string{"a", "b", "c"}}, Expected: `["a","b","c"]`},
+		"json marshal numeric":  {Template: "${json.marshal(42)}", Expected: `42`},
+		"json marshal string":   {Template: `${json.marshal("str")}`, Expected: `"str"`},
+		"json marshal true":     {Template: "${json.marshal(true)}", Expected: `true`},
+		"json marshal false":    {Template: "${json.marshal(false)}", Expected: `false`},
 	}
 
 	for tn, tc := range tests {
@@ -98,4 +103,44 @@ func TestHilFuncRandBase64(t *testing.T) {
 	if length != 24 {
 		t.Errorf("Expected length to be %d got %d", 44, length)
 	}
+}
+
+func TestHilToInterface(t *testing.T) {
+	// This function tests hilToInterface operates correctly with regards to
+	// taking valid user inputs (i.e. only JSON values), converting them to HIL
+	// values then converting them back.
+	tests := map[string]struct {
+		UserInput interface{}
+		Expected  interface{}
+	}{
+		"string":      {UserInput: "foo", Expected: "foo"},
+		"numeric":     {UserInput: 42, Expected: "42"},
+		"bool-true":   {UserInput: true, Expected: "1"},
+		"bool-false":  {UserInput: false, Expected: "0"},
+		"str-array":   {UserInput: []interface{}{"a", "b"}, Expected: []interface{}{"a", "b"}},
+		"mixed-array": {UserInput: []interface{}{"a", 2}, Expected: []interface{}{"a", "2"}},
+		"object": {
+			UserInput: map[string]interface{}{"s": "str", "n": 42.0, "a": []interface{}{"a", 2}},
+			Expected:  map[string]interface{}{"s": "str", "n": "42", "a": []interface{}{"a", "2"}},
+		},
+	}
+
+	for tn, tc := range tests {
+		t.Run(tn, func(t *testing.T) {
+			converted, err := hil.InterfaceToVariable(tc.UserInput)
+			if err != nil {
+				t.Fatalf("Expected no error, got %v", err)
+			}
+
+			res, err := hilToInterface(converted)
+			if err != nil {
+				t.Fatalf("Expected no error, got %v", err)
+			}
+
+			if !reflect.DeepEqual(tc.Expected, res) {
+				t.Errorf("Expected result: %+v (%t), got %+v (%t)", tc.Expected, tc.Expected, res, res)
+			}
+		})
+	}
+
 }
