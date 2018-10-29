@@ -63,6 +63,7 @@ func init() {
 		DefaultRoleWhitelist:    roleWhitelist,
 		BindInputVariables:      accountmanagers.ServiceAccountBindInputVariables(models.MlName, roleWhitelist),
 		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
+		BindComputedVariables:   accountmanagers.ServiceAccountBindComputedVariables(),
 		Examples: []broker.ServiceExample{
 			{
 				Name:            "Basic Configuration",

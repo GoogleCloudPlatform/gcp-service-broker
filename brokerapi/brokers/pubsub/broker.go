@@ -19,7 +19,7 @@ import (
 
 	googlepubsub "cloud.google.com/go/pubsub"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/net/context"
 
@@ -47,30 +47,25 @@ type InstanceInformation struct {
 
 // Provision creates a new Pub/Sub topic from the settings in the user-provided details and service plan.
 // If a subscription name is supplied, the function will also create a subscription for the topic.
-func (b *PubSubBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
-	variableContext, err := serviceDefinition().ProvisionVariables(instanceId, details, plan)
-	if err != nil {
-		return models.ServiceInstanceDetails{}, err
-	}
-
+func (b *PubSubBroker) Provision(ctx context.Context, provisionContext *varcontext.VarContext) (models.ServiceInstanceDetails, error) {
 	// Extract and validate all the params exist and are the right types
-	defaultLabels := utils.ExtractDefaultLabels(instanceId, details)
-	topicName := variableContext.GetString("topic_name")
-	subscriptionName := variableContext.GetString("subscription_name")
+	defaultLabels := provisionContext.GetStringMapString("labels")
+	topicName := provisionContext.GetString("topic_name")
+	subscriptionName := provisionContext.GetString("subscription_name")
 	endpoint := ""
-	if variableContext.GetBool("is_push") {
-		endpoint = variableContext.GetString("endpoint")
+	if provisionContext.GetBool("is_push") {
+		endpoint = provisionContext.GetString("endpoint")
 	}
 
 	subscriptionConfig := googlepubsub.SubscriptionConfig{
 		PushConfig: googlepubsub.PushConfig{
 			Endpoint: endpoint,
 		},
-		AckDeadline: time.Duration(variableContext.GetInt("ack_deadline")) * time.Second,
+		AckDeadline: time.Duration(provisionContext.GetInt("ack_deadline")) * time.Second,
 		Labels:      defaultLabels,
 	}
 
-	if err := variableContext.Error(); err != nil {
+	if err := provisionContext.Error(); err != nil {
 		return models.ServiceInstanceDetails{}, err
 	}
 

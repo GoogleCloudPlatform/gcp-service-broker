@@ -21,6 +21,7 @@ import (
 	googlebigtable "cloud.google.com/go/bigtable"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
@@ -45,12 +46,7 @@ var storageTypes = map[string]googlebigtable.StorageType{
 }
 
 // Provision creates a new Bigtable instance from the settings in the user-provided details and service plan.
-func (b *BigTableBroker) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
-	provisionContext, err := serviceDefinition().ProvisionVariables(instanceId, details, plan)
-	if err != nil {
-		return models.ServiceInstanceDetails{}, err
-	}
-
+func (b *BigTableBroker) Provision(ctx context.Context, provisionContext *varcontext.VarContext) (models.ServiceInstanceDetails, error) {
 	instanceName := provisionContext.GetString("name")
 
 	ic := googlebigtable.InstanceConf{

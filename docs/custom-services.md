@@ -50,6 +50,8 @@ The following string interpolation functions are available for use:
 * `rand.base64(count) -> string`
   * Generates `count` bytes of cryptographically secure randomness and converts it to [URL Encoded Base64](https://tools.ietf.org/html/rfc4648).
   * The randomness makes it suitable for using as passwords.
+* `json.marshal(type) -> string`
+  * Returns a JSON marshaled string of the given type.
 
 ## Variable reference
 

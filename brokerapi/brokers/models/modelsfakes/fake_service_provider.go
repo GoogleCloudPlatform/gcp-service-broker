@@ -11,13 +11,11 @@ import (
 )
 
 type FakeServiceProvider struct {
-	ProvisionStub        func(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error)
+	ProvisionStub        func(ctx context.Context, provisionContext *varcontext.VarContext) (models.ServiceInstanceDetails, error)
 	provisionMutex       sync.RWMutex
 	provisionArgsForCall []struct {
-		ctx        context.Context
-		instanceId string
-		details    brokerapi.ProvisionDetails
-		plan       models.ServicePlan
+		ctx              context.Context
+		provisionContext *varcontext.VarContext
 	}
 	provisionReturns struct {
 		result1 models.ServiceInstanceDetails
@@ -132,19 +130,17 @@ type FakeServiceProvider struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeServiceProvider) Provision(ctx context.Context, instanceId string, details brokerapi.ProvisionDetails, plan models.ServicePlan) (models.ServiceInstanceDetails, error) {
+func (fake *FakeServiceProvider) Provision(ctx context.Context, provisionContext *varcontext.VarContext) (models.ServiceInstanceDetails, error) {
 	fake.provisionMutex.Lock()
 	ret, specificReturn := fake.provisionReturnsOnCall[len(fake.provisionArgsForCall)]
 	fake.provisionArgsForCall = append(fake.provisionArgsForCall, struct {
-		ctx        context.Context
-		instanceId string
-		details    brokerapi.ProvisionDetails
-		plan       models.ServicePlan
-	}{ctx, instanceId, details, plan})
-	fake.recordInvocation("Provision", []interface{}{ctx, instanceId, details, plan})
+		ctx              context.Context
+		provisionContext *varcontext.VarContext
+	}{ctx, provisionContext})
+	fake.recordInvocation("Provision", []interface{}{ctx, provisionContext})
 	fake.provisionMutex.Unlock()
 	if fake.ProvisionStub != nil {
-		return fake.ProvisionStub(ctx, instanceId, details, plan)
+		return fake.ProvisionStub(ctx, provisionContext)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -158,10 +154,10 @@ func (fake *FakeServiceProvider) ProvisionCallCount() int {
 	return len(fake.provisionArgsForCall)
 }
 
-func (fake *FakeServiceProvider) ProvisionArgsForCall(i int) (context.Context, string, brokerapi.ProvisionDetails, models.ServicePlan) {
+func (fake *FakeServiceProvider) ProvisionArgsForCall(i int) (context.Context, *varcontext.VarContext) {
 	fake.provisionMutex.RLock()
 	defer fake.provisionMutex.RUnlock()
-	return fake.provisionArgsForCall[i].ctx, fake.provisionArgsForCall[i].instanceId, fake.provisionArgsForCall[i].details, fake.provisionArgsForCall[i].plan
+	return fake.provisionArgsForCall[i].ctx, fake.provisionArgsForCall[i].provisionContext
 }
 
 func (fake *FakeServiceProvider) ProvisionReturns(result1 models.ServiceInstanceDetails, result2 error) {

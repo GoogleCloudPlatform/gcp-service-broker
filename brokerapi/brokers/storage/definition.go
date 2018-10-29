@@ -19,6 +19,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 )
 
 func init() {
@@ -104,6 +105,9 @@ func serviceDefinition() *broker.ServiceDefinition {
 					Examples("US", "EU", "southamerica-east1").
 					Build(),
 			},
+		},
+		ProvisionComputedVariables: []varcontext.DefaultVariable{
+			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
 		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.StorageName, roleWhitelist),
