@@ -32,7 +32,6 @@ import (
 
 	"encoding/json"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/config"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/datastore"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
@@ -46,8 +45,8 @@ import (
 
 // GCPServiceBroker is a brokerapi.ServiceBroker that can be used to generate an OSB compatible service broker.
 type GCPServiceBroker struct {
-	Catalog               map[string]models.Service
-	ServiceBrokerMap      map[string]models.ServiceProvider
+	Catalog               map[string]broker.Service
+	ServiceBrokerMap      map[string]broker.ServiceProvider
 	enableInputValidation bool
 
 	Logger lager.Logger
@@ -55,7 +54,7 @@ type GCPServiceBroker struct {
 
 // New creates a GCPServiceBroker.
 // Exactly one of GCPServiceBroker or error will be nil when returned.
-func New(cfg *config.BrokerConfig, logger lager.Logger) (*GCPServiceBroker, error) {
+func New(cfg *BrokerConfig, logger lager.Logger) (*GCPServiceBroker, error) {
 
 	self := GCPServiceBroker{}
 	self.Logger = logger
@@ -76,7 +75,7 @@ func New(cfg *config.BrokerConfig, logger lager.Logger) (*GCPServiceBroker, erro
 	}
 
 	// map service specific brokers to general broker
-	self.ServiceBrokerMap = map[string]models.ServiceProvider{
+	self.ServiceBrokerMap = map[string]broker.ServiceProvider{
 		models.StorageName: &storage.StorageBroker{
 			BrokerBase: bb,
 		},
@@ -136,10 +135,10 @@ func (gcpBroker *GCPServiceBroker) Services(ctx context.Context) ([]brokerapi.Se
 	return svcs, nil
 }
 
-func (gcpBroker *GCPServiceBroker) getPlanFromId(serviceId, planId string) (models.ServicePlan, error) {
+func (gcpBroker *GCPServiceBroker) getPlanFromId(serviceId, planId string) (broker.ServicePlan, error) {
 	service, serviceOk := gcpBroker.Catalog[serviceId]
 	if !serviceOk {
-		return models.ServicePlan{}, fmt.Errorf("unknown service id: %q", serviceId)
+		return broker.ServicePlan{}, fmt.Errorf("unknown service id: %q", serviceId)
 	}
 
 	for _, plan := range service.Plans {
@@ -148,7 +147,7 @@ func (gcpBroker *GCPServiceBroker) getPlanFromId(serviceId, planId string) (mode
 		}
 	}
 
-	return models.ServicePlan{}, fmt.Errorf("unknown plan id: %q", planId)
+	return broker.ServicePlan{}, fmt.Errorf("unknown plan id: %q", planId)
 }
 
 // Provision creates a new instance of a service.
@@ -479,7 +478,7 @@ func (gcpBroker *GCPServiceBroker) LastOperation(ctx context.Context, instanceID
 
 // updateStateOnOperationCompletion handles updating/cleaning-up resources that need to be changed
 // once lastOperation finishes successfully.
-func (gcpBroker *GCPServiceBroker) updateStateOnOperationCompletion(ctx context.Context, service models.ServiceProvider, lastOperationType, instanceID string) error {
+func (gcpBroker *GCPServiceBroker) updateStateOnOperationCompletion(ctx context.Context, service broker.ServiceProvider, lastOperationType, instanceID string) error {
 	if lastOperationType == models.DeprovisionOperationType {
 		if err := db_service.DeleteServiceInstanceDetailsById(ctx, instanceID); err != nil {
 			return fmt.Errorf("Error deleting instance details from database: %s. WARNING: this instance will remain visible in cf. Contact your operator for cleanup", err)

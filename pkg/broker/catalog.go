@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package models
+package broker
 
-import pcfosb "github.com/pivotal-cf/brokerapi"
+import "github.com/pivotal-cf/brokerapi"
 
 // Service overrides the canonical Service Broker service type using a custom
 // type for Plans, everything else is the same.
 type Service struct {
-	pcfosb.Service
+	brokerapi.Service
 
 	Plans []ServicePlan `json:"plans"`
 }
 
 // ToPlain converts this service to a plain PCF Service definition.
-func (s Service) ToPlain() pcfosb.Service {
+func (s Service) ToPlain() brokerapi.Service {
 	plain := s.Service
-	plainPlans := []pcfosb.ServicePlan{}
+	plainPlans := []brokerapi.ServicePlan{}
 
 	for _, plan := range s.Plans {
 		plainPlans = append(plainPlans, plan.ServicePlan)
@@ -41,7 +41,7 @@ func (s Service) ToPlain() pcfosb.Service {
 // ServicePlan extends the OSB ServicePlan by including a map of key/value
 // pairs that can be used to pass additional information to the back-end.
 type ServicePlan struct {
-	pcfosb.ServicePlan
+	brokerapi.ServicePlan
 
 	ServiceProperties map[string]string `json:"service_properties"`
 }

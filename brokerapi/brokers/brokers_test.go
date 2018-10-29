@@ -19,21 +19,20 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
 	. "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
+	brokerbasefakes "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base/broker_basefakes"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models/modelsfakes"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker/brokerfakes"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
 
 	"code.cloudfoundry.org/lager"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/config"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -43,7 +42,7 @@ import (
 var _ = Describe("Brokers", func() {
 	var (
 		gcpBroker                *GCPServiceBroker
-		brokerConfig             *config.BrokerConfig
+		brokerConfig             *BrokerConfig
 		err                      error
 		logger                   lager.Logger
 		serviceNameToId          map[string]string = make(map[string]string)
@@ -80,7 +79,7 @@ var _ = Describe("Brokers", func() {
 		os.Setenv("SECURITY_USER_NAME", "username")
 		os.Setenv("SECURITY_USER_PASSWORD", "password")
 
-		brokerConfig, err = config.NewBrokerConfigFromEnv()
+		brokerConfig, err = NewBrokerConfigFromEnv()
 		if err != nil {
 			logger.Error("error", err)
 		}
@@ -88,7 +87,7 @@ var _ = Describe("Brokers", func() {
 		instanceId = "newid"
 		bindingId = "newbinding"
 
-		gcpBroker, err = brokers.New(brokerConfig, logger)
+		gcpBroker, err = New(brokerConfig, logger)
 		if err != nil {
 			logger.Error("error", err)
 		}
@@ -115,7 +114,7 @@ var _ = Describe("Brokers", func() {
 			if k == serviceNameToId[models.CloudsqlMySQLName] {
 				async = true
 			}
-			gcpBroker.ServiceBrokerMap[k] = &modelsfakes.FakeServiceProvider{
+			gcpBroker.ServiceBrokerMap[k] = &brokerfakes.FakeServiceProvider{
 				ProvisionsAsyncStub:   func() bool { return async },
 				DeprovisionsAsyncStub: func() bool { return async },
 				ProvisionStub: func(ctx context.Context, vc *varcontext.VarContext) (models.ServiceInstanceDetails, error) {
@@ -248,7 +247,7 @@ var _ = Describe("Brokers", func() {
 				bqId := serviceNameToId[models.BigqueryName]
 				_, err := gcpBroker.Provision(context.Background(), instanceId, bqProvisionDetails, true)
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(gcpBroker.ServiceBrokerMap[bqId].(*modelsfakes.FakeServiceProvider).ProvisionCallCount()).To(Equal(1))
+				Expect(gcpBroker.ServiceBrokerMap[bqId].(*brokerfakes.FakeServiceProvider).ProvisionCallCount()).To(Equal(1))
 			})
 
 		})
@@ -301,7 +300,7 @@ var _ = Describe("Brokers", func() {
 					ServiceID: bqId,
 				}, true)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(gcpBroker.ServiceBrokerMap[bqId].(*modelsfakes.FakeServiceProvider).DeprovisionCallCount()).To(Equal(1))
+				Expect(gcpBroker.ServiceBrokerMap[bqId].(*brokerfakes.FakeServiceProvider).DeprovisionCallCount()).To(Equal(1))
 			})
 		})
 
@@ -331,7 +330,7 @@ var _ = Describe("Brokers", func() {
 				Expect(err).NotTo(HaveOccurred())
 				_, err = gcpBroker.Bind(context.Background(), instanceId, bindingId, storageBindDetails)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*modelsfakes.FakeServiceProvider).BindCallCount()).To(Equal(1))
+				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*brokerfakes.FakeServiceProvider).BindCallCount()).To(Equal(1))
 			})
 
 			It("it should reject bad roles", func() {
@@ -359,7 +358,7 @@ var _ = Describe("Brokers", func() {
 				Expect(err).NotTo(HaveOccurred())
 				_, err := gcpBroker.Bind(context.Background(), instanceId, bindingId, storageBindDetails)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*modelsfakes.FakeServiceProvider).BuildInstanceCredentialsCallCount()).To(Equal(1))
+				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*brokerfakes.FakeServiceProvider).BuildInstanceCredentialsCallCount()).To(Equal(1))
 			})
 		})
 
@@ -374,7 +373,7 @@ var _ = Describe("Brokers", func() {
 				Expect(err).NotTo(HaveOccurred())
 				err = gcpBroker.Unbind(context.Background(), instanceId, bindingId, storageUnbindDetails)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*modelsfakes.FakeServiceProvider).UnbindCallCount()).To(Equal(1))
+				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.StorageName]].(*brokerfakes.FakeServiceProvider).UnbindCallCount()).To(Equal(1))
 			})
 		})
 
@@ -415,7 +414,7 @@ var _ = Describe("Brokers", func() {
 				Expect(err).NotTo(HaveOccurred())
 				_, err = gcpBroker.LastOperation(context.Background(), instanceId, "operationtoken")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.CloudsqlMySQLName]].(*modelsfakes.FakeServiceProvider).PollInstanceCallCount()).To(Equal(1))
+				Expect(gcpBroker.ServiceBrokerMap[serviceNameToId[models.CloudsqlMySQLName]].(*brokerfakes.FakeServiceProvider).PollInstanceCallCount()).To(Equal(1))
 			})
 		})
 
@@ -430,9 +429,9 @@ var _ = Describe("AccountManagers", func() {
 
 	var (
 		logger         lager.Logger
-		iamStyleBroker models.ServiceProvider
-		spannerBroker  models.ServiceProvider
-		accountManager modelsfakes.FakeServiceAccountManager
+		iamStyleBroker broker.ServiceProvider
+		spannerBroker  broker.ServiceProvider
+		accountManager brokerbasefakes.FakeServiceAccountManager
 		err            error
 		testCtx        context.Context
 	)
@@ -447,7 +446,7 @@ var _ = Describe("AccountManagers", func() {
 		db_service.RunMigrations(testDb)
 		db_service.DbConnection = testDb
 
-		accountManager = modelsfakes.FakeServiceAccountManager{
+		accountManager = brokerbasefakes.FakeServiceAccountManager{
 			CreateCredentialsStub: func(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error) {
 				return map[string]interface{}{}, nil
 			},

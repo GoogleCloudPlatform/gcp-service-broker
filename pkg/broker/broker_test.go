@@ -421,7 +421,7 @@ func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 		t.Run(tn, func(t *testing.T) {
 			viper.Set(service.ProvisionDefaultOverrideProperty(), tc.DefaultOverride)
 			details := brokerapi.ProvisionDetails{RawParameters: json.RawMessage(tc.UserParams)}
-			plan := models.ServicePlan{ServiceProperties: tc.ServiceProperties}
+			plan := ServicePlan{ServiceProperties: tc.ServiceProperties}
 			vars, err := service.ProvisionVariables("instance-id-here", details, plan)
 
 			if err != nil {
