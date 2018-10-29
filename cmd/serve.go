@@ -21,7 +21,6 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/config"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/compatibility"
@@ -64,7 +63,7 @@ func serve() {
 	db_service.New(logger)
 
 	// init broker
-	cfg, err := config.NewBrokerConfigFromEnv()
+	cfg, err := brokers.NewBrokerConfigFromEnv()
 	if err != nil {
 		logger.Fatal("Error initializing service broker config: %s", err)
 	}

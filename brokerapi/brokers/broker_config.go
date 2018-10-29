@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package brokers
 
 import (
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
-	"golang.org/x/oauth2/jwt"
 	"github.com/spf13/viper"
+	"golang.org/x/oauth2/jwt"
 )
 
 const (
@@ -31,7 +30,7 @@ func init() {
 }
 
 type BrokerConfig struct {
-	Catalog               map[string]models.Service
+	Catalog               map[string]broker.Service
 	HttpConfig            *jwt.Config
 	ProjectId             string
 	EnableInputValidation bool
@@ -54,16 +53,16 @@ func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
 	}
 
 	return &BrokerConfig{
-		Catalog:    catalog,
-		ProjectId:  projectId,
-		HttpConfig: conf,
+		Catalog:               catalog,
+		ProjectId:             projectId,
+		HttpConfig:            conf,
 		EnableInputValidation: viper.GetBool(inputValidationProp),
 	}, nil
 }
 
 // pulls SERVICES, PLANS, and environment variables to construct catalog
-func initCatalogFromEnv() (map[string]models.Service, error) {
-	serviceMap := make(map[string]models.Service)
+func initCatalogFromEnv() (map[string]broker.Service, error) {
+	serviceMap := make(map[string]broker.Service)
 
 	for _, service := range broker.GetEnabledServices() {
 		entry, err := service.CatalogEntry()

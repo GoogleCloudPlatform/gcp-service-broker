@@ -26,10 +26,17 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
+//go:generate counterfeiter . ServiceAccountManager
+
+type ServiceAccountManager interface {
+	CreateCredentials(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error)
+	DeleteCredentials(ctx context.Context, creds models.ServiceBindingCredentials) error
+}
+
 // BrokerBase is the reference bind and unbind implementation for brokers that
 // bind and unbind with only Service Accounts.
 type BrokerBase struct {
-	AccountManager models.ServiceAccountManager
+	AccountManager ServiceAccountManager
 	HttpConfig     *jwt.Config
 	ProjectId      string
 	Logger         lager.Logger

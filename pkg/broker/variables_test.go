@@ -15,9 +15,10 @@
 package broker
 
 import (
+	"errors"
 	"reflect"
 	"testing"
-	"errors"
+
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 )
 
@@ -119,25 +120,6 @@ func TestBrokerVariable_ValidateVariables(t *testing.T) {
 				},
 			},
 			Expected: errors.New("1 error(s) occurred: test: Invalid type. Expected: integer, given: string"),
-		},
-		"double trouble": {
-			Parameters: map[string]interface{}{
-				"test":  "didn't see that coming",
-				"test2": "I am no good",
-			},
-			Variables: []BrokerVariable{
-				{
-					Required:  true,
-					FieldName: "test",
-					Type:      JsonTypeInteger,
-				},
-				{
-					Required:  true,
-					FieldName: "test2",
-					Type:      JsonTypeInteger,
-				},
-			},
-			Expected: errors.New("2 error(s) occurred: test: Invalid type. Expected: integer, given: string; test2: Invalid type. Expected: integer, given: string"),
 		},
 		"test constraints": {
 			Parameters: map[string]interface{}{
