@@ -30,7 +30,6 @@ func init() {
 }
 
 type BrokerConfig struct {
-	Catalog               map[string]broker.Service
 	HttpConfig            *jwt.Config
 	ProjectId             string
 	EnableInputValidation bool
@@ -48,31 +47,10 @@ func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
 		return nil, err
 	}
 
-	catalog, err := initCatalogFromEnv()
-	if err != nil {
-		return nil, err
-	}
-
 	return &BrokerConfig{
-		Catalog:               catalog,
 		ProjectId:             projectId,
 		HttpConfig:            conf,
 		EnableInputValidation: viper.GetBool(inputValidationProp),
 		Registry:              broker.DefaultRegistry,
 	}, nil
-}
-
-// pulls SERVICES, PLANS, and environment variables to construct catalog
-func initCatalogFromEnv() (map[string]broker.Service, error) {
-	serviceMap := make(map[string]broker.Service)
-
-	for _, service := range broker.GetEnabledServices() {
-		entry, err := service.CatalogEntry()
-		if err != nil {
-			return serviceMap, err
-		}
-		serviceMap[entry.ID] = *entry
-	}
-
-	return serviceMap, nil
 }
