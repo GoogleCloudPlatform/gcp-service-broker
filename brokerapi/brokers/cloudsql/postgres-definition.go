@@ -15,10 +15,13 @@
 package cloudsql
 
 import (
+	"code.cloudfoundry.org/lager"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"golang.org/x/oauth2/jwt"
 )
 
 func init() {
@@ -239,6 +242,10 @@ func postgresServiceDefinition() *broker.ServiceDefinition {
 					"role": "cloudsql.editor",
 				},
 			},
+		},
+		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
+			bb := broker_base.NewBrokerBase(projectId, auth, logger)
+			return &CloudSQLBroker{BrokerBase: bb}
 		},
 	}
 }
