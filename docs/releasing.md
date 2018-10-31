@@ -6,6 +6,17 @@
 - [ ] Open a ticket with the name `release-vX.Y.Z` and copy the contents of this file into its description.
 - [ ] Create a new pre-release branch in the GitHub repository labeled `release-vX.Y.Z`.
 
+## Update the project in the branch
+
+- [ ] Update version in `utils/version.go`.
+- [ ] Run `go build`.
+- [ ] Run `./gcp-service-broker generate tile > tile.yml`.
+- [ ] Run `./gcp-service-broker generate manifest > manifest.yml`.
+- [ ] Run `./gcp-service-broker generate use > docs/use.md`.
+- [ ] Run `./gcp-service-broker generate customization > docs/customization.md`.
+- [ ] Update the `CHANGELOG.md` to match the new version.
+- [ ] Commit the changes on the new branch.
+
 ## Generate the OSDF file
 
 - [ ] Get a list of licenses using the [license_finder](https://github.com/pivotal-legacy/LicenseFinder) tool.
@@ -41,3 +52,4 @@
 - [ ] An ISV Program Manager will make the release available to "All Users" after review. Partner Admins can make the release available to "Admin Users".
 - [ ] Merge the release branch once done.
 - [ ] Make a release announcement in the gcp-service-broker Google Group like [this one](https://groups.google.com/forum/#!topic/gcp-service-broker/7Ae9D2B1AzE).
+- [ ] Submit an issue to https://github.com/cf-platform-eng/gcp-pcf-quickstart to update the GCP PCF quickstart.

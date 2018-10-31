@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - New tile form for creating custom Cloud Storage plans.
 - Examples of binding variables to the docs.
 - Constraints/validation of the binding variables to the docs.
+- New `version` sub-command to show the current version of the binary.
+- New `generate` sub-commands to generate the `tile.yml` and `manifest.yml` files.
 
 ### Changed
 - Role whitelists are now validated through JSON Schema checks.

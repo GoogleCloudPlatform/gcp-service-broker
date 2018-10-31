@@ -797,7 +797,7 @@ A global service for real-time and reliable messaging and streaming data.
  * `subscription_name` _string_ - Name of the subscription.
     * The string must have at most 255 characters.
     * The string must have at least 0 characters.
-    * The string must match the regular expression `^[a-zA-Z][a-zA-Z0-9\d\-_~%\.\+]+`.
+    * The string must match the regular expression `^(|[a-zA-Z][a-zA-Z0-9\d\-_~%\.\+]+)`.
  * `topic_name` _string_ - **Required** Name of the topic.
     * The string must have at most 255 characters.
     * The string must have at least 3 characters.
