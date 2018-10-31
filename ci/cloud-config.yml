@@ -1,0 +1,23 @@
+steps:
+# Unit tests
+- name: 'gcr.io/cloud-builders/go'
+  args: ['test', '-v', './...']
+  env: ['PROJECT_ROOT=github.com/GoogleCloudPlatform/gcp-service-broker']
+  timeout: 90s
+# Assert that it builds
+- name: 'gcr.io/cloud-builders/go'
+  args: ['build']
+  env: ['PROJECT_ROOT=github.com/GoogleCloudPlatform/gcp-service-broker']
+  timeout: 30s
+# Integration test
+- name: 'golang'
+  args: ['./ci/cbtasks/osb-integration-tests.sh']
+  timeout: 30m
+# Build tile
+- name: 'cfplatformeng/tile-generator:v12.0.4'
+  args: ['./ci/cbtasks/build-tile.sh']
+  env: ['VERSION=$TAG_NAME']
+artifacts:
+  objects:
+    location: gs://asdf-asfd-asfd-asfd-afds-asdf-asdf-asdf-asdf/$BUILD_ID
+    paths: ['product/*.pivotal']
