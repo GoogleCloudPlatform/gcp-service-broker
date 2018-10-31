@@ -22,6 +22,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // TileFormsSections holds the top level fields in tile.yml responsible for
@@ -60,6 +61,17 @@ type FormProperty struct {
 	Configurable bool         `yaml:"configurable,omitempty"` // optional, default false
 	Options      []FormOption `yaml:"options,omitempty"`
 	Optional     bool         `yaml:"optional,omitempty"` // optional, default false
+}
+
+// GenerateFormsString creates all the forms for the user to fill out in the PCF tile
+// and returns it as a string.
+func GenerateFormsString() string {
+	response, err := yaml.Marshal(GenerateForms())
+	if err != nil {
+		log.Fatalf("Error marshaling YAML: %s", err)
+	}
+
+	return string(response)
 }
 
 // GenerateForms creates all the forms for the user to fill out in the PCF tile.
