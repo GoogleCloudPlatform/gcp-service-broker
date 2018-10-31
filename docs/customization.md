@@ -676,7 +676,7 @@ For example:
   <li>Default: <code>SSD</code></li>
   <li>Valid Values:
   <ul>
-    <li><tt>SSD</tt> - SSD - Solid-state Drive</li><li><tt>HDD</tt> - HDD - Hard Disk Drive</li>
+    <li><tt>HDD</tt> - HDD - Hard Disk Drive</li><li><tt>SSD</tt> - SSD - Solid-state Drive</li>
   </ul>
   </li>
 </ul>
