@@ -156,6 +156,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 				},
 			},
 		},
+		BindComputedVariables: accountmanagers.ServiceAccountBindComputedVariables(),
 		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &StorageBroker{BrokerBase: bb}
