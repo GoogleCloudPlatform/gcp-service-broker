@@ -31,15 +31,15 @@ import (
 // ServiceDefinition holds the necessary details to describe an OSB service and
 // provision it.
 type ServiceDefinition struct {
-	Name                       string
-	DefaultServiceDefinition   string
-	ProvisionInputVariables    []BrokerVariable
-	ProvisionComputedVariables []varcontext.DefaultVariable
-	BindInputVariables         []BrokerVariable
-	BindOutputVariables        []BrokerVariable
-	BindComputedVariables      []varcontext.DefaultVariable
-	PlanVariables              []BrokerVariable
-	Examples                   []ServiceExample
+	Name                       string                       `validate:"osbname"`
+	DefaultServiceDefinition   string                       `validate:"json"`
+	ProvisionInputVariables    []BrokerVariable             `validate:"dive"`
+	ProvisionComputedVariables []varcontext.DefaultVariable `validate:"dive"`
+	BindInputVariables         []BrokerVariable             `validate:"dive"`
+	BindOutputVariables        []BrokerVariable             `validate:"dive"`
+	BindComputedVariables      []varcontext.DefaultVariable `validate:"dive"`
+	PlanVariables              []BrokerVariable             `validate:"dive"`
+	Examples                   []ServiceExample             `validate:"dive"`
 	DefaultRoleWhitelist       []string
 
 	// ProviderBuilder creates a new provider given the project, auth, and logger.

@@ -50,9 +50,9 @@ func (builder *ContextBuilder) SetEvalConstants(constants map[string]interface{}
 // DefaultVariable holds a value that may or may not be evaluated.
 // If the value is a string then it will be evaluated.
 type DefaultVariable struct {
-	Name      string      `json:"name"`
-	Default   interface{} `json:"default"`
-	Overwrite bool        `json:"overwrite"`
+	Name      string      `json:"name" yaml:"name" validate:"required"`
+	Default   interface{} `json:"default" yaml:"default" validate:"required"`
+	Overwrite bool        `json:"overwrite" yaml:"overwrite"`
 }
 
 // MergeDefaults gets the default values from the given BrokerVariables and

@@ -218,6 +218,17 @@ You can configure the following environment variables:
   <li>Default: <code>true</code></li>
 </ul>
 
+<b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_MONITORING_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Monitoring instances.
+
+
+
+
+
+<ul>
+  <li><b>Required</b></li>
+  <li>Default: <code>true</code></li>
+</ul>
+
 <b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_PROFILER_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Profiler instances.
 
 

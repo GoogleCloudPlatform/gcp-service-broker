@@ -19,6 +19,7 @@ import (
 	"log"
 	"sort"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/viper"
 )
@@ -50,6 +51,10 @@ func (brokerRegistry BrokerRegistry) Register(service *ServiceDefinition) {
 	// Test deserializing the user defined plans and service definition
 	if _, err := service.CatalogEntry(); err != nil {
 		log.Fatalf("Error registering service %q, %s", name, err)
+	}
+
+	if err := validation.ValidateStruct(service); err != nil {
+		log.Fatalf("Error validating service %q, %s", name, err)
 	}
 
 	brokerRegistry[name] = service
