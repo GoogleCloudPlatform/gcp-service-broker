@@ -49,7 +49,8 @@ func serviceDefinition() *broker.ServiceDefinition {
 	          "longDescription": "Unified object storage for developers and enterprises. Cloud Storage allows world-wide storage and retrieval of any amount of data at any time.",
 	          "documentationUrl": "https://cloud.google.com/storage/docs/overview",
 	          "supportUrl": "https://cloud.google.com/support/",
-	          "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/storage.svg"
+	          "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/storage.svg",
+	          "shareable": "true"
 	        },
 	        "tags": ["gcp", "storage"],
 	        "plans": [

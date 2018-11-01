@@ -50,7 +50,8 @@ func serviceDefinition() *broker.ServiceDefinition {
         "longDescription": "A global service for real-time and reliable messaging and streaming data.",
         "documentationUrl": "https://cloud.google.com/pubsub/docs/",
         "supportUrl": "https://cloud.google.com/support/",
-        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/pubsub.svg"
+        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/pubsub.svg",
+        "shareable": "true"
       },
       "tags": ["gcp", "pubsub"],
       "plans": [

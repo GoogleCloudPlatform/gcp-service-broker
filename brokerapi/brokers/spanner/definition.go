@@ -51,7 +51,8 @@ func serviceDefinition() *broker.ServiceDefinition {
 				"longDescription": "The first horizontally scalable, globally consistent, relational database service.",
 				"documentationUrl": "https://cloud.google.com/spanner/",
 				"supportUrl": "https://cloud.google.com/support/",
-				"imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg"
+				"imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg",
+				"shareable": "true"
 			},
 			"tags": ["gcp", "spanner"],
 			"plans": [
