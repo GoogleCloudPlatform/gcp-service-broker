@@ -42,7 +42,8 @@ func postgresServiceDefinition() *broker.ServiceDefinition {
 	          "longDescription": "Google Cloud SQL is a fully-managed MySQL database service.",
 	          "documentationUrl": "https://cloud.google.com/sql/docs/",
 	          "supportUrl": "https://cloud.google.com/support/",
-	          "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
+	          "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg",
+	          "shareable": true
         },
         "tags": ["gcp", "cloudsql", "postgres"],
         "plans":[

@@ -36,7 +36,8 @@ func init() {
 		        "longDescription": "Stackdriver Debugger is a feature of the Google Cloud Platform that lets you inspect the state of an application at any code location without using logging statements and without stopping or slowing down your applications. Your users are not impacted during debugging. Using the production debugger you can capture the local variables and call stack and link it back to a specific line location in your source code.",
 		        "documentationUrl": "https://cloud.google.com/debugger/docs/",
 		        "supportUrl": "https://cloud.google.com/support/",
-		        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg"
+		        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg",
+		        "shareable": true
 		      },
 		      "tags": ["gcp", "stackdriver", "debugger"],
 		      "plans": [

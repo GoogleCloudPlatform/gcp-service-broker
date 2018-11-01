@@ -47,7 +47,8 @@ func init() {
         "longDescription": "Machine Learning APIs including Vision, Translate, Speech, and Natural Language.",
         "documentationUrl": "https://cloud.google.com/ml/",
         "supportUrl": "https://cloud.google.com/support/",
-        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/machine-learning.svg"
+        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/machine-learning.svg",
+        "shareable": true
       },
       "tags": ["gcp", "ml"],
       "plans":  [

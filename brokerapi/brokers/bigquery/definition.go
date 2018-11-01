@@ -51,7 +51,8 @@ func serviceDefinition() *broker.ServiceDefinition {
           "longDescription": "A fast, economical and fully managed data warehouse for large-scale data analytics.",
           "documentationUrl": "https://cloud.google.com/bigquery/docs/",
           "supportUrl": "https://cloud.google.com/support/",
-          "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigquery.svg"
+          "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigquery.svg",
+          "shareable": true
         },
         "tags": ["gcp", "bigquery"],
         "plans": [

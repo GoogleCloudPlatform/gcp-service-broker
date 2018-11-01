@@ -36,7 +36,8 @@ func init() {
 		        "longDescription": "Continuous CPU and heap profiling to improve performance and reduce costs.",
 		        "documentationUrl": "https://cloud.google.com/profiler/docs/",
 		        "supportUrl": "https://cloud.google.com/support/",
-		        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg"
+		        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg",
+		        "shareable": true
 		      },
 		      "tags": ["gcp", "stackdriver", "profiler"],
 		      "plans": [
