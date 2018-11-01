@@ -18,11 +18,12 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
-	"github.com/xeipuuv/gojsonschema"
-	"github.com/hashicorp/go-multierror"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"errors"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"github.com/hashicorp/go-multierror"
+	"github.com/xeipuuv/gojsonschema"
 )
 
 const (
@@ -38,11 +39,11 @@ type BrokerVariable struct {
 	// Is this variable required?
 	Required bool
 	// The name of the JSON field this variable serializes/deserializes to
-	FieldName string
+	FieldName string `validate:"required"`
 	// The JSONSchema type of the field
-	Type JsonType
+	Type JsonType `validate:"required"`
 	// Human readable info about the field.
-	Details string
+	Details string `validate:"required"`
 	// The default value of the field.
 	Default interface{}
 	// If there are a limited number of valid values for this field then
