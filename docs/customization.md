@@ -373,7 +373,7 @@ Enables validating user input variables against JSON Schema definitions.
 
 
 <ul>
-  <li><b>Required</b></li>
+  <li><i>Optional</i></li>
   <li>Default: <code>true</code></li>
 </ul>
 
@@ -384,7 +384,8 @@ Enable compatibility with the GCP Service Broker v3.x. Before version 4.0, each 
 
 
 <ul>
-  <li><b>Required</b></li>
+  <li><i>Optional</i></li>
+  <li>Default: <code>false</code></li>
 </ul>
 
 

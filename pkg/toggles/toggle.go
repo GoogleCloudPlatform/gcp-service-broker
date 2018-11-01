@@ -48,7 +48,7 @@ func (toggle Toggle) EnvironmentVariable() string {
 	return utils.PropertyToEnv(toggle.viperProperty())
 }
 
-// viperProperty gets the viper property of the variable to contorl the toggle.
+// viperProperty gets the viper property of the variable to control the toggle.
 func (toggle Toggle) viperProperty() string {
 	return toggle.propertyPrefix + toggle.Name
 }
