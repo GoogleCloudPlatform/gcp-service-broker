@@ -12,14 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package stackdriver_debugger
+package stackdriver
 
 import (
-	"code.cloudfoundry.org/lager"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
-	"golang.org/x/oauth2/jwt"
 )
 
 func init() {
@@ -64,10 +61,7 @@ func init() {
 				BindParams:      map[string]interface{}{},
 			},
 		},
-		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
-			bb := broker_base.NewBrokerBase(projectId, auth, logger)
-			return &StackdriverDebuggerBroker{BrokerBase: bb}
-		},
+		ProviderBuilder: NewStackdriverAccountProvider,
 	}
 
 	broker.Register(bs)
