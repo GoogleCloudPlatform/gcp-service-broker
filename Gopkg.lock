@@ -51,6 +51,25 @@
   version = "v1.4.7"
 
 [[projects]]
+  digest = "1:709292c015123a3bc69ea970dc9abd6667170e7fbf5cdeb10c6d14b250d3385f"
+  name = "github.com/go-playground/locales"
+  packages = [
+    ".",
+    "currency",
+  ]
+  pruneopts = ""
+  revision = "f63010822830b6fe52288ee52d5a1151088ce039"
+  version = "v0.12.1"
+
+[[projects]]
+  digest = "1:7ca0f6f2a364f603e843763d35c979b595d71159982791de27f9ec40d532876b"
+  name = "github.com/go-playground/universal-translator"
+  packages = ["."]
+  pruneopts = ""
+  revision = "b32fa301c9fe55953584134cb6853a13c87ec0a1"
+  version = "v0.16.0"
+
+[[projects]]
   digest = "1:c07de423ca37dc2765396d6971599ab652a339538084b9b58c9f7fc533b28525"
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
@@ -561,6 +580,14 @@
   version = "v1.14.0"
 
 [[projects]]
+  digest = "1:012e42909518f4d3149fc0c6c368bcd401411bfb52da8a8bcd5b6471dd13993d"
+  name = "gopkg.in/go-playground/validator.v9"
+  packages = ["."]
+  pruneopts = ""
+  revision = "3be31424000e9263ddc36f27b1de4c18f657f02e"
+  version = "v9.22.0"
+
+[[projects]]
   digest = "1:f0620375dd1f6251d9973b5f2596228cc8042e887cd7f827e4220bc1ce8c30e2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -604,6 +631,7 @@
     "google.golang.org/api/sqladmin/v1beta4",
     "google.golang.org/api/storage/v1",
     "google.golang.org/genproto/googleapis/spanner/admin/instance/v1",
+    "gopkg.in/go-playground/validator.v9",
     "gopkg.in/yaml.v2",
   ]
   solver-name = "gps-cdcl"

@@ -72,3 +72,7 @@
 [[constraint]]
   name = "github.com/xeipuuv/gojsonschema"
   version = "v1.0"
+
+[[constraint]]
+  name = "gopkg.in/go-playground/validator.v9"
+  version = "9.22.0"
