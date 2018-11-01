@@ -21,6 +21,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -231,31 +232,26 @@ func generateServiceAccountForm() Form {
 }
 
 func generateCompatibilityForm() Form {
+	var formEntries []FormProperty
+
+	for _, toggle := range toggles.Compatibility.Toggles() {
+		toggleEntry := FormProperty{
+			Name:         strings.ToLower(toggle.EnvironmentVariable()),
+			Type:         "boolean",
+			Label:        toggle.Name,
+			Configurable: true,
+			Default:      toggle.Default,
+			Description:  singleLine(toggle.Description),
+		}
+
+		formEntries = append(formEntries, toggleEntry)
+	}
+
 	return Form{
 		Name:        "compatibility",
 		Label:       "Compatibility",
 		Description: "Legacy Compatibility Options",
-		Properties: []FormProperty{
-			{
-				Name:         "gsb_compatibility_three_to_four_legacy_plans",
-				Type:         "boolean",
-				Label:        "Compatibility with GCP Service Broker v3.X plans",
-				Configurable: true,
-				Default:      false,
-				Description: singleLine(`Enable compatibility with the GCP Service Broker v3.x.
-					Before version 4.0, each installation generated its own plan UUIDs, after 4.0 they have been standardized.
-					This option installs a compatibility layer which checks if a service is using the correct plan GUID.
-					If the service does not use the correct GUID, the request will fail with a message about how to upgrade.`),
-			},
-			{
-				Name:         "gsb_compatibility_enable_input_validation",
-				Type:         "boolean",
-				Label:        "Enables input variable JSON Schema validation checks",
-				Configurable: true,
-				Default:      true,
-				Description:  singleLine(`Enables validating user input variables against JSON Schema definitions.`),
-			},
-		},
+		Properties:  formEntries,
 	}
 }
 
