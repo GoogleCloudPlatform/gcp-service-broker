@@ -53,7 +53,6 @@ packages:
 # applications as environment variables. You can also refer to them
 # elsewhere in this template by using:
 #     (( .properties.<property-name> ))
-#
 forms:
 - name: root_service_account
   label: Root Service Account
@@ -155,6 +154,11 @@ forms:
     type: boolean
     default: true
     label: Let the broker create and bind Stackdriver Debugger instances.
+    configurable: true
+  - name: gsb_service_google_stackdriver_monitoring_enabled
+    type: boolean
+    default: true
+    label: Let the broker create and bind Stackdriver Monitoring instances.
     configurable: true
   - name: gsb_service_google_stackdriver_profiler_enabled
     type: boolean
@@ -399,10 +403,10 @@ service_plan_forms:
       for more information.'
     configurable: true
     options:
-    - name: HDD
-      label: HDD - Hard Disk Drive
     - name: SSD
       label: SSD - Solid-state Drive
+    - name: HDD
+      label: HDD - Hard Disk Drive
   - name: num_nodes
     type: string
     default: "3"

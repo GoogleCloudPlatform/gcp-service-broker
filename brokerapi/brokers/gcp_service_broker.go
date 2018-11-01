@@ -37,9 +37,7 @@ import (
 	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/datastore"
 	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
 	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver_debugger"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver_profiler"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver_trace"
+	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver"
 	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/storage"
 )
 

@@ -12,40 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package stackdriver_trace
+package stackdriver
 
 import (
-	"code.cloudfoundry.org/lager"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
-	"golang.org/x/oauth2/jwt"
 )
 
 func init() {
 	bs := &broker.ServiceDefinition{
-		Name: "google-stackdriver-trace",
+		Name: "google-stackdriver-monitoring",
 		DefaultServiceDefinition: `{
-      "id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
-      "description": "Stackdriver Trace",
-      "name": "google-stackdriver-trace",
+      "id": "2bc0d9ed-3f68-4056-b842-4a85cfbc727f",
+      "description": "Stackdriver Monitoring",
+      "name": "google-stackdriver-monitoring",
       "bindable": true,
       "plan_updateable": false,
       "metadata": {
-        "displayName": "Stackdriver Trace",
-        "longDescription": "Stackdriver Trace is a distributed tracing system that collects latency data from your applications and displays it in the Google Cloud Platform Console. You can track how requests propagate through your application and receive detailed near real-time performance insights.",
-        "documentationUrl": "https://cloud.google.com/trace/docs/",
+        "displayName": "Stackdriver Monitoring",
+        "longDescription": "Stackdriver Monitoring provides visibility into the performance, uptime, and overall health of cloud-powered applications. ",
+        "documentationUrl": "https://cloud.google.com/monitoring/docs/",
         "supportUrl": "https://cloud.google.com/support/",
-        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg"
+        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg"
       },
-      "tags": ["gcp", "stackdriver", "trace"],
+      "tags": ["gcp", "stackdriver", "monitoring", "preview"],
       "plans": [
         {
-          "id": "ab6c2287-b4bc-4ff4-a36a-0575e7910164",
-          "service_id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
+          "id": "2e4b85c1-0ce6-46e4-91f5-eebeb373e3f5",
           "name": "default",
           "display_name": "Default",
-          "description": "Stackdriver Trace default plan.",
+          "description": "Stackdriver Monitoring default plan.",
           "service_properties": {}
         }
       ]
@@ -53,21 +49,18 @@ func init() {
 		`,
 		ProvisionInputVariables: []broker.BrokerVariable{},
 		BindInputVariables:      []broker.BrokerVariable{},
-		BindComputedVariables:   accountmanagers.FixedRoleBindComputedVariables("cloudtrace.agent"),
+		BindComputedVariables:   accountmanagers.FixedRoleBindComputedVariables("monitoring.metricWriter"),
 		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
 		Examples: []broker.ServiceExample{
 			{
 				Name:            "Basic Configuration",
-				Description:     "Creates an account with the permission `cloudtrace.agent`.",
-				PlanId:          "ab6c2287-b4bc-4ff4-a36a-0575e7910164",
+				Description:     "Creates an account with the permission `monitoring.metricWriter` for writing metrics.",
+				PlanId:          "2e4b85c1-0ce6-46e4-91f5-eebeb373e3f5",
 				ProvisionParams: map[string]interface{}{},
 				BindParams:      map[string]interface{}{},
 			},
 		},
-		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
-			bb := broker_base.NewBrokerBase(projectId, auth, logger)
-			return &StackdriverTraceBroker{BrokerBase: bb}
-		},
+		ProviderBuilder: NewStackdriverAccountProvider,
 	}
 
 	broker.Register(bs)
