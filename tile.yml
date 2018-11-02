@@ -135,6 +135,11 @@ forms:
     default: true
     label: Let the broker create and bind Google Cloud Datastore instances.
     configurable: true
+  - name: gsb_service_google_dialogflow_enabled
+    type: boolean
+    default: true
+    label: Let the broker create and bind Google Cloud Dialogflow instances.
+    configurable: true
   - name: gsb_service_google_ml_apis_enabled
     type: boolean
     default: true
@@ -405,10 +410,10 @@ service_plan_forms:
       for more information.'
     configurable: true
     options:
-    - name: SSD
-      label: SSD - Solid-state Drive
     - name: HDD
       label: HDD - Hard Disk Drive
+    - name: SSD
+      label: SSD - Solid-state Drive
   - name: num_nodes
     type: string
     default: "3"
@@ -564,3 +569,4 @@ service_plan_forms:
     label: Storage Class
     description: 'The storage class of the bucket. See: https://cloud.google.com/storage/docs/storage-classes.'
     configurable: true
+

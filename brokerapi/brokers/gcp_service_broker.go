@@ -35,6 +35,7 @@ import (
 	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigtable"
 	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/cloudsql"
 	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/datastore"
+	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/dialogflow"
 	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
 	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
 	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver"
