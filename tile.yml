@@ -569,4 +569,3 @@ service_plan_forms:
     label: Storage Class
     description: 'The storage class of the bucket. See: https://cloud.google.com/storage/docs/storage-classes.'
     configurable: true
-
