@@ -74,6 +74,43 @@ The broker makes additional variables available to be used during provision and 
 * `instance.name` - _string_ The name of the instance.
 * `instance.details` - _map[string]any_ Output variables of the instance as specified by ProvisionOutputVariables.
 
+## Service life cycle
+
+Each service has two interdependent life cycles: the **definition life cycle** and the **API life cycle**.
+
+### Definition life cycle
+
+The **definition life cycle** reflects the state of your plugin.
+It can be in one of three states, represented by `tags` on the service definition:
+
+* `preview` - The service may have some outstanding issues, or lack documentation, but is ready for savvy users.
+* (no tag) - The service is ready to be used by all users.
+* `unmaintained` - The service should not be used by any users except those that already rely on it and will have no future developments.
+* `eol` - End of life. The service may operate in a reduced capacity (e.g. blocking new provisioning or forcing service upgrades) due to changes in the upstream service.
+
+### API life cycle
+
+The **API life cycle** reflects the state of the backing Google Cloud services your plugin depends on.
+These reflect the published [launch stages](https://cloud.google.com/terms/launch-stages).
+
+* `beta` - There are no SLA or technical support obligations in a Beta release, and charges may be waived in some cases. Products will be complete from a feature perspective, but may have some open outstanding issues. Beta releases are suitable for limited production use cases.
+* (no tag) - GA features are open to all developers and are considered stable and fully qualified for production use.
+* `deprecated` - Deprecated features are scheduled to be shut down and removed.
+
+The **API life cycle** tag MUST be set to the least supported launch stage of any of its components.
+For example, if your plugin uses a deprecated API and two beta APIs, the tag would be `deprecated`.
+If your plugin uses three GA APIs and a beta API then the tag would be `beta`.
+
+  deprecated < beta < ga
+
+NOTE: Alpha and Early Access plugins WILL NOT be included in official releases of the broker.
+
+### Operating with life cycles
+
+Breaking down life cycles into distinct sets helps operators decide what amount of risk they're willing to take on.
+For example, an operator might be willing to allow an unmaintained plugin if the underlying services were GA.
+Alternatively, an operator might not want to enable `deprecated` plugins on a new install even if they're maintained.
+
 ## Design guidelines
 
 When you're creating a new service for the broker you're designing for three separate sets of people:
