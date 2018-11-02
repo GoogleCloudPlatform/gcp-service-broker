@@ -19,6 +19,7 @@ import (
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"golang.org/x/oauth2/jwt"
 )
 
@@ -50,16 +51,45 @@ func init() {
         }
       ]
     }`,
-		ProvisionInputVariables: []broker.BrokerVariable{},
-		BindInputVariables:      []broker.BrokerVariable{},
-		BindComputedVariables:   accountmanagers.FixedRoleBindComputedVariables("datastore.user"),
-		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
+		ProvisionInputVariables: []broker.BrokerVariable{
+			{
+				FieldName: "namespace",
+				Type:      broker.JsonTypeString,
+				Details:   "A context for the identifiers in your entity’s dataset. This ensures that different systems can all interpret an entity's data the same way, based on the rules for the entity’s particular namespace. Blank means the default namespace will be used.",
+				Default:   "",
+				Constraints: validation.NewConstraintBuilder().
+					MaxLength(100).
+					Pattern("^[A-Za-z0-9_-]*$").
+					Build(),
+			},
+		},
+		BindInputVariables:    []broker.BrokerVariable{},
+		BindComputedVariables: accountmanagers.FixedRoleBindComputedVariables("datastore.user"),
+		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
+			broker.BrokerVariable{
+				FieldName: "namespace",
+				Type:      broker.JsonTypeString,
+				Details:   "A context for the identifiers in your entity’s dataset.",
+				Required:  false,
+				Constraints: validation.NewConstraintBuilder().
+					MaxLength(100).
+					Pattern("^[A-Za-z0-9_-]*$").
+					Build(),
+			},
+		),
 		Examples: []broker.ServiceExample{
 			{
 				Name:            "Basic Configuration",
 				Description:     "Creates a datastore and a user with the permission `datastore.user`.",
 				PlanId:          "05f1fb6b-b5f0-48a2-9c2b-a5f236507a97",
 				ProvisionParams: map[string]interface{}{},
+				BindParams:      map[string]interface{}{},
+			},
+			{
+				Name:            "Custom Namespace",
+				Description:     "Creates a datastore and returns the provided namespace along with bind calls.",
+				PlanId:          "05f1fb6b-b5f0-48a2-9c2b-a5f236507a97",
+				ProvisionParams: map[string]interface{}{"namespace": "my-namespace"},
 				BindParams:      map[string]interface{}{},
 			},
 		},
