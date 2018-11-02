@@ -24,17 +24,22 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/compatibility"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 const (
-	apiUserProp         = "api.user"
-	apiPasswordProp     = "api.password"
-	apiPortProp         = "api.port"
-	v3CompatibilityProp = "compatibility.three-to-four.legacy-plans"
+	apiUserProp     = "api.user"
+	apiPasswordProp = "api.password"
+	apiPortProp     = "api.port"
 )
+
+var v3CompatibilityToggle = toggles.Compatibility.Toggle("three-to-four.legacy-plans", false, `Enable compatibility with the GCP Service Broker v3.x.
+	Before version 4.0, each installation generated its own plan UUIDs, after 4.0 they have been standardized.
+	This option installs a compatibility layer which checks if a service is using the correct plan GUID.
+	If the service does not use the correct GUID, the request will fail with a message about how to upgrade.`)
 
 func init() {
 	rootCmd.AddCommand(&cobra.Command{
@@ -88,7 +93,7 @@ func serve() {
 		"username": username,
 	})
 
-	if viper.GetBool(v3CompatibilityProp) {
+	if v3CompatibilityToggle.IsActive() {
 		logger.Info("Enabling v3 Compatibility Mode")
 
 		serviceBroker = compatibility.NewLegacyPlanUpgrader(serviceBroker)

@@ -16,18 +16,12 @@ package brokers
 
 import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
-	"github.com/spf13/viper"
 	"golang.org/x/oauth2/jwt"
 )
 
-const (
-	inputValidationProp = "compatibility.enable-input-validation"
-)
-
-func init() {
-	viper.SetDefault(inputValidationProp, true)
-}
+var enableInputValidation = toggles.Compatibility.Toggle("enable-input-validation", true, "Enables validating user input variables against JSON Schema definitions.")
 
 type BrokerConfig struct {
 	HttpConfig            *jwt.Config
@@ -50,7 +44,7 @@ func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
 	return &BrokerConfig{
 		ProjectId:             projectId,
 		HttpConfig:            conf,
-		EnableInputValidation: viper.GetBool(inputValidationProp),
+		EnableInputValidation: enableInputValidation.IsActive(),
 		Registry:              broker.DefaultRegistry,
 	}, nil
 }

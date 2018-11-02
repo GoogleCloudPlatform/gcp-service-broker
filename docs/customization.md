@@ -366,25 +366,26 @@ Legacy Compatibility Options
 
 You can configure the following environment variables:
 
-<b><tt>GSB_COMPATIBILITY_THREE_TO_FOUR_LEGACY_PLANS</tt></b> - <i>boolean</i> - Compatibility with GCP Service Broker v3.X plans
-
-Enable compatibility with the GCP Service Broker v3.x. Before version 4.0, each installation generated its own plan UUIDs, after 4.0 they have been standardized. This option installs a compatibility layer which checks if a service is using the correct plan GUID. If the service does not use the correct GUID, the request will fail with a message about how to upgrade.
-
-
-
-<ul>
-  <li><b>Required</b></li>
-</ul>
-
-<b><tt>GSB_COMPATIBILITY_ENABLE_INPUT_VALIDATION</tt></b> - <i>boolean</i> - Enables input variable JSON Schema validation checks
+<b><tt>GSB_COMPATIBILITY_ENABLE_INPUT_VALIDATION</tt></b> - <i>boolean</i> - enable-input-validation
 
 Enables validating user input variables against JSON Schema definitions.
 
 
 
 <ul>
-  <li><b>Required</b></li>
+  <li><i>Optional</i></li>
   <li>Default: <code>true</code></li>
+</ul>
+
+<b><tt>GSB_COMPATIBILITY_THREE_TO_FOUR_LEGACY_PLANS</tt></b> - <i>boolean</i> - three-to-four.legacy-plans
+
+Enable compatibility with the GCP Service Broker v3.x. Before version 4.0, each installation generated its own plan UUIDs, after 4.0 they have been standardized. This option installs a compatibility layer which checks if a service is using the correct plan GUID. If the service does not use the correct GUID, the request will fail with a message about how to upgrade.
+
+
+
+<ul>
+  <li><i>Optional</i></li>
+  <li>Default: <code>false</code></li>
 </ul>
 
 
