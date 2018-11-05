@@ -90,6 +90,7 @@ func (set *ToggleSet) Toggle(name string, value bool, description string) Toggle
 
 	set.toggles = append(set.toggles, toggle)
 	viper.SetDefault(toggle.viperProperty(), value)
+	// viper.BindEnv(toggle.viperProperty(), toggle.EnvironmentVariable())
 
 	return toggle
 }
