@@ -223,6 +223,25 @@ func ServiceAccountBindInputVariables(serviceName string, defaultWhitelist []str
 	}
 }
 
+// ServiceAccountWhitelistWithDefault holds non-overridable whitelists with default values.
+// This function SHOULD be used for new services over ServiceAccountBindInputVariables.
+func ServiceAccountWhitelistWithDefault(whitelist []string, defaultValue string) []broker.BrokerVariable {
+	whitelistEnum := make(map[interface{}]string)
+	for _, val := range whitelist {
+		whitelistEnum[val] = roleResourcePrefix + val
+	}
+
+	return []broker.BrokerVariable{
+		{
+			FieldName: "role",
+			Type:      broker.JsonTypeString,
+			Details:   `The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details.`,
+			Enum:      whitelistEnum,
+			Default:   defaultValue,
+		},
+	}
+}
+
 // ServiceAccountBindComputedVariables holds computed variables required to provision service accounts, label them and ensure they are unique.
 func ServiceAccountBindComputedVariables() []varcontext.DefaultVariable {
 	return []varcontext.DefaultVariable{
