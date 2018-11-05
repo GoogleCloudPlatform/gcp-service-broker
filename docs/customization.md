@@ -174,6 +174,17 @@ You can configure the following environment variables:
   <li>Default: <code>true</code></li>
 </ul>
 
+<b><tt>GSB_SERVICE_GOOGLE_DIALOGFLOW_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Dialogflow instances.
+
+
+
+
+
+<ul>
+  <li><b>Required</b></li>
+  <li>Default: <code>true</code></li>
+</ul>
+
 <b><tt>GSB_SERVICE_GOOGLE_ML_APIS_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Machine Learning APIs instances.
 
 
