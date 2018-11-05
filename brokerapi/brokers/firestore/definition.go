@@ -38,7 +38,7 @@ func init() {
         "displayName": "Google Cloud Firestore",
         "longDescription": "Cloud Firestore is a fast, fully managed, serverless, cloud-native NoSQL document database that simplifies storing, syncing, and querying data for your mobile, web, and IoT apps at global scale.",
         "documentationUrl": "https://cloud.google.com/firestore/docs/",
-        "supportUrl": "https://cloud.google.com/support/",
+        "supportUrl": "https://cloud.google.com/firestore/docs/getting-support",
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/firestore.svg"
       },
       "tags": ["gcp", "firestore", "preview", "beta"],
@@ -70,7 +70,7 @@ func init() {
 				Description:     "Creates a Firestore user that can only view entities.",
 				PlanId:          "64403af0-4413-4ef3-a813-37f0306ef498",
 				ProvisionParams: map[string]interface{}{},
-				BindParams:      map[string]interface{}{"role": "datastore.user"},
+				BindParams:      map[string]interface{}{"role": "datastore.viewer"},
 			},
 		},
 		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
