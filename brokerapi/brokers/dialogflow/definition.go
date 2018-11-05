@@ -35,7 +35,7 @@ func init() {
         "displayName": "Google Cloud Dialogflow",
         "longDescription": "Dialogflow is an end-to-end, build-once deploy-everywhere development suite for creating conversational interfaces for websites, mobile applications, popular messaging platforms, and IoT devices.",
         "documentationUrl": "https://cloud.google.com/dialogflow-enterprise/docs/",
-        "supportUrl": "https://cloud.google.com/support/",
+        "supportUrl": "https://cloud.google.com/dialogflow-enterprise/docs/support",
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/dialogflow-enterprise.svg"
       },
       "tags": ["gcp", "dialogflow", "preview"],
