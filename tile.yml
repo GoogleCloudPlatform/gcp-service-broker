@@ -244,11 +244,47 @@ forms:
   label: Compatibility
   description: Legacy Compatibility Options
   properties:
+  - name: gsb_compatibility_enable_eol_services
+    type: boolean
+    default: "false"
+    label: enable-eol-services
+    description: Enable broker services that are end of life.
+    configurable: true
+    optional: true
+  - name: gsb_compatibility_enable_gcp_beta_services
+    type: boolean
+    default: "true"
+    label: enable-gcp-beta-services
+    description: Enable services that are in GCP Beta. These have no SLA or support
+      policy.
+    configurable: true
+    optional: true
+  - name: gsb_compatibility_enable_gcp_deprecated_services
+    type: boolean
+    default: "false"
+    label: enable-gcp-deprecated-services
+    description: Enable services that use deprecated GCP components.
+    configurable: true
+    optional: true
   - name: gsb_compatibility_enable_input_validation
     type: boolean
     default: "true"
     label: enable-input-validation
     description: Enables validating user input variables against JSON Schema definitions.
+    configurable: true
+    optional: true
+  - name: gsb_compatibility_enable_preview_services
+    type: boolean
+    default: "true"
+    label: enable-preview-services
+    description: Enable services that are new to the broker this release.
+    configurable: true
+    optional: true
+  - name: gsb_compatibility_enable_unmaintained_services
+    type: boolean
+    default: "false"
+    label: enable-unmaintained-services
+    description: Enable broker services that are unmaintained.
     configurable: true
     optional: true
   - name: gsb_compatibility_three_to_four_legacy_plans
@@ -410,10 +446,10 @@ service_plan_forms:
       for more information.'
     configurable: true
     options:
-    - name: HDD
-      label: HDD - Hard Disk Drive
     - name: SSD
       label: SSD - Solid-state Drive
+    - name: HDD
+      label: HDD - Hard Disk Drive
   - name: num_nodes
     type: string
     default: "3"
@@ -457,10 +493,10 @@ service_plan_forms:
     description: Select a pricing plan (only for 1st generation instances).
     configurable: true
     options:
-    - name: PER_USE
-      label: Per-Use
     - name: PACKAGE
       label: Package
+    - name: PER_USE
+      label: Per-Use
   - name: max_disk_size
     type: string
     default: "10"

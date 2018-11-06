@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/viper"
 
 	"golang.org/x/net/context"
@@ -315,7 +316,7 @@ func ServiceAccountBindOutputVariables() []broker.BrokerVariable {
 }
 
 func whitelistAllows(whitelist []string, role string) bool {
-	return NewStringSet(whitelist...).Contains(role)
+	return utils.NewStringSet(whitelist...).Contains(role)
 }
 
 // RoleWhitelistProperty computes the Viper property name for the boolean the user

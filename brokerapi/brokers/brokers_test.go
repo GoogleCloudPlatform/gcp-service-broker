@@ -189,7 +189,10 @@ var _ = Describe("Brokers", func() {
 			serviceList, err := gcpBroker.Services(context.Background())
 			Expect(err).ToNot(HaveOccurred())
 
-			Expect(len(serviceList)).To(Equal(len(broker.GetEnabledServices())))
+			enabledServices, err := broker.GetEnabledServices()
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(len(serviceList)).To(Equal(len(enabledServices)))
 		})
 	})
 

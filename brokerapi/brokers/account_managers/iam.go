@@ -15,6 +15,7 @@
 package account_managers
 
 import (
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	cloudresourcemanager "google.golang.org/api/cloudresourcemanager/v1"
 )
 
@@ -38,13 +39,13 @@ func mergeBindings(bindings []*cloudresourcemanager.Binding) []*cloudresourceman
 }
 
 // Map a role to a map of members, allowing easy merging of multiple bindings.
-func rolesToMembersMap(bindings []*cloudresourcemanager.Binding) map[string]StringSet {
-	bm := make(map[string]StringSet)
+func rolesToMembersMap(bindings []*cloudresourcemanager.Binding) map[string]utils.StringSet {
+	bm := make(map[string]utils.StringSet)
 	for _, b := range bindings {
 		if set, ok := bm[b.Role]; ok {
 			set.Add(b.Members...)
 		} else {
-			bm[b.Role] = NewStringSet(b.Members...)
+			bm[b.Role] = utils.NewStringSet(b.Members...)
 		}
 	}
 

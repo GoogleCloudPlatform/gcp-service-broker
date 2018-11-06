@@ -66,7 +66,7 @@ func init() {
 		Use:   "tile",
 		Short: "Generate tile.yml file",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(generator.GenerateTile())
+			fmt.Print(generator.GenerateTile())
 		},
 	})
 

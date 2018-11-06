@@ -377,6 +377,39 @@ Legacy Compatibility Options
 
 You can configure the following environment variables:
 
+<b><tt>GSB_COMPATIBILITY_ENABLE_EOL_SERVICES</tt></b> - <i>boolean</i> - enable-eol-services
+
+Enable broker services that are end of life.
+
+
+
+<ul>
+  <li><i>Optional</i></li>
+  <li>Default: <code>false</code></li>
+</ul>
+
+<b><tt>GSB_COMPATIBILITY_ENABLE_GCP_BETA_SERVICES</tt></b> - <i>boolean</i> - enable-gcp-beta-services
+
+Enable services that are in GCP Beta. These have no SLA or support policy.
+
+
+
+<ul>
+  <li><i>Optional</i></li>
+  <li>Default: <code>true</code></li>
+</ul>
+
+<b><tt>GSB_COMPATIBILITY_ENABLE_GCP_DEPRECATED_SERVICES</tt></b> - <i>boolean</i> - enable-gcp-deprecated-services
+
+Enable services that use deprecated GCP components.
+
+
+
+<ul>
+  <li><i>Optional</i></li>
+  <li>Default: <code>false</code></li>
+</ul>
+
 <b><tt>GSB_COMPATIBILITY_ENABLE_INPUT_VALIDATION</tt></b> - <i>boolean</i> - enable-input-validation
 
 Enables validating user input variables against JSON Schema definitions.
@@ -386,6 +419,28 @@ Enables validating user input variables against JSON Schema definitions.
 <ul>
   <li><i>Optional</i></li>
   <li>Default: <code>true</code></li>
+</ul>
+
+<b><tt>GSB_COMPATIBILITY_ENABLE_PREVIEW_SERVICES</tt></b> - <i>boolean</i> - enable-preview-services
+
+Enable services that are new to the broker this release.
+
+
+
+<ul>
+  <li><i>Optional</i></li>
+  <li>Default: <code>true</code></li>
+</ul>
+
+<b><tt>GSB_COMPATIBILITY_ENABLE_UNMAINTAINED_SERVICES</tt></b> - <i>boolean</i> - enable-unmaintained-services
+
+Enable broker services that are unmaintained.
+
+
+
+<ul>
+  <li><i>Optional</i></li>
+  <li>Default: <code>false</code></li>
 </ul>
 
 <b><tt>GSB_COMPATIBILITY_THREE_TO_FOUR_LEGACY_PLANS</tt></b> - <i>boolean</i> - three-to-four.legacy-plans
@@ -848,7 +903,7 @@ For example:
   <li>Default: <code>PER_USE</code></li>
   <li>Valid Values:
   <ul>
-    <li><tt>PER_USE</tt> - Per-Use</li><li><tt>PACKAGE</tt> - Package</li>
+    <li><tt>PACKAGE</tt> - Package</li><li><tt>PER_USE</tt> - Per-Use</li>
   </ul>
   </li>
 </ul>

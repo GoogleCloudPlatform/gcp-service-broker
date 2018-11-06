@@ -153,7 +153,10 @@ func (t *ThreeToFour) Unbind(ctx context.Context, instanceID, bindingID string, 
 // Services returns the list of enabled services, with dummy services injected
 // for legacy compatibility.
 func (t *ThreeToFour) Services(ctx context.Context) ([]brokerapi.Service, error) {
-	services := broker.GetEnabledServices()
+	services, err := broker.GetEnabledServices()
+	if err != nil {
+		return nil, err
+	}
 
 	var marketplace []brokerapi.Service
 

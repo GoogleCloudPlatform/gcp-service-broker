@@ -19,15 +19,29 @@ import (
 	"log"
 	"sort"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/viper"
+)
+
+var (
+	// The following flags enable and disable services based on their tags.
+	// The guiding philosophy for defaults is optimistic about new technology and pessimistic about old.
+	lifecycleTagToggles = map[string]toggles.Toggle{
+		"preview":      toggles.Compatibility.Toggle("enable-preview-services", true, `Enable services that are new to the broker this release.`),
+		"unmaintained": toggles.Compatibility.Toggle("enable-unmaintained-services", false, `Enable broker services that are unmaintained.`),
+		"eol":          toggles.Compatibility.Toggle("enable-eol-services", false, `Enable broker services that are end of life.`),
+		"beta":         toggles.Compatibility.Toggle("enable-gcp-beta-services", true, "Enable services that are in GCP Beta. These have no SLA or support policy."),
+		"deprecated":   toggles.Compatibility.Toggle("enable-gcp-deprecated-services", false, "Enable services that use deprecated GCP components."),
+	}
 )
 
 // BrokerRegistry holds the list of ServiceDefinitions that can be provisioned
 // by the GCP Service Broker.
 type BrokerRegistry map[string]*ServiceDefinition
 
+// DefaultRegistry is the broker registry all service broker definitions implicitly register with.
 var DefaultRegistry = BrokerRegistry{}
 
 // Registers a ServiceDefinition with the service registry that various commands
@@ -62,17 +76,31 @@ func (brokerRegistry BrokerRegistry) Register(service *ServiceDefinition) {
 
 // GetEnabledServices returns a list of all registered brokers that the user
 // has enabled the use of.
-func GetEnabledServices() []*ServiceDefinition { return DefaultRegistry.GetEnabledServices() }
-func (brokerRegistry *BrokerRegistry) GetEnabledServices() []*ServiceDefinition {
+func GetEnabledServices() ([]*ServiceDefinition, error) { return DefaultRegistry.GetEnabledServices() }
+func (brokerRegistry *BrokerRegistry) GetEnabledServices() ([]*ServiceDefinition, error) {
 	var out []*ServiceDefinition
 
 	for _, svc := range brokerRegistry.GetAllServices() {
-		if svc.IsEnabled() {
+		isEnabled := svc.IsEnabled()
+
+		if entry, err := svc.CatalogEntry(); err != nil {
+			return nil, err
+		} else {
+			tags := utils.NewStringSet(entry.Tags...)
+			for tag, toggle := range lifecycleTagToggles {
+				if !toggle.IsActive() && tags.Contains(tag) {
+					isEnabled = false
+					break
+				}
+			}
+		}
+
+		if isEnabled {
 			out = append(out, svc)
 		}
 	}
 
-	return out
+	return out, nil
 }
 
 // GetAllServices returns a list of all registered brokers whether or not the

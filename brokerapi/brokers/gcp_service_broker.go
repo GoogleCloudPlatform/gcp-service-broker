@@ -70,7 +70,12 @@ func New(cfg *BrokerConfig, logger lager.Logger) (*GCPServiceBroker, error) {
 func (gcpBroker *GCPServiceBroker) Services(ctx context.Context) ([]brokerapi.Service, error) {
 	svcs := []brokerapi.Service{}
 
-	for _, service := range gcpBroker.registry.GetEnabledServices() {
+	enabledServices, err := broker.GetEnabledServices()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, service := range enabledServices {
 		entry, err := service.CatalogEntry()
 		if err != nil {
 			return svcs, err
