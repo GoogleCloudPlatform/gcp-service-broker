@@ -32,7 +32,7 @@ func init() {
         "displayName": "Stackdriver Monitoring",
         "longDescription": "Stackdriver Monitoring provides visibility into the performance, uptime, and overall health of cloud-powered applications. ",
         "documentationUrl": "https://cloud.google.com/monitoring/docs/",
-        "supportUrl": "https://cloud.google.com/support/",
+        "supportUrl": "https://cloud.google.com/stackdriver/docs/getting-support",
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg"
       },
       "tags": ["gcp", "stackdriver", "monitoring", "preview"],

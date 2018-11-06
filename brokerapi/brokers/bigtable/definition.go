@@ -47,7 +47,7 @@ func serviceDefinition() *broker.ServiceDefinition {
           "displayName": "Google Bigtable",
           "longDescription": "A high performance NoSQL database service for large analytical and operational workloads.",
           "documentationUrl": "https://cloud.google.com/bigtable/",
-          "supportUrl": "https://cloud.google.com/support/",
+          "supportUrl": "https://cloud.google.com/bigtable/docs/support/getting-support",
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigtable.svg"
       },
       "tags": ["gcp", "bigtable"],
