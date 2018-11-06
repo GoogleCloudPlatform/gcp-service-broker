@@ -32,7 +32,7 @@ func init() {
         "displayName": "Stackdriver Trace",
         "longDescription": "Stackdriver Trace is a distributed tracing system that collects latency data from your applications and displays it in the Google Cloud Platform Console. You can track how requests propagate through your application and receive detailed near real-time performance insights.",
         "documentationUrl": "https://cloud.google.com/trace/docs/",
-        "supportUrl": "https://cloud.google.com/support/",
+        "supportUrl": "https://cloud.google.com/stackdriver/docs/getting-support",
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg"
       },
       "tags": ["gcp", "stackdriver", "trace"],

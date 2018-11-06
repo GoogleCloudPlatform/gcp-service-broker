@@ -36,7 +36,7 @@ func init() {
         "displayName": "Google Cloud Datastore",
         "longDescription": "Google Cloud Datastore is a NoSQL document database built for automatic scaling, high performance, and ease of application development.",
         "documentationUrl": "https://cloud.google.com/datastore/docs/",
-        "supportUrl": "https://cloud.google.com/support/",
+        "supportUrl": "https://cloud.google.com/datastore/docs/getting-support",
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/datastore.svg"
       },
       "tags": ["gcp", "datastore"],

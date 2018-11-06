@@ -50,7 +50,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 				"displayName": "Google Spanner",
 				"longDescription": "The first horizontally scalable, globally consistent, relational database service.",
 				"documentationUrl": "https://cloud.google.com/spanner/",
-				"supportUrl": "https://cloud.google.com/support/",
+				"supportUrl": "https://cloud.google.com/spanner/docs/support",
 				"imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg"
 			},
 			"tags": ["gcp", "spanner"],

@@ -50,7 +50,7 @@ func serviceDefinition() *broker.ServiceDefinition {
           "displayName": "Google BigQuery",
           "longDescription": "A fast, economical and fully managed data warehouse for large-scale data analytics.",
           "documentationUrl": "https://cloud.google.com/bigquery/docs/",
-          "supportUrl": "https://cloud.google.com/support/",
+          "supportUrl": "https://cloud.google.com/bigquery/support",
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigquery.svg"
         },
         "tags": ["gcp", "bigquery"],

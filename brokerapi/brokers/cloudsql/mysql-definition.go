@@ -41,7 +41,7 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 		      "displayName": "Google CloudSQL MySQL",
 		      "longDescription": "Google Cloud SQL is a fully-managed MySQL database service.",
 		      "documentationUrl": "https://cloud.google.com/sql/docs/",
-		      "supportUrl": "https://cloud.google.com/support/",
+		      "supportUrl": "https://cloud.google.com/sql/docs/getting-support",
 		      "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
 		    },
 		    "tags": ["gcp", "cloudsql", "mysql"],
