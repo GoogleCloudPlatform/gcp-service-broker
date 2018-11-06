@@ -43,6 +43,10 @@ type terraformProvider struct {
 // Provision creates the necessary resources that an instance of this service
 // needs to operate.
 func (provider *terraformProvider) Provision(ctx context.Context, provisionContext *varcontext.VarContext) (models.ServiceInstanceDetails, error) {
+	provider.BrokerBase.Logger.Info("terraform-provision", lager.Data{
+		"context": provisionContext.ToMap(),
+	})
+
 	return models.ServiceInstanceDetails{}, nil
 }
 
@@ -50,6 +54,10 @@ func (provider *terraformProvider) Provision(ctx context.Context, provisionConte
 // If the deprovision is asynchronous (results in a long-running job), then operationId is returned.
 // If no error and no operationId are returned, then the deprovision is expected to have been completed successfully.
 func (provider *terraformProvider) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (operationId *string, err error) {
+	provider.BrokerBase.Logger.Info("terraform-provision", lager.Data{
+		"instance": instance.ID,
+	})
+
 	return nil, nil
 }
 

@@ -1,10 +1,20 @@
 package tf
 
 import (
+	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
 )
+
+var roleWhitelist = []string{
+	"storage.objectCreator",
+	"storage.objectViewer",
+	"storage.objectAdmin",
+}
 
 var cloudStorage = TfServiceDefinitionV1{
 	Version:          1,
@@ -32,14 +42,131 @@ var cloudStorage = TfServiceDefinitionV1{
 		},
 	},
 	ProvisionSettings: &TfServiceDefinitionV1Action{
-		PlanInputs: []broker.BrokerVariable{},
-		UserInputs: []broker.BrokerVariable{},
-		Computed:   []varcontext.DefaultVariable{},
-		Template:   ``,
-		Outputs:    []broker.BrokerVariable{},
+		PlanInputs: []broker.BrokerVariable{
+			{
+				FieldName: "storage_class",
+				Type:      broker.JsonTypeString,
+				Details:   "The storage class of the bucket. See: https://cloud.google.com/storage/docs/storage-classes.",
+				Required:  true,
+			},
+		},
+		UserInputs: []broker.BrokerVariable{
+			{
+				FieldName: "name",
+				Type:      broker.JsonTypeString,
+				Details:   "The name of the bucket. There is a single global namespace shared by all buckets so it MUST be unique.",
+				Default:   "pcf_sb_${counter.next()}_${time.nano()}",
+				Constraints: validation.NewConstraintBuilder(). // https://cloud.google.com/storage/docs/naming
+										Pattern("^[A-Za-z0-9_\\.]+$").
+										MinLength(3).
+										MaxLength(222).
+										Build(),
+			},
+			{
+				FieldName: "location",
+				Type:      broker.JsonTypeString,
+				Default:   "US",
+				Details:   `The location of the bucket. Object data for objects in the bucket resides in physical storage within this region. See: https://cloud.google.com/storage/docs/bucket-locations`,
+				Constraints: validation.NewConstraintBuilder().
+					Pattern("^[A-Za-z][-a-z0-9A-Z]+$").
+					Examples("US", "EU", "southamerica-east1").
+					Build(),
+			},
+		},
+		Computed: []varcontext.DefaultVariable{
+			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
+		},
+		Template: `
+variable name {type = "string"}
+variable location {type = "string"}
+variable labels {type = "map"}
+variable storage_class {type = "string"}
+
+resource "google_storage_bucket" "bucket" {
+  name     = "${var.name}"
+  location = "${var.location}"
+  labels = "${var.labels}"
+  storage_class = "${var.storage_class}"
+}
+
+output id {value = "${google_storage_bucket.bucket.id}"}
+output bucket_name {value = "${var.name}"}
+`,
+		Outputs: []broker.BrokerVariable{
+			{
+				FieldName: "bucket_name",
+				Type:      broker.JsonTypeString,
+				Details:   "Name of the bucket this binding is for.",
+				Required:  true,
+				Constraints: validation.NewConstraintBuilder(). // https://cloud.google.com/storage/docs/naming
+										Pattern("^[A-Za-z0-9_\\.]+$").
+										MinLength(3).
+										MaxLength(222).
+										Build(),
+			},
+			{
+				FieldName:   "id",
+				Type:        broker.JsonTypeString,
+				Details:     "The GCP ID of this bucket.",
+				Required:    true,
+				Constraints: validation.NewConstraintBuilder().Build(),
+			},
+		},
 	},
-	// BindSettings      TfServiceDefinitionV1Action `yaml:"bind" validate:"required,dive"`
-	// Examples          []broker.ServiceExample     `yaml:"examples" validate:"required,dive"`
+	BindSettings: &TfServiceDefinitionV1Action{
+		PlanInputs: []broker.BrokerVariable{},
+		UserInputs: accountmanagers.ServiceAccountBindInputVariables(models.StorageName, roleWhitelist),
+		Computed:   accountmanagers.ServiceAccountBindComputedVariables(),
+		Template: `
+variable role {type = "string"}
+variable binding_id {type = "string"}
+variable bucket {type = "string"}
+
+resource "google_service_account" "account" {
+  account_id = "pcf-binding-${substr("${var.binding_id}", 0, 15)}"
+  display_name = "pcf-binding-${substr("${var.binding_id}", 0, 15)}"
+}
+
+resource "google_service_account_key" "key" {
+  service_account_id = "${google_service_account.account.name}"
+}
+
+resource "google_storage_bucket_iam_member" "member" {
+  bucket = "${var.bucket}"
+  role   = "roles/${var.role}"
+  member = "serviceAccount:${google_service_account.account.email}"
+}
+
+output "name" {value = "${google_service_account.account.display_name}"}
+output "email" {value = "${google_service_account.account.email}"}
+output "unique_id" {value = "${google_service_account.account.unique_id}"}
+output "private_key_data" {value = "${google_service_account_key.key.private_key}"}
+output "project_id" {value = "${google_service_account.account.project}"}
+`,
+		Outputs: accountmanagers.ServiceAccountBindOutputVariables(),
+	},
+
+	Examples: []broker.ServiceExample{
+		{
+			Name:            "Basic Configuration",
+			Description:     "Create a nearline bucket with a service account that can create/read/delete the objects in it.",
+			PlanId:          "a42c1182-d1a0-4d40-82c1-28220518b360",
+			ProvisionParams: map[string]interface{}{"location": "us"},
+			BindParams: map[string]interface{}{
+				"role": "storage.objectAdmin",
+			},
+		},
+		{
+			Name:            "Cold Storage",
+			Description:     "Create a coldline bucket with a service account that can create/read/delete the objects in it.",
+			PlanId:          "c8538397-8f15-45e3-a229-8bb349c3a98f",
+			ProvisionParams: map[string]interface{}{"location": "us"},
+			BindParams: map[string]interface{}{
+				"role":     "storage.objectAdmin",
+				"location": "us-west1",
+			},
+		},
+	},
 
 	// Internal SHOULD be set to true for Google maintained services.
 	Internal: true,

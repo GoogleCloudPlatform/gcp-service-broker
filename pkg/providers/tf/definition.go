@@ -47,7 +47,7 @@ type TfServiceDefinitionV1Action struct {
 	PlanInputs []broker.BrokerVariable      `yaml:"plan_inputs" validate:"dive"`
 	UserInputs []broker.BrokerVariable      `yaml:"user_inputs" validate:"dive"`
 	Computed   []varcontext.DefaultVariable `yaml:"computed_inputs" validate:"dive"`
-	Template   string                       `yaml:"template" validate:"required"`
+	Template   string                       `yaml:"template" validate:"hcl"`
 	Outputs    []broker.BrokerVariable      `yaml:"outputs" validate:"dive"`
 }
 
@@ -77,8 +77,10 @@ func (tfb *TfServiceDefinitionV1) ToService() (*broker.ServiceDefinition, error)
 		return nil, err
 	}
 
+	// TODO validate that the Terraform module definitions fit with the definiton
+
 	return &broker.ServiceDefinition{
-		Name: tfb.Name,
+		Name:                       tfb.Name,
 		DefaultServiceDefinition:   string(defaultServiceDefinition),
 		ProvisionInputVariables:    tfb.ProvisionSettings.UserInputs,
 		ProvisionComputedVariables: tfb.ProvisionSettings.Computed,
