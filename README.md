@@ -14,10 +14,13 @@ The GCP Service Broker provides support for:
 * [Cloud SQL](https://cloud.google.com/sql/)
 * [Cloud Storage](https://cloud.google.com/storage/)
 * [Datastore](https://cloud.google.com/datastore/)
+* [Dialogflow](https://cloud.google.com/dialogflow-enterprise/)
+* [Firestore](https://cloud.google.com/firestore/)
 * [ML APIs](https://cloud.google.com/ml/)
 * [PubSub](https://cloud.google.com/pubsub/)
 * [Spanner](https://cloud.google.com/spanner/)
 * [Stackdriver Debugger](https://cloud.google.com/debugger/)
+* [Stackdriver Monitoring](https://cloud.google.com/monitoring/)
 * [Stackdriver Trace](https://cloud.google.com/trace/)
 * [Stackdriver Profiler](https://cloud.google.com/profiler/)
 
