@@ -31,10 +31,6 @@ type TerraformBuilder struct {
 	// GOOGLE_PROJECT
 }
 
-type TerraformWorkspace struct {
-	// directory
-}
-
 func (builder *TerraformBuilder) AddModule(name, definition string) {
 
 }

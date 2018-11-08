@@ -21,19 +21,19 @@ import (
 	"github.com/hashicorp/hcl"
 )
 
-// TerraformModule represents a module in a Terraform workspace.
-type TerraformModule struct {
+// ModuleDefinition represents a module in a Terraform workspace.
+type ModuleDefinition struct {
 	Name       string `validate:"terraform_identifier,required"`
 	Definition string `validate:"hcl"`
 }
 
-// Validate checks the validity of the TerraformModule struct.
-func (module *TerraformModule) Validate() error {
+// Validate checks the validity of the ModuleDefinition struct.
+func (module *ModuleDefinition) Validate() error {
 	return validation.ValidateStruct(module)
 }
 
 // Inputs gets the input parameter names for the module.
-func (module *TerraformModule) Inputs() ([]string, error) {
+func (module *ModuleDefinition) Inputs() ([]string, error) {
 	defn := terraformModuleHcl{}
 	if err := hcl.Decode(&defn, module.Definition); err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func (module *TerraformModule) Inputs() ([]string, error) {
 }
 
 // Outputs gets the output parameter names for the module.
-func (module *TerraformModule) Outputs() ([]string, error) {
+func (module *ModuleDefinition) Outputs() ([]string, error) {
 	defn := terraformModuleHcl{}
 	if err := hcl.Decode(&defn, module.Definition); err != nil {
 		return nil, err

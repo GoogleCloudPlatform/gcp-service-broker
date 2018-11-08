@@ -20,8 +20,8 @@ import (
 	"testing"
 )
 
-func ExampleTerraformModule_Inputs() {
-	module := TerraformModule{
+func ExampleModuleDefinition_Inputs() {
+	module := ModuleDefinition{
 		Name: "cloud_storage",
 		Definition: `
     variable name {type = "string"}
@@ -43,8 +43,8 @@ func ExampleTerraformModule_Inputs() {
 	// Output: [name storage_class]
 }
 
-func ExampleTerraformModule_Outputs() {
-	module := TerraformModule{
+func ExampleModuleDefinition_Outputs() {
+	module := ModuleDefinition{
 		Name: "cloud_storage",
 		Definition: `
     resource "google_storage_bucket" "bucket" {
@@ -66,13 +66,13 @@ func ExampleTerraformModule_Outputs() {
 	// Output: [bucket_name id]
 }
 
-func TestTerraformModule_Validate(t *testing.T) {
+func TestModuleDefinition_Validate(t *testing.T) {
 	cases := map[string]struct {
-		Module      TerraformModule
+		Module      ModuleDefinition
 		ErrContains string
 	}{
 		"nominal": {
-			Module: TerraformModule{
+			Module: ModuleDefinition{
 				Name: "my_module",
 				Definition: `
           resource "google_storage_bucket" "bucket" {
@@ -83,7 +83,7 @@ func TestTerraformModule_Validate(t *testing.T) {
 			ErrContains: "",
 		},
 		"bad-name": {
-			Module: TerraformModule{
+			Module: ModuleDefinition{
 				Name: "my module",
 				Definition: `
           resource "google_storage_bucket" "bucket" {
@@ -94,7 +94,7 @@ func TestTerraformModule_Validate(t *testing.T) {
 			ErrContains: "Field validation for 'Name' failed ",
 		},
 		"bad-hcl": {
-			Module: TerraformModule{
+			Module: ModuleDefinition{
 				Name: "my_module",
 				Definition: `
           resource "bucket" {
