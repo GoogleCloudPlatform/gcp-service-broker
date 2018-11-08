@@ -5,7 +5,21 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unresolved]
- - TODO add pending changelog entries here.
+
+### Added
+ - The ability to enable/disable services based on product lifecycle tags. See [#340](https://github.com/GoogleCloudPlatform/gcp-service-broker/pull/340) for context.
+ - Preview support for Firestore.
+ - Preview support for Dialogflow.
+ - Preview support for Stackdriver Metrics.
+ - Namespace support for Datastore.
+ 
+### Changed
+ - Support links for services now point to service-specific pages where possible.
+ - Feature flags are now handled through a generic toggles framework. Option labels and descriptions might change slightly in the tile.
+ - Service definitions now get field-level validation to check for sanity before being registered.
+
+### Removed
+ - The `examples/` directory.
 
 ## [4.1.0] - 2018-11-05
 
