@@ -80,15 +80,23 @@ func (tfb *TfServiceDefinitionV1) ToService() (*broker.ServiceDefinition, error)
 	// TODO validate that the Terraform module definitions fit with the definiton
 
 	return &broker.ServiceDefinition{
-		Name:                       tfb.Name,
-		DefaultServiceDefinition:   string(defaultServiceDefinition),
-		ProvisionInputVariables:    tfb.ProvisionSettings.UserInputs,
-		ProvisionComputedVariables: tfb.ProvisionSettings.Computed,
-		BindInputVariables:         tfb.BindSettings.UserInputs,
-		BindComputedVariables:      tfb.BindSettings.Computed,
-		BindOutputVariables:        append(tfb.ProvisionSettings.Outputs, tfb.BindSettings.Outputs...),
-		PlanVariables:              append(tfb.ProvisionSettings.PlanInputs, tfb.BindSettings.PlanInputs...),
-		Examples:                   tfb.Examples,
+		Name:                     tfb.Name,
+		DefaultServiceDefinition: string(defaultServiceDefinition),
+		ProvisionInputVariables:  tfb.ProvisionSettings.UserInputs,
+		ProvisionComputedVariables: append(tfb.ProvisionSettings.Computed, varcontext.DefaultVariable{
+			Name:      "tf_id",
+			Default:   "tf:${request.instance_id}:",
+			Overwrite: true,
+		}),
+		BindInputVariables: tfb.BindSettings.UserInputs,
+		BindComputedVariables: append(tfb.BindSettings.Computed, varcontext.DefaultVariable{
+			Name:      "tf_id",
+			Default:   "tf:${request.instance_id}:${request.binding_id}",
+			Overwrite: true,
+		}),
+		BindOutputVariables: append(tfb.ProvisionSettings.Outputs, tfb.BindSettings.Outputs...),
+		PlanVariables:       append(tfb.ProvisionSettings.PlanInputs, tfb.BindSettings.PlanInputs...),
+		Examples:            tfb.Examples,
 		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
 			return NewTerraformProvider(projectId, auth, logger, *tfb)
 		},

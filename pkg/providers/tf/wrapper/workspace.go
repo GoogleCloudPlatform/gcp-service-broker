@@ -29,9 +29,18 @@ var (
 	FsInitializationErr = errors.New("Filesystem must first be initialized.")
 )
 
+func DeserializeWorkspace(definition string) (*TerraformWorkspace, error) {
+	ws := TerraformWorkspace{}
+	if err := json.Unmarshal([]byte(definition), &ws); err != nil {
+		return nil, err
+	}
+
+	return &ws, nil
+}
+
 type TerraformWorkspace struct {
 	Id          string             `json:"id"`
-	Environment map[string]string  `json:"-"` // GOOGLE_CREDENTIALS needs to be set to the JSON key and GOOGLE_PROJET needs to be set to the project
+	Environment map[string]string  `json:"-"` // GOOGLE_CREDENTIALS needs to be set to the JSON key and GOOGLE_PROJECT needs to be set to the project
 	Modules     []ModuleDefinition `json:"modules"`
 	Instances   []ModuleInstance   `json:"instances"`
 	State       []byte             `json:"tfstate"`
@@ -39,6 +48,16 @@ type TerraformWorkspace struct {
 	mux         sync.Mutex
 	initialized bool
 	dir         string
+}
+
+// Serialize converts the TerraformWorkspace into a JSON string.
+func (workspace *TerraformWorkspace) Serialize() (string, error) {
+	ws, err := json.Marshal(workspace)
+	if err != nil {
+		return "", err
+	}
+
+	return string(ws), nil
 }
 
 func (workspace *TerraformWorkspace) InitializeFs() error {
@@ -55,7 +74,7 @@ func (workspace *TerraformWorkspace) InitializeFs() error {
 		workspace.dir = dir
 	}
 
-	// write the modules
+	// write the modulesTerraformWorkspace
 	for _, module := range workspace.Modules {
 		parent := path.Join(workspace.dir, module.Name)
 		if err := os.Mkdir(parent, 0600); err != nil {
@@ -103,7 +122,7 @@ func (workspace *TerraformWorkspace) TeardownFs() error {
 }
 
 func (workspace *TerraformWorkspace) Validate() error {
-	// make sure
+	// run tf validate
 	return nil
 }
 

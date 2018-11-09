@@ -185,3 +185,31 @@ type PlanDetailsV1 struct {
 func (PlanDetailsV1) TableName() string {
 	return "plan_details"
 }
+
+// TerraformDeploymentV1 describes the state of a Terraform resource deployment.
+type TerraformDeploymentV1 struct {
+	ID        string `gorm:"primary_key",sql:"type:varchar(1024)"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
+
+	// Workspace contains a JSON serialized version of the Terraform workspace.
+	Workspace string `sql:"type:clob"`
+
+	// LastOperationType describes the last operation being performed on the resource.
+	LastOperationType string
+
+	// LastOperationState holds one of the following strings "in progress", "succeeded", "failed".
+	// These mirror the OSB API.
+	LastOperationState string
+
+	// LastOperationMessage is a description that can be passed back to the user.
+	LastOperationMessage string
+}
+
+// TableName returns a consistent table name (`tf_deployment`) for gorm so
+// multiple structs from different versions of the database all operate on the
+// same table.
+func (TerraformDeploymentV1) TableName() string {
+	return "tf_deployment"
+}

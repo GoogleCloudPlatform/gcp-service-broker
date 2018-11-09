@@ -360,3 +360,60 @@ func (ds *SqlDatastore) CheckDeletedPlanDetailsV1ById(ctx context.Context, id st
 }
 
 
+
+
+// CountTerraformDeploymentById gets the count of TerraformDeployment by its key (id) in the datastore (0 or 1)
+func CountTerraformDeploymentById(ctx context.Context, id string) (int, error) { return defaultDatastore().CountTerraformDeploymentById(ctx, id) }
+func (ds *SqlDatastore) CountTerraformDeploymentById(ctx context.Context, id string) (int, error) {
+	var count int
+	err := ds.db.Model(&models.TerraformDeployment{}).Where("id = ?", id).Count(&count).Error
+	return count, err
+}
+
+// CreateTerraformDeployment creates a new record in the database and assigns it a primary key.
+func CreateTerraformDeployment(ctx context.Context, object *models.TerraformDeployment) error { return defaultDatastore().CreateTerraformDeployment(ctx, object) }
+func (ds *SqlDatastore) CreateTerraformDeployment(ctx context.Context, object *models.TerraformDeployment) error {
+	return ds.db.Create(object).Error
+}
+
+// SaveTerraformDeployment updates an existing record in the database.
+func SaveTerraformDeployment(ctx context.Context, object *models.TerraformDeployment) error { return defaultDatastore().SaveTerraformDeployment(ctx, object) }
+func (ds *SqlDatastore) SaveTerraformDeployment(ctx context.Context, object *models.TerraformDeployment) error {
+	return ds.db.Save(object).Error
+}
+// DeleteTerraformDeploymentById soft-deletes the record by its key (id).
+func DeleteTerraformDeploymentById(ctx context.Context, id string) error { return defaultDatastore().DeleteTerraformDeploymentById(ctx, id) }
+func (ds *SqlDatastore) DeleteTerraformDeploymentById(ctx context.Context, id string) error {
+	return ds.db.Where("id = ?", id).Delete(&models.TerraformDeployment{}).Error
+}
+
+
+
+// DeleteTerraformDeployment soft-deletes the record.
+func DeleteTerraformDeployment(ctx context.Context, record *models.TerraformDeployment) error { return defaultDatastore().DeleteTerraformDeployment(ctx, record) }
+func (ds *SqlDatastore) DeleteTerraformDeployment(ctx context.Context, record *models.TerraformDeployment) error {
+	return ds.db.Delete(record).Error
+}
+// GetTerraformDeploymentById gets an instance of TerraformDeployment by its key (id).
+func GetTerraformDeploymentById(ctx context.Context, id string) (*models.TerraformDeployment, error) { return defaultDatastore().GetTerraformDeploymentById(ctx, id) }
+func (ds *SqlDatastore) GetTerraformDeploymentById(ctx context.Context, id string) (*models.TerraformDeployment, error) {
+	record := models.TerraformDeployment{}
+	if err := ds.db.Where("id = ?", id).First(&record).Error; err != nil {
+		return nil, err
+	}
+
+	return &record, nil
+}
+
+// CheckDeletedTerraformDeploymentById checks to see if an instance of TerraformDeployment was soft deleted by its key (id).
+func CheckDeletedTerraformDeploymentById(ctx context.Context, id string) (bool, error) { return defaultDatastore().CheckDeletedTerraformDeploymentById(ctx, id) }
+func (ds *SqlDatastore) CheckDeletedTerraformDeploymentById(ctx context.Context, id string) (bool, error) {
+	record := models.TerraformDeployment{}
+	if err := ds.db.Unscoped().Where("id = ?", id).First(&record).Error; err != nil {
+		return false, err
+	}
+
+	return record.DeletedAt != nil, nil
+}
+
+

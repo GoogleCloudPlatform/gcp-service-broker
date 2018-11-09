@@ -47,6 +47,10 @@ func (provider *terraformProvider) Provision(ctx context.Context, provisionConte
 		"context": provisionContext.ToMap(),
 	})
 
+	// convert provisioncontext to map, only pull out necessary items.
+	// create a new wrapper, pass to async_handler and get id or error back
+	// return id or error
+
 	return models.ServiceInstanceDetails{}, nil
 }
 
@@ -57,6 +61,10 @@ func (provider *terraformProvider) Deprovision(ctx context.Context, instance mod
 	provider.BrokerBase.Logger.Info("terraform-provision", lager.Data{
 		"instance": instance.ID,
 	})
+
+	// convert provisioncontext to map, only pull out necessary items.
+	// create a new wrapper, pass to async_handler and get id or error back
+	// return id or error
 
 	return nil, nil
 }
