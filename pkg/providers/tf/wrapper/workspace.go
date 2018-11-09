@@ -23,11 +23,44 @@ import (
 	"path"
 	"reflect"
 	"sync"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 )
 
 var (
 	FsInitializationErr = errors.New("Filesystem must first be initialized.")
 )
+
+func NewWorkspace(variableContext *varcontext.VarContext, terraformTemplate string) (*TerraformWorkspace, error) {
+	tfModule := ModuleDefinition{
+		Name:       "brokertemplate",
+		Definition: terraformTemplate,
+	}
+
+	inputList, err := tfModule.Inputs()
+	if err != nil {
+		return nil, err
+	}
+
+	limitedConfig := make(map[string]interface{})
+	config := variableContext.ToMap()
+	for _, name := range inputList {
+		limitedConfig[name] = config[name]
+	}
+
+	workspace := TerraformWorkspace{
+		Modules: []ModuleDefinition{tfModule},
+		Instances: []ModuleInstance{
+			{
+				ModuleName:    tfModule.Name,
+				InstanceName:  "instance",
+				Configuration: limitedConfig,
+			},
+		},
+	}
+
+	return &workspace, nil
+}
 
 func DeserializeWorkspace(definition string) (*TerraformWorkspace, error) {
 	ws := TerraformWorkspace{}
@@ -39,7 +72,6 @@ func DeserializeWorkspace(definition string) (*TerraformWorkspace, error) {
 }
 
 type TerraformWorkspace struct {
-	Id          string             `json:"id"`
 	Environment map[string]string  `json:"-"` // GOOGLE_CREDENTIALS needs to be set to the JSON key and GOOGLE_PROJECT needs to be set to the project
 	Modules     []ModuleDefinition `json:"modules"`
 	Instances   []ModuleInstance   `json:"instances"`
@@ -174,7 +206,7 @@ func (workspace *TerraformWorkspace) updateState() error {
 	return nil
 }
 
-func (workspace *TerraformWorkspace) Provision() error {
+func (workspace *TerraformWorkspace) Apply() error {
 	workspace.mux.Lock()
 	defer workspace.mux.Unlock()
 	if !workspace.initialized {

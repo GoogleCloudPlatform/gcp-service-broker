@@ -22,7 +22,9 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf/wrapper"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
 )
@@ -31,12 +33,14 @@ func NewTerraformProvider(projectId string, auth *jwt.Config, logger lager.Logge
 	return &terraformProvider{
 		BrokerBase:        broker_base.NewBrokerBase(projectId, auth, logger),
 		serviceDefinition: serviceDefinition,
+		jobRunner:         TfJobRunner{ProjectId: projectId, ServiceAccount: utils.GetServiceAccountJson()},
 	}
 }
 
 type terraformProvider struct {
 	broker_base.BrokerBase
 
+	jobRunner         TfJobRunner
 	serviceDefinition TfServiceDefinitionV1
 }
 
@@ -47,38 +51,56 @@ func (provider *terraformProvider) Provision(ctx context.Context, provisionConte
 		"context": provisionContext.ToMap(),
 	})
 
-	// convert provisioncontext to map, only pull out necessary items.
-	// create a new wrapper, pass to async_handler and get id or error back
-	// return id or error
+	tfId := provisionContext.GetString("tf_id")
+	if err := provisionContext.Error(); err != nil {
+		return models.ServiceInstanceDetails{}, err
+	}
 
-	return models.ServiceInstanceDetails{}, nil
+	workspace, err := wrapper.NewWorkspace(provisionContext, provider.serviceDefinition.ProvisionSettings.Template)
+	if err != nil {
+		return models.ServiceInstanceDetails{}, err
+	}
+
+	if err := provider.jobRunner.StageJob(ctx, tfId, workspace); err != nil {
+		return models.ServiceInstanceDetails{}, err
+	}
+
+	if err := provider.jobRunner.Create(ctx, tfId); err != nil {
+		return models.ServiceInstanceDetails{}, err
+	}
+
+	return models.ServiceInstanceDetails{
+		OperationId:   tfId,
+		OperationType: models.ProvisionOperationType,
+	}, nil
 }
 
 // Deprovision deprovisions the service.
 // If the deprovision is asynchronous (results in a long-running job), then operationId is returned.
 // If no error and no operationId are returned, then the deprovision is expected to have been completed successfully.
 func (provider *terraformProvider) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (operationId *string, err error) {
-	provider.BrokerBase.Logger.Info("terraform-provision", lager.Data{
+	provider.BrokerBase.Logger.Info("terraform-deprovision", lager.Data{
 		"instance": instance.ID,
 	})
 
-	// convert provisioncontext to map, only pull out necessary items.
-	// create a new wrapper, pass to async_handler and get id or error back
-	// return id or error
+	tfId := generateTfId(instance.ID, "")
+	if err := provider.jobRunner.Destroy(ctx, tfId); err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	return &tfId, nil
 }
 
 func (provider *terraformProvider) PollInstance(ctx context.Context, instance models.ServiceInstanceDetails) (bool, error) {
-	return false, nil
+	return Status(ctx, generateTfId(instance.ID, ""))
 }
 
 func (provider *terraformProvider) ProvisionsAsync() bool {
-	return false
+	return true
 }
 
 func (provider *terraformProvider) DeprovisionsAsync() bool {
-	return false
+	return true
 }
 
 // UpdateInstanceDetails updates the ServiceInstanceDetails with the most recent state from GCP.

@@ -16,6 +16,7 @@ package tf
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
@@ -101,4 +102,8 @@ func (tfb *TfServiceDefinitionV1) ToService() (*broker.ServiceDefinition, error)
 			return NewTerraformProvider(projectId, auth, logger, *tfb)
 		},
 	}, nil
+}
+
+func generateTfId(instanceId, bindingId string) string {
+	return fmt.Sprintf("tf:%s:%s", instanceId, bindingId)
 }
