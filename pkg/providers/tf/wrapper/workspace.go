@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path"
 	"reflect"
 	"sync"
@@ -154,18 +155,13 @@ func (workspace *TerraformWorkspace) TeardownFs() error {
 }
 
 func (workspace *TerraformWorkspace) Validate() error {
-	// run tf validate
-	return nil
-}
-
-func (workspace *TerraformWorkspace) Plan() (string, error) {
 	workspace.mux.Lock()
 	defer workspace.mux.Unlock()
 	if !workspace.initialized {
-		return "", FsInitializationErr
+		return FsInitializationErr
 	}
 
-	return "", nil
+	return workspace.runTf("validate", "-no-color")
 }
 
 func (workspace *TerraformWorkspace) Outputs(instance string) (map[string]interface{}, error) {
@@ -213,26 +209,37 @@ func (workspace *TerraformWorkspace) Apply() error {
 		return FsInitializationErr
 	}
 
-	return nil
+	return workspace.runTf("apply", "-auto-approve", "-no-color")
 }
 
 func (workspace *TerraformWorkspace) Destroy() error {
 	workspace.mux.Lock()
 	defer workspace.mux.Unlock()
 	if !workspace.initialized {
-		return nil
+		return FsInitializationErr
 	}
 
-	if err := os.RemoveAll(workspace.dir); err != nil {
-		return err
-	}
-
-	workspace.initialized = false
-	return nil
+	return workspace.runTf("destroy", "-auto-approve", "-no-color")
 }
 
 func (workspace *TerraformWorkspace) tfStatePath() string {
 	return path.Join(workspace.dir, "terraform.tfstate")
+}
+
+func (workspace *TerraformWorkspace) runTf(subCommand string, args ...string) error {
+	sub := []string{subCommand}
+	sub = append(sub, args...)
+
+	var env []string
+	for k, v := range workspace.Environment {
+		env = append(env, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	c := exec.Command("terraform", sub...)
+	c.Env = env
+	c.Dir = workspace.dir
+
+	return c.Run()
 }
 
 // tfState is a struct that can help us deserialize the tfstate JSON file.

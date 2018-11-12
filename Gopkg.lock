@@ -194,17 +194,6 @@
   revision = "04140366298a54a039076d798123ffa108fff46c"
 
 [[projects]]
-  digest = "1:29145d7af4adafd72a79df5e41456ac9e232d5a28c1cd4dacf3ff008a217fc10"
-  name = "github.com/lib/pq"
-  packages = [
-    ".",
-    "oid",
-  ]
-  pruneopts = ""
-  revision = "4ded0e9383f75c197b3a2aaa6d590ac52df6fd79"
-  version = "v1.0.0"
-
-[[projects]]
   digest = "1:961dc3b1d11f969370533390fdf203813162980c858e1dabe827b60940c909a5"
   name = "github.com/magiconair/properties"
   packages = ["."]
@@ -298,14 +287,6 @@
   pruneopts = ""
   revision = "d1fcddd951a6776bc01659143dda6aca057e98b7"
   version = "v2.0.4"
-
-[[projects]]
-  branch = "fix-large-token"
-  digest = "1:9c03f2ce3a571c923fb7f1efb614dafe8e8a285e94d4fd26a27ce662f998fd89"
-  name = "github.com/pivotal-golang/lager"
-  packages = ["."]
-  pruneopts = ""
-  revision = "ce912f1f6e007e955045546229ae42ba5ac66fa7"
 
 [[projects]]
   digest = "1:7ba2551c9a8de293bc575dbe2c0d862c52252d26f267f784547f059f512471c8"
@@ -605,17 +586,15 @@
     "cloud.google.com/go/storage",
     "code.cloudfoundry.org/lager",
     "github.com/go-sql-driver/mysql",
-    "github.com/gorilla/mux",
     "github.com/hashicorp/go-multierror",
+    "github.com/hashicorp/hcl",
     "github.com/hashicorp/hil",
     "github.com/hashicorp/hil/ast",
     "github.com/jinzhu/gorm",
     "github.com/jinzhu/gorm/dialects/sqlite",
-    "github.com/lib/pq",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
     "github.com/pivotal-cf/brokerapi",
-    "github.com/pivotal-golang/lager",
     "github.com/spf13/cast",
     "github.com/spf13/cobra",
     "github.com/spf13/viper",
@@ -629,7 +608,6 @@
     "google.golang.org/api/iam/v1",
     "google.golang.org/api/option",
     "google.golang.org/api/sqladmin/v1beta4",
-    "google.golang.org/api/storage/v1",
     "google.golang.org/genproto/googleapis/spanner/admin/instance/v1",
     "gopkg.in/go-playground/validator.v9",
     "gopkg.in/yaml.v2",

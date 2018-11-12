@@ -141,7 +141,7 @@ func (runner *TfJobRunner) operationFinished(err error, workspace *wrapper.Terra
 	}
 
 	// only destroy the on-disk workspace if the state was updated correctly
-	return workspace.Destroy()
+	return workspace.TeardownFs()
 }
 
 func Status(ctx context.Context, id string) (bool, error) {
