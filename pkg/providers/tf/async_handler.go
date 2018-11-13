@@ -36,10 +36,6 @@ type TfJobRunner struct {
 }
 
 func (runner *TfJobRunner) StageJob(ctx context.Context, jobId string, workspace *wrapper.TerraformWorkspace) error {
-	if err := workspace.InitializeFs(); err != nil {
-		return fmt.Errorf("couldn't initialize temporary workspace: %s", err.Error())
-	}
-
 	// Validate that TF is happy with the workspace
 	if err := workspace.Validate(); err != nil {
 		return err
@@ -84,7 +80,7 @@ func (runner *TfJobRunner) hydrateWorkspace(ctx context.Context, deployment *mod
 		"GOOGLE_PROJECT":     runner.ProjectId,
 	}
 
-	return ws, ws.InitializeFs()
+	return ws, nil
 }
 
 func (runner *TfJobRunner) Dump(ctx context.Context, id string) (*wrapper.TerraformWorkspace, error) {
@@ -159,12 +155,7 @@ func (runner *TfJobRunner) operationFinished(err error, workspace *wrapper.Terra
 
 	deployment.Workspace = workspaceString
 
-	if err := db_service.SaveTerraformDeployment(context.Background(), deployment); err != nil {
-		return err
-	}
-
-	// only destroy the on-disk workspace if the state was updated correctly
-	return workspace.TeardownFs()
+	return db_service.SaveTerraformDeployment(context.Background(), deployment)
 }
 
 func (runner *TfJobRunner) Status(ctx context.Context, id string) (bool, error) {

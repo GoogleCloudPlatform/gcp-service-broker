@@ -84,7 +84,7 @@ func (provider *terraformProvider) create(ctx context.Context, vars *varcontext.
 		return "", err
 	}
 
-	workspace, err := wrapper.NewWorkspace(vars, action.Template)
+	workspace, err := wrapper.NewWorkspace(vars.ToMap(), action.Template)
 	if err != nil {
 		return tfId, err
 	}

@@ -19,25 +19,26 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"path"
 	"reflect"
+	"strings"
 	"sync"
 
 	"code.cloudfoundry.org/lager"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 )
 
 // DefaultInstanceName is the default name of an instance of a particular module.
-const DefaultInstanceName = "instance"
+const (
+	DefaultInstanceName = "instance"
+)
 
 var (
 	FsInitializationErr = errors.New("Filesystem must first be initialized.")
 )
 
-func NewWorkspace(variableContext *varcontext.VarContext, terraformTemplate string) (*TerraformWorkspace, error) {
+func NewWorkspace(templateVars map[string]interface{}, terraformTemplate string) (*TerraformWorkspace, error) {
 	tfModule := ModuleDefinition{
 		Name:       "brokertemplate",
 		Definition: terraformTemplate,
@@ -49,9 +50,8 @@ func NewWorkspace(variableContext *varcontext.VarContext, terraformTemplate stri
 	}
 
 	limitedConfig := make(map[string]interface{})
-	config := variableContext.ToMap()
 	for _, name := range inputList {
-		limitedConfig[name] = config[name]
+		limitedConfig[name] = templateVars[name]
 	}
 
 	workspace := TerraformWorkspace{
@@ -77,19 +77,45 @@ func DeserializeWorkspace(definition string) (*TerraformWorkspace, error) {
 	return &ws, nil
 }
 
+// TerraformWorkspace represents the directory layout of a Terraform execution.
+//
+// It manages the directory structure needed for the commands, serializing and
+// deserializing Terraform state, and all the flags necessary to call Terraform.
 type TerraformWorkspace struct {
 	Environment map[string]string  `json:"-"` // GOOGLE_CREDENTIALS needs to be set to the JSON key and GOOGLE_PROJECT needs to be set to the project
 	Modules     []ModuleDefinition `json:"modules"`
 	Instances   []ModuleInstance   `json:"instances"`
 	State       []byte             `json:"tfstate"`
 
-	mux         sync.Mutex
-	initialized bool
-	dir         string
+	dirLock sync.Mutex
+	dir     string
 }
 
 func (workspace *TerraformWorkspace) String() string {
-	return fmt.Sprintf("Directory: %s", workspace.dir)
+	var b strings.Builder
+
+	b.WriteString("# Terraform Workspace\n")
+	fmt.Fprintf(&b, "modules: %d\n", len(workspace.Modules))
+	fmt.Fprintf(&b, "instances: %d\n", len(workspace.Instances))
+	fmt.Fprintln(&b)
+
+	for _, instance := range workspace.Instances {
+		fmt.Fprintf(&b, "## Instance %q\n", instance.InstanceName)
+		fmt.Fprintf(&b, "module = %q\n", instance.ModuleName)
+
+		for k, v := range instance.Configuration {
+			fmt.Fprintf(&b, "input.%s = %#v\n", k, v)
+		}
+
+		if outputs, err := workspace.Outputs(instance.InstanceName); err != nil {
+			for k, v := range outputs {
+				fmt.Fprintf(&b, "output.%s = %#v\n", k, v)
+			}
+		}
+		fmt.Fprintln(&b)
+	}
+
+	return b.String()
 }
 
 // Serialize converts the TerraformWorkspace into a JSON string.
@@ -102,13 +128,9 @@ func (workspace *TerraformWorkspace) Serialize() (string, error) {
 	return string(ws), nil
 }
 
-func (workspace *TerraformWorkspace) InitializeFs() error {
-	workspace.mux.Lock()
-	defer workspace.mux.Unlock()
-	if workspace.initialized {
-		return nil
-	}
-
+// initializeFs initializes the filesystem directory necessary to run Terraform.
+func (workspace *TerraformWorkspace) initializeFs() error {
+	workspace.dirLock.Lock()
 	// create a temp directory
 	if dir, err := ioutil.TempDir("", "gsb"); err != nil {
 		return err
@@ -147,45 +169,34 @@ func (workspace *TerraformWorkspace) InitializeFs() error {
 		}
 	}
 
-	workspace.initialized = true
+	// run "terraform init"
+	if err := workspace.runTf("init", "-no-color"); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (workspace *TerraformWorkspace) TeardownFs() error {
-	workspace.mux.Lock()
-	defer workspace.mux.Unlock()
+// TeardownFs removes the directory we executed Terraform in and updates the
+// state from it.
+func (workspace *TerraformWorkspace) teardownFs() error {
+	bytes, err := ioutil.ReadFile(workspace.tfStatePath())
+	if err != nil {
+		return err
+	}
+
+	workspace.State = bytes
 
 	if err := os.RemoveAll(workspace.dir); err != nil {
 		return err
 	}
 
-	workspace.initialized = false
+	workspace.dir = ""
+	workspace.dirLock.Unlock()
 	return nil
 }
 
-func (workspace *TerraformWorkspace) Validate() error {
-	workspace.mux.Lock()
-	defer workspace.mux.Unlock()
-	if !workspace.initialized {
-		return FsInitializationErr
-	}
-
-	if err := workspace.runTf("init", "-no-color"); err != nil {
-		return err
-	}
-
-	log.Println("Running validation")
-	return workspace.runTf("validate", "-no-color")
-}
-
 func (workspace *TerraformWorkspace) Outputs(instance string) (map[string]interface{}, error) {
-	workspace.mux.Lock()
-	defer workspace.mux.Unlock()
-
-	if err := workspace.updateState(); err != nil {
-		return nil, err
-	}
-
 	state := tfState{}
 	if err := json.Unmarshal(workspace.State, &state); err != nil {
 		return nil, err
@@ -200,40 +211,32 @@ func (workspace *TerraformWorkspace) Outputs(instance string) (map[string]interf
 	return module.GetOutputs(), nil
 }
 
-func (workspace *TerraformWorkspace) updateState() error {
-	if !workspace.initialized {
-		return nil
-	}
-
-	bytes, err := ioutil.ReadFile(workspace.tfStatePath())
+func (workspace *TerraformWorkspace) Validate() error {
+	err := workspace.initializeFs()
+	defer workspace.teardownFs()
 	if err != nil {
 		return err
 	}
 
-	workspace.State = bytes
-	return nil
+	return workspace.runTf("validate", "-no-color")
 }
 
 func (workspace *TerraformWorkspace) Apply() error {
-	workspace.mux.Lock()
-	defer workspace.mux.Unlock()
-	if !workspace.initialized {
-		return FsInitializationErr
+	err := workspace.initializeFs()
+	defer workspace.teardownFs()
+	if err != nil {
+		return err
 	}
 
-	workspace.runTf("init", "-no-color")
-
-	log.Println("Running Apply")
 	return workspace.runTf("apply", "-auto-approve", "-no-color")
 }
 
 func (workspace *TerraformWorkspace) Destroy() error {
-	workspace.mux.Lock()
-	defer workspace.mux.Unlock()
-	if !workspace.initialized {
-		return FsInitializationErr
+	err := workspace.initializeFs()
+	defer workspace.teardownFs()
+	if err != nil {
+		return err
 	}
-	workspace.runTf("init", "-no-color")
 
 	return workspace.runTf("destroy", "-auto-approve", "-no-color")
 }
@@ -269,9 +272,6 @@ func (workspace *TerraformWorkspace) runTf(subCommand string, args ...string) er
 		"output": string(output),
 		"error":  err,
 	})
-
-	// ignore update state issues
-	workspace.updateState()
 
 	return err
 }
