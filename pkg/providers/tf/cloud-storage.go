@@ -79,13 +79,11 @@ var cloudStorage = TfServiceDefinitionV1{
 		Template: `
 variable name {type = "string"}
 variable location {type = "string"}
-variable labels {type = "map"}
 variable storage_class {type = "string"}
 
 resource "google_storage_bucket" "bucket" {
   name     = "${var.name}"
   location = "${var.location}"
-  labels = "${var.labels}"
   storage_class = "${var.storage_class}"
 }
 
@@ -149,21 +147,11 @@ output "project_id" {value = "${google_service_account.account.project}"}
 	Examples: []broker.ServiceExample{
 		{
 			Name:            "Basic Configuration",
-			Description:     "Create a nearline bucket with a service account that can create/read/delete the objects in it.",
-			PlanId:          "a42c1182-d1a0-4d40-82c1-28220518b360",
+			Description:     "Create a bucket with a service account that can create/read/delete the objects in it.",
+			PlanId:          "e1d11f65-da66-46ad-977c-6d56513baf43",
 			ProvisionParams: map[string]interface{}{"location": "us"},
 			BindParams: map[string]interface{}{
 				"role": "storage.objectAdmin",
-			},
-		},
-		{
-			Name:            "Cold Storage",
-			Description:     "Create a coldline bucket with a service account that can create/read/delete the objects in it.",
-			PlanId:          "c8538397-8f15-45e3-a229-8bb349c3a98f",
-			ProvisionParams: map[string]interface{}{"location": "us"},
-			BindParams: map[string]interface{}{
-				"role":     "storage.objectAdmin",
-				"location": "us-west1",
 			},
 		},
 	},

@@ -8,6 +8,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf/wrapper"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 )
 
 const (
@@ -15,6 +16,18 @@ const (
 	Succeeded  = "succeeded"
 	Failed     = "failed"
 )
+
+func NewTfJobRunerFromEnv() (*TfJobRunner, error) {
+	projectId, err := utils.GetDefaultProjectId()
+	if err != nil {
+		return nil, err
+	}
+
+	return &TfJobRunner{
+		ProjectId:      projectId,
+		ServiceAccount: utils.GetServiceAccountJson(),
+	}, nil
+}
 
 type TfJobRunner struct {
 	ProjectId      string
@@ -71,6 +84,15 @@ func (runner *TfJobRunner) hydrateWorkspace(ctx context.Context, deployment *mod
 	}
 
 	return ws, ws.InitializeFs()
+}
+
+func (runner *TfJobRunner) Dump(ctx context.Context, id string) (*wrapper.TerraformWorkspace, error) {
+	deployment, err := db_service.GetTerraformDeploymentById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return runner.hydrateWorkspace(ctx, deployment)
 }
 
 func (runner *TfJobRunner) Create(ctx context.Context, id string) error {
@@ -144,7 +166,7 @@ func (runner *TfJobRunner) operationFinished(err error, workspace *wrapper.Terra
 	return workspace.TeardownFs()
 }
 
-func Status(ctx context.Context, id string) (bool, error) {
+func (runner *TfJobRunner) Status(ctx context.Context, id string) (bool, error) {
 	deployment, err := db_service.GetTerraformDeploymentById(ctx, id)
 	if err != nil {
 		return false, err
@@ -160,7 +182,7 @@ func Status(ctx context.Context, id string) (bool, error) {
 	}
 }
 
-func Outputs(ctx context.Context, id, instanceName string) (map[string]interface{}, error) {
+func (runner *TfJobRunner) Outputs(ctx context.Context, id, instanceName string) (map[string]interface{}, error) {
 	deployment, err := db_service.GetTerraformDeploymentById(ctx, id)
 	if err != nil {
 		return nil, err

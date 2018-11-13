@@ -16,7 +16,6 @@ package tf
 
 import (
 	"context"
-	"errors"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
@@ -92,7 +91,7 @@ func (provider *terraformProvider) Deprovision(ctx context.Context, instance mod
 }
 
 func (provider *terraformProvider) PollInstance(ctx context.Context, instance models.ServiceInstanceDetails) (bool, error) {
-	return Status(ctx, generateTfId(instance.ID, ""))
+	return provider.jobRunner.Status(ctx, generateTfId(instance.ID, ""))
 }
 
 func (provider *terraformProvider) ProvisionsAsync() bool {
@@ -108,5 +107,12 @@ func (provider *terraformProvider) DeprovisionsAsync() bool {
 // on broker version changes.
 // Return a nil error if you choose not to implement this function.
 func (provider *terraformProvider) UpdateInstanceDetails(ctx context.Context, instance *models.ServiceInstanceDetails) error {
-	return errors.New("Update is not supported.")
+	tfId := generateTfId(instance.ID, "")
+
+	outs, err := provider.jobRunner.Outputs(ctx, tfId, wrapper.DefaultInstanceName)
+	if err != nil {
+		return err
+	}
+
+	return instance.SetOtherDetails(outs)
 }

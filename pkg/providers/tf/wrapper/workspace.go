@@ -19,14 +19,19 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path"
 	"reflect"
 	"sync"
 
+	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 )
+
+// DefaultInstanceName is the default name of an instance of a particular module.
+const DefaultInstanceName = "instance"
 
 var (
 	FsInitializationErr = errors.New("Filesystem must first be initialized.")
@@ -54,7 +59,7 @@ func NewWorkspace(variableContext *varcontext.VarContext, terraformTemplate stri
 		Instances: []ModuleInstance{
 			{
 				ModuleName:    tfModule.Name,
-				InstanceName:  "instance",
+				InstanceName:  DefaultInstanceName,
 				Configuration: limitedConfig,
 			},
 		},
@@ -81,6 +86,10 @@ type TerraformWorkspace struct {
 	mux         sync.Mutex
 	initialized bool
 	dir         string
+}
+
+func (workspace *TerraformWorkspace) String() string {
+	return fmt.Sprintf("Directory: %s", workspace.dir)
 }
 
 // Serialize converts the TerraformWorkspace into a JSON string.
@@ -110,11 +119,11 @@ func (workspace *TerraformWorkspace) InitializeFs() error {
 	// write the modulesTerraformWorkspace
 	for _, module := range workspace.Modules {
 		parent := path.Join(workspace.dir, module.Name)
-		if err := os.Mkdir(parent, 0600); err != nil {
+		if err := os.Mkdir(parent, 0755); err != nil {
 			return err
 		}
 
-		if err := ioutil.WriteFile(path.Join(parent, "definition.tf"), []byte(module.Definition), 0600); err != nil {
+		if err := ioutil.WriteFile(path.Join(parent, "definition.tf"), []byte(module.Definition), 0755); err != nil {
 			return err
 		}
 	}
@@ -126,14 +135,14 @@ func (workspace *TerraformWorkspace) InitializeFs() error {
 			return err
 		}
 
-		if err := ioutil.WriteFile(path.Join(workspace.dir, instance.InstanceName+".tf"), contents, 0600); err != nil {
+		if err := ioutil.WriteFile(path.Join(workspace.dir, instance.InstanceName+".tf"), contents, 0755); err != nil {
 			return err
 		}
 	}
 
 	// write the state if it exists
 	if len(workspace.State) > 0 {
-		if err := ioutil.WriteFile(workspace.tfStatePath(), workspace.State, 0600); err != nil {
+		if err := ioutil.WriteFile(workspace.tfStatePath(), workspace.State, 0755); err != nil {
 			return err
 		}
 	}
@@ -161,6 +170,11 @@ func (workspace *TerraformWorkspace) Validate() error {
 		return FsInitializationErr
 	}
 
+	if err := workspace.runTf("init", "-no-color"); err != nil {
+		return err
+	}
+
+	log.Println("Running validation")
 	return workspace.runTf("validate", "-no-color")
 }
 
@@ -171,8 +185,6 @@ func (workspace *TerraformWorkspace) Outputs(instance string) (map[string]interf
 	if err := workspace.updateState(); err != nil {
 		return nil, err
 	}
-
-	// TODO parse the state from the file and return it here.
 
 	state := tfState{}
 	if err := json.Unmarshal(workspace.State, &state); err != nil {
@@ -209,6 +221,9 @@ func (workspace *TerraformWorkspace) Apply() error {
 		return FsInitializationErr
 	}
 
+	workspace.runTf("init", "-no-color")
+
+	log.Println("Running Apply")
 	return workspace.runTf("apply", "-auto-approve", "-no-color")
 }
 
@@ -218,6 +233,7 @@ func (workspace *TerraformWorkspace) Destroy() error {
 	if !workspace.initialized {
 		return FsInitializationErr
 	}
+	workspace.runTf("init", "-no-color")
 
 	return workspace.runTf("destroy", "-auto-approve", "-no-color")
 }
@@ -230,7 +246,7 @@ func (workspace *TerraformWorkspace) runTf(subCommand string, args ...string) er
 	sub := []string{subCommand}
 	sub = append(sub, args...)
 
-	var env []string
+	env := os.Environ()
 	for k, v := range workspace.Environment {
 		env = append(env, fmt.Sprintf("%s=%s", k, v))
 	}
@@ -239,7 +255,25 @@ func (workspace *TerraformWorkspace) runTf(subCommand string, args ...string) er
 	c.Env = env
 	c.Dir = workspace.dir
 
-	return c.Run()
+	logger := lager.NewLogger("terraform@" + workspace.dir)
+	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.ERROR))
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
+
+	logger.Info("starting process", lager.Data{
+		"path": c.Path,
+		"args": c.Args,
+		"dir":  c.Dir,
+	})
+	output, err := c.CombinedOutput()
+	logger.Info("results", lager.Data{
+		"output": string(output),
+		"error":  err,
+	})
+
+	// ignore update state issues
+	workspace.updateState()
+
+	return err
 }
 
 // tfState is a struct that can help us deserialize the tfstate JSON file.

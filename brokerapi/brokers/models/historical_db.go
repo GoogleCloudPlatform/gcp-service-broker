@@ -211,5 +211,5 @@ type TerraformDeploymentV1 struct {
 // multiple structs from different versions of the database all operate on the
 // same table.
 func (TerraformDeploymentV1) TableName() string {
-	return "tf_deployment"
+	return "terraform_deployments"
 }

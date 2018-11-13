@@ -18,9 +18,9 @@ import "encoding/json"
 
 // ModuleInstance represents the configuration of a single instance of a module.
 type ModuleInstance struct {
-	ModuleName    string
-	InstanceName  string
-	Configuration map[string]interface{}
+	ModuleName    string                 `json:"module_name"`
+	InstanceName  string                 `json:"instance_name"`
+	Configuration map[string]interface{} `json:"configuration"`
 }
 
 // MarshalDefinition converts the module instance definition into a JSON
