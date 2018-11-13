@@ -34,6 +34,7 @@ var (
 		"eol":          toggles.Compatibility.Toggle("enable-eol-services", false, `Enable broker services that are end of life.`),
 		"beta":         toggles.Compatibility.Toggle("enable-gcp-beta-services", true, "Enable services that are in GCP Beta. These have no SLA or support policy."),
 		"deprecated":   toggles.Compatibility.Toggle("enable-gcp-deprecated-services", false, "Enable services that use deprecated GCP components."),
+		"terraform":    toggles.Compatibility.Toggle("enable-terraform-services", false, "Enable services that use the experimental, unstable, Terraform back-end."),
 	}
 )
 

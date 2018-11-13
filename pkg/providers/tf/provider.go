@@ -30,7 +30,6 @@ import (
 
 func NewTerraformProvider(projectId string, auth *jwt.Config, logger lager.Logger, serviceDefinition TfServiceDefinitionV1) broker.ServiceProvider {
 	return &terraformProvider{
-		// BrokerBase:        broker_base.NewBrokerBase(projectId, auth, logger),
 		serviceDefinition: serviceDefinition,
 		jobRunner:         TfJobRunner{ProjectId: projectId, ServiceAccount: utils.GetServiceAccountJson()},
 		logger:            logger.Session("terraform-" + serviceDefinition.Name),

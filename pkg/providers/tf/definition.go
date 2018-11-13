@@ -34,7 +34,7 @@ type TfServiceDefinitionV1 struct {
 	ImageUrl          string                       `yaml:"image_url" validate:"url"`
 	DocumentationUrl  string                       `yaml:"documentation_url" validate:"url"`
 	SupportUrl        string                       `yaml:"support_url" validate:"url"`
-	Tags              []string                     `yaml:"tags"`
+	Tags              []string                     `yaml:"tags,flow"`
 	Plans             []broker.ServicePlan         `yaml:"plans" validate:"required,dive"`
 	ProvisionSettings *TfServiceDefinitionV1Action `yaml:"provision" validate:"dive"`
 	BindSettings      *TfServiceDefinitionV1Action `yaml:"bind" validate:"dive"`

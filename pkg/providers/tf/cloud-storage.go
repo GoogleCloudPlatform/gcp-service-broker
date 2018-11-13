@@ -18,7 +18,7 @@ var roleWhitelist = []string{
 
 var cloudStorage = TfServiceDefinitionV1{
 	Version:          1,
-	Name:             "google-storage-2",
+	Name:             "google-storage-experimental",
 	Id:               "68d094ae-e727-4c14-af07-ee34133c8dfb",
 	Description:      "Unified object storage for developers and enterprises. Cloud Storage allows world-wide storage and retrieval of any amount of data at any time.",
 	DisplayName:      "Google Cloud Storage 2",

@@ -5,13 +5,10 @@ import (
 )
 
 func init() {
-	// if !viper.GetBool("terraform.enable") {
-	// 	return
-	// }
-
 	// TODO load definitions from a directory and instantiate them
 
 	service, err := cloudStorage.ToService()
+
 	if err != nil {
 		panic(err)
 	}

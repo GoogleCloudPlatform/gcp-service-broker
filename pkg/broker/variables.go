@@ -37,23 +37,23 @@ type JsonType string
 
 type BrokerVariable struct {
 	// Is this variable required?
-	Required bool
+	Required bool `yaml:"required,omitempty"`
 	// The name of the JSON field this variable serializes/deserializes to
-	FieldName string `validate:"required"`
+	FieldName string `yaml:"field_name" validate:"required"`
 	// The JSONSchema type of the field
-	Type JsonType `validate:"required"`
+	Type JsonType `yaml:"type" validate:"required"`
 	// Human readable info about the field.
-	Details string `validate:"required"`
+	Details string `yaml:"details" validate:"required"`
 	// The default value of the field.
-	Default interface{}
+	Default interface{} `yaml:"default,omitempty"`
 	// If there are a limited number of valid values for this field then
 	// Enum will hold them in value:friendly name pairs
-	Enum map[interface{}]string
+	Enum map[interface{}]string `yaml:"enum,omitempty"`
 	// Constraints holds JSON Schema validations defined for this variable.
 	// Keys are valid JSON Schema validation keywords, and values are their
 	// associated values.
 	// http://json-schema.org/latest/json-schema-validation.html
-	Constraints map[string]interface{}
+	Constraints map[string]interface{} `yaml:"constraints,omitempty"`
 }
 
 // ToSchema converts the BrokerVariable into the value part of a JSON Schema.
