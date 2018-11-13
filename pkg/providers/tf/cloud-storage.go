@@ -114,7 +114,12 @@ output bucket_name {value = "${var.name}"}
 	BindSettings: &TfServiceDefinitionV1Action{
 		PlanInputs: []broker.BrokerVariable{},
 		UserInputs: accountmanagers.ServiceAccountBindInputVariables(models.StorageName, roleWhitelist),
-		Computed:   accountmanagers.ServiceAccountBindComputedVariables(),
+		Computed: append(accountmanagers.ServiceAccountBindComputedVariables(),
+			varcontext.DefaultVariable{
+				Name:      "bucket",
+				Default:   `${instance.details["bucket_name"]}`,
+				Overwrite: true,
+			}),
 		Template: `
 variable role {type = "string"}
 variable service_account_name {type = "string"}
