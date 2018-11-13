@@ -18,6 +18,7 @@ const (
 	Failed     = "failed"
 )
 
+// NewTfJobRunerFromEnv creates a new TfJobRunner with default configuration values.
 func NewTfJobRunerFromEnv() (*TfJobRunner, error) {
 	projectId, err := utils.GetDefaultProjectId()
 	if err != nil {
@@ -30,11 +31,23 @@ func NewTfJobRunerFromEnv() (*TfJobRunner, error) {
 	}, nil
 }
 
+// TfJobRunner is responsible for executing terraform jobs in the background and
+// providing a way to log and access the state of those background tasks.
+//
+// Jobs are given an ID and a workspace to operate in, and then the TfJobRunner
+// is told which Terraform commands to execute on the given job.
+// The TfJobRunner executes those commands in the background and keeps track of
+// their state in a database table which gets updated once the task is completed.
+//
+// The TfJobRunner keeps track of the workspace and the Terraform state file so
+// subsequent commands will operate on the same structure.
 type TfJobRunner struct {
 	ProjectId      string
 	ServiceAccount string
 }
 
+// StageJob stages a job to be executed. Before the workspace is saved to the
+// database, the modules and inputs are validated by Terraform.
 func (runner *TfJobRunner) StageJob(ctx context.Context, jobId string, workspace *wrapper.TerraformWorkspace) error {
 	// Validate that TF is happy with the workspace
 	if err := workspace.Validate(); err != nil {
@@ -49,7 +62,7 @@ func (runner *TfJobRunner) StageJob(ctx context.Context, jobId string, workspace
 	deployment := &models.TerraformDeployment{
 		ID:                jobId,
 		Workspace:         workspaceString,
-		LastOperationType: models.ProvisionOperationType,
+		LastOperationType: "validation",
 	}
 
 	return runner.operationFinished(nil, workspace, deployment)
@@ -83,15 +96,8 @@ func (runner *TfJobRunner) hydrateWorkspace(ctx context.Context, deployment *mod
 	return ws, nil
 }
 
-func (runner *TfJobRunner) Dump(ctx context.Context, id string) (*wrapper.TerraformWorkspace, error) {
-	deployment, err := db_service.GetTerraformDeploymentById(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	return runner.hydrateWorkspace(ctx, deployment)
-}
-
+// Create runs `terraform apply` on the given workspace in the background.
+// The status of the job can be found by polling the Status function.
 func (runner *TfJobRunner) Create(ctx context.Context, id string) error {
 	deployment, err := db_service.GetTerraformDeploymentById(ctx, id)
 	if err != nil {
@@ -115,6 +121,8 @@ func (runner *TfJobRunner) Create(ctx context.Context, id string) error {
 	return nil
 }
 
+// Destroy runs `terraform destroy` on the given workspace in the background.
+// The status of the job can be found by polling the Status function.
 func (runner *TfJobRunner) Destroy(ctx context.Context, id string) error {
 	deployment, err := db_service.GetTerraformDeploymentById(ctx, id)
 	if err != nil {
@@ -138,6 +146,8 @@ func (runner *TfJobRunner) Destroy(ctx context.Context, id string) error {
 	return nil
 }
 
+// operationFinished closes out the state of the background job so clients that
+// are polling can get the results.
 func (runner *TfJobRunner) operationFinished(err error, workspace *wrapper.TerraformWorkspace, deployment *models.TerraformDeployment) error {
 	if err == nil {
 		deployment.LastOperationState = Succeeded
@@ -158,7 +168,10 @@ func (runner *TfJobRunner) operationFinished(err error, workspace *wrapper.Terra
 	return db_service.SaveTerraformDeployment(context.Background(), deployment)
 }
 
-func (runner *TfJobRunner) Status(ctx context.Context, id string) (bool, error) {
+// Status gets the status of the most recent job on the workspace.
+// If isDone is true, then the status of the operation will not change again.
+// if isDone is false, then the operation is ongoing.
+func (runner *TfJobRunner) Status(ctx context.Context, id string) (isDone bool, err error) {
 	deployment, err := db_service.GetTerraformDeploymentById(ctx, id)
 	if err != nil {
 		return true, err

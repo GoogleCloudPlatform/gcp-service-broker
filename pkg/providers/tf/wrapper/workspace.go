@@ -38,6 +38,8 @@ var (
 	FsInitializationErr = errors.New("Filesystem must first be initialized.")
 )
 
+// NewWorkspace creates a new TerraformWorkspace from a given template and variables to populate an instance of it.
+// The created instance will have the name specified by the DefaultInstanceName constant.
 func NewWorkspace(templateVars map[string]interface{}, terraformTemplate string) (*TerraformWorkspace, error) {
 	tfModule := ModuleDefinition{
 		Name:       "brokertemplate",
@@ -68,6 +70,8 @@ func NewWorkspace(templateVars map[string]interface{}, terraformTemplate string)
 	return &workspace, nil
 }
 
+// DeserializeWorkspace creates a new TerraformWorkspace from a given JSON
+// serialization of one.
 func DeserializeWorkspace(definition string) (*TerraformWorkspace, error) {
 	ws := TerraformWorkspace{}
 	if err := json.Unmarshal([]byte(definition), &ws); err != nil {
@@ -78,9 +82,17 @@ func DeserializeWorkspace(definition string) (*TerraformWorkspace, error) {
 }
 
 // TerraformWorkspace represents the directory layout of a Terraform execution.
+// The structure is strict, consiting of several Terraform modules and instances
+// of those modules. The strictness is artificial, but maintains a clear
+// separation between data and code.
 //
 // It manages the directory structure needed for the commands, serializing and
 // deserializing Terraform state, and all the flags necessary to call Terraform.
+//
+// All public functions that shell out to Terraform maintain the following invariants:
+// - The function blocks if another terraform shell is running.
+// - The function updates the tfstate once finished.
+// - The function creates and destroys its own dir.
 type TerraformWorkspace struct {
 	Environment map[string]string  `json:"-"` // GOOGLE_CREDENTIALS needs to be set to the JSON key and GOOGLE_PROJECT needs to be set to the project
 	Modules     []ModuleDefinition `json:"modules"`
@@ -91,6 +103,8 @@ type TerraformWorkspace struct {
 	dir     string
 }
 
+// String returns a human-friendly representation of the workspace suitable for
+// printing to the console.
 func (workspace *TerraformWorkspace) String() string {
 	var b strings.Builder
 
@@ -196,6 +210,8 @@ func (workspace *TerraformWorkspace) teardownFs() error {
 	return nil
 }
 
+// Outputs gets the Terraform outputs from the state for the instance with the
+// given name. This function DOES NOT invoke Terraform and instead uses the stored state.
 func (workspace *TerraformWorkspace) Outputs(instance string) (map[string]interface{}, error) {
 	state := tfState{}
 	if err := json.Unmarshal(workspace.State, &state); err != nil {
@@ -211,6 +227,8 @@ func (workspace *TerraformWorkspace) Outputs(instance string) (map[string]interf
 	return module.GetOutputs(), nil
 }
 
+// Validate runs `terraform Validate` on this workspace.
+// This funciton blocks if another Terraform command is running on this workspace.
 func (workspace *TerraformWorkspace) Validate() error {
 	err := workspace.initializeFs()
 	defer workspace.teardownFs()
@@ -221,6 +239,8 @@ func (workspace *TerraformWorkspace) Validate() error {
 	return workspace.runTf("validate", "-no-color")
 }
 
+// Apply runs `terraform apply` on this workspace.
+// This funciton blocks if another Terraform command is running on this workspace.
 func (workspace *TerraformWorkspace) Apply() error {
 	err := workspace.initializeFs()
 	defer workspace.teardownFs()
@@ -231,6 +251,8 @@ func (workspace *TerraformWorkspace) Apply() error {
 	return workspace.runTf("apply", "-auto-approve", "-no-color")
 }
 
+// Destroy runs `terraform destroy` on this workspace.
+// This funciton blocks if another Terraform command is running on this workspace.
 func (workspace *TerraformWorkspace) Destroy() error {
 	err := workspace.initializeFs()
 	defer workspace.teardownFs()
