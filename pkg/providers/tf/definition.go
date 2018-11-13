@@ -102,6 +102,9 @@ func (tfb *TfServiceDefinitionV1) ToService() (*broker.ServiceDefinition, error)
 	}, nil
 }
 
+// generateTfId creates a unique id for a given provision/bind combination that
+// will be consistent across calls. This ID will be used in LastOperation polls
+// as well as to uniquely identify the workspace.
 func generateTfId(instanceId, bindingId string) string {
 	return fmt.Sprintf("tf:%s:%s", instanceId, bindingId)
 }

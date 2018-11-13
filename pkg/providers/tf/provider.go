@@ -28,6 +28,7 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
+// NewTerraformProvider creates a new ServiceProvider backed by Terraform module definitions for provision and bind.
 func NewTerraformProvider(projectId string, auth *jwt.Config, logger lager.Logger, serviceDefinition TfServiceDefinitionV1) broker.ServiceProvider {
 	return &terraformProvider{
 		serviceDefinition: serviceDefinition,
@@ -61,6 +62,7 @@ func (provider *terraformProvider) Provision(ctx context.Context, provisionConte
 	}, nil
 }
 
+// Bind creates a new backing Terraform job and executes it, waiting on the result.
 func (provider *terraformProvider) Bind(ctx context.Context, bindContext *varcontext.VarContext) (map[string]interface{}, error) {
 	provider.logger.Info("bind", lager.Data{
 		"context": bindContext.ToMap(),
@@ -96,6 +98,7 @@ func (provider *terraformProvider) create(ctx context.Context, vars *varcontext.
 	return tfId, provider.jobRunner.Create(ctx, tfId)
 }
 
+// BuildInstanceCredentials unions the OtherDetails maps of the instance and bind records.
 func (provider *terraformProvider) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]interface{}, error) {
 	vc, err := varcontext.Builder().
 		MergeJsonObject(json.RawMessage(bindRecord.OtherDetails)).
@@ -108,6 +111,7 @@ func (provider *terraformProvider) BuildInstanceCredentials(ctx context.Context,
 	return vc.ToMap(), nil
 }
 
+// Unbind performs a terraform destroy on the binding.
 func (provider *terraformProvider) Unbind(ctx context.Context, instanceRecord models.ServiceInstanceDetails, bindRecord models.ServiceBindingCredentials) error {
 	tfId := generateTfId(instanceRecord.ID, bindRecord.BindingId)
 	provider.logger.Info("unbind", lager.Data{
@@ -123,9 +127,7 @@ func (provider *terraformProvider) Unbind(ctx context.Context, instanceRecord mo
 	return provider.jobRunner.Wait(ctx, tfId)
 }
 
-// Deprovision deprovisions the service.
-// If the deprovision is asynchronous (results in a long-running job), then operationId is returned.
-// If no error and no operationId are returned, then the deprovision is expected to have been completed successfully.
+// Deprovision performs a terraform destroy on the instance.
 func (provider *terraformProvider) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (operationId *string, err error) {
 	provider.logger.Info("terraform-deprovision", lager.Data{
 		"instance": instance.ID,
@@ -139,14 +141,17 @@ func (provider *terraformProvider) Deprovision(ctx context.Context, instance mod
 	return &tfId, nil
 }
 
+// PollInstance returns the instance status of the backing job.
 func (provider *terraformProvider) PollInstance(ctx context.Context, instance models.ServiceInstanceDetails) (bool, error) {
 	return provider.jobRunner.Status(ctx, generateTfId(instance.ID, ""))
 }
 
+// ProvisionsAsync is always true for Terraformprovider.
 func (provider *terraformProvider) ProvisionsAsync() bool {
 	return true
 }
 
+// DeprovisionsAsync is always true for Terraformprovider.
 func (provider *terraformProvider) DeprovisionsAsync() bool {
 	return true
 }
