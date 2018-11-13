@@ -78,7 +78,7 @@ func (provider *terraformProvider) Bind(ctx context.Context, bindContext *varcon
 	return provider.jobRunner.Outputs(ctx, tfId, wrapper.DefaultInstanceName)
 }
 
-func (provider *terraformProvider) create(ctx context.Context, vars *varcontext.VarContext, action *TfServiceDefinitionV1Action) (string, error) {
+func (provider *terraformProvider) create(ctx context.Context, vars *varcontext.VarContext, action TfServiceDefinitionV1Action) (string, error) {
 	tfId := vars.GetString("tf_id")
 	if err := vars.Error(); err != nil {
 		return "", err

@@ -26,19 +26,19 @@ import (
 )
 
 type TfServiceDefinitionV1 struct {
-	Version           int                          `yaml:"version" validate:"required,eq=1"`
-	Name              string                       `yaml:"name" validate:"required"`
-	Id                string                       `yaml:"id" validate:"required,uuid"`
-	Description       string                       `yaml:"description" validate:"required"`
-	DisplayName       string                       `yaml:"display_name" validate:"required"`
-	ImageUrl          string                       `yaml:"image_url" validate:"url"`
-	DocumentationUrl  string                       `yaml:"documentation_url" validate:"url"`
-	SupportUrl        string                       `yaml:"support_url" validate:"url"`
-	Tags              []string                     `yaml:"tags,flow"`
-	Plans             []broker.ServicePlan         `yaml:"plans" validate:"required,dive"`
-	ProvisionSettings *TfServiceDefinitionV1Action `yaml:"provision" validate:"dive"`
-	BindSettings      *TfServiceDefinitionV1Action `yaml:"bind" validate:"dive"`
-	Examples          []broker.ServiceExample      `yaml:"examples" validate:"required,dive"`
+	Version           int                         `yaml:"version" validate:"required,eq=1"`
+	Name              string                      `yaml:"name" validate:"required"`
+	Id                string                      `yaml:"id" validate:"required,uuid"`
+	Description       string                      `yaml:"description" validate:"required"`
+	DisplayName       string                      `yaml:"display_name" validate:"required"`
+	ImageUrl          string                      `yaml:"image_url" validate:"url"`
+	DocumentationUrl  string                      `yaml:"documentation_url" validate:"url"`
+	SupportUrl        string                      `yaml:"support_url" validate:"url"`
+	Tags              []string                    `yaml:"tags,flow"`
+	Plans             []broker.ServicePlan        `yaml:"plans" validate:"required,dive"`
+	ProvisionSettings TfServiceDefinitionV1Action `yaml:"provision" validate:"required,dive"`
+	BindSettings      TfServiceDefinitionV1Action `yaml:"bind" validate:"required,dive"`
+	Examples          []broker.ServiceExample     `yaml:"examples" validate:"required,dive"`
 
 	// Internal SHOULD be set to true for Google maintained services.
 	Internal bool `yaml:"-"`
@@ -77,8 +77,6 @@ func (tfb *TfServiceDefinitionV1) ToService() (*broker.ServiceDefinition, error)
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO validate that the Terraform module definitions fit with the definiton
 
 	return &broker.ServiceDefinition{
 		Name:                     tfb.Name,

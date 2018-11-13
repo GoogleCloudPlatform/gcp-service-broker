@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf/wrapper"
 	"github.com/jinzhu/gorm"
 	"github.com/spf13/cobra"
 )
@@ -58,13 +59,28 @@ func init() {
 		Use:   "dump",
 		Short: "dump a Terraform workspace",
 		Run: func(cmd *cobra.Command, args []string) {
-			ws, err := jobRunner.Dump(context.Background(), args[0])
+			deployment, err := db_service.GetTerraformDeploymentById(context.Background(), args[0])
+			if err != nil {
+				log.Fatal(err)
+			}
+			ws, err := wrapper.DeserializeWorkspace(deployment.Workspace)
 			if err != nil {
 				fmt.Printf("Error: %s\n", err.Error())
 				log.Fatal(err)
 			}
 
 			fmt.Println(ws)
+		},
+	})
+
+	tfCmd.AddCommand(&cobra.Command{
+		Use:   "wait",
+		Short: "wait for a Terraform job",
+		Run: func(cmd *cobra.Command, args []string) {
+			err := jobRunner.Wait(context.Background(), args[0])
+			if err != nil {
+				log.Fatal(err)
+			}
 		},
 	})
 
