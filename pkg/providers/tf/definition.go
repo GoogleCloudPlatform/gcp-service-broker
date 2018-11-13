@@ -25,6 +25,7 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
+// TfServiceDefinitionV1 is the first version of user defined services.
 type TfServiceDefinitionV1 struct {
 	Version           int                         `yaml:"version" validate:"required,eq=1"`
 	Name              string                      `yaml:"name" validate:"required"`
@@ -44,6 +45,8 @@ type TfServiceDefinitionV1 struct {
 	Internal bool `yaml:"-"`
 }
 
+// TfServiceDefinitionV1Action holds information needed to process user inputs
+// for a single provision or bind call.
 type TfServiceDefinitionV1Action struct {
 	PlanInputs []broker.BrokerVariable      `yaml:"plan_inputs" validate:"dive"`
 	UserInputs []broker.BrokerVariable      `yaml:"user_inputs" validate:"dive"`
@@ -52,6 +55,8 @@ type TfServiceDefinitionV1Action struct {
 	Outputs    []broker.BrokerVariable      `yaml:"outputs" validate:"dive"`
 }
 
+// ToService converts the flat TfServiceDefinitionV1 into a broker.ServiceDefinition
+// that the registry can use.
 func (tfb *TfServiceDefinitionV1) ToService() (*broker.ServiceDefinition, error) {
 	osbDefinition := broker.Service{
 		Service: brokerapi.Service{
