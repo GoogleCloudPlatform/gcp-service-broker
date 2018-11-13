@@ -16,9 +16,9 @@ package tf
 
 import (
 	"context"
+	"encoding/json"
 
 	"code.cloudfoundry.org/lager"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf/wrapper"
@@ -30,15 +30,16 @@ import (
 
 func NewTerraformProvider(projectId string, auth *jwt.Config, logger lager.Logger, serviceDefinition TfServiceDefinitionV1) broker.ServiceProvider {
 	return &terraformProvider{
-		BrokerBase:        broker_base.NewBrokerBase(projectId, auth, logger),
+		// BrokerBase:        broker_base.NewBrokerBase(projectId, auth, logger),
 		serviceDefinition: serviceDefinition,
 		jobRunner:         TfJobRunner{ProjectId: projectId, ServiceAccount: utils.GetServiceAccountJson()},
+		logger:            logger.Session("terraform-" + serviceDefinition.Name),
 	}
 }
 
 type terraformProvider struct {
-	broker_base.BrokerBase
-
+	// broker_base.BrokerBase
+	logger            lager.Logger
 	jobRunner         TfJobRunner
 	serviceDefinition TfServiceDefinitionV1
 }
@@ -46,25 +47,12 @@ type terraformProvider struct {
 // Provision creates the necessary resources that an instance of this service
 // needs to operate.
 func (provider *terraformProvider) Provision(ctx context.Context, provisionContext *varcontext.VarContext) (models.ServiceInstanceDetails, error) {
-	provider.BrokerBase.Logger.Info("terraform-provision", lager.Data{
+	provider.logger.Info("provision", lager.Data{
 		"context": provisionContext.ToMap(),
 	})
 
-	tfId := provisionContext.GetString("tf_id")
-	if err := provisionContext.Error(); err != nil {
-		return models.ServiceInstanceDetails{}, err
-	}
-
-	workspace, err := wrapper.NewWorkspace(provisionContext, provider.serviceDefinition.ProvisionSettings.Template)
+	tfId, err := provider.create(ctx, provisionContext, provider.serviceDefinition.ProvisionSettings)
 	if err != nil {
-		return models.ServiceInstanceDetails{}, err
-	}
-
-	if err := provider.jobRunner.StageJob(ctx, tfId, workspace); err != nil {
-		return models.ServiceInstanceDetails{}, err
-	}
-
-	if err := provider.jobRunner.Create(ctx, tfId); err != nil {
 		return models.ServiceInstanceDetails{}, err
 	}
 
@@ -74,11 +62,73 @@ func (provider *terraformProvider) Provision(ctx context.Context, provisionConte
 	}, nil
 }
 
+func (provider *terraformProvider) Bind(ctx context.Context, bindContext *varcontext.VarContext) (map[string]interface{}, error) {
+	provider.logger.Info("bind", lager.Data{
+		"context": bindContext.ToMap(),
+	})
+
+	tfId, err := provider.create(ctx, bindContext, provider.serviceDefinition.BindSettings)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := provider.jobRunner.Wait(ctx, tfId); err != nil {
+		return nil, err
+	}
+
+	return provider.jobRunner.Outputs(ctx, tfId, wrapper.DefaultInstanceName)
+}
+
+func (provider *terraformProvider) create(ctx context.Context, vars *varcontext.VarContext, action *TfServiceDefinitionV1Action) (string, error) {
+	tfId := vars.GetString("tf_id")
+	if err := vars.Error(); err != nil {
+		return "", err
+	}
+
+	workspace, err := wrapper.NewWorkspace(vars, action.Template)
+	if err != nil {
+		return tfId, err
+	}
+
+	if err := provider.jobRunner.StageJob(ctx, tfId, workspace); err != nil {
+		return tfId, err
+	}
+
+	return tfId, provider.jobRunner.Create(ctx, tfId)
+}
+
+func (provider *terraformProvider) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]interface{}, error) {
+	vc, err := varcontext.Builder().
+		MergeJsonObject(json.RawMessage(bindRecord.OtherDetails)).
+		MergeJsonObject(json.RawMessage(instanceRecord.OtherDetails)).
+		Build()
+	if err != nil {
+		return nil, err
+	}
+
+	return vc.ToMap(), nil
+}
+
+func (provider *terraformProvider) Unbind(ctx context.Context, instanceRecord models.ServiceInstanceDetails, bindRecord models.ServiceBindingCredentials) error {
+	tfId := generateTfId(instanceRecord.ID, bindRecord.BindingId)
+	provider.logger.Info("unbind", lager.Data{
+		"instance": instanceRecord.ID,
+		"binding":  bindRecord.ID,
+		"tfId":     tfId,
+	})
+
+	if err := provider.jobRunner.Destroy(ctx, tfId); err != nil {
+		return err
+	}
+
+	return provider.jobRunner.Wait(ctx, tfId)
+}
+
 // Deprovision deprovisions the service.
 // If the deprovision is asynchronous (results in a long-running job), then operationId is returned.
 // If no error and no operationId are returned, then the deprovision is expected to have been completed successfully.
 func (provider *terraformProvider) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (operationId *string, err error) {
-	provider.BrokerBase.Logger.Info("terraform-deprovision", lager.Data{
+	provider.logger.Info("terraform-deprovision", lager.Data{
 		"instance": instance.ID,
 	})
 

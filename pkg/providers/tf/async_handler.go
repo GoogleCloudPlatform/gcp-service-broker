@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
@@ -169,7 +170,7 @@ func (runner *TfJobRunner) operationFinished(err error, workspace *wrapper.Terra
 func (runner *TfJobRunner) Status(ctx context.Context, id string) (bool, error) {
 	deployment, err := db_service.GetTerraformDeploymentById(ctx, id)
 	if err != nil {
-		return false, err
+		return true, err
 	}
 
 	switch deployment.LastOperationState {
@@ -194,4 +195,20 @@ func (runner *TfJobRunner) Outputs(ctx context.Context, id, instanceName string)
 	}
 
 	return ws.Outputs(instanceName)
+}
+
+// Wait waits for an operation to complete, polling its status once per second.
+func (runner *TfJobRunner) Wait(ctx context.Context, id string) error {
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+
+		case <-time.After(1 * time.Second):
+			isDone, err := runner.Status(ctx, id)
+			if isDone {
+				return err
+			}
+		}
+	}
 }

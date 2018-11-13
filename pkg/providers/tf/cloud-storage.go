@@ -117,12 +117,13 @@ output bucket_name {value = "${var.name}"}
 		Computed:   accountmanagers.ServiceAccountBindComputedVariables(),
 		Template: `
 variable role {type = "string"}
-variable binding_id {type = "string"}
+variable service_account_name {type = "string"}
+variable service_account_display_name {type = "string"}
 variable bucket {type = "string"}
 
 resource "google_service_account" "account" {
-  account_id = "pcf-binding-${substr("${var.binding_id}", 0, 15)}"
-  display_name = "pcf-binding-${substr("${var.binding_id}", 0, 15)}"
+  account_id = "${var.service_account_name}"
+  display_name = "${var.service_account_display_name}"
 }
 
 resource "google_service_account_key" "key" {
@@ -135,11 +136,11 @@ resource "google_storage_bucket_iam_member" "member" {
   member = "serviceAccount:${google_service_account.account.email}"
 }
 
-output "name" {value = "${google_service_account.account.display_name}"}
-output "email" {value = "${google_service_account.account.email}"}
-output "unique_id" {value = "${google_service_account.account.unique_id}"}
-output "private_key_data" {value = "${google_service_account_key.key.private_key}"}
-output "project_id" {value = "${google_service_account.account.project}"}
+output "Name" {value = "${google_service_account.account.display_name}"}
+output "Email" {value = "${google_service_account.account.email}"}
+output "UniqueId" {value = "${google_service_account.account.unique_id}"}
+output "PrivateKeyData" {value = "${google_service_account_key.key.private_key}"}
+output "ProjectId" {value = "${google_service_account.account.project}"}
 `,
 		Outputs: accountmanagers.ServiceAccountBindOutputVariables(),
 	},
