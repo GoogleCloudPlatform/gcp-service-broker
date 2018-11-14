@@ -37,7 +37,7 @@ func init() {
 		Version:          1,
 		Name:             "google-storage-experimental",
 		Id:               "68d094ae-e727-4c14-af07-ee34133c8dfb",
-		Description:      "Experimental Google Cloud Storage that uses the Terraform back-end and grants service accounts IAM directly on the bucket.",
+		Description:      "Experimental Google Cloud Storage that uses the Terraform back-end and grants service accounts IAM permissions directly on the bucket.",
 		DisplayName:      "Experimental Google Cloud Storage",
 		ImageUrl:         "",
 		DocumentationUrl: "",
