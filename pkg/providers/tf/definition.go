@@ -20,7 +20,10 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf/wrapper"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
 )
@@ -55,9 +58,90 @@ type TfServiceDefinitionV1Action struct {
 	Outputs    []broker.BrokerVariable      `yaml:"outputs" validate:"dive"`
 }
 
+// ValidateTemplateIO makes sure that the inputs supplied by the user are a
+// superset of the inputs needed by the Terraform template, and the template
+// outputs match the outputs.
+func (action *TfServiceDefinitionV1Action) ValidateTemplateIO() error {
+	if err := action.validateTemplateInputs(); err != nil {
+		return err
+	}
+
+	return action.validateTemplateOutputs()
+}
+
+// validateTemplateInputs checks that all the inputs of the Terraform template
+// are defined by the service.
+func (action *TfServiceDefinitionV1Action) validateTemplateInputs() error {
+	inputs := utils.NewStringSet()
+
+	for _, in := range action.PlanInputs {
+		inputs.Add(in.FieldName)
+	}
+
+	for _, in := range action.UserInputs {
+		inputs.Add(in.FieldName)
+	}
+
+	for _, in := range action.Computed {
+		inputs.Add(in.Name)
+	}
+
+	tfModule := wrapper.ModuleDefinition{Definition: action.Template}
+	tfIn, err := tfModule.Inputs()
+	if err != nil {
+		return err
+	}
+
+	missingFields := utils.NewStringSet(tfIn...).Minus(inputs).ToSlice()
+	if len(missingFields) > 0 {
+		return fmt.Errorf("The Terraform template requires the fields %v which are missing from the declared inputs.", missingFields)
+	}
+
+	return nil
+}
+
+// validateTemplateOutputs checks that the Terraform template outputs match
+// the names of the defined outputs.
+func (action *TfServiceDefinitionV1Action) validateTemplateOutputs() error {
+	definedOutputs := utils.NewStringSet()
+
+	for _, in := range action.Outputs {
+		definedOutputs.Add(in.FieldName)
+	}
+
+	tfModule := wrapper.ModuleDefinition{Definition: action.Template}
+	tfOut, err := tfModule.Outputs()
+	if err != nil {
+		return err
+	}
+
+	if !definedOutputs.Equals(utils.NewStringSet(tfOut...)) {
+		return fmt.Errorf("The Terraform template outputs %v MUST match the service declared outputs %v.", tfOut, definedOutputs)
+	}
+
+	return nil
+}
+
+// Validate checks the service definition for semantic errors.
+func (tfb *TfServiceDefinitionV1) Validate() error {
+	if err := validation.ValidateStruct(tfb); err != nil {
+		return err
+	}
+
+	if err := tfb.ProvisionSettings.ValidateTemplateIO(); err != nil {
+		return err
+	}
+
+	return tfb.BindSettings.ValidateTemplateIO()
+}
+
 // ToService converts the flat TfServiceDefinitionV1 into a broker.ServiceDefinition
 // that the registry can use.
 func (tfb *TfServiceDefinitionV1) ToService() (*broker.ServiceDefinition, error) {
+	if err := tfb.Validate(); err != nil {
+		return nil, err
+	}
+
 	osbDefinition := broker.Service{
 		Service: brokerapi.Service{
 			ID:            tfb.Id,
