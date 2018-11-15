@@ -22,7 +22,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"reflect"
 	"strings"
 	"sync"
 
@@ -37,6 +36,10 @@ const (
 var (
 	FsInitializationErr = errors.New("Filesystem must first be initialized.")
 )
+
+// TerraformExecutor is the function that shells out to Terraform.
+// It can intercept, modify or retry the given command.
+type TerraformExecutor func(*exec.Cmd) error
 
 // NewWorkspace creates a new TerraformWorkspace from a given template and variables to populate an instance of it.
 // The created instance will have the name specified by the DefaultInstanceName constant.
@@ -98,6 +101,10 @@ type TerraformWorkspace struct {
 	Modules     []ModuleDefinition `json:"modules"`
 	Instances   []ModuleInstance   `json:"instances"`
 	State       []byte             `json:"tfstate"`
+
+	// Executor is a function that gets invoked to shell out to Terraform.
+	// If left nil, the default executor is used.
+	Executor TerraformExecutor `json:"-"`
 
 	dirLock sync.Mutex
 	dir     string
@@ -213,8 +220,8 @@ func (workspace *TerraformWorkspace) teardownFs() error {
 // Outputs gets the Terraform outputs from the state for the instance with the
 // given name. This function DOES NOT invoke Terraform and instead uses the stored state.
 func (workspace *TerraformWorkspace) Outputs(instance string) (map[string]interface{}, error) {
-	state := tfState{}
-	if err := json.Unmarshal(workspace.State, &state); err != nil {
+	state, err := NewTfstate(workspace.State)
+	if err != nil {
 		return nil, err
 	}
 
@@ -280,7 +287,16 @@ func (workspace *TerraformWorkspace) runTf(subCommand string, args ...string) er
 	c.Env = env
 	c.Dir = workspace.dir
 
-	logger := lager.NewLogger("terraform@" + workspace.dir)
+	executor := defaultExecutor
+	if workspace.Executor != nil {
+		executor = workspace.Executor
+	}
+
+	return executor(c)
+}
+
+func defaultExecutor(c *exec.Cmd) error {
+	logger := lager.NewLogger("terraform@" + c.Dir)
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.ERROR))
 	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
 
@@ -296,40 +312,4 @@ func (workspace *TerraformWorkspace) runTf(subCommand string, args ...string) er
 	})
 
 	return err
-}
-
-// tfState is a struct that can help us deserialize the tfstate JSON file.
-type tfState struct {
-	Version int        `json:"version"`
-	Modules []tfModule `json:"modules"`
-}
-
-// GetModule gets a module at a given path or nil if none exists for that path.
-func (state *tfState) GetModule(path ...string) *tfModule {
-	for _, module := range state.Modules {
-		if reflect.DeepEqual(module.Path, path) {
-			return &module
-		}
-	}
-
-	return nil
-}
-
-type tfModule struct {
-	Path    []string `json:"path"`
-	Outputs map[string]struct {
-		Type  string      `json:"type"`
-		Value interface{} `json:"value"`
-	} `json:"outputs"`
-}
-
-// GetOutputs gets the key/value outputs defined for a module.
-func (module *tfModule) GetOutputs() map[string]interface{} {
-	out := make(map[string]interface{})
-
-	for outputName, tfOutput := range module.Outputs {
-		out[outputName] = tfOutput.Value
-	}
-
-	return out
 }
