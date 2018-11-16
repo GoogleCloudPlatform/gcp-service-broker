@@ -42,6 +42,7 @@ func init() {
 	addDumpTableCommand(showCmd, "migrations", &[]models.Migration{})
 	addDumpTableCommand(showCmd, "operations", &[]models.CloudOperationV1{})
 	addDumpTableCommand(showCmd, "provisions", &[]models.ProvisionRequestDetails{})
+	addDumpTableCommand(showCmd, "terraform", &[]models.TerraformDeployment{})
 }
 
 func addDumpTableCommand(parent *cobra.Command, name string, value interface{}) {

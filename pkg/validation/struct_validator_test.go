@@ -28,6 +28,14 @@ type jsonStringStruct struct {
 	Json string `validate:"json"`
 }
 
+type hclStruct struct {
+	Hcl string `validate:"hcl"`
+}
+
+type terraformIdentifierStruct struct {
+	Id string `validate:"terraform_identifier"`
+}
+
 func TestValidateStruct(t *testing.T) {
 	cases := map[string]struct {
 		Validate  interface{}
@@ -91,6 +99,45 @@ func TestValidateStruct(t *testing.T) {
 		},
 		"json string full object": {
 			Validate:  jsonStringStruct{Json: `{"a":42, "s":"foo"}`},
+			ExpectErr: false,
+		},
+		"hcl blank": {
+			Validate:  hclStruct{Hcl: ""},
+			ExpectErr: false,
+		},
+		"hcl bad": {
+			Validate:  hclStruct{Hcl: "asfd"},
+			ExpectErr: true,
+		},
+		"hcl json": {
+			Validate:  hclStruct{Hcl: `{"a":42, "s":"foo"}`},
+			ExpectErr: false,
+		},
+		"hcl terraform provider": {
+			Validate: hclStruct{Hcl: `
+				provider "google" {
+				  credentials = "${file("account.json")}"
+				  project     = "my-project-id"
+				  region      = "us-central1"
+				}
+				provider "google-beta" {
+				  credentials = "${file("account.json")}"
+				  project     = "my-project-id"
+				  region      = "us-central1"
+				}
+				`},
+			ExpectErr: false,
+		},
+		"terraform identifier good": {
+			Validate:  terraformIdentifierStruct{Id: "good_value_here"},
+			ExpectErr: false,
+		},
+		"terraform identifier bad": {
+			Validate:  terraformIdentifierStruct{Id: "bad.value.here"},
+			ExpectErr: true,
+		},
+		"terraform identifier blank": {
+			Validate:  terraformIdentifierStruct{Id: ""},
 			ExpectErr: false,
 		},
 	}

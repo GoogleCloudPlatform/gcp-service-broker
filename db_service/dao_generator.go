@@ -89,6 +89,18 @@ func main() {
 				"Features":  `{"some":["json","blob","here"]}`,
 			},
 		},
+		{
+			Type:            "TerraformDeployment",
+			PrimaryKeyType:  "string",
+			PrimaryKeyField: "id",
+			Keys:            []fieldList{},
+			ExampleFields: map[string]interface{}{
+				"Workspace":            "{}",
+				"LastOperationType":    "create",
+				"LastOperationState":   `in progress`,
+				"LastOperationMessage": `Started 2018-01-01`,
+			},
+		},
 	}
 
 	for i, model := range models {

@@ -69,3 +69,7 @@ type Migration MigrationV1
 // CloudOperation holds information about the status of Google Cloud
 // long-running operations.
 type CloudOperation CloudOperationV1
+
+// TerraformDeployment holds Terraform state and plan information for resources
+// that use that execution system.
+type TerraformDeployment TerraformDeploymentV1

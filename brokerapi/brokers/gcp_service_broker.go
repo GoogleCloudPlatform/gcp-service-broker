@@ -41,6 +41,7 @@ import (
 	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
 	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver"
 	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/storage"
+	_ "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
 )
 
 // GCPServiceBroker is a brokerapi.ServiceBroker that can be used to generate an OSB compatible service broker.

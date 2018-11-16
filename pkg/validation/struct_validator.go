@@ -19,7 +19,8 @@ import (
 	"reflect"
 	"regexp"
 
-	"gopkg.in/go-playground/validator.v9"
+	"github.com/hashicorp/hcl"
+	validator "gopkg.in/go-playground/validator.v9"
 )
 
 var validate = validator.New()
@@ -27,6 +28,8 @@ var validate = validator.New()
 func init() {
 	validate.RegisterValidation("osbname", regexValidation(`^[a-zA-Z0-9-\.]+$`))
 	validate.RegisterValidation("json", jsonValidation)
+	validate.RegisterValidation("hcl", hclValidation)
+	validate.RegisterValidation("terraform_identifier", regexValidation(`^[a-z_]*$`))
 }
 
 // ValidateStruct executes the validation tags on a struct and returns any
@@ -58,4 +61,10 @@ func jsonValidation(field validator.FieldLevel) bool {
 	default:
 		return json.Valid(fl.Bytes())
 	}
+}
+
+func hclValidation(field validator.FieldLevel) bool {
+	value := field.Field().String()
+	_, err := hcl.Parse(value)
+	return err == nil
 }
