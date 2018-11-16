@@ -39,9 +39,9 @@ func init() {
 		Id:               "68d094ae-e727-4c14-af07-ee34133c8dfb",
 		Description:      "Experimental Google Cloud Storage that uses the Terraform back-end and grants service accounts IAM permissions directly on the bucket.",
 		DisplayName:      "Experimental Google Cloud Storage",
-		ImageUrl:         "",
-		DocumentationUrl: "",
-		SupportUrl:       "",
+		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/storage.svg",
+		DocumentationUrl: "https://cloud.google.com/storage/docs/overview",
+		SupportUrl:       "https://cloud.google.com/storage/docs/getting-support",
 		Tags:             []string{"preview", "gcp", "terraform", "storage"},
 		Plans: []broker.ServicePlan{
 			{

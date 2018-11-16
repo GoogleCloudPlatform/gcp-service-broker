@@ -14,7 +14,11 @@
 
 package utils
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+	"sort"
+)
 
 // NewStringSet creates a new string set with the given contents.
 func NewStringSet(contents ...string) StringSet {
@@ -33,13 +37,14 @@ func (set StringSet) Add(str ...string) {
 	}
 }
 
-// ToSlice converts the set to a slice with undefined contents order.
+// ToSlice converts the set to a slice with sort.Strings order.
 func (set StringSet) ToSlice() []string {
 	out := []string{}
 	for k := range set {
 		out = append(out, k)
 	}
 
+	sort.Strings(out)
 	return out
 }
 
@@ -58,4 +63,22 @@ func (set StringSet) Equals(other StringSet) bool {
 func (set StringSet) Contains(other string) bool {
 	_, ok := set[other]
 	return ok
+}
+
+// Returns a copy of this set with every string in the other removed.
+func (set StringSet) Minus(other StringSet) StringSet {
+	difference := NewStringSet()
+
+	for k, _ := range set {
+		if !other.Contains(k) {
+			difference.Add(k)
+		}
+	}
+
+	return difference
+}
+
+// String converts this set to a human readable string.
+func (set StringSet) String() string {
+	return fmt.Sprintf("%v", set.ToSlice())
 }
