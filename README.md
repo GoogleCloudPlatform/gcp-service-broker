@@ -13,6 +13,7 @@ The GCP Service Broker provides support for:
 * [Bigtable](https://cloud.google.com/bigtable/)
 * [Cloud SQL](https://cloud.google.com/sql/)
 * [Cloud Storage](https://cloud.google.com/storage/)
+* [Dataflow](https://cloud.google.com/dataflow/)
 * [Datastore](https://cloud.google.com/datastore/)
 * [Dialogflow](https://cloud.google.com/dialogflow-enterprise/)
 * [Firestore](https://cloud.google.com/firestore/)
