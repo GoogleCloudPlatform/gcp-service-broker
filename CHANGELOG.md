@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
  - Preview support for Dialogflow.
  - Preview support for Stackdriver Metrics.
  - Namespace support for Datastore.
- 
+ - Preview support for Dataflow.
+
 ### Changed
  - Support links for services now point to service-specific pages where possible.
  - Feature flags are now handled through a generic toggles framework. Option labels and descriptions might change slightly in the tile.
