@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
  - Preview support for Stackdriver Metrics.
  - Namespace support for Datastore.
  - Preview support for Dataflow.
+ - Default roles for ML, BigQuery, BigTable, CloudSQL, Pub/Sub, Spanner, and Cloud Storage.
 
 ### Changed
  - Support links for services now point to service-specific pages where possible.
