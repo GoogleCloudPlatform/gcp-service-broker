@@ -207,7 +207,7 @@ type ServiceAccountInfo struct {
 	PrivateKeyData string `json:"PrivateKeyData"`
 }
 
-// ServiceAccountWhitelistWithDefault holds overridable whitelists with default values.
+// ServiceAccountBindInputVariables holds overridable whitelists with default values.
 // This function SHOULD NOT be used for new services.
 func ServiceAccountBindInputVariables(serviceName string, defaultWhitelist []string, defaultRole string) []broker.BrokerVariable {
 	whitelist := roleWhitelist(serviceName, defaultWhitelist)
