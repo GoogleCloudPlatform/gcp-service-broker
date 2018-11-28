@@ -197,3 +197,46 @@ func (tfb *TfServiceDefinitionV1) ToService() (*broker.ServiceDefinition, error)
 func generateTfId(instanceId, bindingId string) string {
 	return fmt.Sprintf("tf:%s:%s", instanceId, bindingId)
 }
+
+// NewExampleTfServiceDefinition creates a new service defintition with sample
+// values for the service broker suitable to give a user a template to manually
+// edit.
+func NewExampleTfServiceDefinition() TfServiceDefinitionV1 {
+	return TfServiceDefinitionV1{
+		Version:          1,
+		Name:             "example-service",
+		Id:               "00000000-0000-0000-0000-000000000000",
+		Description:      "a longer service description",
+		DisplayName:      "Example Service",
+		ImageUrl:         "https://example.com/icon.jpg",
+		DocumentationUrl: "https//example.com",
+		SupportUrl:       "https://example.com/support.html",
+		Tags:             []string{"gcp", "example", "service"},
+		Plans: []broker.ServicePlan{
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:   "00000000-0000-0000-0000-000000000001",
+					Name: "example-plan",
+					Metadata: &brokerapi.ServicePlanMetadata{
+						DisplayName: "Example Plan",
+					},
+					Description: "Example plan description.",
+				},
+				ServiceProperties: map[string]string{
+					"plan_property": "plan-property-value",
+				},
+			},
+		},
+		ProvisionSettings: TfServiceDefinitionV1Action{},
+		BindSettings:      TfServiceDefinitionV1Action{},
+		Examples: []broker.ServiceExample{
+			{
+				Name:            "Example",
+				Description:     "Examples are used for documenting your service AND as integration tests.",
+				PlanId:          "00000000-0000-0000-0000-000000000001",
+				ProvisionParams: map[string]interface{}{"provision-param": "us"},
+				BindParams:      map[string]interface{}{"bind-param": "bind-value"},
+			},
+		},
+	}
+}
