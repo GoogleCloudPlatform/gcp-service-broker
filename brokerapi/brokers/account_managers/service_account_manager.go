@@ -36,9 +36,14 @@ import (
 	iam "google.golang.org/api/iam/v1"
 )
 
-const roleResourcePrefix = "roles/"
-const saResourcePrefix = "serviceAccount:"
-const projectResourcePrefix = "projects/"
+const (
+	roleResourcePrefix     = "roles/"
+	saResourcePrefix       = "serviceAccount:"
+	projectResourcePrefix  = "projects/"
+	overridableBindMessage = `The role for the account without the "roles/" prefix.
+	See: https://cloud.google.com/iam/docs/understanding-roles for more details.
+	Note: The default enumeration may be overridden by your operator.`
+)
 
 type ServiceAccountManager struct {
 	ProjectId  string
@@ -202,23 +207,27 @@ type ServiceAccountInfo struct {
 	PrivateKeyData string `json:"PrivateKeyData"`
 }
 
-func ServiceAccountBindInputVariables(serviceName string, defaultWhitelist []string) []broker.BrokerVariable {
-	details := fmt.Sprintf(`The role for the account without the "roles/" prefix.
-		See: https://cloud.google.com/iam/docs/understanding-roles for more details.
-		Note: The default enumeration may be overridden by your operator.`)
-
+// ServiceAccountBindInputVariables holds overridable whitelists with default values.
+// This function SHOULD NOT be used for new services.
+func ServiceAccountBindInputVariables(serviceName string, defaultWhitelist []string, defaultRole string) []broker.BrokerVariable {
 	whitelist := roleWhitelist(serviceName, defaultWhitelist)
 	whitelistEnum := make(map[interface{}]string)
 	for _, val := range whitelist {
 		whitelistEnum[val] = roleResourcePrefix + val
 	}
 
+	var realDefault interface{} = nil
+	if whitelistEnum[defaultRole] != "" {
+		realDefault = defaultRole
+	}
+
 	return []broker.BrokerVariable{
 		{
-			Required:  true,
+			Required:  realDefault == nil,
 			FieldName: "role",
 			Type:      broker.JsonTypeString,
-			Details:   details,
+			Details:   overridableBindMessage,
+			Default:   realDefault,
 			Enum:      whitelistEnum,
 		},
 	}

@@ -36,7 +36,7 @@ func roleWhitelist() []string {
 }
 
 func commonBindVariables(serviceName string) []broker.BrokerVariable {
-	return append(accountmanagers.ServiceAccountBindInputVariables(serviceName, roleWhitelist()),
+	return append(accountmanagers.ServiceAccountBindInputVariables(serviceName, roleWhitelist(), "cloudsql.client"),
 		broker.BrokerVariable{
 			FieldName: "jdbc_uri_format",
 			Type:      broker.JsonTypeString,
