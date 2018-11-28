@@ -30,15 +30,19 @@ func makeParents(dest string) error {
 }
 
 func cp(from, to string) error {
-	if err := makeParents(to); err != nil {
-		return err
-	}
-
 	in, err := os.Open(from)
 	if err != nil {
 		return err
 	}
 	defer in.Close()
+
+	return cpReader(in, to)
+}
+
+func cpReader(from io.Reader, to string) error {
+	if err := makeParents(to); err != nil {
+		return err
+	}
 
 	out, err := os.Create(to)
 	if err != nil {
@@ -46,7 +50,7 @@ func cp(from, to string) error {
 	}
 	defer out.Close()
 
-	if _, err = io.Copy(out, in); err != nil {
+	if _, err = io.Copy(out, from); err != nil {
 		return err
 	}
 	return out.Close()

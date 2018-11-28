@@ -58,6 +58,9 @@ func NewTfJobRunerFromEnv() (*TfJobRunner, error) {
 type TfJobRunner struct {
 	ProjectId      string
 	ServiceAccount string
+
+	// Sets a custom executor for the job runner.
+	CustomExecutor wrapper.TerraformExecutor
 }
 
 // StageJob stages a job to be executed. Before the workspace is saved to the
@@ -105,6 +108,10 @@ func (runner *TfJobRunner) hydrateWorkspace(ctx context.Context, deployment *mod
 	ws.Environment = map[string]string{
 		"GOOGLE_CREDENTIALS": runner.ServiceAccount,
 		"GOOGLE_PROJECT":     runner.ProjectId,
+	}
+
+	if runner.CustomExecutor != nil {
+		ws.Executor = runner.CustomExecutor
 	}
 
 	return ws, nil

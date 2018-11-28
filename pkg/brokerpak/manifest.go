@@ -45,9 +45,17 @@ func (p *Platform) String() string {
 	return fmt.Sprintf("%s/%s", p.Os, p.Arch)
 }
 
+func (p *Platform) Equals(other Platform) bool {
+	return p.String() == other.String()
+}
+
+func CurrentPlatform() Platform {
+	return Platform{Os: runtime.GOOS, Arch: runtime.GOARCH}
+}
+
 // MatchesCurrent returns true if the platform matches this binary's GOOS/GOARCH combination.
 func (p *Platform) MatchesCurrent() bool {
-	return p.Os == runtime.GOOS && p.Arch == runtime.GOARCH
+	return p.Equals(CurrentPlatform())
 }
 
 func (tr *TerraformResource) Url(platform Platform) string {

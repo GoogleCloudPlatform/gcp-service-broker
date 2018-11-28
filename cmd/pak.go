@@ -15,6 +15,8 @@
 package cmd
 
 import (
+	"log"
+
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/brokerpak"
 	"github.com/spf13/cobra"
 )
@@ -71,7 +73,7 @@ dependencies, services it provides, and the contents.
 
 	pakCmd.AddCommand(&cobra.Command{
 		Use:   "init",
-		Short: "initialize a pak manifest and example service in the current directory",
+		Short: "initialize a brokerpak manifest and example service in the current directory",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return brokerpak.Init("")
 		},
@@ -79,7 +81,7 @@ dependencies, services it provides, and the contents.
 
 	pakCmd.AddCommand(&cobra.Command{
 		Use:   "build [path/to/pack/directory]",
-		Short: "bundle up the service definition files and Terraform resources",
+		Short: "bundle up the service definition files and Terraform resources into a brokerpak",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			directory := ""
@@ -93,7 +95,7 @@ dependencies, services it provides, and the contents.
 
 	pakCmd.AddCommand(&cobra.Command{
 		Use:   "info [pack.zip]",
-		Short: "get info about a service definition pack",
+		Short: "get info about a brokerpak",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return brokerpak.Info(args[0])
@@ -102,11 +104,32 @@ dependencies, services it provides, and the contents.
 
 	pakCmd.AddCommand(&cobra.Command{
 		Use:   "validate [pack.zip]",
-		Short: "validate a service definition pack",
+		Short: "validate a brokerpak",
 		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return brokerpak.Validate(args[0])
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := brokerpak.Validate(args[0]); err != nil {
+				log.Fatalf("Error: %v\n", err)
+			} else {
+				log.Println("Valid")
+			}
 		},
 	})
 
+	pakCmd.AddCommand(&cobra.Command{
+		Use:   "run-examples [pack.zip]",
+		Short: "run the examples from a brokerpak",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			brokerpak.RunExamples(args[0])
+		},
+	})
+
+	pakCmd.AddCommand(&cobra.Command{
+		Use:   "use [pack.zip]",
+		Short: "generate the use docs markdown for the given pack",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			brokerpak.Docs(args[0])
+		},
+	})
 }

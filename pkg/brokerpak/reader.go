@@ -18,8 +18,13 @@ import (
 	"archive/zip"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
+	"strings"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf/wrapper"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -52,7 +57,7 @@ func (pak *BrokerPakReader) readYaml(name string, v interface{}) error {
 
 	decoder := yaml.NewDecoder(rc)
 	if err := decoder.Decode(v); err != nil {
-		return err
+		return fmt.Errorf("couldn't decode %q: %v", name, err)
 	}
 
 	return nil
@@ -118,18 +123,74 @@ func (pak *BrokerPakReader) Close() {
 	pak.contents.Close()
 }
 
-func (pak *BrokerPakReader) Register() error {
+func (pak *BrokerPakReader) Register(registry broker.BrokerRegistry) error {
+	dir, err := ioutil.TempDir("", "brokerpak")
+	if err != nil {
+		return err
+	}
+
+	// extract the Terraform directory
+	if err := pak.ExtractPlatformBins(dir); err != nil {
+		return err
+	}
+
+	binPath := filepath.Join(dir, "terraform")
+	opts := tf.ServiceOptions{
+		Executor: wrapper.CustomTerraformExecutor(binPath, dir),
+	}
+
+	// register the services
+	services, err := pak.Services()
+	if err != nil {
+		return err
+	}
+	for _, svc := range services {
+		bs, err := svc.ToService(opts)
+		if err != nil {
+			return err
+		}
+
+		registry.Register(bs)
+	}
+
+	return nil
+}
+
+func (pak *BrokerPakReader) ExtractPlatformBins(destination string) error {
 	mf, err := pak.Manifest()
 	if err != nil {
 		return err
 	}
 
 	if !mf.AppliesToCurrentPlatform() {
-		return errors.New("The .brokerpack does not contain the binaries necessary to run on the current platform.")
+		return errors.New("The package does not contain the binaries necessary to run on the current platform.")
 	}
 
-	// TODO extract binary contents to a tmp path
-	// TODO register YAML files
+	curr := CurrentPlatform()
+	bindir := fmt.Sprintf("bin/%s/%s/", curr.Os, curr.Arch)
+
+	for _, fd := range pak.contents.File {
+		if fd.UncompressedSize == 0 { // skip directories
+			continue
+		}
+
+		if !strings.HasPrefix(fd.Name, bindir) {
+			continue
+		}
+		rc, err := fd.Open()
+		if err != nil {
+			return fmt.Errorf("couldn't open binary %q: %v", fd.Name, err)
+		}
+		defer rc.Close()
+
+		newName := fd.Name[len(bindir):]
+		dest := filepath.Join(destination, filepath.FromSlash(newName))
+
+		if err := cpReader(rc, dest); err != nil {
+			return fmt.Errorf("couldn't extract binary %q: %v", fd.Name, err)
+		}
+	}
+
 	return nil
 }
 

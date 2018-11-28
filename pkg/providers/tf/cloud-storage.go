@@ -15,7 +15,7 @@
 package tf
 
 import (
-	"log"
+	yaml "gopkg.in/yaml.v2"
 
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 
@@ -183,9 +183,13 @@ func init() {
 		Internal: true,
 	}
 
-	service, err := cloudStorage.ToService()
-	if err != nil {
-		log.Fatal(err)
-	}
-	broker.Register(service)
+	yaml.Marshal(cloudStorage)
+	// fmt.Println(string(storage))
+	//
+	//
+	// service, err := cloudStorage.ToService()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// broker.Register(service)
 }

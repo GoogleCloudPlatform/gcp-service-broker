@@ -295,6 +295,24 @@ func (workspace *TerraformWorkspace) runTf(subCommand string, args ...string) er
 	return executor(c)
 }
 
+// CustomTerraformExecutor executes a custom Terraform binary that uses plugins
+// from a given plugin directory rather than the Terraform that's on the PATH
+// and downloading the binaries from the web.
+func CustomTerraformExecutor(tfBinaryPath, tfPluginDir string) TerraformExecutor {
+	return func(c *exec.Cmd) error {
+		c.Path = tfBinaryPath
+
+		// Add the -get-plugins=false and -plugin-dir={tfPluginDir} after the
+		// sub-command to force Terraform to use a particular plugin.
+		subCommand := c.Args[0]
+		oldFlags := c.Args[1:]
+		newArgs := []string{subCommand, "-get-plugins=false", fmt.Sprintf("-plugin-dir=%s", tfPluginDir)}
+		c.Args = append(newArgs, oldFlags...)
+
+		return defaultExecutor(c)
+	}
+}
+
 func defaultExecutor(c *exec.Cmd) error {
 	logger := lager.NewLogger("terraform@" + c.Dir)
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.ERROR))

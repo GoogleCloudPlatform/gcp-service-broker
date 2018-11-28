@@ -21,7 +21,10 @@ import (
 	"path/filepath"
 	"text/tabwriter"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
+	"github.com/spf13/viper"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -148,6 +151,51 @@ func Validate(pack string) error {
 	if err != nil {
 		return err
 	}
+	defer brokerPak.Close()
 
 	return brokerPak.Validate()
+}
+
+func RegisterAll(registry broker.BrokerRegistry) error {
+	localPacks := viper.GetStringSlice("brokerpak.local_packs")
+
+	for _, pack := range localPacks {
+		if err := registerPak(pack, registry); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func registerPak(pack string, registry broker.BrokerRegistry) error {
+	brokerPak, err := OpenBrokerPak(pack)
+	if err != nil {
+		return fmt.Errorf("couldn't open brokerpak: %q: %v", pack, err)
+	}
+	defer brokerPak.Close()
+
+	if err := brokerPak.Register(registry); err != nil {
+		return fmt.Errorf("couldn't register brokerpak: %q: %v", pack, err)
+	}
+
+	return nil
+}
+
+func RunExamples(pack string) error {
+	registry := broker.BrokerRegistry{}
+	if err := registerPak(pack, registry); err != nil {
+		return err
+	}
+
+	apiClient, err := client.NewClientFromEnv()
+	if err != nil {
+		return err
+	}
+
+	return client.RunExamplesForService(registry, apiClient, "")
+}
+
+func Docs(pack string) error {
+	return nil
 }
