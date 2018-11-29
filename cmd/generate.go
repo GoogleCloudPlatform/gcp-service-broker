@@ -17,6 +17,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/generator"
 	"github.com/spf13/cobra"
 )
@@ -42,7 +43,7 @@ func init() {
 
 	`,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(generator.CatalogDocumentation())
+			fmt.Println(generator.CatalogDocumentation(broker.DefaultRegistry))
 		},
 	})
 
