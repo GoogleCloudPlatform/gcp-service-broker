@@ -18,10 +18,10 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var (
@@ -49,12 +49,14 @@ Configuration Params:
  - api.user
  - api.password
  - api.port
+ - api.hostname (default: localhost)
 
 Environment Variables:
 
  - GSB_API_USER
  - GSB_API_PASSWORD
  - GSB_API_PORT
+ - GSP_API_HOSTNAME
 
 The client commands return formatted JSON when run if the exit code is 0:
 
@@ -114,12 +116,12 @@ user-defined plans.
 
 	Exits with a 0 if all examples were successful, 1 otherwise.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			apiClient, err := createClient()
+			apiClient, err := client.NewClientFromEnv()
 			if err != nil {
 				log.Fatalf("Error creating client: %v", err)
 			}
 
-			if err := client.RunExamplesForService(apiClient, serviceName); err != nil {
+			if err := client.RunExamplesForService(broker.DefaultRegistry, apiClient, serviceName); err != nil {
 				log.Fatalf("Error executing examples: %v", err)
 			}
 
@@ -153,7 +155,7 @@ func newClientCommand(use, short string, run func(*client.Client) *client.Broker
 		Use:   use,
 		Short: short,
 		Run: func(cmd *cobra.Command, args []string) {
-			apiClient, err := createClient()
+			apiClient, err := client.NewClientFromEnv()
 			if err != nil {
 				log.Fatalf("Could not create API client: %s", err)
 			}
@@ -162,12 +164,4 @@ func newClientCommand(use, short string, run func(*client.Client) *client.Broker
 			utils.PrettyPrintOrExit(results)
 		},
 	}
-}
-
-func createClient() (*client.Client, error) {
-	user := viper.GetString("api.user")
-	pass := viper.GetString("api.password")
-	port := viper.GetInt("api.port")
-
-	return client.New(user, pass, "localhost", port)
 }
