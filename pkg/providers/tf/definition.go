@@ -186,7 +186,8 @@ func (tfb *TfServiceDefinitionV1) ToService() (*broker.ServiceDefinition, error)
 		PlanVariables:       append(tfb.ProvisionSettings.PlanInputs, tfb.BindSettings.PlanInputs...),
 		Examples:            tfb.Examples,
 		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
-			return NewTerraformProvider(projectId, auth, logger, *tfb)
+			jobRunner := NewTfJobRunnerForProject(projectId)
+			return NewTerraformProvider(jobRunner, logger, *tfb)
 		},
 	}, nil
 }
