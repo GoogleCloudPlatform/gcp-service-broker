@@ -297,7 +297,7 @@ func (workspace *TerraformWorkspace) runTf(subCommand string, args ...string) er
 
 // CustomTerraformExecutor executes a custom Terraform binary that uses plugins
 // from a given plugin directory rather than the Terraform that's on the PATH
-// and downloading the binaries from the web.
+// which will download provider binaries from the web.
 func CustomTerraformExecutor(tfBinaryPath, tfPluginDir string, wrapped TerraformExecutor) TerraformExecutor {
 	return func(c *exec.Cmd) error {
 		c.Path = tfBinaryPath
@@ -311,6 +311,8 @@ func CustomTerraformExecutor(tfBinaryPath, tfPluginDir string, wrapped Terraform
 	}
 }
 
+// DefaultExecutor is the default executor that shells out to Terraform
+// and logs results to stdout.
 func DefaultExecutor(c *exec.Cmd) error {
 	logger := lager.NewLogger("terraform@" + c.Dir)
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.ERROR))
