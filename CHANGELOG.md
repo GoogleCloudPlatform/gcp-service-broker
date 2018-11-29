@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unresolved]
 
+### Security
+ - The broker uses a Pivotal library affected by [CVE-2018-15759](https://pivotal.io/security/cve-2018-15759). Until the library is updated, it's recommended that you not run the service broker on a public network. If you must run it on a public network, make it accessible through a proxy that supports fail2ban.
+
 ### Added
  - The ability to enable/disable services based on product lifecycle tags. See [#340](https://github.com/GoogleCloudPlatform/gcp-service-broker/pull/340) for context.
  - Preview support for Firestore.
@@ -13,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
  - Preview support for Stackdriver Metrics.
  - Namespace support for Datastore.
  - Preview support for Dataflow.
+ - Default roles for ML, BigQuery, BigTable, CloudSQL, Pub/Sub, Spanner, and Cloud Storage.
 
 ### Changed
  - Support links for services now point to service-specific pages where possible.

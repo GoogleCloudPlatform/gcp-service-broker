@@ -27,7 +27,7 @@ import (
 )
 
 // NewTerraformProvider creates a new ServiceProvider backed by Terraform module definitions for provision and bind.
-func NewTerraformProvider(jobRunner TfJobRunner, logger lager.Logger, serviceDefinition TfServiceDefinitionV1) broker.ServiceProvider {
+func NewTerraformProvider(jobRunner *TfJobRunner, logger lager.Logger, serviceDefinition TfServiceDefinitionV1) broker.ServiceProvider {
 	return &terraformProvider{
 		serviceDefinition: serviceDefinition,
 		jobRunner:         jobRunner,
@@ -38,7 +38,7 @@ func NewTerraformProvider(jobRunner TfJobRunner, logger lager.Logger, serviceDef
 type terraformProvider struct {
 	// broker_base.BrokerBase
 	logger            lager.Logger
-	jobRunner         TfJobRunner
+	jobRunner         *TfJobRunner
 	serviceDefinition TfServiceDefinitionV1
 }
 

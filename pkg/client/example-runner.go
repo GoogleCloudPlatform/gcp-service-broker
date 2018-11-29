@@ -27,8 +27,8 @@ import (
 )
 
 // RunExamplesForService runs all the exmaples for a given service name against
-// the service broker pointed to by client. All examples get run if serviceName
-// is blank.
+// the service broker pointed to by client. All examples in the registry get run
+// if serviceName is blank.
 func RunExamplesForService(registry broker.BrokerRegistry, client *Client, serviceName string) error {
 	rand.Seed(time.Now().UTC().UnixNano())
 

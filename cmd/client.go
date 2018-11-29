@@ -49,12 +49,14 @@ Configuration Params:
  - api.user
  - api.password
  - api.port
+ - api.hostname (default: localhost)
 
 Environment Variables:
 
  - GSB_API_USER
  - GSB_API_PASSWORD
  - GSB_API_PORT
+ - GSP_API_HOSTNAME
 
 The client commands return formatted JSON when run if the exit code is 0:
 

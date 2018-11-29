@@ -64,7 +64,7 @@ func init() {
 		`,
 		ProvisionInputVariables: []broker.BrokerVariable{},
 		DefaultRoleWhitelist:    roleWhitelist,
-		BindInputVariables:      accountmanagers.ServiceAccountBindInputVariables(models.MlName, roleWhitelist),
+		BindInputVariables:      accountmanagers.ServiceAccountBindInputVariables(models.MlName, roleWhitelist, "ml.modelUser"),
 		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
 		BindComputedVariables:   accountmanagers.ServiceAccountBindComputedVariables(),
 		Examples: []broker.ServiceExample{

@@ -93,3 +93,52 @@ func TestTerraformWorkspace_Invariants(t *testing.T) {
 		})
 	}
 }
+
+func TestCustomTerraformExecutor(t *testing.T) {
+	customBinary := "/path/to/terraform"
+	customPlugins := "/path/to/terraform-plugins"
+	pluginsFlag := "-plugin-dir=" + customPlugins
+
+	cases := map[string]struct {
+		Input    *exec.Cmd
+		Expected *exec.Cmd
+	}{
+		"destroy": {
+			Input:    exec.Command("terraform", "destroy", "-auto-approve", "-no-color"),
+			Expected: exec.Command(customBinary, "destroy", "-get-plugins=false", pluginsFlag, "-auto-approve", "-no-color"),
+		},
+		"apply": {
+			Input:    exec.Command("terraform", "apply", "-auto-approve", "-no-color"),
+			Expected: exec.Command(customBinary, "apply", "-get-plugins=false", pluginsFlag, "-auto-approve", "-no-color"),
+		},
+		"validate": {
+			Input:    exec.Command("terraform", "validate", "-no-color"),
+			Expected: exec.Command(customBinary, "validate", "-get-plugins=false", pluginsFlag, "-no-color"),
+		},
+		"init": {
+			Input:    exec.Command("terraform", "init", "-no-color"),
+			Expected: exec.Command(customBinary, "init", "-get-plugins=false", pluginsFlag, "-no-color"),
+		},
+	}
+
+	for tn, tc := range cases {
+		t.Run(tn, func(t *testing.T) {
+			actual := exec.Command("!actual-never-got-called!")
+
+			executor := CustomTerraformExecutor(customBinary, customPlugins, func(c *exec.Cmd) error {
+				actual = c
+				return nil
+			})
+
+			executor(tc.Input)
+
+			if actual.Path != tc.Expected.Path {
+				t.Errorf("path wasn't updated, expected: %q, actual: %q", tc.Expected.Path, actual.Path)
+			}
+
+			if !reflect.DeepEqual(actual.Args, tc.Expected.Args) {
+				t.Errorf("args weren't updated correctly, expected: %#v, actual: %#v", tc.Expected.Args, actual.Args)
+			}
+		})
+	}
+}

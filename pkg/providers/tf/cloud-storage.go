@@ -19,7 +19,6 @@ import (
 
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
@@ -130,7 +129,7 @@ func init() {
 		},
 		BindSettings: TfServiceDefinitionV1Action{
 			PlanInputs: []broker.BrokerVariable{},
-			UserInputs: accountmanagers.ServiceAccountBindInputVariables(models.StorageName, roleWhitelist),
+			UserInputs: accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "storage.objectAdmin"),
 			Computed: append(accountmanagers.ServiceAccountBindComputedVariables(),
 				varcontext.DefaultVariable{
 					Name:      "bucket",

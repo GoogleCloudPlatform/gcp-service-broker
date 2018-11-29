@@ -39,10 +39,15 @@ func NewTfJobRunerFromEnv() (*TfJobRunner, error) {
 		return nil, err
 	}
 
+	return NewTfJobRunnerForProject(projectId), nil
+}
+
+// Construct a new JobRunner for the given project.
+func NewTfJobRunnerForProject(projectId string) *TfJobRunner {
 	return &TfJobRunner{
 		ProjectId:      projectId,
 		ServiceAccount: utils.GetServiceAccountJson(),
-	}, nil
+	}
 }
 
 // TfJobRunner is responsible for executing terraform jobs in the background and
@@ -59,8 +64,8 @@ type TfJobRunner struct {
 	ProjectId      string
 	ServiceAccount string
 
-	// Sets a custom executor for the job runner.
-	CustomExecutor wrapper.TerraformExecutor
+	// Executor holds a custom executor that will be called when commands are run.
+	Executor wrapper.TerraformExecutor
 }
 
 // StageJob stages a job to be executed. Before the workspace is saved to the
@@ -110,8 +115,8 @@ func (runner *TfJobRunner) hydrateWorkspace(ctx context.Context, deployment *mod
 		"GOOGLE_PROJECT":     runner.ProjectId,
 	}
 
-	if runner.CustomExecutor != nil {
-		ws.Executor = runner.CustomExecutor
+	if runner.Executor != nil {
+		ws.Executor = runner.Executor
 	}
 
 	return ws, nil

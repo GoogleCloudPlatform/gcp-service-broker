@@ -135,9 +135,7 @@ func (pak *BrokerPakReader) Register(registry broker.BrokerRegistry) error {
 	}
 
 	binPath := filepath.Join(dir, "terraform")
-	opts := tf.ServiceOptions{
-		Executor: wrapper.CustomTerraformExecutor(binPath, dir),
-	}
+	executor := wrapper.CustomTerraformExecutor(binPath, dir, wrapper.DefaultExecutor)
 
 	// register the services
 	services, err := pak.Services()
@@ -145,7 +143,7 @@ func (pak *BrokerPakReader) Register(registry broker.BrokerRegistry) error {
 		return err
 	}
 	for _, svc := range services {
-		bs, err := svc.ToService(opts)
+		bs, err := svc.ToService(executor)
 		if err != nil {
 			return err
 		}
