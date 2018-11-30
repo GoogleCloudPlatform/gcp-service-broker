@@ -25,7 +25,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf/wrapper"
-	yaml "gopkg.in/yaml.v2"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
 )
 
 // BrokerPakReader reads bundled together Terraform and service definitions.
@@ -49,18 +49,7 @@ func (pak *BrokerPakReader) readYaml(name string, v interface{}) error {
 		return fmt.Errorf("Couldn't find the file with the givne name %q", name)
 	}
 
-	rc, err := fd.Open()
-	if err != nil {
-		return err
-	}
-	defer rc.Close()
-
-	decoder := yaml.NewDecoder(rc)
-	if err := decoder.Decode(v); err != nil {
-		return fmt.Errorf("couldn't decode %q: %v", name, err)
-	}
-
-	return nil
+	return stream.Copy(stream.FromReadCloserError(fd.Open()), stream.ToYaml(v))
 }
 
 // Manifest fetches the manifest out of the package.
@@ -175,16 +164,12 @@ func (pak *BrokerPakReader) ExtractPlatformBins(destination string) error {
 		if !strings.HasPrefix(fd.Name, bindir) {
 			continue
 		}
-		rc, err := fd.Open()
-		if err != nil {
-			return fmt.Errorf("couldn't open binary %q: %v", fd.Name, err)
-		}
-		defer rc.Close()
 
+		src := stream.FromReadCloserError(fd.Open())
 		newName := fd.Name[len(bindir):]
-		dest := filepath.Join(destination, filepath.FromSlash(newName))
+		dest := stream.ToFile(destination, filepath.FromSlash(newName))
 
-		if err := cpReader(rc, dest); err != nil {
+		if err := stream.Copy(src, dest); err != nil {
 			return fmt.Errorf("couldn't extract binary %q: %v", fd.Name, err)
 		}
 	}

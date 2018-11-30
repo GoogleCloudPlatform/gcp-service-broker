@@ -24,6 +24,7 @@ import (
 	"runtime"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
 	"github.com/mholt/archiver"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -149,10 +150,8 @@ func (m *Manifest) packDefinitions(tmp, base string) error {
 	var servicePaths []string
 	for i, sd := range m.ServiceDefinitions {
 		packedName := fmt.Sprintf("service-%d.yml", i)
-		from := filepath.Join(base, sd)
-		to := filepath.Join(tmp, "definitions", packedName)
 
-		if err := cp(from, to); err != nil {
+		if err := stream.Copy(stream.FromFile(base, sd), stream.ToFile(tmp, "definitions", packedName)); err != nil {
 			return err
 		}
 
