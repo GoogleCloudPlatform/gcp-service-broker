@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"testing"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
 )
@@ -84,4 +86,38 @@ func ExampleExtract() {
 	stream.Copy(stream.FromFile(tmp, "my", "file.txt"), stream.ToWriter(os.Stdout))
 
 	// Output: Hello, world!
+}
+
+func TestClean(t *testing.T) {
+	cases := map[string]struct {
+		Case     []string
+		Expected string
+	}{
+		"blank": {
+			Case:     []string{},
+			Expected: "",
+		},
+		"absolute": {
+			Case:     []string{"/foo", "bar"},
+			Expected: "foo/bar",
+		},
+		"relative-dot": {
+			Case:     []string{"./foo", "bar"},
+			Expected: "foo/bar",
+		},
+		"backslash": {
+			// This case will ONLY test validity on Windows based machines.
+			Case:     []string{filepath.Join("windows", "system32")},
+			Expected: "windows/system32",
+		},
+	}
+
+	for tn, tc := range cases {
+		t.Run(tn, func(t *testing.T) {
+			actual := Clean(tc.Case...)
+			if actual != tc.Expected {
+				t.Errorf("expected: %q, actual: %q", tc.Expected, actual)
+			}
+		})
+	}
 }

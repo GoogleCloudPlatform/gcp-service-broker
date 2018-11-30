@@ -28,8 +28,7 @@ import (
 )
 
 const manifestName = "manifest.yml"
-
-var HashicorpUrlTemplate = "https://releases.hashicorp.com/${name}/${version}/${name}_${version}_${os}_${arch}.zip"
+const HashicorpUrlTemplate = "https://releases.hashicorp.com/${name}/${version}/${name}_${version}_${os}_${arch}.zip"
 
 type TerraformResource struct {
 	Name    string `yaml:"name" validate:"required"`

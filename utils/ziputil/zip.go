@@ -41,6 +41,8 @@ func Join(path ...string) string {
 	return strings.Join(path, "/")
 }
 
+// Clean converts a path into a zip style path by replacing backslashes with
+// forward-slashes and making the paths relative by removing leading "/" and "./".
 func Clean(path ...string) string {
 	joined := filepath.ToSlash(Join(path...))
 	slashStrip := strings.TrimPrefix(joined, "/")
@@ -114,13 +116,12 @@ func Archive(sourceFolder, destinationZip string) error {
 	if err != nil {
 		return fmt.Errorf("couldn't create archive %q: %v", destinationZip, err)
 	}
-
 	defer fd.Close()
 
 	w := zip.NewWriter(fd)
 	defer w.Close()
 
-	err = filepath.Walk(sourceFolder, func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(sourceFolder, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -146,10 +147,4 @@ func Archive(sourceFolder, destinationZip string) error {
 
 		return nil
 	})
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

@@ -36,7 +36,7 @@ type BrokerPakReader struct {
 func (pak *BrokerPakReader) readYaml(name string, v interface{}) error {
 	fd := ziputil.Find(&pak.contents.Reader, name)
 	if fd == nil {
-		return fmt.Errorf("Couldn't find the file with the givne name %q", name)
+		return fmt.Errorf("couldn't find the file with the name %q", name)
 	}
 
 	return stream.Copy(stream.FromReadCloserError(fd.Open()), stream.ToYaml(v))
@@ -74,6 +74,8 @@ func (pak *BrokerPakReader) Services() ([]tf.TfServiceDefinitionV1, error) {
 	return services, nil
 }
 
+// Validate checks the manifest and service definitions for syntactic and
+// limited semantic errors.
 func (pak *BrokerPakReader) Validate() error {
 	manifest, err := pak.Manifest()
 	if err != nil {
@@ -98,10 +100,13 @@ func (pak *BrokerPakReader) Validate() error {
 	return nil
 }
 
+// Close closes the underlying reader for the BrokerPakReader.
 func (pak *BrokerPakReader) Close() error {
 	return pak.contents.Close()
 }
 
+// Register extracts the binaries used by the services provided by this pak,
+// then registers those services with the given registry.
 func (pak *BrokerPakReader) Register(registry broker.BrokerRegistry) error {
 	dir, err := ioutil.TempDir("", "brokerpak")
 	if err != nil {
@@ -109,7 +114,7 @@ func (pak *BrokerPakReader) Register(registry broker.BrokerRegistry) error {
 	}
 
 	// extract the Terraform directory
-	if err := pak.ExtractPlatformBins(dir); err != nil {
+	if err := pak.extractPlatformBins(dir); err != nil {
 		return err
 	}
 
@@ -133,7 +138,7 @@ func (pak *BrokerPakReader) Register(registry broker.BrokerRegistry) error {
 	return nil
 }
 
-func (pak *BrokerPakReader) ExtractPlatformBins(destination string) error {
+func (pak *BrokerPakReader) extractPlatformBins(destination string) error {
 	mf, err := pak.Manifest()
 	if err != nil {
 		return err
@@ -149,6 +154,7 @@ func (pak *BrokerPakReader) ExtractPlatformBins(destination string) error {
 	return ziputil.Extract(&pak.contents.Reader, bindir, destination)
 }
 
+// Opens the file at the given path as a BrokerPakReader.
 func OpenBrokerPak(pakPath string) (*BrokerPakReader, error) {
 	rc, err := zip.OpenReader(pakPath)
 	if err != nil {
