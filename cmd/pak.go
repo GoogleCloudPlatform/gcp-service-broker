@@ -15,7 +15,10 @@
 package cmd
 
 import (
+	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/brokerpak"
 	"github.com/spf13/cobra"
@@ -52,16 +55,16 @@ Terraform resources, and pack them together.
 
 This will produce a pack:
 
-	my-pak.zip
+	my-pak.brokerpak
 
 You can validate the pack:
 
-	gcp-service-broker pak validate my-pak.zip
+	gcp-service-broker pak validate my-pak.brokerpak
 
 You can also list information about the pack which includes metadata,
 dependencies, services it provides, and the contents.
 
-	gcp-service-broker pak info my-pak.zip
+	gcp-service-broker pak info my-pak.brokerpak
 
 `,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -83,18 +86,23 @@ dependencies, services it provides, and the contents.
 		Use:   "build [path/to/pack/directory]",
 		Short: "bundle up the service definition files and Terraform resources into a brokerpak",
 		Args:  cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			directory := ""
 			if len(args) == 1 {
 				directory = args[0]
 			}
 
-			return brokerpak.Pack(directory)
+			pakPath, err := brokerpak.Pack(directory)
+			if err != nil {
+				log.Fatalf("error while packing %q: %v", directory, err)
+			}
+
+			fmt.Printf("created: %v\n", pakPath)
 		},
 	})
 
 	pakCmd.AddCommand(&cobra.Command{
-		Use:   "info [pack.zip]",
+		Use:   "info [pack.brokerpak]",
 		Short: "get info about a brokerpak",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -103,7 +111,7 @@ dependencies, services it provides, and the contents.
 	})
 
 	pakCmd.AddCommand(&cobra.Command{
-		Use:   "validate [pack.zip]",
+		Use:   "validate [pack.brokerpak]",
 		Short: "validate a brokerpak",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -116,7 +124,7 @@ dependencies, services it provides, and the contents.
 	})
 
 	pakCmd.AddCommand(&cobra.Command{
-		Use:   "run-examples [pack.zip]",
+		Use:   "run-examples [pack.brokerpak]",
 		Short: "run the examples from a brokerpak",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -125,11 +133,43 @@ dependencies, services it provides, and the contents.
 	})
 
 	pakCmd.AddCommand(&cobra.Command{
-		Use:   "use [pack.zip]",
-		Short: "generate the use docs markdown for the given pack",
-		Args:  cobra.ExactArgs(1),
+		Use:     "docs [pack.brokerpak]",
+		Aliases: []string{"use"},
+		Short:   "generate the markdown usage docs for the given pack",
+		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			brokerpak.Docs(args[0])
+		},
+	})
+
+	pakCmd.AddCommand(&cobra.Command{
+		Use:   "test",
+		Short: "Run an integration test for the workflow",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			// Runs a quick and dirty e2e test for the development pattern
+			td, err := ioutil.TempDir("", "test-brokerpak")
+			if err != nil {
+				log.Fatalf("couldn't initialize temp directory: %v", err)
+			}
+			defer os.RemoveAll(td)
+
+			if err := brokerpak.Init(td); err != nil {
+				log.Fatalf("couldn't initialize brokerpak: %v", err)
+			}
+
+			// Edit the manifest to point to our local server
+			packname, err := brokerpak.Pack(td)
+			defer os.Remove(packname)
+			if err != nil {
+				log.Fatalf("couldn't pack brokerpak: %v", err)
+			}
+
+			if err := brokerpak.Validate(packname); err != nil {
+				log.Fatalf("couldn't validate brokerpak: %v", err)
+			}
+
+			log.Println("success!")
 		},
 	})
 }

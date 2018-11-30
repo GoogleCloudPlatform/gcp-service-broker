@@ -16,29 +16,28 @@ package brokerpak
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"text/tabwriter"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/ziputil"
 	"github.com/spf13/viper"
-	yaml "gopkg.in/yaml.v2"
 )
 
 // Init initializes a new brokerpak in the given directory with an example manifest and service definition.
 func Init(directory string) error {
-	manifestPath := filepath.Join(directory, manifestName)
 	exampleManifest := NewExampleManifest()
-	if err := writeYaml(manifestPath, exampleManifest); err != nil {
+	if err := stream.Copy(stream.FromYaml(exampleManifest), stream.ToFile(directory, manifestName)); err != nil {
 		return err
 	}
 
 	for _, path := range exampleManifest.ServiceDefinitions {
-		defnPath := filepath.Join(directory, path)
-		if err := writeYaml(defnPath, tf.NewExampleTfServiceDefinition()); err != nil {
+		if err := stream.Copy(stream.FromYaml(tf.NewExampleTfServiceDefinition()), stream.ToFile(directory, path)); err != nil {
 			return err
 		}
 	}
@@ -46,35 +45,25 @@ func Init(directory string) error {
 	return nil
 }
 
-func writeYaml(path string, v interface{}) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0755|os.ModeDir); err != nil {
-		return err
-	}
-
-	bytes, err := yaml.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	return ioutil.WriteFile(path, bytes, 0644)
-}
-
-func Pack(directory string) error {
+// Pack creates a new brokerpak from the given directory which MUST contain a
+// manifest.yml file. If the pack was successful, the returned string will be
+// the path to the created brokerpak.
+func Pack(directory string) (string, error) {
 	abs, err := filepath.Abs(directory)
 	if err != nil {
-		return err
+		return "", err
 	}
 	manifestPath := filepath.Join(directory, manifestName)
 	manifest, err := OpenManifest(manifestPath)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	packname := filepath.Base(abs) + ".zip"
-	fmt.Printf("Packing to %q\n", packname)
-	return manifest.Pack(directory, packname)
+	packname := filepath.Base(abs) + ".brokerpak"
+	return packname, manifest.Pack(directory, packname)
 }
 
+// Info writes out human-readable information about the brokerpak.
 func Info(pack string) error {
 	brokerPak, err := OpenBrokerPak(pack)
 	if err != nil {
@@ -133,19 +122,14 @@ func Info(pack string) error {
 		fmt.Println()
 	}
 
-	{
-		fmt.Println("Contents")
-		sw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.StripEscape)
-		fmt.Fprintln(sw, "MODE\tSIZE\tNAME")
-		for _, fd := range brokerPak.contents.File {
-			fmt.Fprintf(sw, "%s\t%d\t%s\n", fd.Mode().String(), fd.UncompressedSize, fd.Name)
-		}
-		sw.Flush()
-		fmt.Println()
-	}
+	fmt.Println("Contents")
+	ziputil.List(&brokerPak.contents.Reader, os.Stdout)
+	fmt.Println()
+
 	return nil
 }
 
+// Validate checks the brokerpak for syntactic and limited semantic errors.
 func Validate(pack string) error {
 	brokerPak, err := OpenBrokerPak(pack)
 	if err != nil {
@@ -156,6 +140,8 @@ func Validate(pack string) error {
 	return brokerPak.Validate()
 }
 
+// RegisterAll fetches all brokerpaks from the settings file and registers them
+// with the given registry.
 func RegisterAll(registry broker.BrokerRegistry) error {
 	localPacks := viper.GetStringSlice("brokerpak.local_packs")
 
@@ -182,6 +168,7 @@ func registerPak(pack string, registry broker.BrokerRegistry) error {
 	return nil
 }
 
+// RunExamples executes the examples from a brokerpak.
 func RunExamples(pack string) error {
 	registry := broker.BrokerRegistry{}
 	if err := registerPak(pack, registry); err != nil {
@@ -196,6 +183,13 @@ func RunExamples(pack string) error {
 	return client.RunExamplesForService(registry, apiClient, "")
 }
 
+// Docs generates the markdown usage docs for the given pack and writes them to stdout.
 func Docs(pack string) error {
+	registry := broker.BrokerRegistry{}
+	if err := registerPak(pack, registry); err != nil {
+		return err
+	}
+
+	fmt.Println(generator.CatalogDocumentation(registry))
 	return nil
 }

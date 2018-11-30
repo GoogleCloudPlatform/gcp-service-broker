@@ -15,26 +15,41 @@
 package brokerpak
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
-	"github.com/mholt/archiver"
-	yaml "gopkg.in/yaml.v2"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/ziputil"
 )
 
 const manifestName = "manifest.yml"
+
+var HashicorpUrlTemplate = "https://releases.hashicorp.com/${name}/${version}/${name}_${version}_${os}_${arch}.zip"
 
 type TerraformResource struct {
 	Name    string `yaml:"name" validate:"required"`
 	Version string `yaml:"version" validate:"required"`
 	Source  string `yaml:"source" validate:"required"`
+
+	// UrlTemplate holds a custom URL template to get the release of the given tool.
+	// Paramaters available are ${name}, ${version}, ${os}, and ${arch}.
+	// If non is specified HashicorpUrlTemplate is used.
+	UrlTemplate string `yaml:"url_template,omitempty"`
+}
+
+func (tr *TerraformResource) Url(platform Platform) string {
+	replacer := strings.NewReplacer("${name}", tr.Name, "${version}", tr.Version, "${os}", platform.Os, "${arch}", platform.Arch)
+	url := tr.UrlTemplate
+	if url == "" {
+		url = HashicorpUrlTemplate
+	}
+
+	return replacer.Replace(url)
 }
 
 type Platform struct {
@@ -57,10 +72,6 @@ func CurrentPlatform() Platform {
 // MatchesCurrent returns true if the platform matches this binary's GOOS/GOARCH combination.
 func (p *Platform) MatchesCurrent() bool {
 	return p.Equals(CurrentPlatform())
-}
-
-func (tr *TerraformResource) Url(platform Platform) string {
-	return fmt.Sprintf("https://releases.hashicorp.com/%s/%s/%s_%s_%s_%s.zip", tr.Name, tr.Version, tr.Name, tr.Version, platform.Os, platform.Arch)
 }
 
 type Manifest struct {
@@ -107,12 +118,7 @@ func (m *Manifest) Pack(base, dest string) error {
 		return err
 	}
 
-	return archiver.Archive([]string{
-		filepath.Join(dir, "src"),
-		filepath.Join(dir, "bin"),
-		filepath.Join(dir, "definitions"),
-		filepath.Join(dir, manifestName),
-	}, dest)
+	return ziputil.Archive(dir, dest)
 }
 
 func (m *Manifest) packSources(tmp string) error {
@@ -135,7 +141,7 @@ func (m *Manifest) packBinaries(tmp string) error {
 				return err
 			}
 
-			if err := archiver.Unarchive(destination, platformPath); err != nil {
+			if err := ziputil.Unarchive(destination, platformPath); err != nil {
 				return fmt.Errorf("problem extracting %q, %v", destination, err)
 			}
 		}
@@ -160,29 +166,14 @@ func (m *Manifest) packDefinitions(tmp, base string) error {
 
 	manifestCopy.ServiceDefinitions = servicePaths
 
-	return writeYaml(filepath.Join(tmp, manifestName), &manifestCopy)
-}
-
-// NewManifest reads a manifest from the given stream failing if the manifest
-// could not be decoded.
-func NewManifest(reader io.Reader) (*Manifest, error) {
-	out := &Manifest{}
-	if err := yaml.NewDecoder(reader).Decode(out); err != nil {
-		return nil, err
-	}
-
-	return out, nil
+	return stream.Copy(stream.FromYaml(manifestCopy), stream.ToFile(tmp, manifestName))
 }
 
 // OpenManifest reads a manifest from the given file, failing if the manifest
 // couldn't be decoded or read.
 func OpenManifest(filename string) (*Manifest, error) {
-	contents, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	return NewManifest(bytes.NewReader(contents))
+	out := &Manifest{}
+	return out, stream.Copy(stream.FromFile(filename), stream.ToYaml(out))
 }
 
 // NewExampleManifest creates a new manifest with sample values for the service broker suitable for giving a user a template to manually edit.

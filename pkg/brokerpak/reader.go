@@ -20,12 +20,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
-	"strings"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf/wrapper"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/ziputil"
 )
 
 // BrokerPakReader reads bundled together Terraform and service definitions.
@@ -33,18 +33,8 @@ type BrokerPakReader struct {
 	contents *zip.ReadCloser
 }
 
-func (pak *BrokerPakReader) find(name string) *zip.File {
-	for _, f := range pak.contents.File {
-		if f.Name == name {
-			return f
-		}
-	}
-
-	return nil
-}
-
 func (pak *BrokerPakReader) readYaml(name string, v interface{}) error {
-	fd := pak.find(name)
+	fd := ziputil.Find(&pak.contents.Reader, name)
 	if fd == nil {
 		return fmt.Errorf("Couldn't find the file with the givne name %q", name)
 	}
@@ -87,29 +77,29 @@ func (pak *BrokerPakReader) Services() ([]tf.TfServiceDefinitionV1, error) {
 func (pak *BrokerPakReader) Validate() error {
 	manifest, err := pak.Manifest()
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't open brokerpak manifest: %v", err)
 	}
 
 	if err := manifest.Validate(); err != nil {
-		return err
+		return fmt.Errorf("couldn't validate brokerpak manifest: %v", err)
 	}
 
 	services, err := pak.Services()
 	if err != nil {
-		return err
+		return fmt.Errorf("couldn't list services: %v", err)
 	}
 
 	for _, svc := range services {
 		if err := svc.Validate(); err != nil {
-			return err
+			return fmt.Errorf("service %q failed validation: %v", svc.Name, err)
 		}
 	}
 
 	return nil
 }
 
-func (pak *BrokerPakReader) Close() {
-	pak.contents.Close()
+func (pak *BrokerPakReader) Close() error {
+	return pak.contents.Close()
 }
 
 func (pak *BrokerPakReader) Register(registry broker.BrokerRegistry) error {
@@ -154,27 +144,9 @@ func (pak *BrokerPakReader) ExtractPlatformBins(destination string) error {
 	}
 
 	curr := CurrentPlatform()
-	bindir := fmt.Sprintf("bin/%s/%s/", curr.Os, curr.Arch)
 
-	for _, fd := range pak.contents.File {
-		if fd.UncompressedSize == 0 { // skip directories
-			continue
-		}
-
-		if !strings.HasPrefix(fd.Name, bindir) {
-			continue
-		}
-
-		src := stream.FromReadCloserError(fd.Open())
-		newName := fd.Name[len(bindir):]
-		dest := stream.ToFile(destination, filepath.FromSlash(newName))
-
-		if err := stream.Copy(src, dest); err != nil {
-			return fmt.Errorf("couldn't extract binary %q: %v", fd.Name, err)
-		}
-	}
-
-	return nil
+	bindir := ziputil.Join("bin", curr.Os, curr.Arch)
+	return ziputil.Extract(&pak.contents.Reader, bindir, destination)
 }
 
 func OpenBrokerPak(pakPath string) (*BrokerPakReader, error) {

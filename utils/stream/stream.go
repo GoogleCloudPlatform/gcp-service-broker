@@ -107,13 +107,18 @@ func FromReader(rc io.Reader) Source {
 // ToFile concatenates the given path segments with filepath.Join, creates any
 // parent directoreis if needed, and writes the file.
 func ToFile(path ...string) Dest {
+	return ToModeFile(0600, path...)
+}
+
+// ToModeFile is like ToFile, but sets the permissions on the created file.
+func ToModeFile(mode os.FileMode, path ...string) Dest {
 	return func() (io.WriteCloser, error) {
 		outputPath := filepath.Join(path...)
 		if err := os.MkdirAll(filepath.Dir(outputPath), 0700|os.ModeDir); err != nil {
 			return nil, err
 		}
 
-		return os.OpenFile(outputPath, os.O_CREATE|os.O_WRONLY, 0600)
+		return os.OpenFile(outputPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, mode)
 	}
 }
 

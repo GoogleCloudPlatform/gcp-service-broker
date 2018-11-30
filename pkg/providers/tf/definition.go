@@ -211,33 +211,85 @@ func NewExampleTfServiceDefinition() TfServiceDefinitionV1 {
 		Description:      "a longer service description",
 		DisplayName:      "Example Service",
 		ImageUrl:         "https://example.com/icon.jpg",
-		DocumentationUrl: "https//example.com",
+		DocumentationUrl: "https://example.com",
 		SupportUrl:       "https://example.com/support.html",
 		Tags:             []string{"gcp", "example", "service"},
 		Plans: []broker.ServicePlan{
 			{
 				ServicePlan: brokerapi.ServicePlan{
 					ID:   "00000000-0000-0000-0000-000000000001",
-					Name: "example-plan",
+					Name: "example-email-plan",
 					Metadata: &brokerapi.ServicePlanMetadata{
-						DisplayName: "Example Plan",
+						DisplayName: "example.com email builder",
 					},
-					Description: "Example plan description.",
+					Description: "Builds emails for example.com.",
 				},
 				ServiceProperties: map[string]string{
-					"plan_property": "plan-property-value",
+					"domain": "example.com",
 				},
 			},
 		},
-		ProvisionSettings: TfServiceDefinitionV1Action{},
-		BindSettings:      TfServiceDefinitionV1Action{},
+		ProvisionSettings: TfServiceDefinitionV1Action{
+			PlanInputs: []broker.BrokerVariable{
+				{
+					FieldName: "domain",
+					Type:      broker.JsonTypeString,
+					Details:   "The domain name",
+					Required:  true,
+				},
+			},
+			UserInputs: []broker.BrokerVariable{
+				{
+					FieldName: "username",
+					Type:      broker.JsonTypeString,
+					Details:   "The username to create",
+					Required:  true,
+				},
+			},
+			Template: `
+			variable domain {type = "string"}
+			variable username {type = "string"}
+
+			output email {value = "${var.username}@${var.domain}"}
+			`,
+			Outputs: []broker.BrokerVariable{
+				{
+					FieldName: "email",
+					Type:      broker.JsonTypeString,
+					Details:   "The combined email address",
+					Required:  true,
+				},
+			},
+		},
+		BindSettings: TfServiceDefinitionV1Action{
+			Computed: []varcontext.DefaultVariable{
+				{Name: "address", Default: `${instance.details["email"]}`, Overwrite: true},
+			},
+			Template: `
+			resource "random_string" "password" {
+			  length = 16
+			  special = true
+			  override_special = "/@\" "
+			}
+
+			output uri {value = "smtp://${var.address}:${random_string.password.result}@smtp.mycompany.com"}
+			`,
+			Outputs: []broker.BrokerVariable{
+				{
+					FieldName: "uri",
+					Type:      broker.JsonTypeString,
+					Details:   "The uri to use to connect to this service",
+					Required:  true,
+				},
+			},
+		},
 		Examples: []broker.ServiceExample{
 			{
 				Name:            "Example",
 				Description:     "Examples are used for documenting your service AND as integration tests.",
 				PlanId:          "00000000-0000-0000-0000-000000000001",
-				ProvisionParams: map[string]interface{}{"provision-param": "us"},
-				BindParams:      map[string]interface{}{"bind-param": "bind-value"},
+				ProvisionParams: map[string]interface{}{"username": "my-account"},
+				BindParams:      map[string]interface{}{},
 			},
 		},
 	}

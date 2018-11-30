@@ -64,7 +64,3 @@
 [[constraint]]
   name = "gopkg.in/go-playground/validator.v9"
   version = "9.22.0"
-
-[[constraint]]
-  name = "github.com/mholt/archiver"
-  version = "3.1.0"
