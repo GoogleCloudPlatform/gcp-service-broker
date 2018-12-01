@@ -15,52 +15,19 @@
 package brokerpak
 
 import (
-	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
+	getter "github.com/hashicorp/go-getter"
 )
 
-func fetch(url, dest string) error {
-	fmt.Printf("downloading %q to %q\n", url, dest)
+// fetchArchive uses go-getter to download archives. By default go-getter
+// decompresses archives, so this configuration prevents that.
+func fetchArchive(src, dest string) error {
+	return (&getter.Client{
+		Src:           src,
+		Dst:           dest,
+		Mode:          getter.ClientModeFile,
+		Getters:       getter.Getters,
+		Decompressors: map[string]getter.Decompressor{},
+	}).Get()
 
-	_, err := os.Stat(dest)
-	exists := !os.IsNotExist(err)
-	if exists {
-		fmt.Println("file already exists, skipping")
-		return nil
-	}
-
-	// Setup local files first because it's cheaper to make these errors before
-	// ones involving the network.
-	if err := os.MkdirAll(filepath.Dir(dest), os.ModePerm); err != nil {
-		return fmt.Errorf("error creating local directory %q: %v", filepath.Dir(dest), err)
-	}
-	out, err := os.Create(dest)
-	if err != nil {
-		return fmt.Errorf("error opening local file %q: %v", dest, err)
-	}
-	defer out.Close()
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return fmt.Errorf("error creating HTTP request: %v", err)
-	}
-	req.Header.Set("User-Agent", "gcp-service-broker")
-
-	response, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("error getting HTTP resource: %v", err)
-	}
-
-	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("got unexpected HTTP response code: %d", response.StatusCode)
-	}
-
-	if _, err := io.Copy(out, response.Body); err != nil {
-		return fmt.Errorf("error copying output: %v", err)
-	}
-
-	return nil
+	return getter.Get(src, dest)
 }

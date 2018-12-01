@@ -19,59 +19,15 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
-	"strings"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/ziputil"
+
+	getter "github.com/hashicorp/go-getter"
 )
 
 const manifestName = "manifest.yml"
-const HashicorpUrlTemplate = "https://releases.hashicorp.com/${name}/${version}/${name}_${version}_${os}_${arch}.zip"
-
-type TerraformResource struct {
-	Name    string `yaml:"name" validate:"required"`
-	Version string `yaml:"version" validate:"required"`
-	Source  string `yaml:"source" validate:"required"`
-
-	// UrlTemplate holds a custom URL template to get the release of the given tool.
-	// Paramaters available are ${name}, ${version}, ${os}, and ${arch}.
-	// If non is specified HashicorpUrlTemplate is used.
-	UrlTemplate string `yaml:"url_template,omitempty"`
-}
-
-func (tr *TerraformResource) Url(platform Platform) string {
-	replacer := strings.NewReplacer("${name}", tr.Name, "${version}", tr.Version, "${os}", platform.Os, "${arch}", platform.Arch)
-	url := tr.UrlTemplate
-	if url == "" {
-		url = HashicorpUrlTemplate
-	}
-
-	return replacer.Replace(url)
-}
-
-type Platform struct {
-	Os   string `yaml:"os" validate:"required"`
-	Arch string `yaml:"arch" validate:"required"`
-}
-
-func (p *Platform) String() string {
-	return fmt.Sprintf("%s/%s", p.Os, p.Arch)
-}
-
-func (p *Platform) Equals(other Platform) bool {
-	return p.String() == other.String()
-}
-
-func CurrentPlatform() Platform {
-	return Platform{Os: runtime.GOOS, Arch: runtime.GOARCH}
-}
-
-// MatchesCurrent returns true if the platform matches this binary's GOOS/GOARCH combination.
-func (p *Platform) MatchesCurrent() bool {
-	return p.Equals(CurrentPlatform())
-}
 
 type Manifest struct {
 	PackVersion int `yaml:"packversion" validate:"required,eq=1"`
@@ -123,7 +79,7 @@ func (m *Manifest) Pack(base, dest string) error {
 func (m *Manifest) packSources(tmp string) error {
 	for _, resource := range m.TerraformResources {
 		destination := filepath.Join(tmp, "src", resource.Name+".zip")
-		if err := fetch(resource.Source, destination); err != nil {
+		if err := fetchArchive(resource.Source, destination); err != nil {
 			return err
 		}
 	}
@@ -134,14 +90,8 @@ func (m *Manifest) packBinaries(tmp string) error {
 	for _, platform := range m.Platforms {
 		platformPath := filepath.Join(tmp, "bin", platform.Os, platform.Arch)
 		for _, resource := range m.TerraformResources {
-			destination := filepath.Join(platformPath, resource.Name+".zip")
-			defer os.Remove(destination)
-			if err := fetch(resource.Url(platform), destination); err != nil {
+			if err := getter.GetAny(platformPath, resource.Url(platform)); err != nil {
 				return err
-			}
-
-			if err := ziputil.Unarchive(destination, platformPath); err != nil {
-				return fmt.Errorf("problem extracting %q, %v", destination, err)
 			}
 		}
 	}
