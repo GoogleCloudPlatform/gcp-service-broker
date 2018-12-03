@@ -21,7 +21,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sync"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	multierror "github.com/hashicorp/go-multierror"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -30,28 +33,27 @@ type Dest func() (io.WriteCloser, error)
 
 // Copy copies data from a source stream to a destination stream.
 func Copy(src Source, dest Dest) error {
+	mc := Multicloser{}
+	defer mc.Close()
+
 	readCloser, err := src()
 	if err != nil {
 		return fmt.Errorf("copy couldn't open source: %v", err)
 	}
-	defer readCloser.Close()
+	mc.Add(readCloser)
 
 	writeCloser, err := dest()
 	if err != nil {
 		return fmt.Errorf("copy couldn't open destination: %v", err)
 	}
-	defer writeCloser.Close()
+	mc.Add(writeCloser)
 
 	if _, err := io.Copy(writeCloser, readCloser); err != nil {
 		return fmt.Errorf("copy couldn't copy data: %v", err)
 	}
 
-	if err := readCloser.Close(); err != nil {
-		return fmt.Errorf("copy couldn't close source: %v", err)
-	}
-
-	if err := writeCloser.Close(); err != nil {
-		return fmt.Errorf("copy couldn't close destination: %v", err)
+	if err := mc.Close(); err != nil {
+		return fmt.Errorf("copy couldn't close streams: %v", err)
 	}
 
 	return nil
@@ -186,4 +188,30 @@ type errWriteCloser struct {
 
 func (w errWriteCloser) Close() error {
 	return w.CloseErr
+}
+
+type Multicloser struct {
+	closers []io.Closer
+	mu      sync.Mutex
+}
+
+func (mc *Multicloser) Add(c io.Closer) {
+	mc.mu.Lock()
+	defer mc.mu.Unlock()
+	mc.closers = append(mc.closers, c)
+}
+
+func (mc *Multicloser) Close() error {
+	mc.mu.Lock()
+	defer mc.mu.Unlock()
+	result := &multierror.Error{ErrorFormat: utils.SingleLineErrorFormatter}
+
+	for _, closer := range mc.closers {
+		if err := closer.Close(); err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+
+	mc.closers = []io.Closer{}
+	return result.ErrorOrNil()
 }

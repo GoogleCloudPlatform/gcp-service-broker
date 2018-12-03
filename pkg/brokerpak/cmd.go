@@ -83,7 +83,7 @@ func Info(pack string) error {
 	// Pack information
 	fmt.Println("Information")
 	{
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.StripEscape)
+		w := cmdTabWriter()
 		fmt.Fprintf(w, "format\t%d\n", mf.PackVersion)
 		fmt.Fprintf(w, "name\t%s\n", mf.Name)
 		fmt.Fprintf(w, "version\t%s\n", mf.Version)
@@ -102,7 +102,7 @@ func Info(pack string) error {
 
 	{
 		fmt.Println("Dependencies")
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.StripEscape)
+		w := cmdTabWriter()
 		fmt.Fprintln(w, "NAME\tVERSION\tSOURCE")
 		for _, resource := range mf.TerraformResources {
 			fmt.Fprintf(w, "%s\t%s\t%s\n", resource.Name, resource.Version, resource.Source)
@@ -113,7 +113,7 @@ func Info(pack string) error {
 
 	{
 		fmt.Println("Services")
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.StripEscape)
+		w := cmdTabWriter()
 		fmt.Fprintln(w, "ID\tNAME\tDESCRIPTION\tPLANS")
 		for _, svc := range services {
 			fmt.Fprintf(w, "%s\t%s\t%s\t%d\n", svc.Id, svc.Name, svc.Description, len(svc.Plans))
@@ -127,6 +127,11 @@ func Info(pack string) error {
 	fmt.Println()
 
 	return nil
+}
+
+func cmdTabWriter() *tabwriter.Writer {
+	// args: output, minwidth, tabwidth, padding, padchar, flags
+	return tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.StripEscape)
 }
 
 // Validate checks the brokerpak for syntactic and limited semantic errors.

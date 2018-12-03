@@ -121,3 +121,28 @@ func TestClean(t *testing.T) {
 		})
 	}
 }
+
+// This is a modified version of Golang's net/http/fs_test.go:TestServeFile_DotDot
+func TestContainsDotDot(t *testing.T) {
+	tests := []struct {
+		req      string
+		expected bool
+	}{
+		{"/testdata/file", false},
+		{"/../file", true},
+		{"/..", true},
+		{"/../", true},
+		{"/../foo", true},
+		{"/..\\foo", true},
+		{"/file/a", false},
+		{"/file/a..", false},
+		{"/file/a/..", true},
+		{"/file/a\\..", true},
+	}
+	for _, tt := range tests {
+		actual := containsDotDot(tt.req)
+		if actual != tt.expected {
+			t.Errorf("expected containsDotDot to be %t got %t", tt.expected, actual)
+		}
+	}
+}

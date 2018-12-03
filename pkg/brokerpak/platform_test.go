@@ -24,7 +24,7 @@ func ExamplePlatform_String() {
 }
 
 func ExamplePlatform_Equals() {
-	p := Platform{Os: "js", Arch: "webasm"}
+	p := Platform{Os: "beos", Arch: "webasm"}
 	fmt.Println(p.Equals(p))
 	fmt.Println(p.Equals(CurrentPlatform()))
 

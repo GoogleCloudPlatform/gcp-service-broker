@@ -74,6 +74,8 @@ func Open(z *zip.Reader, path ...string) (io.ReadCloser, error) {
 }
 
 // Extracts the contents of the zipDirectory to the given OS osDirectory.
+// This routine is overly strict and doesn't allow extracting _any_ files that
+// contain "..".
 func Extract(z *zip.Reader, zipDirectory, osDirectory string) error {
 	for _, fd := range z.File {
 		if fd.UncompressedSize == 0 { // skip directories
@@ -82,6 +84,10 @@ func Extract(z *zip.Reader, zipDirectory, osDirectory string) error {
 
 		if !strings.HasPrefix(fd.Name, zipDirectory) {
 			continue
+		}
+
+		if containsDotDot(fd.Name) {
+			return fmt.Errorf("potential zip slip extracting %q", fd.Name)
 		}
 
 		src := stream.FromReadCloserError(fd.Open())
@@ -97,6 +103,23 @@ func Extract(z *zip.Reader, zipDirectory, osDirectory string) error {
 
 	return nil
 }
+
+// containsDotDot checks if the filepath value v contains a ".." entry.
+// This will check filepath components by splitting along / or \. This
+// function is copied directly from the Go net/http implementation.
+func containsDotDot(v string) bool {
+	if !strings.Contains(v, "..") {
+		return false
+	}
+	for _, ent := range strings.FieldsFunc(v, isSlashRune) {
+		if ent == ".." {
+			return true
+		}
+	}
+	return false
+}
+
+func isSlashRune(r rune) bool { return r == '/' || r == '\\' }
 
 // Unarchive opens the specified file and extracts all of its contents to the
 // destination.

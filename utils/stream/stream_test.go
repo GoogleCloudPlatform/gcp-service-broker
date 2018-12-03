@@ -78,7 +78,7 @@ func TestCopy(t *testing.T) {
 			dest: func() (io.WriteCloser, error) {
 				return errWriteCloser{ioutil.Discard, errors.New("closerr")}, nil
 			},
-			expected: errors.New("copy couldn't close destination: closerr"),
+			expected: errors.New("copy couldn't close streams: 1 error(s) occurred: closerr"),
 		},
 	}
 

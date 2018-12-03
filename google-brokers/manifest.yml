@@ -2,7 +2,7 @@ packversion: 1
 name: google-services
 version: 1.0.0
 metadata:
-  author: jlewisiii@google.com
+  author: Google LLC
 platforms:
 - os: linux
   arch: "386"
