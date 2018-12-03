@@ -28,6 +28,4 @@ func fetchArchive(src, dest string) error {
 		Getters:       getter.Getters,
 		Decompressors: map[string]getter.Decompressor{},
 	}).Get()
-
-	return getter.Get(src, dest)
 }

@@ -16,7 +16,6 @@ package brokerpak
 
 import (
 	"archive/zip"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -144,11 +143,10 @@ func (pak *BrokerPakReader) extractPlatformBins(destination string) error {
 		return err
 	}
 
-	if !mf.AppliesToCurrentPlatform() {
-		return errors.New("The package does not contain the binaries necessary to run on the current platform.")
-	}
-
 	curr := CurrentPlatform()
+	if !mf.AppliesToCurrentPlatform() {
+		return fmt.Errorf("the package %q doesn't contain binaries compatible with the current platform %q", mf.Name, curr.String())
+	}
 
 	bindir := ziputil.Join("bin", curr.Os, curr.Arch)
 	return ziputil.Extract(&pak.contents.Reader, bindir, destination)

@@ -40,8 +40,7 @@ your needs.
 
 To start building a pack, create a new directory and within it run init:
 
-	mkdir my-pak && cd my-pak
-	gcp-service-broker pak init
+	gcp-service-broker pak init my-pak
 
 You'll get a new pack with a manifest and example service definition.
 Define the architectures and Terraform plugins you need in your manifest along
@@ -51,13 +50,13 @@ files.
 When you're done, you can build the bundle which will download the sources,
 Terraform resources, and pack them together.
 
-	cd .. && gcp-service-broker pak build my-pak
+	gcp-service-broker pak build my-pak
 
 This will produce a pack:
 
 	my-pak.brokerpak
 
-You can validate the pack:
+You can run validation on an existing pack you created or downloaded:
 
 	gcp-service-broker pak validate my-pak.brokerpak
 
@@ -75,10 +74,18 @@ dependencies, services it provides, and the contents.
 	rootCmd.AddCommand(pakCmd)
 
 	pakCmd.AddCommand(&cobra.Command{
-		Use:   "init",
-		Short: "initialize a brokerpak manifest and example service in the current directory",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return brokerpak.Init("")
+		Use:   "init [path/to/pack/directory]",
+		Short: "initialize a brokerpak manifest and example service",
+		Args:  cobra.MaximumNArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			directory := ""
+			if len(args) == 1 {
+				directory = args[0]
+			}
+
+			if err := brokerpak.Init(directory); err != nil {
+				log.Fatalf("error while packing %q: %v", directory, err)
+			}
 		},
 	})
 
@@ -105,8 +112,10 @@ dependencies, services it provides, and the contents.
 		Use:   "info [pack.brokerpak]",
 		Short: "get info about a brokerpak",
 		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return brokerpak.Info(args[0])
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := brokerpak.Info(args[0]); err != nil {
+				log.Fatalf("error getting info for %q: %v", args[0], err)
+			}
 		},
 	})
 

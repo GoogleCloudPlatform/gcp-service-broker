@@ -83,42 +83,42 @@ func Info(pack string) error {
 	// Pack information
 	fmt.Println("Information")
 	{
-		iw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.StripEscape)
-		fmt.Fprintf(iw, "format\t%d\n", mf.PackVersion)
-		fmt.Fprintf(iw, "name\t%s\n", mf.Name)
-		fmt.Fprintf(iw, "version\t%s\n", mf.Version)
-		fmt.Fprintln(iw, "platforms")
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.StripEscape)
+		fmt.Fprintf(w, "format\t%d\n", mf.PackVersion)
+		fmt.Fprintf(w, "name\t%s\n", mf.Name)
+		fmt.Fprintf(w, "version\t%s\n", mf.Version)
+		fmt.Fprintln(w, "platforms")
 		for _, arch := range mf.Platforms {
-			fmt.Fprintf(iw, "\t%s\n", arch.String())
+			fmt.Fprintf(w, "\t%s\n", arch.String())
 		}
-		fmt.Fprintln(iw, "metadata")
+		fmt.Fprintln(w, "metadata")
 		for k, v := range mf.Metadata {
-			fmt.Fprintf(iw, "\t%s\t%s\n", k, v)
+			fmt.Fprintf(w, "\t%s\t%s\n", k, v)
 		}
 
-		iw.Flush()
+		w.Flush()
 		fmt.Println()
 	}
 
 	{
 		fmt.Println("Dependencies")
-		rw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.StripEscape)
-		fmt.Fprintln(rw, "NAME\tVERSION\tSOURCE")
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.StripEscape)
+		fmt.Fprintln(w, "NAME\tVERSION\tSOURCE")
 		for _, resource := range mf.TerraformResources {
-			fmt.Fprintf(rw, "%s\t%s\t%s\n", resource.Name, resource.Version, resource.Source)
+			fmt.Fprintf(w, "%s\t%s\t%s\n", resource.Name, resource.Version, resource.Source)
 		}
-		rw.Flush()
+		w.Flush()
 		fmt.Println()
 	}
 
 	{
 		fmt.Println("Services")
-		sw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.StripEscape)
-		fmt.Fprintln(sw, "ID\tNAME\tDESCRIPTION\tPLANS")
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.StripEscape)
+		fmt.Fprintln(w, "ID\tNAME\tDESCRIPTION\tPLANS")
 		for _, svc := range services {
-			fmt.Fprintf(sw, "%s\t%s\t%s\t%d\n", svc.Id, svc.Name, svc.Description, len(svc.Plans))
+			fmt.Fprintf(w, "%s\t%s\t%s\t%d\n", svc.Id, svc.Name, svc.Description, len(svc.Plans))
 		}
-		sw.Flush()
+		w.Flush()
 		fmt.Println()
 	}
 

@@ -30,8 +30,10 @@ import (
 const manifestName = "manifest.yml"
 
 type Manifest struct {
+	// Package metadata
 	PackVersion int `yaml:"packversion" validate:"required,eq=1"`
 
+	// User modifiable values
 	Name               string              `yaml:"name" validate:"required"`
 	Version            string              `yaml:"version" validate:"required"`
 	Metadata           map[string]string   `yaml:"metadata"`
@@ -40,10 +42,13 @@ type Manifest struct {
 	ServiceDefinitions []string            `yaml:"service_definitions" validate:"required"`
 }
 
+// Validate will run struct validation on the fields of this manifest.
 func (m *Manifest) Validate() error {
 	return validation.ValidateStruct(m)
 }
 
+// AppliesToCurrentPlatform returns true if the one of the platforms in the
+// manifest match the current GOOS and GOARCH.
 func (m *Manifest) AppliesToCurrentPlatform() bool {
 	for _, platform := range m.Platforms {
 		if platform.MatchesCurrent() {
@@ -54,6 +59,7 @@ func (m *Manifest) AppliesToCurrentPlatform() bool {
 	return false
 }
 
+// Pack creates a brokerpak from the manifest and definitions.
 func (m *Manifest) Pack(base, dest string) error {
 	dir, err := ioutil.TempDir("", "brokerpak")
 	if err != nil {
@@ -100,6 +106,9 @@ func (m *Manifest) packBinaries(tmp string) error {
 }
 
 func (m *Manifest) packDefinitions(tmp, base string) error {
+	// users can place definitions in any directory structure they like, even
+	// above the current directory so we standardize their location and names
+	// for the zip to avoid collisions
 	manifestCopy := *m
 
 	var servicePaths []string
