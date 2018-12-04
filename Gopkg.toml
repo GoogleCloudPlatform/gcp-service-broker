@@ -68,3 +68,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/hashicorp/go-getter"
+
+[[constraint]]
+  name = "gopkg.in/russross/blackfriday.v2"
+  version = "2.0.1"

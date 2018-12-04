@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/brokerpak"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/compatibility"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/server"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/cobra"
@@ -113,5 +114,6 @@ func serve() {
 
 	brokerAPI := brokerapi.New(serviceBroker, logger, credentials)
 	http.Handle("/", brokerAPI)
+	http.Handle("/docs", server.NewDocsHandler(broker.DefaultRegistry))
 	http.ListenAndServe(":"+port, nil)
 }
