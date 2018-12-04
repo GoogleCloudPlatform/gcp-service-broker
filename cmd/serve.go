@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/brokerpak"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/compatibility"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/server"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
@@ -68,6 +69,10 @@ func serve() {
 	models.ProductionizeUserAgent()
 
 	db_service.New(logger)
+
+	if err := brokerpak.RegisterAll(broker.DefaultRegistry); err != nil {
+		logger.Fatal("Error loading brokerpaks: %v", err)
+	}
 
 	// init broker
 	cfg, err := brokers.NewBrokerConfigFromEnv()
