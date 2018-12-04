@@ -24,7 +24,8 @@ import (
 )
 
 func TestNewDocsHandler(t *testing.T) {
-	// Test that the handler sets the correct header
+	// Test that the handler sets the correct header and contains some imporant
+	// strings that will indicate (but not prove!) that the rendering was correct.
 	handler := NewDocsHandler(broker.DefaultRegistry)
 	request := httptest.NewRequest(http.MethodGet, "/docs", nil)
 	w := httptest.NewRecorder()
