@@ -87,8 +87,7 @@ func generateServiceDocumentation(svc *broker.ServiceDefinition) string {
 	templateText := `
 --------------------------------------------------------------------------------
 
-# ![]({{ .metadata.ImageUrl }}) {{ .metadata.DisplayName }}
-
+# <a name="{{ .catalog.Name }}"></a> ![]({{ .metadata.ImageUrl }}) {{ .metadata.DisplayName }}
 {{ .metadata.LongDescription }}
 
  * [Documentation]({{.metadata.DocumentationUrl }})

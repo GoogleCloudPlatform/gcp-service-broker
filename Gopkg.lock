@@ -289,6 +289,14 @@
   version = "v2.0.4"
 
 [[projects]]
+  branch = "master"
+  digest = "1:606fa779c7a80ab6a9ec5836cd12759f86cd6e1d82d5d60cf7ec5133e78c6cf8"
+  name = "github.com/shurcooL/sanitized_anchor_name"
+  packages = ["."]
+  pruneopts = ""
+  revision = "86672fcb3f950f35f2e675df2240550f2a50762f"
+
+[[projects]]
   digest = "1:7ba2551c9a8de293bc575dbe2c0d862c52252d26f267f784547f059f512471c8"
   name = "github.com/spf13/afero"
   packages = [
@@ -569,6 +577,14 @@
   version = "v9.22.0"
 
 [[projects]]
+  digest = "1:87dffed114a34c714199c74e15c04ecb1c332c669f63f722220a5e4e6eb2ef52"
+  name = "gopkg.in/russross/blackfriday.v2"
+  packages = ["."]
+  pruneopts = ""
+  revision = "d3b5b032dc8e8927d31a5071b56e14c89f045135"
+  version = "v2.0.1"
+
+[[projects]]
   digest = "1:f0620375dd1f6251d9973b5f2596228cc8042e887cd7f827e4220bc1ce8c30e2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -610,6 +626,7 @@
     "google.golang.org/api/sqladmin/v1beta4",
     "google.golang.org/genproto/googleapis/spanner/admin/instance/v1",
     "gopkg.in/go-playground/validator.v9",
+    "gopkg.in/russross/blackfriday.v2",
     "gopkg.in/yaml.v2",
   ]
   solver-name = "gps-cdcl"
