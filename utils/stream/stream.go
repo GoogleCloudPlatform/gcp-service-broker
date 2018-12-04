@@ -33,7 +33,7 @@ type Dest func() (io.WriteCloser, error)
 
 // Copy copies data from a source stream to a destination stream.
 func Copy(src Source, dest Dest) error {
-	mc := Multicloser{}
+	mc := MultiCloser{}
 	defer mc.Close()
 
 	readCloser, err := src()
@@ -99,7 +99,7 @@ func FromReadCloserError(rc io.ReadCloser, err error) Source {
 	}
 }
 
-// FromReader converts a Reader to a ReadCloser and takes ownership of closing it.
+// FromReader converts a Reader to a Source.
 func FromReader(rc io.Reader) Source {
 	return func() (io.ReadCloser, error) {
 		return ioutil.NopCloser(rc), nil
@@ -171,7 +171,7 @@ type bufferCallback struct {
 	closeCallback func(*bytes.Buffer) error
 }
 
-// Close implements io.Closer
+// Close implements io.Closer.
 func (b *bufferCallback) Close() error {
 	return b.closeCallback(&b.Buffer)
 }
@@ -186,22 +186,30 @@ type errWriteCloser struct {
 	CloseErr error
 }
 
+// Close implements io.Closer.
 func (w errWriteCloser) Close() error {
 	return w.CloseErr
 }
 
-type Multicloser struct {
+// MultiCloser calls Close() once on every added closer and returns
+// a multierror of all errors encountered.
+type MultiCloser struct {
 	closers []io.Closer
 	mu      sync.Mutex
 }
 
-func (mc *Multicloser) Add(c io.Closer) {
+// Add appends the closer to the internal list of closers.
+func (mc *MultiCloser) Add(c io.Closer) {
 	mc.mu.Lock()
 	defer mc.mu.Unlock()
 	mc.closers = append(mc.closers, c)
 }
 
-func (mc *Multicloser) Close() error {
+// Close calls close on all closers, discarding them from the list.
+// Modifying MultiCloser in your Close method will create a deadlock.
+// At the end of this function, the close list will be empty and any encountered
+// errors will be returned.
+func (mc *MultiCloser) Close() error {
 	mc.mu.Lock()
 	defer mc.mu.Unlock()
 	result := &multierror.Error{ErrorFormat: utils.SingleLineErrorFormatter}

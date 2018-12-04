@@ -26,6 +26,9 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
 )
 
+// A zip file with a single file with the contents "Hello, world!":
+// MODE        SIZE  NAME
+// -rw-rw-rw-  13    path/to/my/file.txt
 var exampleFile = []byte{
 	0x50, 0x4b, 0x3, 0x4, 0x14, 0x0, 0x8, 0x0, 0x8, 0x0, 0x0, 0x0, 0x0, 0x0,
 	0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x13, 0x0,
@@ -72,14 +75,16 @@ func ExampleOpen() {
 }
 
 func ExampleExtract() {
-	tmp, _ := ioutil.TempDir("", "ziptest")
+	tmp, err := ioutil.TempDir("", "ziptest")
+	if err != nil {
+		panic(err)
+	}
 	defer os.RemoveAll(tmp)
 
 	zf := openZipfile()
 
 	// extract all files/dirs under the path/to directory to tmp
-	err := Extract(zf, "path/to", tmp)
-	if err != nil {
+	if err := Extract(zf, "path/to", tmp); err != nil {
 		panic(err)
 	}
 

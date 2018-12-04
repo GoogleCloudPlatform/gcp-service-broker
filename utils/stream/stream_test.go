@@ -112,7 +112,10 @@ func ExampleYaml() {
 }
 
 func ExampleFile() {
-	td, _ := ioutil.TempDir("", "test")
+	td, err := ioutil.TempDir("", "test")
+	if err != nil {
+		panic(err)
+	}
 	defer os.RemoveAll(td)
 
 	Copy(FromString("hello\nworld"), ToFile(td, "parent", "other", "testing.txt"))
@@ -122,4 +125,27 @@ func ExampleFile() {
 
 	// Output: hello
 	// world
+}
+
+func ExampleMultiCloser() {
+	var mc MultiCloser
+
+	mc.Add(ioutil.NopCloser(nil))
+
+	fmt.Println("closed:", mc.Close())
+
+	// Output: closed: <nil>
+}
+
+func ExampleMultiCloser_Error() {
+	var mc MultiCloser
+
+	closer := errWriteCloser{nil, errors.New("example close error")}
+	mc.Add(closer)
+
+	fmt.Println("error closed:", mc.Close())
+	fmt.Println("call after closed:", mc.Close())
+
+	// Output: error closed: 1 error(s) occurred: example close error
+	// call after closed: <nil>
 }
