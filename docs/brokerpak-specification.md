@@ -1,6 +1,6 @@
 # Brokerpak V1 specification
 
-This document will explain how to create a new brokerpak.
+This document will explain how a brokerpak is structured, and the schema it follows.
 
 A brokerpak is comprised of a versioned Terraform binary and providers for one
 or more platform, a manifest, one or more service definitions, and source code.
@@ -321,3 +321,14 @@ This is because they can resolve variables to the user's values first.
 * `request.app_guid` - _string_ The ID of the application this binding is for.
 * `instance.name` - _string_ The name of the instance.
 * `instance.details` - _map[string]any_ Output variables of the instance as specified by ProvisionOutputVariables.
+
+## File format
+
+The brokerpak itself is a zip file with the extension `.brokerpak`.
+In the root is the `manifest.yml` file, which will specify the version of the pak.
+
+There are three directories in the pak's root:
+
+* `src/` an unstructured directory that holds source code for the bundled binaries, this is for complying with 3rd party licenses.
+* `bin/` contains binaries under `bin/{os}/{arch}` sub-directories for each supported platform.
+* `definitions/` contain the service definition YAML files.
