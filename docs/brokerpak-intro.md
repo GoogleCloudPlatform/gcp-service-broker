@@ -16,10 +16,10 @@ Developers use the broker to provision and bind new services to their applicatio
 Therefore, a service broker is responsible for federating access between an _application provider_ and a _developer_ with respecting the wishes of the _platform_ and its _operators_.
 Each of these parties influences the broker, its services, and structure.
 
-* Developers want lots of services that require minimal configuration that give them enough control that they can do their jobs.
-* Operators need to appease many masters. They need to make sure the services they expose are secure, follow regulatory constraints, can be billed correctly, have support, and won't be abused.
-* Service brokers must serve all the operators needs, for a variety of different businesses, threat models, and regulatory constraints; they must also serve developers to be used, and the idiosyncrasies of the platform.
-* Application provider are interested in providing lots of stable, generic services at a rapid pace.
+* Developers want lots of services that require minimal configuration yet give them enough control that they have independence.
+* Operators need to make sure the services they expose are secure, follow regulatory constraints, can be billed correctly, are well supported, and won't be abused.
+* Application providers are interested in providing lots of stable, generic services at a rapid pace.
+* Service brokers serve the needs of the operators, developers, and platforms. They map the services out to match a variety of different businesses models, threat models, regulatory constraints, and use-cases.
 
 Together, this means a service broker must:
 
@@ -36,8 +36,6 @@ Together, this means a service broker must:
 Some of these tasks can be automated, but many require deeper understanding of the platform and specific services to do correctly.
 
 ### How brokerpak solves these problems
-
-So, how does brokerpak solve these problems?
 
 The brokerpak is a (zip) package that contains bundled versions of Terraform, service definitions (as Terraform modules), Terraform providers, and source code for regulatory compliance.
 Brokerpaks are written as code, can be built as part of a CI/CD platform, and can be stored as build artifacts.
