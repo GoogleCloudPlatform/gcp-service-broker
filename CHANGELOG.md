@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
  - Default roles for ML, BigQuery, BigTable, CloudSQL, Pub/Sub, Spanner, and Cloud Storage.
  - `/docs` endpoint that serves docs for your installation.
  - Varcontext now supports casting computed HIL values.
+ - New broken out regional and multi-regional cloud storage plans.
 
 ### Changed
  - Support links for services now point to service-specific pages where possible.
