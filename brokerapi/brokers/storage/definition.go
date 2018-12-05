@@ -84,14 +84,14 @@ func serviceDefinition() *broker.ServiceDefinition {
 	            "description": "Google Cloud Storage Coldline is a very-low-cost, highly durable storage service for data archiving, online backup, and disaster recovery.",
 	            "service_properties": {"storage_class": "COLDLINE"}
 	          },
-						{
-							"id": "5e6161d2-0202-48be-80c4-1006cce19b9d",
-							"name": "regional",
-							"display_name": "Regional Storage",
-							"description": "Data is stored in a narrow geographic region, redundant across availability zones with a 99.99% typical monthly availability.",
-							"service_properties": {"storage_class": "REGIONAL"}
-						},
-						{
+	          {
+	            "id": "5e6161d2-0202-48be-80c4-1006cce19b9d",
+	            "name": "regional",
+	            "display_name": "Regional Storage",
+	            "description": "Data is stored in a narrow geographic region, redundant across availability zones with a 99.99% typical monthly availability.",
+	            "service_properties": {"storage_class": "REGIONAL"}
+	          },
+	          {
 	            "id": "a5e8dfb5-e5ec-472a-8d36-33afcaff2fdb",
 	            "name": "multiregional",
 	            "display_name": "Multi-Regional Storage",
