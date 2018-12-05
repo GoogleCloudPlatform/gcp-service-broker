@@ -64,3 +64,11 @@
 [[constraint]]
   name = "gopkg.in/go-playground/validator.v9"
   version = "9.22.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/hashicorp/go-getter"
+
+[[constraint]]
+  name = "gopkg.in/russross/blackfriday.v2"
+  version = "2.0.1"

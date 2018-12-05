@@ -300,14 +300,21 @@ func (workspace *TerraformWorkspace) runTf(subCommand string, args ...string) er
 // which will download provider binaries from the web.
 func CustomTerraformExecutor(tfBinaryPath, tfPluginDir string, wrapped TerraformExecutor) TerraformExecutor {
 	return func(c *exec.Cmd) error {
-		c.Path = tfBinaryPath
+
 		// Add the -get-plugins=false and -plugin-dir={tfPluginDir} after the
 		// sub-command to force Terraform to use a particular plugin.
 		subCommand := c.Args[1]
-		oldFlags := c.Args[2:]
-		newArgs := []string{tfBinaryPath, subCommand, "-get-plugins=false", fmt.Sprintf("-plugin-dir=%s", tfPluginDir)}
-		c.Args = append(newArgs, oldFlags...)
-		return wrapped(c)
+		subCommandArgs := c.Args[2:]
+
+		if subCommand == "init" {
+			subCommandArgs = append([]string{"-get-plugins=false", fmt.Sprintf("-plugin-dir=%s", tfPluginDir)}, subCommandArgs...)
+		}
+
+		allArgs := append([]string{subCommand}, subCommandArgs...)
+		newCmd := exec.Command(tfBinaryPath, allArgs...)
+		newCmd.Dir = c.Dir
+		newCmd.Env = c.Env
+		return wrapped(newCmd)
 	}
 }
 

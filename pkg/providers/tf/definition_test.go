@@ -111,3 +111,11 @@ func TestTfServiceDefinitionV1Action_ValidateTemplateIO(t *testing.T) {
 		})
 	}
 }
+
+func TestNewExampleTfServiceDefinition(t *testing.T) {
+	example := NewExampleTfServiceDefinition()
+
+	if err := example.Validate(); err != nil {
+		t.Fatalf("example service definition should be valid, but got error: %v", err)
+	}
+}

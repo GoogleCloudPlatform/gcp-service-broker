@@ -18,8 +18,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
+	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf/wrapper"
@@ -71,6 +73,8 @@ type TfJobRunner struct {
 // StageJob stages a job to be executed. Before the workspace is saved to the
 // database, the modules and inputs are validated by Terraform.
 func (runner *TfJobRunner) StageJob(ctx context.Context, jobId string, workspace *wrapper.TerraformWorkspace) error {
+	workspace.Executor = runner.Executor
+
 	// Validate that TF is happy with the workspace
 	if err := workspace.Validate(); err != nil {
 		return err
@@ -115,9 +119,14 @@ func (runner *TfJobRunner) hydrateWorkspace(ctx context.Context, deployment *mod
 		"GOOGLE_PROJECT":     runner.ProjectId,
 	}
 
-	if runner.Executor != nil {
-		ws.Executor = runner.Executor
-	}
+	ws.Executor = runner.Executor
+
+	logger := lager.NewLogger("job-runner")
+	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.ERROR))
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
+	logger.Info("wrapping", lager.Data{
+		"wrapper": ws,
+	})
 
 	return ws, nil
 }

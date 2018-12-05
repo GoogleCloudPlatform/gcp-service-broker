@@ -41,6 +41,7 @@ For operators: see [docs/customization.md](https://github.com/GoogleCloudPlatfor
 For developers: see [docs/use.md](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/use.md) for information about creating and binding specific GCP services with the broker.
 Complete Spring Boot sample applications which use services can be found in the [service-broker-samples repository](https://github.com/GoogleCloudPlatform/service-broker-samples).
 
+You can get documentation specific to your install from the `/docs` endpoint of your deployment.
 
 ## Commands
 

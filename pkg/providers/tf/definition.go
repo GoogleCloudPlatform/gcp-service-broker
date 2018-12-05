@@ -137,7 +137,7 @@ func (tfb *TfServiceDefinitionV1) Validate() error {
 
 // ToService converts the flat TfServiceDefinitionV1 into a broker.ServiceDefinition
 // that the registry can use.
-func (tfb *TfServiceDefinitionV1) ToService() (*broker.ServiceDefinition, error) {
+func (tfb *TfServiceDefinitionV1) ToService(executor wrapper.TerraformExecutor) (*broker.ServiceDefinition, error) {
 	if err := tfb.Validate(); err != nil {
 		return nil, err
 	}
@@ -187,6 +187,7 @@ func (tfb *TfServiceDefinitionV1) ToService() (*broker.ServiceDefinition, error)
 		Examples:            tfb.Examples,
 		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
 			jobRunner := NewTfJobRunnerForProject(projectId)
+			jobRunner.Executor = executor
 			return NewTerraformProvider(jobRunner, logger, *tfb)
 		},
 	}, nil
@@ -197,4 +198,99 @@ func (tfb *TfServiceDefinitionV1) ToService() (*broker.ServiceDefinition, error)
 // as well as to uniquely identify the workspace.
 func generateTfId(instanceId, bindingId string) string {
 	return fmt.Sprintf("tf:%s:%s", instanceId, bindingId)
+}
+
+// NewExampleTfServiceDefinition creates a new service defintition with sample
+// values for the service broker suitable to give a user a template to manually
+// edit.
+func NewExampleTfServiceDefinition() TfServiceDefinitionV1 {
+	return TfServiceDefinitionV1{
+		Version:          1,
+		Name:             "example-service",
+		Id:               "00000000-0000-0000-0000-000000000000",
+		Description:      "a longer service description",
+		DisplayName:      "Example Service",
+		ImageUrl:         "https://example.com/icon.jpg",
+		DocumentationUrl: "https://example.com",
+		SupportUrl:       "https://example.com/support.html",
+		Tags:             []string{"gcp", "example", "service"},
+		Plans: []broker.ServicePlan{
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:   "00000000-0000-0000-0000-000000000001",
+					Name: "example-email-plan",
+					Metadata: &brokerapi.ServicePlanMetadata{
+						DisplayName: "example.com email builder",
+					},
+					Description: "Builds emails for example.com.",
+				},
+				ServiceProperties: map[string]string{
+					"domain": "example.com",
+				},
+			},
+		},
+		ProvisionSettings: TfServiceDefinitionV1Action{
+			PlanInputs: []broker.BrokerVariable{
+				{
+					FieldName: "domain",
+					Type:      broker.JsonTypeString,
+					Details:   "The domain name",
+					Required:  true,
+				},
+			},
+			UserInputs: []broker.BrokerVariable{
+				{
+					FieldName: "username",
+					Type:      broker.JsonTypeString,
+					Details:   "The username to create",
+					Required:  true,
+				},
+			},
+			Template: `
+			variable domain {type = "string"}
+			variable username {type = "string"}
+
+			output email {value = "${var.username}@${var.domain}"}
+			`,
+			Outputs: []broker.BrokerVariable{
+				{
+					FieldName: "email",
+					Type:      broker.JsonTypeString,
+					Details:   "The combined email address",
+					Required:  true,
+				},
+			},
+		},
+		BindSettings: TfServiceDefinitionV1Action{
+			Computed: []varcontext.DefaultVariable{
+				{Name: "address", Default: `${instance.details["email"]}`, Overwrite: true},
+			},
+			Template: `
+			resource "random_string" "password" {
+			  length = 16
+			  special = true
+			  override_special = "/@\" "
+			}
+
+			output uri {value = "smtp://${var.address}:${random_string.password.result}@smtp.mycompany.com"}
+			`,
+			Outputs: []broker.BrokerVariable{
+				{
+					FieldName: "uri",
+					Type:      broker.JsonTypeString,
+					Details:   "The uri to use to connect to this service",
+					Required:  true,
+				},
+			},
+		},
+		Examples: []broker.ServiceExample{
+			{
+				Name:            "Example",
+				Description:     "Examples are used for documenting your service AND as integration tests.",
+				PlanId:          "00000000-0000-0000-0000-000000000001",
+				ProvisionParams: map[string]interface{}{"username": "my-account"},
+				BindParams:      map[string]interface{}{},
+			},
+		},
+	}
 }

@@ -105,15 +105,15 @@ func TestCustomTerraformExecutor(t *testing.T) {
 	}{
 		"destroy": {
 			Input:    exec.Command("terraform", "destroy", "-auto-approve", "-no-color"),
-			Expected: exec.Command(customBinary, "destroy", "-get-plugins=false", pluginsFlag, "-auto-approve", "-no-color"),
+			Expected: exec.Command(customBinary, "destroy", "-auto-approve", "-no-color"),
 		},
 		"apply": {
 			Input:    exec.Command("terraform", "apply", "-auto-approve", "-no-color"),
-			Expected: exec.Command(customBinary, "apply", "-get-plugins=false", pluginsFlag, "-auto-approve", "-no-color"),
+			Expected: exec.Command(customBinary, "apply", "-auto-approve", "-no-color"),
 		},
 		"validate": {
 			Input:    exec.Command("terraform", "validate", "-no-color"),
-			Expected: exec.Command(customBinary, "validate", "-get-plugins=false", pluginsFlag, "-no-color"),
+			Expected: exec.Command(customBinary, "validate", "-no-color"),
 		},
 		"init": {
 			Input:    exec.Command("terraform", "init", "-no-color"),
