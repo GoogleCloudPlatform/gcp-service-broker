@@ -242,7 +242,7 @@ func (b *CloudSQLBroker) BuildInstanceCredentials(ctx context.Context, bindRecor
 
 	return varcontext.Builder().
 		MergeMap(combinedCreds).
-		MergeEvalResult("uri", uriFormat).
+		MergeEvalResult("uri", uriFormat, varcontext.TypeString).
 		BuildMap()
 }
 

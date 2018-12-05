@@ -36,6 +36,10 @@ type terraformIdentifierStruct struct {
 	Id string `validate:"terraform_identifier"`
 }
 
+type jsonschemaTypeStruct struct {
+	Type string `validate:"jsonschema_type"`
+}
+
 func TestValidateStruct(t *testing.T) {
 	cases := map[string]struct {
 		Validate  interface{}
@@ -139,6 +143,34 @@ func TestValidateStruct(t *testing.T) {
 		"terraform identifier blank": {
 			Validate:  terraformIdentifierStruct{Id: ""},
 			ExpectErr: false,
+		},
+		"jsonschema type blank": {
+			Validate:  jsonschemaTypeStruct{Type: ""},
+			ExpectErr: false,
+		},
+		"jsonschema type object": {
+			Validate:  jsonschemaTypeStruct{Type: "object"},
+			ExpectErr: false,
+		},
+		"jsonschema type boolean": {
+			Validate:  jsonschemaTypeStruct{Type: "boolean"},
+			ExpectErr: false,
+		},
+		"jsonschema type number": {
+			Validate:  jsonschemaTypeStruct{Type: "number"},
+			ExpectErr: false,
+		},
+		"jsonschema type string": {
+			Validate:  jsonschemaTypeStruct{Type: "string"},
+			ExpectErr: false,
+		},
+		"jsonschema type integer": {
+			Validate:  jsonschemaTypeStruct{Type: "integer"},
+			ExpectErr: false,
+		},
+		"jsonschema type invalid": {
+			Validate:  jsonschemaTypeStruct{Type: "invalid"},
+			ExpectErr: true,
 		},
 	}
 

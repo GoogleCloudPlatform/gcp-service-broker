@@ -9,14 +9,12 @@ documentation_url: https://cloud.google.com/storage/docs/overview
 support_url: https://cloud.google.com/storage/docs/getting-support
 tags: [preview, gcp, terraform, storage]
 plans:
-- serviceplan:
-    id: e1d11f65-da66-46ad-977c-6d56513baf43
-    name: standard
-    description: Standard storage class.
-    free: false
-    metadata:
-      displayname: Standard
-  serviceproperties:
+- name: standard
+  id: e1d11f65-da66-46ad-977c-6d56513baf43
+  description: Standard storage class.
+  free: false
+  display_name: Standard
+  properties:
     storage_class: STANDARD
 provision:
   plan_inputs:
@@ -49,15 +47,18 @@ provision:
   - name: labels
     default: ${json.marshal(request.default_labels)}
     overwrite: true
+    type: object
   template: |-
     variable name {type = "string"}
     variable location {type = "string"}
     variable storage_class {type = "string"}
+    variable labels {type = "map"}
 
     resource "google_storage_bucket" "bucket" {
       name     = "${var.name}"
       location = "${var.location}"
       storage_class = "${var.storage_class}"
+      labels = "${var.labels}"
     }
 
     output id {value = "${google_storage_bucket.bucket.id}"}

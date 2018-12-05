@@ -236,7 +236,7 @@ func (svc *ServiceDefinition) ServiceDefinition() (*Service, error) {
 func (svc *ServiceDefinition) provisionDefaults() []varcontext.DefaultVariable {
 	var out []varcontext.DefaultVariable
 	for _, provisionVar := range svc.ProvisionInputVariables {
-		out = append(out, varcontext.DefaultVariable{Name: provisionVar.FieldName, Default: provisionVar.Default, Overwrite: false})
+		out = append(out, varcontext.DefaultVariable{Name: provisionVar.FieldName, Default: provisionVar.Default, Overwrite: false, Type: string(provisionVar.Type)})
 	}
 	return out
 }
@@ -244,7 +244,7 @@ func (svc *ServiceDefinition) provisionDefaults() []varcontext.DefaultVariable {
 func (svc *ServiceDefinition) bindDefaults() []varcontext.DefaultVariable {
 	var out []varcontext.DefaultVariable
 	for _, v := range svc.BindInputVariables {
-		out = append(out, varcontext.DefaultVariable{Name: v.FieldName, Default: v.Default, Overwrite: false})
+		out = append(out, varcontext.DefaultVariable{Name: v.FieldName, Default: v.Default, Overwrite: false, Type: string(v.Type)})
 	}
 	return out
 }

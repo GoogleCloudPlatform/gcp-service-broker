@@ -30,6 +30,7 @@ func init() {
 	validate.RegisterValidation("json", jsonValidation)
 	validate.RegisterValidation("hcl", hclValidation)
 	validate.RegisterValidation("terraform_identifier", regexValidation(`^[a-z_]*$`))
+	validate.RegisterValidation("jsonschema_type", regexValidation(`^(|object|boolean|array|number|string|integer)$`))
 }
 
 // ValidateStruct executes the validation tags on a struct and returns any

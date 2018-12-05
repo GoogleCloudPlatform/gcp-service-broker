@@ -17,10 +17,21 @@ package varcontext
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext/interpolation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/spf13/cast"
+)
+
+const (
+	TypeObject  = "object"
+	TypeBoolean = "boolean"
+	TypeArray   = "array"
+	TypeNumber  = "number"
+	TypeString  = "string"
+	TypeInteger = "integer"
 )
 
 // ContextBuilder is a builder for VariableContexts.
@@ -53,6 +64,7 @@ type DefaultVariable struct {
 	Name      string      `json:"name" yaml:"name" validate:"required"`
 	Default   interface{} `json:"default" yaml:"default" validate:"required"`
 	Overwrite bool        `json:"overwrite" yaml:"overwrite"`
+	Type      string      `json:"type" yaml:"type" validate:"jsonschema_type"`
 }
 
 // MergeDefaults gets the default values from the given BrokerVariables and
@@ -68,9 +80,13 @@ func (builder *ContextBuilder) MergeDefaults(brokerVariables []DefaultVariable) 
 		}
 
 		if strVal, ok := v.Default.(string); ok {
-			builder.MergeEvalResult(v.Name, strVal)
+			builder.MergeEvalResult(v.Name, strVal, v.Type)
 		} else {
 			builder.context[v.Name] = v.Default
+		}
+
+		if _, exists := builder.context[v.Name]; exists && !v.Overwrite {
+			continue
 		}
 	}
 
@@ -79,7 +95,7 @@ func (builder *ContextBuilder) MergeDefaults(brokerVariables []DefaultVariable) 
 
 // MergeEvalResult evaluates the template against the templating engine and
 // merges in the value if the result is not an error.
-func (builder *ContextBuilder) MergeEvalResult(key, template string) *ContextBuilder {
+func (builder *ContextBuilder) MergeEvalResult(key, template, resultType string) *ContextBuilder {
 	evaluationContext := make(map[string]interface{})
 	for k, v := range builder.context {
 		evaluationContext[k] = v
@@ -94,9 +110,48 @@ func (builder *ContextBuilder) MergeEvalResult(key, template string) *ContextBui
 		return builder
 	}
 
-	builder.context[key] = result
+	converted, err := castTo(result, resultType)
+	if err != nil {
+		builder.errors = multierror.Append(err)
+		return builder
+	}
+
+	builder.context[key] = converted
 
 	return builder
+}
+
+func toSliceE(value interface{}) ([]interface{}, error) {
+	kind := reflect.TypeOf(value).Kind()
+	switch kind {
+	case reflect.String:
+		out := []interface{}{}
+		err := json.Unmarshal([]byte(value.(string)), &out)
+		return out, err
+	default:
+		return cast.ToSliceE(value)
+	}
+}
+
+func castTo(value interface{}, jsonType string) (interface{}, error) {
+	switch jsonType {
+	case TypeObject:
+		return cast.ToStringMapE(value)
+	case TypeBoolean:
+		return cast.ToBoolE(value)
+	case TypeArray:
+		return toSliceE(value)
+	case TypeNumber:
+		return cast.ToFloat64E(value)
+	case TypeString:
+		return cast.ToStringE(value)
+	case TypeInteger:
+		return cast.ToIntE(value)
+	case "": // for legacy compatibility
+		return value, nil
+	default:
+		return nil, fmt.Errorf("couldn't cast %v to %s, unknown type", value, jsonType)
+	}
 }
 
 // MergeMap inserts all the keys and values from the map into the context.
