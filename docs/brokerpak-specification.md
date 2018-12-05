@@ -1,8 +1,10 @@
-# Brokerpak specification
+# Brokerpak V1 specification
 
-This document will explain how to create a new `brokerpak`.
+This document will explain how to create a new brokerpak.
 
-A brokerpak is comprised of a versioned Terraform binary and providers for one or more platform, a manifest, one or more service definitions, and source code.
+A brokerpak is comprised of a versioned Terraform binary and providers for one
+or more platform, a manifest, one or more service definitions, and source code.
+Here are the contents of an example brokerpak:
 
 ```
 MODE        SIZE      NAME
@@ -24,7 +26,6 @@ drwxr-xr-x  0         src
 ```
 
 You can create, inspect, validate, document and test brokerpaks using the `pak` sub-command.
-
 Run the command `gcp-service-broker pak help` for more information about creating a pak.
 
 ## Manifest
