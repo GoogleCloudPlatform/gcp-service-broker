@@ -1,6 +1,6 @@
 # Brokerpak introduction
 
-This document will explain `brokerpak`s, what they are, what problem they solve, how they solve that problem, and best practices around developing, maintaining, and using them.
+This document will explain brokerpaks, what they are, the problems they solve, how they them, and best practices around developing, maintaining, and using paks.
 
 ## What is a brokerpak?
 
@@ -37,7 +37,7 @@ Some of these tasks can be automated, but many require deeper understanding of t
 
 ### How brokerpak solves these problems
 
-The brokerpak is a (zip) package that contains bundled versions of Terraform, service definitions (as Terraform modules), Terraform providers, and source code for regulatory compliance.
+The brokerpak is a (zip) package that contains bundled versions of [Terraform](https://terraform.io/intro/index.html), service definitions (as Terraform modules), Terraform providers, and source code for regulatory compliance.
 Brokerpaks are written as code, can be built as part of a CI/CD platform, and can be stored as build artifacts.
 Operators can build and deploy their own brokerpaks along with those provided by the platform.
 Operators can also modify the brokerpaks provided by the platform if they need to tailor the experience for their users.

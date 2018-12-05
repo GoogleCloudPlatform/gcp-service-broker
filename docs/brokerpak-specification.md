@@ -34,21 +34,21 @@ Each brokerpak has a manifest file named `manifest.yml`. This file determines
 which architectures your brokerpak will work on, which plugins it will use,
 and which services it will provide.
 
-### Structure
+### Schema
 
-**manifest.yml**
+#### Manifest YAML file
 
 | Field | Type | Description |
 | --- | --- | --- |
-| packversion* | int | The version of the manifest. MUST be `1`. Breaking changes to syntax or semantics will get an incremented packversion number. Future numbers MUST be increasing but might not be sequential. |
+| packversion* | int | The version of the schema the manifest adheres to. This MUST be set to `1` to be compatible with the brokerpak specification v1. |
 | version* | string | The version of this brokerpak. It's RECOMMENDED you follow [semantic versioning](https://semver.org/) for your brokerpaks. |
 | name* | string | The name of this brokerpak. It's RECOMMENDED that this be lower-case and include only alphanumeric characters, dashes, and underscores. |
 | metadata | object | A free-form field for key/value pairs of additional information about this brokerpak. This could include the authors, creation date, source code repository, etc. |
 | platforms* | array of platform | The platforms this brokerpak will be executed on. |
-| terraform_binaries* | array of terraform_resource | The list of Terraform providers and Terraform that'll be bundled with the brokerpak. |
+| terraform_binaries* | array of Terraform resource | The list of Terraform providers and Terraform that'll be bundled with the brokerpak. |
 | service_definitions* | array of string | Each entry points to a file relative to the manifest that defines a service as part of the brokerpak. |
 
-**platform**
+#### Platform object
 
 The platform OS and architecture follow Go's naming scheme.
 
@@ -57,7 +57,7 @@ The platform OS and architecture follow Go's naming scheme.
 | os* | string | The operating system of the platoform. |
 | arch* | string | The architecture of the platform. |
 
-**terraform_resource**
+#### Terraform resource object
 
 This structure holds information about a specific Terraform version or Resource.
 
@@ -103,7 +103,7 @@ service_definitions:
 
 | Field | Type | Description |
 | --- | --- | --- |
-| version* | int | The schema version of this service definition file. MUST be `1`. Breaking changes to syntax or semantics will get an incremented number. Future numbers MUST be increasing but MIGHT not be sequential. |
+| version* | int |  The version of the schema the service definition adheres to. This MUST be set to `1` to be compatible with the brokerpak specification v1. |
 | name* | string | A CLI-friendly name of the service. MUST only contain alphanumeric characters, periods, and hyphens (no spaces). MUST be unique across all service objects returned in this response. MUST be a non-empty string. |
 | id* | string | A UUID used to correlate this service in future requests to the Service Broker. This MUST be globally unique such that Platforms (and their users) MUST be able to assume that seeing the same value (no matter what Service Broker uses it) will always refer to this service. |
 | description* | string | A short description of the service. MUST be a non-empty string. |
@@ -265,7 +265,8 @@ The following string interpolation functions are available for use:
     * If the implementation is hard to explain, it's a bad idea.
     * If the implementation is easy to explain, it may be a good idea.
 * `time.nano() -> string`
-  * This function returns the current UNIX time in nanoseconds as a decimal string.
+  * This function returns the current time as a Unix time, the number of nanoseconds elapsed since January 1, 1970 UTC, as a decimal string.
+  * The result is undefined if the Unix time in nanoseconds cannot be represented by an int64 (a date before the year 1678 or after 2262).
 * `regexp.matches(regex_string, string) -> bool`
   * Checks if the string matches the given regex.
 * `str.truncate(count, string) -> string`
