@@ -51,7 +51,12 @@ Because services are written with built-in test-cases, they can be used to evalu
 
 ## Best practices
 
-- small services
-- few dependencies
-- collaborative development
--
+### Brokerpak guidelines
+
+Aim to keep your brokerpaks small and focused around a core idea.
+
+It may be beneficial to divide your services into brokerpaks based on any of the following factors:
+
+ * The users of the service e.g. organizational unit.
+ * The stability of the backing service (alpha, beta, GA).
+ * The subject matter experts that work on the services e.g. networking vs database.
