@@ -1,6 +1,6 @@
 # Brokerpak introduction
 
-This document will explain brokerpaks, what they are, the problems they solve, how they them, and best practices around developing, maintaining, and using paks.
+This document will explain brokerpaks, what they are, the problems they solve, how to use them, and best practices around developing, maintaining, and using paks.
 
 ## What is a brokerpak?
 
@@ -8,22 +8,22 @@ To understand the how and why of brokerpaks, it's first important to understand 
 
 ### A quick aside about service brokers
 
-A _service broker_ provides an interface between an _application provider_ (e.g. GCP, Azure or AWS), and an _application platform_ (e.g. Kubernetes or Cloud Foundry).
+A _service broker_ provides an interface between an _service provider_ (e.g. GCP, Azure or AWS), and an _application platform_ (e.g. Kubernetes or Cloud Foundry).
 The service broker is managed by _platform operators_.
-These platform operators are responsible for configuring the broker to meet the needs of their business, platform, and _developers_.
-Developers use the broker to provision and bind new services to their applications.
+These _platform operators_ are responsible for configuring the broker to meet the needs of their business, platform, and _developers_.
+_Developers_ use the broker to provision and bind new services to their applications.
 
 Therefore, a service broker is responsible for federating access between an _application provider_ and a _developer_ with respecting the wishes of the _platform_ and its _operators_.
 Each of these parties influences the broker, its services, and structure.
 
 * Developers want lots of services that require minimal configuration yet give them enough control that they have independence.
 * Operators need to make sure the services they expose are secure, follow regulatory constraints, can be billed correctly, are well supported, and won't be abused.
-* Application providers are interested in providing lots of stable, generic services at a rapid pace.
+* Service providers are interested in providing lots of stable, generic services at a rapid pace.
 * Service brokers serve the needs of the operators, developers, and platforms. They map the services out to match a variety of different businesses models, threat models, regulatory constraints, and use-cases.
 
 Together, this means a service broker must:
 
-* Provide lots of services for developers.
+* Provide many of services for developers.
 * Provide services granular enough that operators can control cost.
 * Provide services robust enough that operators can control security.
 * Provide services structured enough operators can trust they'll be in compliance.
