@@ -16,14 +16,17 @@ package brokerpak
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"text/tabwriter"
 
+	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/ziputil"
 	"github.com/spf13/viper"
@@ -148,10 +151,30 @@ func Validate(pack string) error {
 // RegisterAll fetches all brokerpaks from the settings file and registers them
 // with the given registry.
 func RegisterAll(registry broker.BrokerRegistry) error {
-	localPacks := viper.GetStringSlice("brokerpak.local_packs")
+	registerLogger := utils.NewLogger("brokerpak-registration")
+	// create a temp directory to hold all the paks
+	pakDir, err := ioutil.TempDir("", "brokerpaks")
+	if err != nil {
+		return fmt.Errorf("couldn't create brokerpak staging area: %v", err)
+	}
+	defer os.RemoveAll(pakDir)
 
-	for _, pack := range localPacks {
-		if err := registerPak(pack, registry); err != nil {
+	for i, packSource := range viper.GetStringSlice("brokerpak.packs") {
+		destFile := filepath.Join(pakDir, fmt.Sprintf("pack-%d.brokerpak", i))
+		registerLogger.Debug("importing brokerpak", lager.Data{
+			"source":      packSource,
+			"destination": destFile,
+		})
+
+		if err := fetchBrokerpak(packSource, destFile); err != nil {
+			return err
+		}
+
+		registerLogger.Debug("registering brokerpak", lager.Data{
+			"source":      packSource,
+			"destination": destFile,
+		})
+		if err := registerPak(destFile, registry); err != nil {
 			return err
 		}
 	}

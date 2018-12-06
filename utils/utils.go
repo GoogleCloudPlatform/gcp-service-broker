@@ -18,9 +18,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"strings"
 
+	"code.cloudfoundry.org/lager"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2/google"
@@ -207,4 +209,15 @@ func SingleLineErrorFormatter(es []error) string {
 	}
 
 	return fmt.Sprintf("%d error(s) occurred: %s", len(es), strings.Join(points, "; "))
+}
+
+// NewLogger creates a new lager.Logger with the given name that has correct
+// writing settings.
+func NewLogger(name string) lager.Logger {
+	logger := lager.NewLogger(name)
+
+	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.ERROR))
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
+
+	return logger
 }

@@ -15,7 +15,22 @@
 package brokerpak
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"net/url"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"cloud.google.com/go/storage"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
 	getter "github.com/hashicorp/go-getter"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/option"
 )
 
 // fetchArchive uses go-getter to download archives. By default go-getter
@@ -25,7 +40,91 @@ func fetchArchive(src, dest string) error {
 		Src:           src,
 		Dst:           dest,
 		Mode:          getter.ClientModeFile,
-		Getters:       getter.Getters,
 		Decompressors: map[string]getter.Decompressor{},
 	}).Get()
+}
+
+// fetchBrokerpak downloads a local or remote brokerpak; brokerpaks can be
+// fetched remotely using the gs:// prefix which will load them from a
+// Cloud Storage bucket with the broker's credentials.
+// Relative paths are resolved relative to the executable.
+func fetchBrokerpak(src, dest string) error {
+	execWd := filepath.Dir(os.Args[0])
+	execDir, err := filepath.Abs(execWd)
+	if err != nil {
+		return fmt.Errorf("couldn't turn dir %q into abs path: %v", execWd, err)
+	}
+
+	getters := map[string]getter.Getter{}
+	for k, g := range getter.Getters {
+		getters[k] = g
+	}
+	getters["gs"] = &gsGetter{}
+
+	return (&getter.Client{
+		Src: src,
+		Dst: dest,
+		Pwd: execDir,
+
+		Mode:          getter.ClientModeFile,
+		Getters:       getters,
+		Decompressors: map[string]getter.Decompressor{},
+	}).Get()
+}
+
+// gsGetter is a go-getter that works on Cloud Storage using the broker's
+// service account. It's incomplete in that it doesn't support directories.
+type gsGetter struct{}
+
+// ClientMode is unsupported for gsGetter.
+func (g *gsGetter) ClientMode(u *url.URL) (getter.ClientMode, error) {
+	return getter.ClientModeInvalid, errors.New("mode is not supported for this client")
+}
+
+// Get clones a remote destination
+func (g *gsGetter) Get(dst string, u *url.URL) error {
+	return errors.New("getting directories is not supported for this client")
+}
+
+// GetFile downloads the give URL into the given path. The URL must
+// reference a single file. If possible, the Getter should check if
+// the remote end contains the same file and no-op this operation.
+func (g *gsGetter) GetFile(dst string, u *url.URL) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	obj, err := g.objectAt(u)
+	if err != nil {
+		return err
+	}
+
+	src := stream.FromReadCloserError(obj.NewReader(ctx))
+	return stream.Copy(src, stream.ToFile(dst))
+}
+
+func (g *gsGetter) objectAt(u *url.URL) (*storage.ObjectHandle, error) {
+	client, err := g.client()
+	if err != nil {
+		return nil, err
+	}
+
+	return client.Bucket(u.Hostname()).Object(strings.TrimPrefix(u.Path, "/")), nil
+}
+
+func (g *gsGetter) client() (*storage.Client, error) {
+	creds, err := google.CredentialsFromJSON(context.Background(), []byte(utils.GetServiceAccountJson()), storage.ScopeReadOnly)
+	if err != nil {
+		return nil, errors.New("couldn't get JSON credentials from the enviornment")
+	}
+
+	options := []option.ClientOption{
+		option.WithCredentials(creds),
+		option.WithUserAgent(models.CustomUserAgent),
+	}
+
+	client, err := storage.NewClient(context.Background(), options...)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't connect to Cloud Storage: %v", err)
+	}
+	return client, nil
 }

@@ -26,6 +26,7 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/lager"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 )
 
 // DefaultInstanceName is the default name of an instance of a particular module.
@@ -321,9 +322,7 @@ func CustomTerraformExecutor(tfBinaryPath, tfPluginDir string, wrapped Terraform
 // DefaultExecutor is the default executor that shells out to Terraform
 // and logs results to stdout.
 func DefaultExecutor(c *exec.Cmd) error {
-	logger := lager.NewLogger("terraform@" + c.Dir)
-	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.ERROR))
-	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
+	logger := utils.NewLogger("terraform@" + c.Dir)
 
 	logger.Info("starting process", lager.Data{
 		"path": c.Path,
