@@ -152,7 +152,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 		Examples: []broker.ServiceExample{
 			{
 				Name:            "Basic Configuration",
-				Description:     "Create a nearline bucket with a service account that can create/read/delete the objects in it.",
+				Description:     "Create a nearline bucket with a service account that can create/read/list/delete the objects in it.",
 				PlanId:          "a42c1182-d1a0-4d40-82c1-28220518b360",
 				ProvisionParams: map[string]interface{}{"location": "us"},
 				BindParams: map[string]interface{}{
@@ -161,7 +161,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 			},
 			{
 				Name:            "Cold Storage",
-				Description:     "Create a coldline bucket with a service account that can create/read/delete the objects in it.",
+				Description:     "Create a coldline bucket with a service account that can create/read/list/delete the objects in it.",
 				PlanId:          "c8538397-8f15-45e3-a229-8bb349c3a98f",
 				ProvisionParams: map[string]interface{}{"location": "us"},
 				BindParams: map[string]interface{}{
@@ -170,7 +170,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 			},
 			{
 				Name:            "Regional Storage",
-				Description:     "Create a regional bucket with a service account that can create/read/delete the objects in it.",
+				Description:     "Create a regional bucket with a service account that can create/read/list/delete the objects in it.",
 				PlanId:          "5e6161d2-0202-48be-80c4-1006cce19b9d",
 				ProvisionParams: map[string]interface{}{"location": "us-west1"},
 				BindParams: map[string]interface{}{
@@ -179,7 +179,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 			},
 			{
 				Name:            "Multi-Regional Storage",
-				Description:     "Create a multi-regional bucket with a service account that can create/read/delete the objects in it.",
+				Description:     "Create a multi-regional bucket with a service account that can create/read/list/delete the objects in it.",
 				PlanId:          "a5e8dfb5-e5ec-472a-8d36-33afcaff2fdb",
 				ProvisionParams: map[string]interface{}{"location": "us"},
 				BindParams: map[string]interface{}{
