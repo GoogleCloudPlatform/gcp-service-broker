@@ -154,6 +154,7 @@ func Archive(sourceFolder, destinationZip string) error {
 			return err
 		}
 		header.Name = Clean(strings.TrimPrefix(path, sourceFolder))
+		header.Method = zip.Deflate
 
 		if info.IsDir() {
 			w.CreateHeader(header)
