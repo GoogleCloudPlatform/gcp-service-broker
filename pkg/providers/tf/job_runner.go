@@ -18,7 +18,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	"code.cloudfoundry.org/lager"
@@ -121,9 +120,7 @@ func (runner *TfJobRunner) hydrateWorkspace(ctx context.Context, deployment *mod
 
 	ws.Executor = runner.Executor
 
-	logger := lager.NewLogger("job-runner")
-	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.ERROR))
-	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
+	logger := utils.NewLogger("job-runner")
 	logger.Info("wrapping", lager.Data{
 		"wrapper": ws,
 	})

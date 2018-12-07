@@ -15,10 +15,8 @@
 package cmd
 
 import (
-	"os"
-
-	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -28,8 +26,7 @@ func init() {
 		Short: "Upgrade your database",
 		Long:  `Upgrade your database to be compatible with this service broker.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			logger := lager.NewLogger("migrations-cmd")
-			logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.DEBUG))
+			logger := utils.NewLogger("migrations-cmd")
 
 			logger.Debug("Setting up the database")
 			db := db_service.SetupDb(logger)
