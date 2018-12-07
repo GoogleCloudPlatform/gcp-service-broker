@@ -106,6 +106,22 @@ forms:
     label: Client key
     configurable: true
     optional: true
+- name: brokerpaks
+  label: Brokerpaks
+  description: |-
+    Brokerpaks are ways to extend the broker with custom services defined by Terraform templates.
+    A brokerpak is an archive comprised of a versioned Terraform binary and providers for one or more platform, a manifest, one or more service definitions, and source code.
+  properties:
+  - name: gsb_brokerpak_packs
+    type: text
+    label: Brokerpaks to load
+    description: |-
+      List brokerpaks URIs one per line. Supported protocols are http, https, gs, and git.
+      Cloud Storage (gs) URIs follow the gs://<bucket>/<path> convention and will be read using the service broker service account.
+
+      You can validate the checksum of any file on download by appending a checksum query parameter to the URI in the format type:value.
+      Valid checksum types are md5, sha1, sha256 and sha512. e.g. gs://foo/bar.brokerpak?checksum=md5:3063a2c62e82ef8614eee6745a7b6b59
+    configurable: true
 - name: enable_disable
   label: Enable Services
   description: Enable or disable services.
@@ -130,6 +146,11 @@ forms:
     default: true
     label: Let the broker create and bind Google CloudSQL PostgreSQL instances.
     configurable: true
+  - name: gsb_service_google_dataflow_enabled
+    type: boolean
+    default: true
+    label: Let the broker create and bind Google Cloud Dataflow instances.
+    configurable: true
   - name: gsb_service_google_datastore_enabled
     type: boolean
     default: true
@@ -139,6 +160,11 @@ forms:
     type: boolean
     default: true
     label: Let the broker create and bind Google Cloud Dialogflow instances.
+    configurable: true
+  - name: gsb_service_google_firestore_enabled
+    type: boolean
+    default: true
+    label: Let the broker create and bind Google Cloud Firestore instances.
     configurable: true
   - name: gsb_service_google_ml_apis_enabled
     type: boolean
@@ -278,6 +304,13 @@ forms:
     default: "true"
     label: enable-preview-services
     description: Enable services that are new to the broker this release.
+    configurable: true
+    optional: true
+  - name: gsb_compatibility_enable_terraform_services
+    type: boolean
+    default: "false"
+    label: enable-terraform-services
+    description: Enable services that use the experimental, unstable, Terraform back-end.
     configurable: true
     optional: true
   - name: gsb_compatibility_enable_unmaintained_services
@@ -446,10 +479,10 @@ service_plan_forms:
       for more information.'
     configurable: true
     options:
-    - name: SSD
-      label: SSD - Solid-state Drive
     - name: HDD
       label: HDD - Hard Disk Drive
+    - name: SSD
+      label: SSD - Solid-state Drive
   - name: num_nodes
     type: string
     default: "3"

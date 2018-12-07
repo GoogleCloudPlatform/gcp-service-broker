@@ -17,6 +17,7 @@ package generator
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
@@ -83,6 +84,7 @@ func GenerateForms() TileFormsSections {
 		Forms: []Form{
 			generateServiceAccountForm(),
 			generateDatabaseForm(),
+			generateBrokerpakForm(),
 			generateEnableDisableForm(),
 			generateRoleWhitelistForm(),
 			generateCompatibilityForm(),
@@ -335,6 +337,28 @@ func generateServicePlanForm(svc *broker.ServiceDefinition) (Form, error) {
 	return planForm, nil
 }
 
+func generateBrokerpakForm() Form {
+	return Form{
+		Name:  "brokerpaks",
+		Label: "Brokerpaks",
+		Description: `Brokerpaks are ways to extend the broker with custom services defined by Terraform templates.
+A brokerpak is an archive comprised of a versioned Terraform binary and providers for one or more platform, a manifest, one or more service definitions, and source code.`,
+		Properties: []FormProperty{
+			{
+				Name:  strings.ToLower(utils.PropertyToEnv("brokerpak.packs")),
+				Type:  "text",
+				Label: "Brokerpaks to load",
+				Description: `List brokerpaks URIs one per line. Supported protocols are http, https, gs, and git.
+Cloud Storage (gs) URIs follow the gs://<bucket>/<path> convention and will be read using the service broker service account.
+
+You can validate the checksum of any file on download by appending a checksum query parameter to the URI in the format type:value.
+Valid checksum types are md5, sha1, sha256 and sha512. e.g. gs://foo/bar.brokerpak?checksum=md5:3063a2c62e82ef8614eee6745a7b6b59`,
+				Configurable: true,
+			},
+		},
+	}
+}
+
 func brokerVariableToFormProperty(v broker.BrokerVariable) FormProperty {
 	formInput := FormProperty{
 		Name:         v.FieldName,
@@ -353,6 +377,12 @@ func brokerVariableToFormProperty(v broker.BrokerVariable) FormProperty {
 		for name, label := range v.Enum {
 			opts = append(opts, FormOption{Name: fmt.Sprintf("%v", name), Label: label})
 		}
+
+		// Sort the options by human-readable label so they end up in a deterministic
+		// order to prevent odd stuff from coming up during diffs.
+		sort.Slice(opts, func(i, j int) bool {
+			return opts[i].Label < opts[j].Label
+		})
 
 		formInput.Options = opts
 
