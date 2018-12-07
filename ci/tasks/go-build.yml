@@ -9,7 +9,7 @@ inputs:
   path: broker-source
 outputs:
 - name: compiled-broker
-  path: broker-source
+  path: broker-source/gcp-service-broker
 run:
   dir: broker-source
   path: go.ash
