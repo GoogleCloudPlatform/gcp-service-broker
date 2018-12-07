@@ -36,12 +36,7 @@ import (
 // fetchArchive uses go-getter to download archives. By default go-getter
 // decompresses archives, so this configuration prevents that.
 func fetchArchive(src, dest string) error {
-	return (&getter.Client{
-		Src:           src,
-		Dst:           dest,
-		Mode:          getter.ClientModeFile,
-		Decompressors: map[string]getter.Decompressor{},
-	}).Get()
+	return newFileGetterClient(src, dest).Get()
 }
 
 // fetchBrokerpak downloads a local or remote brokerpak; brokerpaks can be
@@ -55,21 +50,33 @@ func fetchBrokerpak(src, dest string) error {
 		return fmt.Errorf("couldn't turn dir %q into abs path: %v", execWd, err)
 	}
 
+	client := newFileGetterClient(src, dest)
+	client.Getters["gs"] = &gsGetter{}
+	client.Pwd = execDir
+
+	return client.Get()
+}
+
+func defaultGetters() map[string]getter.Getter {
 	getters := map[string]getter.Getter{}
 	for k, g := range getter.Getters {
 		getters[k] = g
 	}
-	getters["gs"] = &gsGetter{}
 
-	return (&getter.Client{
+	return getters
+}
+
+// newFileGetterClient creates a new client that will fetch a single file,
+// with the default set of getters and will NOT automatically decompress it.
+func newFileGetterClient(src, dest string) *getter.Client {
+	return &getter.Client{
 		Src: src,
 		Dst: dest,
-		Pwd: execDir,
 
 		Mode:          getter.ClientModeFile,
-		Getters:       getters,
+		Getters:       defaultGetters(),
 		Decompressors: map[string]getter.Decompressor{},
-	}).Get()
+	}
 }
 
 // gsGetter is a go-getter that works on Cloud Storage using the broker's
@@ -81,7 +88,7 @@ func (g *gsGetter) ClientMode(u *url.URL) (getter.ClientMode, error) {
 	return getter.ClientModeInvalid, errors.New("mode is not supported for this client")
 }
 
-// Get clones a remote destination
+// Get clones a remote destination to a local directory.
 func (g *gsGetter) Get(dst string, u *url.URL) error {
 	return errors.New("getting directories is not supported for this client")
 }
@@ -93,36 +100,30 @@ func (g *gsGetter) GetFile(dst string, u *url.URL) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	obj, err := g.objectAt(u)
+	client, err := g.client(ctx)
 	if err != nil {
 		return err
 	}
 
-	src := stream.FromReadCloserError(obj.NewReader(ctx))
-	return stream.Copy(src, stream.ToFile(dst))
-}
-
-func (g *gsGetter) objectAt(u *url.URL) (*storage.ObjectHandle, error) {
-	client, err := g.client()
+	reader, err := g.objectAt(client, u).NewReader(ctx)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("couldn't open object at %q: %v", u.String(), err)
 	}
 
-	return client.Bucket(u.Hostname()).Object(strings.TrimPrefix(u.Path, "/")), nil
+	return stream.Copy(stream.FromReadCloser(reader), stream.ToFile(dst))
 }
 
-func (g *gsGetter) client() (*storage.Client, error) {
-	creds, err := google.CredentialsFromJSON(context.Background(), []byte(utils.GetServiceAccountJson()), storage.ScopeReadOnly)
+func (gsGetter) objectAt(client *storage.Client, u *url.URL) *storage.ObjectHandle {
+	return client.Bucket(u.Hostname()).Object(strings.TrimPrefix(u.Path, "/"))
+}
+
+func (gsGetter) client(ctx context.Context) (*storage.Client, error) {
+	creds, err := google.CredentialsFromJSON(ctx, []byte(utils.GetServiceAccountJson()), storage.ScopeReadOnly)
 	if err != nil {
 		return nil, errors.New("couldn't get JSON credentials from the enviornment")
 	}
 
-	options := []option.ClientOption{
-		option.WithCredentials(creds),
-		option.WithUserAgent(models.CustomUserAgent),
-	}
-
-	client, err := storage.NewClient(context.Background(), options...)
+	client, err := storage.NewClient(ctx, option.WithCredentials(creds), option.WithUserAgent(models.CustomUserAgent))
 	if err != nil {
 		return nil, fmt.Errorf("couldn't connect to Cloud Storage: %v", err)
 	}

@@ -159,6 +159,8 @@ func RegisterAll(registry broker.BrokerRegistry) error {
 	}
 	defer os.RemoveAll(pakDir)
 
+	// XXX(josephlewis42): this could be parallelized to increase performance
+	// if we find people are pulling lots of data from the network.
 	for i, packSource := range viper.GetStringSlice("brokerpak.packs") {
 		destFile := filepath.Join(pakDir, fmt.Sprintf("pack-%d.brokerpak", i))
 		registerLogger.Debug("importing brokerpak", lager.Data{

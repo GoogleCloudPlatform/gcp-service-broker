@@ -99,6 +99,11 @@ func FromReadCloserError(rc io.ReadCloser, err error) Source {
 	}
 }
 
+// FromReadCloser reads the contents of the readcloser and takes ownership of closing it.
+func FromReadCloser(rc io.ReadCloser) Source {
+	return FromReadCloserError(rc, nil)
+}
+
 // FromReader converts a Reader to a Source.
 func FromReader(rc io.Reader) Source {
 	return func() (io.ReadCloser, error) {
