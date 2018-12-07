@@ -17,24 +17,32 @@ package cmd
 import (
 	"context"
 	"net/http"
-	"os"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/brokerpak"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/compatibility"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/server"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 const (
-	apiUserProp         = "api.user"
-	apiPasswordProp     = "api.password"
-	apiPortProp         = "api.port"
-	v3CompatibilityProp = "compatibility.three-to-four.legacy-plans"
+	apiUserProp     = "api.user"
+	apiPasswordProp = "api.password"
+	apiPortProp     = "api.port"
 )
+
+var v3CompatibilityToggle = toggles.Compatibility.Toggle("three-to-four.legacy-plans", false, `Enable compatibility with the GCP Service Broker v3.x.
+	Before version 4.0, each installation generated its own plan UUIDs, after 4.0 they have been standardized.
+	This option installs a compatibility layer which checks if a service is using the correct plan GUID.
+	If the service does not use the correct GUID, the request will fail with a message about how to upgrade.`)
 
 func init() {
 	rootCmd.AddCommand(&cobra.Command{
@@ -54,13 +62,15 @@ func init() {
 
 func serve() {
 
-	logger := lager.NewLogger("gcp-service-broker")
-	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.ERROR))
-	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
+	logger := utils.NewLogger("gcp-service-broker")
 
 	models.ProductionizeUserAgent()
 
 	db_service.New(logger)
+
+	if err := brokerpak.RegisterAll(broker.DefaultRegistry); err != nil {
+		logger.Fatal("Error loading brokerpaks: %v", err)
+	}
 
 	// init broker
 	cfg, err := brokers.NewBrokerConfigFromEnv()
@@ -88,7 +98,7 @@ func serve() {
 		"username": username,
 	})
 
-	if viper.GetBool(v3CompatibilityProp) {
+	if v3CompatibilityToggle.IsActive() {
 		logger.Info("Enabling v3 Compatibility Mode")
 
 		serviceBroker = compatibility.NewLegacyPlanUpgrader(serviceBroker)
@@ -102,5 +112,6 @@ func serve() {
 
 	brokerAPI := brokerapi.New(serviceBroker, logger, credentials)
 	http.Handle("/", brokerAPI)
+	http.Handle("/docs", server.NewDocsHandler(broker.DefaultRegistry))
 	http.ListenAndServe(":"+port, nil)
 }

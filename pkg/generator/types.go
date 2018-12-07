@@ -26,12 +26,12 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 )
 
-// CatalogDocumentation generates markdown documentation for an entire service
-// catalog.
-func CatalogDocumentation() string {
+// CatalogDocumentation generates markdown documentation for the service catalog
+// of the given registry.
+func CatalogDocumentation(registry broker.BrokerRegistry) string {
 	out := ""
 
-	services := broker.GetAllServices()
+	services := registry.GetAllServices()
 	for _, svc := range services {
 		out += generateServiceDocumentation(svc)
 		out += "\n"
@@ -87,8 +87,7 @@ func generateServiceDocumentation(svc *broker.ServiceDefinition) string {
 	templateText := `
 --------------------------------------------------------------------------------
 
-# ![]({{ .metadata.ImageUrl }}) {{ .metadata.DisplayName }}
-
+# <a name="{{ .catalog.Name }}"></a> ![]({{ .metadata.ImageUrl }}) {{ .metadata.DisplayName }}
 {{ .metadata.LongDescription }}
 
  * [Documentation]({{.metadata.DocumentationUrl }})

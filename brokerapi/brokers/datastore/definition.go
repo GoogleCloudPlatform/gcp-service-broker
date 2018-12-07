@@ -15,8 +15,12 @@
 package datastore
 
 import (
+	"code.cloudfoundry.org/lager"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
+	"golang.org/x/oauth2/jwt"
 )
 
 func init() {
@@ -32,7 +36,7 @@ func init() {
         "displayName": "Google Cloud Datastore",
         "longDescription": "Google Cloud Datastore is a NoSQL document database built for automatic scaling, high performance, and ease of application development.",
         "documentationUrl": "https://cloud.google.com/datastore/docs/",
-        "supportUrl": "https://cloud.google.com/support/",
+        "supportUrl": "https://cloud.google.com/datastore/docs/getting-support",
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/datastore.svg"
       },
       "tags": ["gcp", "datastore"],
@@ -47,10 +51,32 @@ func init() {
         }
       ]
     }`,
-		ProvisionInputVariables: []broker.BrokerVariable{},
-		BindInputVariables:      []broker.BrokerVariable{},
-		BindComputedVariables:   accountmanagers.FixedRoleBindComputedVariables("datastore.user"),
-		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
+		ProvisionInputVariables: []broker.BrokerVariable{
+			{
+				FieldName: "namespace",
+				Type:      broker.JsonTypeString,
+				Details:   "A context for the identifiers in your entity’s dataset. This ensures that different systems can all interpret an entity's data the same way, based on the rules for the entity’s particular namespace. Blank means the default namespace will be used.",
+				Default:   "",
+				Constraints: validation.NewConstraintBuilder().
+					MaxLength(100).
+					Pattern("^[A-Za-z0-9_-]*$").
+					Build(),
+			},
+		},
+		BindInputVariables:    []broker.BrokerVariable{},
+		BindComputedVariables: accountmanagers.FixedRoleBindComputedVariables("datastore.user"),
+		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
+			broker.BrokerVariable{
+				FieldName: "namespace",
+				Type:      broker.JsonTypeString,
+				Details:   "A context for the identifiers in your entity’s dataset.",
+				Required:  false,
+				Constraints: validation.NewConstraintBuilder().
+					MaxLength(100).
+					Pattern("^[A-Za-z0-9_-]*$").
+					Build(),
+			},
+		),
 		Examples: []broker.ServiceExample{
 			{
 				Name:            "Basic Configuration",
@@ -59,6 +85,17 @@ func init() {
 				ProvisionParams: map[string]interface{}{},
 				BindParams:      map[string]interface{}{},
 			},
+			{
+				Name:            "Custom Namespace",
+				Description:     "Creates a datastore and returns the provided namespace along with bind calls.",
+				PlanId:          "05f1fb6b-b5f0-48a2-9c2b-a5f236507a97",
+				ProvisionParams: map[string]interface{}{"namespace": "my-namespace"},
+				BindParams:      map[string]interface{}{},
+			},
+		},
+		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
+			bb := broker_base.NewBrokerBase(projectId, auth, logger)
+			return &DatastoreBroker{BrokerBase: bb}
 		},
 	}
 

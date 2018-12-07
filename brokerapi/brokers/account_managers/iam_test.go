@@ -17,6 +17,7 @@ package account_managers
 import (
 	"testing"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	cloudresourcemanager "google.golang.org/api/cloudresourcemanager/v1"
 )
 
@@ -69,8 +70,8 @@ func TestIamMergeBindings(t *testing.T) {
 		}
 
 		for _, binding := range merged {
-			expset := NewStringSet(tc.expect[binding.Role]...)
-			gotset := NewStringSet(binding.Members...)
+			expset := utils.NewStringSet(tc.expect[binding.Role]...)
+			gotset := utils.NewStringSet(binding.Members...)
 
 			if !expset.Equals(gotset) {
 				t.Errorf("%s) expected %v members in %s role, got %v", tn, expset.ToSlice(), binding.Role, gotset.ToSlice())

@@ -15,11 +15,14 @@
 package spanner
 
 import (
+	"code.cloudfoundry.org/lager"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"golang.org/x/oauth2/jwt"
 )
 
 func init() {
@@ -47,7 +50,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 				"displayName": "Google Spanner",
 				"longDescription": "The first horizontally scalable, globally consistent, relational database service.",
 				"documentationUrl": "https://cloud.google.com/spanner/",
-				"supportUrl": "https://cloud.google.com/support/",
+				"supportUrl": "https://cloud.google.com/spanner/docs/support",
 				"imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg"
 			},
 			"tags": ["gcp", "spanner"],
@@ -108,7 +111,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.SpannerName, roleWhitelist),
+		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.SpannerName, roleWhitelist, "spanner.databaseUser"),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "instance_id",
@@ -122,6 +125,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 					Build(),
 			},
 		),
+		BindComputedVariables: accountmanagers.ServiceAccountBindComputedVariables(),
 		PlanVariables: []broker.BrokerVariable{
 			{
 				FieldName: "num_nodes",
@@ -146,6 +150,10 @@ func serviceDefinition() *broker.ServiceDefinition {
 				ProvisionParams: map[string]interface{}{"name": "auth-database", "location": "nam3"},
 				BindParams:      map[string]interface{}{"role": "spanner.databaseAdmin"},
 			},
+		},
+		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
+			bb := broker_base.NewBrokerBase(projectId, auth, logger)
+			return &SpannerBroker{BrokerBase: bb}
 		},
 	}
 }

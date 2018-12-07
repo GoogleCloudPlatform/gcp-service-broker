@@ -15,11 +15,14 @@
 package bigquery
 
 import (
+	"code.cloudfoundry.org/lager"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"golang.org/x/oauth2/jwt"
 )
 
 func init() {
@@ -47,7 +50,7 @@ func serviceDefinition() *broker.ServiceDefinition {
           "displayName": "Google BigQuery",
           "longDescription": "A fast, economical and fully managed data warehouse for large-scale data analytics.",
           "documentationUrl": "https://cloud.google.com/bigquery/docs/",
-          "supportUrl": "https://cloud.google.com/support/",
+          "supportUrl": "https://cloud.google.com/bigquery/support",
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigquery.svg"
         },
         "tags": ["gcp", "bigquery"],
@@ -88,7 +91,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
 		},
 		DefaultRoleWhitelist:  roleWhitelist,
-		BindInputVariables:    accountmanagers.ServiceAccountBindInputVariables(models.BigqueryName, roleWhitelist),
+		BindInputVariables:    accountmanagers.ServiceAccountBindInputVariables(models.BigqueryName, roleWhitelist, "bigquery.user"),
 		BindComputedVariables: accountmanagers.ServiceAccountBindComputedVariables(),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
@@ -114,6 +117,10 @@ func serviceDefinition() *broker.ServiceDefinition {
 					"role": "bigquery.user",
 				},
 			},
+		},
+		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
+			bb := broker_base.NewBrokerBase(projectId, auth, logger)
+			return &BigQueryBroker{BrokerBase: bb}
 		},
 	}
 }

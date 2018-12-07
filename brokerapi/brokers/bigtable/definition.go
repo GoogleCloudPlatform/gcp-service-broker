@@ -15,10 +15,13 @@
 package bigtable
 
 import (
+	"code.cloudfoundry.org/lager"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
+	"golang.org/x/oauth2/jwt"
 )
 
 func init() {
@@ -44,7 +47,7 @@ func serviceDefinition() *broker.ServiceDefinition {
           "displayName": "Google Bigtable",
           "longDescription": "A high performance NoSQL database service for large analytical and operational workloads.",
           "documentationUrl": "https://cloud.google.com/bigtable/",
-          "supportUrl": "https://cloud.google.com/support/",
+          "supportUrl": "https://cloud.google.com/bigtable/docs/support/getting-support",
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigtable.svg"
       },
       "tags": ["gcp", "bigtable"],
@@ -118,7 +121,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.BigtableName, roleWhitelist),
+		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.BigtableName, roleWhitelist, "bigtable.user"),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "instance_id",
@@ -165,6 +168,10 @@ func serviceDefinition() *broker.ServiceDefinition {
 					"role": "bigtable.user",
 				},
 			},
+		},
+		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
+			bb := broker_base.NewBrokerBase(projectId, auth, logger)
+			return &BigTableBroker{BrokerBase: bb}
 		},
 	}
 }

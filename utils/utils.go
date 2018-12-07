@@ -18,9 +18,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"strings"
 
+	"code.cloudfoundry.org/lager"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2/google"
@@ -46,7 +48,7 @@ func init() {
 }
 
 func GetAuthedConfig() (*jwt.Config, error) {
-	rootCreds := getServiceAccountJson()
+	rootCreds := GetServiceAccountJson()
 	conf, err := google.JWTConfigFromJSON([]byte(rootCreds), cloudPlatformScope)
 	if err != nil {
 		return nil, fmt.Errorf("Error initializing config from credentials: %s", err)
@@ -156,16 +158,16 @@ func jsonDiff(superset, subset json.RawMessage) ([]byte, error) {
 // on the JSON Service Account key.
 func GetDefaultProjectId() (string, error) {
 	serviceAccount := make(map[string]string)
-	if err := json.Unmarshal([]byte(getServiceAccountJson()), &serviceAccount); err != nil {
+	if err := json.Unmarshal([]byte(GetServiceAccountJson()), &serviceAccount); err != nil {
 		return "", fmt.Errorf("could not unmarshal service account details. %v", err)
 	}
 
 	return serviceAccount["project_id"], nil
 }
 
-// getServiceAccountJson gets the raw JSON credentials of the Service Account
+// GetServiceAccountJson gets the raw JSON credentials of the Service Account
 // the service broker acts as.
-func getServiceAccountJson() string {
+func GetServiceAccountJson() string {
 	return viper.GetString("google.account")
 }
 
@@ -207,4 +209,15 @@ func SingleLineErrorFormatter(es []error) string {
 	}
 
 	return fmt.Sprintf("%d error(s) occurred: %s", len(es), strings.Join(points, "; "))
+}
+
+// NewLogger creates a new lager.Logger with the given name that has correct
+// writing settings.
+func NewLogger(name string) lager.Logger {
+	logger := lager.NewLogger(name)
+
+	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.ERROR))
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
+
+	return logger
 }

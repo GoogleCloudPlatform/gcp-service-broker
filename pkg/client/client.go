@@ -23,6 +23,7 @@ import (
 	"net/url"
 
 	"github.com/pivotal-cf/brokerapi"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -33,6 +34,17 @@ const (
 	// put in place work.
 	ClientsBrokerApiVersion = "2.13"
 )
+
+// NewClientFromEnv creates a new client from the client configuration properties.
+func NewClientFromEnv() (*Client, error) {
+	user := viper.GetString("api.user")
+	pass := viper.GetString("api.password")
+	port := viper.GetInt("api.port")
+
+	viper.SetDefault("api.hostname", "localhost")
+	host := viper.GetString("api.hostname")
+	return New(user, pass, host, port)
+}
 
 // New creates a new OSB Client connected to the given resource.
 func New(username, password, hostname string, port int) (*Client, error) {

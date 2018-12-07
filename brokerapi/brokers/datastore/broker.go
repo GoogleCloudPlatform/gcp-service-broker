@@ -23,14 +23,34 @@ import (
 	"github.com/pivotal-cf/brokerapi"
 )
 
+// InstanceInformation holds the details needed to bind a service to a DatastoreBroker.
+type InstanceInformation struct {
+	Namespace string `json:"namespace,omitempty"`
+}
+
 // DatastoreBroker is the service-broker back-end for creating and binding Datastore instances.
 type DatastoreBroker struct {
 	broker_base.BrokerBase
 }
 
-// Provision is a no-op call because only service accounts need to be bound/unbound for Datastore.
+// Provision stores the namespace for future reference.
 func (b *DatastoreBroker) Provision(ctx context.Context, provisionContext *varcontext.VarContext) (models.ServiceInstanceDetails, error) {
-	return models.ServiceInstanceDetails{}, nil
+	// return models.ServiceInstanceDetails{}, nil
+
+	ii := InstanceInformation{
+		Namespace: provisionContext.GetString("namespace"),
+	}
+
+	if err := provisionContext.Error(); err != nil {
+		return models.ServiceInstanceDetails{}, err
+	}
+
+	details := models.ServiceInstanceDetails{}
+	if err := details.SetOtherDetails(ii); err != nil {
+		return models.ServiceInstanceDetails{}, err
+	}
+
+	return details, nil
 }
 
 // Deprovision is a no-op call because only service accounts need to be bound/unbound for Datastore.

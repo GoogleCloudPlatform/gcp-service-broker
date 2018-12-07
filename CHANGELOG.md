@@ -6,6 +6,31 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unresolved]
 
+### Security
+ - The broker uses a Pivotal library affected by [CVE-2018-15759](https://pivotal.io/security/cve-2018-15759). Until the library is updated, it's recommended that you not run the service broker on a public network. If you must run it on a public network, make it accessible through a proxy that supports fail2ban.
+
+### Added
+ - The ability to enable/disable services based on product lifecycle tags. See [#340](https://github.com/GoogleCloudPlatform/gcp-service-broker/pull/340) for context.
+ - Preview support for Firestore.
+ - Preview support for Dialogflow.
+ - Preview support for Stackdriver Metrics.
+ - Namespace support for Datastore.
+ - Preview support for Dataflow.
+ - Default roles for ML, BigQuery, BigTable, CloudSQL, Pub/Sub, Spanner, and Cloud Storage.
+ - `/docs` endpoint that serves docs for your installation.
+ - Varcontext now supports casting computed HIL values.
+ - New regional and multi-regional Cloud Storage plans.
+
+### Changed
+ - Support links for services now point to service-specific pages where possible.
+ - Feature flags are now handled through a generic toggles framework. Option labels and descriptions might change slightly in the tile.
+ - Service definitions now get field-level validation to check for sanity before being registered.
+
+### Removed
+ - The `examples/` directory.
+
+## [4.1.0] - 2018-11-05
+
 ### Added
 - Pub/Sub now adds default labels to created topics and subscriptions.
 - New validation documentation for Pub/Sub.
@@ -16,6 +41,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - New tile form for creating custom Cloud Storage plans.
 - Examples of binding variables to the docs.
 - Constraints/validation of the binding variables to the docs.
+- New `version` sub-command to show the current version of the binary.
+- New `generate` sub-commands to generate the `tile.yml` and `manifest.yml` files.
 
 ### Changed
 - Role whitelists are now validated through JSON Schema checks.

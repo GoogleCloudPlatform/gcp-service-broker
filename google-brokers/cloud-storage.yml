@@ -1,0 +1,178 @@
+version: 1
+name: google-storage-experimental
+id: 68d094ae-e727-4c14-af07-ee34133c8dfb
+description: Experimental Google Cloud Storage that uses the Terraform back-end and
+  grants service accounts IAM permissions directly on the bucket.
+display_name: Experimental Google Cloud Storage
+image_url: https://cloud.google.com/_static/images/cloud/products/logos/svg/storage.svg
+documentation_url: https://cloud.google.com/storage/docs/overview
+support_url: https://cloud.google.com/storage/docs/getting-support
+tags: [preview, gcp, terraform, storage]
+plans:
+- name: standard
+  id: e1d11f65-da66-46ad-977c-6d56513baf43
+  description: Standard storage class.
+  free: false
+  display_name: Standard
+  properties:
+    storage_class: STANDARD
+provision:
+  plan_inputs:
+  - required: true
+    field_name: storage_class
+    type: string
+    details: 'The storage class of the bucket. See: https://cloud.google.com/storage/docs/storage-classes.'
+  user_inputs:
+  - field_name: name
+    type: string
+    details: The name of the bucket. There is a single global namespace shared by
+      all buckets so it MUST be unique.
+    default: pcf_sb_${counter.next()}_${time.nano()}
+    constraints:
+      maxLength: 222
+      minLength: 3
+      pattern: ^[A-Za-z0-9_\.]+$
+  - field_name: location
+    type: string
+    details: 'The location of the bucket. Object data for objects in the bucket resides
+      in physical storage within this region. See: https://cloud.google.com/storage/docs/bucket-locations'
+    default: US
+    constraints:
+      examples:
+      - US
+      - EU
+      - southamerica-east1
+      pattern: ^[A-Za-z][-a-z0-9A-Z]+$
+  computed_inputs:
+  - name: labels
+    default: ${json.marshal(request.default_labels)}
+    overwrite: true
+    type: object
+  template: |-
+    variable name {type = "string"}
+    variable location {type = "string"}
+    variable storage_class {type = "string"}
+    variable labels {type = "map"}
+
+    resource "google_storage_bucket" "bucket" {
+      name     = "${var.name}"
+      location = "${var.location}"
+      storage_class = "${var.storage_class}"
+      labels = "${var.labels}"
+    }
+
+    output id {value = "${google_storage_bucket.bucket.id}"}
+    output bucket_name {value = "${var.name}"}
+
+  outputs:
+  - required: true
+    field_name: bucket_name
+    type: string
+    details: Name of the bucket this binding is for.
+    constraints:
+      maxLength: 222
+      minLength: 3
+      pattern: ^[A-Za-z0-9_\.]+$
+  - required: true
+    field_name: id
+    type: string
+    details: The GCP ID of this bucket.
+bind:
+  plan_inputs: []
+  user_inputs:
+  - required: true
+    field_name: role
+    type: string
+    details: "The role for the account without the \"roles/\" prefix.\n\t\tSee: https://cloud.google.com/iam/docs/understanding-roles
+      for more details.\n\t\tNote: The default enumeration may be overridden by your
+      operator."
+    enum:
+      storage.objectAdmin: roles/storage.objectAdmin
+      storage.objectCreator: roles/storage.objectCreator
+      storage.objectViewer: roles/storage.objectViewer
+  computed_inputs:
+  - name: service_account_name
+    default: ${str.truncate(20, "pcf-binding-${request.binding_id}")}
+    overwrite: true
+  - name: service_account_display_name
+    default: ${service_account_name}
+    overwrite: true
+  - name: bucket
+    default: ${instance.details["bucket_name"]}
+    overwrite: true
+  template: |-
+    variable role {type = "string"}
+    variable service_account_name {type = "string"}
+    variable service_account_display_name {type = "string"}
+    variable bucket {type = "string"}
+
+    resource "google_service_account" "account" {
+      account_id = "${var.service_account_name}"
+      display_name = "${var.service_account_display_name}"
+    }
+
+    resource "google_service_account_key" "key" {
+      service_account_id = "${google_service_account.account.name}"
+    }
+
+    resource "google_storage_bucket_iam_member" "member" {
+      bucket = "${var.bucket}"
+      role   = "roles/${var.role}"
+      member = "serviceAccount:${google_service_account.account.email}"
+    }
+
+    output "Name" {value = "${google_service_account.account.display_name}"}
+    output "Email" {value = "${google_service_account.account.email}"}
+    output "UniqueId" {value = "${google_service_account.account.unique_id}"}
+    output "PrivateKeyData" {value = "${google_service_account_key.key.private_key}"}
+    output "ProjectId" {value = "${google_service_account.account.project}"}
+
+  outputs:
+  - required: true
+    field_name: Email
+    type: string
+    details: Email address of the service account.
+    constraints:
+      examples:
+      - pcf-binding-ex312029@my-project.iam.gserviceaccount.com
+      pattern: ^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$
+  - required: true
+    field_name: Name
+    type: string
+    details: The name of the service account.
+    constraints:
+      examples:
+      - pcf-binding-ex312029
+  - required: true
+    field_name: PrivateKeyData
+    type: string
+    details: Service account private key data. Base64 encoded JSON.
+    constraints:
+      minLength: 512
+      pattern: ^[A-Za-z0-9+/]*=*$
+  - required: true
+    field_name: ProjectId
+    type: string
+    details: ID of the project that owns the service account.
+    constraints:
+      examples:
+      - my-project
+      maxLength: 30
+      minLength: 6
+      pattern: ^[a-z0-9-]+$
+  - required: true
+    field_name: UniqueId
+    type: string
+    details: Unique and stable ID of the service account.
+    constraints:
+      examples:
+      - "112447814736626230844"
+examples:
+- name: Basic Configuration
+  description: Create a bucket with a service account that can create/read/delete
+    the objects in it.
+  plan_id: e1d11f65-da66-46ad-977c-6d56513baf43
+  provision_params:
+    location: us
+  bind_params:
+    role: storage.objectAdmin

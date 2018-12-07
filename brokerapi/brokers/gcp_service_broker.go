@@ -17,37 +17,40 @@ package brokers
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"code.cloudfoundry.org/lager"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/api_service"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigquery"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigtable"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/cloudsql"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver_profiler"
 	"github.com/pivotal-cf/brokerapi"
+	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/googleapi"
 
 	"encoding/json"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/datastore"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver_debugger"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver_trace"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/storage"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+
+	// import the brokers to register them
+	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/api_service"
+	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigquery"
+	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigtable"
+	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/cloudsql"
+	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/dataflow"
+	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/datastore"
+	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/dialogflow"
+	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/firestore"
+	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
+	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
+	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver"
+	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/storage"
+	_ "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
 )
 
 // GCPServiceBroker is a brokerapi.ServiceBroker that can be used to generate an OSB compatible service broker.
 type GCPServiceBroker struct {
-	Catalog               map[string]broker.Service
-	ServiceBrokerMap      map[string]broker.ServiceProvider
 	enableInputValidation bool
+	registry              broker.BrokerRegistry
+	jwtConfig             *jwt.Config
+	projectId             string
 
 	Logger lager.Logger
 }
@@ -55,72 +58,13 @@ type GCPServiceBroker struct {
 // New creates a GCPServiceBroker.
 // Exactly one of GCPServiceBroker or error will be nil when returned.
 func New(cfg *BrokerConfig, logger lager.Logger) (*GCPServiceBroker, error) {
-
-	self := GCPServiceBroker{}
-	self.Logger = logger
-	self.Catalog = cfg.Catalog
-	self.enableInputValidation = cfg.EnableInputValidation
-
-	saManager := &account_managers.ServiceAccountManager{
-		HttpConfig: cfg.HttpConfig,
-		ProjectId:  cfg.ProjectId,
-		Logger:     self.Logger,
-	}
-
-	bb := broker_base.BrokerBase{
-		AccountManager: saManager,
-		HttpConfig:     cfg.HttpConfig,
-		ProjectId:      cfg.ProjectId,
-		Logger:         self.Logger,
-	}
-
-	// map service specific brokers to general broker
-	self.ServiceBrokerMap = map[string]broker.ServiceProvider{
-		models.StorageName: &storage.StorageBroker{
-			BrokerBase: bb,
-		},
-		models.PubsubName: &pubsub.PubSubBroker{
-			BrokerBase: bb,
-		},
-		models.StackdriverDebuggerName: &stackdriver_debugger.StackdriverDebuggerBroker{
-			BrokerBase: bb,
-		},
-		models.StackdriverProfilerName: &stackdriver_profiler.StackdriverProfilerBroker{
-			BrokerBase: bb,
-		},
-		models.StackdriverTraceName: &stackdriver_trace.StackdriverTraceBroker{
-			BrokerBase: bb,
-		},
-		models.BigqueryName: &bigquery.BigQueryBroker{
-			BrokerBase: bb,
-		},
-		models.MlName: &api_service.ApiServiceBroker{
-			BrokerBase: bb,
-		},
-		models.CloudsqlMySQLName: &cloudsql.CloudSQLBroker{
-			BrokerBase: bb,
-		},
-		models.CloudsqlPostgresName: &cloudsql.CloudSQLBroker{
-			BrokerBase: bb,
-		},
-		models.BigtableName: &bigtable.BigTableBroker{
-			BrokerBase: bb,
-		},
-		models.SpannerName: &spanner.SpannerBroker{
-			BrokerBase: bb,
-		},
-		models.DatastoreName: &datastore.DatastoreBroker{
-			BrokerBase: bb,
-		},
-	}
-
-	// replace the mapping from name to a mapping from id
-	for _, service := range self.Catalog {
-		self.ServiceBrokerMap[service.ID] = self.ServiceBrokerMap[service.Name]
-		delete(self.ServiceBrokerMap, service.Name)
-	}
-
-	return &self, nil
+	return &GCPServiceBroker{
+		enableInputValidation: cfg.EnableInputValidation,
+		registry:              cfg.Registry,
+		jwtConfig:             cfg.HttpConfig,
+		projectId:             cfg.ProjectId,
+		Logger:                logger,
+	}, nil
 }
 
 // Services lists services in the broker's catalog.
@@ -128,26 +72,30 @@ func New(cfg *BrokerConfig, logger lager.Logger) (*GCPServiceBroker, error) {
 func (gcpBroker *GCPServiceBroker) Services(ctx context.Context) ([]brokerapi.Service, error) {
 	svcs := []brokerapi.Service{}
 
-	for _, svc := range gcpBroker.Catalog {
-		svcs = append(svcs, svc.ToPlain())
+	enabledServices, err := broker.GetEnabledServices()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, service := range enabledServices {
+		entry, err := service.CatalogEntry()
+		if err != nil {
+			return svcs, err
+		}
+		svcs = append(svcs, entry.ToPlain())
 	}
 
 	return svcs, nil
 }
 
-func (gcpBroker *GCPServiceBroker) getPlanFromId(serviceId, planId string) (broker.ServicePlan, error) {
-	service, serviceOk := gcpBroker.Catalog[serviceId]
-	if !serviceOk {
-		return broker.ServicePlan{}, fmt.Errorf("unknown service id: %q", serviceId)
+func (gcpBroker *GCPServiceBroker) getDefinitionAndProvider(serviceId string) (*broker.ServiceDefinition, broker.ServiceProvider, error) {
+	defn, err := gcpBroker.registry.GetServiceById(serviceId)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	for _, plan := range service.Plans {
-		if plan.ID == planId {
-			return plan, nil
-		}
-	}
-
-	return broker.ServicePlan{}, fmt.Errorf("unknown plan id: %q", planId)
+	providerBuilder := defn.ProviderBuilder(gcpBroker.projectId, gcpBroker.jwtConfig, gcpBroker.Logger)
+	return defn, providerBuilder, nil
 }
 
 // Provision creates a new instance of a service.
@@ -168,21 +116,18 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrInstanceAlreadyExists
 	}
 
-	brokerService, err := broker.GetServiceById(details.ServiceID)
+	brokerService, serviceHelper, err := gcpBroker.getDefinitionAndProvider(details.ServiceID)
 	if err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, err
 	}
 
-	serviceId := details.ServiceID
-
-	// verify the service exists and
+	// verify the service exists and the plan exists
 	plan, err := brokerService.GetPlanById(details.PlanID)
 	if err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, err
 	}
 
 	// verify async provisioning is allowed if it is required
-	serviceHelper := gcpBroker.ServiceBrokerMap[serviceId]
 	shouldProvisionAsync := serviceHelper.ProvisionsAsync()
 	if shouldProvisionAsync && !clientSupportsAsync {
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrAsyncRequired
@@ -190,7 +135,7 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 
 	if gcpBroker.enableInputValidation {
 		// validate parameters meet the service's schema
-		if err := validateProvisionVariables(details); err != nil {
+		if err := gcpBroker.validateProvisionVariables(details); err != nil {
 			return brokerapi.ProvisionedServiceSpec{}, err
 		}
 	}
@@ -207,7 +152,7 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 	}
 
 	// save instance details
-	instanceDetails.ServiceId = serviceId
+	instanceDetails.ServiceId = details.ServiceID
 	instanceDetails.ID = instanceID
 	instanceDetails.PlanId = details.PlanID
 	instanceDetails.SpaceGuid = details.SpaceGUID
@@ -230,8 +175,8 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 	return brokerapi.ProvisionedServiceSpec{IsAsync: shouldProvisionAsync, DashboardURL: "", OperationData: instanceDetails.OperationId}, nil
 }
 
-func validateProvisionVariables(details brokerapi.ProvisionDetails) error {
-	ServiceDefinition, err := broker.GetServiceById(details.ServiceID)
+func (gcpBroker *GCPServiceBroker) validateProvisionVariables(details brokerapi.ProvisionDetails) error {
+	serviceDefinition, err := gcpBroker.registry.GetServiceById(details.ServiceID)
 	if err != nil {
 		return err
 	}
@@ -243,11 +188,11 @@ func validateProvisionVariables(details brokerapi.ProvisionDetails) error {
 		}
 	}
 
-	return broker.ValidateVariables(params, ServiceDefinition.ProvisionInputVariables)
+	return broker.ValidateVariables(params, serviceDefinition.ProvisionInputVariables)
 }
 
-func validateBindVariables(details brokerapi.BindDetails) error {
-	ServiceDefinition, err := broker.GetServiceById(details.ServiceID)
+func (gcpBroker *GCPServiceBroker) validateBindVariables(details brokerapi.BindDetails) error {
+	serviceDefinition, err := gcpBroker.registry.GetServiceById(details.ServiceID)
 	if err != nil {
 		return err
 	}
@@ -259,7 +204,7 @@ func validateBindVariables(details brokerapi.BindDetails) error {
 		}
 	}
 
-	return broker.ValidateVariables(params, ServiceDefinition.BindInputVariables)
+	return broker.ValidateVariables(params, serviceDefinition.BindInputVariables)
 }
 
 // Deprovision destroys an existing instance of a service.
@@ -272,29 +217,23 @@ func (gcpBroker *GCPServiceBroker) Deprovision(ctx context.Context, instanceID s
 		"details":            details,
 	})
 
-	service := gcpBroker.ServiceBrokerMap[details.ServiceID]
-
 	// make sure that instance actually exists
-	count, err := db_service.CountServiceInstanceDetailsById(ctx, instanceID)
+	instance, err := db_service.GetServiceInstanceDetailsById(ctx, instanceID)
 	if err != nil {
-		return response, fmt.Errorf("Database error checking for existing instance: %s", err)
-	}
-	if count == 0 {
 		return response, brokerapi.ErrInstanceDoesNotExist
 	}
 
+	_, serviceProvider, err := gcpBroker.getDefinitionAndProvider(instance.ServiceId)
+	if err != nil {
+		return response, err
+	}
+
 	// if async deprovisioning isn't allowed but this service needs it, throw an error
-	if service.DeprovisionsAsync() && !clientSupportsAsync {
+	if serviceProvider.DeprovisionsAsync() && !clientSupportsAsync {
 		return response, brokerapi.ErrAsyncRequired
 	}
 
-	// deprovision
-	instance, err := db_service.GetServiceInstanceDetailsById(ctx, instanceID)
-	if err != nil {
-		return response, brokerapi.NewFailureResponseBuilder(err, http.StatusInternalServerError, "fetching instance from database").Build()
-	}
-
-	operationId, err := service.Deprovision(ctx, *instance, details)
+	operationId, err := serviceProvider.Deprovision(ctx, *instance, details)
 	if err != nil {
 		return response, err
 	}
@@ -329,13 +268,6 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 		"details":     details,
 	})
 
-	ServiceDefinition, err := broker.GetServiceById(details.ServiceID)
-	if err != nil {
-		return brokerapi.Binding{}, err
-	}
-
-	serviceHelper := gcpBroker.ServiceBrokerMap[details.ServiceID]
-
 	// check for existing binding
 	count, err := db_service.CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, instanceID, bindingID)
 	if err != nil {
@@ -351,20 +283,25 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 		return brokerapi.Binding{}, fmt.Errorf("Error retrieving service instance details: %s", err)
 	}
 
+	serviceDefinition, serviceProvider, err := gcpBroker.getDefinitionAndProvider(instanceRecord.ServiceId)
+	if err != nil {
+		return brokerapi.Binding{}, err
+	}
+
 	if gcpBroker.enableInputValidation {
 		// validate parameters meet the service's schema
-		if err := validateBindVariables(details); err != nil {
+		if err := gcpBroker.validateBindVariables(details); err != nil {
 			return brokerapi.Binding{}, err
 		}
 	}
 
-	vars, err := ServiceDefinition.BindVariables(*instanceRecord, bindingID, details)
+	vars, err := serviceDefinition.BindVariables(*instanceRecord, bindingID, details)
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}
 
 	// create binding
-	credsDetails, err := serviceHelper.Bind(ctx, vars)
+	credsDetails, err := serviceProvider.Bind(ctx, vars)
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}
@@ -387,7 +324,7 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 			err)
 	}
 
-	updatedCreds, err := serviceHelper.BuildInstanceCredentials(ctx, newCreds, *instanceRecord)
+	updatedCreds, err := serviceProvider.BuildInstanceCredentials(ctx, newCreds, *instanceRecord)
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}
@@ -404,7 +341,10 @@ func (gcpBroker *GCPServiceBroker) Unbind(ctx context.Context, instanceID, bindi
 		"details":     details,
 	})
 
-	service := gcpBroker.ServiceBrokerMap[details.ServiceID]
+	_, serviceProvider, err := gcpBroker.getDefinitionAndProvider(details.ServiceID)
+	if err != nil {
+		return err
+	}
 
 	// validate existence of binding
 	existingBinding, err := db_service.GetServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, instanceID, bindingID)
@@ -419,7 +359,7 @@ func (gcpBroker *GCPServiceBroker) Unbind(ctx context.Context, instanceID, bindi
 	}
 
 	// remove binding from Google
-	if err := service.Unbind(ctx, *instance, *existingBinding); err != nil {
+	if err := serviceProvider.Unbind(ctx, *instance, *existingBinding); err != nil {
 		return err
 	}
 
@@ -445,16 +385,19 @@ func (gcpBroker *GCPServiceBroker) LastOperation(ctx context.Context, instanceID
 		return brokerapi.LastOperation{}, brokerapi.ErrInstanceDoesNotExist
 	}
 
-	service := gcpBroker.ServiceBrokerMap[instance.ServiceId]
-	isAsyncService := service.ProvisionsAsync() || service.DeprovisionsAsync()
+	_, serviceProvider, err := gcpBroker.getDefinitionAndProvider(instance.ServiceId)
+	if err != nil {
+		return brokerapi.LastOperation{}, err
+	}
 
+	isAsyncService := serviceProvider.ProvisionsAsync() || serviceProvider.DeprovisionsAsync()
 	if !isAsyncService {
 		return brokerapi.LastOperation{}, brokerapi.ErrAsyncRequired
 	}
 
 	lastOperationType := instance.OperationType
 
-	done, err := service.PollInstance(ctx, *instance)
+	done, err := serviceProvider.PollInstance(ctx, *instance)
 	if err != nil {
 		// this is a retryable error
 		if gerr, ok := err.(*googleapi.Error); ok {
@@ -472,7 +415,7 @@ func (gcpBroker *GCPServiceBroker) LastOperation(ctx context.Context, instanceID
 
 	// the instance may have been invalidated, so we pass its primary key rather than the
 	// instance directly.
-	updateErr := gcpBroker.updateStateOnOperationCompletion(ctx, service, lastOperationType, instanceID)
+	updateErr := gcpBroker.updateStateOnOperationCompletion(ctx, serviceProvider, lastOperationType, instanceID)
 	return brokerapi.LastOperation{State: brokerapi.Succeeded}, updateErr
 }
 

@@ -16,8 +16,10 @@ package account_managers
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/spf13/viper"
 )
 
@@ -72,4 +74,73 @@ func ExampleroleWhitelist() {
 
 	// Output: [a b c]
 	// [x y z]
+}
+
+func TestServiceAccountBindInputVariables(t *testing.T) {
+
+	cases := map[string]struct {
+		Whitelist   []string
+		Override    string
+		DefaultRole string
+		Expected    broker.BrokerVariable
+	}{
+		"default in whitelist": {
+			Whitelist:   []string{"foo"},
+			DefaultRole: "foo",
+			Expected: broker.BrokerVariable{
+				FieldName: "role",
+				Type:      broker.JsonTypeString,
+				Details:   overridableBindMessage,
+
+				Required: false,
+				Default:  "foo",
+				Enum:     map[interface{}]string{"foo": "roles/foo"},
+			},
+		},
+
+		"default not in whitelist": {
+			Whitelist:   []string{"foo"},
+			DefaultRole: "test",
+			Expected: broker.BrokerVariable{
+				FieldName: "role",
+				Type:      broker.JsonTypeString,
+				Details:   overridableBindMessage,
+
+				Required: true,
+				Default:  nil,
+				Enum:     map[interface{}]string{"foo": "roles/foo"},
+			},
+		},
+
+		"default not in override whitelist": {
+			Whitelist:   []string{"foo"},
+			Override:    "bar,bazz",
+			DefaultRole: "foo",
+			Expected: broker.BrokerVariable{
+				FieldName: "role",
+				Type:      broker.JsonTypeString,
+				Details:   overridableBindMessage,
+
+				Required: true,
+				Default:  nil,
+				Enum:     map[interface{}]string{"bar": "roles/bar", "bazz": "roles/bazz"},
+			},
+		},
+	}
+
+	for tn, tc := range cases {
+		t.Run(tn, func(t *testing.T) {
+			viper.Set(RoleWhitelistProperty("my-service"), tc.Override)
+			vars := ServiceAccountBindInputVariables("my-service", tc.Whitelist, tc.DefaultRole)
+			if len(vars) != 1 {
+				t.Fatalf("Expected 1 input variable, got %d", len(vars))
+			}
+
+			if !reflect.DeepEqual(vars[0], tc.Expected) {
+				t.Fatalf("Expected %#v, got %#v", tc.Expected, vars[0])
+
+			}
+		})
+
+	}
 }

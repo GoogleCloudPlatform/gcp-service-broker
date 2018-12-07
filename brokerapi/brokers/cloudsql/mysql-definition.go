@@ -15,10 +15,13 @@
 package cloudsql
 
 import (
+	"code.cloudfoundry.org/lager"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"golang.org/x/oauth2/jwt"
 )
 
 func init() {
@@ -38,7 +41,7 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 		      "displayName": "Google CloudSQL MySQL",
 		      "longDescription": "Google Cloud SQL is a fully-managed MySQL database service.",
 		      "documentationUrl": "https://cloud.google.com/sql/docs/",
-		      "supportUrl": "https://cloud.google.com/support/",
+		      "supportUrl": "https://cloud.google.com/sql/docs/getting-support",
 		      "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
 		    },
 		    "tags": ["gcp", "cloudsql", "mysql"],
@@ -287,6 +290,10 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 					"role": "cloudsql.editor",
 				},
 			},
+		},
+		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
+			bb := broker_base.NewBrokerBase(projectId, auth, logger)
+			return &CloudSQLBroker{BrokerBase: bb}
 		},
 	}
 }

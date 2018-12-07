@@ -5,7 +5,7 @@
 A fast, economical and fully managed data warehouse for large-scale data analytics.
 
  * [Documentation](https://cloud.google.com/bigquery/docs/)
- * [Support](https://cloud.google.com/support/)
+ * [Support](https://cloud.google.com/bigquery/support)
  * Catalog Metadata ID: `f80c0a3e-bd4d-4809-a900-b4e33a6450f1`
  * Tags: gcp, bigquery
  * Service Name: `google-bigquery`
@@ -28,7 +28,7 @@ A fast, economical and fully managed data warehouse for large-scale data analyti
 **Request Parameters**
 
 
- * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator.
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator. Default: `bigquery.user`.
     * The value must be one of: [bigquery.dataEditor bigquery.dataOwner bigquery.dataViewer bigquery.jobUser bigquery.user].
 
 **Response Parameters**
@@ -105,7 +105,7 @@ $ cf bind-service my-app my-google-bigquery-example -c `{"role":"bigquery.user"}
 A high performance NoSQL database service for large analytical and operational workloads.
 
  * [Documentation](https://cloud.google.com/bigtable/)
- * [Support](https://cloud.google.com/support/)
+ * [Support](https://cloud.google.com/bigtable/docs/support/getting-support)
  * Catalog Metadata ID: `b8e19880-ac58-42ef-b033-f7cd9c94d1fe`
  * Tags: gcp, bigtable
  * Service Name: `google-bigtable`
@@ -136,7 +136,7 @@ A high performance NoSQL database service for large analytical and operational w
 **Request Parameters**
 
 
- * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator.
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator. Default: `bigtable.user`.
     * The value must be one of: [bigtable.reader bigtable.user bigtable.viewer].
 
 **Response Parameters**
@@ -215,7 +215,7 @@ $ cf bind-service my-app my-google-bigtable-example -c `{"role":"bigtable.user"}
 Google Cloud SQL is a fully-managed MySQL database service.
 
  * [Documentation](https://cloud.google.com/sql/docs/)
- * [Support](https://cloud.google.com/support/)
+ * [Support](https://cloud.google.com/sql/docs/getting-support)
  * Catalog Metadata ID: `4bc59b9a-8520-409f-85da-1c7552315863`
  * Tags: gcp, cloudsql, mysql
  * Service Name: `google-cloudsql-mysql`
@@ -269,7 +269,7 @@ Google Cloud SQL is a fully-managed MySQL database service.
 **Request Parameters**
 
 
- * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator.
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator. Default: `cloudsql.client`.
     * The value must be one of: [cloudsql.client cloudsql.editor cloudsql.viewer].
  * `jdbc_uri_format` _string_ - If `true`, `uri` field will contain a JDBC formatted URI. Default: `false`.
     * The value must be one of: [false true].
@@ -447,7 +447,7 @@ Google Cloud SQL is a fully-managed MySQL database service.
 **Request Parameters**
 
 
- * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator.
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator. Default: `cloudsql.client`.
     * The value must be one of: [cloudsql.client cloudsql.editor cloudsql.viewer].
  * `jdbc_uri_format` _string_ - If `true`, `uri` field will contain a JDBC formatted URI. Default: `false`.
     * The value must be one of: [false true].
@@ -566,12 +566,127 @@ $ cf bind-service my-app my-google-cloudsql-postgres-example -c `{"role":"clouds
 
 --------------------------------------------------------------------------------
 
+# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/dataflow.svg) Google Cloud Dataflow
+
+A managed service for executing a wide variety of data processing patterns built on Apache Beam.
+
+ * [Documentation](https://cloud.google.com/dataflow/docs/)
+ * [Support](https://cloud.google.com/dataflow/docs/support)
+ * Catalog Metadata ID: `3e897eb3-9062-4966-bd4f-85bda0f73b3d`
+ * Tags: gcp, dataflow, preview
+ * Service Name: `google-dataflow`
+
+## Provisioning
+
+**Request Parameters**
+
+_No parameters supported._
+
+
+## Binding
+
+**Request Parameters**
+
+
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Default: `dataflow.developer`.
+    * The value must be one of: [dataflow.developer dataflow.viewer].
+
+**Response Parameters**
+
+ * `Email` _string_ - **Required** Email address of the service account.
+    * Examples: [pcf-binding-ex312029@my-project.iam.gserviceaccount.com].
+    * The string must match the regular expression `^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`.
+ * `Name` _string_ - **Required** The name of the service account.
+    * Examples: [pcf-binding-ex312029].
+ * `PrivateKeyData` _string_ - **Required** Service account private key data. Base64 encoded JSON.
+    * The string must have at least 512 characters.
+    * The string must match the regular expression `^[A-Za-z0-9+/]*=*$`.
+ * `ProjectId` _string_ - **Required** ID of the project that owns the service account.
+    * Examples: [my-project].
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z0-9-]+$`.
+ * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
+    * Examples: [112447814736626230844].
+
+## Plans
+
+The following plans are built-in to the GCP Service Broker and may be overriden
+or disabled by the broker administrator.
+
+
+  * **default**: Dataflow default plan. Plan ID: `8e956dd6-8c0f-470c-9a11-065537d81872`.
+
+
+## Examples
+
+
+
+
+### Developer
+
+
+Creates a Dataflow user and grants it permission to create, drain and cancel jobs.
+Uses plan: `8e956dd6-8c0f-470c-9a11-065537d81872`.
+
+**Provision**
+
+```javascript
+{}
+```
+
+**Bind**
+
+```javascript
+{}
+```
+
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-dataflow default my-google-dataflow-example -c `{}`
+$ cf bind-service my-app my-google-dataflow-example -c `{}`
+</pre>
+
+
+### Viewer
+
+
+Creates a Dataflow user and grants it permission to create, drain and cancel jobs.
+Uses plan: `8e956dd6-8c0f-470c-9a11-065537d81872`.
+
+**Provision**
+
+```javascript
+{}
+```
+
+**Bind**
+
+```javascript
+{
+    "role": "dataflow.viewer"
+}
+```
+
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-dataflow default my-google-dataflow-example -c `{}`
+$ cf bind-service my-app my-google-dataflow-example -c `{"role":"dataflow.viewer"}`
+</pre>
+
+
+
+
+--------------------------------------------------------------------------------
+
 # ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/datastore.svg) Google Cloud Datastore
 
 Google Cloud Datastore is a NoSQL document database built for automatic scaling, high performance, and ease of application development.
 
  * [Documentation](https://cloud.google.com/datastore/docs/)
- * [Support](https://cloud.google.com/support/)
+ * [Support](https://cloud.google.com/datastore/docs/getting-support)
  * Catalog Metadata ID: `76d4abb2-fee7-4c8f-aee1-bcea2837f02b`
  * Tags: gcp, datastore
  * Service Name: `google-datastore`
@@ -580,7 +695,10 @@ Google Cloud Datastore is a NoSQL document database built for automatic scaling,
 
 **Request Parameters**
 
-_No parameters supported._
+
+ * `namespace` _string_ - A context for the identifiers in your entity’s dataset. This ensures that different systems can all interpret an entity's data the same way, based on the rules for the entity’s particular namespace. Blank means the default namespace will be used. Default: ``.
+    * The string must have at most 100 characters.
+    * The string must match the regular expression `^[A-Za-z0-9_-]*$`.
 
 
 ## Binding
@@ -606,6 +724,9 @@ _No parameters supported._
     * The string must match the regular expression `^[a-z0-9-]+$`.
  * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
     * Examples: [112447814736626230844].
+ * `namespace` _string_ - A context for the identifiers in your entity’s dataset.
+    * The string must have at most 100 characters.
+    * The string must match the regular expression `^[A-Za-z0-9_-]*$`.
 
 ## Plans
 
@@ -647,6 +768,234 @@ $ cf bind-service my-app my-google-datastore-example -c `{}`
 </pre>
 
 
+### Custom Namespace
+
+
+Creates a datastore and returns the provided namespace along with bind calls.
+Uses plan: `05f1fb6b-b5f0-48a2-9c2b-a5f236507a97`.
+
+**Provision**
+
+```javascript
+{
+    "namespace": "my-namespace"
+}
+```
+
+**Bind**
+
+```javascript
+{}
+```
+
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-datastore default my-google-datastore-example -c `{"namespace":"my-namespace"}`
+$ cf bind-service my-app my-google-datastore-example -c `{}`
+</pre>
+
+
+
+
+--------------------------------------------------------------------------------
+
+# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/dialogflow-enterprise.svg) Google Cloud Dialogflow
+
+Dialogflow is an end-to-end, build-once deploy-everywhere development suite for creating conversational interfaces for websites, mobile applications, popular messaging platforms, and IoT devices.
+
+ * [Documentation](https://cloud.google.com/dialogflow-enterprise/docs/)
+ * [Support](https://cloud.google.com/dialogflow-enterprise/docs/support)
+ * Catalog Metadata ID: `e84b69db-3de9-4688-8f5c-26b9d5b1f129`
+ * Tags: gcp, dialogflow, preview
+ * Service Name: `google-dialogflow`
+
+## Provisioning
+
+**Request Parameters**
+
+_No parameters supported._
+
+
+## Binding
+
+**Request Parameters**
+
+_No parameters supported._
+
+**Response Parameters**
+
+ * `Email` _string_ - **Required** Email address of the service account.
+    * Examples: [pcf-binding-ex312029@my-project.iam.gserviceaccount.com].
+    * The string must match the regular expression `^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`.
+ * `Name` _string_ - **Required** The name of the service account.
+    * Examples: [pcf-binding-ex312029].
+ * `PrivateKeyData` _string_ - **Required** Service account private key data. Base64 encoded JSON.
+    * The string must have at least 512 characters.
+    * The string must match the regular expression `^[A-Za-z0-9+/]*=*$`.
+ * `ProjectId` _string_ - **Required** ID of the project that owns the service account.
+    * Examples: [my-project].
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z0-9-]+$`.
+ * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
+    * Examples: [112447814736626230844].
+
+## Plans
+
+The following plans are built-in to the GCP Service Broker and may be overriden
+or disabled by the broker administrator.
+
+
+  * **default**: Dialogflow default plan. Plan ID: `3ac4e1bd-b22d-4a99-864b-d3a3ac582348`.
+
+
+## Examples
+
+
+
+
+### Reader
+
+
+Creates a Dialogflow user and grants it permission to detect intent and read/write session properties (contexts, session entity types, etc.).
+Uses plan: `3ac4e1bd-b22d-4a99-864b-d3a3ac582348`.
+
+**Provision**
+
+```javascript
+{}
+```
+
+**Bind**
+
+```javascript
+{}
+```
+
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-dialogflow default my-google-dialogflow-example -c `{}`
+$ cf bind-service my-app my-google-dialogflow-example -c `{}`
+</pre>
+
+
+
+
+--------------------------------------------------------------------------------
+
+# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/firestore.svg) Google Cloud Firestore
+
+Cloud Firestore is a fast, fully managed, serverless, cloud-native NoSQL document database that simplifies storing, syncing, and querying data for your mobile, web, and IoT apps at global scale.
+
+ * [Documentation](https://cloud.google.com/firestore/docs/)
+ * [Support](https://cloud.google.com/firestore/docs/getting-support)
+ * Catalog Metadata ID: `a2b7b873-1e34-4530-8a42-902ff7d66b43`
+ * Tags: gcp, firestore, preview, beta
+ * Service Name: `google-firestore`
+
+## Provisioning
+
+**Request Parameters**
+
+_No parameters supported._
+
+
+## Binding
+
+**Request Parameters**
+
+
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Default: `datastore.user`.
+    * The value must be one of: [datastore.user datastore.viewer].
+
+**Response Parameters**
+
+ * `Email` _string_ - **Required** Email address of the service account.
+    * Examples: [pcf-binding-ex312029@my-project.iam.gserviceaccount.com].
+    * The string must match the regular expression `^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`.
+ * `Name` _string_ - **Required** The name of the service account.
+    * Examples: [pcf-binding-ex312029].
+ * `PrivateKeyData` _string_ - **Required** Service account private key data. Base64 encoded JSON.
+    * The string must have at least 512 characters.
+    * The string must match the regular expression `^[A-Za-z0-9+/]*=*$`.
+ * `ProjectId` _string_ - **Required** ID of the project that owns the service account.
+    * Examples: [my-project].
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z0-9-]+$`.
+ * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
+    * Examples: [112447814736626230844].
+
+## Plans
+
+The following plans are built-in to the GCP Service Broker and may be overriden
+or disabled by the broker administrator.
+
+
+  * **default**: Firestore default plan. Plan ID: `64403af0-4413-4ef3-a813-37f0306ef498`.
+
+
+## Examples
+
+
+
+
+### Reader Writer
+
+
+Creates a general Firestore user and grants it permission to read and write entities.
+Uses plan: `64403af0-4413-4ef3-a813-37f0306ef498`.
+
+**Provision**
+
+```javascript
+{}
+```
+
+**Bind**
+
+```javascript
+{}
+```
+
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-firestore default my-google-firestore-example -c `{}`
+$ cf bind-service my-app my-google-firestore-example -c `{}`
+</pre>
+
+
+### Read Only
+
+
+Creates a Firestore user that can only view entities.
+Uses plan: `64403af0-4413-4ef3-a813-37f0306ef498`.
+
+**Provision**
+
+```javascript
+{}
+```
+
+**Bind**
+
+```javascript
+{
+    "role": "datastore.viewer"
+}
+```
+
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-firestore default my-google-firestore-example -c `{}`
+$ cf bind-service my-app my-google-firestore-example -c `{"role":"datastore.viewer"}`
+</pre>
+
+
 
 
 --------------------------------------------------------------------------------
@@ -673,7 +1022,7 @@ _No parameters supported._
 **Request Parameters**
 
 
- * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator.
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator. Default: `ml.modelUser`.
     * The value must be one of: [ml.developer ml.jobOwner ml.modelOwner ml.modelUser ml.operationOwner ml.viewer].
 
 **Response Parameters**
@@ -745,7 +1094,7 @@ $ cf bind-service my-app my-google-ml-apis-example -c `{"role":"ml.developer"}`
 A global service for real-time and reliable messaging and streaming data.
 
  * [Documentation](https://cloud.google.com/pubsub/docs/)
- * [Support](https://cloud.google.com/support/)
+ * [Support](https://cloud.google.com/pubsub/docs/support)
  * Catalog Metadata ID: `628629e3-79f5-4255-b981-d14c6c7856be`
  * Tags: gcp, pubsub
  * Service Name: `google-pubsub`
@@ -774,7 +1123,7 @@ A global service for real-time and reliable messaging and streaming data.
 **Request Parameters**
 
 
- * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator.
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator. Default: `pubsub.editor`.
     * The value must be one of: [pubsub.editor pubsub.publisher pubsub.subscriber pubsub.viewer].
 
 **Response Parameters**
@@ -797,7 +1146,7 @@ A global service for real-time and reliable messaging and streaming data.
  * `subscription_name` _string_ - Name of the subscription.
     * The string must have at most 255 characters.
     * The string must have at least 0 characters.
-    * The string must match the regular expression `^[a-zA-Z][a-zA-Z0-9\d\-_~%\.\+]+`.
+    * The string must match the regular expression `^(|[a-zA-Z][a-zA-Z0-9\d\-_~%\.\+]+)`.
  * `topic_name` _string_ - **Required** Name of the topic.
     * The string must have at most 255 characters.
     * The string must have at least 3 characters.
@@ -919,7 +1268,7 @@ $ cf bind-service my-app my-google-pubsub-example -c `{"role":"pubsub.publisher"
 The first horizontally scalable, globally consistent, relational database service.
 
  * [Documentation](https://cloud.google.com/spanner/)
- * [Support](https://cloud.google.com/support/)
+ * [Support](https://cloud.google.com/spanner/docs/support)
  * Catalog Metadata ID: `51b3e27e-d323-49ce-8c5f-1211e6409e82`
  * Tags: gcp, spanner
  * Service Name: `google-spanner`
@@ -946,7 +1295,7 @@ The first horizontally scalable, globally consistent, relational database servic
 **Request Parameters**
 
 
- * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator.
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator. Default: `spanner.databaseUser`.
     * The value must be one of: [spanner.databaseAdmin spanner.databaseReader spanner.databaseUser spanner.viewer].
 
 **Response Parameters**
@@ -1056,7 +1405,7 @@ $ cf bind-service my-app my-google-spanner-example -c `{"role":"spanner.database
 Stackdriver Debugger is a feature of the Google Cloud Platform that lets you inspect the state of an application at any code location without using logging statements and without stopping or slowing down your applications. Your users are not impacted during debugging. Using the production debugger you can capture the local variables and call stack and link it back to a specific line location in your source code.
 
  * [Documentation](https://cloud.google.com/debugger/docs/)
- * [Support](https://cloud.google.com/support/)
+ * [Support](https://cloud.google.com/stackdriver/docs/getting-support)
  * Catalog Metadata ID: `83837945-1547-41e0-b661-ea31d76eed11`
  * Tags: gcp, stackdriver, debugger
  * Service Name: `google-stackdriver-debugger`
@@ -1136,12 +1485,97 @@ $ cf bind-service my-app my-google-stackdriver-debugger-example -c `{}`
 
 --------------------------------------------------------------------------------
 
+# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg) Stackdriver Monitoring
+
+Stackdriver Monitoring provides visibility into the performance, uptime, and overall health of cloud-powered applications.
+
+ * [Documentation](https://cloud.google.com/monitoring/docs/)
+ * [Support](https://cloud.google.com/stackdriver/docs/getting-support)
+ * Catalog Metadata ID: `2bc0d9ed-3f68-4056-b842-4a85cfbc727f`
+ * Tags: gcp, stackdriver, monitoring, preview
+ * Service Name: `google-stackdriver-monitoring`
+
+## Provisioning
+
+**Request Parameters**
+
+_No parameters supported._
+
+
+## Binding
+
+**Request Parameters**
+
+_No parameters supported._
+
+**Response Parameters**
+
+ * `Email` _string_ - **Required** Email address of the service account.
+    * Examples: [pcf-binding-ex312029@my-project.iam.gserviceaccount.com].
+    * The string must match the regular expression `^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`.
+ * `Name` _string_ - **Required** The name of the service account.
+    * Examples: [pcf-binding-ex312029].
+ * `PrivateKeyData` _string_ - **Required** Service account private key data. Base64 encoded JSON.
+    * The string must have at least 512 characters.
+    * The string must match the regular expression `^[A-Za-z0-9+/]*=*$`.
+ * `ProjectId` _string_ - **Required** ID of the project that owns the service account.
+    * Examples: [my-project].
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z0-9-]+$`.
+ * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
+    * Examples: [112447814736626230844].
+
+## Plans
+
+The following plans are built-in to the GCP Service Broker and may be overriden
+or disabled by the broker administrator.
+
+
+  * **default**: Stackdriver Monitoring default plan. Plan ID: `2e4b85c1-0ce6-46e4-91f5-eebeb373e3f5`.
+
+
+## Examples
+
+
+
+
+### Basic Configuration
+
+
+Creates an account with the permission `monitoring.metricWriter` for writing metrics.
+Uses plan: `2e4b85c1-0ce6-46e4-91f5-eebeb373e3f5`.
+
+**Provision**
+
+```javascript
+{}
+```
+
+**Bind**
+
+```javascript
+{}
+```
+
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-stackdriver-monitoring default my-google-stackdriver-monitoring-example -c `{}`
+$ cf bind-service my-app my-google-stackdriver-monitoring-example -c `{}`
+</pre>
+
+
+
+
+--------------------------------------------------------------------------------
+
 # ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg) Stackdriver Profiler
 
 Continuous CPU and heap profiling to improve performance and reduce costs.
 
  * [Documentation](https://cloud.google.com/profiler/docs/)
- * [Support](https://cloud.google.com/support/)
+ * [Support](https://cloud.google.com/stackdriver/docs/getting-support)
  * Catalog Metadata ID: `00b9ca4a-7cd6-406a-a5b7-2f43f41ade75`
  * Tags: gcp, stackdriver, profiler
  * Service Name: `google-stackdriver-profiler`
@@ -1226,7 +1660,7 @@ $ cf bind-service my-app my-google-stackdriver-profiler-example -c `{}`
 Stackdriver Trace is a distributed tracing system that collects latency data from your applications and displays it in the Google Cloud Platform Console. You can track how requests propagate through your application and receive detailed near real-time performance insights.
 
  * [Documentation](https://cloud.google.com/trace/docs/)
- * [Support](https://cloud.google.com/support/)
+ * [Support](https://cloud.google.com/stackdriver/docs/getting-support)
  * Catalog Metadata ID: `c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a`
  * Tags: gcp, stackdriver, trace
  * Service Name: `google-stackdriver-trace`
@@ -1311,7 +1745,7 @@ $ cf bind-service my-app my-google-stackdriver-trace-example -c `{}`
 Unified object storage for developers and enterprises. Cloud Storage allows world-wide storage and retrieval of any amount of data at any time.
 
  * [Documentation](https://cloud.google.com/storage/docs/overview)
- * [Support](https://cloud.google.com/support/)
+ * [Support](https://cloud.google.com/storage/docs/getting-support)
  * Catalog Metadata ID: `b9e4332e-b42b-4680-bda5-ea1506797474`
  * Tags: gcp, storage
  * Service Name: `google-storage`
@@ -1335,7 +1769,7 @@ Unified object storage for developers and enterprises. Cloud Storage allows worl
 **Request Parameters**
 
 
- * `role` _string_ - **Required** The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator.
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator. Default: `storage.objectAdmin`.
     * The value must be one of: [storage.objectAdmin storage.objectCreator storage.objectViewer].
 
 **Response Parameters**
@@ -1435,4 +1869,107 @@ Uses plan: `c8538397-8f15-45e3-a229-8bb349c3a98f`.
 <pre>
 $ cf create-service google-storage coldline my-google-storage-example -c `{"location":"us"}`
 $ cf bind-service my-app my-google-storage-example -c `{"location":"us-west1","role":"storage.objectAdmin"}`
+</pre>
+
+
+
+
+--------------------------------------------------------------------------------
+
+# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/storage.svg) google-storage-experimental
+
+Experimental Google Cloud Storage that uses the Terraform back-end and grants service accounts IAM permissions directly on the bucket.
+
+ * [Documentation](https://cloud.google.com/storage/docs/overview)
+ * [Support](https://cloud.google.com/storage/docs/getting-support)
+ * Catalog Metadata ID: `68d094ae-e727-4c14-af07-ee34133c8dfb`
+ * Tags: preview, gcp, terraform, storage
+ * Service Name: `google-storage-experimental`
+
+## Provisioning
+
+**Request Parameters**
+
+
+ * `name` _string_ - The name of the bucket. There is a single global namespace shared by all buckets so it MUST be unique. Default: `pcf_sb_${counter.next()}_${time.nano()}`.
+    * The string must have at most 222 characters.
+    * The string must have at least 3 characters.
+    * The string must match the regular expression `^[A-Za-z0-9_\.]+$`.
+ * `location` _string_ - The location of the bucket. Object data for objects in the bucket resides in physical storage within this region. See: https://cloud.google.com/storage/docs/bucket-locations Default: `US`.
+    * Examples: [US EU southamerica-east1].
+    * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
+
+
+## Binding
+
+**Request Parameters**
+
+
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Default: `storage.objectAdmin`.
+    * The value must be one of: [storage.objectAdmin storage.objectCreator storage.objectViewer].
+
+**Response Parameters**
+
+ * `bucket_name` _string_ - **Required** Name of the bucket this binding is for.
+    * The string must have at most 222 characters.
+    * The string must have at least 3 characters.
+    * The string must match the regular expression `^[A-Za-z0-9_\.]+$`.
+ * `id` _string_ - **Required** The GCP ID of this bucket.
+ * `Email` _string_ - **Required** Email address of the service account.
+    * Examples: [pcf-binding-ex312029@my-project.iam.gserviceaccount.com].
+    * The string must match the regular expression `^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`.
+ * `Name` _string_ - **Required** The name of the service account.
+    * Examples: [pcf-binding-ex312029].
+ * `PrivateKeyData` _string_ - **Required** Service account private key data. Base64 encoded JSON.
+    * The string must have at least 512 characters.
+    * The string must match the regular expression `^[A-Za-z0-9+/]*=*$`.
+ * `ProjectId` _string_ - **Required** ID of the project that owns the service account.
+    * Examples: [my-project].
+    * The string must have at most 30 characters.
+    * The string must have at least 6 characters.
+    * The string must match the regular expression `^[a-z0-9-]+$`.
+ * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
+    * Examples: [112447814736626230844].
+
+## Plans
+
+The following plans are built-in to the GCP Service Broker and may be overriden
+or disabled by the broker administrator.
+
+
+  * **standard**: Standard storage class. Plan ID: `e1d11f65-da66-46ad-977c-6d56513baf43`.
+
+
+## Examples
+
+
+
+
+### Basic Configuration
+
+
+Create a bucket with a service account that can create/read/delete the objects in it.
+Uses plan: `e1d11f65-da66-46ad-977c-6d56513baf43`.
+
+**Provision**
+
+```javascript
+{
+    "location": "us"
+}
+```
+
+**Bind**
+
+```javascript
+{
+    "role": "storage.objectAdmin"
+}
+```
+
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-storage-experimental standard my-google-storage-experimental-example -c `{"location":"us"}`
+$ cf bind-service my-app my-google-storage-experimental-example -c `{"role":"storage.objectAdmin"}`
 </pre>

@@ -74,13 +74,47 @@ func TestContextBuilder(t *testing.T) {
 			Expected: map[string]interface{}{"a": "b"},
 		},
 
+		"MergeDefaults object": {
+			Builder:  Builder().MergeDefaults([]DefaultVariable{{Name: "o", Default: `{"foo": "bar"}`, Type: "object"}}),
+			Expected: map[string]interface{}{"o": map[string]interface{}{"foo": "bar"}},
+		},
+
+		"MergeDefaults boolean": {
+			Builder:  Builder().MergeDefaults([]DefaultVariable{{Name: "b", Default: `true`, Type: "boolean"}}),
+			Expected: map[string]interface{}{"b": true},
+		},
+		"MergeDefaults array": {
+			Builder:  Builder().MergeDefaults([]DefaultVariable{{Name: "a", Default: `["a","b","c","d"]`, Type: "array"}}),
+			Expected: map[string]interface{}{"a": []interface{}{"a", "b", "c", "d"}},
+		},
+		"MergeDefaults number": {
+			Builder:  Builder().MergeDefaults([]DefaultVariable{{Name: "n", Default: `1.234`, Type: "number"}}),
+			Expected: map[string]interface{}{"n": 1.234},
+		},
+		"MergeDefaults integer": {
+			Builder:  Builder().MergeDefaults([]DefaultVariable{{Name: "i", Default: `1234`, Type: "integer"}}),
+			Expected: map[string]interface{}{"i": 1234},
+		},
+		"MergeDefaults string": {
+			Builder:  Builder().MergeDefaults([]DefaultVariable{{Name: "s", Default: `1234`, Type: "string"}}),
+			Expected: map[string]interface{}{"s": "1234"},
+		},
+		"MergeDefaults blank type": {
+			Builder:  Builder().MergeDefaults([]DefaultVariable{{Name: "s", Default: `1234`, Type: ""}}),
+			Expected: map[string]interface{}{"s": "1234"},
+		},
+		"MergeDefaults bad type": {
+			Builder:     Builder().MergeDefaults([]DefaultVariable{{Name: "s", Default: `1234`, Type: "class"}}),
+			ErrContains: "couldn't cast 1234 to class, unknown type",
+		},
+
 		// MergeEvalResult
 		"MergeEvalResult accumulates context": {
-			Builder:  Builder().MergeEvalResult("a", "a").MergeEvalResult("b", "${a}"),
+			Builder:  Builder().MergeEvalResult("a", "a", "string").MergeEvalResult("b", "${a}", "string"),
 			Expected: map[string]interface{}{"a": "a", "b": "a"},
 		},
 		"MergeEvalResult errors": {
-			Builder:     Builder().MergeEvalResult("a", "${dne}"),
+			Builder:     Builder().MergeEvalResult("a", "${dne}", "string"),
 			ErrContains: `couldn't compute the value for "a"`,
 		},
 
@@ -114,14 +148,14 @@ func TestContextBuilder(t *testing.T) {
 		"Basic constants": {
 			Builder: Builder().
 				SetEvalConstants(map[string]interface{}{"PI": 3.14}).
-				MergeEvalResult("out", "${PI}"),
+				MergeEvalResult("out", "${PI}", "string"),
 			Expected: map[string]interface{}{"out": "3.14"},
 		},
 		"User overrides constant": {
 			Builder: Builder().
 				SetEvalConstants(map[string]interface{}{"PI": 3.14}).
 				MergeMap(map[string]interface{}{"PI": 3.2}). // reassign incorrectly, https://en.wikipedia.org/wiki/Indiana_Pi_Bill
-				MergeEvalResult("PI", "${PI}"),              // test which PI gets referenced
+				MergeEvalResult("PI", "${PI}", "string"),    // test which PI gets referenced
 			Expected: map[string]interface{}{"PI": "3.14"},
 		},
 	}
@@ -131,33 +165,33 @@ func TestContextBuilder(t *testing.T) {
 
 			vc, err := tc.Builder.Build()
 
+			switch {
+			case err == nil && tc.ErrContains == "":
+				break
+			case err == nil && tc.ErrContains != "":
+				t.Fatalf("Got no error when %q was expected", tc.ErrContains)
+			case err != nil && tc.ErrContains == "":
+				t.Fatalf("Got error %v when none was expected", err)
+			case !strings.Contains(err.Error(), tc.ErrContains):
+				t.Fatalf("Got error %v, but expected it to contain %q", err, tc.ErrContains)
+			}
 			if vc == nil && tc.Expected != nil {
 				t.Fatalf("Expected: %v, got: %v", tc.Expected, vc)
 			}
 
 			if vc != nil && !reflect.DeepEqual(vc.ToMap(), tc.Expected) {
-				t.Errorf("Expected: %v, got: %v", tc.Expected, vc.ToMap())
+				t.Errorf("Expected: %#v, got: %#v", tc.Expected, vc.ToMap())
 			}
 
-			switch {
-			case err == nil && tc.ErrContains == "":
-				break
-			case err == nil && tc.ErrContains != "":
-				t.Errorf("Got no error when %q was expected", tc.ErrContains)
-			case err != nil && tc.ErrContains == "":
-				t.Errorf("Got error %v when none was expected", err)
-			case !strings.Contains(err.Error(), tc.ErrContains):
-				t.Errorf("Got error %v, but expected it to contain %q", err, tc.ErrContains)
-			}
 		})
 	}
 }
 
 func ExampleContextBuilder_BuildMap() {
-	_, e := Builder().MergeEvalResult("a", "${assert(false, \"failure!\")}").BuildMap()
+	_, e := Builder().MergeEvalResult("a", "${assert(false, \"failure!\")}", "string").BuildMap()
 	fmt.Printf("Error: %v\n", e)
 
-	m, _ := Builder().MergeEvalResult("a", "${1+1}").BuildMap()
+	m, _ := Builder().MergeEvalResult("a", "${1+1}", "string").BuildMap()
 	fmt.Printf("Map: %v\n", m)
 
 	//Output: Error: 1 error(s) occurred: couldn't compute the value for "a", template: "${assert(false, \"failure!\")}", assert: Assertion failed: failure!

@@ -14,13 +14,15 @@
 
 package models
 
+import "github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+
 // This custom user agent string is added to provision calls so that Google can track the aggregated use of this tool
 // We can better advocate for devoting resources to supporting cloud foundry and this service broker if we can show
 // good usage statistics for it, so if you feel the need to fork this repo, please leave this string in place!
-var CustomUserAgent = "cf-gcp-service-broker-test 4.0.0"
+var CustomUserAgent = "cf-gcp-service-broker-test " + utils.Version
 
 func ProductionizeUserAgent() {
-	CustomUserAgent = "cf-gcp-service-broker 4.0.0"
+	CustomUserAgent = "cf-gcp-service-broker " + utils.Version
 }
 
 const StorageName = "google-storage"

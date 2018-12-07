@@ -19,26 +19,31 @@ import (
 	"fmt"
 	"strings"
 
+	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/viper"
+	"golang.org/x/oauth2/jwt"
 )
 
 // ServiceDefinition holds the necessary details to describe an OSB service and
 // provision it.
 type ServiceDefinition struct {
-	Name                       string
-	DefaultServiceDefinition   string
-	ProvisionInputVariables    []BrokerVariable
-	ProvisionComputedVariables []varcontext.DefaultVariable
-	BindInputVariables         []BrokerVariable
-	BindOutputVariables        []BrokerVariable
-	BindComputedVariables      []varcontext.DefaultVariable
-	PlanVariables              []BrokerVariable
-	Examples                   []ServiceExample
+	Name                       string                       `validate:"osbname"`
+	DefaultServiceDefinition   string                       `validate:"json"`
+	ProvisionInputVariables    []BrokerVariable             `validate:"dive"`
+	ProvisionComputedVariables []varcontext.DefaultVariable `validate:"dive"`
+	BindInputVariables         []BrokerVariable             `validate:"dive"`
+	BindOutputVariables        []BrokerVariable             `validate:"dive"`
+	BindComputedVariables      []varcontext.DefaultVariable `validate:"dive"`
+	PlanVariables              []BrokerVariable             `validate:"dive"`
+	Examples                   []ServiceExample             `validate:"dive"`
 	DefaultRoleWhitelist       []string
+
+	// ProviderBuilder creates a new provider given the project, auth, and logger.
+	ProviderBuilder func(projectId string, auth *jwt.Config, logger lager.Logger) ServiceProvider
 }
 
 // EnabledProperty computes the Viper property name for the boolean the user
@@ -231,7 +236,7 @@ func (svc *ServiceDefinition) ServiceDefinition() (*Service, error) {
 func (svc *ServiceDefinition) provisionDefaults() []varcontext.DefaultVariable {
 	var out []varcontext.DefaultVariable
 	for _, provisionVar := range svc.ProvisionInputVariables {
-		out = append(out, varcontext.DefaultVariable{Name: provisionVar.FieldName, Default: provisionVar.Default, Overwrite: false})
+		out = append(out, varcontext.DefaultVariable{Name: provisionVar.FieldName, Default: provisionVar.Default, Overwrite: false, Type: string(provisionVar.Type)})
 	}
 	return out
 }
@@ -239,7 +244,7 @@ func (svc *ServiceDefinition) provisionDefaults() []varcontext.DefaultVariable {
 func (svc *ServiceDefinition) bindDefaults() []varcontext.DefaultVariable {
 	var out []varcontext.DefaultVariable
 	for _, v := range svc.BindInputVariables {
-		out = append(out, varcontext.DefaultVariable{Name: v.FieldName, Default: v.Default, Overwrite: false})
+		out = append(out, varcontext.DefaultVariable{Name: v.FieldName, Default: v.Default, Overwrite: false, Type: string(v.Type)})
 	}
 	return out
 }

@@ -35,6 +35,7 @@ func newInMemoryDatastore(t *testing.T) *SqlDatastore {
 	testDb.CreateTable(models.ServiceBindingCredentials{})
 	testDb.CreateTable(models.ProvisionRequestDetails{})
 	testDb.CreateTable(models.PlanDetailsV1{})
+	testDb.CreateTable(models.TerraformDeployment{})
 	
 	return &SqlDatastore{db: testDb}
 }
@@ -1104,6 +1105,207 @@ func TestSqlDatastore_CountPlanDetailsV1ById(t *testing.T) {
 
 	// on startup, there should be no objects to find or delete
 	if count, err := ds.CountPlanDetailsV1ById(testCtx, instance.ID); count != 1 || err != nil {
+		t.Fatalf("Expected count to be 1 and error to be nil got count: %d, err: %v", count, err)
+	}
+}
+
+
+func createTerraformDeploymentInstance() (string, models.TerraformDeployment) {
+	testPk := string(42)
+
+	instance := models.TerraformDeployment{}
+	instance.ID = testPk
+	instance.LastOperationMessage = "Started 2018-01-01"
+	instance.LastOperationState = "in progress"
+	instance.LastOperationType = "create"
+	instance.Workspace = "{}"
+
+
+	return testPk, instance
+}
+
+func ensureTerraformDeploymentFieldsMatch(t *testing.T, expected, actual *models.TerraformDeployment) {
+
+	if expected.LastOperationMessage != actual.LastOperationMessage {
+		t.Errorf("Expected field LastOperationMessage to be %#v, got %#v", expected.LastOperationMessage, actual.LastOperationMessage)
+	}
+
+	if expected.LastOperationState != actual.LastOperationState {
+		t.Errorf("Expected field LastOperationState to be %#v, got %#v", expected.LastOperationState, actual.LastOperationState)
+	}
+
+	if expected.LastOperationType != actual.LastOperationType {
+		t.Errorf("Expected field LastOperationType to be %#v, got %#v", expected.LastOperationType, actual.LastOperationType)
+	}
+
+	if expected.Workspace != actual.Workspace {
+		t.Errorf("Expected field Workspace to be %#v, got %#v", expected.Workspace, actual.Workspace)
+	}
+
+}
+
+func TestSqlDatastore_TerraformDeploymentDAO(t *testing.T) {
+	ds := newInMemoryDatastore(t)
+	testPk, instance := createTerraformDeploymentInstance()
+	testCtx := context.Background()
+
+	// on startup, there should be no objects to find or delete
+	if count, err := ds.CountTerraformDeploymentById(testCtx, testPk); count != 0 || err != nil {
+		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
+	}
+
+	if _, err := ds.GetTerraformDeploymentById(testCtx, testPk); err != gorm.ErrRecordNotFound {
+		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing PK got %v", err)
+	}
+
+	if _, err := ds.CheckDeletedTerraformDeploymentById(testCtx, testPk); err != gorm.ErrRecordNotFound {
+		t.Errorf("Expected an ErrRecordNotFound trying to check deletion status of a non-existing PK got %v", err)
+	}
+
+	// Should be able to create the item
+	beforeCreation := time.Now()
+	if err := ds.CreateTerraformDeployment(testCtx, &instance); err != nil {
+		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
+	}
+	afterCreation := time.Now()
+
+	// after creation we should be able to get the item
+	ret, err := ds.GetTerraformDeploymentById(testCtx, testPk)
+	if err != nil {
+		t.Errorf("Expected no error trying to get saved item, got: %v", err)
+	}
+
+	if ret.CreatedAt.Before(beforeCreation) || ret.CreatedAt.After(afterCreation) {
+		t.Errorf("Expected creation time to be between  %v and %v got %v", beforeCreation, afterCreation, ret.CreatedAt)
+	}
+
+	if !ret.UpdatedAt.Equal(ret.CreatedAt) {
+		t.Errorf("Expected initial update time to equal creation time, but got update: %v, create: %v", ret.UpdatedAt, ret.CreatedAt)
+	}
+
+	// Ensure non-gorm fields were deserialized correctly
+	ensureTerraformDeploymentFieldsMatch(t, &instance, ret)
+
+	// we should be able to update the item and it will have a new updated time
+	if err := ds.SaveTerraformDeployment(testCtx, ret); err != nil {
+		t.Errorf("Expected no error trying to get update %#v , got: %v", ret, err)
+	}
+
+	if !ret.UpdatedAt.After(ret.CreatedAt) {
+		t.Errorf("Expected update time to be after create time after update, got update: %#v create: %#v", ret.UpdatedAt, ret.CreatedAt)
+	}
+
+	// after deleting the item we should not be able to get it
+	deleted, err := ds.CheckDeletedTerraformDeploymentById(testCtx, testPk)
+	if err != nil {
+		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
+	}
+	if deleted {
+		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
+	}
+
+	if err := ds.DeleteTerraformDeploymentById(testCtx, testPk); err != nil {
+		t.Errorf("Expected no error when deleting by pk got: %v", err)
+	}
+
+	// we should be able to see that it was soft-deleted
+	deleted, err = ds.CheckDeletedTerraformDeploymentById(testCtx, testPk)
+	if err != nil {
+		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
+	}
+	if !deleted {
+		t.Errorf("Expected a deleted instance to marked as deleted but it was not.")
+	}
+
+	// after deleting the item we should not be able to get it
+	if _, err := ds.GetTerraformDeploymentById(testCtx, testPk); err != gorm.ErrRecordNotFound {
+		t.Errorf("Expected ErrRecordNotFound after delete but got %v", err)
+	}
+}
+func TestSqlDatastore_GetTerraformDeploymentById(t *testing.T) {
+	ds := newInMemoryDatastore(t)
+	_, instance := createTerraformDeploymentInstance()
+	testCtx := context.Background()
+
+	if _, err := ds.GetTerraformDeploymentById(testCtx, instance.ID); err != gorm.ErrRecordNotFound {
+		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
+	}
+
+	beforeCreation := time.Now()
+	if err := ds.CreateTerraformDeployment(testCtx, &instance); err != nil {
+		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
+	}
+	afterCreation := time.Now()
+
+	// after creation we should be able to get the item
+	ret, err := ds.GetTerraformDeploymentById(testCtx, instance.ID)
+	if err != nil {
+		t.Errorf("Expected no error trying to get saved item, got: %v", err)
+	}
+
+	if ret.CreatedAt.Before(beforeCreation) || ret.CreatedAt.After(afterCreation) {
+		t.Errorf("Expected creation time to be between  %v and %v got %v", beforeCreation, afterCreation, ret.CreatedAt)
+	}
+
+	if !ret.UpdatedAt.Equal(ret.CreatedAt) {
+		t.Errorf("Expected initial update time to equal creation time, but got update: %v, create: %v", ret.UpdatedAt, ret.CreatedAt)
+	}
+
+	// Ensure non-gorm fields were deserialized correctly
+	ensureTerraformDeploymentFieldsMatch(t, &instance, ret)
+}
+
+func TestSqlDatastore_CheckDeletedTerraformDeploymentById(t *testing.T) {
+	ds := newInMemoryDatastore(t)
+	_, instance := createTerraformDeploymentInstance()
+	testCtx := context.Background()
+
+	if _, err := ds.CheckDeletedTerraformDeploymentById(testCtx, instance.ID); err != gorm.ErrRecordNotFound {
+		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
+	}
+
+	if err := ds.CreateTerraformDeployment(testCtx, &instance); err != nil {
+		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
+	}
+
+	deleted, err := ds.CheckDeletedTerraformDeploymentById(testCtx, instance.ID)
+	if err != nil {
+		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
+	}
+	if deleted {
+		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
+	}
+
+	if err := ds.DeleteTerraformDeployment(testCtx, &instance); err != nil {
+		t.Errorf("Expected no error when deleting by pk got: %v", err)
+	}
+
+	// we should be able to see that it was soft-deleted
+	deleted, err = ds.CheckDeletedTerraformDeploymentById(testCtx, instance.ID)
+	if err != nil {
+		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
+	}
+	if !deleted {
+		t.Errorf("Expected a deleted instance to marked as deleted but it was not.")
+	}
+}
+
+func TestSqlDatastore_CountTerraformDeploymentById(t *testing.T) {
+	ds := newInMemoryDatastore(t)
+	_, instance := createTerraformDeploymentInstance()
+	testCtx := context.Background()
+
+	// on startup, there should be no objects to find or delete
+	if count, err := ds.CountTerraformDeploymentById(testCtx, instance.ID); count != 0 || err != nil {
+		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
+	}
+
+	if err := ds.CreateTerraformDeployment(testCtx, &instance); err != nil {
+		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
+	}
+
+	// on startup, there should be no objects to find or delete
+	if count, err := ds.CountTerraformDeploymentById(testCtx, instance.ID); count != 1 || err != nil {
 		t.Fatalf("Expected count to be 1 and error to be nil got count: %d, err: %v", count, err)
 	}
 }

@@ -16,11 +16,10 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/generator"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 )
 
 func init() {
@@ -44,7 +43,7 @@ func init() {
 
 	`,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(generator.CatalogDocumentation())
+			fmt.Println(generator.CatalogDocumentation(broker.DefaultRegistry))
 		},
 	})
 
@@ -52,12 +51,7 @@ func init() {
 		Use:   "forms",
 		Short: "Generate PCF Tile Forms",
 		Run: func(cmd *cobra.Command, args []string) {
-			response, err := yaml.Marshal(generator.GenerateForms())
-			if err != nil {
-				log.Fatalf("Error marshaling YAML: %s", err)
-			}
-
-			fmt.Println(string(response))
+			fmt.Println(generator.GenerateFormsString())
 		},
 	})
 
@@ -69,4 +63,19 @@ func init() {
 		},
 	})
 
+	generateCmd.AddCommand(&cobra.Command{
+		Use:   "tile",
+		Short: "Generate tile.yml file",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Print(generator.GenerateTile())
+		},
+	})
+
+	generateCmd.AddCommand(&cobra.Command{
+		Use:   "manifest",
+		Short: "Generate manifest.yml file",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(generator.GenerateManifest())
+		},
+	})
 }

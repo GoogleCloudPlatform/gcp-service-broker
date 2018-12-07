@@ -18,16 +18,16 @@ package broker
 // work.
 type ServiceExample struct {
 	// Name is a human-readable name of the example.
-	Name string
+	Name string `json:"name" yaml:"name" validate:"required"`
 	// Description is a long-form description of what this example is about.
-	Description string
+	Description string `json:"description" yaml:"description" validate:"required"`
 	// PlanId is the plan this example will run against.
-	PlanId string
+	PlanId string `json:"plan_id" yaml:"plan_id" validate:"required"`
 
 	// ProvisionParams is the JSON object that will be passed to provision.
-	ProvisionParams map[string]interface{}
+	ProvisionParams map[string]interface{} `json:"provision_params" yaml:"provision_params" validate:"required"`
 
 	// BindParams is the JSON object that will be passed to bind. If nil,
 	// this example DOES NOT include a bind portion.
-	BindParams map[string]interface{}
+	BindParams map[string]interface{} `json:"bind_params" yaml:"bind_params"`
 }

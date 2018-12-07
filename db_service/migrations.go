@@ -26,7 +26,7 @@ import (
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 )
 
-const numMigrations = 4
+const numMigrations = 5
 
 // runs schema migrations on the provided service broker database to get it up to date
 func RunMigrations(db *gorm.DB) error {
@@ -145,6 +145,10 @@ func RunMigrations(db *gorm.DB) error {
 
 	migrations[3] = func() error {
 		return autoMigrateTables(db, &models.ServiceInstanceDetailsV2{})
+	}
+
+	migrations[4] = func() error {
+		return autoMigrateTables(db, &models.TerraformDeploymentV1{})
 	}
 
 	var lastMigrationNumber = -1

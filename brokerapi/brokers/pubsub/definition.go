@@ -15,11 +15,14 @@
 package pubsub
 
 import (
+	"code.cloudfoundry.org/lager"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"golang.org/x/oauth2/jwt"
 )
 
 func init() {
@@ -46,7 +49,7 @@ func serviceDefinition() *broker.ServiceDefinition {
         "displayName": "Google PubSub",
         "longDescription": "A global service for real-time and reliable messaging and streaming data.",
         "documentationUrl": "https://cloud.google.com/pubsub/docs/",
-        "supportUrl": "https://cloud.google.com/support/",
+        "supportUrl": "https://cloud.google.com/pubsub/docs/support",
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/pubsub.svg"
       },
       "tags": ["gcp", "pubsub"],
@@ -117,7 +120,7 @@ again during that time (on a best-effort basis).
 			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.PubsubName, roleWhitelist),
+		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.PubsubName, roleWhitelist, "pubsub.editor"),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "subscription_name",
@@ -180,6 +183,10 @@ again during that time (on a best-effort basis).
 					"role": "pubsub.publisher",
 				},
 			},
+		},
+		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
+			bb := broker_base.NewBrokerBase(projectId, auth, logger)
+			return &PubSubBroker{BrokerBase: bb}
 		},
 	}
 }

@@ -16,24 +16,18 @@ package brokers
 
 import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
-	"github.com/spf13/viper"
 	"golang.org/x/oauth2/jwt"
 )
 
-const (
-	inputValidationProp = "compatibility.enable-input-validation"
-)
-
-func init() {
-	viper.SetDefault(inputValidationProp, true)
-}
+var enableInputValidation = toggles.Compatibility.Toggle("enable-input-validation", true, "Enables validating user input variables against JSON Schema definitions.")
 
 type BrokerConfig struct {
-	Catalog               map[string]broker.Service
 	HttpConfig            *jwt.Config
 	ProjectId             string
 	EnableInputValidation bool
+	Registry              broker.BrokerRegistry
 }
 
 func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
@@ -47,30 +41,10 @@ func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
 		return nil, err
 	}
 
-	catalog, err := initCatalogFromEnv()
-	if err != nil {
-		return nil, err
-	}
-
 	return &BrokerConfig{
-		Catalog:               catalog,
 		ProjectId:             projectId,
 		HttpConfig:            conf,
-		EnableInputValidation: viper.GetBool(inputValidationProp),
+		EnableInputValidation: enableInputValidation.IsActive(),
+		Registry:              broker.DefaultRegistry,
 	}, nil
-}
-
-// pulls SERVICES, PLANS, and environment variables to construct catalog
-func initCatalogFromEnv() (map[string]broker.Service, error) {
-	serviceMap := make(map[string]broker.Service)
-
-	for _, service := range broker.GetEnabledServices() {
-		entry, err := service.CatalogEntry()
-		if err != nil {
-			return serviceMap, err
-		}
-		serviceMap[entry.ID] = *entry
-	}
-
-	return serviceMap, nil
 }
