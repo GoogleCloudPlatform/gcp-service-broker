@@ -6,9 +6,12 @@ image_resource:
     repository: gcr.io/cloud-builders/go
 inputs:
 - name: gcp-service-broker
-  path: src
+  path: broker-source
+outputs:
+- name: compiled-broker
+  path: broker-source
 run:
-  dir: src
+  dir: broker-source
   path: go.ash
   args: ['build']
 params:
