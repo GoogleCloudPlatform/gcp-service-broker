@@ -2,6 +2,11 @@
 
 set -e
 
+# set up alpine
+apk update
+apk add ca-certificates
+
+# use the compiled broker
 cd compiled-broker
 
 # Setup Environment
