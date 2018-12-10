@@ -64,9 +64,9 @@ jobs:
           trigger: true
         - get: gcp-service-broker-ci
       - task: test
-        file: gcp-service-broker-ci/ci/tasks/go-build.yml
-      - task: build
         file: gcp-service-broker-ci/ci/tasks/go-test.yml
+      - task: build
+        file: gcp-service-broker-ci/ci/tasks/go-build.yml
 
   - name: unit-test
     plan:
