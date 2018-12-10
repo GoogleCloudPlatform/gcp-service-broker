@@ -80,4 +80,4 @@ jobs:
         file: gcp-service-broker-ci/ci/tasks/build-tile.yml
       - put: release
         params:
-          file: tiles/gcp-service-broker-*.pivotal
+          file: bundle/*.zip
