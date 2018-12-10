@@ -2,10 +2,11 @@
 
 set -e
 
-echo "Installing zip"
+echo "Installing dependencies"
 apk update
-apk add zip
+apk add git
 
+echo "Generating metadata"
 mkdir -p metadata/docs
 
 git --git-dir=gcp-service-broker/.git rev-parse HEAD > metadata/revision
