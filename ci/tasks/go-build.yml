@@ -13,6 +13,6 @@ outputs:
 run:
   dir: broker-source
   path: go.ash
-  args: ['build' '-o', '../gsb-bin/gcp-service-broker']
+  args: ['build', '-o', '../gsb-bin/gcp-service-broker']
 params:
   PROJECT_ROOT: github.com/GoogleCloudPlatform/gcp-service-broker
