@@ -8,12 +8,12 @@ inputs:
 - name: gcp-service-broker
   path: broker-source
 outputs:
-- name: client
+- name: client-darwin
 run:
   dir: broker-source
   path: go.ash
-  args: ['build', '-o', '../client/gcp-service-broker-linux']
+  args: ['build', '-o', '../client-darwin/gcp-service-broker-darwin']
 params:
   PROJECT_ROOT: github.com/GoogleCloudPlatform/gcp-service-broker
-  GOOS: linux
+  GOOS: darwin
   GOARCH: amd64

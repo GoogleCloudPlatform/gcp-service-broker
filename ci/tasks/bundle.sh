@@ -25,7 +25,9 @@ cp tiles/* staging/servers
 
 echo "Staging client binaries"
 mkdir -p staging/clients
-cp client/* staging/clients
+cp client-darwin/* staging/clients
+cp client-linux/* staging/clients
+cp client-windows/* staging/clients
 
 echo "Creating release"
 zip bundle/gcp-service-broker-$CURRENT_VERSION-$REVISION.zip -r staging/*

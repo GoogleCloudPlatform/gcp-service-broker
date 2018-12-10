@@ -8,11 +8,11 @@ inputs:
 - name: gcp-service-broker
   path: broker-source
 outputs:
-- name: client
+- name: client-windows
 run:
   dir: broker-source
   path: go.ash
-  args: ['build', '-o', '../client/gcp-service-broker-windows.exe']
+  args: ['build', '-o', '../client-windows/gcp-service-broker-windows.exe']
 params:
   PROJECT_ROOT: github.com/GoogleCloudPlatform/gcp-service-broker
   GOOS: windows
