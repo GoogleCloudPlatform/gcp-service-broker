@@ -9,6 +9,9 @@ inputs:
 - name: gcp-service-broker
 - name: metadata
 - name: tiles
+- name: client-linux
+- name: client-windows
+- name: client-darwin
 outputs:
 - name: bundle
 run:
