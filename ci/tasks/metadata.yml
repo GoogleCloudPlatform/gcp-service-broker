@@ -7,5 +7,7 @@ image_resource:
 inputs:
 - name: gcp-service-broker-ci
 - name: compiled-broker
+outputs:
+- name: metadata
 run:
   path: gcp-service-broker-ci/ci/tasks/metadata.sh

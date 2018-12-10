@@ -2,13 +2,15 @@
 
 set -e
 
-export service_broker_dir=src/gcp-service-broker
-export current_version="$(cat version/version)"
+export SERVICE_BROKER_DIR=src/gcp-service-broker
+export CURRENT_VERSION="$(cat metadata/version)"
 
-pushd "$service_broker_dir"
+pushd "$SERVICE_BROKER_DIR"
     zip /tmp/gcp-service-broker.zip -r . -x *.git* product/\* release/\* examples/\*
 
-    tile build "$current_version"
+    tile build "$CURRENT_VERSION"
+    tile build "$CURRENT_VERSION-rc"
+
 popd
 
-mv "$service_broker_dir/product/"*.pivotal candidate/
+mv "$SERVICE_BROKER_DIR/product/"*.pivotal tiles/
