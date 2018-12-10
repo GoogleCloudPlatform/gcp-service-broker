@@ -9,10 +9,10 @@ inputs:
   path: broker-source
 outputs:
 - name: compiled-broker
-  path: broker-source/gcp-service-broker
+  path: gsb-bin
 run:
   dir: broker-source
   path: go.ash
-  args: ['build']
+  args: ['build' '-o', '../gsb-bin/gcp-service-broker']
 params:
   PROJECT_ROOT: github.com/GoogleCloudPlatform/gcp-service-broker
