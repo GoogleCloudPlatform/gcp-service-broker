@@ -6,19 +6,20 @@ export CURRENT_VERSION="$(cat metadata/version)"
 # Bundle up the output
 mkdir staging
 
-# Files from the source directory
+echo "Staging files from the source"
 cp gcp-service-broker/CHANGELOG.md staging/
 cp gcp-service-broker/OSDF*.txt staging/
 
-# Files from metadata
-cp metadata/version staing/
+echo "Staging files from metadata"
+cp metadata/version staging/
 cp -r metadata/docs staging/
 
-# Server Side
+echo "Staging server binaries"
 mkdir -p staging/servers
 cp tiles/* staging/servers
 
-# Client Side
+echo "Staging client binaries"
 # TODO(josephlewis42) pack up cross-compiled binaries for windows/darwin/linux
 
+echo "Creating release"
 zip bundle/gcp-service-broker-$CURRENT_VERSION.zip -r staging/*
