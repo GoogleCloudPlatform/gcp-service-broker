@@ -17,4 +17,3 @@ params:
 
 run:
   path: gcp-service-broker-ci/ci/tasks/osb-integration-tests.sh
-  dir: compiled-broker
