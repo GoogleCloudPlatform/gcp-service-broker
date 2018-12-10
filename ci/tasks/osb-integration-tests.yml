@@ -3,12 +3,11 @@ platform: linux
 image_resource:
   type: docker-image
   source:
-    repository: golang
+    repository: alpine
 
 inputs:
+- name: compiled-broker
 - name: gcp-service-broker-ci
-- name: gcp-service-broker
-  path: src/gcp-service-broker
 
 params:
   ROOT_SERVICE_ACCOUNT_JSON:
