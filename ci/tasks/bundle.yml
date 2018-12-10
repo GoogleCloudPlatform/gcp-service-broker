@@ -9,6 +9,7 @@ inputs:
 - name: gcp-service-broker
 - name: metadata
 - name: tiles
+- name: client
 outputs:
 - name: bundle
 run:

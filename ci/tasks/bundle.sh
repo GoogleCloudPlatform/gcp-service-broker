@@ -24,7 +24,8 @@ mkdir -p staging/servers
 cp tiles/* staging/servers
 
 echo "Staging client binaries"
-# TODO(josephlewis42) pack up cross-compiled binaries for windows/darwin/linux
+mkdir -p staging/clients
+cp client/* staging/clients
 
 echo "Creating release"
 zip bundle/gcp-service-broker-$CURRENT_VERSION-$REVISION.zip -r staging/*
