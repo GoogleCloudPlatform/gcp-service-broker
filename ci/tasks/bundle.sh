@@ -1,6 +1,10 @@
 #!/bin/sh
 set -e
 
+echo "Installing zip"
+apk update
+apk add zip
+
 export CURRENT_VERSION="$(cat metadata/version)"
 
 # Bundle up the output
