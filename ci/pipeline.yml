@@ -78,6 +78,8 @@ jobs:
         file: gcp-service-broker-ci/ci/tasks/metadata.yml
       - task: build-tile
         file: gcp-service-broker-ci/ci/tasks/build-tile.yml
+      - task: bundle
+        file: gcp-service-broker-ci/ci/tasks/bundle.yml
       - put: release
         params:
           file: bundle/*.zip
