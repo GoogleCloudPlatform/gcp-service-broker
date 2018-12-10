@@ -5,6 +5,7 @@ image_resource:
   source:
     repository: alpine
 inputs:
+- name: gcp-service-broker
 - name: gcp-service-broker-ci
 - name: compiled-broker
 outputs:
