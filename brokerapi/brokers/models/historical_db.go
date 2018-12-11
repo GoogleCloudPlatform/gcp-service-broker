@@ -194,7 +194,7 @@ type TerraformDeploymentV1 struct {
 	DeletedAt *time.Time
 
 	// Workspace contains a JSON serialized version of the Terraform workspace.
-	Workspace string `sql:"type:clob"`
+	Workspace string `sql:"type:text"`
 
 	// LastOperationType describes the last operation being performed on the resource.
 	LastOperationType string

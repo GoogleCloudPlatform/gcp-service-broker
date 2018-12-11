@@ -15,11 +15,13 @@
 package tf
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"github.com/pivotal-cf/brokerapi"
 )
 
 func TestTfServiceDefinitionV1Action_ValidateTemplateIO(t *testing.T) {
@@ -118,4 +120,50 @@ func TestNewExampleTfServiceDefinition(t *testing.T) {
 	if err := example.Validate(); err != nil {
 		t.Fatalf("example service definition should be valid, but got error: %v", err)
 	}
+}
+
+func TestTfServiceDefinitionV1Plan_ToPlan(t *testing.T) {
+	cases := map[string]struct {
+		Definition TfServiceDefinitionV1Plan
+		Expected   broker.ServicePlan
+	}{
+		"full": {
+			Definition: TfServiceDefinitionV1Plan{
+				Id:          "00000000-0000-0000-0000-000000000001",
+				Name:        "example-email-plan",
+				DisplayName: "example.com email builder",
+				Description: "Builds emails for example.com.",
+				Bullets:     []string{"information point 1", "information point 2", "some caveat here"},
+				Free:        false,
+				Properties: map[string]string{
+					"domain": "example.com",
+				},
+			},
+			Expected: broker.ServicePlan{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "00000000-0000-0000-0000-000000000001",
+					Name:        "example-email-plan",
+					Description: "Builds emails for example.com.",
+					Free:        brokerapi.FreeValue(false),
+					Metadata: &brokerapi.ServicePlanMetadata{
+						Bullets:     []string{"information point 1", "information point 2", "some caveat here"},
+						DisplayName: "example.com email builder",
+					},
+				},
+				ServiceProperties: map[string]string{"domain": "example.com"}},
+		},
+	}
+
+	for tn, tc := range cases {
+		t.Run(tn, func(t *testing.T) {
+			actual := tc.Definition.ToPlan()
+			if !reflect.DeepEqual(actual, tc.Expected) {
+				t.Fatalf("Expected: %v Actual: %v", tc.Expected, actual)
+			}
+		})
+	}
+}
+
+func TestTfServiceDefinitionV1Variable_ToBrokerVariable(t *testing.T) {
+	// adsf
 }

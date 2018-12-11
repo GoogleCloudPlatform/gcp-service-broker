@@ -17,7 +17,6 @@ package cmd
 import (
 	"log"
 
-	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
@@ -30,7 +29,7 @@ func init() {
 		Short: "Dump plan information from the database",
 		Long:  `Dump plan information from the database.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			logger := lager.NewLogger("get_plan_info_cmd")
+			logger := utils.NewLogger("get_plan_info_cmd")
 			db := db_service.SetupDb(logger)
 
 			var pds []*models.PlanDetailsV1

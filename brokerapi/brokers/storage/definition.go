@@ -58,7 +58,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 	            "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
 	            "name": "standard",
 	            "display_name": "Standard",
-	            "description": "Standard storage class.",
+	            "description": "Standard storage class. Auto-selects either regional or multi-regional based on the location.",
 	            "service_properties": {"storage_class": "STANDARD"}
 	          },
 	          {
@@ -83,6 +83,20 @@ func serviceDefinition() *broker.ServiceDefinition {
 	            "display_name": "Coldline Storage",
 	            "description": "Google Cloud Storage Coldline is a very-low-cost, highly durable storage service for data archiving, online backup, and disaster recovery.",
 	            "service_properties": {"storage_class": "COLDLINE"}
+	          },
+	          {
+	            "id": "5e6161d2-0202-48be-80c4-1006cce19b9d",
+	            "name": "regional",
+	            "display_name": "Regional Storage",
+	            "description": "Data is stored in a narrow geographic region, redundant across availability zones with a 99.99% typical monthly availability.",
+	            "service_properties": {"storage_class": "REGIONAL"}
+	          },
+	          {
+	            "id": "a5e8dfb5-e5ec-472a-8d36-33afcaff2fdb",
+	            "name": "multiregional",
+	            "display_name": "Multi-Regional Storage",
+	            "description": "Data is stored geo-redundantly with >99.99% typical monthly availability.",
+	            "service_properties": {"storage_class": "MULTI_REGIONAL"}
 	          }
 	        ]
 	      }`,
@@ -138,7 +152,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 		Examples: []broker.ServiceExample{
 			{
 				Name:            "Basic Configuration",
-				Description:     "Create a nearline bucket with a service account that can create/read/delete the objects in it.",
+				Description:     "Create a nearline bucket with a service account that can create/read/list/delete the objects in it.",
 				PlanId:          "a42c1182-d1a0-4d40-82c1-28220518b360",
 				ProvisionParams: map[string]interface{}{"location": "us"},
 				BindParams: map[string]interface{}{
@@ -147,12 +161,29 @@ func serviceDefinition() *broker.ServiceDefinition {
 			},
 			{
 				Name:            "Cold Storage",
-				Description:     "Create a coldline bucket with a service account that can create/read/delete the objects in it.",
+				Description:     "Create a coldline bucket with a service account that can create/read/list/delete the objects in it.",
 				PlanId:          "c8538397-8f15-45e3-a229-8bb349c3a98f",
 				ProvisionParams: map[string]interface{}{"location": "us"},
 				BindParams: map[string]interface{}{
-					"role":     "storage.objectAdmin",
-					"location": "us-west1",
+					"role": "storage.objectAdmin",
+				},
+			},
+			{
+				Name:            "Regional Storage",
+				Description:     "Create a regional bucket with a service account that can create/read/list/delete the objects in it.",
+				PlanId:          "5e6161d2-0202-48be-80c4-1006cce19b9d",
+				ProvisionParams: map[string]interface{}{"location": "us-west1"},
+				BindParams: map[string]interface{}{
+					"role": "storage.objectAdmin",
+				},
+			},
+			{
+				Name:            "Multi-Regional Storage",
+				Description:     "Create a multi-regional bucket with a service account that can create/read/list/delete the objects in it.",
+				PlanId:          "a5e8dfb5-e5ec-472a-8d36-33afcaff2fdb",
+				ProvisionParams: map[string]interface{}{"location": "us"},
+				BindParams: map[string]interface{}{
+					"role": "storage.objectAdmin",
 				},
 			},
 		},

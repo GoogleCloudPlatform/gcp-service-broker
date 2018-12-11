@@ -3,16 +3,16 @@ platform: linux
 image_resource:
   type: docker-image
   source:
-    repository: cfplatformeng/tile-generator
-    tag: latest
+    repository: alpine
 inputs:
 - name: gcp-service-broker-ci
 - name: gcp-service-broker
-  path: src/gcp-service-broker
 - name: metadata
-
-outputs:
 - name: tiles
-
+- name: client-linux
+- name: client-windows
+- name: client-darwin
+outputs:
+- name: bundle
 run:
-  path: gcp-service-broker-ci/ci/tasks/build-tile.sh
+  path: gcp-service-broker-ci/ci/tasks/bundle.sh

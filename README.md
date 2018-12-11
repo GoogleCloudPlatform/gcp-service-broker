@@ -1,8 +1,8 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/GoogleCloudPlatform/gcp-service-broker)](https://goreportcard.com/report/github.com/GoogleCloudPlatform/gcp-service-broker) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-# Cloud Foundry Service Broker for Google Cloud Platform
+# Open Service Broker for Google Cloud Platform
 
-This is a service broker built to be used with [Cloud Foundry](https://docs.cloudfoundry.org/services/overview.html).
+This is a service broker built to be used with [Cloud Foundry](https://docs.cloudfoundry.org/services/overview.html) and Kubernetes.
 It adheres to the [Open Service Broker API v2.13](https://github.com/openservicebrokerapi/servicebroker/blob/v2.13/spec.md).
 
 Service brokers provide a consistent way to create resources and accounts that can access those resources across a variety of different services.

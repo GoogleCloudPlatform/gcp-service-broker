@@ -22,11 +22,11 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf/wrapper"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/jinzhu/gorm"
 	"github.com/spf13/cobra"
 )
@@ -40,9 +40,7 @@ func init() {
 		Short: "Interact with the Terraform backend",
 		Long:  `Interact with the Terraform backend`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) (err error) {
-			logger := lager.NewLogger("tf")
-			logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.ERROR))
-			logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
+			logger := utils.NewLogger("tf")
 			db = db_service.New(logger)
 
 			jobRunner, err = tf.NewTfJobRunerFromEnv()

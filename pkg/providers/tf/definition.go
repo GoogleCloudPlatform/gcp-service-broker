@@ -39,13 +39,44 @@ type TfServiceDefinitionV1 struct {
 	DocumentationUrl  string                      `yaml:"documentation_url" validate:"url"`
 	SupportUrl        string                      `yaml:"support_url" validate:"url"`
 	Tags              []string                    `yaml:"tags,flow"`
-	Plans             []broker.ServicePlan        `yaml:"plans" validate:"required,dive"`
+	Plans             []TfServiceDefinitionV1Plan `yaml:"plans" validate:"required,dive"`
 	ProvisionSettings TfServiceDefinitionV1Action `yaml:"provision" validate:"required,dive"`
 	BindSettings      TfServiceDefinitionV1Action `yaml:"bind" validate:"required,dive"`
 	Examples          []broker.ServiceExample     `yaml:"examples" validate:"required,dive"`
 
 	// Internal SHOULD be set to true for Google maintained services.
 	Internal bool `yaml:"-"`
+}
+
+// TfServiceDefinitionV1Plan represents a service plan in a human-friendly format
+// that can be converted into an OSB compatible plan.
+type TfServiceDefinitionV1Plan struct {
+	Name        string            `yaml:"name" validate:"required"`
+	Id          string            `yaml:"id" validate:"required,uuid"`
+	Description string            `yaml:"description" validate:"required"`
+	DisplayName string            `yaml:"display_name" validate:"required"`
+	Bullets     []string          `yaml:"bullets,omitempty"`
+	Free        bool              `yaml:"free,omitempty"`
+	Properties  map[string]string `yaml:"properties" validate:"required"`
+}
+
+// Converts this plan definition to a broker.ServicePlan.
+func (plan *TfServiceDefinitionV1Plan) ToPlan() broker.ServicePlan {
+	masterPlan := brokerapi.ServicePlan{
+		ID:          plan.Id,
+		Description: plan.Description,
+		Name:        plan.Name,
+		Free:        brokerapi.FreeValue(plan.Free),
+		Metadata: &brokerapi.ServicePlanMetadata{
+			Bullets:     plan.Bullets,
+			DisplayName: plan.DisplayName,
+		},
+	}
+
+	return broker.ServicePlan{
+		ServicePlan:       masterPlan,
+		ServiceProperties: plan.Properties,
+	}
 }
 
 // TfServiceDefinitionV1Action holds information needed to process user inputs
@@ -142,6 +173,11 @@ func (tfb *TfServiceDefinitionV1) ToService(executor wrapper.TerraformExecutor) 
 		return nil, err
 	}
 
+	var rawPlans []broker.ServicePlan
+	for _, plan := range tfb.Plans {
+		rawPlans = append(rawPlans, plan.ToPlan())
+	}
+
 	osbDefinition := broker.Service{
 		Service: brokerapi.Service{
 			ID:            tfb.Id,
@@ -159,7 +195,7 @@ func (tfb *TfServiceDefinitionV1) ToService(executor wrapper.TerraformExecutor) 
 			Tags: tfb.Tags,
 		},
 
-		Plans: tfb.Plans,
+		Plans: rawPlans,
 	}
 
 	defaultServiceDefinition, err := json.Marshal(osbDefinition)
@@ -214,17 +250,15 @@ func NewExampleTfServiceDefinition() TfServiceDefinitionV1 {
 		DocumentationUrl: "https://example.com",
 		SupportUrl:       "https://example.com/support.html",
 		Tags:             []string{"gcp", "example", "service"},
-		Plans: []broker.ServicePlan{
+		Plans: []TfServiceDefinitionV1Plan{
 			{
-				ServicePlan: brokerapi.ServicePlan{
-					ID:   "00000000-0000-0000-0000-000000000001",
-					Name: "example-email-plan",
-					Metadata: &brokerapi.ServicePlanMetadata{
-						DisplayName: "example.com email builder",
-					},
-					Description: "Builds emails for example.com.",
-				},
-				ServiceProperties: map[string]string{
+				Id:          "00000000-0000-0000-0000-000000000001",
+				Name:        "example-email-plan",
+				DisplayName: "example.com email builder",
+				Description: "Builds emails for example.com.",
+				Bullets:     []string{"information point 1", "information point 2", "some caveat here"},
+				Free:        false,
+				Properties: map[string]string{
 					"domain": "example.com",
 				},
 			},

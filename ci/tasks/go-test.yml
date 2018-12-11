@@ -1,0 +1,15 @@
+---
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: gcr.io/cloud-builders/go
+inputs:
+- name: gcp-service-broker
+  path: src
+run:
+  dir: src
+  path: go.ash
+  args: ['test', '-v', './...']
+params:
+  PROJECT_ROOT: github.com/GoogleCloudPlatform/gcp-service-broker
