@@ -72,6 +72,7 @@ Service names _should_ begin with your organization and if necessary the cloud p
 | `widgets-sql` | **Good** |
 | `widgets-aws-sql` | **Good**, indicates the cloud platform as well as the service. |
 | `widgets-acctg-sql` | **Good**, indicates that the service is maintained by/for the accounting department. |
+| `legacy-widgets-sql` | **Good**, the legacy keyword comes first to indicate the service is deprecated. |
 
 ### Service guidelines
 
