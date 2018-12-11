@@ -58,6 +58,20 @@ It may be beneficial to divide your services into brokerpaks based on any of the
  * The users of the service e.g. organizational unit.
  * The stability of the backing service (alpha, beta, GA).
  * The subject matter experts that work on the services e.g. networking vs database.
+ 
+### Naming guidelines
+
+Names _should_ be CLI friendly, meaning that they are alphanumeric, lower-case, and are separated by dashes (-).
+
+Service names _should_ begin with your organization and if necessary the cloud platform they're based on. To avoid collisions, you can also include the department name. For example, if your company was "Widgets Inc.":
+
+| Name | Description |
+| ----:|:----------- |
+| `google-sql` | **Bad**, doesn't include your company name so it might conflict with official releases. |
+| `google-widgets-sql` | **Bad**, your company name should come first. |
+| `widgets-sql` | **Good** |
+| `widgets-aws-sql` | **Good**, indicates the cloud platform as well as the service. |
+| `widgets-acctg-sql` | **Good**, indicates that the service is maintained by/for the accounting department. |
 
 ### Service guidelines
 
