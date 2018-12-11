@@ -58,6 +58,16 @@ It may be beneficial to divide your services into brokerpaks based on any of the
  * The users of the service e.g. organizational unit.
  * The stability of the backing service (alpha, beta, GA).
  * The subject matter experts that work on the services e.g. networking vs database.
+ 
+#### Brokerpak lifecycle example
+
+The GCP Service Broker will split its brokerpaks into three sets:
+
+* The `preview` brokerpak will contain upcoming services. It's expected that you install the GA brokerpak, so we can freely move services from preview to GA as needed.
+* The `current` brokerpak will contian the full list of services.
+* The `unmaintained` brokerpaks will each contain exactly one service that we no longer support. This is so you can install exactly as many as needed and take over maintenance of any you need.
+
+As services evolve, support can naturally pass to those who still need legacy technologies. This is a pattern you can follow in your organization too.
 
 ### Service guidelines
 
