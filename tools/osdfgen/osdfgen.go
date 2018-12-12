@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// `osdfgen` can be used to build a CSV suitable for uploading to Pivotal's 
+// [OSDF Generator](http://osdf-generator.cfapps.io/static/index.html).
+// It determines licenses by sniffing the dependencies listed in `Gopkg.lock`.
+// Example: go run osdfgen.go -p ../../ -o test.csv
+// The `-p` flag points at the project root and the `-o` flag is the place to put the output (stdout by default).
 package main
 
 import (
@@ -34,7 +39,7 @@ import (
 
 var (
 	out  = flag.String("o", "-", "Sets the output location of the OSDF csv")
-	proj = flag.String("p", ".", "the project root")
+	proj = flag.String("p", ".", "The project root")
 )
 
 type Lockfile struct {
@@ -94,7 +99,6 @@ func main() {
 	}
 
 	writer.Flush()
-
 }
 
 func mostLikelyLicense(m map[string]float32) string {
