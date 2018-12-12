@@ -44,8 +44,14 @@ const header = `# Copyright 2018 the Service Broker Project Authors.
 
 func init() {
 	rootCmd.AddCommand(&cobra.Command{
-		Use:    "dump-legacy",
-		Short:  "Dump a legacy plan in a Terraform format",
+		Use:   "dump-legacy legacy-service-name",
+		Short: "Dump a legacy plan in a Terraform format",
+		Long: `This utility takes a legacy service and converts it into a YAML
+		suitable for use with brokerpaks. The translation is best-effort and will
+		require some tweaking.
+
+		This utility is hidden and may be removed without warning.
+		`,
 		Args:   cobra.ExactArgs(1),
 		Hidden: true,
 		Run: func(cmd *cobra.Command, args []string) {
