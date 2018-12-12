@@ -17,3 +17,4 @@ terraform_binaries:
   source: https://github.com/terraform-providers/terraform-provider-google/archive/v1.19.0.zip
 service_definitions:
 - cloud-storage.yml
+- google-redis.yml
