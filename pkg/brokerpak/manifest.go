@@ -59,6 +59,11 @@ func (m *Manifest) AppliesToCurrentPlatform() bool {
 	return false
 }
 
+// SuggestedBrokerpakName gets the suggested name of the brokerpak this manifest represents.
+func (m *Manifest) SuggestedBrokerpakName() string {
+	return fmt.Sprintf("%s-%s.brokerpak", m.Name, m.Version)
+}
+
 // Pack creates a brokerpak from the manifest and definitions.
 func (m *Manifest) Pack(base, dest string) error {
 	dir, err := ioutil.TempDir("", "brokerpak")

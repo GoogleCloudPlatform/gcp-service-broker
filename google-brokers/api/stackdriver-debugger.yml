@@ -1,0 +1,103 @@
+# Copyright 2018 the Service Broker Project Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http:#www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+version: 1
+name: google-stackdriver-debugger
+id: 5fb64341-cab4-4eda-a5e1-1d75ebab496b
+description: Stackdriver Debugger
+display_name: Stackdriver Debugger
+image_url: https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg
+documentation_url: https://cloud.google.com/debugger/docs/
+support_url: https://cloud.google.com/stackdriver/docs/getting-support
+tags: [gcp, stackdriver, debugger, preview]
+plans:
+- name: default
+  id: c2a4f712-faea-473a-bb14-b4edee65958d
+  description: Stackdriver Debugger default plan.
+  display_name: "Default"
+  properties: {}
+provision:
+  plan_inputs: []
+  user_inputs: []
+  computed_inputs: []
+  template: ''
+  outputs: []
+bind:
+  plan_inputs: []
+  user_inputs: []
+  computed_inputs:
+  - name: service_account_name
+    default: ${str.truncate(20, "pcf-binding-${request.binding_id}")}
+    overwrite: true
+    type: string
+  template: |
+    variable service_account_name {type = "string"}
+
+    resource "google_service_account" "account" {
+      account_id = "${var.service_account_name}"
+      display_name = "${var.service_account_name}"
+    }
+
+    resource "google_service_account_key" "key" {
+      service_account_id = "${google_service_account.account.name}"
+    }
+
+    resource "google_project_iam_member" "member" {
+      role   = "roles/clouddebugger.agent"
+      member = "serviceAccount:${google_service_account.account.email}"
+    }
+
+    output name {value = "${google_service_account.account.display_name}"}
+    output email {value = "${google_service_account.account.email}"}
+    output private_key {value = "${google_service_account_key.key.private_key}"}
+    output project_id {value = "${google_service_account.account.project}"}
+  outputs:
+  - required: true
+    field_name: email
+    type: string
+    details: Email address of the service account.
+    constraints:
+      examples:
+      - pcf-binding-ex312029@my-project.iam.gserviceaccount.com
+      pattern: ^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$
+  - required: true
+    field_name: name
+    type: string
+    details: The name of the service account.
+    constraints:
+      examples:
+      - pcf-binding-ex312029
+  - required: true
+    field_name: private_key
+    type: string
+    details: Service account private key data. Base64 encoded JSON.
+    constraints:
+      minLength: 512
+      pattern: ^[A-Za-z0-9+/]*=*$
+  - required: true
+    field_name: project_id
+    type: string
+    details: ID of the project that owns the service account.
+    constraints:
+      examples:
+      - my-project
+      maxLength: 30
+      minLength: 6
+      pattern: ^[a-z0-9-]+$
+examples:
+- name: Basic Configuration
+  description: Creates an account with the permission `clouddebugger.agent`.
+  plan_id: c2a4f712-faea-473a-bb14-b4edee65958d
+  provision_params: {}
+  bind_params: {}
