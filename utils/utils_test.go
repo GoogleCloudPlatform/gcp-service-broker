@@ -143,3 +143,41 @@ func TestExtractDefaultLabels(t *testing.T) {
 		}
 	}
 }
+
+func TestSplitNewlineDelimitedList(t *testing.T) {
+	cases := map[string]struct {
+		Input    string
+		Expected []string
+	}{
+		"none": {
+			Input:    ``,
+			Expected: nil,
+		},
+		"single": {
+			Input:    `gs://foo/bar`,
+			Expected: []string{"gs://foo/bar"},
+		},
+		"crlf": {
+			Input:    "a://foo\r\nb://bar",
+			Expected: []string{"a://foo", "b://bar"},
+		},
+		"trim": {
+			Input:    "  a://foo  \n\tb://bar  ",
+			Expected: []string{"a://foo", "b://bar"},
+		},
+		"blank": {
+			Input:    "\n\r\r\n\n\t\t\v\n\n\n\n\n \n\n\n \n \n \n\n",
+			Expected: nil,
+		},
+	}
+
+	for tn, tc := range cases {
+		t.Run(tn, func(t *testing.T) {
+			actual := SplitNewlineDelimitedList(tc.Input)
+
+			if !reflect.DeepEqual(tc.Expected, actual) {
+				t.Errorf("Expected: %v actual: %v", tc.Expected, actual)
+			}
+		})
+	}
+}

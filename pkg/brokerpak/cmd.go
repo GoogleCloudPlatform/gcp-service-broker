@@ -19,7 +19,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"text/tabwriter"
 
 	"code.cloudfoundry.org/lager"
@@ -164,7 +163,7 @@ func RegisterAll(registry broker.BrokerRegistry) error {
 
 	// XXX(josephlewis42): this could be parallelized to increase performance
 	// if we find people are pulling lots of data from the network.
-	for i, packSource := range splitBrokerpakList(viper.GetString(BrokerbakListConfigVar)) {
+	for i, packSource := range utils.SplitNewlineDelimitedList(viper.GetString(BrokerbakListConfigVar)) {
 		destFile := filepath.Join(pakDir, fmt.Sprintf("pack-%d.brokerpak", i))
 		registerLogger.Debug("importing brokerpak", lager.Data{
 			"source":      packSource,
@@ -225,18 +224,4 @@ func Docs(pack string) error {
 
 	fmt.Println(generator.CatalogDocumentation(registry))
 	return nil
-}
-
-// splitBrokerpakList splits a list of brokerpak URIs, trimming whitespace, and
-// removing empty lines
-func splitBrokerpakList(paksText string) []string {
-	var out []string
-	for _, pak := range strings.Split(paksText, "\n") {
-		pakUrl := strings.TrimSpace(pak)
-		if pakUrl != "" {
-			out = append(out, pakUrl)
-		}
-	}
-
-	return out
 }

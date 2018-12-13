@@ -112,15 +112,13 @@ forms:
     Brokerpaks are ways to extend the broker with custom services defined by Terraform templates.
     A brokerpak is an archive comprised of a versioned Terraform binary and providers for one or more platform, a manifest, one or more service definitions, and source code.
   properties:
-  - name: gsb_brokerpak_packs
+  - name: gsb_brokerpak_config
     type: text
-    label: Brokerpaks to load
-    description: |-
-      List brokerpaks URIs one per line. Supported protocols are http, https, gs, and git.
-      Cloud Storage (gs) URIs follow the gs://<bucket>/<path> convention and will be read using the service broker service account.
-
-      You can validate the checksum of any file on download by appending a checksum query parameter to the URI in the format type:value.
-      Valid checksum types are md5, sha1, sha256 and sha512. e.g. gs://foo/bar.brokerpak?checksum=md5:3063a2c62e82ef8614eee6745a7b6b59
+    default: '{}'
+    label: Global Brokerpak Configuration
+    description: A JSON map of configuration key/value pairs for all brokerpaks. If
+      a variable isn't found in the specific brokerpak's configuration it's looked
+      up here.
     configurable: true
 - name: enable_disable
   label: Enable Services
@@ -638,3 +636,44 @@ service_plan_forms:
     label: Storage Class
     description: 'The storage class of the bucket. See: https://cloud.google.com/storage/docs/storage-classes.'
     configurable: true
+- name: gsb_brokerpak_sources
+  label: Configure Brokerpaks
+  description: Configure Brokerpaks
+  optional: true
+  properties:
+  - name: uri
+    type: string
+    label: Brokerpak URI
+    description: "The URI to load. Supported protocols are http, https, gs, and git.\n\t\t\t\tCloud
+      Storage (gs) URIs follow the gs://<bucket>/<path> convention and will be read
+      using the service broker service account.\n\n\t\t\t\tYou can validate the checksum
+      of any file on download by appending a checksum query parameter to the URI in
+      the format type:value.\n\t\t\t\tValid checksum types are md5, sha1, sha256 and
+      sha512. e.g. gs://foo/bar.brokerpak?checksum=md5:3063a2c62e82ef8614eee6745a7b6b59"
+    configurable: true
+  - name: service_prefix
+    type: string
+    label: Service Prefix
+    description: A prefix to prepend to every service name. This will be exact, so
+      you may want to include a trailing dash.
+    configurable: true
+    optional: true
+  - name: excluded_plans
+    type: text
+    label: Excluded Plans
+    description: A list of UUIDs of plans to exclude, one per line.
+    configurable: true
+    optional: true
+  - name: config
+    type: text
+    default: '{}'
+    label: Brokerpak Configuration
+    description: A JSON map of configuration key/value pairs for the brokerpak. If
+      a variable isn't found here, it's looked up in the global config.
+    configurable: true
+  - name: notes
+    type: text
+    label: Notes
+    description: A place for your notes, not used by the broker.
+    configurable: true
+    optional: true
