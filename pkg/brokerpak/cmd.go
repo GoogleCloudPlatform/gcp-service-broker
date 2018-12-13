@@ -113,9 +113,9 @@ func Info(pack string) error {
 	{
 		fmt.Println("Services")
 		w := cmdTabWriter()
-		fmt.Fprintln(w, "ID\tNAME\tDESCRIPTION\tPLANS")
+		fmt.Fprintln(w, "ID\tNAME\tPLANS\tDESCRIPTION")
 		for _, svc := range services {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%d\n", svc.Id, svc.Name, svc.Description, len(svc.Plans))
+			fmt.Fprintf(w, "%s\t%s\t%d\t%s\n", svc.Id, svc.Name, len(svc.Plans), svc.Description)
 		}
 		w.Flush()
 		fmt.Println()
