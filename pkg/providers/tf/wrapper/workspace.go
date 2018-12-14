@@ -220,6 +220,8 @@ func (workspace *TerraformWorkspace) teardownFs() error {
 
 // Outputs gets the Terraform outputs from the state for the instance with the
 // given name. This function DOES NOT invoke Terraform and instead uses the stored state.
+// If no instance exists with the given name, it could be that Terraform pruned it due
+// to having no contents so a blank map is returned.
 func (workspace *TerraformWorkspace) Outputs(instance string) (map[string]interface{}, error) {
 	state, err := NewTfstate(workspace.State)
 	if err != nil {
@@ -228,8 +230,10 @@ func (workspace *TerraformWorkspace) Outputs(instance string) (map[string]interf
 
 	// All root project modules get put under the "root" namespace
 	module := state.GetModule("root", instance)
+
+	// Terraform prunes modules with no contents, so we return blank results.
 	if module == nil {
-		return nil, fmt.Errorf("no instance exists with name %q", instance)
+		return map[string]interface{}{}, nil
 	}
 
 	return module.GetOutputs(), nil

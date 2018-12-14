@@ -41,7 +41,7 @@ type BrokerVariable struct {
 	// The name of the JSON field this variable serializes/deserializes to
 	FieldName string `yaml:"field_name" validate:"required"`
 	// The JSONSchema type of the field
-	Type JsonType `yaml:"type" validate:"required"`
+	Type JsonType `yaml:"type" validate:"required,jsonschema_type"`
 	// Human readable info about the field.
 	Details string `yaml:"details" validate:"required"`
 	// The default value of the field.

@@ -69,6 +69,21 @@ The GCP Service Broker will split its brokerpaks into three sets:
 
 As services evolve, support can naturally pass to those who still need legacy technologies. This is a pattern you can follow in your organization too.
 
+### Naming guidelines
+
+Names _should_ be CLI friendly, meaning that they are alphanumeric, lower-case, and are separated by dashes (-).
+
+Service names _should_ begin with your organization and if necessary the cloud platform they're based on. To avoid collisions, you can also include the department name. For example, if your company was "Widgets Inc.":
+
+| Name | Description |
+| ----:|:----------- |
+| `google-sql` | **Bad**, doesn't include your company name so it might conflict with official releases. |
+| `google-widgets-sql` | **Bad**, your company name should come first. |
+| `widgets-sql` | **Good** |
+| `widgets-aws-sql` | **Good**, indicates the cloud platform as well as the service. |
+| `widgets-acctg-sql` | **Good**, indicates that the service is maintained by/for the accounting department. |
+| `legacy-widgets-sql` | **Good**, the legacy keyword comes first to indicate the service is deprecated. |
+
 ### Service guidelines
 
 When you're creating a new service for the broker you're designing for three separate sets of people:
