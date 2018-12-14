@@ -104,7 +104,11 @@ dependencies, services it provides, and the contents.
 				log.Fatalf("error while packing %q: %v", directory, err)
 			}
 
-			fmt.Printf("created: %v\n", pakPath)
+			if err := brokerpak.Validate(pakPath); err != nil {
+				log.Fatalf("created: %v, but it failed validity checking: %v\n", pakPath, err)
+			} else {
+				fmt.Printf("created: %v\n", pakPath)
+			}
 		},
 	})
 

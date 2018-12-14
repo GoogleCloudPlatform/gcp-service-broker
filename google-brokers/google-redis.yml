@@ -1,0 +1,162 @@
+# Copyright 2018 the Service Broker Project Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http:#www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+version: 1
+name: google-redis
+id: 0e86ad78-99b3-48b6-a986-b594e7995fd6
+description: Cloud Memorystore for Redis is a fully managed Redis service for the
+  Google Cloud Platform.
+display_name: Google Cloud Memorystore for Redis
+image_url: https://cloud.google.com/_static/images/cloud/products/logos/svg/cache.svg
+documentation_url: https://cloud.google.com/memorystore/docs/redis/
+support_url: https://cloud.google.com/support/
+tags: [gcp, redis, preview]
+plans:
+- name: basic
+  id: 6ed44104-8777-4b57-8c03-826b3af7d0be
+  description: A basic plan with no failover. Data will be lost on maintenance or cluster changes.
+  display_name: "Basic"
+  properties:
+    service_tier: BASIC
+- name: ha
+  id: 8c85c90c-f8e3-4337-9069-c03036243894
+  description: A highly available plan with automatic failover.
+  display_name: "High Availability"
+  properties:
+    service_tier: STANDARD_HA
+provision:
+  plan_inputs:
+  - field_name: service_tier
+    required: true
+    type: string
+    details: The service tier of the instance.
+    enum:
+      BASIC: standalone instance
+      STANDARD_HA: highly available primary/replica instances
+  user_inputs:
+  - field_name: memory_size_gb
+    type: integer
+    details: The size of the instance in gigabytes.
+    default: 4
+    constraints:
+      maximum: 300
+      minimum: 1
+  - field_name: instance_id
+    type: string
+    details: Permanent identifier for your instance
+    default: pcf-sb-${counter.next()}-${time.nano()}
+    constraints:
+      maxLength: 30
+      minLength: 6
+      pattern: ^[a-z][a-z0-9-]+$
+  - field_name: display_name
+    type: string
+    details: For display purposes only
+    default: ${instance_id}
+    constraints:
+      maxLength: 80
+  - field_name: region
+    type: string
+    details: The region of the Redis instance.
+    default: us-central1
+    constraints:
+      examples:
+      - us-central1
+      - asia-northeast1
+      pattern: ^[A-Za-z][-a-z0-9A-Z]+$
+  - field_name: authorized_network
+    type: string
+    details:  The full name of the Google Compute Engine network to which the instance is connected. If left unspecified, the default network will be used.
+      This will look something like /projects/PROJECTID/global/networks/NETWORKNAME.
+    default: ''
+  computed_inputs:
+  - name: labels
+    default: ${json.marshal(request.default_labels)}
+    overwrite: true
+    type: object
+  template: |-
+    variable service_tier { type = "string" }
+    variable authorized_network { type = "string" }
+    variable display_name { type = "string" }
+    variable instance_id { type = "string" }
+    variable region { type = "string" }
+    variable memory_size_gb { type = "string" }
+    variable labels { type = "map" }
+
+    data "google_compute_network" "default-network" {
+      name = "default"
+    }
+
+    resource "google_redis_instance" "instance" {
+      name               = "${var.instance_id}"
+      tier               = "${var.service_tier}"
+      memory_size_gb     = "${var.memory_size_gb}"
+      display_name       = "${var.display_name}"
+      region             = "${var.region}"
+      authorized_network = "${coalesce(var.authorized_network, data.google_compute_network.default-network.self_link)}"
+      labels             = "${var.labels}"
+
+      timeouts {
+        create = "15m"
+        update = "15m"
+        delete = "15m"
+      }
+    }
+
+    output memory_size_gb { value = "${google_redis_instance.instance.memory_size_gb}" }
+    output service_tier { value = "${google_redis_instance.instance.tier}" }
+    output redis_version { value = "${google_redis_instance.instance.redis_version}" }
+    output host { value = "${google_redis_instance.instance.host}" }
+    output port { value = "${google_redis_instance.instance.port}" }
+  outputs:
+  - required: true
+    field_name: memory_size_gb
+    type: string
+    details: The size of the instance in gigabytes.
+  - required: true
+    field_name: service_tier
+    type: string
+    details: The service tier of the instance.
+    enum:
+      BASIC: standalone instance
+      STANDARD_HA: highly available primary/replica instances
+  - field_name: redis_version
+    type: string
+    details: The version of the instance.
+    enum:
+      "": most recent version
+      REDIS_3_2: Redis 3.2
+  - field_name: host
+    type: string
+    details: Hostname or IP address of the exposed Redis endpoint used by clients to connect to the service.
+  - field_name: port
+    type: string
+    details: The port number of the exposed Redis endpoint.
+bind:
+  plan_inputs: []
+  user_inputs: []
+  computed_inputs: []
+  template: ''
+  outputs: []
+examples:
+- name: Development Configuration
+  description: Create a small Redis instance for development.
+  plan_id: 6ed44104-8777-4b57-8c03-826b3af7d0be
+  provision_params: {"memory_size_gb": 1}
+  bind_params: {}
+- name: HA Configuration
+  description: Create a small, highly available Redis instance for production.
+  plan_id: 8c85c90c-f8e3-4337-9069-c03036243894
+  provision_params: {"memory_size_gb": 1}
+  bind_params: {}

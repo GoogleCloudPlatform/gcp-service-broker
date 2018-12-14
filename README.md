@@ -17,6 +17,7 @@ The GCP Service Broker provides support for:
 * [Datastore](https://cloud.google.com/datastore/)
 * [Dialogflow](https://cloud.google.com/dialogflow-enterprise/)
 * [Firestore](https://cloud.google.com/firestore/)
+* [Memorystore for Redis](https://cloud.google.com/memorystore/docs/redis/) (preview)
 * [ML APIs](https://cloud.google.com/ml/)
 * [PubSub](https://cloud.google.com/pubsub/)
 * [Spanner](https://cloud.google.com/spanner/)
