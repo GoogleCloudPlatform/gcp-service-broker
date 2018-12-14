@@ -26,7 +26,7 @@ plans:
     worker_machine_type: n1-standard-1
     worker_count: 2
     master_machine_type: n1-standard-1
-    master_count: 1
+    master_count: 3
     preemptible_count: 0
 provision:
   plan_inputs:
