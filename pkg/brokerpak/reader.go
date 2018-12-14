@@ -30,6 +30,12 @@ import (
 // BrokerPakReader reads bundled together Terraform and service definitions.
 type BrokerPakReader struct {
 	contents *zip.ReadCloser
+
+	// Options for the way the BrokerPakReader parses the BrokerPak
+
+	// ServiceTransformer gets called when services are read and can modify the
+	// definition. If the result is nil, the service is filtered.
+	ServiceTransformer func(in tf.TfServiceDefinitionV1) *tf.TfServiceDefinitionV1
 }
 
 func (pak *BrokerPakReader) readYaml(name string, v interface{}) error {
@@ -60,11 +66,18 @@ func (pak *BrokerPakReader) Services() ([]tf.TfServiceDefinitionV1, error) {
 	}
 
 	var services []tf.TfServiceDefinitionV1
-
 	for _, serviceDefinition := range manifest.ServiceDefinitions {
 		tmp := tf.TfServiceDefinitionV1{}
 		if err := pak.readYaml(serviceDefinition, &tmp); err != nil {
 			return nil, err
+		}
+
+		if pak.ServiceTransformer != nil {
+			converted := pak.ServiceTransformer(tmp)
+			if converted == nil {
+				continue
+			}
+			tmp = *converted
 		}
 
 		services = append(services, tmp)

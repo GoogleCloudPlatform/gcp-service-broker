@@ -29,7 +29,6 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/ziputil"
-	"github.com/spf13/viper"
 )
 
 const BrokerbakListConfigVar = "brokerpak.packs"
@@ -161,9 +160,15 @@ func RegisterAll(registry broker.BrokerRegistry) error {
 	}
 	defer os.RemoveAll(pakDir)
 
+	pakConfig, err := NewLoaderConfigurationFromEnv()
+	if err != nil {
+		return err
+	}
+
 	// XXX(josephlewis42): this could be parallelized to increase performance
 	// if we find people are pulling lots of data from the network.
-	for i, packSource := range utils.SplitNewlineDelimitedList(viper.GetString(BrokerbakListConfigVar)) {
+	for i, pak := range pakConfig.Brokerpaks {
+		packSource := pak.BrokerpakUri
 		destFile := filepath.Join(pakDir, fmt.Sprintf("pack-%d.brokerpak", i))
 		registerLogger.Debug("importing brokerpak", lager.Data{
 			"source":      packSource,
@@ -178,26 +183,19 @@ func RegisterAll(registry broker.BrokerRegistry) error {
 			"source":      packSource,
 			"destination": destFile,
 		})
-		if err := registerPak(destFile, registry); err != nil {
+
+		if err := pak.RegisterPak(destFile, registry); err != nil {
 			return err
 		}
+
 	}
 
 	return nil
 }
 
 func registerPak(pack string, registry broker.BrokerRegistry) error {
-	brokerPak, err := OpenBrokerPak(pack)
-	if err != nil {
-		return fmt.Errorf("couldn't open brokerpak: %q: %v", pack, err)
-	}
-	defer brokerPak.Close()
-
-	if err := brokerPak.Register(registry); err != nil {
-		return fmt.Errorf("couldn't register brokerpak: %q: %v", pack, err)
-	}
-
-	return nil
+	resource := NewBrokerpakResourceFromPath(pack)
+	return resource.RegisterPak(pack, registry)
 }
 
 // RunExamples executes the examples from a brokerpak.
