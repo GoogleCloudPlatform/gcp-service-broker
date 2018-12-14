@@ -15,4 +15,4 @@
 package utils
 
 // Version sets the version for the whole GCP service broker software.
-const Version = "4.1.0"
+const Version = "4.1.1"
