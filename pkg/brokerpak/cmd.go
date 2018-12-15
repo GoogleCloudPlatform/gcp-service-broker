@@ -154,12 +154,6 @@ func Validate(pack string) error {
 // with the given registry.
 func RegisterAll(registry broker.BrokerRegistry) error {
 	registerLogger := utils.NewLogger("brokerpak-registration")
-	// create a temp directory to hold all the paks
-	pakDir, err := ioutil.TempDir("", "brokerpaks")
-	if err != nil {
-		return fmt.Errorf("couldn't create brokerpak staging area: %v", err)
-	}
-	defer os.RemoveAll(pakDir)
 
 	pakConfig, err := NewServerConfigFromEnv()
 	if err != nil {
@@ -176,13 +170,7 @@ func RegisterAll(registry broker.BrokerRegistry) error {
 		})
 
 		if err := registerPak(pak, registry); err != nil {
-			registerLogger.Error("registering", err, lager.Data{
-				"name":           name,
-				"excluded-plans": pak.ExcludedPlansSlice(),
-				"prefix":         pak.ServicePrefix,
-			})
-
-			return err
+			return fmt.Errorf("couldn't register %q: %v", name, err)
 		}
 	}
 
