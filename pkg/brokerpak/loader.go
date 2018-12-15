@@ -15,6 +15,7 @@
 package brokerpak
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
@@ -27,15 +28,15 @@ import (
 // BrokerpakResource represents a single configuration of a brokerpak.
 type BrokerpakResource struct {
 	// BrokerpakUri holds the URI for loading the Brokerpak.
-	BrokerpakUri string `json:"uri" yaml:"uri" mapstructure:"uri" validate:"required,uri"`
+	BrokerpakUri string `json:"uri" validate:"required,uri"`
 	// ServicePrefix holds an optional prefix that will be prepended to every service name.
-	ServicePrefix string `json:"service_prefix" yaml:"service_prefix" mapstructure:"service_prefix" validate:"osbname"`
+	ServicePrefix string `json:"service_prefix" validate:"osbname"`
 	// ExcludedPlans holds a newline delimited list of service plan UUIDs that will be excluded at registration time.
-	ExcludedPlans string `json:"excluded_plans" yaml:"excluded_plans" mapstructure:"excluded_plans"`
+	ExcludedPlans string `json:"excluded_plans"`
 	// Config holds the configuration options for the Brokerpak as a JSON object.
-	Config string `json:"config" yaml:"config" mapstructure:"config" validate:"required,json"`
+	Config string `json:"config" validate:"required,json"`
 	// Notes holds user-defined notes about the Brokerpak and shouldn't be used programatically.
-	Notes string `json:"notes" yaml:"notes" mapstructure:"notes"`
+	Notes string `json:"notes"`
 }
 
 // Validate returns an error if the resource is invalid.
@@ -86,10 +87,10 @@ func NewBrokerpakResourceFromPath(path string) *BrokerpakResource {
 // loader.
 type LoaderConfiguration struct {
 	// Config holds global configuration options for the Brokerpak as a JSON object.
-	Config string `json:"config" yaml:"config" mapstructure:"config" validate:"required,json"`
+	Config string `validate:"required,json"`
 
 	// Brokerpaks holds list of brokerpaks to load.
-	Brokerpaks []BrokerpakResource `json:"sources" yaml:"sources" mapstructure:"sources" validate:"dive"`
+	Brokerpaks map[string]BrokerpakResource `validate:"dive"`
 }
 
 // Validate returns an error if the configuration is invalid.
@@ -99,14 +100,20 @@ func (cfg *LoaderConfiguration) Validate() error {
 
 // NewLoaderConfigurationFromEnv loads the global configuration from Viper.
 func NewLoaderConfigurationFromEnv() (*LoaderConfiguration, error) {
-	cfg := LoaderConfiguration{}
-	if err := viper.UnmarshalKey("brokerpak", &cfg); err != nil {
-		return nil, fmt.Errorf("couldn't load brokerpak config: %s", err)
+	paks := map[string]BrokerpakResource{}
+	sources := viper.GetString("brokerpak.sources")
+	if err := json.Unmarshal([]byte(sources), &paks); err != nil {
+		return nil, fmt.Errorf("couldn't deserialize brokerpak source config: %v", err)
+	}
+
+	cfg := LoaderConfiguration{
+		Config:     viper.GetString("brokerpak.config"),
+		Brokerpaks: paks,
 	}
 
 	if err := cfg.Validate(); err != nil {
-		return nil, fmt.Errorf("brokerpak config was invalid: %s", err)
+		return nil, fmt.Errorf("brokerpak config was invalid: %v", err)
 	}
 
-	return &cfg, cfg.Validate()
+	return &cfg, nil
 }

@@ -242,7 +242,6 @@ func generateCompatibilityForm() Form {
 			Type:         "boolean",
 			Label:        toggle.Name,
 			Configurable: true,
-			Optional:     true,
 			Default:      fmt.Sprintf("%v", toggle.Default), // the tile deals with all values as strings so a default string is acceptable.
 			Description:  singleLine(toggle.Description),
 		}

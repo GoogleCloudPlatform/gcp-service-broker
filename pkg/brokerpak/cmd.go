@@ -58,8 +58,8 @@ func Pack(directory string) (string, error) {
 		return "", err
 	}
 	manifestPath := filepath.Join(directory, manifestName)
-	manifest, err := OpenManifest(manifestPath)
-	if err != nil {
+	manifest := &Manifest{}
+	if err := stream.Copy(stream.FromFile(manifestPath), stream.ToYaml(manifest)); err != nil {
 		return "", err
 	}
 
@@ -169,7 +169,7 @@ func RegisterAll(registry broker.BrokerRegistry) error {
 	// if we find people are pulling lots of data from the network.
 	for i, pak := range pakConfig.Brokerpaks {
 		packSource := pak.BrokerpakUri
-		destFile := filepath.Join(pakDir, fmt.Sprintf("pack-%d.brokerpak", i))
+		destFile := filepath.Join(pakDir, fmt.Sprintf("pack-%s.brokerpak", i))
 		registerLogger.Debug("importing brokerpak", lager.Data{
 			"source":      packSource,
 			"destination": destFile,

@@ -127,13 +127,6 @@ func (m *Manifest) packDefinitions(tmp, base string) error {
 	return stream.Copy(stream.FromYaml(manifestCopy), stream.ToFile(tmp, manifestName))
 }
 
-// OpenManifest reads a manifest from the given file, failing if the manifest
-// couldn't be decoded or read.
-func OpenManifest(filename string) (*Manifest, error) {
-	out := &Manifest{}
-	return out, stream.Copy(stream.FromFile(filename), stream.ToYaml(out))
-}
-
 // NewExampleManifest creates a new manifest with sample values for the service broker suitable for giving a user a template to manually edit.
 func NewExampleManifest() Manifest {
 	return Manifest{

@@ -274,7 +274,6 @@ forms:
     label: enable-eol-services
     description: Enable broker services that are end of life.
     configurable: true
-    optional: true
   - name: gsb_compatibility_enable_gcp_beta_services
     type: boolean
     default: "true"
@@ -282,42 +281,36 @@ forms:
     description: Enable services that are in GCP Beta. These have no SLA or support
       policy.
     configurable: true
-    optional: true
   - name: gsb_compatibility_enable_gcp_deprecated_services
     type: boolean
     default: "false"
     label: enable-gcp-deprecated-services
     description: Enable services that use deprecated GCP components.
     configurable: true
-    optional: true
   - name: gsb_compatibility_enable_input_validation
     type: boolean
     default: "true"
     label: enable-input-validation
     description: Enables validating user input variables against JSON Schema definitions.
     configurable: true
-    optional: true
   - name: gsb_compatibility_enable_preview_services
     type: boolean
     default: "true"
     label: enable-preview-services
     description: Enable services that are new to the broker this release.
     configurable: true
-    optional: true
   - name: gsb_compatibility_enable_terraform_services
     type: boolean
     default: "false"
     label: enable-terraform-services
     description: Enable services that use the experimental, unstable, Terraform back-end.
     configurable: true
-    optional: true
   - name: gsb_compatibility_enable_unmaintained_services
     type: boolean
     default: "false"
     label: enable-unmaintained-services
     description: Enable broker services that are unmaintained.
     configurable: true
-    optional: true
   - name: gsb_compatibility_three_to_four_legacy_plans
     type: boolean
     default: "false"
@@ -328,7 +321,6 @@ forms:
       is using the correct plan GUID. If the service does not use the correct GUID,
       the request will fail with a message about how to upgrade.
     configurable: true
-    optional: true
 - name: default_override
   label: Default Overrides
   description: Override the default values your users get when provisioning.
