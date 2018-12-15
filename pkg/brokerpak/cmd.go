@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf/wrapper"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/ziputil"
@@ -160,48 +161,84 @@ func RegisterAll(registry broker.BrokerRegistry) error {
 	}
 	defer os.RemoveAll(pakDir)
 
-	pakConfig, err := NewLoaderConfigurationFromEnv()
+	pakConfig, err := NewServerConfigFromEnv()
 	if err != nil {
 		return err
 	}
 
 	// XXX(josephlewis42): this could be parallelized to increase performance
 	// if we find people are pulling lots of data from the network.
-	for i, pak := range pakConfig.Brokerpaks {
-		packSource := pak.BrokerpakUri
-		destFile := filepath.Join(pakDir, fmt.Sprintf("pack-%s.brokerpak", i))
-		registerLogger.Debug("importing brokerpak", lager.Data{
-			"source":      packSource,
-			"destination": destFile,
+	for name, pak := range pakConfig.Brokerpaks {
+		registerLogger.Info("registering", lager.Data{
+			"name":           name,
+			"excluded-plans": pak.ExcludedPlansSlice(),
+			"prefix":         pak.ServicePrefix,
 		})
 
-		if err := fetchBrokerpak(packSource, destFile); err != nil {
+		if err := registerPak(pak, registry); err != nil {
+			registerLogger.Error("registering", err, lager.Data{
+				"name":           name,
+				"excluded-plans": pak.ExcludedPlansSlice(),
+				"prefix":         pak.ServicePrefix,
+			})
+
 			return err
 		}
-
-		registerLogger.Debug("registering brokerpak", lager.Data{
-			"source":      packSource,
-			"destination": destFile,
-		})
-
-		if err := pak.RegisterPak(destFile, registry); err != nil {
-			return err
-		}
-
 	}
 
 	return nil
 }
 
-func registerPak(pack string, registry broker.BrokerRegistry) error {
-	resource := NewBrokerpakResourceFromPath(pack)
-	return resource.RegisterPak(pack, registry)
+// RegisterPak fetches the brokerpak and registers it with the given registry.
+func registerPak(config BrokerpakSourceConfig, registry broker.BrokerRegistry) error {
+	brokerPak, err := DownloadAndOpenBrokerpak(config.BrokerpakUri)
+	if err != nil {
+		return fmt.Errorf("couldn't open brokerpak: %q: %v", config.BrokerpakUri, err)
+	}
+	defer brokerPak.Close()
+
+	dir, err := ioutil.TempDir("", "brokerpak")
+	if err != nil {
+		return err
+	}
+
+	// extract the Terraform directory
+	if err := brokerPak.ExtractPlatformBins(dir); err != nil {
+		return err
+	}
+
+	binPath := filepath.Join(dir, "terraform")
+	executor := wrapper.CustomTerraformExecutor(binPath, dir, wrapper.DefaultExecutor)
+
+	// register the services
+	services, err := brokerPak.Services()
+	if err != nil {
+		return err
+	}
+
+	toIgnore := utils.NewStringSet(config.ExcludedPlansSlice()...)
+	for _, svc := range services {
+		if toIgnore.Contains(svc.Id) {
+			continue
+		}
+
+		svc.Name = config.ServicePrefix + svc.Name
+
+		bs, err := svc.ToService(executor)
+		if err != nil {
+			return err
+		}
+
+		registry.Register(bs)
+	}
+
+	return nil
 }
 
 // RunExamples executes the examples from a brokerpak.
 func RunExamples(pack string) error {
 	registry := broker.BrokerRegistry{}
-	if err := registerPak(pack, registry); err != nil {
+	if err := registerPak(NewBrokerpakSourceConfigFromPath(pack), registry); err != nil {
 		return err
 	}
 
@@ -216,7 +253,7 @@ func RunExamples(pack string) error {
 // Docs generates the markdown usage docs for the given pack and writes them to stdout.
 func Docs(pack string) error {
 	registry := broker.BrokerRegistry{}
-	if err := registerPak(pack, registry); err != nil {
+	if err := registerPak(NewBrokerpakSourceConfigFromPath(pack), registry); err != nil {
 		return err
 	}
 

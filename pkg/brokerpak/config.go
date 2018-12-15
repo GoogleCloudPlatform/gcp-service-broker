@@ -17,20 +17,19 @@ package brokerpak
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/viper"
 )
 
-// BrokerpakResource represents a single configuration of a brokerpak.
-type BrokerpakResource struct {
+// BrokerpakSourceConfig represents a single configuration of a brokerpak.
+type BrokerpakSourceConfig struct {
 	// BrokerpakUri holds the URI for loading the Brokerpak.
 	BrokerpakUri string `json:"uri" validate:"required,uri"`
 	// ServicePrefix holds an optional prefix that will be prepended to every service name.
-	ServicePrefix string `json:"service_prefix" validate:"osbname"`
+	ServicePrefix string `json:"service_prefix" validate:"omitempty,osbname"`
 	// ExcludedPlans holds a newline delimited list of service plan UUIDs that will be excluded at registration time.
 	ExcludedPlans string `json:"excluded_plans"`
 	// Config holds the configuration options for the Brokerpak as a JSON object.
@@ -39,74 +38,47 @@ type BrokerpakResource struct {
 	Notes string `json:"notes"`
 }
 
-// Validate returns an error if the resource is invalid.
-func (b *BrokerpakResource) Validate() error {
-	return validation.ValidateStruct(b)
-}
-
-// ExcludedPlansSet gets the list of ExcludedPlans as a slice.
-func (b *BrokerpakResource) ExcludedPlansSlice() []string {
+// ExcludedPlansSlice gets the ExcludedPlans as a slice of UUIDs.
+func (b *BrokerpakSourceConfig) ExcludedPlansSlice() []string {
 	return utils.SplitNewlineDelimitedList(b.ExcludedPlans)
 }
 
-// RegisterPak fetches the brokerpak and registers it with the given registry.
-func (b *BrokerpakResource) RegisterPak(pack string, registry broker.BrokerRegistry) error {
-	brokerPak, err := OpenBrokerPak(pack)
-	if err != nil {
-		return fmt.Errorf("couldn't open brokerpak: %q: %v", pack, err)
-	}
-	defer brokerPak.Close()
-
-	toIgnore := utils.NewStringSet(b.ExcludedPlansSlice()...)
-	brokerPak.ServiceTransformer = func(t tf.TfServiceDefinitionV1) *tf.TfServiceDefinitionV1 {
-		if toIgnore.Contains(t.Id) {
-			return nil
-		}
-
-		t.Name = b.ServicePrefix + t.Name
-
-		return &t
-	}
-
-	if err := brokerPak.Register(registry); err != nil {
-		return fmt.Errorf("couldn't register brokerpak: %q: %v", pack, err)
-	}
-
-	return nil
+// SetExcludedPlans sets the ExcludedPlans from a slice of UUIDs.
+func (b *BrokerpakSourceConfig) SetExcludedPlans(plans []string) {
+	b.ExcludedPlans = strings.Join(plans, "\n")
 }
 
-// NewBrokerpakResourceFromPath creates a new BrokerpakResource from a path.
-func NewBrokerpakResourceFromPath(path string) *BrokerpakResource {
-	return &BrokerpakResource{
+// NewBrokerpakSourceConfigFromPath creates a new BrokerpakSourceConfig from a path.
+func NewBrokerpakSourceConfigFromPath(path string) BrokerpakSourceConfig {
+	return BrokerpakSourceConfig{
 		BrokerpakUri: path,
 		Config:       "{}",
 	}
 }
 
-// LoaderConfiguration holds the global configuration object for the Brokerpak
-// loader.
-type LoaderConfiguration struct {
+// ServerConfig holds the Brokerpak configuration for the server.
+type ServerConfig struct {
 	// Config holds global configuration options for the Brokerpak as a JSON object.
 	Config string `validate:"required,json"`
 
 	// Brokerpaks holds list of brokerpaks to load.
-	Brokerpaks map[string]BrokerpakResource `validate:"dive"`
+	Brokerpaks map[string]BrokerpakSourceConfig `validate:"dive,keys,osbname,endkeys"`
 }
 
 // Validate returns an error if the configuration is invalid.
-func (cfg *LoaderConfiguration) Validate() error {
+func (cfg *ServerConfig) Validate() error {
 	return validation.ValidateStruct(cfg)
 }
 
-// NewLoaderConfigurationFromEnv loads the global configuration from Viper.
-func NewLoaderConfigurationFromEnv() (*LoaderConfiguration, error) {
-	paks := map[string]BrokerpakResource{}
+// NewServerConfigFromEnv loads the global Brokerpak config from Viper.
+func NewServerConfigFromEnv() (*ServerConfig, error) {
+	paks := map[string]BrokerpakSourceConfig{}
 	sources := viper.GetString("brokerpak.sources")
 	if err := json.Unmarshal([]byte(sources), &paks); err != nil {
 		return nil, fmt.Errorf("couldn't deserialize brokerpak source config: %v", err)
 	}
 
-	cfg := LoaderConfiguration{
+	cfg := ServerConfig{
 		Config:     viper.GetString("brokerpak.config"),
 		Brokerpaks: paks,
 	}
