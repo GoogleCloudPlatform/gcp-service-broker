@@ -98,10 +98,9 @@ func DeserializeWorkspace(definition string) (*TerraformWorkspace, error) {
 // - The function updates the tfstate once finished.
 // - The function creates and destroys its own dir.
 type TerraformWorkspace struct {
-	Environment map[string]string  `json:"-"` // GOOGLE_CREDENTIALS needs to be set to the JSON key and GOOGLE_PROJECT needs to be set to the project
-	Modules     []ModuleDefinition `json:"modules"`
-	Instances   []ModuleInstance   `json:"instances"`
-	State       []byte             `json:"tfstate"`
+	Modules   []ModuleDefinition `json:"modules"`
+	Instances []ModuleInstance   `json:"instances"`
+	State     []byte             `json:"tfstate"`
 
 	// Executor is a function that gets invoked to shell out to Terraform.
 	// If left nil, the default executor is used.
@@ -283,13 +282,8 @@ func (workspace *TerraformWorkspace) runTf(subCommand string, args ...string) er
 	sub := []string{subCommand}
 	sub = append(sub, args...)
 
-	env := os.Environ()
-	for k, v := range workspace.Environment {
-		env = append(env, fmt.Sprintf("%s=%s", k, v))
-	}
-
 	c := exec.Command("terraform", sub...)
-	c.Env = env
+	c.Env = os.Environ()
 	c.Dir = workspace.dir
 
 	executor := DefaultExecutor
@@ -298,6 +292,18 @@ func (workspace *TerraformWorkspace) runTf(subCommand string, args ...string) er
 	}
 
 	return executor(c)
+}
+
+// CustomEnvironmentExecutor sets custom environment variables on the Terraform
+// execution.
+func CustomEnvironmentExecutor(environment map[string]string, wrapped TerraformExecutor) TerraformExecutor {
+	return func(c *exec.Cmd) error {
+		for k, v := range environment {
+			c.Env = append(c.Env, fmt.Sprintf("%s=%s", k, v))
+		}
+
+		return wrapped(c)
+	}
 }
 
 // CustomTerraformExecutor executes a custom Terraform binary that uses plugins

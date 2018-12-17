@@ -15,6 +15,7 @@
 package wrapper
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -140,5 +141,23 @@ func TestCustomTerraformExecutor(t *testing.T) {
 				t.Errorf("args weren't updated correctly, expected: %#v, actual: %#v", tc.Expected.Args, actual.Args)
 			}
 		})
+	}
+}
+
+func TestCustomEnvironmentExecutor(t *testing.T) {
+	c := exec.Command("/path/to/terraform", "apply")
+	c.Env = []string{"ORIGINAL=value"}
+
+	actual := exec.Command("!actual-never-got-called!")
+	executor := CustomEnvironmentExecutor(map[string]string{"FOO": "bar"}, func(c *exec.Cmd) error {
+		actual = c
+		return nil
+	})
+
+	executor(c)
+	expected := []string{"ORIGINAL=value", "FOO=bar"}
+
+	if !reflect.DeepEqual(expected, actual.Env) {
+		fmt.Errorf("Expected %v actual %v", expected, actual)
 	}
 }
