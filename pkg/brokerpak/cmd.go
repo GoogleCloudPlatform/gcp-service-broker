@@ -16,6 +16,7 @@ package brokerpak
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -31,8 +32,6 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/ziputil"
 )
-
-const BrokerbakListConfigVar = "brokerpak.packs"
 
 // Init initializes a new brokerpak in the given directory with an example manifest and service definition.
 func Init(directory string) error {
@@ -70,6 +69,10 @@ func Pack(directory string) (string, error) {
 
 // Info writes out human-readable information about the brokerpak.
 func Info(pack string) error {
+	return finfo(pack, os.Stdout)
+}
+
+func finfo(pack string, out io.Writer) error {
 	brokerPak, err := OpenBrokerPak(pack)
 	if err != nil {
 		return err
@@ -86,9 +89,9 @@ func Info(pack string) error {
 	}
 
 	// Pack information
-	fmt.Println("Information")
+	fmt.Fprintln(out, "Information")
 	{
-		w := cmdTabWriter()
+		w := cmdTabWriter(out)
 		fmt.Fprintf(w, "format\t%d\n", mf.PackVersion)
 		fmt.Fprintf(w, "name\t%s\n", mf.Name)
 		fmt.Fprintf(w, "version\t%s\n", mf.Version)
@@ -102,23 +105,23 @@ func Info(pack string) error {
 		}
 
 		w.Flush()
-		fmt.Println()
+		fmt.Fprintln(out)
 	}
 
 	{
-		fmt.Println("Dependencies")
-		w := cmdTabWriter()
+		fmt.Fprintln(out, "Dependencies")
+		w := cmdTabWriter(out)
 		fmt.Fprintln(w, "NAME\tVERSION\tSOURCE")
 		for _, resource := range mf.TerraformResources {
 			fmt.Fprintf(w, "%s\t%s\t%s\n", resource.Name, resource.Version, resource.Source)
 		}
 		w.Flush()
-		fmt.Println()
+		fmt.Fprintln(out)
 	}
 
 	{
-		fmt.Println("Services")
-		w := cmdTabWriter()
+		fmt.Fprintln(out, "Services")
+		w := cmdTabWriter(out)
 		fmt.Fprintln(w, "ID\tNAME\tDESCRIPTION\tPLANS")
 		for _, svc := range services {
 			fmt.Fprintf(w, "%s\t%s\t%s\t%d\n", svc.Id, svc.Name, svc.Description, len(svc.Plans))
@@ -127,16 +130,16 @@ func Info(pack string) error {
 		fmt.Println()
 	}
 
-	fmt.Println("Contents")
-	ziputil.List(&brokerPak.contents.Reader, os.Stdout)
-	fmt.Println()
+	fmt.Fprintln(out, "Contents")
+	ziputil.List(&brokerPak.contents.Reader, out)
+	fmt.Fprintln(out)
 
 	return nil
 }
 
-func cmdTabWriter() *tabwriter.Writer {
+func cmdTabWriter(out io.Writer) *tabwriter.Writer {
 	// args: output, minwidth, tabwidth, padding, padchar, flags
-	return tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.StripEscape)
+	return tabwriter.NewWriter(out, 0, 0, 2, ' ', tabwriter.StripEscape)
 }
 
 // Validate checks the brokerpak for syntactic and limited semantic errors.
