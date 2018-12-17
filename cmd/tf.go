@@ -92,11 +92,17 @@ func init() {
 			}
 
 			w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.StripEscape)
-			fmt.Fprintln(w, "ID\tLast Operation\tState\tLast Updated\tMessage")
+			fmt.Fprintln(w, "ID\tLast Operation\tState\tLast Updated\tElapsed\tMessage")
 
 			for _, result := range results {
 				lastUpdate := result.UpdatedAt.Format(time.RFC822)
-				fmt.Fprintf(w, "%q\t%s\t%s\t%s\t%q\n", result.ID, result.LastOperationType, result.LastOperationState, lastUpdate, result.LastOperationMessage)
+
+				elapsed := ""
+				if result.LastOperationState == tf.InProgress {
+					elapsed = time.Now().Sub(result.UpdatedAt).Truncate(time.Second).String()
+				}
+
+				fmt.Fprintf(w, "%q\t%s\t%s\t%s\t%s\t%q\n", result.ID, result.LastOperationType, result.LastOperationState, lastUpdate, elapsed, result.LastOperationMessage)
 			}
 			w.Flush()
 		},
