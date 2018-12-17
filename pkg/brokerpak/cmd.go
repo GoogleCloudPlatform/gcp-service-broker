@@ -195,6 +195,8 @@ func registerPak(config BrokerpakSourceConfig, registry broker.BrokerRegistry) e
 		return err
 	}
 
+	// TODO(josephlewis42) wire in support for overriding environment variables
+	// here via the BrokerpakSourceConfig.Config and ServerConfig.Config options
 	binPath := filepath.Join(dir, "terraform")
 	executor := wrapper.CustomTerraformExecutor(binPath, dir, wrapper.DefaultExecutor)
 

@@ -62,7 +62,7 @@ type ServerConfig struct {
 	Config string `validate:"required,json"`
 
 	// Brokerpaks holds list of brokerpaks to load.
-	Brokerpaks map[string]BrokerpakSourceConfig `validate:"dive,keys,osbname,endkeys"`
+	Brokerpaks map[string]BrokerpakSourceConfig `validate:"dive,keys,osbname,endkeys,dive"`
 }
 
 // Validate returns an error if the configuration is invalid.
