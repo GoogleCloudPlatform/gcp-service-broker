@@ -112,13 +112,15 @@ func (runner *TfJobRunner) hydrateWorkspace(ctx context.Context, deployment *mod
 		return nil, err
 	}
 
-	// set environment variables
-	ws.Environment = map[string]string{
+	// TODO(josephlewis42) don't assume every pak needs Google specific creds
+	// GOOGLE_CREDENTIALS needs to be set to the JSON key and GOOGLE_PROJECT
+	// needs to be set to the project
+	env := map[string]string{
 		"GOOGLE_CREDENTIALS": runner.ServiceAccount,
 		"GOOGLE_PROJECT":     runner.ProjectId,
 	}
 
-	ws.Executor = runner.Executor
+	ws.Executor = wrapper.CustomEnvironmentExecutor(env, runner.Executor)
 
 	logger := utils.NewLogger("job-runner")
 	logger.Info("wrapping", lager.Data{
