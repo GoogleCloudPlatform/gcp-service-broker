@@ -221,3 +221,17 @@ func NewLogger(name string) lager.Logger {
 
 	return logger
 }
+
+// SplitNewlineDelimitedList splits a list of newline delimited items and trims
+// any leading or trailing whitespace from them.
+func SplitNewlineDelimitedList(paksText string) []string {
+	var out []string
+	for _, pak := range strings.Split(paksText, "\n") {
+		pakUrl := strings.TrimSpace(pak)
+		if pakUrl != "" {
+			out = append(out, pakUrl)
+		}
+	}
+
+	return out
+}

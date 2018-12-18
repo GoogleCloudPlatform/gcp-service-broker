@@ -16,6 +16,7 @@ package brokerpak
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -26,10 +27,10 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf/wrapper"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/ziputil"
-	"github.com/spf13/viper"
 )
 
 // Init initializes a new brokerpak in the given directory with an example manifest and service definition.
@@ -57,8 +58,8 @@ func Pack(directory string) (string, error) {
 		return "", err
 	}
 	manifestPath := filepath.Join(directory, manifestName)
-	manifest, err := OpenManifest(manifestPath)
-	if err != nil {
+	manifest := &Manifest{}
+	if err := stream.Copy(stream.FromFile(manifestPath), stream.ToYaml(manifest)); err != nil {
 		return "", err
 	}
 
@@ -68,6 +69,10 @@ func Pack(directory string) (string, error) {
 
 // Info writes out human-readable information about the brokerpak.
 func Info(pack string) error {
+	return finfo(pack, os.Stdout)
+}
+
+func finfo(pack string, out io.Writer) error {
 	brokerPak, err := OpenBrokerPak(pack)
 	if err != nil {
 		return err
@@ -84,9 +89,9 @@ func Info(pack string) error {
 	}
 
 	// Pack information
-	fmt.Println("Information")
+	fmt.Fprintln(out, "Information")
 	{
-		w := cmdTabWriter()
+		w := cmdTabWriter(out)
 		fmt.Fprintf(w, "format\t%d\n", mf.PackVersion)
 		fmt.Fprintf(w, "name\t%s\n", mf.Name)
 		fmt.Fprintf(w, "version\t%s\n", mf.Version)
@@ -100,23 +105,23 @@ func Info(pack string) error {
 		}
 
 		w.Flush()
-		fmt.Println()
+		fmt.Fprintln(out)
 	}
 
 	{
-		fmt.Println("Dependencies")
-		w := cmdTabWriter()
+		fmt.Fprintln(out, "Dependencies")
+		w := cmdTabWriter(out)
 		fmt.Fprintln(w, "NAME\tVERSION\tSOURCE")
 		for _, resource := range mf.TerraformResources {
 			fmt.Fprintf(w, "%s\t%s\t%s\n", resource.Name, resource.Version, resource.Source)
 		}
 		w.Flush()
-		fmt.Println()
+		fmt.Fprintln(out)
 	}
 
 	{
-		fmt.Println("Services")
-		w := cmdTabWriter()
+		fmt.Fprintln(out, "Services")
+		w := cmdTabWriter(out)
 		fmt.Fprintln(w, "ID\tNAME\tDESCRIPTION\tPLANS")
 		for _, svc := range services {
 			fmt.Fprintf(w, "%s\t%s\t%s\t%d\n", svc.Id, svc.Name, svc.Description, len(svc.Plans))
@@ -125,16 +130,16 @@ func Info(pack string) error {
 		fmt.Println()
 	}
 
-	fmt.Println("Contents")
-	ziputil.List(&brokerPak.contents.Reader, os.Stdout)
-	fmt.Println()
+	fmt.Fprintln(out, "Contents")
+	ziputil.List(&brokerPak.contents.Reader, out)
+	fmt.Fprintln(out)
 
 	return nil
 }
 
-func cmdTabWriter() *tabwriter.Writer {
+func cmdTabWriter(out io.Writer) *tabwriter.Writer {
 	// args: output, minwidth, tabwidth, padding, padchar, flags
-	return tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.StripEscape)
+	return tabwriter.NewWriter(out, 0, 0, 2, ' ', tabwriter.StripEscape)
 }
 
 // Validate checks the brokerpak for syntactic and limited semantic errors.
@@ -152,47 +157,72 @@ func Validate(pack string) error {
 // with the given registry.
 func RegisterAll(registry broker.BrokerRegistry) error {
 	registerLogger := utils.NewLogger("brokerpak-registration")
-	// create a temp directory to hold all the paks
-	pakDir, err := ioutil.TempDir("", "brokerpaks")
+
+	pakConfig, err := NewServerConfigFromEnv()
 	if err != nil {
-		return fmt.Errorf("couldn't create brokerpak staging area: %v", err)
+		return err
 	}
-	defer os.RemoveAll(pakDir)
 
 	// XXX(josephlewis42): this could be parallelized to increase performance
 	// if we find people are pulling lots of data from the network.
-	for i, packSource := range viper.GetStringSlice("brokerpak.packs") {
-		destFile := filepath.Join(pakDir, fmt.Sprintf("pack-%d.brokerpak", i))
-		registerLogger.Debug("importing brokerpak", lager.Data{
-			"source":      packSource,
-			"destination": destFile,
+	for name, pak := range pakConfig.Brokerpaks {
+		registerLogger.Info("registering", lager.Data{
+			"name":           name,
+			"excluded-plans": pak.ExcludedPlansSlice(),
+			"prefix":         pak.ServicePrefix,
 		})
 
-		if err := fetchBrokerpak(packSource, destFile); err != nil {
-			return err
-		}
-
-		registerLogger.Debug("registering brokerpak", lager.Data{
-			"source":      packSource,
-			"destination": destFile,
-		})
-		if err := registerPak(destFile, registry); err != nil {
-			return err
+		if err := registerPak(pak, registry); err != nil {
+			return fmt.Errorf("couldn't register %q: %v", name, err)
 		}
 	}
 
 	return nil
 }
 
-func registerPak(pack string, registry broker.BrokerRegistry) error {
-	brokerPak, err := OpenBrokerPak(pack)
+// RegisterPak fetches the brokerpak and registers it with the given registry.
+func registerPak(config BrokerpakSourceConfig, registry broker.BrokerRegistry) error {
+	brokerPak, err := DownloadAndOpenBrokerpak(config.BrokerpakUri)
 	if err != nil {
-		return fmt.Errorf("couldn't open brokerpak: %q: %v", pack, err)
+		return fmt.Errorf("couldn't open brokerpak: %q: %v", config.BrokerpakUri, err)
 	}
 	defer brokerPak.Close()
 
-	if err := brokerPak.Register(registry); err != nil {
-		return fmt.Errorf("couldn't register brokerpak: %q: %v", pack, err)
+	dir, err := ioutil.TempDir("", "brokerpak")
+	if err != nil {
+		return err
+	}
+
+	// extract the Terraform directory
+	if err := brokerPak.ExtractPlatformBins(dir); err != nil {
+		return err
+	}
+
+	// TODO(josephlewis42) wire in support for overriding environment variables
+	// here via the BrokerpakSourceConfig.Config and ServerConfig.Config options
+	binPath := filepath.Join(dir, "terraform")
+	executor := wrapper.CustomTerraformExecutor(binPath, dir, wrapper.DefaultExecutor)
+
+	// register the services
+	services, err := brokerPak.Services()
+	if err != nil {
+		return err
+	}
+
+	toIgnore := utils.NewStringSet(config.ExcludedPlansSlice()...)
+	for _, svc := range services {
+		if toIgnore.Contains(svc.Id) {
+			continue
+		}
+
+		svc.Name = config.ServicePrefix + svc.Name
+
+		bs, err := svc.ToService(executor)
+		if err != nil {
+			return err
+		}
+
+		registry.Register(bs)
 	}
 
 	return nil
@@ -201,7 +231,7 @@ func registerPak(pack string, registry broker.BrokerRegistry) error {
 // RunExamples executes the examples from a brokerpak.
 func RunExamples(pack string) error {
 	registry := broker.BrokerRegistry{}
-	if err := registerPak(pack, registry); err != nil {
+	if err := registerPak(NewBrokerpakSourceConfigFromPath(pack), registry); err != nil {
 		return err
 	}
 
@@ -216,7 +246,7 @@ func RunExamples(pack string) error {
 // Docs generates the markdown usage docs for the given pack and writes them to stdout.
 func Docs(pack string) error {
 	registry := broker.BrokerRegistry{}
-	if err := registerPak(pack, registry); err != nil {
+	if err := registerPak(NewBrokerpakSourceConfigFromPath(pack), registry); err != nil {
 		return err
 	}
 

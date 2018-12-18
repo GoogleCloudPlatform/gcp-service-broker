@@ -20,9 +20,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf/wrapper"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/ziputil"
 )
@@ -60,7 +58,6 @@ func (pak *BrokerPakReader) Services() ([]tf.TfServiceDefinitionV1, error) {
 	}
 
 	var services []tf.TfServiceDefinitionV1
-
 	for _, serviceDefinition := range manifest.ServiceDefinitions {
 		tmp := tf.TfServiceDefinitionV1{}
 		if err := pak.readYaml(serviceDefinition, &tmp); err != nil {
@@ -104,40 +101,9 @@ func (pak *BrokerPakReader) Close() error {
 	return pak.contents.Close()
 }
 
-// Register extracts the binaries used by the services provided by this pak,
-// then registers those services with the given registry.
-func (pak *BrokerPakReader) Register(registry broker.BrokerRegistry) error {
-	dir, err := ioutil.TempDir("", "brokerpak")
-	if err != nil {
-		return err
-	}
-
-	// extract the Terraform directory
-	if err := pak.extractPlatformBins(dir); err != nil {
-		return err
-	}
-
-	binPath := filepath.Join(dir, "terraform")
-	executor := wrapper.CustomTerraformExecutor(binPath, dir, wrapper.DefaultExecutor)
-
-	// register the services
-	services, err := pak.Services()
-	if err != nil {
-		return err
-	}
-	for _, svc := range services {
-		bs, err := svc.ToService(executor)
-		if err != nil {
-			return err
-		}
-
-		registry.Register(bs)
-	}
-
-	return nil
-}
-
-func (pak *BrokerPakReader) extractPlatformBins(destination string) error {
+// ExtractPlatformBins extracts the binaries for the current platform to the
+// given destination.
+func (pak *BrokerPakReader) ExtractPlatformBins(destination string) error {
 	mf, err := pak.Manifest()
 	if err != nil {
 		return err
@@ -159,4 +125,22 @@ func OpenBrokerPak(pakPath string) (*BrokerPakReader, error) {
 		return nil, err
 	}
 	return &BrokerPakReader{contents: rc}, nil
+}
+
+// DownloadAndOpenBrokerpak downloads a (potentially remote) brokerpak to
+// the local filesystem and opens it.
+func DownloadAndOpenBrokerpak(pakUri string) (*BrokerPakReader, error) {
+	// create a temp directory to hold the pak
+	pakDir, err := ioutil.TempDir("", "brokerpak-staging")
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create brokerpak staging area for %q: %v", pakUri, err)
+	}
+
+	// Download the brokerpak
+	localLocation := filepath.Join(pakDir, "pack.brokerpak")
+	if err := fetchBrokerpak(pakUri, localLocation); err != nil {
+		return nil, fmt.Errorf("couldn't download brokerpak %q: %v", pakUri, err)
+	}
+
+	return OpenBrokerPak(localLocation)
 }
