@@ -127,7 +127,7 @@ func (r *Registrar) createExecutor(brokerPak *BrokerPakReader, vc *varcontext.Va
 }
 
 // resolveParameters resolves environment variables from the given global and
-// brokerpak specific
+// brokerpak specific.
 func (Registrar) resolveParameters(params []ManifestParameter, vc *varcontext.VarContext) map[string]string {
 	out := make(map[string]string)
 

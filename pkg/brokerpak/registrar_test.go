@@ -48,7 +48,7 @@ func TestNewRegistrar(t *testing.T) {
 	}
 
 	if len(registry) != 1 {
-		t.Fatal("expected length to be 1 got", len(registry))
+		t.Fatal("Expected length to be 1 got", len(registry))
 	}
 }
 
@@ -263,7 +263,7 @@ func TestRegistrar_walk(t *testing.T) {
 			})
 
 			if err != nil {
-				t.Fatalf("expected no error, got: %v", err)
+				t.Fatalf("Expected no error, got: %v", err)
 			}
 
 			if !reflect.DeepEqual(tc.Expected, actual) {
@@ -312,7 +312,7 @@ func TestRegistrar_walk(t *testing.T) {
 			})
 
 			if err == nil {
-				t.Fatalf("expected error %q, got: nil", tc.Expected)
+				t.Fatalf("Expected error %q, got: nil", tc.Expected)
 			}
 
 			if tc.Expected != err.Error() {

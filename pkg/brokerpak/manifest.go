@@ -132,7 +132,7 @@ func (m *Manifest) packDefinitions(tmp, base string) error {
 // passed to the executed Terraform instance.
 type ManifestParameter struct {
 	// NOTE: Future fields should take inspiration from the CNAB spec because they
-	// solve a similar problem.https://github.com/deislabs/cnab-spec
+	// solve a similar problem. https://github.com/deislabs/cnab-spec
 	Name        string `yaml:"name" validate:"required"`
 	Description string `yaml:"description" validate:"required"`
 }
