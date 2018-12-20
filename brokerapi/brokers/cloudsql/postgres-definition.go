@@ -59,79 +59,79 @@ func postgresServiceDefinition() *broker.ServiceDefinition {
 				        "name": "postgres-db-g1-small"
 				    },
 				    {
-				        "service_properties": { "tier": "db-n1-standard-1", "max_disk_size": "10230" },
+				        "service_properties": { "tier": "db-custom-1-3840", "max_disk_size": "10230" },
 				        "description": "PostgreSQL on a db-n1-standard-1 (1 CPUs, 3.75 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "c4e68ab5-34ca-4d02-857d-3e6b3ab079a7",
 				        "name": "postgres-db-n1-standard-1"
 				    },
 				    {
-				        "service_properties": { "tier": "db-n1-standard-2", "max_disk_size": "10230" },
+				        "service_properties": { "tier": "db-custom-2-7680", "max_disk_size": "10230" },
 				        "description": "PostgreSQL on a db-n1-standard-2 (2 CPUs, 7.5 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "3f578ecf-885c-4b60-b38b-60272f34e00f",
 				        "name": "postgres-db-n1-standard-2"
 				    },
 				    {
-				        "service_properties": { "tier": "db-n1-standard-4", "max_disk_size": "10230" },
+				        "service_properties": { "tier": "db-custom-4-15360", "max_disk_size": "10230" },
 				        "description": "PostgreSQL on a db-n1-standard-4 (4 CPUs, 15 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "b7fcab5d-d66d-4e82-af16-565e84cef7f9",
 				        "name": "postgres-db-n1-standard-4"
 				    },
 				    {
-				        "service_properties": { "tier": "db-n1-standard-8", "max_disk_size": "10230" },
+				        "service_properties": { "tier": "db-custom-8-30720", "max_disk_size": "10230" },
 				        "description": "PostgreSQL on a db-n1-standard-8 (8 CPUs, 30 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "4b2fa14a-caf1-42e0-bd8c-3342502008a8",
 				        "name": "postgres-db-n1-standard-8"
 				    },
 				    {
-				        "service_properties": { "tier": "db-n1-standard-16", "max_disk_size": "10230" },
+				        "service_properties": { "tier": "db-custom-16-61440", "max_disk_size": "10230" },
 				        "description": "PostgreSQL on a db-n1-standard-16 (16 CPUs, 60 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "ca2e770f-bfa5-4fb7-a249-8b943c3474ca",
 				        "name": "postgres-db-n1-standard-16"
 				    },
 				    {
-				        "service_properties": { "tier": "db-n1-standard-32", "max_disk_size": "10230" },
+				        "service_properties": { "tier": "db-custom-32-122880", "max_disk_size": "10230" },
 				        "description": "PostgreSQL on a db-n1-standard-32 (32 CPUs, 120 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "b44f8294-b003-4a50-80c2-706858073f44",
 				        "name": "postgres-db-n1-standard-32"
 				    },
 				    {
-				        "service_properties": { "tier": "db-n1-standard-64", "max_disk_size": "10230" },
+				        "service_properties": { "tier": "db-custom-64-245760", "max_disk_size": "10230" },
 				        "description": "PostgreSQL on a db-n1-standard-64 (64 CPUs, 240 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "d97326e0-5af2-4da5-b970-b4772d59cded",
 				        "name": "postgres-db-n1-standard-64"
 				    },
 				    {
-				        "service_properties": {"tier": "db-n1-highmem-2", "max_disk_size": "10230" },
+				        "service_properties": {"tier": "db-custom-2-13312", "max_disk_size": "10230" },
 				        "description": "PostgreSQL on a db-n1-highmem-2 (2 CPUs, 13 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "c10f8691-02f5-44eb-989f-7217393012ca",
 				        "name": "postgres-db-n1-highmem-2"
 				    },
 				    {
-				        "service_properties": { "tier": "db-n1-highmem-4", "max_disk_size": "10230" },
+				        "service_properties": { "tier": "db-custom-4-26624", "max_disk_size": "10230" },
 				        "description": "PostgreSQL on a db-n1-highmem-4 (4 CPUs, 26 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "610cc78d-d26a-41a9-90b7-547a44517f03",
 				        "name": "postgres-db-n1-highmem-4"
 				    },
 				    {
-				        "service_properties": { "tier": "db-n1-highmem-8",  "max_disk_size": "10230" },
+				        "service_properties": { "tier": "db-custom-8-53248",  "max_disk_size": "10230" },
 				        "description": "PostgreSQL on a db-n1-highmem-8 (8 CPUs, 52 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "2a351e8d-958d-4c4f-ae46-c984fec18740",
 				        "name": "postgres-db-n1-highmem-8"
 				    },
 				    {
-				        "service_properties": { "tier": "db-n1-highmem-16", "max_disk_size": "10230" },
+				        "service_properties": { "tier": "db-custom-16-106496", "max_disk_size": "10230" },
 				        "description": "PostgreSQL on a db-n1-highmem-16 (16 CPUs, 104 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "51d3ca0c-9d21-447d-a395-3e0dc0659775",
 				        "name": "postgres-db-n1-highmem-16"
 				    },
 				    {
-				        "service_properties": { "tier": "db-n1-highmem-32", "max_disk_size": "10230" },
+				        "service_properties": { "tier": "db-custom-32-212992", "max_disk_size": "10230" },
 				        "description": "PostgreSQL on a db-n1-highmem-32 (32 CPUs, 208 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "2e72b386-f7ce-4f0d-a149-9f9a851337d4",
 				        "name": "postgres-db-n1-highmem-32"
 				    },
 				    {
-				        "service_properties": { "tier": "db-n1-highmem-64", "max_disk_size": "10230" },
+				        "service_properties": { "tier": "db-custom-64-425984", "max_disk_size": "10230" },
 				        "description": "PostgreSQL on a db-n1-highmem-64 (64 CPUs, 416 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "82602649-e4ac-4a2f-b80d-dacd745aed6a",
 				        "name": "postgres-db-n1-highmem-64"
@@ -229,6 +229,19 @@ func postgresServiceDefinition() *broker.ServiceDefinition {
 			},
 		},
 		Examples: []broker.ServiceExample{
+			{
+				Name:        "Dedicated Machine Sandbox",
+				Description: "A low end PostgreSQL sandbox that uses a dedicated machine.",
+				PlanId:      "c4e68ab5-34ca-4d02-857d-3e6b3ab079a7",
+				ProvisionParams: map[string]interface{}{
+					"backups_enabled": "false",
+					"binlog":          "false",
+					"disk_size":       "25",
+				},
+				BindParams: map[string]interface{}{
+					"role": "cloudsql.editor",
+				},
+			},
 			{
 				Name:        "Development Sandbox",
 				Description: "An inexpensive PostgreSQL sandbox for developing with no backups.",

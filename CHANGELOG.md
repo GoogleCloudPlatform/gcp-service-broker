@@ -30,6 +30,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Removed
  - The `examples/` directory.
 
+### Fixed
+ - Fixed machine types for PostgreSQL to use custom but keep the old names for compatibility.
+
 ## [4.1.0] - 2018-11-05
 
 ### Added
