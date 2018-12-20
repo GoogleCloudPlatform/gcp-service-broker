@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// +build !service_broker
+
 // `osdfgen` can be used to build a CSV suitable for uploading to Pivotal's
 // [OSDF Generator](http://osdf-generator.cfapps.io/static/index.html).
 // It determines licenses by sniffing the dependencies listed in `Gopkg.lock`.
