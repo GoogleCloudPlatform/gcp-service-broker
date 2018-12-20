@@ -289,7 +289,6 @@ func TestPostgresCustomMachineTypes(t *testing.T) {
 
 	for _, plan := range sd.Plans {
 		t.Run(plan.Name, func(t *testing.T) {
-
 			props := plan.ServiceProperties
 
 			tier := props["tier"]
