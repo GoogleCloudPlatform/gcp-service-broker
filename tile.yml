@@ -268,6 +268,13 @@ forms:
   label: Compatibility
   description: Legacy Compatibility Options
   properties:
+  - name: gsb_compatibility_enable_cf_sharing
+    type: boolean
+    default: "false"
+    label: enable-cf-sharing
+    description: Set all services to have the Sharable flag so they can be shared
+      across spaces in PCF.
+    configurable: true
   - name: gsb_compatibility_enable_eol_services
     type: boolean
     default: "false"
