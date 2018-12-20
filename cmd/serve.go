@@ -44,6 +44,9 @@ var v3CompatibilityToggle = toggles.Compatibility.Toggle("three-to-four.legacy-p
 	This option installs a compatibility layer which checks if a service is using the correct plan GUID.
 	If the service does not use the correct GUID, the request will fail with a message about how to upgrade.`)
 
+var cfCompatibilityToggle = toggles.Compatibility.Toggle("enable-cf-sharing", false, `Set all services to have the Sharable flag so they can be shared
+	across spaces in PCF.`)
+
 func init() {
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "serve",
@@ -97,6 +100,11 @@ func serve() {
 		"port":     port,
 		"username": username,
 	})
+
+	if cfCompatibilityToggle.IsActive() {
+		logger.Info("Enabling Cloud Foundry service sharing")
+		serviceBroker = server.NewCfSharingWrapper(serviceBroker)
+	}
 
 	if v3CompatibilityToggle.IsActive() {
 		logger.Info("Enabling v3 Compatibility Mode")
