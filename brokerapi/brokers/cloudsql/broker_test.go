@@ -21,6 +21,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/pivotal-cf/brokerapi"
+	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 )
@@ -276,6 +277,51 @@ func TestCreateProvisionRequest(t *testing.T) {
 			}
 
 			tc.Validate(t, *request, *instanceInfo)
+		})
+	}
+}
+
+func TestPostgresCustomMachineTypes(t *testing.T) {
+	sd, err := postgresServiceDefinition().ServiceDefinition()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, plan := range sd.Plans {
+		t.Run(plan.Name, func(t *testing.T) {
+			props := plan.ServiceProperties
+
+			tier := props["tier"]
+			if !strings.HasPrefix(tier, "db-custom") {
+				return
+			}
+
+			splitTier := strings.Split(tier, "-")
+			if len(splitTier) != 4 {
+				t.Errorf("Expected custom machine type to be in format db-custom-[NCPU]-[MEM_MB]")
+			}
+
+			cpu := cast.ToInt(splitTier[2])
+			mem := cast.ToInt(splitTier[3])
+
+			// Rules for custom machines
+			// https://cloud.google.com/compute/docs/instances/creating-instance-with-custom-machine-type#create
+			if cpu != 1 && cpu%2 != 0 {
+				t.Errorf("Only machine types with 1 vCPU or an even number of vCPUs can be created got %d", cpu)
+			}
+
+			memPerCpu := float64(mem) / float64(cpu)
+			if memPerCpu < (.9*1024) || memPerCpu > (6.5*1024) {
+				t.Errorf("Memory must be between 0.9 GB per vCPU, up to 6.5 GB per vCPU got %f MB/CPU", memPerCpu)
+			}
+
+			if mem%256 != 0 {
+				t.Errorf("The total memory of the instance must be a multiple of 256 MB, got: %d MB", mem)
+			}
+
+			if cpu > 64 {
+				t.Errorf("The maximum number of CPUs allowed are 64, got %d", cpu)
+			}
 		})
 	}
 }
