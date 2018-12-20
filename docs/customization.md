@@ -113,6 +113,26 @@ You can configure the following environment variables:
 
 
 
+## Brokerpaks
+
+Brokerpaks are ways to extend the broker with custom services defined by Terraform templates.
+A brokerpak is an archive comprised of a versioned Terraform binary and providers for one or more platform, a manifest, one or more service definitions, and source code.
+
+You can configure the following environment variables:
+
+<b><tt>GSB_BROKERPAK_CONFIG</tt></b> - <i>text</i> - Global Brokerpak Configuration
+
+A JSON map of configuration key/value pairs for all brokerpaks. If a variable isn't found in the specific brokerpak's configuration it's looked up here.
+
+
+
+<ul>
+  <li><b>Required</b></li>
+  <li>Default: <code>{}</code></li>
+</ul>
+
+
+
 ## Enable Services
 
 Enable or disable services.
@@ -163,6 +183,17 @@ You can configure the following environment variables:
   <li>Default: <code>true</code></li>
 </ul>
 
+<b><tt>GSB_SERVICE_GOOGLE_DATAFLOW_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Dataflow instances.
+
+
+
+
+
+<ul>
+  <li><b>Required</b></li>
+  <li>Default: <code>true</code></li>
+</ul>
+
 <b><tt>GSB_SERVICE_GOOGLE_DATASTORE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Datastore instances.
 
 
@@ -175,6 +206,17 @@ You can configure the following environment variables:
 </ul>
 
 <b><tt>GSB_SERVICE_GOOGLE_DIALOGFLOW_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Dialogflow instances.
+
+
+
+
+
+<ul>
+  <li><b>Required</b></li>
+  <li>Default: <code>true</code></li>
+</ul>
+
+<b><tt>GSB_SERVICE_GOOGLE_FIRESTORE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Firestore instances.
 
 
 
@@ -377,6 +419,28 @@ Legacy Compatibility Options
 
 You can configure the following environment variables:
 
+<b><tt>GSB_COMPATIBILITY_ENABLE_CATALOG_SCHEMAS</tt></b> - <i>boolean</i> - enable-catalog-schemas
+
+Enable generating JSONSchema for the service catalog.
+
+
+
+<ul>
+  <li><b>Required</b></li>
+  <li>Default: <code>false</code></li>
+</ul>
+
+<b><tt>GSB_COMPATIBILITY_ENABLE_CF_SHARING</tt></b> - <i>boolean</i> - enable-cf-sharing
+
+Set all services to have the Sharable flag so they can be shared across spaces in PCF.
+
+
+
+<ul>
+  <li><b>Required</b></li>
+  <li>Default: <code>false</code></li>
+</ul>
+
 <b><tt>GSB_COMPATIBILITY_ENABLE_EOL_SERVICES</tt></b> - <i>boolean</i> - enable-eol-services
 
 Enable broker services that are end of life.
@@ -384,7 +448,7 @@ Enable broker services that are end of life.
 
 
 <ul>
-  <li><i>Optional</i></li>
+  <li><b>Required</b></li>
   <li>Default: <code>false</code></li>
 </ul>
 
@@ -395,7 +459,7 @@ Enable services that are in GCP Beta. These have no SLA or support policy.
 
 
 <ul>
-  <li><i>Optional</i></li>
+  <li><b>Required</b></li>
   <li>Default: <code>true</code></li>
 </ul>
 
@@ -406,7 +470,7 @@ Enable services that use deprecated GCP components.
 
 
 <ul>
-  <li><i>Optional</i></li>
+  <li><b>Required</b></li>
   <li>Default: <code>false</code></li>
 </ul>
 
@@ -417,7 +481,7 @@ Enables validating user input variables against JSON Schema definitions.
 
 
 <ul>
-  <li><i>Optional</i></li>
+  <li><b>Required</b></li>
   <li>Default: <code>true</code></li>
 </ul>
 
@@ -428,8 +492,19 @@ Enable services that are new to the broker this release.
 
 
 <ul>
-  <li><i>Optional</i></li>
+  <li><b>Required</b></li>
   <li>Default: <code>true</code></li>
+</ul>
+
+<b><tt>GSB_COMPATIBILITY_ENABLE_TERRAFORM_SERVICES</tt></b> - <i>boolean</i> - enable-terraform-services
+
+Enable services that use the experimental, unstable, Terraform back-end.
+
+
+
+<ul>
+  <li><b>Required</b></li>
+  <li>Default: <code>false</code></li>
 </ul>
 
 <b><tt>GSB_COMPATIBILITY_ENABLE_UNMAINTAINED_SERVICES</tt></b> - <i>boolean</i> - enable-unmaintained-services
@@ -439,7 +514,7 @@ Enable broker services that are unmaintained.
 
 
 <ul>
-  <li><i>Optional</i></li>
+  <li><b>Required</b></li>
   <li>Default: <code>false</code></li>
 </ul>
 
@@ -450,7 +525,7 @@ Enable compatibility with the GCP Service Broker v3.x. Before version 4.0, each 
 
 
 <ul>
-  <li><i>Optional</i></li>
+  <li><b>Required</b></li>
   <li>Default: <code>false</code></li>
 </ul>
 
@@ -1294,6 +1369,130 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
+</ul>
+
+
+  </td>
+</tr>
+
+</table>
+
+### Configure Brokerpaks
+
+Configure Brokerpaks
+To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>GSB_BROKERPAK_SOURCES</tt>.
+
+For example:
+<code>
+[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "uri": setme, "service_prefix": setme, "excluded_plans": setme, "config": setme, "notes": setme},...]
+</code>
+
+<table>
+<tr>
+  <th>JSON Property</th>
+  <th>Type</th>
+  <th>Label</th>
+  <th>Details</th>
+</tr>
+<tr>
+  <td><tt>id</tt></td>
+  <td><i>string</i></td>
+  <td>Plan UUID</td>
+  <td>
+    The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
+    <ul><li><b>Required</b></li></ul>
+  </td>
+</tr>
+<tr>
+  <td><tt>name</tt></td>
+  <td><i>string</i></td>
+  <td>Plan CLI Name</td>
+  <td>
+    The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
+    <ul><li><b>Required</b></li></ul>
+  </td>
+</tr>
+
+
+<tr>
+  <td><tt>uri</tt></td>
+  <td><i>string</i></td>
+  <td>Brokerpak URI</td>
+  <td>
+  The URI to load. Supported protocols are http, https, gs, and git.
+				Cloud Storage (gs) URIs follow the gs://<bucket>/<path> convention and will be read using the service broker service account.
+
+				You can validate the checksum of any file on download by appending a checksum query parameter to the URI in the format type:value.
+				Valid checksum types are md5, sha1, sha256 and sha512. e.g. gs://foo/bar.brokerpak?checksum=md5:3063a2c62e82ef8614eee6745a7b6b59
+
+
+<ul>
+  <li><b>Required</b></li>
+</ul>
+
+
+  </td>
+</tr>
+
+<tr>
+  <td><tt>service_prefix</tt></td>
+  <td><i>string</i></td>
+  <td>Service Prefix</td>
+  <td>
+  A prefix to prepend to every service name. This will be exact, so you may want to include a trailing dash.
+
+
+<ul>
+  <li><i>Optional</i></li>
+</ul>
+
+
+  </td>
+</tr>
+
+<tr>
+  <td><tt>excluded_plans</tt></td>
+  <td><i>text</i></td>
+  <td>Excluded Plans</td>
+  <td>
+  A list of UUIDs of plans to exclude, one per line.
+
+
+<ul>
+  <li><i>Optional</i></li>
+</ul>
+
+
+  </td>
+</tr>
+
+<tr>
+  <td><tt>config</tt></td>
+  <td><i>text</i></td>
+  <td>Brokerpak Configuration</td>
+  <td>
+  A JSON map of configuration key/value pairs for the brokerpak. If a variable isn't found here, it's looked up in the global config.
+
+
+<ul>
+  <li><b>Required</b></li>
+  <li>Default: <code>{}</code></li>
+</ul>
+
+
+  </td>
+</tr>
+
+<tr>
+  <td><tt>notes</tt></td>
+  <td><i>text</i></td>
+  <td>Notes</td>
+  <td>
+  A place for your notes, not used by the broker.
+
+
+<ul>
+  <li><i>Optional</i></li>
 </ul>
 
 

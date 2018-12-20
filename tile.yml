@@ -268,6 +268,12 @@ forms:
   label: Compatibility
   description: Legacy Compatibility Options
   properties:
+  - name: gsb_compatibility_enable_catalog_schemas
+    type: boolean
+    default: "false"
+    label: enable-catalog-schemas
+    description: Enable generating JSONSchema for the service catalog.
+    configurable: true
   - name: gsb_compatibility_enable_cf_sharing
     type: boolean
     default: "false"
