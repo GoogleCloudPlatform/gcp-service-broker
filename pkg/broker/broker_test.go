@@ -97,7 +97,7 @@ func ExampleServiceDefinition_TileUserDefinedPlansVariable() {
 
 func ExampleServiceDefinition_ServiceDefinition() {
 	service := ServiceDefinition{
-		Name: "left-handed-smoke-sifter",
+		Name:                     "left-handed-smoke-sifter",
 		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl"}`,
 	}
 
@@ -125,7 +125,7 @@ func ExampleServiceDefinition_ServiceDefinition() {
 
 func ExampleServiceDefinition_GetPlanById() {
 	service := ServiceDefinition{
-		Name: "left-handed-smoke-sifter",
+		Name:                     "left-handed-smoke-sifter",
 		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
 	}
 
@@ -190,7 +190,7 @@ func TestServiceDefinition_UserDefinedPlans(t *testing.T) {
 	}
 
 	service := ServiceDefinition{
-		Name: "left-handed-smoke-sifter",
+		Name:                     "left-handed-smoke-sifter",
 		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "name":"lhss"}`,
 		PlanVariables: []BrokerVariable{
 			{
@@ -274,7 +274,7 @@ func TestServiceDefinition_CatalogEntry(t *testing.T) {
 	}
 
 	service := ServiceDefinition{
-		Name: "left-handed-smoke-sifter",
+		Name:                     "left-handed-smoke-sifter",
 		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl"}`,
 	}
 
@@ -303,9 +303,45 @@ func TestServiceDefinition_CatalogEntry(t *testing.T) {
 	viper.Set(service.UserDefinedPlansProperty(), nil)
 }
 
+func ExampleServiceDefinition_CatalogEntrySchema() {
+	service := ServiceDefinition{
+		Name:                     "left-handed-smoke-sifter",
+		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
+		ProvisionInputVariables: []BrokerVariable{
+			{FieldName: "location", Type: JsonTypeString, Default: "us"},
+		},
+		BindInputVariables: []BrokerVariable{
+			{FieldName: "name", Type: JsonTypeString, Default: "name"},
+		},
+	}
+
+	srvc, err := service.CatalogEntry()
+	if err != nil {
+		panic(err)
+	}
+
+	// Schemas should be nil by default
+	fmt.Println("schemas with flag off:", srvc.ToPlain().Plans[0].Schemas)
+
+	viper.Set("compatibility.enable-catalog-schemas", true)
+	defer viper.Set("compatibility.enable-catalog-schemas", false)
+
+	srvc, err = service.CatalogEntry()
+	if err != nil {
+		panic(err)
+	}
+
+	eq := reflect.DeepEqual(srvc.ToPlain().Plans[0].Schemas, service.createSchemas())
+
+	fmt.Println("schema was generated?", eq)
+
+	// Output: schemas with flag off: <nil>
+	// schema was generated? true
+}
+
 func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 	service := ServiceDefinition{
-		Name: "left-handed-smoke-sifter",
+		Name:                     "left-handed-smoke-sifter",
 		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
 		ProvisionInputVariables: []BrokerVariable{
 			{
@@ -437,7 +473,7 @@ func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 
 func TestServiceDefinition_BindVariables(t *testing.T) {
 	service := ServiceDefinition{
-		Name: "left-handed-smoke-sifter",
+		Name:                     "left-handed-smoke-sifter",
 		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
 		BindInputVariables: []BrokerVariable{
 			{
@@ -554,5 +590,51 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 				t.Errorf("Expected context: %v got %v", tc.ExpectedContext, vars.ToMap())
 			}
 		})
+	}
+}
+
+func TestServiceDefinition_createSchemas(t *testing.T) {
+	service := ServiceDefinition{
+		Name:                     "left-handed-smoke-sifter",
+		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
+		ProvisionInputVariables: []BrokerVariable{
+			{FieldName: "location", Type: JsonTypeString, Default: "us"},
+		},
+		BindInputVariables: []BrokerVariable{
+			{FieldName: "name", Type: JsonTypeString, Default: "name"},
+		},
+	}
+
+	schemas := service.createSchemas()
+	if schemas == nil {
+		t.Fatal("Schemas was nil, expected non-nil value")
+	}
+
+	// it populates the instance create schema with the fields in ProvisionInputVariables
+	instanceCreate := schemas.Instance.Create
+	if instanceCreate.Parameters == nil {
+		t.Error("instance create params were nil, expected a schema")
+	}
+
+	expectedCreateParams := createJsonSchema(service.ProvisionInputVariables)
+	if !reflect.DeepEqual(instanceCreate.Parameters, expectedCreateParams) {
+		t.Errorf("expected create params to be: %v got %v", expectedCreateParams, instanceCreate.Parameters)
+	}
+
+	// It leaves the instance update schema blank.
+	instanceUpdate := schemas.Instance.Update
+	if instanceUpdate.Parameters != nil {
+		t.Error("instance update params were not nil, expected nil")
+	}
+
+	// it populates the binding create schema with the fields in BindInputVariables.
+	bindCreate := schemas.Binding.Create
+	if bindCreate.Parameters == nil {
+		t.Error("bind create params were not nil, expected a schema")
+	}
+
+	expectedBindCreateParams := createJsonSchema(service.BindInputVariables)
+	if !reflect.DeepEqual(bindCreate.Parameters, expectedBindCreateParams) {
+		t.Errorf("expected create params to be: %v got %v", expectedBindCreateParams, bindCreate.Parameters)
 	}
 }

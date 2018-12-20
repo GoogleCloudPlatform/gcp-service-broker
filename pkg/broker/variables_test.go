@@ -56,15 +56,17 @@ func TestBrokerVariable_ToSchema(t *testing.T) {
 		},
 		"full test": {
 			BrokerVariable{
-				Default: "some-value",
-				Type:    JsonTypeString,
-				Details: "more information",
-				Enum:    map[interface{}]string{"b": "description", "a": "description"},
+				FieldName: "full_test_field_name",
+				Default:   "some-value",
+				Type:      JsonTypeString,
+				Details:   "more information",
+				Enum:      map[interface{}]string{"b": "description", "a": "description"},
 				Constraints: map[string]interface{}{
 					"examples": []string{"SAMPLEA", "SAMPLEB"},
 				},
 			},
 			map[string]interface{}{
+				"title":       "Full Test Field Name",
 				"default":     "some-value",
 				"type":        JsonTypeString,
 				"description": "more information",
@@ -90,8 +92,13 @@ func TestBrokerVariable_ValidateVariables(t *testing.T) {
 		Variables  []BrokerVariable
 		Expected   error
 	}{
-		"nil check": {
+		"nil params": {
 			Parameters: nil,
+			Variables:  nil,
+			Expected:   errors.New("1 error(s) occurred: (root): Invalid type. Expected: object, given: null"),
+		},
+		"nil vars check": {
+			Parameters: map[string]interface{}{},
 			Variables:  nil,
 			Expected:   nil,
 		},
@@ -183,12 +190,17 @@ func TestBrokerVariable_ValidateVariables(t *testing.T) {
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
 			actual := ValidateVariables(tc.Parameters, tc.Variables)
-
-			if !reflect.DeepEqual(actual, tc.Expected) {
+			if tc.Expected == nil {
+				if actual != nil {
+					t.Fatalf("Expected ValidateVariables not to raise an error but got %v", actual)
+				}
+			} else {
 				if actual == nil {
-					t.Errorf("Expected ValidateVariables to be: %v, got: %v", tc.Expected, actual)
-				} else if actual.Error() != tc.Expected.Error() {
-					t.Errorf("Expected ValidateVariables to be: %v, got: %v", tc.Expected, actual.Error())
+					t.Fatalf("Expected ValidateVariables to be: %q, got: %v", tc.Expected.Error(), actual)
+				}
+
+				if actual.Error() != tc.Expected.Error() {
+					t.Errorf("Expected ValidateVariables error to be: %q, got: %q", tc.Expected.Error(), actual.Error())
 				}
 			}
 		})
@@ -242,6 +254,34 @@ func TestBrokerVariable_ApplyDefaults(t *testing.T) {
 
 			if !reflect.DeepEqual(tc.Parameters, tc.Expected) {
 				t.Errorf("Expected ValidateVariables to be: %v, got: %v", tc.Expected, tc.Parameters)
+			}
+		})
+	}
+}
+
+func TestFieldNameToLabel(t *testing.T) {
+	cases := map[string]struct {
+		Field    string
+		Expected string
+	}{
+		"snake_case":       {Field: "my_field", Expected: "My Field"},
+		"kebab-case":       {Field: "kebab-case", Expected: "Kebab Case"},
+		"dot.notation":     {Field: "dot.notation", Expected: "Dot Notation"},
+		"uri":              {Field: "my_uri", Expected: "My URI"},
+		"url":              {Field: "my_url", Expected: "My URL"},
+		"id":               {Field: "my_id", Expected: "My ID"},
+		"gb":               {Field: "size_gb", Expected: "Size GB"},
+		"jdbc":             {Field: "jdbc", Expected: "JDBC"},
+		"double_separator": {Field: "my__id", Expected: "My ID"},
+		"single_char":      {Field: "a b c", Expected: "A B C"},
+		"blank":            {Field: "", Expected: ""},
+	}
+
+	for tn, tc := range cases {
+		t.Run(tn, func(t *testing.T) {
+			field := fieldNameToLabel(tc.Field)
+			if field != tc.Expected {
+				t.Errorf("Expected: %q got %q", tc.Expected, field)
 			}
 		})
 	}
