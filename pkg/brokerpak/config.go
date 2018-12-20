@@ -24,6 +24,16 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	brokerpakSourcesKey = "brokerpak.sources"
+	brokerpakConfigKey  = "brokerpak.config"
+)
+
+func init() {
+	viper.SetDefault(brokerpakSourcesKey, "{}")
+	viper.SetDefault(brokerpakConfigKey, "{}")
+}
+
 // BrokerpakSourceConfig represents a single configuration of a brokerpak.
 type BrokerpakSourceConfig struct {
 	// BrokerpakUri holds the URI for loading the Brokerpak.
@@ -73,13 +83,13 @@ func (cfg *ServerConfig) Validate() error {
 // NewServerConfigFromEnv loads the global Brokerpak config from Viper.
 func NewServerConfigFromEnv() (*ServerConfig, error) {
 	paks := map[string]BrokerpakSourceConfig{}
-	sources := viper.GetString("brokerpak.sources")
+	sources := viper.GetString(brokerpakSourcesKey)
 	if err := json.Unmarshal([]byte(sources), &paks); err != nil {
 		return nil, fmt.Errorf("couldn't deserialize brokerpak source config: %v", err)
 	}
 
 	cfg := ServerConfig{
-		Config:     viper.GetString("brokerpak.config"),
+		Config:     viper.GetString(brokerpakConfigKey),
 		Brokerpaks: paks,
 	}
 
@@ -88,4 +98,13 @@ func NewServerConfigFromEnv() (*ServerConfig, error) {
 	}
 
 	return &cfg, nil
+}
+
+func newLocalFileServerConfig(path string) *ServerConfig {
+	return &ServerConfig{
+		Config: viper.GetString(brokerpakConfigKey),
+		Brokerpaks: map[string]BrokerpakSourceConfig{
+			"local-brokerpak": NewBrokerpakSourceConfigFromPath(path),
+		},
+	}
 }

@@ -17,18 +17,14 @@ package brokerpak
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"text/tabwriter"
 
-	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf/wrapper"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/ziputil"
 )
@@ -109,6 +105,16 @@ func finfo(pack string, out io.Writer) error {
 	}
 
 	{
+		fmt.Fprintln(out, "Parameters")
+		w := cmdTabWriter(out)
+		fmt.Fprintln(w, "NAME\tDESCRIPTION")
+		for _, param := range mf.Parameters {
+			fmt.Fprintf(w, "%s\t%s\n", param.Name, param.Description)
+		}
+		w.Flush()
+		fmt.Fprintln(out)
+	}
+	{
 		fmt.Fprintln(out, "Dependencies")
 		w := cmdTabWriter(out)
 		fmt.Fprintln(w, "NAME\tVERSION\tSOURCE")
@@ -156,82 +162,18 @@ func Validate(pack string) error {
 // RegisterAll fetches all brokerpaks from the settings file and registers them
 // with the given registry.
 func RegisterAll(registry broker.BrokerRegistry) error {
-	registerLogger := utils.NewLogger("brokerpak-registration")
-
 	pakConfig, err := NewServerConfigFromEnv()
 	if err != nil {
 		return err
 	}
 
-	// XXX(josephlewis42): this could be parallelized to increase performance
-	// if we find people are pulling lots of data from the network.
-	for name, pak := range pakConfig.Brokerpaks {
-		registerLogger.Info("registering", lager.Data{
-			"name":           name,
-			"excluded-plans": pak.ExcludedPlansSlice(),
-			"prefix":         pak.ServicePrefix,
-		})
-
-		if err := registerPak(pak, registry); err != nil {
-			return fmt.Errorf("couldn't register %q: %v", name, err)
-		}
-	}
-
-	return nil
-}
-
-// RegisterPak fetches the brokerpak and registers it with the given registry.
-func registerPak(config BrokerpakSourceConfig, registry broker.BrokerRegistry) error {
-	brokerPak, err := DownloadAndOpenBrokerpak(config.BrokerpakUri)
-	if err != nil {
-		return fmt.Errorf("couldn't open brokerpak: %q: %v", config.BrokerpakUri, err)
-	}
-	defer brokerPak.Close()
-
-	dir, err := ioutil.TempDir("", "brokerpak")
-	if err != nil {
-		return err
-	}
-
-	// extract the Terraform directory
-	if err := brokerPak.ExtractPlatformBins(dir); err != nil {
-		return err
-	}
-
-	// TODO(josephlewis42) wire in support for overriding environment variables
-	// here via the BrokerpakSourceConfig.Config and ServerConfig.Config options
-	binPath := filepath.Join(dir, "terraform")
-	executor := wrapper.CustomTerraformExecutor(binPath, dir, wrapper.DefaultExecutor)
-
-	// register the services
-	services, err := brokerPak.Services()
-	if err != nil {
-		return err
-	}
-
-	toIgnore := utils.NewStringSet(config.ExcludedPlansSlice()...)
-	for _, svc := range services {
-		if toIgnore.Contains(svc.Id) {
-			continue
-		}
-
-		svc.Name = config.ServicePrefix + svc.Name
-
-		bs, err := svc.ToService(executor)
-		if err != nil {
-			return err
-		}
-
-		registry.Register(bs)
-	}
-
-	return nil
+	return NewRegistrar(pakConfig).Register(registry)
 }
 
 // RunExamples executes the examples from a brokerpak.
 func RunExamples(pack string) error {
-	registry := broker.BrokerRegistry{}
-	if err := registerPak(NewBrokerpakSourceConfigFromPath(pack), registry); err != nil {
+	registry, err := registryFromLocalBrokerpak(pack)
+	if err != nil {
 		return err
 	}
 
@@ -245,11 +187,22 @@ func RunExamples(pack string) error {
 
 // Docs generates the markdown usage docs for the given pack and writes them to stdout.
 func Docs(pack string) error {
-	registry := broker.BrokerRegistry{}
-	if err := registerPak(NewBrokerpakSourceConfigFromPath(pack), registry); err != nil {
+	registry, err := registryFromLocalBrokerpak(pack)
+	if err != nil {
 		return err
 	}
 
 	fmt.Println(generator.CatalogDocumentation(registry))
 	return nil
+}
+
+func registryFromLocalBrokerpak(packPath string) (broker.BrokerRegistry, error) {
+	config := newLocalFileServerConfig(packPath)
+
+	registry := broker.BrokerRegistry{}
+	if err := NewRegistrar(config).Register(registry); err != nil {
+		return nil, err
+	}
+
+	return registry, nil
 }

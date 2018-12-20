@@ -47,6 +47,7 @@ and which services it will provide.
 | platforms* | array of platform | The platforms this brokerpak will be executed on. |
 | terraform_binaries* | array of Terraform resource | The list of Terraform providers and Terraform that'll be bundled with the brokerpak. |
 | service_definitions* | array of string | Each entry points to a file relative to the manifest that defines a service as part of the brokerpak. |
+| parameters | array of parameter | These values are set as environment variables when Terraform is executed. |
 
 #### Platform object
 
@@ -68,6 +69,15 @@ This structure holds information about a specific Terraform version or Resource.
 | source* | string | The URL to a zip of the source code for the resource. |
 | url_template | string | (optional) A custom URL template to get the release of the given tool. Available parameters are ${name}, ${version}, ${os}, and ${arch}. If unspecified the default Hashicorp Terraform download server is used. |
 
+#### Parameter object
+
+This structure holds information about an environment variable that the user can set on the Terraform instance.
+These variables are first resolved from the configuration of the brokerpak then against a global set of values.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name* | string | The environment variable that will be injected e.g. `PROJECT_ID`. |
+| description* | string | A human readable description of what the variable represents. |
 
 ### Example
 
@@ -93,6 +103,9 @@ service_definitions:
 - custom-cloud-storage.yml
 - custom-redis.yml
 - service-mesh.yml
+parameters:
+- name: TF_VAR_redis_version
+  description: Set this to override the Redis version globally via injected Terraform variable.
 ```
 
 ## Services
