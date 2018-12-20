@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
  - Preview support for Dataproc via brokerpaks.
  - Varcontext now supports casting computed HIL values.
  - New regional and multi-regional Cloud Storage plans.
+ - Ability to expose JSONSchema in the service catalog by enabling the `enable-catalog-schemas` flag.
 
 ### Changed
  - Support links for services now point to service-specific pages where possible.

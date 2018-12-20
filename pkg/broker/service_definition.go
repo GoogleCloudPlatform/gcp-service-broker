@@ -21,12 +21,15 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2/jwt"
 )
+
+var enableCatalogSchemas = toggles.Compatibility.Toggle("enable-catalog-schemas", false, `Enable generating JSONSchema for the service catalog.`)
 
 // ServiceDefinition holds the necessary details to describe an OSB service and
 // provision it.
@@ -129,7 +132,30 @@ func (svc *ServiceDefinition) CatalogEntry() (*Service, error) {
 
 	sd.Plans = append(sd.Plans, plans...)
 
+	if enableCatalogSchemas.IsActive() {
+		for i, _ := range sd.Plans {
+			sd.Plans[i].Schemas = svc.createSchemas()
+		}
+	}
+
 	return sd, nil
+}
+
+// createSchemas creates JSONSchemas compatible with the OSB spec for provision and bind.
+// It leaves the instance update schema empty to indicate updates are not supported.
+func (svc *ServiceDefinition) createSchemas() *brokerapi.ServiceSchemas {
+	return &brokerapi.ServiceSchemas{
+		Instance: brokerapi.ServiceInstanceSchema{
+			Create: brokerapi.Schema{
+				Parameters: createJsonSchema(svc.ProvisionInputVariables),
+			},
+		},
+		Binding: brokerapi.ServiceBindingSchema{
+			Create: brokerapi.Schema{
+				Parameters: createJsonSchema(svc.BindInputVariables),
+			},
+		},
+	}
 }
 
 // GetPlanById finds a plan in this service by its UUID.

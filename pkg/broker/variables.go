@@ -17,6 +17,8 @@ package broker
 import (
 	"fmt"
 	"sort"
+	"strings"
+	"unicode"
 
 	"errors"
 
@@ -60,6 +62,12 @@ type BrokerVariable struct {
 func (bv *BrokerVariable) ToSchema() map[string]interface{} {
 	schema := map[string]interface{}{}
 
+	// Setting the auto-generated title comes first so it can be overridden
+	// manually by constraints in special cases.
+	if bv.FieldName != "" {
+		schema[validation.KeyTitle] = fieldNameToLabel(bv.FieldName)
+	}
+
 	for k, v := range bv.Constraints {
 		schema[k] = v
 	}
@@ -91,6 +99,30 @@ func (bv *BrokerVariable) ToSchema() map[string]interface{} {
 	}
 
 	return schema
+}
+
+func fieldNameToLabel(fieldName string) string {
+	acronyms := map[string]string{
+		"id":   "ID",
+		"uri":  "URI",
+		"url":  "URL",
+		"gb":   "GB",
+		"jdbc": "JDBC",
+	}
+
+	components := strings.FieldsFunc(fieldName, func(c rune) bool {
+		return unicode.IsSpace(c) || c == '-' || c == '_' || c == '.'
+	})
+
+	for i, c := range components {
+		if replace, ok := acronyms[c]; ok {
+			components[i] = replace
+		} else {
+			components[i] = strings.ToUpper(c[:1]) + c[1:]
+		}
+	}
+
+	return strings.Join(components, " ")
 }
 
 // Apply defaults adds default values for missing broker variables.
@@ -141,6 +173,8 @@ func createJsonSchema(schemaVariables []BrokerVariable) map[string]interface{} {
 	}
 
 	schema := map[string]interface{}{
+		"$schema":    "http://json-schema.org/draft-04/schema#",
+		"type":       "object",
 		"properties": properties,
 	}
 

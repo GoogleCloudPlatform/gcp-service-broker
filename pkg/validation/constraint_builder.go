@@ -18,6 +18,7 @@ const (
 	KeyDefault          = "default"
 	KeyExamples         = "examples"
 	KeyDescription      = "description"
+	KeyTitle            = "title"
 	KeyType             = "type"
 	KeyConst            = "const"
 	KeyEnum             = "enum"
@@ -56,6 +57,13 @@ func (cb ConstraintBuilder) Type(t string) ConstraintBuilder {
 // Description adds a human-readable description
 func (cb ConstraintBuilder) Description(desc string) ConstraintBuilder {
 	cb[KeyDescription] = desc
+
+	return cb
+}
+
+// Title adds a human-readable label suitable for labeling a UI element.
+func (cb ConstraintBuilder) Title(title string) ConstraintBuilder {
+	cb[KeyTitle] = title
 
 	return cb
 }
