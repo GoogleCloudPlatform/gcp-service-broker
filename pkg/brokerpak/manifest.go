@@ -40,6 +40,7 @@ type Manifest struct {
 	Platforms          []Platform          `yaml:"platforms" validate:"required,dive"`
 	TerraformResources []TerraformResource `yaml:"terraform_binaries" validate:"required,dive"`
 	ServiceDefinitions []string            `yaml:"service_definitions" validate:"required"`
+	Parameters         []ManifestParameter `yaml:"parameters" validate:"dive"`
 }
 
 // Validate will run struct validation on the fields of this manifest.
@@ -127,6 +128,15 @@ func (m *Manifest) packDefinitions(tmp, base string) error {
 	return stream.Copy(stream.FromYaml(manifestCopy), stream.ToFile(tmp, manifestName))
 }
 
+// ManifestParameter holds environment variables that will be looked up and
+// passed to the executed Terraform instance.
+type ManifestParameter struct {
+	// NOTE: Future fields should take inspiration from the CNAB spec because they
+	// solve a similar problem. https://github.com/deislabs/cnab-spec
+	Name        string `yaml:"name" validate:"required"`
+	Description string `yaml:"description" validate:"required"`
+}
+
 // NewExampleManifest creates a new manifest with sample values for the service broker suitable for giving a user a template to manually edit.
 func NewExampleManifest() Manifest {
 	return Manifest{
@@ -153,5 +163,8 @@ func NewExampleManifest() Manifest {
 			},
 		},
 		ServiceDefinitions: []string{"example-service-definition.yml"},
+		Parameters: []ManifestParameter{
+			{Name: "MY_ENVIRONMENT_VARIABLE", Description: "Set this to whatever you like."},
+		},
 	}
 }

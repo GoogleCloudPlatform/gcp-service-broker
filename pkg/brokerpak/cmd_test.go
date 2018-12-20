@@ -23,7 +23,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
 )
@@ -67,6 +66,9 @@ func fakeBrokerpak() (string, error) {
 			},
 		},
 		ServiceDefinitions: []string{"example-service-definition.yml"},
+		Parameters: []ManifestParameter{
+			{Name: "TEST_PARAM", Description: "An example paramater that will be injected into Terraform's environment variables."},
+		},
 	}
 
 	if err := stream.Copy(stream.FromYaml(exampleManifest), stream.ToFile(dir, manifestName)); err != nil {
@@ -119,6 +121,9 @@ func TestFinfo(t *testing.T) {
 		"my-services-pack", // name
 		"1.0.0",            // version
 
+		"Parameters", // heading
+		"TEST_PARAM", // value
+
 		"Dependencies",                   // heading
 		"terraform",                      // dependency
 		"terraform-provider-google-beta", // dependency
@@ -143,7 +148,7 @@ func TestFinfo(t *testing.T) {
 	}
 }
 
-func TestRegisterPak(t *testing.T) {
+func TestRegistryFromLocalBrokerpak(t *testing.T) {
 	pk, err := fakeBrokerpak()
 	defer os.Remove(pk)
 
@@ -156,8 +161,8 @@ func TestRegisterPak(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	registry := broker.BrokerRegistry{}
-	if err := registerPak(NewBrokerpakSourceConfigFromPath(abs), registry); err != nil {
+	registry, err := registryFromLocalBrokerpak(abs)
+	if err != nil {
 		t.Fatal(err)
 	}
 
