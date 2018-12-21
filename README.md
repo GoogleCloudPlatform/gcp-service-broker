@@ -61,14 +61,10 @@ It supports the following sub-commands:
 
 ## Testing
 
-Production testing for the GCP Service Broker is administered via a private Concourse pipeline.
+Pull requests are unit-tested with Travis. You can run the same tests Travis does using `go test ./...`.
 
-To run tests locally, use [Ginkgo](https://onsi.github.io/ginkgo/).
-
-Integration tests require the `ROOT_SERVICE_ACCOUNT_JSON` environment variable to be set.
-
-**Note: Integration tests create and destroy real project resources and therefore have associated costs to run**
-
+Integration tests are run on a private [Concourse](https://concourse-ci.org/) pipeline for all changes to the `master` branch. 
+You can set up your own pipeline using the sources in the `ci` directory if you like.
 
 ## Support
 
