@@ -25,9 +25,9 @@ Documentation for installing as a Pivotal Ops Manager tile is available [here](h
 #### [Set up a GCP Project](#project)
 
 1. Go to the [Google Cloud Console](https://console.cloud.google.com) and sign up, walking through the setup wizard.
-1. Next to the Google Cloud Platform logo in the upper left-hand corner, click the dropdown and select "Create Project".
+1. A page then displays with a collection of options. Select "Create Project" option.
 1. Give your project a name and click "Create".
-1. When the project is created (a notification will show in the upper right), refresh the page.
+1. The dashboard for the newly created project will be displayed.
 
 #### [Enable APIs](#apis)
 
