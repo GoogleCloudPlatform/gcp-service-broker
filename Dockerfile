@@ -20,7 +20,7 @@ COPY . .
 RUN CGO_ENABLED=0 go build -o /bin/gcp-service-broker
 
 FROM scratch
-COPY --from=build /go/src/github.com/GoogleCloudPlatform/gcp-service-broker /sources
+COPY --from=build /go/src/github.com/GoogleCloudPlatform/gcp-service-broker /src
 COPY --from=build /bin/gcp-service-broker /bin/gcp-service-broker
 
 ENTRYPOINT ["/bin/gcp-service-broker"]
