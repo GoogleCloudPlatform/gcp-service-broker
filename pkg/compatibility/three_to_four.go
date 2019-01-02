@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 	"github.com/pivotal-cf/brokerapi"
 )
 
@@ -153,7 +153,8 @@ func (t *ThreeToFour) Unbind(ctx context.Context, instanceID, bindingID string, 
 // Services returns the list of enabled services, with dummy services injected
 // for legacy compatibility.
 func (t *ThreeToFour) Services(ctx context.Context) ([]brokerapi.Service, error) {
-	services, err := broker.GetEnabledServices()
+	builtinServices := builtin.BuiltinBrokerRegistry()
+	services, err := builtinServices.GetEnabledServices()
 	if err != nil {
 		return nil, err
 	}

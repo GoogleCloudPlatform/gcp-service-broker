@@ -22,10 +22,10 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
+func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{"dataflow.viewer", "dataflow.developer"}
 
-	bs := &broker.ServiceDefinition{
+	return &broker.ServiceDefinition{
 		Name: "google-dataflow",
 		DefaultServiceDefinition: `{
       "id": "3e897eb3-9062-4966-bd4f-85bda0f73b3d",
@@ -76,6 +76,4 @@ func init() {
 			return &DataflowBroker{BrokerBase: bb}
 		},
 	}
-
-	broker.Register(bs)
 }

@@ -25,11 +25,7 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
-	broker.Register(serviceDefinition())
-}
-
-func serviceDefinition() *broker.ServiceDefinition {
+func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"spanner.databaseAdmin",
 		"spanner.databaseReader",

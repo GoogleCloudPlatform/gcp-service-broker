@@ -23,8 +23,8 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
-	bs := &broker.ServiceDefinition{
+func ServiceDefinition() *broker.ServiceDefinition {
+	return &broker.ServiceDefinition{
 		Name: "google-datastore",
 		DefaultServiceDefinition: `{
       "id": "76d4abb2-fee7-4c8f-aee1-bcea2837f02b",
@@ -98,6 +98,4 @@ func init() {
 			return &DatastoreBroker{BrokerBase: bb}
 		},
 	}
-
-	broker.Register(bs)
 }

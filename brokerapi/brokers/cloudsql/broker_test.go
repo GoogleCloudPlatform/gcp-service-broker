@@ -62,7 +62,7 @@ func TestCreateProvisionRequest(t *testing.T) {
 		ErrContains string
 	}{
 		"blank instance names get generated": {
-			Service:    mysqlServiceDefinition(),
+			Service:    MysqlServiceDefinition(),
 			PlanId:     mysqlFirstgenPlan,
 			UserParams: `{"instance_name":""}`,
 			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
@@ -73,7 +73,7 @@ func TestCreateProvisionRequest(t *testing.T) {
 		},
 
 		"tiers matching (D|d)\\d+ get firstgen outputs for MySQL": {
-			Service:    mysqlServiceDefinition(),
+			Service:    MysqlServiceDefinition(),
 			PlanId:     mysqlFirstgenPlan,
 			UserParams: `{"name":""}`,
 			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
@@ -84,7 +84,7 @@ func TestCreateProvisionRequest(t *testing.T) {
 		},
 
 		"first-gen MySQL defaults": {
-			Service:    mysqlServiceDefinition(),
+			Service:    MysqlServiceDefinition(),
 			PlanId:     mysqlFirstgenPlan,
 			UserParams: `{}`,
 			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
@@ -106,7 +106,7 @@ func TestCreateProvisionRequest(t *testing.T) {
 			},
 		},
 		"second-gen MySQL defaults": {
-			Service:    mysqlServiceDefinition(),
+			Service:    MysqlServiceDefinition(),
 			PlanId:     mysqlSecondGenPlan,
 			UserParams: `{}`,
 			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
@@ -128,7 +128,7 @@ func TestCreateProvisionRequest(t *testing.T) {
 			},
 		},
 		"PostgreSQL defaults": {
-			Service:    postgresServiceDefinition(),
+			Service:    PostgresServiceDefinition(),
 			PlanId:     postgresPlan,
 			UserParams: `{}`,
 			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
@@ -151,7 +151,7 @@ func TestCreateProvisionRequest(t *testing.T) {
 		},
 
 		"partial maintenance window day": {
-			Service:    mysqlServiceDefinition(),
+			Service:    MysqlServiceDefinition(),
 			PlanId:     mysqlSecondGenPlan,
 			UserParams: `{"maintenance_window_day":"4"}`,
 			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
@@ -166,7 +166,7 @@ func TestCreateProvisionRequest(t *testing.T) {
 		},
 
 		"partial maintenance window hour": {
-			Service:    mysqlServiceDefinition(),
+			Service:    MysqlServiceDefinition(),
 			PlanId:     mysqlSecondGenPlan,
 			UserParams: `{"maintenance_window_hour":"23"}`,
 			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
@@ -181,7 +181,7 @@ func TestCreateProvisionRequest(t *testing.T) {
 		},
 
 		"full maintenance window ": {
-			Service:    mysqlServiceDefinition(),
+			Service:    MysqlServiceDefinition(),
 			PlanId:     mysqlSecondGenPlan,
 			UserParams: `{"maintenance_window_day":"4","maintenance_window_hour":"23"}`,
 			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
@@ -200,7 +200,7 @@ func TestCreateProvisionRequest(t *testing.T) {
 		},
 
 		"instance info generates db on blank ": {
-			Service:    mysqlServiceDefinition(),
+			Service:    MysqlServiceDefinition(),
 			PlanId:     mysqlSecondGenPlan,
 			UserParams: `{"database_name":""}`,
 			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
@@ -211,7 +211,7 @@ func TestCreateProvisionRequest(t *testing.T) {
 		},
 
 		"instance info has name and db name ": {
-			Service:    mysqlServiceDefinition(),
+			Service:    MysqlServiceDefinition(),
 			PlanId:     mysqlSecondGenPlan,
 			UserParams: `{"database_name":"foo", "instance_name": "bar"}`,
 			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
@@ -226,7 +226,7 @@ func TestCreateProvisionRequest(t *testing.T) {
 		},
 
 		"mysql disk size greater than operator specified max fails": {
-			Service:     mysqlServiceDefinition(),
+			Service:     MysqlServiceDefinition(),
 			PlanId:      mysqlSecondGenPlan,
 			UserParams:  `{"disk_size":"99999"}`,
 			Validate:    func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {},
@@ -234,7 +234,7 @@ func TestCreateProvisionRequest(t *testing.T) {
 		},
 
 		"postgres disk size greater than operator specified max fails": {
-			Service:     postgresServiceDefinition(),
+			Service:     PostgresServiceDefinition(),
 			PlanId:      postgresPlan,
 			UserParams:  `{"disk_size":"99999"}`,
 			Validate:    func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {},
@@ -282,7 +282,7 @@ func TestCreateProvisionRequest(t *testing.T) {
 }
 
 func TestPostgresCustomMachineTypes(t *testing.T) {
-	sd, err := postgresServiceDefinition().ServiceDefinition()
+	sd, err := PostgresServiceDefinition().ServiceDefinition()
 	if err != nil {
 		t.Fatal(err)
 	}

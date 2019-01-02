@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/jinzhu/gorm"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
@@ -70,6 +70,7 @@ func RunMigrations(db *gorm.DB) error {
 			return fmt.Errorf("couldn't get Project ID for database upgrades %s", err)
 		}
 
+		builtinServices := builtin.BuiltinBrokerRegistry()
 		for _, pr := range prs {
 			var si models.ServiceInstanceDetailsV1
 			if err := db.Where("id = ?", pr.ServiceInstanceId).First(&si).Error; err != nil {
@@ -82,7 +83,7 @@ func RunMigrations(db *gorm.DB) error {
 			newOd := make(map[string]string)
 
 			// cloudsql
-			svc, err := broker.GetServiceById(si.ServiceId)
+			svc, err := builtinServices.GetServiceById(si.ServiceId)
 			if err != nil {
 				return err
 			}

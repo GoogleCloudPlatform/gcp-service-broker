@@ -23,7 +23,6 @@ import (
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
 
@@ -221,15 +220,11 @@ func (b *CloudSQLBroker) Bind(ctx context.Context, vc *varcontext.VarContext) (m
 }
 
 func (b *CloudSQLBroker) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]interface{}, error) {
-	service, err := broker.GetServiceById(instanceRecord.ServiceId)
-	if err != nil {
-		return nil, err
-	}
 	uriFormat := ""
-	switch service.Name {
-	case models.CloudsqlMySQLName:
+	switch instanceRecord.ServiceId {
+	case MySqlServiceId:
 		uriFormat = `${str.queryEscape(UriPrefix)}mysql://${str.queryEscape(Username)}:${str.queryEscape(Password)}@${str.queryEscape(host)}/${str.queryEscape(database_name)}?ssl_mode=required`
-	case models.CloudsqlPostgresName:
+	case PostgresServiceId:
 		uriFormat = `${str.queryEscape(UriPrefix)}postgres://${str.queryEscape(Username)}:${str.queryEscape(Password)}@${str.queryEscape(host)}/${str.queryEscape(database_name)}?sslmode=require&sslcert=${str.queryEscape(ClientCert)}&sslkey=${str.queryEscape(ClientKey)}&sslrootcert=${str.queryEscape(CaCert)}`
 	default:
 		return map[string]interface{}{}, errors.New("Unknown service")

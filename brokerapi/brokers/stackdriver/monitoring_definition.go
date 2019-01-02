@@ -19,8 +19,8 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
-func init() {
-	bs := &broker.ServiceDefinition{
+func StackdriverMonitoringServiceDefinition() *broker.ServiceDefinition {
+	return &broker.ServiceDefinition{
 		Name: "google-stackdriver-monitoring",
 		DefaultServiceDefinition: `{
       "id": "2bc0d9ed-3f68-4056-b842-4a85cfbc727f",
@@ -62,6 +62,4 @@ func init() {
 		},
 		ProviderBuilder: NewStackdriverAccountProvider,
 	}
-
-	broker.Register(bs)
 }
