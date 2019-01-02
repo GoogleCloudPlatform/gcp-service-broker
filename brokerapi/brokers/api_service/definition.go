@@ -23,7 +23,8 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
+// ServiceDefinition creates a new ServiceDefinition object for the ML service.
+func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"ml.developer",
 		"ml.viewer",
@@ -33,7 +34,7 @@ func init() {
 		"ml.operationOwner",
 	}
 
-	bs := &broker.ServiceDefinition{
+	return &broker.ServiceDefinition{
 		Name: models.MlName,
 		DefaultServiceDefinition: `
 		{
@@ -83,6 +84,4 @@ func init() {
 			return &ApiServiceBroker{BrokerBase: bb}
 		},
 	}
-
-	broker.Register(bs)
 }

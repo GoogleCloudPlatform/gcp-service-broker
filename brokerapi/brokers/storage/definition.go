@@ -25,11 +25,8 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
-	broker.Register(serviceDefinition())
-}
-
-func serviceDefinition() *broker.ServiceDefinition {
+// ServiceDefinition creates a new ServiceDefinition object for the Cloud Storage service.
+func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"storage.objectCreator",
 		"storage.objectViewer",

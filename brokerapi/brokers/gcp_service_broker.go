@@ -28,21 +28,6 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
-
-	// import the brokers to register them
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/api_service"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigquery"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigtable"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/cloudsql"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/dataflow"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/datastore"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/dialogflow"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/firestore"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/storage"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
 )
 
 // GCPServiceBroker is a brokerapi.ServiceBroker that can be used to generate an OSB compatible service broker.
@@ -72,7 +57,7 @@ func New(cfg *BrokerConfig, logger lager.Logger) (*GCPServiceBroker, error) {
 func (gcpBroker *GCPServiceBroker) Services(ctx context.Context) ([]brokerapi.Service, error) {
 	svcs := []brokerapi.Service{}
 
-	enabledServices, err := broker.GetEnabledServices()
+	enabledServices, err := gcpBroker.registry.GetEnabledServices()
 	if err != nil {
 		return nil, err
 	}

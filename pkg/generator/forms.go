@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	yaml "gopkg.in/yaml.v2"
@@ -98,7 +99,7 @@ func GenerateForms() TileFormsSections {
 // generateEnableDisableForm generates the form to enable and disable services.
 func generateEnableDisableForm() Form {
 	enablers := []FormProperty{}
-	for _, svc := range broker.GetAllServices() {
+	for _, svc := range builtin.BuiltinBrokerRegistry() {
 		entry, err := svc.CatalogEntry()
 		if err != nil {
 			log.Fatalf("Error getting catalog entry for service %s, %v", svc.Name, err)
@@ -127,8 +128,10 @@ func generateEnableDisableForm() Form {
 // whitelist validation for new service accounts bound to the service.
 // They are opt-out and on by default for safety.
 func generateRoleWhitelistForm() Form {
+	builtinServices := builtin.BuiltinBrokerRegistry()
+
 	enablers := []FormProperty{}
-	for _, svc := range broker.GetAllServices() {
+	for _, svc := range builtinServices.GetAllServices() {
 		entry, err := svc.CatalogEntry()
 		if err != nil {
 			log.Fatalf("Error getting catalog entry for service %s, %v", svc.Name, err)
@@ -161,8 +164,10 @@ func generateRoleWhitelistForm() Form {
 // generateDefaultOverrideForm generates a form for users to override the
 // defaults in a plan.
 func generateDefaultOverrideForm() Form {
+	builtinServices := builtin.BuiltinBrokerRegistry()
+
 	formElements := []FormProperty{}
-	for _, svc := range broker.GetAllServices() {
+	for _, svc := range builtinServices.GetAllServices() {
 		entry, err := svc.CatalogEntry()
 		if err != nil {
 			log.Fatalf("Error getting catalog entry for service %s, %v", svc.Name, err)
@@ -260,9 +265,10 @@ func generateCompatibilityForm() Form {
 // generateServicePlanForms generates customized service plan forms for all
 // registered services that have the ability to customize their variables.
 func generateServicePlanForms() []Form {
+	builtinServices := builtin.BuiltinBrokerRegistry()
 	out := []Form{}
 
-	for _, svc := range broker.GetAllServices() {
+	for _, svc := range builtinServices.GetAllServices() {
 		planVars := svc.PlanVariables
 
 		if planVars == nil || len(planVars) == 0 {

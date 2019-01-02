@@ -25,11 +25,8 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
-	broker.Register(serviceDefinition())
-}
-
-func serviceDefinition() *broker.ServiceDefinition {
+// ServiceDefinition creates a new ServiceDefinition object for the BigQuery service.
+func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"bigquery.dataViewer",
 		"bigquery.dataEditor",

@@ -18,8 +18,8 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/cobra"
 )
@@ -121,7 +121,7 @@ user-defined plans.
 				log.Fatalf("Error creating client: %v", err)
 			}
 
-			if err := client.RunExamplesForService(broker.DefaultRegistry, apiClient, serviceName); err != nil {
+			if err := client.RunExamplesForService(builtin.BuiltinBrokerRegistry(), apiClient, serviceName); err != nil {
 				log.Fatalf("Error executing examples: %v", err)
 			}
 

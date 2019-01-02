@@ -42,12 +42,8 @@ var (
 // by the GCP Service Broker.
 type BrokerRegistry map[string]*ServiceDefinition
 
-// DefaultRegistry is the broker registry all service broker definitions implicitly register with.
-var DefaultRegistry = BrokerRegistry{}
-
 // Registers a ServiceDefinition with the service registry that various commands
 // poll to create the catalog, documentation, etc.
-func Register(service *ServiceDefinition) { DefaultRegistry.Register(service) }
 func (brokerRegistry BrokerRegistry) Register(service *ServiceDefinition) {
 	name := service.Name
 
@@ -77,7 +73,6 @@ func (brokerRegistry BrokerRegistry) Register(service *ServiceDefinition) {
 
 // GetEnabledServices returns a list of all registered brokers that the user
 // has enabled the use of.
-func GetEnabledServices() ([]*ServiceDefinition, error) { return DefaultRegistry.GetEnabledServices() }
 func (brokerRegistry *BrokerRegistry) GetEnabledServices() ([]*ServiceDefinition, error) {
 	var out []*ServiceDefinition
 
@@ -107,7 +102,6 @@ func (brokerRegistry *BrokerRegistry) GetEnabledServices() ([]*ServiceDefinition
 // GetAllServices returns a list of all registered brokers whether or not the
 // user has enabled them. The brokers are sorted in lexocographic order based
 // on name.
-func GetAllServices() []*ServiceDefinition { return DefaultRegistry.GetAllServices() }
 func (brokerRegistry BrokerRegistry) GetAllServices() []*ServiceDefinition {
 	var out []*ServiceDefinition
 
@@ -123,7 +117,6 @@ func (brokerRegistry BrokerRegistry) GetAllServices() []*ServiceDefinition {
 
 // GetServiceById returns the service with the given ID, if it does not exist
 // or one of the services has a parse error then an error is returned.
-func GetServiceById(id string) (*ServiceDefinition, error) { return DefaultRegistry.GetServiceById(id) }
 func (brokerRegistry BrokerRegistry) GetServiceById(id string) (*ServiceDefinition, error) {
 	for _, svc := range brokerRegistry {
 		if entry, err := svc.CatalogEntry(); err != nil {
