@@ -56,10 +56,6 @@ func (brokerRegistry BrokerRegistry) Register(service *ServiceDefinition) {
 	}
 
 	// Set up environment variables to be compatible with legacy tile.yml configurations.
-	// Bind a name of a service like google-datastore to an environment variable GOOGLE_DATASTORE
-	env := utils.PropertyToEnvUnprefixed(service.Name)
-	viper.BindEnv(service.DefinitionProperty(), env)
-
 	// set defaults
 	viper.SetDefault(service.EnabledProperty(), true)
 
