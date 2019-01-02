@@ -42,7 +42,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
         "supportUrl": "https://cloud.google.com/firestore/docs/getting-support",
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/firestore.svg"
       },
-      "tags": ["gcp", "firestore", "preview", "beta"],
+      "tags": ["gcp", "firestore", "preview", "beta", "builtin"],
       "plans": [
         {
          "id": "64403af0-4413-4ef3-a813-37f0306ef498",

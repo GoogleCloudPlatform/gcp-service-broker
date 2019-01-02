@@ -39,7 +39,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
         "supportUrl": "https://cloud.google.com/dialogflow-enterprise/docs/support",
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/dialogflow-enterprise.svg"
       },
-      "tags": ["gcp", "dialogflow", "preview"],
+      "tags": ["gcp", "dialogflow", "preview", "builtin"],
       "plans": [
         {
          "id": "3ac4e1bd-b22d-4a99-864b-d3a3ac582348",

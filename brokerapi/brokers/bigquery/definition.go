@@ -50,7 +50,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
           "supportUrl": "https://cloud.google.com/bigquery/support",
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigquery.svg"
         },
-        "tags": ["gcp", "bigquery"],
+        "tags": ["gcp", "bigquery", "builtin"],
         "plans": [
           {
             "id": "10ff4e72-6e84-44eb-851f-bdb38a791914",

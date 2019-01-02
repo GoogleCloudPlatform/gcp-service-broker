@@ -35,6 +35,7 @@ var (
 		"beta":         toggles.Compatibility.Toggle("enable-gcp-beta-services", true, "Enable services that are in GCP Beta. These have no SLA or support policy."),
 		"deprecated":   toggles.Compatibility.Toggle("enable-gcp-deprecated-services", false, "Enable services that use deprecated GCP components."),
 		"terraform":    toggles.Compatibility.Toggle("enable-terraform-services", false, "Enable services that use the experimental, unstable, Terraform back-end."),
+		"builtin":      toggles.Compatibility.Toggle("enable-builtin-services", true, "Enable services that are built in to the broker i.e. not brokerpaks."),
 	}
 )
 
@@ -56,9 +57,6 @@ func (brokerRegistry BrokerRegistry) Register(service *ServiceDefinition) {
 	env := utils.PropertyToEnvUnprefixed(service.Name)
 	viper.BindEnv(service.DefinitionProperty(), env)
 
-	// set defaults
-	viper.SetDefault(service.EnabledProperty(), true)
-
 	// Test deserializing the user defined plans and service definition
 	if _, err := service.CatalogEntry(); err != nil {
 		log.Fatalf("Error registering service %q, %s", name, err)
@@ -77,7 +75,7 @@ func (brokerRegistry *BrokerRegistry) GetEnabledServices() ([]*ServiceDefinition
 	var out []*ServiceDefinition
 
 	for _, svc := range brokerRegistry.GetAllServices() {
-		isEnabled := svc.IsEnabled()
+		isEnabled := true
 
 		if entry, err := svc.CatalogEntry(); err != nil {
 			return nil, err

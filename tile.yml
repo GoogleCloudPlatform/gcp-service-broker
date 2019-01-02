@@ -120,90 +120,6 @@ forms:
       a variable isn't found in the specific brokerpak's configuration it's looked
       up here.
     configurable: true
-- name: enable_disable
-  label: Enable Services
-  description: Enable or disable services.
-  properties:
-  - name: gsb_service_google_bigquery_enabled
-    type: boolean
-    default: true
-    label: Let the broker create and bind Google BigQuery instances.
-    configurable: true
-  - name: gsb_service_google_bigtable_enabled
-    type: boolean
-    default: true
-    label: Let the broker create and bind Google Bigtable instances.
-    configurable: true
-  - name: gsb_service_google_cloudsql_mysql_enabled
-    type: boolean
-    default: true
-    label: Let the broker create and bind Google CloudSQL MySQL instances.
-    configurable: true
-  - name: gsb_service_google_cloudsql_postgres_enabled
-    type: boolean
-    default: true
-    label: Let the broker create and bind Google CloudSQL PostgreSQL instances.
-    configurable: true
-  - name: gsb_service_google_dataflow_enabled
-    type: boolean
-    default: true
-    label: Let the broker create and bind Google Cloud Dataflow instances.
-    configurable: true
-  - name: gsb_service_google_datastore_enabled
-    type: boolean
-    default: true
-    label: Let the broker create and bind Google Cloud Datastore instances.
-    configurable: true
-  - name: gsb_service_google_dialogflow_enabled
-    type: boolean
-    default: true
-    label: Let the broker create and bind Google Cloud Dialogflow instances.
-    configurable: true
-  - name: gsb_service_google_firestore_enabled
-    type: boolean
-    default: true
-    label: Let the broker create and bind Google Cloud Firestore instances.
-    configurable: true
-  - name: gsb_service_google_ml_apis_enabled
-    type: boolean
-    default: true
-    label: Let the broker create and bind Google Machine Learning APIs instances.
-    configurable: true
-  - name: gsb_service_google_pubsub_enabled
-    type: boolean
-    default: true
-    label: Let the broker create and bind Google PubSub instances.
-    configurable: true
-  - name: gsb_service_google_spanner_enabled
-    type: boolean
-    default: true
-    label: Let the broker create and bind Google Spanner instances.
-    configurable: true
-  - name: gsb_service_google_stackdriver_debugger_enabled
-    type: boolean
-    default: true
-    label: Let the broker create and bind Stackdriver Debugger instances.
-    configurable: true
-  - name: gsb_service_google_stackdriver_monitoring_enabled
-    type: boolean
-    default: true
-    label: Let the broker create and bind Stackdriver Monitoring instances.
-    configurable: true
-  - name: gsb_service_google_stackdriver_profiler_enabled
-    type: boolean
-    default: true
-    label: Let the broker create and bind Stackdriver Profiler instances.
-    configurable: true
-  - name: gsb_service_google_stackdriver_trace_enabled
-    type: boolean
-    default: true
-    label: Let the broker create and bind Stackdriver Trace instances.
-    configurable: true
-  - name: gsb_service_google_storage_enabled
-    type: boolean
-    default: true
-    label: Let the broker create and bind Google Cloud Storage instances.
-    configurable: true
 - name: role_whitelists
   label: Role Whitelisting
   description: Enable or disable role whitelisting.
@@ -268,6 +184,12 @@ forms:
   label: Compatibility
   description: Legacy Compatibility Options
   properties:
+  - name: gsb_compatibility_enable_builtin_services
+    type: boolean
+    default: "true"
+    label: enable-builtin-services
+    description: Enable services that are built in to the broker i.e. not brokerpaks.
+    configurable: true
   - name: gsb_compatibility_enable_cf_sharing
     type: boolean
     default: "false"

@@ -43,7 +43,7 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 		      "supportUrl": "https://cloud.google.com/sql/docs/getting-support",
 		      "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
 		    },
-		    "tags": ["gcp", "cloudsql", "mysql"],
+		    "tags": ["gcp", "cloudsql", "mysql", "builtin"],
 		    "plans": [
 				    {
 				        "service_properties": {

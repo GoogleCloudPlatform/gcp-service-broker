@@ -86,41 +86,12 @@ func GenerateForms() TileFormsSections {
 			generateServiceAccountForm(),
 			generateDatabaseForm(),
 			generateBrokerpakForm(),
-			generateEnableDisableForm(),
 			generateRoleWhitelistForm(),
 			generateCompatibilityForm(),
 			generateDefaultOverrideForm(),
 		},
 
 		ServicePlanForms: append(generateServicePlanForms(), brokerpakConfigurationForm()),
-	}
-}
-
-// generateEnableDisableForm generates the form to enable and disable services.
-func generateEnableDisableForm() Form {
-	enablers := []FormProperty{}
-	for _, svc := range builtin.BuiltinBrokerRegistry() {
-		entry, err := svc.CatalogEntry()
-		if err != nil {
-			log.Fatalf("Error getting catalog entry for service %s, %v", svc.Name, err)
-		}
-
-		enableForm := FormProperty{
-			Name:         strings.ToLower(utils.PropertyToEnv(svc.EnabledProperty())),
-			Label:        fmt.Sprintf("Let the broker create and bind %s instances.", entry.Metadata.DisplayName),
-			Type:         "boolean",
-			Default:      true,
-			Configurable: true,
-		}
-
-		enablers = append(enablers, enableForm)
-	}
-
-	return Form{
-		Name:        "enable_disable",
-		Label:       "Enable Services",
-		Description: "Enable or disable services.",
-		Properties:  enablers,
 	}
 }
 

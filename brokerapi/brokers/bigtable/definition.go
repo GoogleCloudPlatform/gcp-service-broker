@@ -47,7 +47,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
           "supportUrl": "https://cloud.google.com/bigtable/docs/support/getting-support",
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigtable.svg"
       },
-      "tags": ["gcp", "bigtable"],
+      "tags": ["gcp", "bigtable", "builtin"],
       "plans": [
         {
           "id": "65a49268-2c73-481e-80f3-9fde5bd5a654",

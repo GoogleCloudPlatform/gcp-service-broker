@@ -72,8 +72,7 @@ func TestRegistry_GetEnabledServices(t *testing.T) {
 			registry := BrokerRegistry{}
 			registry.Register(&sd)
 
-			// shouldn't show up when property is false even if the service is enabled
-			viper.Set(sd.EnabledProperty(), true)
+			// shouldn't show up when property is false
 			viper.Set(tc.Property, false)
 			if defns, err := registry.GetEnabledServices(); err != nil {
 				t.Fatal(err)
@@ -87,14 +86,6 @@ func TestRegistry_GetEnabledServices(t *testing.T) {
 				t.Fatal(err)
 			} else if len(defns) != 1 {
 				t.Fatalf("Expected 1 definition with %s enabled, but got %d", tc.Property, len(defns))
-			}
-
-			// should not show up if the service is explicitly disabled
-			viper.Set(sd.EnabledProperty(), false)
-			if defns, err := registry.GetEnabledServices(); err != nil {
-				t.Fatal(err)
-			} else if len(defns) != 0 {
-				t.Fatalf("Expected o definition with %s disabled, but got %d", sd.EnabledProperty(), len(defns))
 			}
 		})
 	}

@@ -49,7 +49,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
         "supportUrl": "https://cloud.google.com/pubsub/docs/support",
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/pubsub.svg"
       },
-      "tags": ["gcp", "pubsub"],
+      "tags": ["gcp", "pubsub", "builtin"],
       "plans": [
         {
           "id": "622f4da3-8731-492a-af29-66a9146f8333",

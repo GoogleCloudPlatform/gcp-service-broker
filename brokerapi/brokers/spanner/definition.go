@@ -50,7 +50,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 				"supportUrl": "https://cloud.google.com/spanner/docs/support",
 				"imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg"
 			},
-			"tags": ["gcp", "spanner"],
+			"tags": ["gcp", "spanner", "builtin"],
 			"plans": [
 				{
 					"id": "44828436-cfbd-47ae-b4bc-48854564347b",

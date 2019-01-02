@@ -26,16 +26,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-func ExampleServiceDefinition_EnabledProperty() {
-	service := ServiceDefinition{
-		Name: "left-handed-smoke-sifter",
-	}
-
-	fmt.Println(service.EnabledProperty())
-
-	// Output: service.left-handed-smoke-sifter.enabled
-}
-
 func ExampleServiceDefinition_DefinitionProperty() {
 	service := ServiceDefinition{
 		Name: "left-handed-smoke-sifter",
@@ -54,21 +44,6 @@ func ExampleServiceDefinition_UserDefinedPlansProperty() {
 	fmt.Println(service.UserDefinedPlansProperty())
 
 	// Output: service.left-handed-smoke-sifter.plans
-}
-
-func ExampleServiceDefinition_IsEnabled() {
-	service := ServiceDefinition{
-		Name: "left-handed-smoke-sifter",
-	}
-
-	viper.Set(service.EnabledProperty(), true)
-	fmt.Println(service.IsEnabled())
-
-	viper.Set(service.EnabledProperty(), false)
-	fmt.Println(service.IsEnabled())
-
-	// Output: true
-	// false
 }
 
 func ExampleServiceDefinition_IsRoleWhitelistEnabled() {

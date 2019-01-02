@@ -50,7 +50,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
         "supportUrl": "https://cloud.google.com/support/",
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/machine-learning.svg"
       },
-      "tags": ["gcp", "ml"],
+      "tags": ["gcp", "ml", "builtin"],
       "plans":  [
         {
          "id": "be7954e1-ecfb-4936-a0b6-db35e6424c7a",

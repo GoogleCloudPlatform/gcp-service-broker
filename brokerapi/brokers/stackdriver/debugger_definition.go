@@ -37,7 +37,7 @@ func StackdriverDebuggerServiceDefinition() *broker.ServiceDefinition {
 		        "supportUrl": "https://cloud.google.com/stackdriver/docs/getting-support",
 		        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg"
 		      },
-		      "tags": ["gcp", "stackdriver", "debugger"],
+		      "tags": ["gcp", "stackdriver", "debugger", "builtin"],
 		      "plans": [
 		        {
 		          "id": "10866183-a775-49e8-96e3-4e7a901e4a79",

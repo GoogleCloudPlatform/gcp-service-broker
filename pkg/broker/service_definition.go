@@ -49,12 +49,6 @@ type ServiceDefinition struct {
 	ProviderBuilder func(projectId string, auth *jwt.Config, logger lager.Logger) ServiceProvider
 }
 
-// EnabledProperty computes the Viper property name for the boolean the user
-// can set to disable or enable this service.
-func (svc *ServiceDefinition) EnabledProperty() string {
-	return fmt.Sprintf("service.%s.enabled", svc.Name)
-}
-
 // DefinitionProperty computes the Viper property name for the JSON service
 // definition.
 func (svc *ServiceDefinition) DefinitionProperty() string {
@@ -108,12 +102,6 @@ func (svc *ServiceDefinition) TileUserDefinedPlansVariable() string {
 	}
 
 	return v + "_CUSTOM_PLANS"
-}
-
-// IsEnabled returns false if the operator has explicitly disabled this service
-// or true otherwise.
-func (svc *ServiceDefinition) IsEnabled() bool {
-	return viper.GetBool(svc.EnabledProperty())
 }
 
 // CatalogEntry returns the service broker catalog entry for this service, it
