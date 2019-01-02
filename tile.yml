@@ -663,10 +663,10 @@ service_plan_forms:
       you may want to include a trailing dash.
     configurable: true
     optional: true
-  - name: excluded_plans
+  - name: excluded_services
     type: text
-    label: Excluded Plans
-    description: A list of UUIDs of plans to exclude, one per line.
+    label: Excluded Services
+    description: A list of UUIDs of services to exclude, one per line.
     configurable: true
     optional: true
   - name: config
