@@ -30,3 +30,7 @@ If you:
   * You can now set it in the database form of the PCF tile.
 * Use a BigQuery billing export for chargebacks:
   * Read the [billing docs](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/billing.md) to understand how labels are automatically applied to services now.
+
+### v3.X to 5.0
+
+You MUST upgrade your 3.X version to 4.x before upgrading to 5.x.
