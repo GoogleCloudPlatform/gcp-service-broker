@@ -318,16 +318,6 @@ forms:
     label: enable-unmaintained-services
     description: Enable broker services that are unmaintained.
     configurable: true
-  - name: gsb_compatibility_three_to_four_legacy_plans
-    type: boolean
-    default: "false"
-    label: three-to-four.legacy-plans
-    description: Enable compatibility with the GCP Service Broker v3.x. Before version
-      4.0, each installation generated its own plan UUIDs, after 4.0 they have been
-      standardized. This option installs a compatibility layer which checks if a service
-      is using the correct plan GUID. If the service does not use the correct GUID,
-      the request will fail with a message about how to upgrade.
-    configurable: true
 - name: default_override
   label: Default Overrides
   description: Override the default values your users get when provisioning.
