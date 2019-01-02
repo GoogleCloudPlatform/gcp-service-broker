@@ -43,7 +43,7 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 	          "supportUrl": "https://cloud.google.com/support/",
 	          "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
         },
-        "tags": ["gcp", "cloudsql", "postgres", "builtin"],
+        "tags": ["gcp", "cloudsql", "postgres"],
         "plans":[
 				    {
 				        "service_properties": { "tier": "db-f1-micro", "max_disk_size": "3062" },
