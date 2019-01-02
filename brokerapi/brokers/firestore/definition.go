@@ -22,6 +22,7 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
+// ServiceDefinition creates a new ServiceDefinition object for the Firestore service.
 func ServiceDefinition() *broker.ServiceDefinition {
 	// NOTE(jlewisiii) Firestore has some intentional differences from other services.
 	// First, it doesn't require legacy compatibility so we won't allow operators to override the whitelist.

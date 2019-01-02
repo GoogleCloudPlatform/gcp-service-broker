@@ -22,6 +22,7 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
+// ServiceDefinition creates a new ServiceDefinition object for the Dialogflow service.
 func ServiceDefinition() *broker.ServiceDefinition {
 	return &broker.ServiceDefinition{
 		Name: "google-dialogflow",

@@ -22,6 +22,7 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
+// ServiceDefinition creates a new ServiceDefinition object for the Dataflow service.
 func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{"dataflow.viewer", "dataflow.developer"}
 

@@ -25,6 +25,7 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
+// ServiceDefinition creates a new ServiceDefinition object for the Pub/Sub service.
 func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"pubsub.publisher",

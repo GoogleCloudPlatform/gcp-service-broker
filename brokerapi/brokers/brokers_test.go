@@ -83,10 +83,6 @@ var _ = Describe("Brokers", func() {
 		os.Setenv("SECURITY_USER_PASSWORD", "password")
 
 		registry := builtin.BuiltinBrokerRegistry()
-		// for name, defn := range broker.DefaultRegistry {
-		// 	copy := *defn
-		// 	registry[name] = &copy
-		// }
 		brokerConfig, err = NewBrokerConfigFromEnv()
 		Expect(err).To(BeNil())
 		brokerConfig.Registry = registry

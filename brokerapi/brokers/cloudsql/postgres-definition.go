@@ -26,6 +26,7 @@ import (
 
 const PostgresServiceId = "cbad6d78-a73c-432d-b8ff-b219a17a803a"
 
+// PostgresServiceDefinition creates a new ServiceDefinition object for the PostgreSQL service.
 func PostgresServiceDefinition() *broker.ServiceDefinition {
 	return &broker.ServiceDefinition{
 		Name: models.CloudsqlPostgresName,

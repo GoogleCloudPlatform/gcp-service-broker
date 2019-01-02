@@ -19,6 +19,8 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
+// StackdriverTraceServiceDefinition creates a new ServiceDefinition object
+// for the Stackdriver Trace service.
 func StackdriverTraceServiceDefinition() *broker.ServiceDefinition {
 	return &broker.ServiceDefinition{
 		Name: "google-stackdriver-trace",

@@ -25,6 +25,7 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
+// ServiceDefinition creates a new ServiceDefinition object for the Spanner service.
 func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"spanner.databaseAdmin",

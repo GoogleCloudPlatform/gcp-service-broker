@@ -23,6 +23,7 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
+// ServiceDefinition creates a new ServiceDefinition object for the ML service.
 func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"ml.developer",

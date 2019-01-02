@@ -19,6 +19,8 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
+// StackdriverMonitoringServiceDefinition creates a new ServiceDefinition object
+// for the Stackdriver Monitoring service.
 func StackdriverMonitoringServiceDefinition() *broker.ServiceDefinition {
 	return &broker.ServiceDefinition{
 		Name: "google-stackdriver-monitoring",
