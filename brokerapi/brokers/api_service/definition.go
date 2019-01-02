@@ -50,7 +50,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
         "supportUrl": "https://cloud.google.com/support/",
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/machine-learning.svg"
       },
-      "tags": ["gcp", "ml", "builtin"],
+      "tags": ["gcp", "ml"],
       "plans":  [
         {
          "id": "be7954e1-ecfb-4936-a0b6-db35e6424c7a",
@@ -83,5 +83,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &ApiServiceBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

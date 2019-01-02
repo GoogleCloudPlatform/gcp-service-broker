@@ -40,7 +40,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
         "supportUrl": "https://cloud.google.com/datastore/docs/getting-support",
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/datastore.svg"
       },
-      "tags": ["gcp", "datastore", "builtin"],
+      "tags": ["gcp", "datastore"],
       "plans": [
         {
          "id": "05f1fb6b-b5f0-48a2-9c2b-a5f236507a97",
@@ -98,5 +98,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &DatastoreBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

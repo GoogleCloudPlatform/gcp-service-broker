@@ -35,8 +35,9 @@ var (
 		"beta":         toggles.Compatibility.Toggle("enable-gcp-beta-services", true, "Enable services that are in GCP Beta. These have no SLA or support policy."),
 		"deprecated":   toggles.Compatibility.Toggle("enable-gcp-deprecated-services", false, "Enable services that use deprecated GCP components."),
 		"terraform":    toggles.Compatibility.Toggle("enable-terraform-services", false, "Enable services that use the experimental, unstable, Terraform back-end."),
-		"builtin":      toggles.Compatibility.Toggle("enable-builtin-services", true, "Enable services that are built in to the broker i.e. not brokerpaks."),
 	}
+
+	enableBuiltinServices = toggles.Compatibility.Toggle("enable-builtin-services", true, `Enable services that are built in to the broker i.e. not brokerpaks.`)
 )
 
 // BrokerRegistry holds the list of ServiceDefinitions that can be provisioned
@@ -76,6 +77,10 @@ func (brokerRegistry *BrokerRegistry) GetEnabledServices() ([]*ServiceDefinition
 
 	for _, svc := range brokerRegistry.GetAllServices() {
 		isEnabled := true
+
+		if svc.IsBuiltin {
+			isEnabled = enableBuiltinServices.IsActive()
+		}
 
 		if entry, err := svc.CatalogEntry(); err != nil {
 			return nil, err

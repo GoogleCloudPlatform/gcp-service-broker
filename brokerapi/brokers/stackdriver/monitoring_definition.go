@@ -37,7 +37,7 @@ func StackdriverMonitoringServiceDefinition() *broker.ServiceDefinition {
         "supportUrl": "https://cloud.google.com/stackdriver/docs/getting-support",
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg"
       },
-      "tags": ["gcp", "stackdriver", "monitoring", "preview", "builtin"],
+      "tags": ["gcp", "stackdriver", "monitoring", "preview"],
       "plans": [
         {
           "id": "2e4b85c1-0ce6-46e4-91f5-eebeb373e3f5",
@@ -63,5 +63,6 @@ func StackdriverMonitoringServiceDefinition() *broker.ServiceDefinition {
 			},
 		},
 		ProviderBuilder: NewStackdriverAccountProvider,
+		IsBuiltin:       true,
 	}
 }

@@ -41,7 +41,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
         "supportUrl": "https://cloud.google.com/dataflow/docs/support",
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/dataflow.svg"
       },
-      "tags": ["gcp", "dataflow", "preview", "builtin"],
+      "tags": ["gcp", "dataflow", "preview"],
       "plans": [
         {
          "id": "8e956dd6-8c0f-470c-9a11-065537d81872",
@@ -76,5 +76,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &DataflowBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

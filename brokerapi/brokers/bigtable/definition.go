@@ -47,7 +47,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
           "supportUrl": "https://cloud.google.com/bigtable/docs/support/getting-support",
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigtable.svg"
       },
-      "tags": ["gcp", "bigtable", "builtin"],
+      "tags": ["gcp", "bigtable"],
       "plans": [
         {
           "id": "65a49268-2c73-481e-80f3-9fde5bd5a654",
@@ -170,5 +170,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &BigTableBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

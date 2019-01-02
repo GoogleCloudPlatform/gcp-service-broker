@@ -49,7 +49,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
         "supportUrl": "https://cloud.google.com/pubsub/docs/support",
         "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/pubsub.svg"
       },
-      "tags": ["gcp", "pubsub", "builtin"],
+      "tags": ["gcp", "pubsub"],
       "plans": [
         {
           "id": "622f4da3-8731-492a-af29-66a9146f8333",
@@ -185,5 +185,6 @@ again during that time (on a best-effort basis).
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &PubSubBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

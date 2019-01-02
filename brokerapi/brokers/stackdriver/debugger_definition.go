@@ -37,7 +37,7 @@ func StackdriverDebuggerServiceDefinition() *broker.ServiceDefinition {
 		        "supportUrl": "https://cloud.google.com/stackdriver/docs/getting-support",
 		        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg"
 		      },
-		      "tags": ["gcp", "stackdriver", "debugger", "builtin"],
+		      "tags": ["gcp", "stackdriver", "debugger"],
 		      "plans": [
 		        {
 		          "id": "10866183-a775-49e8-96e3-4e7a901e4a79",
@@ -64,5 +64,6 @@ func StackdriverDebuggerServiceDefinition() *broker.ServiceDefinition {
 			},
 		},
 		ProviderBuilder: NewStackdriverAccountProvider,
+		IsBuiltin:       true,
 	}
 }

@@ -43,7 +43,7 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 		      "supportUrl": "https://cloud.google.com/sql/docs/getting-support",
 		      "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg"
 		    },
-		    "tags": ["gcp", "cloudsql", "mysql", "builtin"],
+		    "tags": ["gcp", "cloudsql", "mysql"],
 		    "plans": [
 				    {
 				        "service_properties": {
@@ -294,5 +294,6 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &CloudSQLBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

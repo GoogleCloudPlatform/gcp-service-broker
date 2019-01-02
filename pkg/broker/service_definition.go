@@ -47,6 +47,9 @@ type ServiceDefinition struct {
 
 	// ProviderBuilder creates a new provider given the project, auth, and logger.
 	ProviderBuilder func(projectId string, auth *jwt.Config, logger lager.Logger) ServiceProvider
+
+	// IsBuiltin is true if the service is built-in to the platform.
+	IsBuiltin bool
 }
 
 // DefinitionProperty computes the Viper property name for the JSON service

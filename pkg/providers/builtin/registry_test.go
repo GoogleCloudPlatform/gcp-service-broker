@@ -63,21 +63,11 @@ func TestBuiltinBrokerRegistry(t *testing.T) {
 		}
 	})
 
-	t.Run("has-builtin-tag", func(t *testing.T) {
+	t.Run("has-builtin-flag", func(t *testing.T) {
 		registry := BuiltinBrokerRegistry()
 		for _, svc := range registry {
-			defn, err := svc.ServiceDefinition()
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			found := false
-			for _, tag := range defn.Tags {
-				found = found || tag == "builtin"
-			}
-
-			if !found {
-				t.Errorf("Expected tag 'builtin' in list for %s, but list was: %v", defn.Name, defn.Tags)
+			if !svc.IsBuiltin {
+				t.Errorf("Expected flag 'builtin' to be set for %s, but it was: %t", svc.Name, svc.IsBuiltin)
 			}
 		}
 	})

@@ -48,7 +48,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 	          "supportUrl": "https://cloud.google.com/storage/docs/getting-support",
 	          "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/storage.svg"
 	        },
-	        "tags": ["gcp", "storage", "builtin"],
+	        "tags": ["gcp", "storage"],
 	        "plans": [
 	          {
 	            "id": "e1d11f65-da66-46ad-977c-6d56513baf43",
@@ -189,5 +189,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &StorageBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

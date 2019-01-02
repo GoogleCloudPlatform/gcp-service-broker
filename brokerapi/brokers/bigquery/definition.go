@@ -50,7 +50,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
           "supportUrl": "https://cloud.google.com/bigquery/support",
           "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigquery.svg"
         },
-        "tags": ["gcp", "bigquery", "builtin"],
+        "tags": ["gcp", "bigquery"],
         "plans": [
           {
             "id": "10ff4e72-6e84-44eb-851f-bdb38a791914",
@@ -119,5 +119,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &BigQueryBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

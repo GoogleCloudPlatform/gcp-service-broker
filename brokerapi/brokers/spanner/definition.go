@@ -50,7 +50,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 				"supportUrl": "https://cloud.google.com/spanner/docs/support",
 				"imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg"
 			},
-			"tags": ["gcp", "spanner", "builtin"],
+			"tags": ["gcp", "spanner"],
 			"plans": [
 				{
 					"id": "44828436-cfbd-47ae-b4bc-48854564347b",
@@ -152,5 +152,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &SpannerBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

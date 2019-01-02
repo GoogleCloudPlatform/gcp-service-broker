@@ -37,7 +37,7 @@ func StackdriverProfilerServiceDefinition() *broker.ServiceDefinition {
 		        "supportUrl": "https://cloud.google.com/stackdriver/docs/getting-support",
 		        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg"
 		      },
-		      "tags": ["gcp", "stackdriver", "profiler", "builtin"],
+		      "tags": ["gcp", "stackdriver", "profiler"],
 		      "plans": [
 		        {
 		          "id": "594627f6-35f5-462f-9074-10fb033fb18a",
@@ -64,5 +64,6 @@ func StackdriverProfilerServiceDefinition() *broker.ServiceDefinition {
 			},
 		},
 		ProviderBuilder: NewStackdriverAccountProvider,
+		IsBuiltin:       true,
 	}
 }
