@@ -14,10 +14,52 @@
 
 package builtin
 
-// No new builtin providers should be added after this point.
-// Going forward, all new providers should be handled through brokerpaks.
+import (
+	"reflect"
+	"sort"
+	"testing"
+)
 
-// TODO validate exact number of brokers
-// TODO validate broker names
-// TODO validate broker plans
-// TODO validate free == false
+func TestBuiltinBrokerRegistry(t *testing.T) {
+	builtinServiceNames := []string{
+		"google-bigquery",
+		"google-bigtable",
+		"google-cloudsql-mysql",
+		"google-cloudsql-postgres",
+		"google-dataflow",
+		"google-datastore",
+		"google-dialogflow",
+		"google-firestore",
+		"google-ml-apis",
+		"google-pubsub",
+		"google-spanner",
+		"google-stackdriver-debugger",
+		"google-stackdriver-monitoring",
+		"google-stackdriver-profiler",
+		"google-stackdriver-trace",
+		"google-storage",
+	}
+
+	sort.Strings(builtinServiceNames)
+
+	t.Run("service-count", func(t *testing.T) {
+		expectedServiceCount := len(builtinServiceNames)
+		actualServiceCount := len(BuiltinBrokerRegistry())
+		if actualServiceCount != expectedServiceCount {
+			t.Errorf("Expected %d services, registered: %d", expectedServiceCount, actualServiceCount)
+		}
+	})
+
+	t.Run("service-names", func(t *testing.T) {
+		var actual []string
+		registry := BuiltinBrokerRegistry()
+		for name, _ := range registry {
+			actual = append(actual, name)
+		}
+
+		sort.Strings(actual)
+		if !reflect.DeepEqual(builtinServiceNames, actual) {
+			t.Errorf("Expected service names: %v, got: %v", builtinServiceNames, actual)
+		}
+	})
+}
