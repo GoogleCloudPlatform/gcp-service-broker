@@ -1384,7 +1384,7 @@ To specify a custom plan manually, create the plan as JSON in a JSON array and s
 
 For example:
 <code>
-[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "uri": setme, "service_prefix": setme, "excluded_plans": setme, "config": setme, "notes": setme},...]
+[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "uri": setme, "service_prefix": setme, "excluded_services": setme, "config": setme, "notes": setme},...]
 </code>
 
 <table>
@@ -1451,11 +1451,11 @@ For example:
 </tr>
 
 <tr>
-  <td><tt>excluded_plans</tt></td>
+  <td><tt>excluded_services</tt></td>
   <td><i>text</i></td>
-  <td>Excluded Plans</td>
+  <td>Excluded Services</td>
   <td>
-  A list of UUIDs of plans to exclude, one per line.
+  A list of UUIDs of services to exclude, one per line.
 
 
 <ul>
