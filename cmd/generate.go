@@ -48,14 +48,6 @@ func init() {
 	})
 
 	generateCmd.AddCommand(&cobra.Command{
-		Use:   "forms",
-		Short: "Generate PCF Tile Forms",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(generator.GenerateFormsString())
-		},
-	})
-
-	generateCmd.AddCommand(&cobra.Command{
 		Use:   "customization",
 		Short: "Generate customization documentation",
 		Run: func(cmd *cobra.Command, args []string) {
