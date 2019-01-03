@@ -34,12 +34,9 @@ import (
 )
 
 const (
-	roleResourcePrefix     = "roles/"
-	saResourcePrefix       = "serviceAccount:"
-	projectResourcePrefix  = "projects/"
-	overridableBindMessage = `The role for the account without the "roles/" prefix.
-	See: https://cloud.google.com/iam/docs/understanding-roles for more details.
-	Note: The default enumeration may be overridden by your operator.`
+	roleResourcePrefix    = "roles/"
+	saResourcePrefix      = "serviceAccount:"
+	projectResourcePrefix = "projects/"
 )
 
 type ServiceAccountManager struct {

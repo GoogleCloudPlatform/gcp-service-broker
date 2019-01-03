@@ -13,3 +13,61 @@
 // limitations under the License.
 
 package account_managers
+
+import (
+	"reflect"
+	"testing"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+)
+
+func TestServiceAccountWhitelistWithDefault(t *testing.T) {
+	details := `The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details.`
+
+	cases := map[string]struct {
+		Whitelist   []string
+		DefaultRole string
+		Expected    broker.BrokerVariable
+	}{
+		"default in whitelist": {
+			Whitelist:   []string{"foo"},
+			DefaultRole: "foo",
+			Expected: broker.BrokerVariable{
+				FieldName: "role",
+				Type:      broker.JsonTypeString,
+				Details:   details,
+
+				Required: false,
+				Default:  "foo",
+				Enum:     map[interface{}]string{"foo": "roles/foo"},
+			},
+		},
+
+		"default not in whitelist": {
+			Whitelist:   []string{"foo"},
+			DefaultRole: "test",
+			Expected: broker.BrokerVariable{
+				FieldName: "role",
+				Type:      broker.JsonTypeString,
+				Details:   details,
+
+				Required: false,
+				Default:  "test",
+				Enum:     map[interface{}]string{"foo": "roles/foo"},
+			},
+		},
+	}
+
+	for tn, tc := range cases {
+		t.Run(tn, func(t *testing.T) {
+			vars := ServiceAccountWhitelistWithDefault(tc.Whitelist, tc.DefaultRole)
+			if len(vars) != 1 {
+				t.Fatalf("Expected 1 input variable, got %d", len(vars))
+			}
+
+			if !reflect.DeepEqual(vars[0], tc.Expected) {
+				t.Fatalf("Expected %#v, got %#v", tc.Expected, vars[0])
+			}
+		})
+	}
+}
