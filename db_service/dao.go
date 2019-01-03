@@ -1,4 +1,4 @@
-// Copyright 2018 the Service Broker Project Authors.
+// Copyright 2019 the Service Broker Project Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -258,100 +258,6 @@ func (ds *SqlDatastore) GetProvisionRequestDetailsById(ctx context.Context, id u
 func CheckDeletedProvisionRequestDetailsById(ctx context.Context, id uint) (bool, error) { return defaultDatastore().CheckDeletedProvisionRequestDetailsById(ctx, id) }
 func (ds *SqlDatastore) CheckDeletedProvisionRequestDetailsById(ctx context.Context, id uint) (bool, error) {
 	record := models.ProvisionRequestDetails{}
-	if err := ds.db.Unscoped().Where("id = ?", id).First(&record).Error; err != nil {
-		return false, err
-	}
-
-	return record.DeletedAt != nil, nil
-}
-
-
-
-
-// CountPlanDetailsV1ByServiceIdAndName gets the count of PlanDetailsV1 by its key (serviceId, name) in the datastore (0 or 1)
-func CountPlanDetailsV1ByServiceIdAndName(ctx context.Context, serviceId string, name string) (int, error) { return defaultDatastore().CountPlanDetailsV1ByServiceIdAndName(ctx, serviceId, name) }
-func (ds *SqlDatastore) CountPlanDetailsV1ByServiceIdAndName(ctx context.Context, serviceId string, name string) (int, error) {
-	var count int
-	err := ds.db.Model(&models.PlanDetailsV1{}).Where("service_id = ? AND name = ?", serviceId, name).Count(&count).Error
-	return count, err
-}
-
-
-// CountPlanDetailsV1ById gets the count of PlanDetailsV1 by its key (id) in the datastore (0 or 1)
-func CountPlanDetailsV1ById(ctx context.Context, id string) (int, error) { return defaultDatastore().CountPlanDetailsV1ById(ctx, id) }
-func (ds *SqlDatastore) CountPlanDetailsV1ById(ctx context.Context, id string) (int, error) {
-	var count int
-	err := ds.db.Model(&models.PlanDetailsV1{}).Where("id = ?", id).Count(&count).Error
-	return count, err
-}
-
-// CreatePlanDetailsV1 creates a new record in the database and assigns it a primary key.
-func CreatePlanDetailsV1(ctx context.Context, object *models.PlanDetailsV1) error { return defaultDatastore().CreatePlanDetailsV1(ctx, object) }
-func (ds *SqlDatastore) CreatePlanDetailsV1(ctx context.Context, object *models.PlanDetailsV1) error {
-	return ds.db.Create(object).Error
-}
-
-// SavePlanDetailsV1 updates an existing record in the database.
-func SavePlanDetailsV1(ctx context.Context, object *models.PlanDetailsV1) error { return defaultDatastore().SavePlanDetailsV1(ctx, object) }
-func (ds *SqlDatastore) SavePlanDetailsV1(ctx context.Context, object *models.PlanDetailsV1) error {
-	return ds.db.Save(object).Error
-}
-// DeletePlanDetailsV1ByServiceIdAndName soft-deletes the record by its key (serviceId, name).
-func DeletePlanDetailsV1ByServiceIdAndName(ctx context.Context, serviceId string, name string) error { return defaultDatastore().DeletePlanDetailsV1ByServiceIdAndName(ctx, serviceId, name) }
-func (ds *SqlDatastore) DeletePlanDetailsV1ByServiceIdAndName(ctx context.Context, serviceId string, name string) error {
-	return ds.db.Where("service_id = ? AND name = ?", serviceId, name).Delete(&models.PlanDetailsV1{}).Error
-}
-
-// DeletePlanDetailsV1ById soft-deletes the record by its key (id).
-func DeletePlanDetailsV1ById(ctx context.Context, id string) error { return defaultDatastore().DeletePlanDetailsV1ById(ctx, id) }
-func (ds *SqlDatastore) DeletePlanDetailsV1ById(ctx context.Context, id string) error {
-	return ds.db.Where("id = ?", id).Delete(&models.PlanDetailsV1{}).Error
-}
-
-
-
-// DeletePlanDetailsV1 soft-deletes the record.
-func DeletePlanDetailsV1(ctx context.Context, record *models.PlanDetailsV1) error { return defaultDatastore().DeletePlanDetailsV1(ctx, record) }
-func (ds *SqlDatastore) DeletePlanDetailsV1(ctx context.Context, record *models.PlanDetailsV1) error {
-	return ds.db.Delete(record).Error
-}
-// GetPlanDetailsV1ByServiceIdAndName gets an instance of PlanDetailsV1 by its key (serviceId, name).
-func GetPlanDetailsV1ByServiceIdAndName(ctx context.Context, serviceId string, name string) (*models.PlanDetailsV1, error) { return defaultDatastore().GetPlanDetailsV1ByServiceIdAndName(ctx, serviceId, name) }
-func (ds *SqlDatastore) GetPlanDetailsV1ByServiceIdAndName(ctx context.Context, serviceId string, name string) (*models.PlanDetailsV1, error) {
-	record := models.PlanDetailsV1{}
-	if err := ds.db.Where("service_id = ? AND name = ?", serviceId, name).First(&record).Error; err != nil {
-		return nil, err
-	}
-
-	return &record, nil
-}
-
-// CheckDeletedPlanDetailsV1ByServiceIdAndName checks to see if an instance of PlanDetailsV1 was soft deleted by its key (serviceId, name).
-func CheckDeletedPlanDetailsV1ByServiceIdAndName(ctx context.Context, serviceId string, name string) (bool, error) { return defaultDatastore().CheckDeletedPlanDetailsV1ByServiceIdAndName(ctx, serviceId, name) }
-func (ds *SqlDatastore) CheckDeletedPlanDetailsV1ByServiceIdAndName(ctx context.Context, serviceId string, name string) (bool, error) {
-	record := models.PlanDetailsV1{}
-	if err := ds.db.Unscoped().Where("service_id = ? AND name = ?", serviceId, name).First(&record).Error; err != nil {
-		return false, err
-	}
-
-	return record.DeletedAt != nil, nil
-}
-
-// GetPlanDetailsV1ById gets an instance of PlanDetailsV1 by its key (id).
-func GetPlanDetailsV1ById(ctx context.Context, id string) (*models.PlanDetailsV1, error) { return defaultDatastore().GetPlanDetailsV1ById(ctx, id) }
-func (ds *SqlDatastore) GetPlanDetailsV1ById(ctx context.Context, id string) (*models.PlanDetailsV1, error) {
-	record := models.PlanDetailsV1{}
-	if err := ds.db.Where("id = ?", id).First(&record).Error; err != nil {
-		return nil, err
-	}
-
-	return &record, nil
-}
-
-// CheckDeletedPlanDetailsV1ById checks to see if an instance of PlanDetailsV1 was soft deleted by its key (id).
-func CheckDeletedPlanDetailsV1ById(ctx context.Context, id string) (bool, error) { return defaultDatastore().CheckDeletedPlanDetailsV1ById(ctx, id) }
-func (ds *SqlDatastore) CheckDeletedPlanDetailsV1ById(ctx context.Context, id string) (bool, error) {
-	record := models.PlanDetailsV1{}
 	if err := ds.db.Unscoped().Where("id = ?", id).First(&record).Error; err != nil {
 		return false, err
 	}
