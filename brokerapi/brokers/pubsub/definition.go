@@ -117,7 +117,7 @@ again during that time (on a best-effort basis).
 			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.PubsubName, roleWhitelist, "pubsub.editor"),
+		BindInputVariables:   accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "pubsub.editor"),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "subscription_name",

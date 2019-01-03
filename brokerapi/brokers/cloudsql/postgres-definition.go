@@ -200,7 +200,7 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 		},
 
 		DefaultRoleWhitelist:  roleWhitelist(),
-		BindInputVariables:    commonBindVariables(models.CloudsqlPostgresName),
+		BindInputVariables:    commonBindVariables(),
 		BindOutputVariables:   commonBindOutputVariables(),
 		BindComputedVariables: commonBindComputedVariables(),
 		PlanVariables: []broker.BrokerVariable{

@@ -88,7 +88,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
 		},
 		DefaultRoleWhitelist:  roleWhitelist,
-		BindInputVariables:    accountmanagers.ServiceAccountBindInputVariables(models.BigqueryName, roleWhitelist, "bigquery.user"),
+		BindInputVariables:    accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "bigquery.user"),
 		BindComputedVariables: accountmanagers.ServiceAccountBindComputedVariables(),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{

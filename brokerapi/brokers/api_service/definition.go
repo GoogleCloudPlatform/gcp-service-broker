@@ -65,7 +65,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 		`,
 		ProvisionInputVariables: []broker.BrokerVariable{},
 		DefaultRoleWhitelist:    roleWhitelist,
-		BindInputVariables:      accountmanagers.ServiceAccountBindInputVariables(models.MlName, roleWhitelist, "ml.modelUser"),
+		BindInputVariables:      accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "ml.modelUser"),
 		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
 		BindComputedVariables:   accountmanagers.ServiceAccountBindComputedVariables(),
 		Examples: []broker.ServiceExample{
