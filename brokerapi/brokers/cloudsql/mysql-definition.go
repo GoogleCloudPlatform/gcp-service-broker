@@ -294,5 +294,6 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &CloudSQLBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

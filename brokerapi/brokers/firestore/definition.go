@@ -78,5 +78,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &FirestoreBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

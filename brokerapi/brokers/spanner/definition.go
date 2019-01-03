@@ -152,5 +152,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &SpannerBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

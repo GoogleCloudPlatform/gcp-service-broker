@@ -62,4 +62,13 @@ func TestBuiltinBrokerRegistry(t *testing.T) {
 			t.Errorf("Expected service names: %v, got: %v", builtinServiceNames, actual)
 		}
 	})
+
+	t.Run("has-builtin-flag", func(t *testing.T) {
+		registry := BuiltinBrokerRegistry()
+		for _, svc := range registry {
+			if !svc.IsBuiltin {
+				t.Errorf("Expected flag 'builtin' to be set for %s, but it was: %t", svc.Name, svc.IsBuiltin)
+			}
+		}
+	})
 }

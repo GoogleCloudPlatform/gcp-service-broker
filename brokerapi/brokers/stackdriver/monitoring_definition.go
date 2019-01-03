@@ -63,5 +63,6 @@ func StackdriverMonitoringServiceDefinition() *broker.ServiceDefinition {
 			},
 		},
 		ProviderBuilder: NewStackdriverAccountProvider,
+		IsBuiltin:       true,
 	}
 }

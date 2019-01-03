@@ -189,5 +189,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &StorageBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

@@ -67,5 +67,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &DialogflowBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

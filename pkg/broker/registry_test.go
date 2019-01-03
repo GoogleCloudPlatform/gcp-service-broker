@@ -67,13 +67,14 @@ func TestRegistry_GetEnabledServices(t *testing.T) {
                 }
               ]
             }`,
+				IsBuiltin: true,
 			}
 
 			registry := BrokerRegistry{}
 			registry.Register(&sd)
 
-			// shouldn't show up when property is false even if the service is enabled
-			viper.Set(sd.EnabledProperty(), true)
+			// shouldn't show up when property is false even if builtins are enabled
+			viper.Set("compatibility.enable-builtin-services", true)
 			viper.Set(tc.Property, false)
 			if defns, err := registry.GetEnabledServices(); err != nil {
 				t.Fatal(err)
@@ -90,11 +91,11 @@ func TestRegistry_GetEnabledServices(t *testing.T) {
 			}
 
 			// should not show up if the service is explicitly disabled
-			viper.Set(sd.EnabledProperty(), false)
+			viper.Set("compatibility.enable-builtin-services", false)
 			if defns, err := registry.GetEnabledServices(); err != nil {
 				t.Fatal(err)
 			} else if len(defns) != 0 {
-				t.Fatalf("Expected o definition with %s disabled, but got %d", sd.EnabledProperty(), len(defns))
+				t.Fatalf("Expected no definition with builtins disabled, but got %d", len(defns))
 			}
 		})
 	}

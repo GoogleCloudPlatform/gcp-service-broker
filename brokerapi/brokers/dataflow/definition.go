@@ -76,5 +76,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &DataflowBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

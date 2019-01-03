@@ -185,5 +185,6 @@ again during that time (on a best-effort basis).
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &PubSubBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

@@ -170,5 +170,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &BigTableBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }
