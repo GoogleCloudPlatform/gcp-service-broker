@@ -20,7 +20,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
@@ -86,49 +85,11 @@ func GenerateForms() TileFormsSections {
 			generateServiceAccountForm(),
 			generateDatabaseForm(),
 			generateBrokerpakForm(),
-			generateRoleWhitelistForm(),
 			generateCompatibilityForm(),
 			generateDefaultOverrideForm(),
 		},
 
 		ServicePlanForms: append(generateServicePlanForms(), brokerpakConfigurationForm()),
-	}
-}
-
-// generateRoleWhitelistForm generates a form for users to enable/disable the
-// whitelist validation for new service accounts bound to the service.
-// They are opt-out and on by default for safety.
-func generateRoleWhitelistForm() Form {
-	builtinServices := builtin.BuiltinBrokerRegistry()
-
-	enablers := []FormProperty{}
-	for _, svc := range builtinServices.GetAllServices() {
-		entry, err := svc.CatalogEntry()
-		if err != nil {
-			log.Fatalf("Error getting catalog entry for service %s, %v", svc.Name, err)
-		}
-
-		if !svc.IsRoleWhitelistEnabled() {
-			continue
-		}
-
-		enableForm := FormProperty{
-			Name:         strings.ToLower(utils.PropertyToEnv(account_managers.RoleWhitelistProperty(svc.Name))),
-			Label:        fmt.Sprintf("Role whitelist for %s instances.", entry.Metadata.DisplayName),
-			Description:  "A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.",
-			Type:         "string",
-			Default:      strings.Join(svc.DefaultRoleWhitelist, ","),
-			Configurable: true,
-		}
-
-		enablers = append(enablers, enableForm)
-	}
-
-	return Form{
-		Name:        "role_whitelists",
-		Label:       "Role Whitelisting",
-		Description: "Enable or disable role whitelisting.",
-		Properties:  enablers,
 	}
 }
 

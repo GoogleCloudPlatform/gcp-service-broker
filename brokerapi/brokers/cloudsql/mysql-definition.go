@@ -246,7 +246,7 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 			{Name: "_", Default: `${assert(disk_size <= max_disk_size, "disk size (${disk_size}) is greater than max allowed disk size for this plan (${max_disk_size})")}`, Overwrite: true},
 		},
 		DefaultRoleWhitelist:  roleWhitelist(),
-		BindInputVariables:    commonBindVariables(models.CloudsqlMySQLName),
+		BindInputVariables:    commonBindVariables(),
 		BindOutputVariables:   commonBindOutputVariables(),
 		BindComputedVariables: commonBindComputedVariables(),
 		PlanVariables: []broker.BrokerVariable{

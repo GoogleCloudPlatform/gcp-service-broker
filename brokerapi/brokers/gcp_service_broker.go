@@ -32,10 +32,9 @@ import (
 
 // GCPServiceBroker is a brokerapi.ServiceBroker that can be used to generate an OSB compatible service broker.
 type GCPServiceBroker struct {
-	enableInputValidation bool
-	registry              broker.BrokerRegistry
-	jwtConfig             *jwt.Config
-	projectId             string
+	registry  broker.BrokerRegistry
+	jwtConfig *jwt.Config
+	projectId string
 
 	Logger lager.Logger
 }
@@ -44,11 +43,10 @@ type GCPServiceBroker struct {
 // Exactly one of GCPServiceBroker or error will be nil when returned.
 func New(cfg *BrokerConfig, logger lager.Logger) (*GCPServiceBroker, error) {
 	return &GCPServiceBroker{
-		enableInputValidation: cfg.EnableInputValidation,
-		registry:              cfg.Registry,
-		jwtConfig:             cfg.HttpConfig,
-		projectId:             cfg.ProjectId,
-		Logger:                logger,
+		registry:  cfg.Registry,
+		jwtConfig: cfg.HttpConfig,
+		projectId: cfg.ProjectId,
+		Logger:    logger,
 	}, nil
 }
 
@@ -118,11 +116,9 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrAsyncRequired
 	}
 
-	if gcpBroker.enableInputValidation {
-		// validate parameters meet the service's schema
-		if err := gcpBroker.validateProvisionVariables(details); err != nil {
-			return brokerapi.ProvisionedServiceSpec{}, err
-		}
+	// validate parameters meet the service's schema
+	if err := gcpBroker.validateProvisionVariables(details); err != nil {
+		return brokerapi.ProvisionedServiceSpec{}, err
 	}
 
 	vars, err := brokerService.ProvisionVariables(instanceID, details, *plan)
@@ -273,11 +269,9 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 		return brokerapi.Binding{}, err
 	}
 
-	if gcpBroker.enableInputValidation {
-		// validate parameters meet the service's schema
-		if err := gcpBroker.validateBindVariables(details); err != nil {
-			return brokerapi.Binding{}, err
-		}
+	// validate parameters meet the service's schema
+	if err := gcpBroker.validateBindVariables(details); err != nil {
+		return brokerapi.Binding{}, err
 	}
 
 	vars, err := serviceDefinition.BindVariables(*instanceRecord, bindingID, details)
