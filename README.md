@@ -54,16 +54,13 @@ It supports the following sub-commands:
  * `config` - Show and merge configuration options together.
  * `generate` - Generate documentation and tiles.
  * `help` - Help about any command.
- * `migrate` - Upgrade your database (you generally won't need this because the databases auto-upgrade).
- * `plan-info` - Dump plan information from the database.
  * `serve` - Start the service broker.
- * `show` - Show info about the provisioned resources.
 
 ## Testing
 
 Pull requests are unit-tested with Travis. You can run the same tests Travis does using `go test ./...`.
 
-Integration tests are run on a private [Concourse](https://concourse-ci.org/) pipeline for all changes to the `master` branch. 
+Integration tests are run on a private [Concourse](https://concourse-ci.org/) pipeline for all changes to the `master` branch.
 You can set up your own pipeline using the sources in the `ci` directory if you like.
 
 ## Support
