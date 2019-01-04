@@ -49,6 +49,8 @@ func TestRegistry_GetEnabledServices(t *testing.T) {
 
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
+			defer viper.Reset()
+
 			sd := ServiceDefinition{
 				Name: "test-service",
 				DefaultServiceDefinition: `{

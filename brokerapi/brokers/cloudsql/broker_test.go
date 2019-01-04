@@ -27,7 +27,6 @@ import (
 )
 
 func TestCreateProvisionRequest(t *testing.T) {
-
 	viper.Set("service.google-cloudsql-mysql.plans", `[{
       "tier": "db-n1-standard-1",
       "max_disk_size": "512",
@@ -49,6 +48,7 @@ func TestCreateProvisionRequest(t *testing.T) {
       "name": "second-gen",
       "pricing_plan": "PACKAGE"
   }]`)
+	defer viper.Reset()
 
 	mysqlSecondGenPlan := "00000000-0000-0000-0000-000000000001"
 	mysqlFirstgenPlan := "00000000-0000-0000-0000-000000000002"
