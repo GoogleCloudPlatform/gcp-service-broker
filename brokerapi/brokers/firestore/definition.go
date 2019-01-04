@@ -49,7 +49,8 @@ func ServiceDefinition() *broker.ServiceDefinition {
          "name": "default",
          "display_name": "Default",
          "description": "Firestore default plan.",
-         "service_properties": {}
+         "service_properties": {},
+         "free": false
         }
       ]
     }`,

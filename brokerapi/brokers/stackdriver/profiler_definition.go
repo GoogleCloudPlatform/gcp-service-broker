@@ -45,7 +45,8 @@ func StackdriverProfilerServiceDefinition() *broker.ServiceDefinition {
 		          "name": "default",
 		          "display_name": "Default",
 		          "description": "Stackdriver Profiler default plan.",
-		          "service_properties": {}
+		          "service_properties": {},
+		          "free": false
 		        }
 		      ]
 				}

@@ -57,14 +57,16 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					"name": "sandbox",
 					"description": "Useful for testing, not eligible for SLA.",
 					"free": false,
-					"service_properties": {"num_nodes": "1"}
+					"service_properties": {"num_nodes": "1"},
+					"free": false
 				},
 				{
 					"id": "0752b1ad-a784-4dcc-96eb-64149089a1c9",
 					"name": "minimal-production",
 					"description": "A minimal production level Spanner setup eligible for 99.99% SLA. Each node can provide up to 10,000 QPS of reads or 2,000 QPS of writes (writing single rows at 1KB data per row), and 2 TiB storage.",
 					"free": false,
-					"service_properties": {"num_nodes": "3"}
+					"service_properties": {"num_nodes": "3"},
+					"free": false
 				}
 			]
 		}`,
