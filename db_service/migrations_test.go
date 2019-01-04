@@ -116,5 +116,4 @@ func TestRunMigrations_Failures(t *testing.T) {
 			}
 		})
 	}
-
 }

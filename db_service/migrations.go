@@ -17,7 +17,6 @@ package db_service
 import (
 	"errors"
 	"fmt"
-	"math"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/jinzhu/gorm"
@@ -68,9 +67,15 @@ func RunMigrations(db *gorm.DB) error {
 		return autoMigrateTables(db, &models.TerraformDeploymentV1{})
 	}
 
-	lastMigrationNumber, err := lastMigrationNumber(db)
-	if err != nil {
-		return err
+	var lastMigrationNumber = -1
+
+	// if we've run any migrations before, we should have a migrations table, so find the last one we ran
+	if db.HasTable("migrations") {
+		var storedMigrations []models.Migration
+		if err := db.Order("migration_id desc").Find(&storedMigrations).Error; err != nil {
+			return fmt.Errorf("Error getting last migration id even though migration table exists: %s", err)
+		}
+		lastMigrationNumber = storedMigrations[0].MigrationId
 	}
 
 	if err := ValidateLastMigration(lastMigrationNumber); err != nil {
@@ -99,23 +104,6 @@ func RunMigrations(db *gorm.DB) error {
 	}
 
 	return nil
-}
-
-// lastMigrationNumber gets the last migration number of the database or -1 if
-// no migrations have ever been run.
-func lastMigrationNumber(db *gorm.DB) (int, error) {
-	var lastMigrationNumber = -1
-
-	// if we've run any migrations before, we should have a migrations table, so find the last one we ran
-	if db.HasTable("migrations") {
-		var storedMigrations []models.Migration
-		if err := db.Order("migration_id desc").Find(&storedMigrations).Error; err != nil {
-			return math.MaxInt32, fmt.Errorf("Error getting last migration id even though migration table exists: %s", err)
-		}
-		lastMigrationNumber = storedMigrations[0].MigrationId
-	}
-
-	return lastMigrationNumber, nil
 }
 
 // ValidateLastMigration returns an error if the database version is newer than
