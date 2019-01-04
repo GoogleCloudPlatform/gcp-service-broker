@@ -17,7 +17,6 @@ package db_service
 import (
 	"errors"
 	"fmt"
-	"log"
 	"math"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
@@ -80,7 +79,6 @@ func RunMigrations(db *gorm.DB) error {
 
 	// starting from the last migration we ran + 1, run migrations until we are current
 	for i := lastMigrationNumber + 1; i < len(migrations); i++ {
-		log.Printf("Running migration %d/%d\n", i, len(migrations)-1)
 		tx := db.Begin()
 		err := migrations[i]()
 		if err != nil {
