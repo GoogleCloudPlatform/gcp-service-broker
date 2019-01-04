@@ -274,22 +274,12 @@ import (
 	"context"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/jinzhu/gorm"
 )
 
 {{- range .Models}}
 
 {{- $type := .Type}}
-{{- range $idx, $key := .Keys }}
-
-{{ $fn := (print "Count" $type $key.FuncName)}}
-// {{$fn}} gets the count of {{$type}} by its key ({{$key.CallParams}}) in the datastore (0 or 1)
-func {{$fn}}(ctx context.Context, {{ $key.Args }}) (int, error) { return defaultDatastore().{{$fn}}(ctx, {{$key.CallParams}}) }
-func (ds *SqlDatastore) {{$fn}}(ctx context.Context, {{ $key.Args }}) (int, error) {
-	var count int
-	err := ds.db.Model(&models.{{$type}}{}).{{ $key.WhereClause }}.Count(&count).Error
-	return count, err
-}
-{{- end }}
 
 // {{funcName "Create" .Type}} creates a new record in the database and assigns it a primary key.
 func {{funcName "Create" .Type}}(ctx context.Context, object *models.{{.Type}}) error { return defaultDatastore().{{funcName "Create" .Type}}(ctx, object) }
@@ -323,10 +313,10 @@ func (ds *SqlDatastore) {{funcName "Delete" .Type}}(ctx context.Context, record 
 {{- $type := .Type}}
 {{ range $idx, $key := .Keys -}}
 
-{{ $fn := (print "Get" $type $key.FuncName) -}}
-// {{$fn}} gets an instance of {{$type}} by its key ({{$key.CallParams}}).
-func {{$fn}}(ctx context.Context, {{ $key.Args }}) (*models.{{$type}}, error) { return defaultDatastore().{{$fn}}(ctx, {{$key.CallParams}}) }
-func (ds *SqlDatastore) {{$fn}}(ctx context.Context, {{ $key.Args }}) (*models.{{$type}}, error) {
+{{ $getFn := (print "Get" $type $key.FuncName) -}}
+// {{$getFn}} gets an instance of {{$type}} by its key ({{$key.CallParams}}).
+func {{$getFn}}(ctx context.Context, {{ $key.Args }}) (*models.{{$type}}, error) { return defaultDatastore().{{$getFn}}(ctx, {{$key.CallParams}}) }
+func (ds *SqlDatastore) {{$getFn}}(ctx context.Context, {{ $key.Args }}) (*models.{{$type}}, error) {
 	record := models.{{$type}}{}
 	if err := ds.db.{{ $key.WhereClause }}.First(&record).Error; err != nil {
 		return nil, err
@@ -335,21 +325,28 @@ func (ds *SqlDatastore) {{$fn}}(ctx context.Context, {{ $key.Args }}) (*models.{
 	return &record, nil
 }
 
-{{ $fn := (print "CheckDeleted" $type $key.FuncName) -}}
-// {{$fn}} checks to see if an instance of {{$type}} was soft deleted by its key ({{$key.CallParams}}).
-func {{$fn}}(ctx context.Context, {{ $key.Args }}) (bool, error) { return defaultDatastore().{{$fn}}(ctx, {{$key.CallParams}}) }
-func (ds *SqlDatastore) {{$fn}}(ctx context.Context, {{ $key.Args }}) (bool, error) {
-	record := models.{{$type}}{}
-	if err := ds.db.Unscoped().{{ $key.WhereClause }}.First(&record).Error; err != nil {
-		return false, err
-	}
-
-	return record.DeletedAt != nil, nil
+{{ $existsFn := (print "Exists" $type $key.FuncName) -}}
+// {{$existsFn}} checks to see if an instance of {{$type}} exists by its key ({{$key.CallParams}}).
+func {{$existsFn}}(ctx context.Context, {{ $key.Args }}) (bool, error) { return defaultDatastore().{{$existsFn}}(ctx, {{$key.CallParams}}) }
+func (ds *SqlDatastore) {{$existsFn}}(ctx context.Context, {{ $key.Args }}) (bool, error) {
+	return recordToExists(ds.{{$getFn}}(ctx, {{ $key.CallParams }}))
 }
 
 {{ end }}
 
 {{- end }}
+
+func recordToExists(_ interface{}, err error) (bool, error) {
+	if err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
+}
 `))
 
 var daoTestTemplate = template.Must(template.New("").Funcs(
@@ -422,16 +419,11 @@ func TestSqlDatastore_{{.Type}}DAO(t *testing.T) {
 	testCtx := context.Background()
 
 	// on startup, there should be no objects to find or delete
-	if count, err := ds.{{funcName "Count" .Type .PrimaryKeyField}}(testCtx, testPk); count != 0 || err != nil {
-		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
-	}
+	exists, err := ds.{{funcName "Exists" .Type .PrimaryKeyField}}(testCtx, testPk)
+	ensureExistance(t, false, exists, err)
 
 	if _, err := ds.{{funcName "Get" .Type .PrimaryKeyField}}(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing PK got %v", err)
-	}
-
-	if _, err := ds.{{funcName "CheckDeleted" .Type .PrimaryKeyField}}(testCtx, testPk); err != gorm.ErrRecordNotFound {
-		t.Errorf("Expected an ErrRecordNotFound trying to check deletion status of a non-existing PK got %v", err)
 	}
 
 	// Should be able to create the item
@@ -468,28 +460,10 @@ func TestSqlDatastore_{{.Type}}DAO(t *testing.T) {
 	}
 
 	// after deleting the item we should not be able to get it
-	deleted, err := ds.{{funcName "CheckDeleted" .Type .PrimaryKeyField}}(testCtx, testPk)
-	if err != nil {
-		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
-	}
-	if deleted {
-		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
-	}
-
 	if err := ds.{{funcName "Delete" .Type .PrimaryKeyField}}(testCtx, testPk); err != nil {
 		t.Errorf("Expected no error when deleting by pk got: %v", err)
 	}
 
-	// we should be able to see that it was soft-deleted
-	deleted, err = ds.{{funcName "CheckDeleted" .Type .PrimaryKeyField}}(testCtx, testPk)
-	if err != nil {
-		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
-	}
-	if !deleted {
-		t.Errorf("Expected a deleted instance to marked as deleted but it was not.")
-	}
-
-	// after deleting the item we should not be able to get it
 	if _, err := ds.{{funcName "Get" .Type .PrimaryKeyField}}(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected ErrRecordNotFound after delete but got %v", err)
 	}
@@ -531,64 +505,41 @@ func TestSqlDatastore_{{$fn}}(t *testing.T) {
 	ensure{{$type}}FieldsMatch(t, &instance, ret)
 }
 
-{{ $fn := (print "CheckDeleted" $type $key.FuncName) -}}
+{{ $fn := (print "Exists" $type $key.FuncName) -}}
 func TestSqlDatastore_{{$fn}}(t *testing.T) {
 	ds := newInMemoryDatastore(t)
 	_, instance := create{{$type}}Instance()
 	testCtx := context.Background()
 
-	if _, err := ds.{{$fn}}(testCtx, {{$key.ExampleArgs "instance"}}); err != gorm.ErrRecordNotFound {
-		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing record got %v", err)
-	}
+	exists, err := ds.{{$fn}}(testCtx, {{$key.ExampleArgs "instance"}})
+	ensureExistance(t, false, exists, err)
 
 	if err := ds.{{funcName "Create" $type}}(testCtx, &instance); err != nil {
 		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
 	}
 
-	deleted, err := ds.{{$fn}}(testCtx, {{$key.ExampleArgs "instance"}})
-	if err != nil {
-		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
-	}
-	if deleted {
-		t.Errorf("Expected a non-deleted instance to not be marked as deleted but it was.")
-	}
+	exists, err = ds.{{$fn}}(testCtx, {{$key.ExampleArgs "instance"}})
+	ensureExistance(t, true, exists, err)
 
 	if err := ds.{{funcName "Delete" $type}}(testCtx, &instance); err != nil {
 		t.Errorf("Expected no error when deleting by pk got: %v", err)
 	}
 
 	// we should be able to see that it was soft-deleted
-	deleted, err = ds.{{$fn}}(testCtx, {{$key.ExampleArgs "instance"}})
-	if err != nil {
-		t.Errorf("Expected no error when checking if a non-deleted thing was deleted")
-	}
-	if !deleted {
-		t.Errorf("Expected a deleted instance to marked as deleted but it was not.")
-	}
-}
-
-{{ $fn := (print "Count" $type $key.FuncName) -}}
-func TestSqlDatastore_{{$fn}}(t *testing.T) {
-	ds := newInMemoryDatastore(t)
-	_, instance := create{{$type}}Instance()
-	testCtx := context.Background()
-
-	// on startup, there should be no objects to find or delete
-	if count, err := ds.{{$fn}}(testCtx, {{$key.ExampleArgs "instance"}}); count != 0 || err != nil {
-		t.Fatalf("Expected count to be 0 and error to be nil got count: %d, err: %v", count, err)
-	}
-
-	if err := ds.{{funcName "Create" $type}}(testCtx, &instance); err != nil {
-		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
-	}
-
-	// on startup, there should be no objects to find or delete
-	if count, err := ds.{{$fn}}(testCtx, {{$key.ExampleArgs "instance"}}); count != 1 || err != nil {
-		t.Fatalf("Expected count to be 1 and error to be nil got count: %d, err: %v", count, err)
-	}
+	exists, err = ds.{{$fn}}(testCtx, {{$key.ExampleArgs "instance"}})
+	ensureExistance(t, false, exists, err)
 }
 {{ end }}
 
-
 {{- end }}
+
+func ensureExistance(t *testing.T, expected, actual bool, err error) {
+	if err != nil {
+		t.Fatalf("Expected err to be nil, got %v", err)
+	}
+
+	if expected != actual {
+		t.Fatalf("Expected exists to be %t got %t", expected, actual)
+	}
+}
 `))

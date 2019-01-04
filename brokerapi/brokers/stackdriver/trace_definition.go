@@ -45,7 +45,8 @@ func StackdriverTraceServiceDefinition() *broker.ServiceDefinition {
           "name": "default",
           "display_name": "Default",
           "description": "Stackdriver Trace default plan.",
-          "service_properties": {}
+          "service_properties": {},
+          "free": false
         }
       ]
     }

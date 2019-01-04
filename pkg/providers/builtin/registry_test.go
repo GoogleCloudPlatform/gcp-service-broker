@@ -18,6 +18,8 @@ import (
 	"reflect"
 	"sort"
 	"testing"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
 func TestBuiltinBrokerRegistry(t *testing.T) {
@@ -63,12 +65,36 @@ func TestBuiltinBrokerRegistry(t *testing.T) {
 		}
 	})
 
-	t.Run("has-builtin-flag", func(t *testing.T) {
-		registry := BuiltinBrokerRegistry()
-		for _, svc := range registry {
-			if !svc.IsBuiltin {
-				t.Errorf("Expected flag 'builtin' to be set for %s, but it was: %t", svc.Name, svc.IsBuiltin)
-			}
+	for _, svc := range BuiltinBrokerRegistry() {
+		validateServiceDefinition(t, svc)
+	}
+}
+
+func validateServiceDefinition(t *testing.T, svc *broker.ServiceDefinition) {
+	t.Run("service:"+svc.Name, func(t *testing.T) {
+		if !svc.IsBuiltin {
+			t.Errorf("Expected flag 'builtin' to be set, but it was: %t", svc.IsBuiltin)
+		}
+
+		catalog, err := svc.CatalogEntry()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if catalog.PlanUpdatable {
+			t.Error("Expected PlanUpdatable to be false")
+		}
+
+		for _, plan := range catalog.Plans {
+			validateServicePlan(t, svc, plan)
+		}
+	})
+}
+
+func validateServicePlan(t *testing.T, svc *broker.ServiceDefinition, plan broker.ServicePlan) {
+	t.Run("plan:"+plan.Name, func(t *testing.T) {
+		if plan.Free == nil {
+			t.Error("Expected plan to have free/cost setting but was nil")
 		}
 	})
 }

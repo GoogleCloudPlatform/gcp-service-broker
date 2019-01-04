@@ -57,7 +57,8 @@ func ServiceDefinition() *broker.ServiceDefinition {
           "name": "default",
           "display_name": "Default",
           "description": "PubSub Default plan.",
-          "service_properties": {}
+          "service_properties": {},
+          "free": false
         }
       ]
 	  }`,
