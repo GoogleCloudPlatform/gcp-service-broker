@@ -45,7 +45,8 @@ func StackdriverDebuggerServiceDefinition() *broker.ServiceDefinition {
 		          "name": "default",
 		          "display_name": "Default",
 		          "description": "Stackdriver Debugger default plan.",
-		          "service_properties": {}
+		          "service_properties": {},
+		          "free": false
 		        }
 		      ]
 				}

@@ -58,7 +58,8 @@ func ServiceDefinition() *broker.ServiceDefinition {
             "num_nodes": "3"
           },
           "display_name": "3 Node HDD",
-          "service_id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
+          "service_id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe",
+          "free": false
         },
         {
           "id": "38aa0e65-624b-4998-9c06-f9194b56d252",
@@ -69,7 +70,8 @@ func ServiceDefinition() *broker.ServiceDefinition {
             "num_nodes": "3"
           },
           "display_name": "3 Node SSD",
-          "service_id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
+          "service_id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe",
+          "free": false
         }
       ]
     }`,
