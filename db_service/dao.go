@@ -20,16 +20,8 @@ import (
 	"context"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/jinzhu/gorm"
 )
-
-
-// CountServiceInstanceDetailsById gets the count of ServiceInstanceDetails by its key (id) in the datastore (0 or 1)
-func CountServiceInstanceDetailsById(ctx context.Context, id string) (int, error) { return defaultDatastore().CountServiceInstanceDetailsById(ctx, id) }
-func (ds *SqlDatastore) CountServiceInstanceDetailsById(ctx context.Context, id string) (int, error) {
-	var count int
-	err := ds.db.Model(&models.ServiceInstanceDetails{}).Where("id = ?", id).Count(&count).Error
-	return count, err
-}
 
 // CreateServiceInstanceDetails creates a new record in the database and assigns it a primary key.
 func CreateServiceInstanceDetails(ctx context.Context, object *models.ServiceInstanceDetails) error { return defaultDatastore().CreateServiceInstanceDetails(ctx, object) }
@@ -66,45 +58,13 @@ func (ds *SqlDatastore) GetServiceInstanceDetailsById(ctx context.Context, id st
 	return &record, nil
 }
 
-// CheckDeletedServiceInstanceDetailsById checks to see if an instance of ServiceInstanceDetails was soft deleted by its key (id).
-func CheckDeletedServiceInstanceDetailsById(ctx context.Context, id string) (bool, error) { return defaultDatastore().CheckDeletedServiceInstanceDetailsById(ctx, id) }
-func (ds *SqlDatastore) CheckDeletedServiceInstanceDetailsById(ctx context.Context, id string) (bool, error) {
-	record := models.ServiceInstanceDetails{}
-	if err := ds.db.Unscoped().Where("id = ?", id).First(&record).Error; err != nil {
-		return false, err
-	}
-
-	return record.DeletedAt != nil, nil
+// ExistsServiceInstanceDetailsById checks to see if an instance of ServiceInstanceDetails exists by its key (id).
+func ExistsServiceInstanceDetailsById(ctx context.Context, id string) (bool, error) { return defaultDatastore().ExistsServiceInstanceDetailsById(ctx, id) }
+func (ds *SqlDatastore) ExistsServiceInstanceDetailsById(ctx context.Context, id string) (bool, error) {
+	return recordToExists(ds.GetServiceInstanceDetailsById(ctx, id))
 }
 
 
-
-
-// CountServiceBindingCredentialsByServiceInstanceIdAndBindingId gets the count of ServiceBindingCredentials by its key (serviceInstanceId, bindingId) in the datastore (0 or 1)
-func CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx context.Context, serviceInstanceId string, bindingId string) (int, error) { return defaultDatastore().CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, serviceInstanceId, bindingId) }
-func (ds *SqlDatastore) CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx context.Context, serviceInstanceId string, bindingId string) (int, error) {
-	var count int
-	err := ds.db.Model(&models.ServiceBindingCredentials{}).Where("service_instance_id = ? AND binding_id = ?", serviceInstanceId, bindingId).Count(&count).Error
-	return count, err
-}
-
-
-// CountServiceBindingCredentialsByBindingId gets the count of ServiceBindingCredentials by its key (bindingId) in the datastore (0 or 1)
-func CountServiceBindingCredentialsByBindingId(ctx context.Context, bindingId string) (int, error) { return defaultDatastore().CountServiceBindingCredentialsByBindingId(ctx, bindingId) }
-func (ds *SqlDatastore) CountServiceBindingCredentialsByBindingId(ctx context.Context, bindingId string) (int, error) {
-	var count int
-	err := ds.db.Model(&models.ServiceBindingCredentials{}).Where("binding_id = ?", bindingId).Count(&count).Error
-	return count, err
-}
-
-
-// CountServiceBindingCredentialsById gets the count of ServiceBindingCredentials by its key (id) in the datastore (0 or 1)
-func CountServiceBindingCredentialsById(ctx context.Context, id uint) (int, error) { return defaultDatastore().CountServiceBindingCredentialsById(ctx, id) }
-func (ds *SqlDatastore) CountServiceBindingCredentialsById(ctx context.Context, id uint) (int, error) {
-	var count int
-	err := ds.db.Model(&models.ServiceBindingCredentials{}).Where("id = ?", id).Count(&count).Error
-	return count, err
-}
 
 // CreateServiceBindingCredentials creates a new record in the database and assigns it a primary key.
 func CreateServiceBindingCredentials(ctx context.Context, object *models.ServiceBindingCredentials) error { return defaultDatastore().CreateServiceBindingCredentials(ctx, object) }
@@ -153,15 +113,10 @@ func (ds *SqlDatastore) GetServiceBindingCredentialsByServiceInstanceIdAndBindin
 	return &record, nil
 }
 
-// CheckDeletedServiceBindingCredentialsByServiceInstanceIdAndBindingId checks to see if an instance of ServiceBindingCredentials was soft deleted by its key (serviceInstanceId, bindingId).
-func CheckDeletedServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx context.Context, serviceInstanceId string, bindingId string) (bool, error) { return defaultDatastore().CheckDeletedServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, serviceInstanceId, bindingId) }
-func (ds *SqlDatastore) CheckDeletedServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx context.Context, serviceInstanceId string, bindingId string) (bool, error) {
-	record := models.ServiceBindingCredentials{}
-	if err := ds.db.Unscoped().Where("service_instance_id = ? AND binding_id = ?", serviceInstanceId, bindingId).First(&record).Error; err != nil {
-		return false, err
-	}
-
-	return record.DeletedAt != nil, nil
+// ExistsServiceBindingCredentialsByServiceInstanceIdAndBindingId checks to see if an instance of ServiceBindingCredentials exists by its key (serviceInstanceId, bindingId).
+func ExistsServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx context.Context, serviceInstanceId string, bindingId string) (bool, error) { return defaultDatastore().ExistsServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, serviceInstanceId, bindingId) }
+func (ds *SqlDatastore) ExistsServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx context.Context, serviceInstanceId string, bindingId string) (bool, error) {
+	return recordToExists(ds.GetServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, serviceInstanceId, bindingId))
 }
 
 // GetServiceBindingCredentialsByBindingId gets an instance of ServiceBindingCredentials by its key (bindingId).
@@ -175,15 +130,10 @@ func (ds *SqlDatastore) GetServiceBindingCredentialsByBindingId(ctx context.Cont
 	return &record, nil
 }
 
-// CheckDeletedServiceBindingCredentialsByBindingId checks to see if an instance of ServiceBindingCredentials was soft deleted by its key (bindingId).
-func CheckDeletedServiceBindingCredentialsByBindingId(ctx context.Context, bindingId string) (bool, error) { return defaultDatastore().CheckDeletedServiceBindingCredentialsByBindingId(ctx, bindingId) }
-func (ds *SqlDatastore) CheckDeletedServiceBindingCredentialsByBindingId(ctx context.Context, bindingId string) (bool, error) {
-	record := models.ServiceBindingCredentials{}
-	if err := ds.db.Unscoped().Where("binding_id = ?", bindingId).First(&record).Error; err != nil {
-		return false, err
-	}
-
-	return record.DeletedAt != nil, nil
+// ExistsServiceBindingCredentialsByBindingId checks to see if an instance of ServiceBindingCredentials exists by its key (bindingId).
+func ExistsServiceBindingCredentialsByBindingId(ctx context.Context, bindingId string) (bool, error) { return defaultDatastore().ExistsServiceBindingCredentialsByBindingId(ctx, bindingId) }
+func (ds *SqlDatastore) ExistsServiceBindingCredentialsByBindingId(ctx context.Context, bindingId string) (bool, error) {
+	return recordToExists(ds.GetServiceBindingCredentialsByBindingId(ctx, bindingId))
 }
 
 // GetServiceBindingCredentialsById gets an instance of ServiceBindingCredentials by its key (id).
@@ -197,27 +147,13 @@ func (ds *SqlDatastore) GetServiceBindingCredentialsById(ctx context.Context, id
 	return &record, nil
 }
 
-// CheckDeletedServiceBindingCredentialsById checks to see if an instance of ServiceBindingCredentials was soft deleted by its key (id).
-func CheckDeletedServiceBindingCredentialsById(ctx context.Context, id uint) (bool, error) { return defaultDatastore().CheckDeletedServiceBindingCredentialsById(ctx, id) }
-func (ds *SqlDatastore) CheckDeletedServiceBindingCredentialsById(ctx context.Context, id uint) (bool, error) {
-	record := models.ServiceBindingCredentials{}
-	if err := ds.db.Unscoped().Where("id = ?", id).First(&record).Error; err != nil {
-		return false, err
-	}
-
-	return record.DeletedAt != nil, nil
+// ExistsServiceBindingCredentialsById checks to see if an instance of ServiceBindingCredentials exists by its key (id).
+func ExistsServiceBindingCredentialsById(ctx context.Context, id uint) (bool, error) { return defaultDatastore().ExistsServiceBindingCredentialsById(ctx, id) }
+func (ds *SqlDatastore) ExistsServiceBindingCredentialsById(ctx context.Context, id uint) (bool, error) {
+	return recordToExists(ds.GetServiceBindingCredentialsById(ctx, id))
 }
 
 
-
-
-// CountProvisionRequestDetailsById gets the count of ProvisionRequestDetails by its key (id) in the datastore (0 or 1)
-func CountProvisionRequestDetailsById(ctx context.Context, id uint) (int, error) { return defaultDatastore().CountProvisionRequestDetailsById(ctx, id) }
-func (ds *SqlDatastore) CountProvisionRequestDetailsById(ctx context.Context, id uint) (int, error) {
-	var count int
-	err := ds.db.Model(&models.ProvisionRequestDetails{}).Where("id = ?", id).Count(&count).Error
-	return count, err
-}
 
 // CreateProvisionRequestDetails creates a new record in the database and assigns it a primary key.
 func CreateProvisionRequestDetails(ctx context.Context, object *models.ProvisionRequestDetails) error { return defaultDatastore().CreateProvisionRequestDetails(ctx, object) }
@@ -254,27 +190,13 @@ func (ds *SqlDatastore) GetProvisionRequestDetailsById(ctx context.Context, id u
 	return &record, nil
 }
 
-// CheckDeletedProvisionRequestDetailsById checks to see if an instance of ProvisionRequestDetails was soft deleted by its key (id).
-func CheckDeletedProvisionRequestDetailsById(ctx context.Context, id uint) (bool, error) { return defaultDatastore().CheckDeletedProvisionRequestDetailsById(ctx, id) }
-func (ds *SqlDatastore) CheckDeletedProvisionRequestDetailsById(ctx context.Context, id uint) (bool, error) {
-	record := models.ProvisionRequestDetails{}
-	if err := ds.db.Unscoped().Where("id = ?", id).First(&record).Error; err != nil {
-		return false, err
-	}
-
-	return record.DeletedAt != nil, nil
+// ExistsProvisionRequestDetailsById checks to see if an instance of ProvisionRequestDetails exists by its key (id).
+func ExistsProvisionRequestDetailsById(ctx context.Context, id uint) (bool, error) { return defaultDatastore().ExistsProvisionRequestDetailsById(ctx, id) }
+func (ds *SqlDatastore) ExistsProvisionRequestDetailsById(ctx context.Context, id uint) (bool, error) {
+	return recordToExists(ds.GetProvisionRequestDetailsById(ctx, id))
 }
 
 
-
-
-// CountTerraformDeploymentById gets the count of TerraformDeployment by its key (id) in the datastore (0 or 1)
-func CountTerraformDeploymentById(ctx context.Context, id string) (int, error) { return defaultDatastore().CountTerraformDeploymentById(ctx, id) }
-func (ds *SqlDatastore) CountTerraformDeploymentById(ctx context.Context, id string) (int, error) {
-	var count int
-	err := ds.db.Model(&models.TerraformDeployment{}).Where("id = ?", id).Count(&count).Error
-	return count, err
-}
 
 // CreateTerraformDeployment creates a new record in the database and assigns it a primary key.
 func CreateTerraformDeployment(ctx context.Context, object *models.TerraformDeployment) error { return defaultDatastore().CreateTerraformDeployment(ctx, object) }
@@ -311,15 +233,22 @@ func (ds *SqlDatastore) GetTerraformDeploymentById(ctx context.Context, id strin
 	return &record, nil
 }
 
-// CheckDeletedTerraformDeploymentById checks to see if an instance of TerraformDeployment was soft deleted by its key (id).
-func CheckDeletedTerraformDeploymentById(ctx context.Context, id string) (bool, error) { return defaultDatastore().CheckDeletedTerraformDeploymentById(ctx, id) }
-func (ds *SqlDatastore) CheckDeletedTerraformDeploymentById(ctx context.Context, id string) (bool, error) {
-	record := models.TerraformDeployment{}
-	if err := ds.db.Unscoped().Where("id = ?", id).First(&record).Error; err != nil {
-		return false, err
-	}
-
-	return record.DeletedAt != nil, nil
+// ExistsTerraformDeploymentById checks to see if an instance of TerraformDeployment exists by its key (id).
+func ExistsTerraformDeploymentById(ctx context.Context, id string) (bool, error) { return defaultDatastore().ExistsTerraformDeploymentById(ctx, id) }
+func (ds *SqlDatastore) ExistsTerraformDeploymentById(ctx context.Context, id string) (bool, error) {
+	return recordToExists(ds.GetTerraformDeploymentById(ctx, id))
 }
 
 
+
+func recordToExists(_ interface{}, err error) (bool, error) {
+	if err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
+}
