@@ -15,26 +15,23 @@
 package db_service
 
 import (
-	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
+	"math"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/jinzhu/gorm"
-	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 )
 
 const numMigrations = 5
 
 // runs schema migrations on the provided service broker database to get it up to date
 func RunMigrations(db *gorm.DB) error {
-
 	migrations := make([]func() error, numMigrations)
 
 	// initial migration - creates tables
-	migrations[0] = func() error {
+	migrations[0] = func() error { // v1.0
 		return autoMigrateTables(db,
 			&models.ServiceInstanceDetailsV1{},
 			&models.ServiceBindingCredentialsV1{},
@@ -44,99 +41,19 @@ func RunMigrations(db *gorm.DB) error {
 	}
 
 	// adds CloudOperation table
-	migrations[1] = func() error {
-
-		if err := autoMigrateTables(db, &models.CloudOperationV1{}); err != nil {
-			return err
-		}
-
-		// copy provision request details into service instance details
-		cfg, err := utils.GetAuthedConfig()
-		if err != nil {
-			return fmt.Errorf("Error getting authorized http client: %s", err)
-		}
-
-		prs := []models.ProvisionRequestDetailsV1{}
-		if err := db.Find(&prs).Error; err != nil {
-			return err
-		}
-
-		if len(prs) == 0 {
-			return nil
-		}
-
-		projectId, err := utils.GetDefaultProjectId()
-		if err != nil {
-			return fmt.Errorf("couldn't get Project ID for database upgrades %s", err)
-		}
-
-		builtinServices := builtin.BuiltinBrokerRegistry()
-		for _, pr := range prs {
-			var si models.ServiceInstanceDetailsV1
-			if err := db.Where("id = ?", pr.ServiceInstanceId).First(&si).Error; err != nil {
-				return err
-			}
-			od := make(map[string]string)
-			if err := json.Unmarshal([]byte(pr.RequestDetails), &od); err != nil {
-				return err
-			}
-			newOd := make(map[string]string)
-
-			// cloudsql
-			svc, err := builtinServices.GetServiceById(si.ServiceId)
-			if err != nil {
-				return err
-			}
-
-			switch svc.Name {
-			case models.CloudsqlMySQLName:
-				newOd["instance_name"] = od["instance_name"]
-				newOd["database_name"] = od["database_name"]
-
-				sqlService, err := googlecloudsql.New(cfg.Client(context.Background()))
-				if err != nil {
-					return fmt.Errorf("Error creating new CloudSQL Client: %s", err)
-				}
-				dbService := googlecloudsql.NewInstancesService(sqlService)
-				clouddb, err := dbService.Get(projectId, od["instance_name"]).Do()
-				if err != nil {
-					return fmt.Errorf("Error getting instance from api: %s", err)
-				}
-				newOd["host"] = clouddb.IpAddresses[0].IpAddress
-
-			// bigquery
-			case models.BigqueryName:
-				newOd["dataset_id"] = od["name"]
-			// ml apis
-			case models.MlName:
-				// n/a
-			// storage
-			case models.StorageName:
-				newOd["bucket_name"] = od["name"]
-
-			// pubsub
-			case models.PubsubName:
-				newOd["topic_name"] = od["topic_name"]
-				newOd["subscription_name"] = od["subscription_name"]
-			default:
-				return fmt.Errorf("unrecognized service: %s", si.ServiceId)
-			}
-
-			odBytes, err := json.Marshal(&newOd)
-			if err != nil {
-				return err
-			}
-			si.OtherDetails = string(odBytes)
-			if err := db.Save(&si).Error; err != nil {
-				return err
-			}
-		}
-
-		return nil
+	migrations[1] = func() error { // v2.x
+		// NOTE: this migration used to have lots of custom logic, however it has
+		// been removed because brokers starting at v4 no longer support the
+		// functionality the migration required.
+		//
+		// It is acceptable to pass through this migration step on the way to
+		// intiailize a _new_ databse, but it is not acceptable to use this step
+		// in a path through the upgrade.
+		return autoMigrateTables(db, &models.CloudOperationV1{})
 	}
 
 	// drops plan details table
-	migrations[2] = func() error {
+	migrations[2] = func() error { // 4.0.0
 		// NOOP migration, this was used to drop the plan_details table, but
 		// there's more of a disincentive than incentive to do that because it could
 		// leave operators wiping out plain details accidentally and not being able
@@ -144,27 +61,26 @@ func RunMigrations(db *gorm.DB) error {
 		return nil
 	}
 
-	migrations[3] = func() error {
+	migrations[3] = func() error { // v4.1.0
 		return autoMigrateTables(db, &models.ServiceInstanceDetailsV2{})
 	}
 
-	migrations[4] = func() error {
+	migrations[4] = func() error { // v4.2.0
 		return autoMigrateTables(db, &models.TerraformDeploymentV1{})
 	}
 
-	var lastMigrationNumber = -1
+	lastMigrationNumber, err := lastMigrationNumber(db)
+	if err != nil {
+		return err
+	}
 
-	// if we've run any migrations before, we should have a migrations table, so find the last one we ran
-	if db.HasTable("migrations") {
-		var storedMigrations []models.Migration
-		if err := db.Order("migration_id desc").Find(&storedMigrations).Error; err != nil {
-			return fmt.Errorf("Error getting last migration id even though migration table exists: %s", err)
-		}
-		lastMigrationNumber = storedMigrations[0].MigrationId
+	if err := ValidateLastMigration(lastMigrationNumber); err != nil {
+		return err
 	}
 
 	// starting from the last migration we ran + 1, run migrations until we are current
 	for i := lastMigrationNumber + 1; i < len(migrations); i++ {
+		log.Printf("Running migration %d/%d\n", i, len(migrations)-1)
 		tx := db.Begin()
 		err := migrations[i]()
 		if err != nil {
@@ -183,7 +99,40 @@ func RunMigrations(db *gorm.DB) error {
 			}
 		}
 	}
+
 	return nil
+}
+
+// lastMigrationNumber gets the last migration number of the database or -1 if
+// no migrations have ever been run.
+func lastMigrationNumber(db *gorm.DB) (int, error) {
+	var lastMigrationNumber = -1
+
+	// if we've run any migrations before, we should have a migrations table, so find the last one we ran
+	if db.HasTable("migrations") {
+		var storedMigrations []models.Migration
+		if err := db.Order("migration_id desc").Find(&storedMigrations).Error; err != nil {
+			return math.MaxInt32, fmt.Errorf("Error getting last migration id even though migration table exists: %s", err)
+		}
+		lastMigrationNumber = storedMigrations[0].MigrationId
+	}
+
+	return lastMigrationNumber, nil
+}
+
+// ValidateLastMigration returns an error if the database version is newer than
+// this tool supports or is too old to be updated.
+func ValidateLastMigration(lastMigration int) error {
+	switch {
+	case lastMigration >= numMigrations:
+		return errors.New("The database you're connected to is newer than this tool supports.")
+
+	case lastMigration == 0:
+		return errors.New("Migration from broker versions <= 2.0 is no longer supported, upgrade using a v3.x broker then try again.")
+
+	default:
+		return nil
+	}
 }
 
 func autoMigrateTables(db *gorm.DB, tables ...interface{}) error {
