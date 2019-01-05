@@ -18,12 +18,13 @@ import (
 	"code.cloudfoundry.org/lager"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"golang.org/x/oauth2/jwt"
 )
+
+const BigqueryName = "google-bigquery"
 
 // ServiceDefinition creates a new ServiceDefinition object for the BigQuery service.
 func ServiceDefinition() *broker.ServiceDefinition {
@@ -36,7 +37,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 	}
 
 	return &broker.ServiceDefinition{
-		Name: models.BigqueryName,
+		Name: BigqueryName,
 		DefaultServiceDefinition: `{
         "id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
         "description": "A fast, economical and fully managed data warehouse for large-scale data analytics.",

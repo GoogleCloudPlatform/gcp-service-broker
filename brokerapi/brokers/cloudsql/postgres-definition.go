@@ -17,7 +17,6 @@ package cloudsql
 import (
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
@@ -29,7 +28,7 @@ const PostgresServiceId = "cbad6d78-a73c-432d-b8ff-b219a17a803a"
 // PostgresServiceDefinition creates a new ServiceDefinition object for the PostgreSQL service.
 func PostgresServiceDefinition() *broker.ServiceDefinition {
 	return &broker.ServiceDefinition{
-		Name: models.CloudsqlPostgresName,
+		Name: "google-cloudsql-postgres",
 		DefaultServiceDefinition: `{
         "id": "cbad6d78-a73c-432d-b8ff-b219a17a803a",
         "description": "Google Cloud SQL is a fully-managed PostgreSQL database service.",
