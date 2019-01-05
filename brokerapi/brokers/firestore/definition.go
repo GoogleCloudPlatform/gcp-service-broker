@@ -22,11 +22,12 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
+// ServiceDefinition creates a new ServiceDefinition object for the Firestore service.
+func ServiceDefinition() *broker.ServiceDefinition {
 	// NOTE(jlewisiii) Firestore has some intentional differences from other services.
 	// First, it doesn't require legacy compatibility so we won't allow operators to override the whitelist.
 	// Second, Firestore uses the old datastore IAM role model so the roles will look strange.
-	bs := &broker.ServiceDefinition{
+	return &broker.ServiceDefinition{
 		Name: "google-firestore",
 		DefaultServiceDefinition: `{
       "id": "a2b7b873-1e34-4530-8a42-902ff7d66b43",
@@ -48,7 +49,8 @@ func init() {
          "name": "default",
          "display_name": "Default",
          "description": "Firestore default plan.",
-         "service_properties": {}
+         "service_properties": {},
+         "free": false
         }
       ]
     }`,
@@ -77,7 +79,6 @@ func init() {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &FirestoreBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
-
-	broker.Register(bs)
 }

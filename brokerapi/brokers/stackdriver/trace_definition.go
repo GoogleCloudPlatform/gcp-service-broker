@@ -19,8 +19,10 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
-func init() {
-	bs := &broker.ServiceDefinition{
+// StackdriverTraceServiceDefinition creates a new ServiceDefinition object
+// for the Stackdriver Trace service.
+func StackdriverTraceServiceDefinition() *broker.ServiceDefinition {
+	return &broker.ServiceDefinition{
 		Name: "google-stackdriver-trace",
 		DefaultServiceDefinition: `{
       "id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
@@ -43,7 +45,8 @@ func init() {
           "name": "default",
           "display_name": "Default",
           "description": "Stackdriver Trace default plan.",
-          "service_properties": {}
+          "service_properties": {},
+          "free": false
         }
       ]
     }
@@ -62,7 +65,6 @@ func init() {
 			},
 		},
 		ProviderBuilder: NewStackdriverAccountProvider,
+		IsBuiltin:       true,
 	}
-
-	broker.Register(bs)
 }

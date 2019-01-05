@@ -23,7 +23,7 @@ import (
 )
 
 func TestBigTableBroker_ProvisionVariables(t *testing.T) {
-	service := serviceDefinition()
+	service := ServiceDefinition()
 
 	hddPlan := "65a49268-2c73-481e-80f3-9fde5bd5a654"
 	ssdPlan := "38aa0e65-624b-4998-9c06-f9194b56d252"

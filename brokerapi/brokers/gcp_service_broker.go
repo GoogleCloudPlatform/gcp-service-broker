@@ -28,29 +28,13 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
-
-	// import the brokers to register them
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/api_service"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigquery"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigtable"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/cloudsql"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/dataflow"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/datastore"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/dialogflow"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/firestore"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/storage"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
 )
 
 // GCPServiceBroker is a brokerapi.ServiceBroker that can be used to generate an OSB compatible service broker.
 type GCPServiceBroker struct {
-	enableInputValidation bool
-	registry              broker.BrokerRegistry
-	jwtConfig             *jwt.Config
-	projectId             string
+	registry  broker.BrokerRegistry
+	jwtConfig *jwt.Config
+	projectId string
 
 	Logger lager.Logger
 }
@@ -59,11 +43,10 @@ type GCPServiceBroker struct {
 // Exactly one of GCPServiceBroker or error will be nil when returned.
 func New(cfg *BrokerConfig, logger lager.Logger) (*GCPServiceBroker, error) {
 	return &GCPServiceBroker{
-		enableInputValidation: cfg.EnableInputValidation,
-		registry:              cfg.Registry,
-		jwtConfig:             cfg.HttpConfig,
-		projectId:             cfg.ProjectId,
-		Logger:                logger,
+		registry:  cfg.Registry,
+		jwtConfig: cfg.HttpConfig,
+		projectId: cfg.ProjectId,
+		Logger:    logger,
 	}, nil
 }
 
@@ -72,7 +55,7 @@ func New(cfg *BrokerConfig, logger lager.Logger) (*GCPServiceBroker, error) {
 func (gcpBroker *GCPServiceBroker) Services(ctx context.Context) ([]brokerapi.Service, error) {
 	svcs := []brokerapi.Service{}
 
-	enabledServices, err := broker.GetEnabledServices()
+	enabledServices, err := gcpBroker.registry.GetEnabledServices()
 	if err != nil {
 		return nil, err
 	}
@@ -108,11 +91,11 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 	})
 
 	// make sure that instance hasn't already been provisioned
-	count, err := db_service.CountServiceInstanceDetailsById(ctx, instanceID)
+	exists, err := db_service.ExistsServiceInstanceDetailsById(ctx, instanceID)
 	if err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("Database error checking for existing instance: %s", err)
 	}
-	if count > 0 {
+	if exists {
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrInstanceAlreadyExists
 	}
 
@@ -133,11 +116,9 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrAsyncRequired
 	}
 
-	if gcpBroker.enableInputValidation {
-		// validate parameters meet the service's schema
-		if err := gcpBroker.validateProvisionVariables(details); err != nil {
-			return brokerapi.ProvisionedServiceSpec{}, err
-		}
+	// validate parameters meet the service's schema
+	if err := gcpBroker.validateProvisionVariables(details); err != nil {
+		return brokerapi.ProvisionedServiceSpec{}, err
 	}
 
 	vars, err := brokerService.ProvisionVariables(instanceID, details, *plan)
@@ -269,11 +250,11 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 	})
 
 	// check for existing binding
-	count, err := db_service.CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, instanceID, bindingID)
+	exists, err := db_service.ExistsServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, instanceID, bindingID)
 	if err != nil {
 		return brokerapi.Binding{}, fmt.Errorf("Error checking for existing binding: %s", err)
 	}
-	if count > 0 {
+	if exists {
 		return brokerapi.Binding{}, brokerapi.ErrBindingAlreadyExists
 	}
 
@@ -288,11 +269,9 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 		return brokerapi.Binding{}, err
 	}
 
-	if gcpBroker.enableInputValidation {
-		// validate parameters meet the service's schema
-		if err := gcpBroker.validateBindVariables(details); err != nil {
-			return brokerapi.Binding{}, err
-		}
+	// validate parameters meet the service's schema
+	if err := gcpBroker.validateBindVariables(details); err != nil {
+		return brokerapi.Binding{}, err
 	}
 
 	vars, err := serviceDefinition.BindVariables(*instanceRecord, bindingID, details)

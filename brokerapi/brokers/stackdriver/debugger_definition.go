@@ -19,8 +19,10 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
-func init() {
-	bs := &broker.ServiceDefinition{
+// StackdriverDebuggerServiceDefinition creates a new ServiceDefinition object
+// for the Stackdriver Debugger service.
+func StackdriverDebuggerServiceDefinition() *broker.ServiceDefinition {
+	return &broker.ServiceDefinition{
 		Name: "google-stackdriver-debugger",
 		DefaultServiceDefinition: `{
 		      "id": "83837945-1547-41e0-b661-ea31d76eed11",
@@ -43,7 +45,8 @@ func init() {
 		          "name": "default",
 		          "display_name": "Default",
 		          "description": "Stackdriver Debugger default plan.",
-		          "service_properties": {}
+		          "service_properties": {},
+		          "free": false
 		        }
 		      ]
 				}
@@ -62,7 +65,6 @@ func init() {
 			},
 		},
 		ProviderBuilder: NewStackdriverAccountProvider,
+		IsBuiltin:       true,
 	}
-
-	broker.Register(bs)
 }

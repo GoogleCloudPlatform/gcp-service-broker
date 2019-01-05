@@ -23,7 +23,8 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
+// ServiceDefinition creates a new ServiceDefinition object for the ML service.
+func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"ml.developer",
 		"ml.viewer",
@@ -33,7 +34,7 @@ func init() {
 		"ml.operationOwner",
 	}
 
-	bs := &broker.ServiceDefinition{
+	return &broker.ServiceDefinition{
 		Name: models.MlName,
 		DefaultServiceDefinition: `
 		{
@@ -57,14 +58,15 @@ func init() {
          "name": "default",
          "display_name": "Default",
          "description": "Machine Learning API default plan.",
-         "service_properties": {}
+         "service_properties": {},
+         "free": false
         }
       ]
     }
 		`,
 		ProvisionInputVariables: []broker.BrokerVariable{},
 		DefaultRoleWhitelist:    roleWhitelist,
-		BindInputVariables:      accountmanagers.ServiceAccountBindInputVariables(models.MlName, roleWhitelist, "ml.modelUser"),
+		BindInputVariables:      accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "ml.modelUser"),
 		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
 		BindComputedVariables:   accountmanagers.ServiceAccountBindComputedVariables(),
 		Examples: []broker.ServiceExample{
@@ -82,7 +84,6 @@ func init() {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &ApiServiceBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
-
-	broker.Register(bs)
 }

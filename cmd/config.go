@@ -15,8 +15,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -47,10 +45,6 @@ Precidence is in the order:
 
   environment vars > configuration > defaults
 
-You can show the known configuration keys using:
-
-  ./gcp-service-broker config keys
-
 You can show the known coonfiguration values using:
 
   ./gcp-service-broker config show
@@ -67,17 +61,6 @@ You can show the known coonfiguration values using:
 		Long:  `Show the current configuration settings.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			utils.PrettyPrintOrExit(viper.AllSettings())
-		},
-	})
-
-	configCmd.AddCommand(&cobra.Command{
-		Use:   "keys",
-		Short: "Show all configuration keys",
-		Long:  `Show all the known configuration keys.`,
-		Run: func(cmd *cobra.Command, args []string) {
-			for _, key := range viper.AllKeys() {
-				fmt.Println(key)
-			}
 		},
 	})
 

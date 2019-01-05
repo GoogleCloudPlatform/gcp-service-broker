@@ -25,11 +25,8 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
-	broker.Register(serviceDefinition())
-}
-
-func serviceDefinition() *broker.ServiceDefinition {
+// ServiceDefinition creates a new ServiceDefinition object for the Pub/Sub service.
+func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"pubsub.publisher",
 		"pubsub.subscriber",
@@ -60,7 +57,8 @@ func serviceDefinition() *broker.ServiceDefinition {
           "name": "default",
           "display_name": "Default",
           "description": "PubSub Default plan.",
-          "service_properties": {}
+          "service_properties": {},
+          "free": false
         }
       ]
 	  }`,
@@ -120,7 +118,7 @@ again during that time (on a best-effort basis).
 			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.PubsubName, roleWhitelist, "pubsub.editor"),
+		BindInputVariables:   accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "pubsub.editor"),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "subscription_name",
@@ -188,5 +186,6 @@ again during that time (on a best-effort basis).
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &PubSubBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

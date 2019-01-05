@@ -22,7 +22,6 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
-	"github.com/spf13/viper"
 )
 
 var (
@@ -36,28 +35,22 @@ var (
 		"deprecated":   toggles.Compatibility.Toggle("enable-gcp-deprecated-services", false, "Enable services that use deprecated GCP components."),
 		"terraform":    toggles.Compatibility.Toggle("enable-terraform-services", false, "Enable services that use the experimental, unstable, Terraform back-end."),
 	}
+
+	enableBuiltinServices = toggles.Compatibility.Toggle("enable-builtin-services", true, `Enable services that are built in to the broker i.e. not brokerpaks.`)
 )
 
 // BrokerRegistry holds the list of ServiceDefinitions that can be provisioned
 // by the GCP Service Broker.
 type BrokerRegistry map[string]*ServiceDefinition
 
-// DefaultRegistry is the broker registry all service broker definitions implicitly register with.
-var DefaultRegistry = BrokerRegistry{}
-
 // Registers a ServiceDefinition with the service registry that various commands
 // poll to create the catalog, documentation, etc.
-func Register(service *ServiceDefinition) { DefaultRegistry.Register(service) }
 func (brokerRegistry BrokerRegistry) Register(service *ServiceDefinition) {
 	name := service.Name
 
 	if _, ok := brokerRegistry[name]; ok {
 		log.Fatalf("Tried to register multiple instances of: %q", name)
 	}
-
-	// Set up environment variables to be compatible with legacy tile.yml configurations.
-	// set defaults
-	viper.SetDefault(service.EnabledProperty(), true)
 
 	// Test deserializing the user defined plans and service definition
 	if _, err := service.CatalogEntry(); err != nil {
@@ -73,12 +66,15 @@ func (brokerRegistry BrokerRegistry) Register(service *ServiceDefinition) {
 
 // GetEnabledServices returns a list of all registered brokers that the user
 // has enabled the use of.
-func GetEnabledServices() ([]*ServiceDefinition, error) { return DefaultRegistry.GetEnabledServices() }
 func (brokerRegistry *BrokerRegistry) GetEnabledServices() ([]*ServiceDefinition, error) {
 	var out []*ServiceDefinition
 
 	for _, svc := range brokerRegistry.GetAllServices() {
-		isEnabled := svc.IsEnabled()
+		isEnabled := true
+
+		if svc.IsBuiltin {
+			isEnabled = enableBuiltinServices.IsActive()
+		}
 
 		if entry, err := svc.CatalogEntry(); err != nil {
 			return nil, err
@@ -103,7 +99,6 @@ func (brokerRegistry *BrokerRegistry) GetEnabledServices() ([]*ServiceDefinition
 // GetAllServices returns a list of all registered brokers whether or not the
 // user has enabled them. The brokers are sorted in lexocographic order based
 // on name.
-func GetAllServices() []*ServiceDefinition { return DefaultRegistry.GetAllServices() }
 func (brokerRegistry BrokerRegistry) GetAllServices() []*ServiceDefinition {
 	var out []*ServiceDefinition
 
@@ -119,7 +114,6 @@ func (brokerRegistry BrokerRegistry) GetAllServices() []*ServiceDefinition {
 
 // GetServiceById returns the service with the given ID, if it does not exist
 // or one of the services has a parse error then an error is returned.
-func GetServiceById(id string) (*ServiceDefinition, error) { return DefaultRegistry.GetServiceById(id) }
 func (brokerRegistry BrokerRegistry) GetServiceById(id string) (*ServiceDefinition, error) {
 	for _, svc := range brokerRegistry {
 		if entry, err := svc.CatalogEntry(); err != nil {

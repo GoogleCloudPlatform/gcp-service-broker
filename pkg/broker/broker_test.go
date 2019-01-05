@@ -26,16 +26,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-func ExampleServiceDefinition_EnabledProperty() {
-	service := ServiceDefinition{
-		Name: "left-handed-smoke-sifter",
-	}
-
-	fmt.Println(service.EnabledProperty())
-
-	// Output: service.left-handed-smoke-sifter.enabled
-}
-
 func ExampleServiceDefinition_UserDefinedPlansProperty() {
 	service := ServiceDefinition{
 		Name: "left-handed-smoke-sifter",
@@ -44,21 +34,6 @@ func ExampleServiceDefinition_UserDefinedPlansProperty() {
 	fmt.Println(service.UserDefinedPlansProperty())
 
 	// Output: service.left-handed-smoke-sifter.plans
-}
-
-func ExampleServiceDefinition_IsEnabled() {
-	service := ServiceDefinition{
-		Name: "left-handed-smoke-sifter",
-	}
-
-	viper.Set(service.EnabledProperty(), true)
-	fmt.Println(service.IsEnabled())
-
-	viper.Set(service.EnabledProperty(), false)
-	fmt.Println(service.IsEnabled())
-
-	// Output: true
-	// false
 }
 
 func ExampleServiceDefinition_IsRoleWhitelistEnabled() {
@@ -92,7 +67,7 @@ func ExampleServiceDefinition_GetPlanById() {
 	}
 
 	viper.Set(service.UserDefinedPlansProperty(), `[{"id":"custom-plan", "name": "Custom!"}]`)
-	defer viper.Set(service.UserDefinedPlansProperty(), nil)
+	defer viper.Reset()
 
 	plan, err := service.GetPlanById("builtin-plan")
 	fmt.Printf("builtin-plan: %q %v\n", plan.Name, err)
@@ -164,29 +139,29 @@ func TestServiceDefinition_UserDefinedPlans(t *testing.T) {
 	}
 
 	for tn, tc := range cases {
-		viper.Set(service.UserDefinedPlansProperty(), tc.Value)
-		plans, err := service.UserDefinedPlans()
+		t.Run(tn, func(t *testing.T) {
+			viper.Set(service.UserDefinedPlansProperty(), tc.Value)
+			defer viper.Reset()
 
-		// Check errors
-		hasErr := err != nil
-		if hasErr != tc.ExpectError {
-			t.Errorf("%s) Expected Error? %v, got error: %v", tn, tc.ExpectError, err)
-			continue
-		}
+			plans, err := service.UserDefinedPlans()
 
-		// Check IDs
-		if len(plans) != len(tc.PlanIds) {
-			t.Errorf("%s) Expected %d plans, but got %d (%v)", tn, len(tc.PlanIds), len(plans), plans)
-		}
-
-		for _, plan := range plans {
-			if _, ok := tc.PlanIds[plan.ID]; !ok {
-				t.Errorf("%s) Got unexpected plan id %s, expected %+v", tn, plan.ID, tc.PlanIds)
+			// Check errors
+			hasErr := err != nil
+			if hasErr != tc.ExpectError {
+				t.Fatalf("Expected Error? %v, got error: %v", tc.ExpectError, err)
 			}
-		}
 
-		// Reset Environment
-		viper.Set(service.UserDefinedPlansProperty(), nil)
+			// Check IDs
+			if len(plans) != len(tc.PlanIds) {
+				t.Errorf("Expected %d plans, but got %d (%v)", len(tc.PlanIds), len(plans), plans)
+			}
+
+			for _, plan := range plans {
+				if _, ok := tc.PlanIds[plan.ID]; !ok {
+					t.Errorf("Got unexpected plan id %s, expected %+v", plan.ID, tc.PlanIds)
+				}
+			}
+		})
 	}
 }
 
@@ -207,6 +182,7 @@ func TestServiceDefinition_CatalogEntry(t *testing.T) {
 			ExpectError: false,
 		},
 		"bad-plan-json": {
+
 			UserPlans:   `333`,
 			PlanIds:     map[string]bool{},
 			ExpectError: true,
@@ -219,26 +195,27 @@ func TestServiceDefinition_CatalogEntry(t *testing.T) {
 	}
 
 	for tn, tc := range cases {
-		viper.Set(service.UserDefinedPlansProperty(), tc.UserPlans)
+		t.Run(tn, func(t *testing.T) {
+			viper.Set(service.UserDefinedPlansProperty(), tc.UserPlans)
+			defer viper.Reset()
 
-		srvc, err := service.CatalogEntry()
-		hasErr := err != nil
-		if hasErr != tc.ExpectError {
-			t.Errorf("%s) Expected Error? %v, got error: %v", tn, tc.ExpectError, err)
-		}
+			srvc, err := service.CatalogEntry()
+			hasErr := err != nil
+			if hasErr != tc.ExpectError {
+				t.Errorf("Expected Error? %v, got error: %v", tc.ExpectError, err)
+			}
 
-		if err == nil && len(srvc.Plans) != len(tc.PlanIds) {
-			t.Errorf("%s) Expected %d plans, but got %d (%+v)", tn, len(tc.PlanIds), len(srvc.Plans), srvc.Plans)
+			if err == nil && len(srvc.Plans) != len(tc.PlanIds) {
+				t.Errorf("Expected %d plans, but got %d (%+v)", len(tc.PlanIds), len(srvc.Plans), srvc.Plans)
 
-			for _, plan := range srvc.Plans {
-				if _, ok := tc.PlanIds[plan.ID]; !ok {
-					t.Errorf("%s) Got unexpected plan id %s, expected %+v", tn, plan.ID, tc.PlanIds)
+				for _, plan := range srvc.Plans {
+					if _, ok := tc.PlanIds[plan.ID]; !ok {
+						t.Errorf("Got unexpected plan id %s, expected %+v", plan.ID, tc.PlanIds)
+					}
 				}
 			}
-		}
+		})
 	}
-
-	viper.Set(service.UserDefinedPlansProperty(), nil)
 }
 
 func ExampleServiceDefinition_CatalogEntrySchema() {
@@ -262,7 +239,7 @@ func ExampleServiceDefinition_CatalogEntrySchema() {
 	fmt.Println("schemas with flag off:", srvc.ToPlain().Plans[0].Schemas)
 
 	viper.Set("compatibility.enable-catalog-schemas", true)
-	defer viper.Set("compatibility.enable-catalog-schemas", false)
+	defer viper.Reset()
 
 	srvc, err = service.CatalogEntry()
 	if err != nil {
@@ -394,6 +371,8 @@ func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
 			viper.Set(service.ProvisionDefaultOverrideProperty(), tc.DefaultOverride)
+			defer viper.Reset()
+
 			details := brokerapi.ProvisionDetails{RawParameters: json.RawMessage(tc.UserParams)}
 			plan := ServicePlan{ServiceProperties: tc.ServiceProperties}
 			vars, err := service.ProvisionVariables("instance-id-here", details, plan)
@@ -516,6 +495,8 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
 			viper.Set(service.BindDefaultOverrideProperty(), tc.DefaultOverride)
+			defer viper.Reset()
+
 			details := brokerapi.BindDetails{RawParameters: json.RawMessage(tc.UserParams)}
 			instance := models.ServiceInstanceDetails{OtherDetails: tc.InstanceVars}
 			vars, err := service.BindVariables(instance, "binding-id-here", details)

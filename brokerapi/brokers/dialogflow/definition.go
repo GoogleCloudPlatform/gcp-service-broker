@@ -22,8 +22,9 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
-	bs := &broker.ServiceDefinition{
+// ServiceDefinition creates a new ServiceDefinition object for the Dialogflow service.
+func ServiceDefinition() *broker.ServiceDefinition {
+	return &broker.ServiceDefinition{
 		Name: "google-dialogflow",
 		DefaultServiceDefinition: `{
       "id": "e84b69db-3de9-4688-8f5c-26b9d5b1f129",
@@ -45,7 +46,8 @@ func init() {
          "name": "default",
          "display_name": "Default",
          "description": "Dialogflow default plan.",
-         "service_properties": {}
+         "service_properties": {},
+         "free": false
         }
       ]
     }`,
@@ -66,7 +68,6 @@ func init() {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &DialogflowBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
-
-	broker.Register(bs)
 }

@@ -24,11 +24,8 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
-	broker.Register(serviceDefinition())
-}
-
-func serviceDefinition() *broker.ServiceDefinition {
+// ServiceDefinition creates a new ServiceDefinition object for the Bigtable service.
+func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"bigtable.user",
 		"bigtable.reader",
@@ -61,7 +58,8 @@ func serviceDefinition() *broker.ServiceDefinition {
             "num_nodes": "3"
           },
           "display_name": "3 Node HDD",
-          "service_id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
+          "service_id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe",
+          "free": false
         },
         {
           "id": "38aa0e65-624b-4998-9c06-f9194b56d252",
@@ -72,7 +70,8 @@ func serviceDefinition() *broker.ServiceDefinition {
             "num_nodes": "3"
           },
           "display_name": "3 Node SSD",
-          "service_id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
+          "service_id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe",
+          "free": false
         }
       ]
     }`,
@@ -121,7 +120,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.BigtableName, roleWhitelist, "bigtable.user"),
+		BindInputVariables:   accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "bigtable.user"),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "instance_id",
@@ -173,5 +172,6 @@ func serviceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &BigTableBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

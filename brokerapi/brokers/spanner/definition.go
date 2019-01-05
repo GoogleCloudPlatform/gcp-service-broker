@@ -25,11 +25,8 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
-	broker.Register(serviceDefinition())
-}
-
-func serviceDefinition() *broker.ServiceDefinition {
+// ServiceDefinition creates a new ServiceDefinition object for the Spanner service.
+func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"spanner.databaseAdmin",
 		"spanner.databaseReader",
@@ -60,14 +57,16 @@ func serviceDefinition() *broker.ServiceDefinition {
 					"name": "sandbox",
 					"description": "Useful for testing, not eligible for SLA.",
 					"free": false,
-					"service_properties": {"num_nodes": "1"}
+					"service_properties": {"num_nodes": "1"},
+					"free": false
 				},
 				{
 					"id": "0752b1ad-a784-4dcc-96eb-64149089a1c9",
 					"name": "minimal-production",
 					"description": "A minimal production level Spanner setup eligible for 99.99% SLA. Each node can provide up to 10,000 QPS of reads or 2,000 QPS of writes (writing single rows at 1KB data per row), and 2 TiB storage.",
 					"free": false,
-					"service_properties": {"num_nodes": "3"}
+					"service_properties": {"num_nodes": "3"},
+					"free": false
 				}
 			]
 		}`,
@@ -111,7 +110,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.SpannerName, roleWhitelist, "spanner.databaseUser"),
+		BindInputVariables:   accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "spanner.databaseUser"),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "instance_id",
@@ -155,5 +154,6 @@ func serviceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &SpannerBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

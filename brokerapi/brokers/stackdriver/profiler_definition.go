@@ -19,8 +19,10 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
-func init() {
-	bs := &broker.ServiceDefinition{
+// StackdriverProfilerServiceDefinition creates a new ServiceDefinition object
+// for the Stackdriver Profiler service.
+func StackdriverProfilerServiceDefinition() *broker.ServiceDefinition {
+	return &broker.ServiceDefinition{
 		Name: "google-stackdriver-profiler",
 		DefaultServiceDefinition: `{
 		      "id": "00b9ca4a-7cd6-406a-a5b7-2f43f41ade75",
@@ -43,7 +45,8 @@ func init() {
 		          "name": "default",
 		          "display_name": "Default",
 		          "description": "Stackdriver Profiler default plan.",
-		          "service_properties": {}
+		          "service_properties": {},
+		          "free": false
 		        }
 		      ]
 				}
@@ -62,7 +65,6 @@ func init() {
 			},
 		},
 		ProviderBuilder: NewStackdriverAccountProvider,
+		IsBuiltin:       true,
 	}
-
-	broker.Register(bs)
 }

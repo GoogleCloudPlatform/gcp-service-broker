@@ -1,3 +1,9 @@
 language: go
 go: "1.10"
 
+services:
+  - docker
+
+script:
+  - go test -v ./... -tags=service_broker
+  - docker build -t gcp-service-broker .

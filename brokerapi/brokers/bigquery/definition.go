@@ -25,11 +25,8 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
-	broker.Register(serviceDefinition())
-}
-
-func serviceDefinition() *broker.ServiceDefinition {
+// ServiceDefinition creates a new ServiceDefinition object for the BigQuery service.
+func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"bigquery.dataViewer",
 		"bigquery.dataEditor",
@@ -61,7 +58,8 @@ func serviceDefinition() *broker.ServiceDefinition {
             "name": "default",
             "display_name": "Default",
             "description": "BigQuery default plan.",
-            "service_properties": {}
+            "service_properties": {},
+            "free": false
           }
         ]
       }`,
@@ -91,7 +89,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
 		},
 		DefaultRoleWhitelist:  roleWhitelist,
-		BindInputVariables:    accountmanagers.ServiceAccountBindInputVariables(models.BigqueryName, roleWhitelist, "bigquery.user"),
+		BindInputVariables:    accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "bigquery.user"),
 		BindComputedVariables: accountmanagers.ServiceAccountBindComputedVariables(),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
@@ -122,5 +120,6 @@ func serviceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &BigQueryBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

@@ -22,10 +22,11 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
+// ServiceDefinition creates a new ServiceDefinition object for the Dataflow service.
+func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{"dataflow.viewer", "dataflow.developer"}
 
-	bs := &broker.ServiceDefinition{
+	return &broker.ServiceDefinition{
 		Name: "google-dataflow",
 		DefaultServiceDefinition: `{
       "id": "3e897eb3-9062-4966-bd4f-85bda0f73b3d",
@@ -47,7 +48,8 @@ func init() {
          "name": "default",
          "display_name": "Default",
          "description": "Dataflow default plan.",
-         "service_properties": {}
+         "service_properties": {},
+         "free": false
         }
       ]
     }`,
@@ -75,7 +77,6 @@ func init() {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &DataflowBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
-
-	broker.Register(bs)
 }

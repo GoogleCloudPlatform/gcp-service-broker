@@ -25,11 +25,8 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
-	broker.Register(serviceDefinition())
-}
-
-func serviceDefinition() *broker.ServiceDefinition {
+// ServiceDefinition creates a new ServiceDefinition object for the Cloud Storage service.
+func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"storage.objectCreator",
 		"storage.objectViewer",
@@ -59,7 +56,8 @@ func serviceDefinition() *broker.ServiceDefinition {
 	            "name": "standard",
 	            "display_name": "Standard",
 	            "description": "Standard storage class. Auto-selects either regional or multi-regional based on the location.",
-	            "service_properties": {"storage_class": "STANDARD"}
+	            "service_properties": {"storage_class": "STANDARD"},
+	            "free": false
 	          },
 	          {
 	            "id": "a42c1182-d1a0-4d40-82c1-28220518b360",
@@ -67,7 +65,8 @@ func serviceDefinition() *broker.ServiceDefinition {
 	            "name": "nearline",
 	            "display_name": "Nearline",
 	            "description": "Nearline storage class.",
-	            "service_properties": {"storage_class": "NEARLINE"}
+	            "service_properties": {"storage_class": "NEARLINE"},
+	            "free": false
 	          },
 	          {
 	            "id": "1a1f4fe6-1904-44d0-838c-4c87a9490a6b",
@@ -75,28 +74,32 @@ func serviceDefinition() *broker.ServiceDefinition {
 	            "name": "reduced-availability",
 	            "display_name": "Durable Reduced Availability",
 	            "description": "Durable Reduced Availability storage class.",
-	            "service_properties": {"storage_class": "DURABLE_REDUCED_AVAILABILITY"}
+	            "service_properties": {"storage_class": "DURABLE_REDUCED_AVAILABILITY"},
+	            "free": false
 	          },
 	          {
 	            "id": "c8538397-8f15-45e3-a229-8bb349c3a98f",
 	            "name": "coldline",
 	            "display_name": "Coldline Storage",
 	            "description": "Google Cloud Storage Coldline is a very-low-cost, highly durable storage service for data archiving, online backup, and disaster recovery.",
-	            "service_properties": {"storage_class": "COLDLINE"}
+	            "service_properties": {"storage_class": "COLDLINE"},
+	            "free": false
 	          },
 	          {
 	            "id": "5e6161d2-0202-48be-80c4-1006cce19b9d",
 	            "name": "regional",
 	            "display_name": "Regional Storage",
 	            "description": "Data is stored in a narrow geographic region, redundant across availability zones with a 99.99% typical monthly availability.",
-	            "service_properties": {"storage_class": "REGIONAL"}
+	            "service_properties": {"storage_class": "REGIONAL"},
+	            "free": false
 	          },
 	          {
 	            "id": "a5e8dfb5-e5ec-472a-8d36-33afcaff2fdb",
 	            "name": "multiregional",
 	            "display_name": "Multi-Regional Storage",
 	            "description": "Data is stored geo-redundantly with >99.99% typical monthly availability.",
-	            "service_properties": {"storage_class": "MULTI_REGIONAL"}
+	            "service_properties": {"storage_class": "MULTI_REGIONAL"},
+	            "free": false
 	          }
 	        ]
 	      }`,
@@ -127,7 +130,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.StorageName, roleWhitelist, "storage.objectAdmin"),
+		BindInputVariables:   accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "storage.objectAdmin"),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "bucket_name",
@@ -192,5 +195,6 @@ func serviceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &StorageBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

@@ -24,11 +24,10 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
-	broker.Register(mysqlServiceDefinition())
-}
+const MySqlServiceId = "4bc59b9a-8520-409f-85da-1c7552315863"
 
-func mysqlServiceDefinition() *broker.ServiceDefinition {
+// MysqlServiceDefinition creates a new ServiceDefinition object for the Bigtable service.
+func MysqlServiceDefinition() *broker.ServiceDefinition {
 	return &broker.ServiceDefinition{
 		Name: models.CloudsqlMySQLName,
 		DefaultServiceDefinition: `{
@@ -53,7 +52,8 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 				        },
 				        "description": "MySQL on a db-f1-micro (Shared CPUs, 0.6 GB/RAM, 3062 GB/disk, 250 Connections)",
 				        "id": "7d8f9ade-30c1-4c96-b622-ea0205cc5f0b",
-				        "name": "mysql-db-f1-micro"
+				        "name": "mysql-db-f1-micro",
+				        "free": false
 				    },
 				    {
 				        "service_properties": {
@@ -62,7 +62,8 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 				        },
 				        "description": "MySQL on a db-g1-small (Shared CPUs, 1.7 GB/RAM, 3062 GB/disk, 1,000 Connections)",
 				        "id": "b68bf4d8-1636-4121-af2f-087e46189929",
-				        "name": "mysql-db-g1-small"
+				        "name": "mysql-db-g1-small",
+				        "free": false
 				    },
 				    {
 				        "service_properties": {
@@ -71,7 +72,8 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 				        },
 				        "description": "MySQL on a db-n1-standard-1 (1 CPUs, 3.75 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "bdfd8033-c2b9-46e9-9b37-1f3a5889eef4",
-				        "name": "mysql-db-n1-standard-1"
+				        "name": "mysql-db-n1-standard-1",
+				        "free": false
 				    },
 				    {
 				        "service_properties": {
@@ -80,7 +82,8 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 				        },
 				        "description": "MySQL on a db-n1-standard-2 (2 CPUs, 7.5 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "2c99e938-4c1e-4da7-810a-94c9f5b71b57",
-				        "name": "mysql-db-n1-standard-2"
+				        "name": "mysql-db-n1-standard-2",
+				        "free": false
 				    },
 				    {
 				        "service_properties": {
@@ -89,7 +92,8 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 				        },
 				        "description": "MySQL on a db-n1-standard-4 (4 CPUs, 15 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "d520a5f5-7485-4a83-849b-5439f911fe26",
-				        "name": "mysql-db-n1-standard-4"
+				        "name": "mysql-db-n1-standard-4",
+				        "free": false
 				    },
 				    {
 				        "service_properties": {
@@ -98,7 +102,8 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 				        },
 				        "description": "MySQL on a db-n1-standard-8 (8 CPUs, 30 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "7ef42bb4-87e3-4ead-8118-4e88c98ed2e6",
-				        "name": "mysql-db-n1-standard-8"
+				        "name": "mysql-db-n1-standard-8",
+				        "free": false
 				    },
 				    {
 				        "service_properties": {
@@ -107,7 +112,8 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 				        },
 				        "description": "MySQL on a db-n1-standard-16 (16 CPUs, 60 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "200bd90a-4323-46d8-8aa5-afd4601498d0",
-				        "name": "mysql-db-n1-standard-16"
+				        "name": "mysql-db-n1-standard-16",
+				        "free": false
 				    },
 				    {
 				        "service_properties": {
@@ -116,7 +122,8 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 				        },
 				        "description": "MySQL on a db-n1-standard-32 (32 CPUs, 120 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "52305df2-1e64-4cdb-a4c9-bb5dddb33c3e",
-				        "name": "mysql-db-n1-standard-32"
+				        "name": "mysql-db-n1-standard-32",
+				        "free": false
 				    },
 				    {
 				        "service_properties": {
@@ -125,7 +132,8 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 				        },
 				        "description": "MySQL on a db-n1-standard-64 (64 CPUs, 240 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "e45d7c44-4990-4dac-a14d-c5127e9ae0c5",
-				        "name": "mysql-db-n1-standard-64"
+				        "name": "mysql-db-n1-standard-64",
+				        "free": false
 				    },
 				    {
 				        "service_properties": {
@@ -134,7 +142,8 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 				        },
 				        "description": "MySQL on a db-n1-highmem-2 (2 CPUs, 13 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "07b8a04c-0efe-42d3-8b2c-2c23f7c79583",
-				        "name": "mysql-db-n1-highmem-2"
+				        "name": "mysql-db-n1-highmem-2",
+				        "free": false
 				    },
 				    {
 				        "service_properties": {
@@ -143,7 +152,8 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 				        },
 				        "description": "MySQL on a db-n1-highmem-4 (4 CPUs, 26 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "50fa4baa-e36f-41c3-bbe9-c986d9fbe3c8",
-				        "name": "mysql-db-n1-highmem-4"
+				        "name": "mysql-db-n1-highmem-4",
+				        "free": false
 				    },
 				    {
 				        "service_properties": {
@@ -152,7 +162,8 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 				        },
 				        "description": "MySQL on a db-n1-highmem-8 (8 CPUs, 52 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "6e8e5bc3-bf68-4e57-bda1-d9c9a67faee0",
-				        "name": "mysql-db-n1-highmem-8"
+				        "name": "mysql-db-n1-highmem-8",
+				        "free": false
 				    },
 				    {
 				        "service_properties": {
@@ -161,7 +172,8 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 				        },
 				        "description": "MySQL on a db-n1-highmem-16 (16 CPUs, 104 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "3c83ff6b-165e-47bf-9bba-f4801390d0ff",
-				        "name": "mysql-db-n1-highmem-16"
+				        "name": "mysql-db-n1-highmem-16",
+				        "free": false
 				    },
 				    {
 				        "service_properties": {
@@ -170,7 +182,8 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 				        },
 				        "description": "MySQL on a db-n1-highmem-32 (32 CPUs, 208 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "cbc6d376-8fd3-4a34-9ab5-324311f038f6",
-				        "name": "mysql-db-n1-highmem-32"
+				        "name": "mysql-db-n1-highmem-32",
+				        "free": false
 				    },
 				    {
 				        "service_properties": {
@@ -179,7 +192,8 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 				        },
 				        "description": "MySQL on a db-n1-highmem-64 (64 CPUs, 416 GB/RAM, 10230 GB/disk, 4,000 Connections)",
 				        "id": "b0742cc5-caba-4b8d-98e0-03380ae9522b",
-				        "name": "mysql-db-n1-highmem-64"
+				        "name": "mysql-db-n1-highmem-64",
+				        "free": false
 				    }
 				]
 		}`,
@@ -247,7 +261,7 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 			{Name: "_", Default: `${assert(disk_size <= max_disk_size, "disk size (${disk_size}) is greater than max allowed disk size for this plan (${max_disk_size})")}`, Overwrite: true},
 		},
 		DefaultRoleWhitelist:  roleWhitelist(),
-		BindInputVariables:    commonBindVariables(models.CloudsqlMySQLName),
+		BindInputVariables:    commonBindVariables(),
 		BindOutputVariables:   commonBindOutputVariables(),
 		BindComputedVariables: commonBindComputedVariables(),
 		PlanVariables: []broker.BrokerVariable{
@@ -295,5 +309,6 @@ func mysqlServiceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &CloudSQLBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker/brokerfakes"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
 
@@ -81,11 +82,7 @@ var _ = Describe("Brokers", func() {
 		os.Setenv("SECURITY_USER_NAME", "username")
 		os.Setenv("SECURITY_USER_PASSWORD", "password")
 
-		registry := broker.BrokerRegistry{}
-		for name, defn := range broker.DefaultRegistry {
-			copy := *defn
-			registry[name] = &copy
-		}
+		registry := builtin.BuiltinBrokerRegistry()
 		brokerConfig, err = NewBrokerConfigFromEnv()
 		Expect(err).To(BeNil())
 		brokerConfig.Registry = registry
@@ -189,7 +186,8 @@ var _ = Describe("Brokers", func() {
 			serviceList, err := gcpBroker.Services(context.Background())
 			Expect(err).ToNot(HaveOccurred())
 
-			enabledServices, err := broker.GetEnabledServices()
+			builtinRegistry := builtin.BuiltinBrokerRegistry()
+			enabledServices, err := builtinRegistry.GetEnabledServices()
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(len(serviceList)).To(Equal(len(enabledServices)))

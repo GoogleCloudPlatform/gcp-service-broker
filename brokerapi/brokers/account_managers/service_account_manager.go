@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"code.cloudfoundry.org/lager"
@@ -26,8 +25,6 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
-	"github.com/spf13/viper"
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/jwt"
@@ -37,12 +34,9 @@ import (
 )
 
 const (
-	roleResourcePrefix     = "roles/"
-	saResourcePrefix       = "serviceAccount:"
-	projectResourcePrefix  = "projects/"
-	overridableBindMessage = `The role for the account without the "roles/" prefix.
-	See: https://cloud.google.com/iam/docs/understanding-roles for more details.
-	Note: The default enumeration may be overridden by your operator.`
+	roleResourcePrefix    = "roles/"
+	saResourcePrefix      = "serviceAccount:"
+	projectResourcePrefix = "projects/"
 )
 
 type ServiceAccountManager struct {
@@ -207,34 +201,7 @@ type ServiceAccountInfo struct {
 	PrivateKeyData string `json:"PrivateKeyData"`
 }
 
-// ServiceAccountBindInputVariables holds overridable whitelists with default values.
-// This function SHOULD NOT be used for new services.
-func ServiceAccountBindInputVariables(serviceName string, defaultWhitelist []string, defaultRole string) []broker.BrokerVariable {
-	whitelist := roleWhitelist(serviceName, defaultWhitelist)
-	whitelistEnum := make(map[interface{}]string)
-	for _, val := range whitelist {
-		whitelistEnum[val] = roleResourcePrefix + val
-	}
-
-	var realDefault interface{} = nil
-	if whitelistEnum[defaultRole] != "" {
-		realDefault = defaultRole
-	}
-
-	return []broker.BrokerVariable{
-		{
-			Required:  realDefault == nil,
-			FieldName: "role",
-			Type:      broker.JsonTypeString,
-			Details:   overridableBindMessage,
-			Default:   realDefault,
-			Enum:      whitelistEnum,
-		},
-	}
-}
-
 // ServiceAccountWhitelistWithDefault holds non-overridable whitelists with default values.
-// This function SHOULD be used for new services over ServiceAccountBindInputVariables.
 func ServiceAccountWhitelistWithDefault(whitelist []string, defaultValue string) []broker.BrokerVariable {
 	whitelistEnum := make(map[interface{}]string)
 	for _, val := range whitelist {
@@ -322,26 +289,4 @@ func ServiceAccountBindOutputVariables() []broker.BrokerVariable {
 				Build(),
 		},
 	}
-}
-
-func whitelistAllows(whitelist []string, role string) bool {
-	return utils.NewStringSet(whitelist...).Contains(role)
-}
-
-// RoleWhitelistProperty computes the Viper property name for the boolean the user
-// can set to enable or disable the role whitelist.
-func RoleWhitelistProperty(serviceName string) string {
-	return fmt.Sprintf("service.%s.whitelist", serviceName)
-}
-
-// roleWhitelist returns the whitelist of roles the operator has allowed or the
-// default if it is blank.
-func roleWhitelist(serviceName string, defaultRoleWhitelist []string) []string {
-	rawWhitelist := viper.GetString(RoleWhitelistProperty(serviceName))
-	wl := strings.Split(rawWhitelist, ",")
-	if strings.TrimSpace(rawWhitelist) != "" {
-		return wl
-	}
-
-	return defaultRoleWhitelist
 }
