@@ -22,7 +22,6 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
-	"github.com/spf13/viper"
 )
 
 var (
@@ -52,11 +51,6 @@ func (brokerRegistry BrokerRegistry) Register(service *ServiceDefinition) {
 	if _, ok := brokerRegistry[name]; ok {
 		log.Fatalf("Tried to register multiple instances of: %q", name)
 	}
-
-	// Set up environment variables to be compatible with legacy tile.yml configurations.
-	// Bind a name of a service like google-datastore to an environment variable GOOGLE_DATASTORE
-	env := utils.PropertyToEnvUnprefixed(service.Name)
-	viper.BindEnv(service.DefinitionProperty(), env)
 
 	// Test deserializing the user defined plans and service definition
 	if _, err := service.CatalogEntry(); err != nil {

@@ -52,12 +52,6 @@ type ServiceDefinition struct {
 	IsBuiltin bool
 }
 
-// DefinitionProperty computes the Viper property name for the JSON service
-// definition.
-func (svc *ServiceDefinition) DefinitionProperty() string {
-	return fmt.Sprintf("service.%s.definition", svc.Name)
-}
-
 // UserDefinedPlansProperty computes the Viper property name for the JSON list
 // of user-defined service plans.
 func (svc *ServiceDefinition) UserDefinedPlansProperty() string {
@@ -237,13 +231,10 @@ func (svc *ServiceDefinition) validatePlan(plan ServicePlan) error {
 // ServiceDefinition extracts service definition from the environment, failing
 // if the definition was not valid JSON.
 func (svc *ServiceDefinition) ServiceDefinition() (*Service, error) {
-	jsonDefinition := viper.GetString(svc.DefinitionProperty())
-	if jsonDefinition == "" {
-		jsonDefinition = svc.DefaultServiceDefinition
-	}
-
+	// TODO(josephlewis42) change ServiceDefinitions over to their struct
+	// equivalents rather than raw JSON.
 	var defn Service
-	err := json.Unmarshal([]byte(jsonDefinition), &defn)
+	err := json.Unmarshal([]byte(svc.DefaultServiceDefinition), &defn)
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing service definition for %q: %s", svc.Name, err)
 	}
