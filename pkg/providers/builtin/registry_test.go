@@ -85,6 +85,19 @@ func validateServiceDefinition(t *testing.T, svc *broker.ServiceDefinition) {
 			t.Error("Expected PlanUpdatable to be false")
 		}
 
+		// All fields should be optional for UX purposes when using with Cloud Foundry
+		for _, v := range svc.ProvisionInputVariables {
+			if v.Required {
+				t.Errorf("No provision fields should be marked as required but %q was", v.FieldName)
+			}
+		}
+
+		for _, v := range svc.BindInputVariables {
+			if v.Required {
+				t.Errorf("No bind fields should be marked as required but %q was", v.FieldName)
+			}
+		}
+
 		for _, plan := range catalog.Plans {
 			validateServicePlan(t, svc, plan)
 		}
