@@ -23,20 +23,7 @@ import (
 	"testing"
 
 	. "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/api_service"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigquery"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigtable"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
-	brokerbasefakes "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base/broker_basefakes"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/cloudsql"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/dataflow"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/datastore"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/dialogflow"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/firestore"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/storage"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
@@ -282,6 +269,15 @@ func TestGCPServiceBroker_Provision(t *testing.T) {
 				assertEqual(t, "errors should match", errors.New("Plan ID \"bad-plan-id\" could not be found"), err)
 			},
 		},
+		"bad-request-json": {
+			ServiceState: StateNone,
+			Check: func(t *testing.T, broker *GCPServiceBroker, stub *serviceStub) {
+				req := stub.ProvisionDetails()
+				req.RawParameters = json.RawMessage("{invalid json")
+				_, err := broker.Provision(context.Background(), fakeInstanceId, req, true)
+				assertEqual(t, "errors should match", ErrInvalidUserInput, err)
+			},
+		},
 	}
 
 	cases.Run(t)
@@ -319,6 +315,36 @@ func TestGCPServiceBroker_Deprovision(t *testing.T) {
 				assertEqual(t, "async required should be returned if not supported", brokerapi.ErrAsyncRequired, err)
 			},
 		},
+		"async-deprovision-returns-operation": {
+			AsyncService: true,
+			ServiceState: StateProvisioned,
+			Check: func(t *testing.T, broker *GCPServiceBroker, stub *serviceStub) {
+				operationId := "my-operation-id"
+				stub.Provider.DeprovisionReturns(&operationId, nil)
+				resp, err := broker.Deprovision(context.Background(), fakeInstanceId, stub.DeprovisionDetails(), true)
+				failIfErr(t, "deprovisioning", err)
+
+				assertEqual(t, "operationid should be set as the data", operationId, resp.OperationData)
+				assertEqual(t, "IsAsync should be set", true, resp.IsAsync)
+			},
+		},
+
+		"async-deprovision-updates-db": {
+			AsyncService: true,
+			ServiceState: StateProvisioned,
+			Check: func(t *testing.T, broker *GCPServiceBroker, stub *serviceStub) {
+				operationId := "my-operation-id"
+				stub.Provider.DeprovisionReturns(&operationId, nil)
+				_, err := broker.Deprovision(context.Background(), fakeInstanceId, stub.DeprovisionDetails(), true)
+				failIfErr(t, "deprovisioning", err)
+
+				details, err := db_service.GetServiceInstanceDetailsById(context.Background(), fakeInstanceId)
+				failIfErr(t, "looking up details", err)
+
+				assertEqual(t, "OperationId should be set as the data", operationId, details.OperationId)
+				assertEqual(t, "OperationType should be set as Deprovision", models.DeprovisionOperationType, details.OperationType)
+			},
+		},
 	}
 
 	cases.Run(t)
@@ -349,6 +375,15 @@ func TestGCPServiceBroker_Bind(t *testing.T) {
 				expectedErr := "1 error(s) occurred: role: role must be one of the following: \"storage.objectAdmin\", \"storage.objectCreator\", \"storage.objectViewer\""
 				_, err := broker.Bind(context.Background(), fakeInstanceId, "bad-bind-call", req)
 				assertEqual(t, "errors should match", expectedErr, err.Error())
+			},
+		},
+		"bad-request-json": {
+			ServiceState: StateProvisioned,
+			Check: func(t *testing.T, broker *GCPServiceBroker, stub *serviceStub) {
+				req := stub.BindDetails()
+				req.RawParameters = json.RawMessage("{invalid json")
+				_, err := broker.Bind(context.Background(), fakeInstanceId, fakeBindingId, req)
+				assertEqual(t, "errors should match", ErrInvalidUserInput, err)
 			},
 		},
 	}
@@ -445,112 +480,4 @@ func TestGCPServiceBroker_LastOperation(t *testing.T) {
 	}
 
 	cases.Run(t)
-}
-
-func TestServiceProviderAsync(t *testing.T) {
-	cases := map[string]struct {
-		AsyncProvisionExpected   bool
-		AsyncDeprovisionExpected bool
-		Provider                 broker.ServiceProvider
-	}{
-		"ml": {
-			Provider: &api_service.ApiServiceBroker{},
-		},
-		"bigquery": {
-			Provider: &bigquery.BigQueryBroker{},
-		},
-		"bigtable": {
-			Provider: &bigtable.BigTableBroker{},
-		},
-		"cloudsql": {
-			AsyncProvisionExpected:   true,
-			AsyncDeprovisionExpected: true,
-			Provider:                 &cloudsql.CloudSQLBroker{},
-		},
-		"dataflow": {
-			Provider: &dataflow.DataflowBroker{},
-		},
-		"datastore": {
-			Provider: &datastore.DatastoreBroker{},
-		},
-		"dialogflow": {
-			Provider: &dialogflow.DialogflowBroker{},
-		},
-		"firestore": {
-			Provider: &firestore.FirestoreBroker{},
-		},
-		"pubsub": {
-			Provider: &pubsub.PubSubBroker{},
-		},
-		"spanner": {
-			AsyncProvisionExpected: true,
-			Provider:               &spanner.SpannerBroker{},
-		},
-		"storage": {
-			Provider: &storage.StorageBroker{},
-		},
-	}
-
-	for tn, tc := range cases {
-		t.Run(tn, func(t *testing.T) {
-			actualProvisionAsync := tc.Provider.ProvisionsAsync()
-			assertEqual(t, "async provision should match", tc.AsyncProvisionExpected, actualProvisionAsync)
-
-			actualDeprovisionAsync := tc.Provider.DeprovisionsAsync()
-			assertEqual(t, "async deprovision should match", tc.AsyncDeprovisionExpected, actualDeprovisionAsync)
-		})
-	}
-}
-
-func TestThinWrapperServiceProviders(t *testing.T) {
-	cases := map[string]func(broker_base.BrokerBase) broker.ServiceProvider{
-		"pubsub": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
-			return &pubsub.PubSubBroker{BrokerBase: brokerBase}
-		},
-		"stackdriver": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
-			return &stackdriver.StackdriverAccountProvider{BrokerBase: brokerBase}
-		},
-		"ml": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
-			return &api_service.ApiServiceBroker{BrokerBase: brokerBase}
-		},
-		"bigquery": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
-			return &bigquery.BigQueryBroker{BrokerBase: brokerBase}
-		},
-		"dataflow": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
-			return &dataflow.DataflowBroker{BrokerBase: brokerBase}
-		},
-		"datastore": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
-			return &datastore.DatastoreBroker{BrokerBase: brokerBase}
-		},
-		"dialogflow": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
-			return &dialogflow.DialogflowBroker{BrokerBase: brokerBase}
-		},
-		"firestore": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
-			return &firestore.FirestoreBroker{BrokerBase: brokerBase}
-		},
-		"spanner": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
-			return &spanner.SpannerBroker{BrokerBase: brokerBase}
-		},
-		"storage": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
-			return &storage.StorageBroker{BrokerBase: brokerBase}
-		},
-	}
-
-	for tn, tc := range cases {
-		t.Run(tn, func(t *testing.T) {
-			accountManager := brokerbasefakes.FakeServiceAccountManager{}
-			brokerBase := broker_base.BrokerBase{
-				AccountManager: &accountManager,
-			}
-			serviceProvider := tc(brokerBase)
-
-			_, err := serviceProvider.Bind(context.Background(), &varcontext.VarContext{})
-			failIfErr(t, "binding", err)
-			assertEqual(t, "create credentials count should match", 1, accountManager.CreateCredentialsCallCount())
-
-			serviceProvider.Unbind(context.Background(), models.ServiceInstanceDetails{}, models.ServiceBindingCredentials{})
-			failIfErr(t, "unbinding", err)
-			assertEqual(t, "delete credentials count should match", 1, accountManager.DeleteCredentialsCallCount())
-		})
-	}
 }
