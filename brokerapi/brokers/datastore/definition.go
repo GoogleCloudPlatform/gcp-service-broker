@@ -20,39 +20,37 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
+	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
 )
 
 // ServiceDefinition creates a new ServiceDefinition object for the Datastore service.
 func ServiceDefinition() *broker.ServiceDefinition {
 	return &broker.ServiceDefinition{
-		Name: "google-datastore",
-		DefaultServiceDefinition: `{
-      "id": "76d4abb2-fee7-4c8f-aee1-bcea2837f02b",
-      "description": "Google Cloud Datastore is a NoSQL document database service.",
-      "name": "google-datastore",
-      "bindable": true,
-      "plan_updateable": false,
-      "metadata": {
-        "displayName": "Google Cloud Datastore",
-        "longDescription": "Google Cloud Datastore is a NoSQL document database built for automatic scaling, high performance, and ease of application development.",
-        "documentationUrl": "https://cloud.google.com/datastore/docs/",
-        "supportUrl": "https://cloud.google.com/datastore/docs/getting-support",
-        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/datastore.svg"
-      },
-      "tags": ["gcp", "datastore"],
-      "plans": [
-        {
-         "id": "05f1fb6b-b5f0-48a2-9c2b-a5f236507a97",
-         "service_id": "76d4abb2-fee7-4c8f-aee1-bcea2837f02b",
-         "name": "default",
-         "display_name": "Default",
-         "description": "Datastore default plan.",
-         "service_properties": {},
-         "free": false
-        }
-      ]
-    }`,
+		Id:               "76d4abb2-fee7-4c8f-aee1-bcea2837f02b",
+		Name:             "google-datastore",
+		Description:      "Google Cloud Datastore is a NoSQL document database service.",
+		DisplayName:      "Google Cloud Datastore",
+		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/datastore.svg",
+		DocumentationUrl: "https://cloud.google.com/datastore/docs/",
+		SupportUrl:       "https://cloud.google.com/datastore/docs/getting-support",
+		Tags:             []string{"gcp", "datastore"},
+		Bindable:         true,
+		PlanUpdateable:   false,
+		Plans: []broker.ServicePlan{
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "05f1fb6b-b5f0-48a2-9c2b-a5f236507a97",
+					Name:        "default",
+					Description: "Datastore default plan.",
+					Free:        brokerapi.FreeValue(false),
+					Metadata: &brokerapi.ServicePlanMetadata{
+						DisplayName: "Default",
+					},
+				},
+				ServiceProperties: map[string]string{},
+			},
+		},
 		ProvisionInputVariables: []broker.BrokerVariable{
 			{
 				FieldName: "namespace",

@@ -17,40 +17,37 @@ package stackdriver
 import (
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/pivotal-cf/brokerapi"
 )
 
 // StackdriverProfilerServiceDefinition creates a new ServiceDefinition object
 // for the Stackdriver Profiler service.
 func StackdriverProfilerServiceDefinition() *broker.ServiceDefinition {
 	return &broker.ServiceDefinition{
-		Name: "google-stackdriver-profiler",
-		DefaultServiceDefinition: `{
-		      "id": "00b9ca4a-7cd6-406a-a5b7-2f43f41ade75",
-		      "description": "Stackdriver Profiler",
-		      "name": "google-stackdriver-profiler",
-		      "bindable": true,
-		      "plan_updateable": false,
-		      "metadata": {
-		        "displayName": "Stackdriver Profiler",
-		        "longDescription": "Continuous CPU and heap profiling to improve performance and reduce costs.",
-		        "documentationUrl": "https://cloud.google.com/profiler/docs/",
-		        "supportUrl": "https://cloud.google.com/stackdriver/docs/getting-support",
-		        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg"
-		      },
-		      "tags": ["gcp", "stackdriver", "profiler"],
-		      "plans": [
-		        {
-		          "id": "594627f6-35f5-462f-9074-10fb033fb18a",
-		          "service_id": "00b9ca4a-7cd6-406a-a5b7-2f43f41ade75",
-		          "name": "default",
-		          "display_name": "Default",
-		          "description": "Stackdriver Profiler default plan.",
-		          "service_properties": {},
-		          "free": false
-		        }
-		      ]
-				}
-		`,
+		Id:               "00b9ca4a-7cd6-406a-a5b7-2f43f41ade75",
+		Name:             "google-stackdriver-profiler",
+		Description:      "Stackdriver Profiler",
+		DisplayName:      "Stackdriver Profiler",
+		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg",
+		DocumentationUrl: "https://cloud.google.com/profiler/docs/",
+		SupportUrl:       "https://cloud.google.com/stackdriver/docs/getting-support",
+		Tags:             []string{"gcp", "stackdriver", "profiler"},
+		Bindable:         true,
+		PlanUpdateable:   false,
+		Plans: []broker.ServicePlan{
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "594627f6-35f5-462f-9074-10fb033fb18a",
+					Name:        "default",
+					Description: "Stackdriver Profiler default plan.",
+					Free:        brokerapi.FreeValue(false),
+					Metadata: &brokerapi.ServicePlanMetadata{
+						DisplayName: "Default",
+					},
+				},
+				ServiceProperties: map[string]string{},
+			},
+		},
 		ProvisionInputVariables: []broker.BrokerVariable{},
 		BindInputVariables:      []broker.BrokerVariable{},
 		BindComputedVariables:   accountmanagers.FixedRoleBindComputedVariables("cloudprofiler.agent"),

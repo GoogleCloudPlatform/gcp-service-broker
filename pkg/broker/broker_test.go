@@ -28,6 +28,7 @@ import (
 
 func ExampleServiceDefinition_UserDefinedPlansProperty() {
 	service := ServiceDefinition{
+		Id:   "00000000-0000-0000-0000-000000000000",
 		Name: "left-handed-smoke-sifter",
 	}
 
@@ -38,6 +39,7 @@ func ExampleServiceDefinition_UserDefinedPlansProperty() {
 
 func ExampleServiceDefinition_IsRoleWhitelistEnabled() {
 	service := ServiceDefinition{
+		Id:                   "00000000-0000-0000-0000-000000000000",
 		Name:                 "left-handed-smoke-sifter",
 		DefaultRoleWhitelist: []string{"a", "b", "c"},
 	}
@@ -52,6 +54,7 @@ func ExampleServiceDefinition_IsRoleWhitelistEnabled() {
 
 func ExampleServiceDefinition_TileUserDefinedPlansVariable() {
 	service := ServiceDefinition{
+		Id:   "00000000-0000-0000-0000-000000000000",
 		Name: "google-spanner",
 	}
 
@@ -62,8 +65,11 @@ func ExampleServiceDefinition_TileUserDefinedPlansVariable() {
 
 func ExampleServiceDefinition_GetPlanById() {
 	service := ServiceDefinition{
-		Name:                     "left-handed-smoke-sifter",
-		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
+		Id:   "00000000-0000-0000-0000-000000000000",
+		Name: "left-handed-smoke-sifter",
+		Plans: []ServicePlan{
+			{ServicePlan: brokerapi.ServicePlan{ID: "builtin-plan", Name: "Builtin!"}},
+		},
 	}
 
 	viper.Set(service.UserDefinedPlansProperty(), `[{"id":"custom-plan", "name": "Custom!"}]`)
@@ -127,8 +133,8 @@ func TestServiceDefinition_UserDefinedPlans(t *testing.T) {
 	}
 
 	service := ServiceDefinition{
-		Name:                     "left-handed-smoke-sifter",
-		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "name":"lhss"}`,
+		Id:   "abcd-efgh-ijkl",
+		Name: "left-handed-smoke-sifter",
 		PlanVariables: []BrokerVariable{
 			{
 				Required:  true,
@@ -190,8 +196,8 @@ func TestServiceDefinition_CatalogEntry(t *testing.T) {
 	}
 
 	service := ServiceDefinition{
-		Name:                     "left-handed-smoke-sifter",
-		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl"}`,
+		Id:   "00000000-0000-0000-0000-000000000000",
+		Name: "left-handed-smoke-sifter",
 	}
 
 	for tn, tc := range cases {
@@ -220,8 +226,11 @@ func TestServiceDefinition_CatalogEntry(t *testing.T) {
 
 func ExampleServiceDefinition_CatalogEntrySchema() {
 	service := ServiceDefinition{
-		Name:                     "left-handed-smoke-sifter",
-		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
+		Id:   "00000000-0000-0000-0000-000000000000",
+		Name: "left-handed-smoke-sifter",
+		Plans: []ServicePlan{
+			{ServicePlan: brokerapi.ServicePlan{ID: "builtin-plan", Name: "Builtin!"}},
+		},
 		ProvisionInputVariables: []BrokerVariable{
 			{FieldName: "location", Type: JsonTypeString, Default: "us"},
 		},
@@ -256,8 +265,11 @@ func ExampleServiceDefinition_CatalogEntrySchema() {
 
 func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 	service := ServiceDefinition{
-		Name:                     "left-handed-smoke-sifter",
-		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
+		Id:   "00000000-0000-0000-0000-000000000000",
+		Name: "left-handed-smoke-sifter",
+		Plans: []ServicePlan{
+			{ServicePlan: brokerapi.ServicePlan{ID: "builtin-plan", Name: "Builtin!"}},
+		},
 		ProvisionInputVariables: []BrokerVariable{
 			{
 				FieldName: "location",
@@ -390,8 +402,11 @@ func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 
 func TestServiceDefinition_BindVariables(t *testing.T) {
 	service := ServiceDefinition{
-		Name:                     "left-handed-smoke-sifter",
-		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
+		Id:   "00000000-0000-0000-0000-000000000000",
+		Name: "left-handed-smoke-sifter",
+		Plans: []ServicePlan{
+			{ServicePlan: brokerapi.ServicePlan{ID: "builtin-plan", Name: "Builtin!"}},
+		},
 		BindInputVariables: []BrokerVariable{
 			{
 				FieldName: "location",
@@ -514,8 +529,11 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 
 func TestServiceDefinition_createSchemas(t *testing.T) {
 	service := ServiceDefinition{
-		Name:                     "left-handed-smoke-sifter",
-		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
+		Id:   "00000000-0000-0000-0000-000000000000",
+		Name: "left-handed-smoke-sifter",
+		Plans: []ServicePlan{
+			{ServicePlan: brokerapi.ServicePlan{ID: "builtin-plan", Name: "Builtin!"}},
+		},
 		ProvisionInputVariables: []BrokerVariable{
 			{FieldName: "location", Type: JsonTypeString, Default: "us"},
 		},

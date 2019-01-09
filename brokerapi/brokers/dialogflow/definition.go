@@ -19,38 +19,37 @@ import (
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
 )
 
 // ServiceDefinition creates a new ServiceDefinition object for the Dialogflow service.
 func ServiceDefinition() *broker.ServiceDefinition {
 	return &broker.ServiceDefinition{
-		Name: "google-dialogflow",
-		DefaultServiceDefinition: `{
-      "id": "e84b69db-3de9-4688-8f5c-26b9d5b1f129",
-      "description": "Dialogflow is an end-to-end, build-once deploy-everywhere development suite for creating conversational interfaces for websites, mobile applications, popular messaging platforms, and IoT devices.",
-      "name": "google-dialogflow",
-      "bindable": true,
-      "plan_updateable": false,
-      "metadata": {
-        "displayName": "Google Cloud Dialogflow",
-        "longDescription": "Dialogflow is an end-to-end, build-once deploy-everywhere development suite for creating conversational interfaces for websites, mobile applications, popular messaging platforms, and IoT devices.",
-        "documentationUrl": "https://cloud.google.com/dialogflow-enterprise/docs/",
-        "supportUrl": "https://cloud.google.com/dialogflow-enterprise/docs/support",
-        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/dialogflow-enterprise.svg"
-      },
-      "tags": ["gcp", "dialogflow", "preview"],
-      "plans": [
-        {
-         "id": "3ac4e1bd-b22d-4a99-864b-d3a3ac582348",
-         "name": "default",
-         "display_name": "Default",
-         "description": "Dialogflow default plan.",
-         "service_properties": {},
-         "free": false
-        }
-      ]
-    }`,
+		Id:               "e84b69db-3de9-4688-8f5c-26b9d5b1f129",
+		Name:             "google-dialogflow",
+		Description:      "Dialogflow is an end-to-end, build-once deploy-everywhere development suite for creating conversational interfaces for websites, mobile applications, popular messaging platforms, and IoT devices.",
+		DisplayName:      "Google Cloud Dialogflow",
+		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/dialogflow-enterprise.svg",
+		DocumentationUrl: "https://cloud.google.com/dialogflow-enterprise/docs/",
+		SupportUrl:       "https://cloud.google.com/dialogflow-enterprise/docs/support",
+		Tags:             []string{"gcp", "dialogflow", "preview"},
+		Bindable:         true,
+		PlanUpdateable:   false,
+		Plans: []broker.ServicePlan{
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "3ac4e1bd-b22d-4a99-864b-d3a3ac582348",
+					Name:        "default",
+					Description: "Dialogflow default plan.",
+					Free:        brokerapi.FreeValue(false),
+					Metadata: &brokerapi.ServicePlanMetadata{
+						DisplayName: "Default",
+					},
+				},
+				ServiceProperties: map[string]string{},
+			},
+		},
 		ProvisionInputVariables: []broker.BrokerVariable{},
 		BindInputVariables:      []broker.BrokerVariable{},
 		BindComputedVariables:   accountmanagers.FixedRoleBindComputedVariables("dialogflow.client"),
