@@ -37,6 +37,7 @@ const testServiceAccountJson = `{
 
 func TestNewBrokerConfigFromEnv(t *testing.T) {
 	os.Setenv("ROOT_SERVICE_ACCOUNT_JSON", testServiceAccountJson)
+	defer os.Unsetenv("ROOT_SERVICE_ACCOUNT_JSON")
 
 	cfg, err := NewBrokerConfigFromEnv()
 	if err != nil {

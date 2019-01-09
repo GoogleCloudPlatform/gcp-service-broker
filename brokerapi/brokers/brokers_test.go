@@ -40,6 +40,8 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
+// InstanceState holds the lifecycle state of a provisioned service instance.
+// It goes None -> Provisioned -> Bound -> Unbound -> Deprovisioned
 type InstanceState int
 
 const (
@@ -55,15 +57,17 @@ const (
 	fakeBindingId  = "newbinding"
 )
 
+// serviceStub holds a stubbed out ServiceDefinition with easy access to
+// its ID, a valid plan ID, and the mock provider.
 type serviceStub struct {
 	ServiceId         string
 	PlanId            string
 	Provider          *brokerfakes.FakeServiceProvider
 	ServiceDefinition *broker.ServiceDefinition
-
-	realProvider broker.ServiceProvider
 }
 
+// ProvisionDetails creates a brokerapi.ProvisionDetails object valid for
+// the given service.
 func (s *serviceStub) ProvisionDetails() brokerapi.ProvisionDetails {
 	return brokerapi.ProvisionDetails{
 		ServiceID: s.ServiceId,
@@ -71,6 +75,8 @@ func (s *serviceStub) ProvisionDetails() brokerapi.ProvisionDetails {
 	}
 }
 
+// DeprovisionDetails creates a brokerapi.DeprovisionDetails object valid for
+// the given service.
 func (s *serviceStub) DeprovisionDetails() brokerapi.DeprovisionDetails {
 	return brokerapi.DeprovisionDetails{
 		ServiceID: s.ServiceId,
@@ -78,6 +84,8 @@ func (s *serviceStub) DeprovisionDetails() brokerapi.DeprovisionDetails {
 	}
 }
 
+// BindDetails creates a brokerapi.BindDetails object valid for
+// the given service.
 func (s *serviceStub) BindDetails() brokerapi.BindDetails {
 	return brokerapi.BindDetails{
 		ServiceID: s.ServiceId,
@@ -85,6 +93,8 @@ func (s *serviceStub) BindDetails() brokerapi.BindDetails {
 	}
 }
 
+// UnbindDetails creates a brokerapi.UnbindDetails object valid for
+// the given service.
 func (s *serviceStub) UnbindDetails() brokerapi.UnbindDetails {
 	return brokerapi.UnbindDetails{
 		ServiceID: s.ServiceId,
@@ -92,11 +102,13 @@ func (s *serviceStub) UnbindDetails() brokerapi.UnbindDetails {
 	}
 }
 
-func fakeService(isAsync bool) *serviceStub {
+// fakeService creates a ServiceDefinition with a mock ServiceProvider and
+// references to some important properties.
+func fakeService(t *testing.T, isAsync bool) *serviceStub {
 	defn := storage.ServiceDefinition()
 	svc, err := defn.CatalogEntry()
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
 	stub := serviceStub{
@@ -123,6 +135,8 @@ func fakeService(isAsync bool) *serviceStub {
 	return &stub
 }
 
+// newStubbedBroker creates a new GCPServiceBroker with a dummy database for the given registry.
+// It returns the broker and a callback used to clean up the database when done with it.
 func newStubbedBroker(t *testing.T, registry broker.BrokerRegistry) (broker *GCPServiceBroker, closer func()) {
 	// Set up database
 	db, err := gorm.Open("sqlite3", "test.db")
@@ -150,6 +164,8 @@ func newStubbedBroker(t *testing.T, registry broker.BrokerRegistry) (broker *GCP
 	return
 }
 
+// failIfErr is a test helper function which stops the test immediately if the
+// error is set.
 func failIfErr(t *testing.T, action string, err error) {
 	t.Helper()
 
@@ -158,6 +174,8 @@ func failIfErr(t *testing.T, action string, err error) {
 	}
 }
 
+// assertEqual does a reflect.DeepEqual on the values and if they're different
+// reports the message and the values.
 func assertEqual(t *testing.T, message string, expected, actual interface{}) {
 	t.Helper()
 
@@ -166,18 +184,28 @@ func assertEqual(t *testing.T, message string, expected, actual interface{}) {
 	}
 }
 
+// BrokerEndpointTestCase is the base test used for testing any
+// brokerapi.ServiceBroker endpoint.
 type BrokerEndpointTestCase struct {
+	// The following properties are used to set up the environment for your test
+	// to run in.
 	AsyncService bool
 	ServiceState InstanceState
-	Check        func(t *testing.T, broker *GCPServiceBroker, stub *serviceStub)
+
+	// Check is used to validate the state of the world and is where you should
+	// put your test cases.
+	Check func(t *testing.T, broker *GCPServiceBroker, stub *serviceStub)
 }
 
+// BrokerEndpointTestSuite holds a set of tests for a single endpoint.
 type BrokerEndpointTestSuite map[string]BrokerEndpointTestCase
 
+// Run executes every test case, setting up a new environment for each and
+// tearing it down afterward.
 func (cases BrokerEndpointTestSuite) Run(t *testing.T) {
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
-			stub := fakeService(tc.AsyncService)
+			stub := fakeService(t, tc.AsyncService)
 
 			t.Log("Creating broker")
 			registry := broker.BrokerRegistry{}
@@ -194,6 +222,8 @@ func (cases BrokerEndpointTestSuite) Run(t *testing.T) {
 	}
 }
 
+// initService creates a new service and brings it up to the lifecycle state given
+// by state.
 func initService(t *testing.T, state InstanceState, broker *GCPServiceBroker, stub *serviceStub) {
 	if state >= StateProvisioned {
 		_, err := broker.Provision(context.Background(), fakeInstanceId, stub.ProvisionDetails(), true)
