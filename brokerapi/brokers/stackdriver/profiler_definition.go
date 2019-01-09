@@ -26,7 +26,7 @@ func StackdriverProfilerServiceDefinition() *broker.ServiceDefinition {
 	return &broker.ServiceDefinition{
 		Id:               "00b9ca4a-7cd6-406a-a5b7-2f43f41ade75",
 		Name:             "google-stackdriver-profiler",
-		Description:      "Stackdriver Profiler",
+		Description:      "Continuous CPU and heap profiling to improve performance and reduce costs.",
 		DisplayName:      "Stackdriver Profiler",
 		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg",
 		DocumentationUrl: "https://cloud.google.com/profiler/docs/",
@@ -41,9 +41,6 @@ func StackdriverProfilerServiceDefinition() *broker.ServiceDefinition {
 					Name:        "default",
 					Description: "Stackdriver Profiler default plan.",
 					Free:        brokerapi.FreeValue(false),
-					Metadata: &brokerapi.ServicePlanMetadata{
-						DisplayName: "Default",
-					},
 				},
 				ServiceProperties: map[string]string{},
 			},

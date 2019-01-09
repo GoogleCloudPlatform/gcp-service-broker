@@ -50,9 +50,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					Name:        "three-node-production-hdd",
 					Description: "BigTable HDD basic production plan: Approx: Reads: 1,500 QPS @ 200ms or Writes: 30,000 QPS @ 50ms or Scans: 540 MB/s, 24TB storage.",
 					Free:        brokerapi.FreeValue(false),
-					Metadata: &brokerapi.ServicePlanMetadata{
-						DisplayName: "3 Node HDD",
-					},
 				},
 				ServiceProperties: map[string]string{"storage_type": "HDD", "num_nodes": "3"},
 			},
@@ -62,9 +59,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					Name:        "three-node-production-ssd",
 					Description: "BigTable SSD basic production plan: Approx: Reads: 30,000 QPS @ 6ms or Writes: 30,000 QPS @ 6ms or Scans: 660 MB/s, 7.5TB storage.",
 					Free:        brokerapi.FreeValue(false),
-					Metadata: &brokerapi.ServicePlanMetadata{
-						DisplayName: "3 Node SSD",
-					},
 				},
 				ServiceProperties: map[string]string{"storage_type": "SSD", "num_nodes": "3"},
 			},

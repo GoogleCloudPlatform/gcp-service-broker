@@ -26,7 +26,7 @@ func StackdriverMonitoringServiceDefinition() *broker.ServiceDefinition {
 	return &broker.ServiceDefinition{
 		Id:               "2bc0d9ed-3f68-4056-b842-4a85cfbc727f",
 		Name:             "google-stackdriver-monitoring",
-		Description:      "Stackdriver Monitoring",
+		Description:      "Stackdriver Monitoring provides visibility into the performance, uptime, and overall health of cloud-powered applications.",
 		DisplayName:      "Stackdriver Monitoring",
 		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg",
 		DocumentationUrl: "https://cloud.google.com/monitoring/docs/",
@@ -41,9 +41,6 @@ func StackdriverMonitoringServiceDefinition() *broker.ServiceDefinition {
 					Name:        "default",
 					Description: "Stackdriver Monitoring default plan.",
 					Free:        brokerapi.FreeValue(false),
-					Metadata: &brokerapi.ServicePlanMetadata{
-						DisplayName: "Default",
-					},
 				},
 				ServiceProperties: map[string]string{},
 			},

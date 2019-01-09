@@ -26,7 +26,7 @@ func StackdriverTraceServiceDefinition() *broker.ServiceDefinition {
 	return &broker.ServiceDefinition{
 		Id:               "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
 		Name:             "google-stackdriver-trace",
-		Description:      "Stackdriver Trace",
+		Description:      "Stackdriver Trace is a distributed tracing system that collects latency data from your applications and displays it in the Google Cloud Platform Console. You can track how requests propagate through your application and receive detailed near real-time performance insights.",
 		DisplayName:      "Stackdriver Trace",
 		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg",
 		DocumentationUrl: "https://cloud.google.com/trace/docs/",
@@ -41,9 +41,6 @@ func StackdriverTraceServiceDefinition() *broker.ServiceDefinition {
 					Name:        "default",
 					Description: "Stackdriver Trace default plan.",
 					Free:        brokerapi.FreeValue(false),
-					Metadata: &brokerapi.ServicePlanMetadata{
-						DisplayName: "Default",
-					},
 				},
 				ServiceProperties: map[string]string{},
 			},

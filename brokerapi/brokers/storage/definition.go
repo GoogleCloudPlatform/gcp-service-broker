@@ -51,9 +51,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					Name:        "standard",
 					Description: "Standard storage class. Auto-selects either regional or multi-regional based on the location.",
 					Free:        brokerapi.FreeValue(false),
-					Metadata: &brokerapi.ServicePlanMetadata{
-						DisplayName: "Standard",
-					},
 				},
 				ServiceProperties: map[string]string{"storage_class": "STANDARD"},
 			},
@@ -63,9 +60,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					Name:        "nearline",
 					Description: "Nearline storage class.",
 					Free:        brokerapi.FreeValue(false),
-					Metadata: &brokerapi.ServicePlanMetadata{
-						DisplayName: "Nearline",
-					},
 				},
 				ServiceProperties: map[string]string{"storage_class": "NEARLINE"},
 			},
@@ -75,9 +69,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					Name:        "reduced-availability",
 					Description: "Durable Reduced Availability storage class.",
 					Free:        brokerapi.FreeValue(false),
-					Metadata: &brokerapi.ServicePlanMetadata{
-						DisplayName: "Durable Reduced Availability",
-					},
 				},
 				ServiceProperties: map[string]string{"storage_class": "DURABLE_REDUCED_AVAILABILITY"},
 			},
@@ -87,9 +78,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					Name:        "coldline",
 					Description: "Google Cloud Storage Coldline is a very-low-cost, highly durable storage service for data archiving, online backup, and disaster recovery.",
 					Free:        brokerapi.FreeValue(false),
-					Metadata: &brokerapi.ServicePlanMetadata{
-						DisplayName: "Coldline Storage",
-					},
 				},
 				ServiceProperties: map[string]string{"storage_class": "COLDLINE"},
 			},
@@ -99,9 +87,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					Name:        "regional",
 					Description: "Data is stored in a narrow geographic region, redundant across availability zones with a 99.99% typical monthly availability.",
 					Free:        brokerapi.FreeValue(false),
-					Metadata: &brokerapi.ServicePlanMetadata{
-						DisplayName: "Regional Storage",
-					},
 				},
 				ServiceProperties: map[string]string{"storage_class": "REGIONAL"},
 			},
@@ -111,9 +96,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					Name:        "multiregional",
 					Description: "Data is stored geo-redundantly with >99.99% typical monthly availability.",
 					Free:        brokerapi.FreeValue(false),
-					Metadata: &brokerapi.ServicePlanMetadata{
-						DisplayName: "Multi-Regional Storage",
-					},
 				},
 				ServiceProperties: map[string]string{"storage_class": "MULTI_REGIONAL"},
 			},

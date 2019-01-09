@@ -46,9 +46,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					Name:        "default",
 					Description: "Firestore default plan.",
 					Free:        brokerapi.FreeValue(false),
-					Metadata: &brokerapi.ServicePlanMetadata{
-						DisplayName: "Default",
-					},
 				},
 				ServiceProperties: map[string]string{},
 			},
