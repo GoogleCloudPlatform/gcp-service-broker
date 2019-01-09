@@ -31,8 +31,8 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 	return &broker.ServiceDefinition{
 		Id:               "cbad6d78-a73c-432d-b8ff-b219a17a803a",
 		Name:             "google-cloudsql-postgres",
-		Description:      "Google Cloud SQL is a fully-managed PostgreSQL database service.",
-		DisplayName:      "Google CloudSQL PostgreSQL",
+		Description:      "Google CloudSQL for PostgreSQL is a fully-managed PostgreSQL database service.",
+		DisplayName:      "Google CloudSQL for PostgreSQL",
 		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg",
 		DocumentationUrl: "https://cloud.google.com/sql/docs/",
 		SupportUrl:       "https://cloud.google.com/support/",
