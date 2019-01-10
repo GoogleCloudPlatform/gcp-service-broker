@@ -117,3 +117,53 @@ func TestRunMigrations_Failures(t *testing.T) {
 		})
 	}
 }
+
+func TestRunMigrations(t *testing.T) {
+	cases := map[string]func(t *testing.T, db *gorm.DB){
+		"creates-migrations-table": func(t *testing.T, db *gorm.DB) {
+			if err := RunMigrations(db); err != nil {
+				t.Fatal(err)
+			}
+
+			if !db.HasTable("migrations") {
+				t.Error("Expected db to have migrations table")
+			}
+		},
+
+		"applies-all-migrations-when-run": func(t *testing.T, db *gorm.DB) {
+			if err := RunMigrations(db); err != nil {
+				t.Fatal(err)
+			}
+
+			var storedMigrations []models.Migration
+			if err := db.Order("id desc").Find(&storedMigrations).Error; err != nil {
+				t.Fatal(err)
+			}
+
+			lastMigrationNumber := storedMigrations[0].MigrationId
+			if lastMigrationNumber != numMigrations-1 {
+				t.Errorf("expected lastMigrationNumber to be %d, got %d", numMigrations-1, lastMigrationNumber)
+			}
+		},
+
+		"can-run-migrations-multiple-times": func(t *testing.T, db *gorm.DB) {
+			for i := 0; i < 10; i++ {
+				if err := RunMigrations(db); err != nil {
+					t.Fatal(err)
+				}
+			}
+		},
+	}
+
+	for tn, tc := range cases {
+		t.Run(tn, func(t *testing.T) {
+			db, err := gorm.Open("sqlite3", "test.sqlite3")
+			defer os.Remove("test.sqlite3")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			tc(t, db)
+		})
+	}
+}
