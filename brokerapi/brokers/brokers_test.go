@@ -190,8 +190,7 @@ var _ = Describe("Brokers", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			builtinRegistry := builtin.BuiltinBrokerRegistry()
-			enabledServices, err := builtinRegistry.GetEnabledServices()
-			Expect(err).ToNot(HaveOccurred())
+			enabledServices := builtinRegistry.GetEnabledServices()
 
 			Expect(len(serviceList)).To(Equal(len(enabledServices)))
 		})

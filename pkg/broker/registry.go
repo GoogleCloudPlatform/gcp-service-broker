@@ -66,7 +66,7 @@ func (brokerRegistry BrokerRegistry) Register(service *ServiceDefinition) {
 
 // GetEnabledServices returns a list of all registered brokers that the user
 // has enabled the use of.
-func (brokerRegistry *BrokerRegistry) GetEnabledServices() ([]*ServiceDefinition, error) {
+func (brokerRegistry *BrokerRegistry) GetEnabledServices() []*ServiceDefinition {
 	var out []*ServiceDefinition
 
 	for _, svc := range brokerRegistry.GetAllServices() {
@@ -76,15 +76,11 @@ func (brokerRegistry *BrokerRegistry) GetEnabledServices() ([]*ServiceDefinition
 			isEnabled = enableBuiltinServices.IsActive()
 		}
 
-		if entry, err := svc.CatalogEntry(); err != nil {
-			return nil, err
-		} else {
-			tags := utils.NewStringSet(entry.Tags...)
-			for tag, toggle := range lifecycleTagToggles {
-				if !toggle.IsActive() && tags.Contains(tag) {
-					isEnabled = false
-					break
-				}
+		tags := utils.NewStringSet(svc.Tags...)
+		for tag, toggle := range lifecycleTagToggles {
+			if !toggle.IsActive() && tags.Contains(tag) {
+				isEnabled = false
+				break
 			}
 		}
 
@@ -93,7 +89,7 @@ func (brokerRegistry *BrokerRegistry) GetEnabledServices() ([]*ServiceDefinition
 		}
 	}
 
-	return out, nil
+	return out
 }
 
 // GetAllServices returns a list of all registered brokers whether or not the

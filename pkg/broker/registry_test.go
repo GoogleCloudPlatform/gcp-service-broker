@@ -74,25 +74,20 @@ func TestRegistry_GetEnabledServices(t *testing.T) {
 			// shouldn't show up when property is false even if builtins are enabled
 			viper.Set("compatibility.enable-builtin-services", true)
 			viper.Set(tc.Property, false)
-			if defns, err := registry.GetEnabledServices(); err != nil {
-				t.Fatal(err)
-			} else if len(defns) != 0 {
+
+			if defns := registry.GetEnabledServices(); len(defns) != 0 {
 				t.Fatalf("Expected 0 definitions with %s disabled, but got %d", tc.Property, len(defns))
 			}
 
 			// should show up when property is true
 			viper.Set(tc.Property, true)
-			if defns, err := registry.GetEnabledServices(); err != nil {
-				t.Fatal(err)
-			} else if len(defns) != 1 {
+			if defns := registry.GetEnabledServices(); len(defns) != 1 {
 				t.Fatalf("Expected 1 definition with %s enabled, but got %d", tc.Property, len(defns))
 			}
 
 			// should not show up if the service is explicitly disabled
 			viper.Set("compatibility.enable-builtin-services", false)
-			if defns, err := registry.GetEnabledServices(); err != nil {
-				t.Fatal(err)
-			} else if len(defns) != 0 {
+			if defns := registry.GetEnabledServices(); len(defns) != 0 {
 				t.Fatalf("Expected no definition with builtins disabled, but got %d", len(defns))
 			}
 		})
