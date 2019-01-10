@@ -17,19 +17,21 @@ package cloudsql
 import (
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"golang.org/x/oauth2/jwt"
 )
 
-const MySqlServiceId = "4bc59b9a-8520-409f-85da-1c7552315863"
+const (
+	MySqlServiceId    = "4bc59b9a-8520-409f-85da-1c7552315863"
+	CloudsqlMySQLName = "google-cloudsql-mysql"
+)
 
 // MysqlServiceDefinition creates a new ServiceDefinition object for the Bigtable service.
 func MysqlServiceDefinition() *broker.ServiceDefinition {
 	return &broker.ServiceDefinition{
-		Name: models.CloudsqlMySQLName,
+		Name: CloudsqlMySQLName,
 		DefaultServiceDefinition: `{
 		    "id": "4bc59b9a-8520-409f-85da-1c7552315863",
 		    "description": "Google Cloud SQL is a fully-managed MySQL database service.",

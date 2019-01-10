@@ -18,7 +18,6 @@ import (
 	"code.cloudfoundry.org/lager"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
@@ -35,7 +34,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 	}
 
 	return &broker.ServiceDefinition{
-		Name: models.PubsubName,
+		Name: "google-pubsub",
 		DefaultServiceDefinition: `{
       "id": "628629e3-79f5-4255-b981-d14c6c7856be",
       "description": "A global service for real-time and reliable messaging and streaming data.",

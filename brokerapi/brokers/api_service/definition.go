@@ -18,7 +18,6 @@ import (
 	"code.cloudfoundry.org/lager"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"golang.org/x/oauth2/jwt"
 )
@@ -35,7 +34,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 	}
 
 	return &broker.ServiceDefinition{
-		Name: models.MlName,
+		Name: "google-ml-apis",
 		DefaultServiceDefinition: `
 		{
       "id": "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4",

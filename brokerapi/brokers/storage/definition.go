@@ -18,12 +18,13 @@ import (
 	"code.cloudfoundry.org/lager"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"golang.org/x/oauth2/jwt"
 )
+
+const StorageName = "google-storage"
 
 // ServiceDefinition creates a new ServiceDefinition object for the Cloud Storage service.
 func ServiceDefinition() *broker.ServiceDefinition {
@@ -34,7 +35,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 	}
 
 	return &broker.ServiceDefinition{
-		Name: models.StorageName,
+		Name: StorageName,
 		DefaultServiceDefinition: `{
 	        "id": "b9e4332e-b42b-4680-bda5-ea1506797474",
 	        "description": "Unified object storage for developers and enterprises. Cloud Storage allows world-wide storage and retrieval of any amount of data at any time.",

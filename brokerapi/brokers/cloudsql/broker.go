@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 
 	"context"
@@ -430,6 +431,6 @@ func (b *CloudSQLBroker) createClient(ctx context.Context) (*googlecloudsql.Serv
 		return nil, fmt.Errorf("Couldn't instantiate CloudSQL API client: %s", err)
 	}
 
-	client.UserAgent = models.CustomUserAgent
+	client.UserAgent = utils.CustomUserAgent
 	return client, nil
 }
