@@ -17,6 +17,7 @@ package broker
 import (
 	"testing"
 
+	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/viper"
 )
 
@@ -52,23 +53,18 @@ func TestRegistry_GetEnabledServices(t *testing.T) {
 			defer viper.Reset()
 
 			sd := ServiceDefinition{
+				Id:   "b9e4332e-b42b-4680-bda5-ea1506797474",
 				Name: "test-service",
-				DefaultServiceDefinition: `{
-              "id": "b9e4332e-b42b-4680-bda5-ea1506797474",
-              "description": "test-service-definition",
-              "name": "google-storage",
-              "bindable": true,
-              "metadata": {},
-              "tags": ["gcp", "` + tc.Tag + `"],
-              "plans": [
-                {
-                  "id": "e1d11f65-da66-46ad-977c-6d56513baf43",
-                  "name": "standard",
-                  "display_name": "Standard",
-                  "description": "Standard storage class."
-                }
-              ]
-            }`,
+				Tags: []string{"gcp", tc.Tag},
+				Plans: []ServicePlan{
+					{
+						ServicePlan: brokerapi.ServicePlan{
+							ID:          "e1d11f65-da66-46ad-977c-6d56513baf43",
+							Name:        "Builtin!",
+							Description: "Standard storage class",
+						},
+					},
+				},
 				IsBuiltin: true,
 			}
 

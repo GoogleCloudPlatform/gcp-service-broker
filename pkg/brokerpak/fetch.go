@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
 	getter "github.com/hashicorp/go-getter"
@@ -123,7 +122,7 @@ func (gsGetter) client(ctx context.Context) (*storage.Client, error) {
 		return nil, errors.New("couldn't get JSON credentials from the enviornment")
 	}
 
-	client, err := storage.NewClient(ctx, option.WithCredentials(creds), option.WithUserAgent(models.CustomUserAgent))
+	client, err := storage.NewClient(ctx, option.WithCredentials(creds), option.WithUserAgent(utils.CustomUserAgent))
 	if err != nil {
 		return nil, fmt.Errorf("couldn't connect to Cloud Storage: %v", err)
 	}

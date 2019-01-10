@@ -22,6 +22,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	"google.golang.org/api/option"
 	instancepb "google.golang.org/genproto/googleapis/spanner/admin/instance/v1"
@@ -157,7 +158,7 @@ func (s *SpannerBroker) qualifiedInstanceName(instanceName string) string {
 }
 
 func (s *SpannerBroker) createAdminClient(ctx context.Context) (*googlespanner.InstanceAdminClient, error) {
-	co := option.WithUserAgent(models.CustomUserAgent)
+	co := option.WithUserAgent(utils.CustomUserAgent)
 	ct := option.WithTokenSource(s.HttpConfig.TokenSource(ctx))
 	client, err := googlespanner.NewInstanceAdminClient(ctx, co, ct)
 	if err != nil {

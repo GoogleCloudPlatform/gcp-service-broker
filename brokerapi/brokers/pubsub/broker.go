@@ -20,6 +20,7 @@ import (
 	googlepubsub "cloud.google.com/go/pubsub"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/net/context"
 
@@ -142,7 +143,7 @@ func (b *PubSubBroker) Deprovision(ctx context.Context, topic models.ServiceInst
 }
 
 func (b *PubSubBroker) createClient(ctx context.Context) (*googlepubsub.Client, error) {
-	co := option.WithUserAgent(models.CustomUserAgent)
+	co := option.WithUserAgent(utils.CustomUserAgent)
 	ct := option.WithTokenSource(b.HttpConfig.TokenSource(ctx))
 	client, err := googlepubsub.NewClient(ctx, b.ProjectId, co, ct)
 	if err != nil {

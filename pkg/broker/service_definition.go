@@ -34,8 +34,18 @@ var enableCatalogSchemas = toggles.Compatibility.Toggle("enable-catalog-schemas"
 // ServiceDefinition holds the necessary details to describe an OSB service and
 // provision it.
 type ServiceDefinition struct {
-	Name                       string                       `validate:"osbname"`
-	DefaultServiceDefinition   string                       `validate:"json"`
+	Id               string `validate:"required,uuid"`
+	Name             string `validate:"required,osbname"`
+	Description      string
+	DisplayName      string
+	ImageUrl         string `validate:"omitempty,url"`
+	DocumentationUrl string `validate:"omitempty,url"`
+	SupportUrl       string `validate:"omitempty,url"`
+	Tags             []string
+	Bindable         bool
+	PlanUpdateable   bool
+	Plans            []ServicePlan
+
 	ProvisionInputVariables    []BrokerVariable             `validate:"dive"`
 	ProvisionComputedVariables []varcontext.DefaultVariable `validate:"dive"`
 	BindInputVariables         []BrokerVariable             `validate:"dive"`
@@ -50,12 +60,6 @@ type ServiceDefinition struct {
 
 	// IsBuiltin is true if the service is built-in to the platform.
 	IsBuiltin bool
-}
-
-// DefinitionProperty computes the Viper property name for the JSON service
-// definition.
-func (svc *ServiceDefinition) DefinitionProperty() string {
-	return fmt.Sprintf("service.%s.definition", svc.Name)
 }
 
 // UserDefinedPlansProperty computes the Viper property name for the JSON list
@@ -111,17 +115,30 @@ func (svc *ServiceDefinition) TileUserDefinedPlansVariable() string {
 // has metadata about the service so operators and programmers know which
 // service and plan will work best for their purposes.
 func (svc *ServiceDefinition) CatalogEntry() (*Service, error) {
-	sd, err := svc.ServiceDefinition()
+	userPlans, err := svc.UserDefinedPlans()
 	if err != nil {
 		return nil, err
 	}
 
-	plans, err := svc.UserDefinedPlans()
-	if err != nil {
-		return nil, err
-	}
+	sd := &Service{
+		Service: brokerapi.Service{
+			ID:          svc.Id,
+			Name:        svc.Name,
+			Description: svc.Description,
+			Metadata: &brokerapi.ServiceMetadata{
+				DisplayName:     svc.DisplayName,
+				LongDescription: svc.Description,
 
-	sd.Plans = append(sd.Plans, plans...)
+				DocumentationUrl: svc.DocumentationUrl,
+				ImageUrl:         svc.ImageUrl,
+				SupportUrl:       svc.SupportUrl,
+			},
+			Tags:          svc.Tags,
+			Bindable:      svc.Bindable,
+			PlanUpdatable: svc.PlanUpdateable,
+		},
+		Plans: append(svc.Plans, userPlans...),
+	}
 
 	if enableCatalogSchemas.IsActive() {
 		for i, _ := range sd.Plans {
@@ -232,22 +249,6 @@ func (svc *ServiceDefinition) validatePlan(plan ServicePlan) error {
 	}
 
 	return nil
-}
-
-// ServiceDefinition extracts service definition from the environment, failing
-// if the definition was not valid JSON.
-func (svc *ServiceDefinition) ServiceDefinition() (*Service, error) {
-	jsonDefinition := viper.GetString(svc.DefinitionProperty())
-	if jsonDefinition == "" {
-		jsonDefinition = svc.DefaultServiceDefinition
-	}
-
-	var defn Service
-	err := json.Unmarshal([]byte(jsonDefinition), &defn)
-	if err != nil {
-		return nil, fmt.Errorf("Error parsing service definition for %q: %s", svc.Name, err)
-	}
-	return &defn, err
 }
 
 func (svc *ServiceDefinition) provisionDefaults() []varcontext.DefaultVariable {

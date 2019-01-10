@@ -244,12 +244,7 @@ func TestCreateProvisionRequest(t *testing.T) {
 
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
-			serviceCatalogEntry, err := tc.Service.CatalogEntry()
-			if err != nil {
-				t.Fatalf("got error trying to get service catalog %v", err)
-			}
-
-			details := brokerapi.ProvisionDetails{RawParameters: json.RawMessage(tc.UserParams), ServiceID: serviceCatalogEntry.ID}
+			details := brokerapi.ProvisionDetails{RawParameters: json.RawMessage(tc.UserParams), ServiceID: tc.Service.Id}
 			plan, err := tc.Service.GetPlanById(tc.PlanId)
 			if err != nil {
 				t.Fatalf("got error trying to find plan %s %v", tc.PlanId, err)
@@ -282,12 +277,7 @@ func TestCreateProvisionRequest(t *testing.T) {
 }
 
 func TestPostgresCustomMachineTypes(t *testing.T) {
-	sd, err := PostgresServiceDefinition().ServiceDefinition()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for _, plan := range sd.Plans {
+	for _, plan := range PostgresServiceDefinition().Plans {
 		t.Run(plan.Name, func(t *testing.T) {
 			props := plan.ServiceProperties
 
