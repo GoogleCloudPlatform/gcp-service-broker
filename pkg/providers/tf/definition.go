@@ -15,7 +15,6 @@
 package tf
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"code.cloudfoundry.org/lager"
@@ -178,35 +177,20 @@ func (tfb *TfServiceDefinitionV1) ToService(executor wrapper.TerraformExecutor) 
 		rawPlans = append(rawPlans, plan.ToPlan())
 	}
 
-	osbDefinition := broker.Service{
-		Service: brokerapi.Service{
-			ID:            tfb.Id,
-			Name:          tfb.Name,
-			Description:   tfb.Description,
-			Bindable:      true,
-			PlanUpdatable: false,
-			Metadata: &brokerapi.ServiceMetadata{
-				DisplayName:      tfb.Name,
-				LongDescription:  tfb.Description,
-				DocumentationUrl: tfb.DocumentationUrl,
-				SupportUrl:       tfb.SupportUrl,
-				ImageUrl:         tfb.ImageUrl,
-			},
-			Tags: tfb.Tags,
-		},
-
-		Plans: rawPlans,
-	}
-
-	defaultServiceDefinition, err := json.Marshal(osbDefinition)
-	if err != nil {
-		return nil, err
-	}
-
 	return &broker.ServiceDefinition{
-		Name:                     tfb.Name,
-		DefaultServiceDefinition: string(defaultServiceDefinition),
-		ProvisionInputVariables:  tfb.ProvisionSettings.UserInputs,
+		Id:               tfb.Id,
+		Name:             tfb.Name,
+		Description:      tfb.Description,
+		Bindable:         true,
+		PlanUpdateable:   false,
+		DisplayName:      tfb.DisplayName,
+		DocumentationUrl: tfb.DocumentationUrl,
+		SupportUrl:       tfb.SupportUrl,
+		ImageUrl:         tfb.ImageUrl,
+		Tags:             tfb.Tags,
+		Plans:            rawPlans,
+
+		ProvisionInputVariables: tfb.ProvisionSettings.UserInputs,
 		ProvisionComputedVariables: append(tfb.ProvisionSettings.Computed, varcontext.DefaultVariable{
 			Name:      "tf_id",
 			Default:   "tf:${request.instance_id}:",

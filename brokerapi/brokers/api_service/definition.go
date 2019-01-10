@@ -19,6 +19,7 @@ import (
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
 )
 
@@ -34,35 +35,27 @@ func ServiceDefinition() *broker.ServiceDefinition {
 	}
 
 	return &broker.ServiceDefinition{
-		Name: "google-ml-apis",
-		DefaultServiceDefinition: `
-		{
-      "id": "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4",
-      "description": "Machine Learning APIs including Vision, Translate, Speech, and Natural Language.",
-      "name": "google-ml-apis",
-      "bindable": true,
-      "plan_updateable": false,
-      "metadata": {
-        "displayName": "Google Machine Learning APIs",
-        "longDescription": "Machine Learning APIs including Vision, Translate, Speech, and Natural Language.",
-        "documentationUrl": "https://cloud.google.com/ml/",
-        "supportUrl": "https://cloud.google.com/support/",
-        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/machine-learning.svg"
-      },
-      "tags": ["gcp", "ml"],
-      "plans":  [
-        {
-         "id": "be7954e1-ecfb-4936-a0b6-db35e6424c7a",
-         "service_id": "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4",
-         "name": "default",
-         "display_name": "Default",
-         "description": "Machine Learning API default plan.",
-         "service_properties": {},
-         "free": false
-        }
-      ]
-    }
-		`,
+		Id:               "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4",
+		Name:             "google-ml-apis",
+		Description:      "Machine Learning APIs including Vision, Translate, Speech, and Natural Language.",
+		DisplayName:      "Google Machine Learning APIs",
+		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/machine-learning.svg",
+		DocumentationUrl: "https://cloud.google.com/ml/",
+		SupportUrl:       "https://cloud.google.com/support/",
+		Tags:             []string{"gcp", "ml"},
+		Bindable:         true,
+		PlanUpdateable:   false,
+		Plans: []broker.ServicePlan{
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "be7954e1-ecfb-4936-a0b6-db35e6424c7a",
+					Name:        "default",
+					Description: "Machine Learning API default plan.",
+					Free:        brokerapi.FreeValue(false),
+				},
+				ServiceProperties: map[string]string{},
+			},
+		},
 		ProvisionInputVariables: []broker.BrokerVariable{},
 		DefaultRoleWhitelist:    roleWhitelist,
 		BindInputVariables:      accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "ml.modelUser"),

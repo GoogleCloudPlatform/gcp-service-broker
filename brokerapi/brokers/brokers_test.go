@@ -104,7 +104,7 @@ var _ = Describe("Brokers", func() {
 		for _, service := range registry {
 			catalog, err := service.CatalogEntry()
 			Expect(err).To(BeNil())
-			serviceNameToId[service.Name] = catalog.ID
+			serviceNameToId[service.Name] = service.Id
 			if service.Name == bigquery.BigqueryName {
 				someBigQueryPlanId = catalog.Plans[0].ID
 			}

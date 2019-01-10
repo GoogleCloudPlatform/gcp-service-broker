@@ -116,12 +116,8 @@ func (brokerRegistry BrokerRegistry) GetAllServices() []*ServiceDefinition {
 // or one of the services has a parse error then an error is returned.
 func (brokerRegistry BrokerRegistry) GetServiceById(id string) (*ServiceDefinition, error) {
 	for _, svc := range brokerRegistry {
-		if entry, err := svc.CatalogEntry(); err != nil {
-			return nil, err
-		} else {
-			if entry.ID == id {
-				return svc, nil
-			}
+		if svc.Id == id {
+			return svc, nil
 		}
 	}
 

@@ -19,6 +19,7 @@ import (
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
 )
 
@@ -27,32 +28,27 @@ func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{"dataflow.viewer", "dataflow.developer"}
 
 	return &broker.ServiceDefinition{
-		Name: "google-dataflow",
-		DefaultServiceDefinition: `{
-      "id": "3e897eb3-9062-4966-bd4f-85bda0f73b3d",
-      "description": "A managed service for executing a wide variety of data processing patterns built on Apache Beam.",
-      "name": "google-dataflow",
-      "bindable": true,
-      "plan_updateable": false,
-      "metadata": {
-        "displayName": "Google Cloud Dataflow",
-        "longDescription": "A managed service for executing a wide variety of data processing patterns built on Apache Beam.",
-        "documentationUrl": "https://cloud.google.com/dataflow/docs/",
-        "supportUrl": "https://cloud.google.com/dataflow/docs/support",
-        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/dataflow.svg"
-      },
-      "tags": ["gcp", "dataflow", "preview"],
-      "plans": [
-        {
-         "id": "8e956dd6-8c0f-470c-9a11-065537d81872",
-         "name": "default",
-         "display_name": "Default",
-         "description": "Dataflow default plan.",
-         "service_properties": {},
-         "free": false
-        }
-      ]
-    }`,
+		Id:               "3e897eb3-9062-4966-bd4f-85bda0f73b3d",
+		Name:             "google-dataflow",
+		Description:      "A managed service for executing a wide variety of data processing patterns built on Apache Beam.",
+		DisplayName:      "Google Cloud Dataflow",
+		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/dataflow.svg",
+		DocumentationUrl: "https://cloud.google.com/dataflow/docs/",
+		SupportUrl:       "https://cloud.google.com/dataflow/docs/support",
+		Tags:             []string{"gcp", "dataflow", "preview"},
+		Bindable:         true,
+		PlanUpdateable:   false,
+		Plans: []broker.ServicePlan{
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "8e956dd6-8c0f-470c-9a11-065537d81872",
+					Name:        "default",
+					Description: "Dataflow default plan.",
+					Free:        brokerapi.FreeValue(false),
+				},
+				ServiceProperties: map[string]string{},
+			},
+		},
 		ProvisionInputVariables: []broker.BrokerVariable{},
 		BindInputVariables:      accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "dataflow.developer"),
 		BindComputedVariables:   accountmanagers.ServiceAccountBindComputedVariables(),
