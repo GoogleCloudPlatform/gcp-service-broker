@@ -25,6 +25,8 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
+const StorageName = "google-storage"
+
 // ServiceDefinition creates a new ServiceDefinition object for the Cloud Storage service.
 func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
@@ -35,7 +37,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 
 	return &broker.ServiceDefinition{
 		Id:               "b9e4332e-b42b-4680-bda5-ea1506797474",
-		Name:             "google-storage",
+		Name:             StorageName,
 		Description:      "Unified object storage for developers and enterprises. Cloud Storage allows world-wide storage and retrieval of any amount of data at any time.",
 		DisplayName:      "Google Cloud Storage",
 		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/storage.svg",

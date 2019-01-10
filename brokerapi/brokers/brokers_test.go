@@ -20,11 +20,14 @@ import (
 	"os"
 
 	. "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigquery"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	brokerbasefakes "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base/broker_basefakes"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/cloudsql"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/storage"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker/brokerfakes"
@@ -102,21 +105,21 @@ var _ = Describe("Brokers", func() {
 			catalog, err := service.CatalogEntry()
 			Expect(err).To(BeNil())
 			serviceNameToId[service.Name] = service.Id
-			if service.Name == models.BigqueryName {
+			if service.Name == bigquery.BigqueryName {
 				someBigQueryPlanId = catalog.Plans[0].ID
 			}
-			if service.Name == models.CloudsqlMySQLName {
+			if service.Name == cloudsql.CloudsqlMySQLName {
 
 				someCloudSQLPlanId = catalog.Plans[0].ID
 			}
-			if service.Name == models.StorageName {
+			if service.Name == storage.StorageName {
 				someStoragePlanId = catalog.Plans[0].ID
 			}
 		}
 
 		for _, service := range registry {
 			async := false
-			if service.Name == models.CloudsqlMySQLName {
+			if service.Name == cloudsql.CloudsqlMySQLName {
 				async = true
 			}
 			fakeProvider := &brokerfakes.FakeServiceProvider{
@@ -137,34 +140,34 @@ var _ = Describe("Brokers", func() {
 		}
 
 		bqProvisionDetails = brokerapi.ProvisionDetails{
-			ServiceID: serviceNameToId[models.BigqueryName],
+			ServiceID: serviceNameToId[bigquery.BigqueryName],
 			PlanID:    someBigQueryPlanId,
 		}
 
 		cloudSqlProvisionDetails = brokerapi.ProvisionDetails{
-			ServiceID: serviceNameToId[models.CloudsqlMySQLName],
+			ServiceID: serviceNameToId[cloudsql.CloudsqlMySQLName],
 			PlanID:    someCloudSQLPlanId,
 		}
 
 		storageProvisionDetails = brokerapi.ProvisionDetails{
-			ServiceID: serviceNameToId[models.StorageName],
+			ServiceID: serviceNameToId[storage.StorageName],
 			PlanID:    someStoragePlanId,
 		}
 
 		storageBindDetails = brokerapi.BindDetails{
-			ServiceID:     serviceNameToId[models.StorageName],
+			ServiceID:     serviceNameToId[storage.StorageName],
 			PlanID:        someStoragePlanId,
 			RawParameters: json.RawMessage(`{"role":"storage.objectAdmin"}`),
 		}
 
 		storageBadBindDetails = brokerapi.BindDetails{
-			ServiceID:     serviceNameToId[models.StorageName],
+			ServiceID:     serviceNameToId[storage.StorageName],
 			PlanID:        someStoragePlanId,
 			RawParameters: json.RawMessage(`{"role":"storage.admin"}`),
 		}
 
 		storageUnbindDetails = brokerapi.UnbindDetails{
-			ServiceID: serviceNameToId[models.StorageName],
+			ServiceID: serviceNameToId[storage.StorageName],
 			PlanID:    someStoragePlanId,
 		}
 
@@ -197,7 +200,7 @@ var _ = Describe("Brokers", func() {
 	Describe("provision", func() {
 		Context("when the bigquery service id is provided", func() {
 			It("should call bigquery provisioning", func() {
-				bqId := serviceNameToId[models.BigqueryName]
+				bqId := serviceNameToId[bigquery.BigqueryName]
 				_, err := gcpBroker.Provision(context.Background(), instanceId, bqProvisionDetails, true)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(serviceBrokerMap[bqId].ProvisionCallCount()).To(Equal(1))
@@ -218,7 +221,7 @@ var _ = Describe("Brokers", func() {
 		Context("when an unrecognized plan is provisioned", func() {
 			It("should return an error", func() {
 				_, err = gcpBroker.Provision(context.Background(), instanceId, brokerapi.ProvisionDetails{
-					ServiceID: serviceNameToId[models.BigqueryName],
+					ServiceID: serviceNameToId[bigquery.BigqueryName],
 					PlanID:    "nope",
 				}, true)
 				Expect(err).To(HaveOccurred())
@@ -246,7 +249,7 @@ var _ = Describe("Brokers", func() {
 	Describe("deprovision", func() {
 		Context("when the bigquery service id is provided", func() {
 			It("should call bigquery deprovisioning", func() {
-				bqId := serviceNameToId[models.BigqueryName]
+				bqId := serviceNameToId[bigquery.BigqueryName]
 				_, err := gcpBroker.Provision(context.Background(), instanceId, bqProvisionDetails, true)
 				Expect(err).NotTo(HaveOccurred())
 				_, err = gcpBroker.Deprovision(context.Background(), instanceId, brokerapi.DeprovisionDetails{
@@ -260,7 +263,7 @@ var _ = Describe("Brokers", func() {
 		Context("when the service doesn't exist", func() {
 			It("should return an error", func() {
 				_, err := gcpBroker.Deprovision(context.Background(), instanceId, brokerapi.DeprovisionDetails{
-					ServiceID: serviceNameToId[models.BigqueryName],
+					ServiceID: serviceNameToId[bigquery.BigqueryName],
 				}, true)
 				Expect(err).To(HaveOccurred())
 			})
@@ -269,7 +272,7 @@ var _ = Describe("Brokers", func() {
 		Context("when async provisioning isn't allowed but the service requested requires it", func() {
 			It("should return an error", func() {
 				_, err := gcpBroker.Deprovision(context.Background(), instanceId, brokerapi.DeprovisionDetails{
-					ServiceID: serviceNameToId[models.CloudsqlMySQLName],
+					ServiceID: serviceNameToId[cloudsql.CloudsqlMySQLName],
 				}, false)
 				Expect(err).To(HaveOccurred())
 			})
@@ -283,7 +286,7 @@ var _ = Describe("Brokers", func() {
 				Expect(err).NotTo(HaveOccurred())
 				_, err = gcpBroker.Bind(context.Background(), instanceId, bindingId, storageBindDetails)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(serviceBrokerMap[serviceNameToId[models.StorageName]].BindCallCount()).To(Equal(1))
+				Expect(serviceBrokerMap[serviceNameToId[storage.StorageName]].BindCallCount()).To(Equal(1))
 			})
 
 			It("it should reject bad roles", func() {
@@ -311,7 +314,7 @@ var _ = Describe("Brokers", func() {
 				Expect(err).NotTo(HaveOccurred())
 				_, err := gcpBroker.Bind(context.Background(), instanceId, bindingId, storageBindDetails)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(serviceBrokerMap[serviceNameToId[models.StorageName]].BuildInstanceCredentialsCallCount()).To(Equal(1))
+				Expect(serviceBrokerMap[serviceNameToId[storage.StorageName]].BuildInstanceCredentialsCallCount()).To(Equal(1))
 			})
 		})
 	})
@@ -325,7 +328,7 @@ var _ = Describe("Brokers", func() {
 				Expect(err).NotTo(HaveOccurred())
 				err = gcpBroker.Unbind(context.Background(), instanceId, bindingId, storageUnbindDetails)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(serviceBrokerMap[serviceNameToId[models.StorageName]].UnbindCallCount()).To(Equal(1))
+				Expect(serviceBrokerMap[serviceNameToId[storage.StorageName]].UnbindCallCount()).To(Equal(1))
 			})
 		})
 
@@ -366,7 +369,7 @@ var _ = Describe("Brokers", func() {
 				Expect(err).NotTo(HaveOccurred())
 				_, err = gcpBroker.LastOperation(context.Background(), instanceId, "operationtoken")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(serviceBrokerMap[serviceNameToId[models.CloudsqlMySQLName]].PollInstanceCallCount()).To(Equal(1))
+				Expect(serviceBrokerMap[serviceNameToId[cloudsql.CloudsqlMySQLName]].PollInstanceCallCount()).To(Equal(1))
 			})
 		})
 

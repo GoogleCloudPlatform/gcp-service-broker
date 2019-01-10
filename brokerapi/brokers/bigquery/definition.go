@@ -25,6 +25,8 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
+const BigqueryName = "google-bigquery"
+
 // ServiceDefinition creates a new ServiceDefinition object for the BigQuery service.
 func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
@@ -37,7 +39,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 
 	return &broker.ServiceDefinition{
 		Id:               "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
-		Name:             "google-bigquery",
+		Name:             BigqueryName,
 		Description:      "A fast, economical and fully managed data warehouse for large-scale data analytics.",
 		DisplayName:      "Google BigQuery",
 		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigquery.svg",

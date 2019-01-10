@@ -29,7 +29,7 @@ const PostgresServiceId = "cbad6d78-a73c-432d-b8ff-b219a17a803a"
 // PostgresServiceDefinition creates a new ServiceDefinition object for the PostgreSQL service.
 func PostgresServiceDefinition() *broker.ServiceDefinition {
 	return &broker.ServiceDefinition{
-		Id:               "cbad6d78-a73c-432d-b8ff-b219a17a803a",
+		Id:               PostgresServiceId,
 		Name:             "google-cloudsql-postgres",
 		Description:      "Google CloudSQL for PostgreSQL is a fully-managed PostgreSQL database service.",
 		DisplayName:      "Google CloudSQL for PostgreSQL",
