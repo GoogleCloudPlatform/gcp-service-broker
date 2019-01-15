@@ -16,7 +16,9 @@ package brokers
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/pivotal-cf/brokerapi"
@@ -28,6 +30,11 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+)
+
+var (
+	invalidUserInputMsg = "User supplied paramaters must be in the form of a valid JSON map."
+	ErrInvalidUserInput = brokerapi.NewFailureResponse(errors.New(invalidUserInputMsg), http.StatusBadRequest, "parsing-user-request")
 )
 
 // GCPServiceBroker is a brokerapi.ServiceBroker that can be used to generate an OSB compatible service broker.
@@ -117,7 +124,7 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 	}
 
 	// validate parameters meet the service's schema
-	if err := gcpBroker.validateProvisionVariables(details); err != nil {
+	if err := gcpBroker.validateProvisionVariables(details, brokerService); err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, err
 	}
 
@@ -156,32 +163,22 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 	return brokerapi.ProvisionedServiceSpec{IsAsync: shouldProvisionAsync, DashboardURL: "", OperationData: instanceDetails.OperationId}, nil
 }
 
-func (gcpBroker *GCPServiceBroker) validateProvisionVariables(details brokerapi.ProvisionDetails) error {
-	serviceDefinition, err := gcpBroker.registry.GetServiceById(details.ServiceID)
-	if err != nil {
-		return err
-	}
-
+func (gcpBroker *GCPServiceBroker) validateProvisionVariables(details brokerapi.ProvisionDetails, serviceDefinition *broker.ServiceDefinition) error {
 	params := make(map[string]interface{})
 	if len(details.RawParameters) > 0 {
 		if err := json.Unmarshal([]byte(details.RawParameters), &params); err != nil {
-			return err
+			return ErrInvalidUserInput
 		}
 	}
 
 	return broker.ValidateVariables(params, serviceDefinition.ProvisionInputVariables)
 }
 
-func (gcpBroker *GCPServiceBroker) validateBindVariables(details brokerapi.BindDetails) error {
-	serviceDefinition, err := gcpBroker.registry.GetServiceById(details.ServiceID)
-	if err != nil {
-		return err
-	}
-
+func (gcpBroker *GCPServiceBroker) validateBindVariables(details brokerapi.BindDetails, serviceDefinition *broker.ServiceDefinition) error {
 	params := make(map[string]interface{})
 	if len(details.RawParameters) > 0 {
 		if err := json.Unmarshal([]byte(details.RawParameters), &params); err != nil {
-			return err
+			return ErrInvalidUserInput
 		}
 	}
 
@@ -270,7 +267,7 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 	}
 
 	// validate parameters meet the service's schema
-	if err := gcpBroker.validateBindVariables(details); err != nil {
+	if err := gcpBroker.validateBindVariables(details, serviceDefinition); err != nil {
 		return brokerapi.Binding{}, err
 	}
 
