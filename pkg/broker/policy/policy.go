@@ -79,7 +79,7 @@ func (cond Condition) ValidateKeys(allowedKeys []string) error {
 		return nil
 	}
 
-	return fmt.Errorf("unknown condition keys: %v condition keys must one of: %v, check their capitalization and spelling", invalidKeys, allowedKeys)
+	return fmt.Errorf("unknown condition keys: %v condition keys must be one of: %v, check their capitalization and spelling", invalidKeys, allowedKeys)
 }
 
 // Policy combines a condition with several sets of values that are set if

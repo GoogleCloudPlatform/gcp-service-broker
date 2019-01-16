@@ -78,7 +78,7 @@ func TestCondition_ValidateKeys(t *testing.T) {
 		"key-mismatch": {
 			Condition:   Condition{"service_name": "abc"},
 			AllowedKeys: []string{"service_id"},
-			Expected:    errors.New("unknown condition keys: [service_name] condition keys must one of: [service_id], check their capitalization and spelling"),
+			Expected:    errors.New("unknown condition keys: [service_name] condition keys must be one of: [service_id], check their capitalization and spelling"),
 		},
 	}
 
@@ -125,7 +125,7 @@ func TestPolicyList_Validate(t *testing.T) {
 				},
 			},
 			AllowedKeys: []string{"a", "b"},
-			Expected:    errors.New(`error in policy[0], comment: "some-user-comment", error: unknown condition keys: [unknown] condition keys must one of: [a b], check their capitalization and spelling`),
+			Expected:    errors.New(`error in policy[0], comment: "some-user-comment", error: unknown condition keys: [unknown] condition keys must be one of: [a b], check their capitalization and spelling`),
 		},
 		"bad-assertion": {
 			Policy: PolicyList{
@@ -240,7 +240,7 @@ func TestNewPolicyListFromJson(t *testing.T) {
 				{"//":"user-comment", "if":{"unknown-condition":""}}
 			]}`,
 			AllowedKeys: []string{},
-			Expected:    errors.New(`error in policy[0], comment: "user-comment", error: unknown condition keys: [unknown-condition] condition keys must one of: [], check their capitalization and spelling`),
+			Expected:    errors.New(`error in policy[0], comment: "user-comment", error: unknown condition keys: [unknown-condition] condition keys must be one of: [], check their capitalization and spelling`),
 		},
 		"bad-assertion": {
 			Json: `{
