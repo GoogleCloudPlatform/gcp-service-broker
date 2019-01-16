@@ -41,6 +41,18 @@ func ExampleNewStringSet() {
 	// Output: true
 }
 
+func ExampleNewStringSetFromStringMapKeys() {
+	m := map[string]string{
+		"a": "some a value",
+		"b": "some b value",
+	}
+
+	set := NewStringSetFromStringMapKeys(m)
+	fmt.Println(set)
+
+	// Output: [a b]
+}
+
 func ExampleStringSet_ToSlice() {
 	a := NewStringSet()
 	a.Add("z")
