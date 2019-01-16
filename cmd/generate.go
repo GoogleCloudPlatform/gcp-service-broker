@@ -17,8 +17,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/generator"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 	"github.com/spf13/cobra"
 )
 
@@ -43,15 +43,7 @@ func init() {
 
 	`,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(generator.CatalogDocumentation(broker.DefaultRegistry))
-		},
-	})
-
-	generateCmd.AddCommand(&cobra.Command{
-		Use:   "forms",
-		Short: "Generate PCF Tile Forms",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(generator.GenerateFormsString())
+			fmt.Println(generator.CatalogDocumentation(builtin.BuiltinBrokerRegistry()))
 		},
 	})
 

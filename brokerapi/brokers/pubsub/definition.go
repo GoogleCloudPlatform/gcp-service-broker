@@ -18,18 +18,15 @@ import (
 	"code.cloudfoundry.org/lager"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
-	broker.Register(serviceDefinition())
-}
-
-func serviceDefinition() *broker.ServiceDefinition {
+// ServiceDefinition creates a new ServiceDefinition object for the Pub/Sub service.
+func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"pubsub.publisher",
 		"pubsub.subscriber",
@@ -38,32 +35,27 @@ func serviceDefinition() *broker.ServiceDefinition {
 	}
 
 	return &broker.ServiceDefinition{
-		Name: models.PubsubName,
-		DefaultServiceDefinition: `{
-      "id": "628629e3-79f5-4255-b981-d14c6c7856be",
-      "description": "A global service for real-time and reliable messaging and streaming data.",
-      "name": "google-pubsub",
-      "bindable": true,
-      "plan_updateable": false,
-      "metadata": {
-        "displayName": "Google PubSub",
-        "longDescription": "A global service for real-time and reliable messaging and streaming data.",
-        "documentationUrl": "https://cloud.google.com/pubsub/docs/",
-        "supportUrl": "https://cloud.google.com/pubsub/docs/support",
-        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/pubsub.svg"
-      },
-      "tags": ["gcp", "pubsub"],
-      "plans": [
-        {
-          "id": "622f4da3-8731-492a-af29-66a9146f8333",
-          "service_id": "628629e3-79f5-4255-b981-d14c6c7856be",
-          "name": "default",
-          "display_name": "Default",
-          "description": "PubSub Default plan.",
-          "service_properties": {}
-        }
-      ]
-	  }`,
+		Id:               "628629e3-79f5-4255-b981-d14c6c7856be",
+		Name:             "google-pubsub",
+		Description:      "A global service for real-time and reliable messaging and streaming data.",
+		DisplayName:      "Google PubSub",
+		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/pubsub.svg",
+		DocumentationUrl: "https://cloud.google.com/pubsub/docs/",
+		SupportUrl:       "https://cloud.google.com/pubsub/docs/support",
+		Tags:             []string{"gcp", "pubsub"},
+		Bindable:         true,
+		PlanUpdateable:   false,
+		Plans: []broker.ServicePlan{
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "622f4da3-8731-492a-af29-66a9146f8333",
+					Name:        "default",
+					Description: "PubSub Default plan.",
+					Free:        brokerapi.FreeValue(false),
+				},
+				ServiceProperties: map[string]string{},
+			},
+		},
 		ProvisionInputVariables: []broker.BrokerVariable{
 			{
 				FieldName: "topic_name",
@@ -120,7 +112,7 @@ again during that time (on a best-effort basis).
 			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.PubsubName, roleWhitelist, "pubsub.editor"),
+		BindInputVariables:   accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "pubsub.editor"),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "subscription_name",
@@ -188,5 +180,6 @@ again during that time (on a best-effort basis).
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &PubSubBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

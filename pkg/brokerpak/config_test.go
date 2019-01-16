@@ -124,6 +124,7 @@ func TestServiceConfig_Validate(t *testing.T) {
 func ExampleNewServerConfigFromEnv() {
 	viper.Set("brokerpak.sources", `{"good-key":{"uri":"file://path/to/brokerpak", "config":"{}"}}`)
 	viper.Set("brokerpak.config", `{}`)
+	defer viper.Reset() // cleanup
 
 	cfg, err := NewServerConfigFromEnv()
 	if err != nil {
@@ -169,6 +170,7 @@ func TestNewServerConfigFromEnv(t *testing.T) {
 		t.Run(tn, func(t *testing.T) {
 			viper.Set("brokerpak.sources", tc.Sources)
 			viper.Set("brokerpak.config", tc.Config)
+			defer viper.Reset()
 
 			cfg, err := NewServerConfigFromEnv()
 			if err == nil {

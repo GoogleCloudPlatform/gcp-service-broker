@@ -14,7 +14,9 @@
 
 package broker
 
-import "github.com/pivotal-cf/brokerapi"
+import (
+	"github.com/pivotal-cf/brokerapi"
+)
 
 // Service overrides the canonical Service Broker service type using a custom
 // type for Plans, everything else is the same.

@@ -27,6 +27,15 @@ func NewStringSet(contents ...string) StringSet {
 	return set
 }
 
+// NewStringSet creates a new string set with the given contents.
+func NewStringSetFromStringMapKeys(contents map[string]string) StringSet {
+	set := StringSet{}
+	for k, _ := range contents {
+		set.Add(k)
+	}
+	return set
+}
+
 // StringSet is a set data structure for strings
 type StringSet map[string]bool
 

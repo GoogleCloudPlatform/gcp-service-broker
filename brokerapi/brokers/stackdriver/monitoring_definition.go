@@ -17,36 +17,34 @@ package stackdriver
 import (
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/pivotal-cf/brokerapi"
 )
 
-func init() {
-	bs := &broker.ServiceDefinition{
-		Name: "google-stackdriver-monitoring",
-		DefaultServiceDefinition: `{
-      "id": "2bc0d9ed-3f68-4056-b842-4a85cfbc727f",
-      "description": "Stackdriver Monitoring",
-      "name": "google-stackdriver-monitoring",
-      "bindable": true,
-      "plan_updateable": false,
-      "metadata": {
-        "displayName": "Stackdriver Monitoring",
-        "longDescription": "Stackdriver Monitoring provides visibility into the performance, uptime, and overall health of cloud-powered applications. ",
-        "documentationUrl": "https://cloud.google.com/monitoring/docs/",
-        "supportUrl": "https://cloud.google.com/stackdriver/docs/getting-support",
-        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg"
-      },
-      "tags": ["gcp", "stackdriver", "monitoring", "preview"],
-      "plans": [
-        {
-          "id": "2e4b85c1-0ce6-46e4-91f5-eebeb373e3f5",
-          "name": "default",
-          "display_name": "Default",
-          "description": "Stackdriver Monitoring default plan.",
-          "service_properties": {}
-        }
-      ]
-    }
-		`,
+// StackdriverMonitoringServiceDefinition creates a new ServiceDefinition object
+// for the Stackdriver Monitoring service.
+func StackdriverMonitoringServiceDefinition() *broker.ServiceDefinition {
+	return &broker.ServiceDefinition{
+		Id:               "2bc0d9ed-3f68-4056-b842-4a85cfbc727f",
+		Name:             "google-stackdriver-monitoring",
+		Description:      "Stackdriver Monitoring provides visibility into the performance, uptime, and overall health of cloud-powered applications.",
+		DisplayName:      "Stackdriver Monitoring",
+		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg",
+		DocumentationUrl: "https://cloud.google.com/monitoring/docs/",
+		SupportUrl:       "https://cloud.google.com/stackdriver/docs/getting-support",
+		Tags:             []string{"gcp", "stackdriver", "monitoring", "preview"},
+		Bindable:         true,
+		PlanUpdateable:   false,
+		Plans: []broker.ServicePlan{
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "2e4b85c1-0ce6-46e4-91f5-eebeb373e3f5",
+					Name:        "default",
+					Description: "Stackdriver Monitoring default plan.",
+					Free:        brokerapi.FreeValue(false),
+				},
+				ServiceProperties: map[string]string{},
+			},
+		},
 		ProvisionInputVariables: []broker.BrokerVariable{},
 		BindInputVariables:      []broker.BrokerVariable{},
 		BindComputedVariables:   accountmanagers.FixedRoleBindComputedVariables("monitoring.metricWriter"),
@@ -61,7 +59,6 @@ func init() {
 			},
 		},
 		ProviderBuilder: NewStackdriverAccountProvider,
+		IsBuiltin:       true,
 	}
-
-	broker.Register(bs)
 }

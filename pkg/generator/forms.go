@@ -20,8 +20,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	yaml "gopkg.in/yaml.v2"
@@ -85,8 +85,6 @@ func GenerateForms() TileFormsSections {
 			generateServiceAccountForm(),
 			generateDatabaseForm(),
 			generateBrokerpakForm(),
-			generateEnableDisableForm(),
-			generateRoleWhitelistForm(),
 			generateCompatibilityForm(),
 			generateDefaultOverrideForm(),
 		},
@@ -95,74 +93,13 @@ func GenerateForms() TileFormsSections {
 	}
 }
 
-// generateEnableDisableForm generates the form to enable and disable services.
-func generateEnableDisableForm() Form {
-	enablers := []FormProperty{}
-	for _, svc := range broker.GetAllServices() {
-		entry, err := svc.CatalogEntry()
-		if err != nil {
-			log.Fatalf("Error getting catalog entry for service %s, %v", svc.Name, err)
-		}
-
-		enableForm := FormProperty{
-			Name:         strings.ToLower(utils.PropertyToEnv(svc.EnabledProperty())),
-			Label:        fmt.Sprintf("Let the broker create and bind %s instances.", entry.Metadata.DisplayName),
-			Type:         "boolean",
-			Default:      true,
-			Configurable: true,
-		}
-
-		enablers = append(enablers, enableForm)
-	}
-
-	return Form{
-		Name:        "enable_disable",
-		Label:       "Enable Services",
-		Description: "Enable or disable services.",
-		Properties:  enablers,
-	}
-}
-
-// generateRoleWhitelistForm generates a form for users to enable/disable the
-// whitelist validation for new service accounts bound to the service.
-// They are opt-out and on by default for safety.
-func generateRoleWhitelistForm() Form {
-	enablers := []FormProperty{}
-	for _, svc := range broker.GetAllServices() {
-		entry, err := svc.CatalogEntry()
-		if err != nil {
-			log.Fatalf("Error getting catalog entry for service %s, %v", svc.Name, err)
-		}
-
-		if !svc.IsRoleWhitelistEnabled() {
-			continue
-		}
-
-		enableForm := FormProperty{
-			Name:         strings.ToLower(utils.PropertyToEnv(account_managers.RoleWhitelistProperty(svc.Name))),
-			Label:        fmt.Sprintf("Role whitelist for %s instances.", entry.Metadata.DisplayName),
-			Description:  "A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.",
-			Type:         "string",
-			Default:      strings.Join(svc.DefaultRoleWhitelist, ","),
-			Configurable: true,
-		}
-
-		enablers = append(enablers, enableForm)
-	}
-
-	return Form{
-		Name:        "role_whitelists",
-		Label:       "Role Whitelisting",
-		Description: "Enable or disable role whitelisting.",
-		Properties:  enablers,
-	}
-}
-
 // generateDefaultOverrideForm generates a form for users to override the
 // defaults in a plan.
 func generateDefaultOverrideForm() Form {
+	builtinServices := builtin.BuiltinBrokerRegistry()
+
 	formElements := []FormProperty{}
-	for _, svc := range broker.GetAllServices() {
+	for _, svc := range builtinServices.GetAllServices() {
 		entry, err := svc.CatalogEntry()
 		if err != nil {
 			log.Fatalf("Error getting catalog entry for service %s, %v", svc.Name, err)
@@ -260,9 +197,10 @@ func generateCompatibilityForm() Form {
 // generateServicePlanForms generates customized service plan forms for all
 // registered services that have the ability to customize their variables.
 func generateServicePlanForms() []Form {
+	builtinServices := builtin.BuiltinBrokerRegistry()
 	out := []Form{}
 
-	for _, svc := range broker.GetAllServices() {
+	for _, svc := range builtinServices.GetAllServices() {
 		planVars := svc.PlanVariables
 
 		if planVars == nil || len(planVars) == 0 {

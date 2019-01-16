@@ -334,50 +334,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:b04597acc9d90336e9409114e4e85f03cf253574a70c5c5c61450422e4911f10"
-  name = "github.com/onsi/ginkgo"
-  packages = [
-    ".",
-    "config",
-    "internal/codelocation",
-    "internal/containernode",
-    "internal/failer",
-    "internal/leafnodes",
-    "internal/remote",
-    "internal/spec",
-    "internal/specrunner",
-    "internal/suite",
-    "internal/testingtproxy",
-    "internal/writer",
-    "reporters",
-    "reporters/stenographer",
-    "types",
-  ]
-  pruneopts = ""
-  revision = "462326b1628e124b23f42e87a8f2750e3c4e2d24"
-  version = "v1.2.0"
-
-[[projects]]
-  digest = "1:3d652dc0d00c12c705e619312d46388620a35c347f335c22d6cb2b4f0b8efd67"
-  name = "github.com/onsi/gomega"
-  packages = [
-    ".",
-    "format",
-    "internal/assertion",
-    "internal/asyncassertion",
-    "internal/testingtsupport",
-    "matchers",
-    "matchers/support/goraph/bipartitegraph",
-    "matchers/support/goraph/edge",
-    "matchers/support/goraph/node",
-    "matchers/support/goraph/util",
-    "types",
-  ]
-  pruneopts = ""
-  revision = "a78ae492d53aad5a7a232d0d0462c14c400e3ee7"
-  version = "v1.0"
-
-[[projects]]
   digest = "1:894aef961c056b6d85d12bac890bf60c44e99b46292888bfa66caf529f804457"
   name = "github.com/pelletier/go-toml"
   packages = ["."]
@@ -730,8 +686,6 @@
     "github.com/hashicorp/hil/ast",
     "github.com/jinzhu/gorm",
     "github.com/jinzhu/gorm/dialects/sqlite",
-    "github.com/onsi/ginkgo",
-    "github.com/onsi/gomega",
     "github.com/pivotal-cf/brokerapi",
     "github.com/spf13/cast",
     "github.com/spf13/cobra",

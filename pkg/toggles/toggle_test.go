@@ -35,6 +35,8 @@ func ExampleToggle_IsActive() {
 
 	fmt.Println(toggle.IsActive())
 	viper.Set("foo.bar", "false")
+	defer viper.Reset()
+
 	fmt.Println(toggle.IsActive())
 
 	// Output: true

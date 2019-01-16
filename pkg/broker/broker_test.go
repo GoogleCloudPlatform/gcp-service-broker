@@ -26,28 +26,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-func ExampleServiceDefinition_EnabledProperty() {
-	service := ServiceDefinition{
-		Name: "left-handed-smoke-sifter",
-	}
-
-	fmt.Println(service.EnabledProperty())
-
-	// Output: service.left-handed-smoke-sifter.enabled
-}
-
-func ExampleServiceDefinition_DefinitionProperty() {
-	service := ServiceDefinition{
-		Name: "left-handed-smoke-sifter",
-	}
-
-	fmt.Println(service.DefinitionProperty())
-
-	// Output: service.left-handed-smoke-sifter.definition
-}
-
 func ExampleServiceDefinition_UserDefinedPlansProperty() {
 	service := ServiceDefinition{
+		Id:   "00000000-0000-0000-0000-000000000000",
 		Name: "left-handed-smoke-sifter",
 	}
 
@@ -56,23 +37,9 @@ func ExampleServiceDefinition_UserDefinedPlansProperty() {
 	// Output: service.left-handed-smoke-sifter.plans
 }
 
-func ExampleServiceDefinition_IsEnabled() {
-	service := ServiceDefinition{
-		Name: "left-handed-smoke-sifter",
-	}
-
-	viper.Set(service.EnabledProperty(), true)
-	fmt.Println(service.IsEnabled())
-
-	viper.Set(service.EnabledProperty(), false)
-	fmt.Println(service.IsEnabled())
-
-	// Output: true
-	// false
-}
-
 func ExampleServiceDefinition_IsRoleWhitelistEnabled() {
 	service := ServiceDefinition{
+		Id:                   "00000000-0000-0000-0000-000000000000",
 		Name:                 "left-handed-smoke-sifter",
 		DefaultRoleWhitelist: []string{"a", "b", "c"},
 	}
@@ -87,6 +54,7 @@ func ExampleServiceDefinition_IsRoleWhitelistEnabled() {
 
 func ExampleServiceDefinition_TileUserDefinedPlansVariable() {
 	service := ServiceDefinition{
+		Id:   "00000000-0000-0000-0000-000000000000",
 		Name: "google-spanner",
 	}
 
@@ -95,42 +63,17 @@ func ExampleServiceDefinition_TileUserDefinedPlansVariable() {
 	// Output: SPANNER_CUSTOM_PLANS
 }
 
-func ExampleServiceDefinition_ServiceDefinition() {
-	service := ServiceDefinition{
-		Name:                     "left-handed-smoke-sifter",
-		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl"}`,
-	}
-
-	// Default definition
-	defn, err := service.ServiceDefinition()
-	fmt.Printf("%q %v\n", defn.ID, err)
-
-	// Override
-	viper.Set(service.DefinitionProperty(), `{"id":"override-id"}`)
-	defn, err = service.ServiceDefinition()
-	fmt.Printf("%q %v\n", defn.ID, err)
-
-	// Bad Value
-	viper.Set(service.DefinitionProperty(), "nil")
-	_, err = service.ServiceDefinition()
-	fmt.Printf("%v\n", err)
-
-	// Cleanup
-	viper.Set(service.DefinitionProperty(), nil)
-
-	// Output: "abcd-efgh-ijkl" <nil>
-	// "override-id" <nil>
-	// Error parsing service definition for "left-handed-smoke-sifter": invalid character 'i' in literal null (expecting 'u')
-}
-
 func ExampleServiceDefinition_GetPlanById() {
 	service := ServiceDefinition{
-		Name:                     "left-handed-smoke-sifter",
-		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
+		Id:   "00000000-0000-0000-0000-000000000000",
+		Name: "left-handed-smoke-sifter",
+		Plans: []ServicePlan{
+			{ServicePlan: brokerapi.ServicePlan{ID: "builtin-plan", Name: "Builtin!"}},
+		},
 	}
 
 	viper.Set(service.UserDefinedPlansProperty(), `[{"id":"custom-plan", "name": "Custom!"}]`)
-	defer viper.Set(service.UserDefinedPlansProperty(), nil)
+	defer viper.Reset()
 
 	plan, err := service.GetPlanById("builtin-plan")
 	fmt.Printf("builtin-plan: %q %v\n", plan.Name, err)
@@ -190,8 +133,8 @@ func TestServiceDefinition_UserDefinedPlans(t *testing.T) {
 	}
 
 	service := ServiceDefinition{
-		Name:                     "left-handed-smoke-sifter",
-		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "name":"lhss"}`,
+		Id:   "abcd-efgh-ijkl",
+		Name: "left-handed-smoke-sifter",
 		PlanVariables: []BrokerVariable{
 			{
 				Required:  true,
@@ -202,111 +145,92 @@ func TestServiceDefinition_UserDefinedPlans(t *testing.T) {
 	}
 
 	for tn, tc := range cases {
-		viper.Set(service.UserDefinedPlansProperty(), tc.Value)
-		plans, err := service.UserDefinedPlans()
+		t.Run(tn, func(t *testing.T) {
+			viper.Set(service.UserDefinedPlansProperty(), tc.Value)
+			defer viper.Reset()
 
-		// Check errors
-		hasErr := err != nil
-		if hasErr != tc.ExpectError {
-			t.Errorf("%s) Expected Error? %v, got error: %v", tn, tc.ExpectError, err)
-			continue
-		}
+			plans, err := service.UserDefinedPlans()
 
-		// Check IDs
-		if len(plans) != len(tc.PlanIds) {
-			t.Errorf("%s) Expected %d plans, but got %d (%v)", tn, len(tc.PlanIds), len(plans), plans)
-		}
-
-		for _, plan := range plans {
-			if _, ok := tc.PlanIds[plan.ID]; !ok {
-				t.Errorf("%s) Got unexpected plan id %s, expected %+v", tn, plan.ID, tc.PlanIds)
+			// Check errors
+			hasErr := err != nil
+			if hasErr != tc.ExpectError {
+				t.Fatalf("Expected Error? %v, got error: %v", tc.ExpectError, err)
 			}
-		}
 
-		// Reset Environment
-		viper.Set(service.UserDefinedPlansProperty(), nil)
+			// Check IDs
+			if len(plans) != len(tc.PlanIds) {
+				t.Errorf("Expected %d plans, but got %d (%v)", len(tc.PlanIds), len(plans), plans)
+			}
+
+			for _, plan := range plans {
+				if _, ok := tc.PlanIds[plan.ID]; !ok {
+					t.Errorf("Got unexpected plan id %s, expected %+v", plan.ID, tc.PlanIds)
+				}
+			}
+		})
 	}
 }
 
 func TestServiceDefinition_CatalogEntry(t *testing.T) {
 	cases := map[string]struct {
-		UserDefinition interface{}
-		UserPlans      interface{}
-		PlanIds        map[string]bool
-		ExpectError    bool
+		UserPlans   interface{}
+		PlanIds     map[string]bool
+		ExpectError bool
 	}{
 		"no-customization": {
-			UserDefinition: nil,
-			UserPlans:      nil,
-			PlanIds:        map[string]bool{},
-			ExpectError:    false,
-		},
-		"custom-definition": {
-			UserDefinition: `{"id":"abcd-efgh-ijkl", "plans":[{"id":"zzz","name":"zzz"}]}`,
-			UserPlans:      nil,
-			PlanIds:        map[string]bool{"zzz": true},
-			ExpectError:    false,
+			UserPlans:   nil,
+			PlanIds:     map[string]bool{},
+			ExpectError: false,
 		},
 		"custom-plans": {
-			UserDefinition: nil,
-			UserPlans:      `[{"id":"aaa","name":"aaa"},{"id":"bbb","name":"bbb"}]`,
-			PlanIds:        map[string]bool{"aaa": true, "bbb": true},
-			ExpectError:    false,
-		},
-		"custom-plans-and-definition": {
-			UserDefinition: `{"id":"abcd-efgh-ijkl", "plans":[{"id":"zzz","name":"zzz"}]}`,
-			UserPlans:      `[{"id":"aaa","name":"aaa"},{"id":"bbb","name":"bbb"}]`,
-			PlanIds:        map[string]bool{"aaa": true, "bbb": true, "zzz": true},
-			ExpectError:    false,
-		},
-		"bad-definition-json": {
-			UserDefinition: `333`,
-			UserPlans:      nil,
-			PlanIds:        map[string]bool{},
-			ExpectError:    true,
+			UserPlans:   `[{"id":"aaa","name":"aaa"},{"id":"bbb","name":"bbb"}]`,
+			PlanIds:     map[string]bool{"aaa": true, "bbb": true},
+			ExpectError: false,
 		},
 		"bad-plan-json": {
-			UserDefinition: nil,
-			UserPlans:      `333`,
-			PlanIds:        map[string]bool{},
-			ExpectError:    true,
+
+			UserPlans:   `333`,
+			PlanIds:     map[string]bool{},
+			ExpectError: true,
 		},
 	}
 
 	service := ServiceDefinition{
-		Name:                     "left-handed-smoke-sifter",
-		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl"}`,
+		Id:   "00000000-0000-0000-0000-000000000000",
+		Name: "left-handed-smoke-sifter",
 	}
 
 	for tn, tc := range cases {
-		viper.Set(service.DefinitionProperty(), tc.UserDefinition)
-		viper.Set(service.UserDefinedPlansProperty(), tc.UserPlans)
+		t.Run(tn, func(t *testing.T) {
+			viper.Set(service.UserDefinedPlansProperty(), tc.UserPlans)
+			defer viper.Reset()
 
-		srvc, err := service.CatalogEntry()
-		hasErr := err != nil
-		if hasErr != tc.ExpectError {
-			t.Errorf("%s) Expected Error? %v, got error: %v", tn, tc.ExpectError, err)
-		}
+			srvc, err := service.CatalogEntry()
+			hasErr := err != nil
+			if hasErr != tc.ExpectError {
+				t.Errorf("Expected Error? %v, got error: %v", tc.ExpectError, err)
+			}
 
-		if err == nil && len(srvc.Plans) != len(tc.PlanIds) {
-			t.Errorf("%s) Expected %d plans, but got %d (%+v)", tn, len(tc.PlanIds), len(srvc.Plans), srvc.Plans)
+			if err == nil && len(srvc.Plans) != len(tc.PlanIds) {
+				t.Errorf("Expected %d plans, but got %d (%+v)", len(tc.PlanIds), len(srvc.Plans), srvc.Plans)
 
-			for _, plan := range srvc.Plans {
-				if _, ok := tc.PlanIds[plan.ID]; !ok {
-					t.Errorf("%s) Got unexpected plan id %s, expected %+v", tn, plan.ID, tc.PlanIds)
+				for _, plan := range srvc.Plans {
+					if _, ok := tc.PlanIds[plan.ID]; !ok {
+						t.Errorf("Got unexpected plan id %s, expected %+v", plan.ID, tc.PlanIds)
+					}
 				}
 			}
-		}
+		})
 	}
-
-	viper.Set(service.DefinitionProperty(), nil)
-	viper.Set(service.UserDefinedPlansProperty(), nil)
 }
 
 func ExampleServiceDefinition_CatalogEntrySchema() {
 	service := ServiceDefinition{
-		Name:                     "left-handed-smoke-sifter",
-		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
+		Id:   "00000000-0000-0000-0000-000000000000",
+		Name: "left-handed-smoke-sifter",
+		Plans: []ServicePlan{
+			{ServicePlan: brokerapi.ServicePlan{ID: "builtin-plan", Name: "Builtin!"}},
+		},
 		ProvisionInputVariables: []BrokerVariable{
 			{FieldName: "location", Type: JsonTypeString, Default: "us"},
 		},
@@ -324,7 +248,7 @@ func ExampleServiceDefinition_CatalogEntrySchema() {
 	fmt.Println("schemas with flag off:", srvc.ToPlain().Plans[0].Schemas)
 
 	viper.Set("compatibility.enable-catalog-schemas", true)
-	defer viper.Set("compatibility.enable-catalog-schemas", false)
+	defer viper.Reset()
 
 	srvc, err = service.CatalogEntry()
 	if err != nil {
@@ -341,8 +265,11 @@ func ExampleServiceDefinition_CatalogEntrySchema() {
 
 func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 	service := ServiceDefinition{
-		Name:                     "left-handed-smoke-sifter",
-		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
+		Id:   "00000000-0000-0000-0000-000000000000",
+		Name: "left-handed-smoke-sifter",
+		Plans: []ServicePlan{
+			{ServicePlan: brokerapi.ServicePlan{ID: "builtin-plan", Name: "Builtin!"}},
+		},
 		ProvisionInputVariables: []BrokerVariable{
 			{
 				FieldName: "location",
@@ -456,6 +383,8 @@ func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
 			viper.Set(service.ProvisionDefaultOverrideProperty(), tc.DefaultOverride)
+			defer viper.Reset()
+
 			details := brokerapi.ProvisionDetails{RawParameters: json.RawMessage(tc.UserParams)}
 			plan := ServicePlan{ServiceProperties: tc.ServiceProperties}
 			vars, err := service.ProvisionVariables("instance-id-here", details, plan)
@@ -473,8 +402,11 @@ func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 
 func TestServiceDefinition_BindVariables(t *testing.T) {
 	service := ServiceDefinition{
-		Name:                     "left-handed-smoke-sifter",
-		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
+		Id:   "00000000-0000-0000-0000-000000000000",
+		Name: "left-handed-smoke-sifter",
+		Plans: []ServicePlan{
+			{ServicePlan: brokerapi.ServicePlan{ID: "builtin-plan", Name: "Builtin!"}},
+		},
 		BindInputVariables: []BrokerVariable{
 			{
 				FieldName: "location",
@@ -578,6 +510,8 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
 			viper.Set(service.BindDefaultOverrideProperty(), tc.DefaultOverride)
+			defer viper.Reset()
+
 			details := brokerapi.BindDetails{RawParameters: json.RawMessage(tc.UserParams)}
 			instance := models.ServiceInstanceDetails{OtherDetails: tc.InstanceVars}
 			vars, err := service.BindVariables(instance, "binding-id-here", details)
@@ -595,8 +529,11 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 
 func TestServiceDefinition_createSchemas(t *testing.T) {
 	service := ServiceDefinition{
-		Name:                     "left-handed-smoke-sifter",
-		DefaultServiceDefinition: `{"id":"abcd-efgh-ijkl", "plans": [{"id": "builtin-plan", "name": "Builtin!"}]}`,
+		Id:   "00000000-0000-0000-0000-000000000000",
+		Name: "left-handed-smoke-sifter",
+		Plans: []ServicePlan{
+			{ServicePlan: brokerapi.ServicePlan{ID: "builtin-plan", Name: "Builtin!"}},
+		},
 		ProvisionInputVariables: []BrokerVariable{
 			{FieldName: "location", Type: JsonTypeString, Default: "us"},
 		},

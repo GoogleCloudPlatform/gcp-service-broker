@@ -17,37 +17,34 @@ package stackdriver
 import (
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/pivotal-cf/brokerapi"
 )
 
-func init() {
-	bs := &broker.ServiceDefinition{
-		Name: "google-stackdriver-trace",
-		DefaultServiceDefinition: `{
-      "id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
-      "description": "Stackdriver Trace",
-      "name": "google-stackdriver-trace",
-      "bindable": true,
-      "plan_updateable": false,
-      "metadata": {
-        "displayName": "Stackdriver Trace",
-        "longDescription": "Stackdriver Trace is a distributed tracing system that collects latency data from your applications and displays it in the Google Cloud Platform Console. You can track how requests propagate through your application and receive detailed near real-time performance insights.",
-        "documentationUrl": "https://cloud.google.com/trace/docs/",
-        "supportUrl": "https://cloud.google.com/stackdriver/docs/getting-support",
-        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg"
-      },
-      "tags": ["gcp", "stackdriver", "trace"],
-      "plans": [
-        {
-          "id": "ab6c2287-b4bc-4ff4-a36a-0575e7910164",
-          "service_id": "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
-          "name": "default",
-          "display_name": "Default",
-          "description": "Stackdriver Trace default plan.",
-          "service_properties": {}
-        }
-      ]
-    }
-		`,
+// StackdriverTraceServiceDefinition creates a new ServiceDefinition object
+// for the Stackdriver Trace service.
+func StackdriverTraceServiceDefinition() *broker.ServiceDefinition {
+	return &broker.ServiceDefinition{
+		Id:               "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a",
+		Name:             "google-stackdriver-trace",
+		Description:      "Stackdriver Trace is a distributed tracing system that collects latency data from your applications and displays it in the Google Cloud Platform Console. You can track how requests propagate through your application and receive detailed near real-time performance insights.",
+		DisplayName:      "Stackdriver Trace",
+		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg",
+		DocumentationUrl: "https://cloud.google.com/trace/docs/",
+		SupportUrl:       "https://cloud.google.com/stackdriver/docs/getting-support",
+		Tags:             []string{"gcp", "stackdriver", "trace"},
+		Bindable:         true,
+		PlanUpdateable:   false,
+		Plans: []broker.ServicePlan{
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "ab6c2287-b4bc-4ff4-a36a-0575e7910164",
+					Name:        "default",
+					Description: "Stackdriver Trace default plan.",
+					Free:        brokerapi.FreeValue(false),
+				},
+				ServiceProperties: map[string]string{},
+			},
+		},
 		ProvisionInputVariables: []broker.BrokerVariable{},
 		BindInputVariables:      []broker.BrokerVariable{},
 		BindComputedVariables:   accountmanagers.FixedRoleBindComputedVariables("cloudtrace.agent"),
@@ -62,7 +59,6 @@ func init() {
 			},
 		},
 		ProviderBuilder: NewStackdriverAccountProvider,
+		IsBuiltin:       true,
 	}
-
-	broker.Register(bs)
 }

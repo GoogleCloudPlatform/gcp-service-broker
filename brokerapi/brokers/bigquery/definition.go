@@ -18,18 +18,17 @@ import (
 	"code.cloudfoundry.org/lager"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
-	broker.Register(serviceDefinition())
-}
+const BigqueryName = "google-bigquery"
 
-func serviceDefinition() *broker.ServiceDefinition {
+// ServiceDefinition creates a new ServiceDefinition object for the BigQuery service.
+func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"bigquery.dataViewer",
 		"bigquery.dataEditor",
@@ -39,32 +38,27 @@ func serviceDefinition() *broker.ServiceDefinition {
 	}
 
 	return &broker.ServiceDefinition{
-		Name: models.BigqueryName,
-		DefaultServiceDefinition: `{
-        "id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
-        "description": "A fast, economical and fully managed data warehouse for large-scale data analytics.",
-        "name": "google-bigquery",
-        "bindable": true,
-        "plan_updateable": false,
-        "metadata": {
-          "displayName": "Google BigQuery",
-          "longDescription": "A fast, economical and fully managed data warehouse for large-scale data analytics.",
-          "documentationUrl": "https://cloud.google.com/bigquery/docs/",
-          "supportUrl": "https://cloud.google.com/bigquery/support",
-          "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigquery.svg"
-        },
-        "tags": ["gcp", "bigquery"],
-        "plans": [
-          {
-            "id": "10ff4e72-6e84-44eb-851f-bdb38a791914",
-            "service_id": "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
-            "name": "default",
-            "display_name": "Default",
-            "description": "BigQuery default plan.",
-            "service_properties": {}
-          }
-        ]
-      }`,
+		Id:               "f80c0a3e-bd4d-4809-a900-b4e33a6450f1",
+		Name:             BigqueryName,
+		Description:      "A fast, economical and fully managed data warehouse for large-scale data analytics.",
+		DisplayName:      "Google BigQuery",
+		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigquery.svg",
+		DocumentationUrl: "https://cloud.google.com/bigquery/docs/",
+		SupportUrl:       "https://cloud.google.com/bigquery/support",
+		Tags:             []string{"gcp", "bigquery"},
+		Bindable:         true,
+		PlanUpdateable:   false,
+		Plans: []broker.ServicePlan{
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "10ff4e72-6e84-44eb-851f-bdb38a791914",
+					Name:        "default",
+					Description: "BigQuery default plan.",
+					Free:        brokerapi.FreeValue(false),
+				},
+				ServiceProperties: map[string]string{},
+			},
+		},
 		ProvisionInputVariables: []broker.BrokerVariable{
 			{
 				FieldName: "name",
@@ -91,7 +85,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
 		},
 		DefaultRoleWhitelist:  roleWhitelist,
-		BindInputVariables:    accountmanagers.ServiceAccountBindInputVariables(models.BigqueryName, roleWhitelist, "bigquery.user"),
+		BindInputVariables:    accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "bigquery.user"),
 		BindComputedVariables: accountmanagers.ServiceAccountBindComputedVariables(),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
@@ -122,5 +116,6 @@ func serviceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &BigQueryBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

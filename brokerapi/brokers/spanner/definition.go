@@ -18,18 +18,15 @@ import (
 	"code.cloudfoundry.org/lager"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
-	broker.Register(serviceDefinition())
-}
-
-func serviceDefinition() *broker.ServiceDefinition {
+// ServiceDefinition creates a new ServiceDefinition object for the Spanner service.
+func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"spanner.databaseAdmin",
 		"spanner.databaseReader",
@@ -38,39 +35,36 @@ func serviceDefinition() *broker.ServiceDefinition {
 	}
 
 	return &broker.ServiceDefinition{
-		Name: models.SpannerName,
-		DefaultServiceDefinition: `
-		{
-			"id": "51b3e27e-d323-49ce-8c5f-1211e6409e82",
-			"description": "The first horizontally scalable, globally consistent, relational database service.",
-			"name": "google-spanner",
-			"bindable": true,
-			"plan_updateable": false,
-			"metadata": {
-				"displayName": "Google Spanner",
-				"longDescription": "The first horizontally scalable, globally consistent, relational database service.",
-				"documentationUrl": "https://cloud.google.com/spanner/",
-				"supportUrl": "https://cloud.google.com/spanner/docs/support",
-				"imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg"
-			},
-			"tags": ["gcp", "spanner"],
-			"plans": [
-				{
-					"id": "44828436-cfbd-47ae-b4bc-48854564347b",
-					"name": "sandbox",
-					"description": "Useful for testing, not eligible for SLA.",
-					"free": false,
-					"service_properties": {"num_nodes": "1"}
+		Id:               "51b3e27e-d323-49ce-8c5f-1211e6409e82",
+		Name:             "google-spanner",
+		Description:      "The first horizontally scalable, globally consistent, relational database service.",
+		DisplayName:      "Google Spanner",
+		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg",
+		DocumentationUrl: "https://cloud.google.com/spanner/",
+		SupportUrl:       "https://cloud.google.com/spanner/docs/support",
+		Tags:             []string{"gcp", "spanner"},
+		Bindable:         true,
+		PlanUpdateable:   false,
+		Plans: []broker.ServicePlan{
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "44828436-cfbd-47ae-b4bc-48854564347b",
+					Name:        "sandbox",
+					Description: "Useful for testing, not eligible for SLA.",
+					Free:        brokerapi.FreeValue(false),
 				},
-				{
-					"id": "0752b1ad-a784-4dcc-96eb-64149089a1c9",
-					"name": "minimal-production",
-					"description": "A minimal production level Spanner setup eligible for 99.99% SLA. Each node can provide up to 10,000 QPS of reads or 2,000 QPS of writes (writing single rows at 1KB data per row), and 2 TiB storage.",
-					"free": false,
-					"service_properties": {"num_nodes": "3"}
-				}
-			]
-		}`,
+				ServiceProperties: map[string]string{"num_nodes": "1"},
+			},
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "0752b1ad-a784-4dcc-96eb-64149089a1c9",
+					Name:        "minimal-production",
+					Description: "A minimal production level Spanner setup eligible for 99.99% SLA. Each node can provide up to 10,000 QPS of reads or 2,000 QPS of writes (writing single rows at 1KB data per row), and 2 TiB storage.",
+					Free:        brokerapi.FreeValue(false),
+				},
+				ServiceProperties: map[string]string{"num_nodes": "3"},
+			},
+		},
 		ProvisionInputVariables: []broker.BrokerVariable{
 			{
 				FieldName: "name",
@@ -111,7 +105,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.SpannerName, roleWhitelist, "spanner.databaseUser"),
+		BindInputVariables:   accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "spanner.databaseUser"),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "instance_id",
@@ -155,5 +149,6 @@ func serviceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &SpannerBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

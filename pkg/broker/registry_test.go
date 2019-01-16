@@ -17,6 +17,7 @@ package broker
 import (
 	"testing"
 
+	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/viper"
 )
 
@@ -49,31 +50,29 @@ func TestRegistry_GetEnabledServices(t *testing.T) {
 
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
+			defer viper.Reset()
+
 			sd := ServiceDefinition{
+				Id:   "b9e4332e-b42b-4680-bda5-ea1506797474",
 				Name: "test-service",
-				DefaultServiceDefinition: `{
-              "id": "b9e4332e-b42b-4680-bda5-ea1506797474",
-              "description": "test-service-definition",
-              "name": "google-storage",
-              "bindable": true,
-              "metadata": {},
-              "tags": ["gcp", "` + tc.Tag + `"],
-              "plans": [
-                {
-                  "id": "e1d11f65-da66-46ad-977c-6d56513baf43",
-                  "name": "standard",
-                  "display_name": "Standard",
-                  "description": "Standard storage class."
-                }
-              ]
-            }`,
+				Tags: []string{"gcp", tc.Tag},
+				Plans: []ServicePlan{
+					{
+						ServicePlan: brokerapi.ServicePlan{
+							ID:          "e1d11f65-da66-46ad-977c-6d56513baf43",
+							Name:        "Builtin!",
+							Description: "Standard storage class",
+						},
+					},
+				},
+				IsBuiltin: true,
 			}
 
 			registry := BrokerRegistry{}
 			registry.Register(&sd)
 
-			// shouldn't show up when property is false even if the service is enabled
-			viper.Set(sd.EnabledProperty(), true)
+			// shouldn't show up when property is false even if builtins are enabled
+			viper.Set("compatibility.enable-builtin-services", true)
 			viper.Set(tc.Property, false)
 			if defns, err := registry.GetEnabledServices(); err != nil {
 				t.Fatal(err)
@@ -90,11 +89,11 @@ func TestRegistry_GetEnabledServices(t *testing.T) {
 			}
 
 			// should not show up if the service is explicitly disabled
-			viper.Set(sd.EnabledProperty(), false)
+			viper.Set("compatibility.enable-builtin-services", false)
 			if defns, err := registry.GetEnabledServices(); err != nil {
 				t.Fatal(err)
 			} else if len(defns) != 0 {
-				t.Fatalf("Expected o definition with %s disabled, but got %d", sd.EnabledProperty(), len(defns))
+				t.Fatalf("Expected no definition with builtins disabled, but got %d", len(defns))
 			}
 		})
 	}

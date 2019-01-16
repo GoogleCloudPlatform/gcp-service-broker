@@ -18,18 +18,17 @@ import (
 	"code.cloudfoundry.org/lager"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
-	broker.Register(serviceDefinition())
-}
+const StorageName = "google-storage"
 
-func serviceDefinition() *broker.ServiceDefinition {
+// ServiceDefinition creates a new ServiceDefinition object for the Cloud Storage service.
+func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"storage.objectCreator",
 		"storage.objectViewer",
@@ -37,69 +36,72 @@ func serviceDefinition() *broker.ServiceDefinition {
 	}
 
 	return &broker.ServiceDefinition{
-		Name: models.StorageName,
-		DefaultServiceDefinition: `{
-	        "id": "b9e4332e-b42b-4680-bda5-ea1506797474",
-	        "description": "Unified object storage for developers and enterprises. Cloud Storage allows world-wide storage and retrieval of any amount of data at any time.",
-	        "name": "google-storage",
-	        "bindable": true,
-	        "plan_updateable": false,
-	        "metadata": {
-	          "displayName": "Google Cloud Storage",
-	          "longDescription": "Unified object storage for developers and enterprises. Cloud Storage allows world-wide storage and retrieval of any amount of data at any time.",
-	          "documentationUrl": "https://cloud.google.com/storage/docs/overview",
-	          "supportUrl": "https://cloud.google.com/storage/docs/getting-support",
-	          "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/storage.svg"
-	        },
-	        "tags": ["gcp", "storage"],
-	        "plans": [
-	          {
-	            "id": "e1d11f65-da66-46ad-977c-6d56513baf43",
-	            "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
-	            "name": "standard",
-	            "display_name": "Standard",
-	            "description": "Standard storage class. Auto-selects either regional or multi-regional based on the location.",
-	            "service_properties": {"storage_class": "STANDARD"}
-	          },
-	          {
-	            "id": "a42c1182-d1a0-4d40-82c1-28220518b360",
-	            "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
-	            "name": "nearline",
-	            "display_name": "Nearline",
-	            "description": "Nearline storage class.",
-	            "service_properties": {"storage_class": "NEARLINE"}
-	          },
-	          {
-	            "id": "1a1f4fe6-1904-44d0-838c-4c87a9490a6b",
-	            "service_id": "b9e4332e-b42b-4680-bda5-ea1506797474",
-	            "name": "reduced-availability",
-	            "display_name": "Durable Reduced Availability",
-	            "description": "Durable Reduced Availability storage class.",
-	            "service_properties": {"storage_class": "DURABLE_REDUCED_AVAILABILITY"}
-	          },
-	          {
-	            "id": "c8538397-8f15-45e3-a229-8bb349c3a98f",
-	            "name": "coldline",
-	            "display_name": "Coldline Storage",
-	            "description": "Google Cloud Storage Coldline is a very-low-cost, highly durable storage service for data archiving, online backup, and disaster recovery.",
-	            "service_properties": {"storage_class": "COLDLINE"}
-	          },
-	          {
-	            "id": "5e6161d2-0202-48be-80c4-1006cce19b9d",
-	            "name": "regional",
-	            "display_name": "Regional Storage",
-	            "description": "Data is stored in a narrow geographic region, redundant across availability zones with a 99.99% typical monthly availability.",
-	            "service_properties": {"storage_class": "REGIONAL"}
-	          },
-	          {
-	            "id": "a5e8dfb5-e5ec-472a-8d36-33afcaff2fdb",
-	            "name": "multiregional",
-	            "display_name": "Multi-Regional Storage",
-	            "description": "Data is stored geo-redundantly with >99.99% typical monthly availability.",
-	            "service_properties": {"storage_class": "MULTI_REGIONAL"}
-	          }
-	        ]
-	      }`,
+		Id:               "b9e4332e-b42b-4680-bda5-ea1506797474",
+		Name:             StorageName,
+		Description:      "Unified object storage for developers and enterprises. Cloud Storage allows world-wide storage and retrieval of any amount of data at any time.",
+		DisplayName:      "Google Cloud Storage",
+		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/storage.svg",
+		DocumentationUrl: "https://cloud.google.com/storage/docs/overview",
+		SupportUrl:       "https://cloud.google.com/storage/docs/getting-support",
+		Tags:             []string{"gcp", "storage"},
+		Bindable:         true,
+		PlanUpdateable:   false,
+		Plans: []broker.ServicePlan{
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "e1d11f65-da66-46ad-977c-6d56513baf43",
+					Name:        "standard",
+					Description: "Standard storage class. Auto-selects either regional or multi-regional based on the location.",
+					Free:        brokerapi.FreeValue(false),
+				},
+				ServiceProperties: map[string]string{"storage_class": "STANDARD"},
+			},
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "a42c1182-d1a0-4d40-82c1-28220518b360",
+					Name:        "nearline",
+					Description: "Nearline storage class.",
+					Free:        brokerapi.FreeValue(false),
+				},
+				ServiceProperties: map[string]string{"storage_class": "NEARLINE"},
+			},
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "1a1f4fe6-1904-44d0-838c-4c87a9490a6b",
+					Name:        "reduced-availability",
+					Description: "Durable Reduced Availability storage class.",
+					Free:        brokerapi.FreeValue(false),
+				},
+				ServiceProperties: map[string]string{"storage_class": "DURABLE_REDUCED_AVAILABILITY"},
+			},
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "c8538397-8f15-45e3-a229-8bb349c3a98f",
+					Name:        "coldline",
+					Description: "Google Cloud Storage Coldline is a very-low-cost, highly durable storage service for data archiving, online backup, and disaster recovery.",
+					Free:        brokerapi.FreeValue(false),
+				},
+				ServiceProperties: map[string]string{"storage_class": "COLDLINE"},
+			},
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "5e6161d2-0202-48be-80c4-1006cce19b9d",
+					Name:        "regional",
+					Description: "Data is stored in a narrow geographic region, redundant across availability zones with a 99.99% typical monthly availability.",
+					Free:        brokerapi.FreeValue(false),
+				},
+				ServiceProperties: map[string]string{"storage_class": "REGIONAL"},
+			},
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "a5e8dfb5-e5ec-472a-8d36-33afcaff2fdb",
+					Name:        "multiregional",
+					Description: "Data is stored geo-redundantly with >99.99% typical monthly availability.",
+					Free:        brokerapi.FreeValue(false),
+				},
+				ServiceProperties: map[string]string{"storage_class": "MULTI_REGIONAL"},
+			},
+		},
 		ProvisionInputVariables: []broker.BrokerVariable{
 			{
 				FieldName: "name",
@@ -127,7 +129,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.StorageName, roleWhitelist, "storage.objectAdmin"),
+		BindInputVariables:   accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "storage.objectAdmin"),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "bucket_name",
@@ -192,5 +194,6 @@ func serviceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &StorageBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

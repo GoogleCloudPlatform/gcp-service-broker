@@ -21,6 +21,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	googlebigquery "google.golang.org/api/bigquery/v2"
 )
@@ -96,7 +97,7 @@ func (b *BigQueryBroker) createClient(ctx context.Context) (*googlebigquery.Serv
 	if err != nil {
 		return nil, fmt.Errorf("Couldn't instantiate BigQuery API client: %s", err)
 	}
-	service.UserAgent = models.CustomUserAgent
+	service.UserAgent = utils.CustomUserAgent
 
 	return service, nil
 }

@@ -18,17 +18,14 @@ import (
 	"code.cloudfoundry.org/lager"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
+	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
-	broker.Register(serviceDefinition())
-}
-
-func serviceDefinition() *broker.ServiceDefinition {
+// ServiceDefinition creates a new ServiceDefinition object for the Bigtable service.
+func ServiceDefinition() *broker.ServiceDefinition {
 	roleWhitelist := []string{
 		"bigtable.user",
 		"bigtable.reader",
@@ -36,46 +33,36 @@ func serviceDefinition() *broker.ServiceDefinition {
 	}
 
 	return &broker.ServiceDefinition{
-		Name: models.BigtableName,
-		DefaultServiceDefinition: `{
-      "id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe",
-      "description": "A high performance NoSQL database service for large analytical and operational workloads.",
-      "name": "google-bigtable",
-      "bindable": true,
-      "plan_updateable": false,
-      "metadata": {
-          "displayName": "Google Bigtable",
-          "longDescription": "A high performance NoSQL database service for large analytical and operational workloads.",
-          "documentationUrl": "https://cloud.google.com/bigtable/",
-          "supportUrl": "https://cloud.google.com/bigtable/docs/support/getting-support",
-          "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigtable.svg"
-      },
-      "tags": ["gcp", "bigtable"],
-      "plans": [
-        {
-          "id": "65a49268-2c73-481e-80f3-9fde5bd5a654",
-          "name": "three-node-production-hdd",
-          "description": "BigTable HDD basic production plan: Approx: Reads: 1,500 QPS @ 200ms or Writes: 30,000 QPS @ 50ms or Scans: 540 MB/s, 24TB storage.",
-          "service_properties": {
-            "storage_type": "HDD",
-            "num_nodes": "3"
-          },
-          "display_name": "3 Node HDD",
-          "service_id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
-        },
-        {
-          "id": "38aa0e65-624b-4998-9c06-f9194b56d252",
-          "name": "three-node-production-ssd",
-          "description": "BigTable SSD basic production plan: Approx: Reads: 30,000 QPS @ 6ms or Writes: 30,000 QPS @ 6ms or Scans: 660 MB/s, 7.5TB storage.",
-          "service_properties": {
-            "storage_type": "SSD",
-            "num_nodes": "3"
-          },
-          "display_name": "3 Node SSD",
-          "service_id": "b8e19880-ac58-42ef-b033-f7cd9c94d1fe"
-        }
-      ]
-    }`,
+		Id:               "b8e19880-ac58-42ef-b033-f7cd9c94d1fe",
+		Name:             "google-bigtable",
+		Description:      "A high performance NoSQL database service for large analytical and operational workloads.",
+		DisplayName:      "Google Bigtable",
+		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/bigtable.svg",
+		DocumentationUrl: "https://cloud.google.com/bigtable/",
+		SupportUrl:       "https://cloud.google.com/bigtable/docs/support/getting-support",
+		Tags:             []string{"gcp", "bigtable"},
+		Bindable:         true,
+		PlanUpdateable:   false,
+		Plans: []broker.ServicePlan{
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "65a49268-2c73-481e-80f3-9fde5bd5a654",
+					Name:        "three-node-production-hdd",
+					Description: "BigTable HDD basic production plan: Approx: Reads: 1,500 QPS @ 200ms or Writes: 30,000 QPS @ 50ms or Scans: 540 MB/s, 24TB storage.",
+					Free:        brokerapi.FreeValue(false),
+				},
+				ServiceProperties: map[string]string{"storage_type": "HDD", "num_nodes": "3"},
+			},
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "38aa0e65-624b-4998-9c06-f9194b56d252",
+					Name:        "three-node-production-ssd",
+					Description: "BigTable SSD basic production plan: Approx: Reads: 30,000 QPS @ 6ms or Writes: 30,000 QPS @ 6ms or Scans: 660 MB/s, 7.5TB storage.",
+					Free:        brokerapi.FreeValue(false),
+				},
+				ServiceProperties: map[string]string{"storage_type": "SSD", "num_nodes": "3"},
+			},
+		},
 		ProvisionInputVariables: []broker.BrokerVariable{
 			{
 				FieldName: "name",
@@ -121,7 +108,7 @@ func serviceDefinition() *broker.ServiceDefinition {
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
-		BindInputVariables:   accountmanagers.ServiceAccountBindInputVariables(models.BigtableName, roleWhitelist, "bigtable.user"),
+		BindInputVariables:   accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "bigtable.user"),
 		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
 			broker.BrokerVariable{
 				FieldName: "instance_id",
@@ -173,5 +160,6 @@ func serviceDefinition() *broker.ServiceDefinition {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &BigTableBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
 }

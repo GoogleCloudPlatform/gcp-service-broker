@@ -21,6 +21,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
@@ -94,7 +95,7 @@ func (b *StorageBroker) Deprovision(ctx context.Context, bucket models.ServiceIn
 }
 
 func (b *StorageBroker) createClient(ctx context.Context) (*googlestorage.Client, error) {
-	co := option.WithUserAgent(models.CustomUserAgent)
+	co := option.WithUserAgent(utils.CustomUserAgent)
 	ct := option.WithTokenSource(b.HttpConfig.TokenSource(ctx))
 	storageService, err := googlestorage.NewClient(ctx, co, ct)
 	if err != nil {

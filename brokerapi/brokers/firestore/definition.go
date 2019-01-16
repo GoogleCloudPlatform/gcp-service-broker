@@ -19,39 +19,37 @@ import (
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
 )
 
-func init() {
+// ServiceDefinition creates a new ServiceDefinition object for the Firestore service.
+func ServiceDefinition() *broker.ServiceDefinition {
 	// NOTE(jlewisiii) Firestore has some intentional differences from other services.
 	// First, it doesn't require legacy compatibility so we won't allow operators to override the whitelist.
 	// Second, Firestore uses the old datastore IAM role model so the roles will look strange.
-	bs := &broker.ServiceDefinition{
-		Name: "google-firestore",
-		DefaultServiceDefinition: `{
-      "id": "a2b7b873-1e34-4530-8a42-902ff7d66b43",
-      "description": "Cloud Firestore is a fast, fully managed, serverless, cloud-native NoSQL document database that simplifies storing, syncing, and querying data for your mobile, web, and IoT apps at global scale.",
-      "name": "google-firestore",
-      "bindable": true,
-      "plan_updateable": false,
-      "metadata": {
-        "displayName": "Google Cloud Firestore",
-        "longDescription": "Cloud Firestore is a fast, fully managed, serverless, cloud-native NoSQL document database that simplifies storing, syncing, and querying data for your mobile, web, and IoT apps at global scale.",
-        "documentationUrl": "https://cloud.google.com/firestore/docs/",
-        "supportUrl": "https://cloud.google.com/firestore/docs/getting-support",
-        "imageUrl": "https://cloud.google.com/_static/images/cloud/products/logos/svg/firestore.svg"
-      },
-      "tags": ["gcp", "firestore", "preview", "beta"],
-      "plans": [
-        {
-         "id": "64403af0-4413-4ef3-a813-37f0306ef498",
-         "name": "default",
-         "display_name": "Default",
-         "description": "Firestore default plan.",
-         "service_properties": {}
-        }
-      ]
-    }`,
+	return &broker.ServiceDefinition{
+		Id:               "a2b7b873-1e34-4530-8a42-902ff7d66b43",
+		Name:             "google-firestore",
+		Description:      "Cloud Firestore is a fast, fully managed, serverless, cloud-native NoSQL document database that simplifies storing, syncing, and querying data for your mobile, web, and IoT apps at global scale.",
+		DisplayName:      "Google Cloud Firestore",
+		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/firestore.svg",
+		DocumentationUrl: "https://cloud.google.com/firestore/docs/",
+		SupportUrl:       "https://cloud.google.com/firestore/docs/getting-support",
+		Tags:             []string{"gcp", "firestore", "preview", "beta"},
+		Bindable:         true,
+		PlanUpdateable:   false,
+		Plans: []broker.ServicePlan{
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:          "64403af0-4413-4ef3-a813-37f0306ef498",
+					Name:        "default",
+					Description: "Firestore default plan.",
+					Free:        brokerapi.FreeValue(false),
+				},
+				ServiceProperties: map[string]string{},
+			},
+		},
 		ProvisionInputVariables: []broker.BrokerVariable{},
 		BindInputVariables:      accountmanagers.ServiceAccountWhitelistWithDefault([]string{"datastore.user", "datastore.viewer"}, "datastore.user"),
 		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
@@ -77,7 +75,6 @@ func init() {
 			bb := broker_base.NewBrokerBase(projectId, auth, logger)
 			return &FirestoreBroker{BrokerBase: bb}
 		},
+		IsBuiltin: true,
 	}
-
-	broker.Register(bs)
 }
