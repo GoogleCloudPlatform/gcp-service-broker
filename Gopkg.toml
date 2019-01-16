@@ -1,6 +1,8 @@
 # Refer to https://golang.github.io/dep/docs/Gopkg.toml.html
 # for detailed Gopkg.toml documentation.
 
+ignored = ["github.com/GoogleCloudPlatform/gcp-service-broker/tools/osdfgen*"]
+
 [[constraint]]
   branch = "master"
   name = "code.cloudfoundry.org/lager"
@@ -12,14 +14,6 @@
 [[constraint]]
   name = "github.com/jinzhu/gorm"
   version = "1.9.0"
-
-[[constraint]]
-  name = "github.com/onsi/ginkgo"
-  version = "~1.2.0"
-
-[[constraint]]
-  name = "github.com/onsi/gomega"
-  version = "~1.0.0"
 
 [[constraint]]
   name = "github.com/pivotal-cf/brokerapi"
