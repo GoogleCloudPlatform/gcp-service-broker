@@ -44,9 +44,9 @@ func (r *Registrar) Register(registry broker.BrokerRegistry) error {
 
 	return r.walk(func(name string, pak BrokerpakSourceConfig, vc *varcontext.VarContext) error {
 		registerLogger.Info("registering", lager.Data{
-			"name":           name,
-			"excluded-plans": pak.ExcludedPlansSlice(),
-			"prefix":         pak.ServicePrefix,
+			"name":              name,
+			"excluded-services": pak.ExcludedServicesSlice(),
+			"prefix":            pak.ServicePrefix,
 		})
 
 		brokerPak, err := DownloadAndOpenBrokerpak(pak.BrokerpakUri)
@@ -82,7 +82,7 @@ func (r *Registrar) Register(registry broker.BrokerRegistry) error {
 func (Registrar) toDefinitions(services []tf.TfServiceDefinitionV1, config BrokerpakSourceConfig, executor wrapper.TerraformExecutor) ([]*broker.ServiceDefinition, error) {
 	var out []*broker.ServiceDefinition
 
-	toIgnore := utils.NewStringSet(config.ExcludedPlansSlice()...)
+	toIgnore := utils.NewStringSet(config.ExcludedServicesSlice()...)
 	for _, svc := range services {
 		if toIgnore.Contains(svc.Id) {
 			continue

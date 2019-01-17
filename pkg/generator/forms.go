@@ -322,10 +322,10 @@ func brokerpakConfigurationForm() Form {
 				Configurable: true,
 			},
 			{
-				Name:         "excluded_plans",
-				Label:        "Excluded Plans",
+				Name:         "excluded_services",
+				Label:        "Excluded Services",
 				Type:         "text",
-				Description:  "A list of UUIDs of plans to exclude, one per line.",
+				Description:  "A list of UUIDs of services to exclude, one per line.",
 				Optional:     true,
 				Configurable: true,
 			},

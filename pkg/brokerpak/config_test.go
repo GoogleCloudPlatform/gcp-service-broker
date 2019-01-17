@@ -37,28 +37,28 @@ func TestNewBrokerpakSourceConfigFromPath(t *testing.T) {
 		}
 	})
 
-	t.Run("has-no-excluded-plans-by-default", func(t *testing.T) {
+	t.Run("has-no-excluded-services-by-default", func(t *testing.T) {
 		cfg := NewBrokerpakSourceConfigFromPath("/path/to/my/pak.brokerpak")
-		if cfg.ExcludedPlans != "" {
-			t.Fatalf("Expected no excluded plans, got: %v", cfg.ExcludedPlans)
+		if cfg.ExcludedServices != "" {
+			t.Fatalf("Expected no excluded services, got: %v", cfg.ExcludedServices)
 		}
 	})
 }
 
-func ExampleBrokerpakSourceConfig_ExcludedPlansSlice() {
-	cfg := BrokerpakSourceConfig{ExcludedPlans: "FOO\nBAR"}
+func ExampleBrokerpakSourceConfig_ExcludedServicesSlice() {
+	cfg := BrokerpakSourceConfig{ExcludedServices: "FOO\nBAR"}
 
-	fmt.Println(cfg.ExcludedPlansSlice())
+	fmt.Println(cfg.ExcludedServicesSlice())
 
 	// Output: [FOO BAR]
 }
 
-func ExampleBrokerpakSourceConfig_SetExcludedPlans() {
+func ExampleBrokerpakSourceConfig_SetExcludedServices() {
 	cfg := BrokerpakSourceConfig{}
-	cfg.SetExcludedPlans([]string{"plan1", "plan2"})
+	cfg.SetExcludedServices([]string{"plan1", "plan2"})
 
-	fmt.Println("slice:", cfg.ExcludedPlansSlice())
-	fmt.Println("text:", cfg.ExcludedPlans)
+	fmt.Println("slice:", cfg.ExcludedServicesSlice())
+	fmt.Println("text:", cfg.ExcludedServices)
 
 	// Output: slice: [plan1 plan2]
 	// text: plan1

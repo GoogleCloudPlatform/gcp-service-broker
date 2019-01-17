@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unresolved]
+## [4.2.0] - 2019-01-04
 
 ### Security
  - The broker uses a Pivotal library affected by [CVE-2018-15759](https://pivotal.io/security/cve-2018-15759). Until the library is updated, it's recommended that you not run the service broker on a public network. If you must run it on a public network, make it accessible through a proxy that supports fail2ban.

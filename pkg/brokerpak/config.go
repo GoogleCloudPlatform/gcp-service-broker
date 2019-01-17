@@ -40,22 +40,22 @@ type BrokerpakSourceConfig struct {
 	BrokerpakUri string `json:"uri" validate:"required,uri"`
 	// ServicePrefix holds an optional prefix that will be prepended to every service name.
 	ServicePrefix string `json:"service_prefix" validate:"omitempty,osbname"`
-	// ExcludedPlans holds a newline delimited list of service plan UUIDs that will be excluded at registration time.
-	ExcludedPlans string `json:"excluded_plans"`
+	// ExcludedServices holds a newline delimited list of service UUIDs that will be excluded at registration time.
+	ExcludedServices string `json:"excluded_services"`
 	// Config holds the configuration options for the Brokerpak as a JSON object.
 	Config string `json:"config" validate:"required,json"`
 	// Notes holds user-defined notes about the Brokerpak and shouldn't be used programatically.
 	Notes string `json:"notes"`
 }
 
-// ExcludedPlansSlice gets the ExcludedPlans as a slice of UUIDs.
-func (b *BrokerpakSourceConfig) ExcludedPlansSlice() []string {
-	return utils.SplitNewlineDelimitedList(b.ExcludedPlans)
+// ExcludedServicesSlice gets the ExcludedServices as a slice of UUIDs.
+func (b *BrokerpakSourceConfig) ExcludedServicesSlice() []string {
+	return utils.SplitNewlineDelimitedList(b.ExcludedServices)
 }
 
-// SetExcludedPlans sets the ExcludedPlans from a slice of UUIDs.
-func (b *BrokerpakSourceConfig) SetExcludedPlans(plans []string) {
-	b.ExcludedPlans = strings.Join(plans, "\n")
+// SetExcludedServices sets the ExcludedServices from a slice of UUIDs.
+func (b *BrokerpakSourceConfig) SetExcludedServices(services []string) {
+	b.ExcludedServices = strings.Join(services, "\n")
 }
 
 // NewBrokerpakSourceConfigFromPath creates a new BrokerpakSourceConfig from a path.

@@ -17,7 +17,7 @@
 ---
 applications:
   - name: gcp-service-broker
-    product_version: "4.1.0"
+    product_version: "4.2.0"
     metadata_version: "1.0"
     label: 'GCP Service Broker'
     description: 'A service broker for Google Cloud Platform services.'

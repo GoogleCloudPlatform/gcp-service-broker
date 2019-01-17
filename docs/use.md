@@ -1,7 +1,6 @@
 --------------------------------------------------------------------------------
 
-# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/bigquery.svg) Google BigQuery
-
+# <a name="google-bigquery"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/bigquery.svg) Google BigQuery
 A fast, economical and fully managed data warehouse for large-scale data analytics.
 
  * [Documentation](https://cloud.google.com/bigquery/docs/)
@@ -100,8 +99,7 @@ $ cf bind-service my-app my-google-bigquery-example -c `{"role":"bigquery.user"}
 
 --------------------------------------------------------------------------------
 
-# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/bigtable.svg) Google Bigtable
-
+# <a name="google-bigtable"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/bigtable.svg) Google Bigtable
 A high performance NoSQL database service for large analytical and operational workloads.
 
  * [Documentation](https://cloud.google.com/bigtable/)
@@ -210,8 +208,7 @@ $ cf bind-service my-app my-google-bigtable-example -c `{"role":"bigtable.user"}
 
 --------------------------------------------------------------------------------
 
-# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg) Google CloudSQL MySQL
-
+# <a name="google-cloudsql-mysql"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg) Google CloudSQL MySQL
 Google Cloud SQL is a fully-managed MySQL database service.
 
  * [Documentation](https://cloud.google.com/sql/docs/)
@@ -388,8 +385,7 @@ $ cf bind-service my-app my-google-cloudsql-mysql-example -c `{"role":"cloudsql.
 
 --------------------------------------------------------------------------------
 
-# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg) Google CloudSQL PostgreSQL
-
+# <a name="google-cloudsql-postgres"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg) Google CloudSQL PostgreSQL
 Google Cloud SQL is a fully-managed MySQL database service.
 
  * [Documentation](https://cloud.google.com/sql/docs/)
@@ -510,24 +506,56 @@ or disabled by the broker administrator.
 
   * **postgres-db-f1-micro**: PostgreSQL on a db-f1-micro (Shared CPUs, 0.6 GB/RAM, 3062 GB/disk, 250 Connections) Plan ID: `2513d4d9-684b-4c3c-add4-6404969006de`.
   * **postgres-db-g1-small**: PostgreSQL on a db-g1-small (Shared CPUs, 1.7 GB/RAM, 3062 GB/disk, 1,000 Connections) Plan ID: `6c1174d8-243c-44d1-b7a8-e94a779f67f5`.
-  * **postgres-db-n1-standard-1**: PostgreSQL on a db-n1-standard-1 (1 CPUs, 3.75 GB/RAM, 10230 GB/disk, 4,000 Connections) Plan ID: `c4e68ab5-34ca-4d02-857d-3e6b3ab079a7`.
-  * **postgres-db-n1-standard-2**: PostgreSQL on a db-n1-standard-2 (2 CPUs, 7.5 GB/RAM, 10230 GB/disk, 4,000 Connections) Plan ID: `3f578ecf-885c-4b60-b38b-60272f34e00f`.
-  * **postgres-db-n1-standard-4**: PostgreSQL on a db-n1-standard-4 (4 CPUs, 15 GB/RAM, 10230 GB/disk, 4,000 Connections) Plan ID: `b7fcab5d-d66d-4e82-af16-565e84cef7f9`.
-  * **postgres-db-n1-standard-8**: PostgreSQL on a db-n1-standard-8 (8 CPUs, 30 GB/RAM, 10230 GB/disk, 4,000 Connections) Plan ID: `4b2fa14a-caf1-42e0-bd8c-3342502008a8`.
-  * **postgres-db-n1-standard-16**: PostgreSQL on a db-n1-standard-16 (16 CPUs, 60 GB/RAM, 10230 GB/disk, 4,000 Connections) Plan ID: `ca2e770f-bfa5-4fb7-a249-8b943c3474ca`.
-  * **postgres-db-n1-standard-32**: PostgreSQL on a db-n1-standard-32 (32 CPUs, 120 GB/RAM, 10230 GB/disk, 4,000 Connections) Plan ID: `b44f8294-b003-4a50-80c2-706858073f44`.
-  * **postgres-db-n1-standard-64**: PostgreSQL on a db-n1-standard-64 (64 CPUs, 240 GB/RAM, 10230 GB/disk, 4,000 Connections) Plan ID: `d97326e0-5af2-4da5-b970-b4772d59cded`.
-  * **postgres-db-n1-highmem-2**: PostgreSQL on a db-n1-highmem-2 (2 CPUs, 13 GB/RAM, 10230 GB/disk, 4,000 Connections) Plan ID: `c10f8691-02f5-44eb-989f-7217393012ca`.
-  * **postgres-db-n1-highmem-4**: PostgreSQL on a db-n1-highmem-4 (4 CPUs, 26 GB/RAM, 10230 GB/disk, 4,000 Connections) Plan ID: `610cc78d-d26a-41a9-90b7-547a44517f03`.
-  * **postgres-db-n1-highmem-8**: PostgreSQL on a db-n1-highmem-8 (8 CPUs, 52 GB/RAM, 10230 GB/disk, 4,000 Connections) Plan ID: `2a351e8d-958d-4c4f-ae46-c984fec18740`.
-  * **postgres-db-n1-highmem-16**: PostgreSQL on a db-n1-highmem-16 (16 CPUs, 104 GB/RAM, 10230 GB/disk, 4,000 Connections) Plan ID: `51d3ca0c-9d21-447d-a395-3e0dc0659775`.
-  * **postgres-db-n1-highmem-32**: PostgreSQL on a db-n1-highmem-32 (32 CPUs, 208 GB/RAM, 10230 GB/disk, 4,000 Connections) Plan ID: `2e72b386-f7ce-4f0d-a149-9f9a851337d4`.
-  * **postgres-db-n1-highmem-64**: PostgreSQL on a db-n1-highmem-64 (64 CPUs, 416 GB/RAM, 10230 GB/disk, 4,000 Connections) Plan ID: `82602649-e4ac-4a2f-b80d-dacd745aed6a`.
+  * **postgres-db-n1-standard-1**: PostgreSQL with 1 CPU, 3.75 GB/RAM, 10230 GB/disk, supporting 4,000 connections. Plan ID: `c4e68ab5-34ca-4d02-857d-3e6b3ab079a7`.
+  * **postgres-db-n1-standard-2**: PostgreSQL with 2 CPUs, 7.5 GB/RAM, 10230 GB/disk, supporting 4,000 connections. Plan ID: `3f578ecf-885c-4b60-b38b-60272f34e00f`.
+  * **postgres-db-n1-standard-4**: PostgreSQL with 4 CPUs, 15 GB/RAM, 10230 GB/disk, supporting 4,000 connections. Plan ID: `b7fcab5d-d66d-4e82-af16-565e84cef7f9`.
+  * **postgres-db-n1-standard-8**: PostgreSQL with 8 CPUs, 30 GB/RAM, 10230 GB/disk, supporting 4,000 connections. Plan ID: `4b2fa14a-caf1-42e0-bd8c-3342502008a8`.
+  * **postgres-db-n1-standard-16**: PostgreSQL with 16 CPUs, 60 GB/RAM, 10230 GB/disk, supporting 4,000 connections. Plan ID: `ca2e770f-bfa5-4fb7-a249-8b943c3474ca`.
+  * **postgres-db-n1-standard-32**: PostgreSQL with 32 CPUs, 120 GB/RAM, 10230 GB/disk, supporting 4,000 connections. Plan ID: `b44f8294-b003-4a50-80c2-706858073f44`.
+  * **postgres-db-n1-standard-64**: PostgreSQL with 64 CPUs, 240 GB/RAM, 10230 GB/disk, supporting 4,000 connections. Plan ID: `d97326e0-5af2-4da5-b970-b4772d59cded`.
+  * **postgres-db-n1-highmem-2**: PostgreSQL with 2 CPUs, 13 GB/RAM, 10230 GB/disk, supporting 4,000 connections. Plan ID: `c10f8691-02f5-44eb-989f-7217393012ca`.
+  * **postgres-db-n1-highmem-4**: PostgreSQL with 4 CPUs, 26 GB/RAM, 10230 GB/disk, supporting 4,000 connections. Plan ID: `610cc78d-d26a-41a9-90b7-547a44517f03`.
+  * **postgres-db-n1-highmem-8**: PostgreSQL with 8 CPUs, 52 GB/RAM, 10230 GB/disk, supporting 4,000 connections. Plan ID: `2a351e8d-958d-4c4f-ae46-c984fec18740`.
+  * **postgres-db-n1-highmem-16**: PostgreSQL with 16 CPUs, 104 GB/RAM, 10230 GB/disk, supporting 4,000 connections. Plan ID: `51d3ca0c-9d21-447d-a395-3e0dc0659775`.
+  * **postgres-db-n1-highmem-32**: PostgreSQL with 32 CPUs, 208 GB/RAM, 10230 GB/disk, supporting 4,000 connections. Plan ID: `2e72b386-f7ce-4f0d-a149-9f9a851337d4`.
+  * **postgres-db-n1-highmem-64**: PostgreSQL with 64 CPUs, 416 GB/RAM, 10230 GB/disk, supporting 4,000 connections. Plan ID: `82602649-e4ac-4a2f-b80d-dacd745aed6a`.
 
 
 ## Examples
 
 
+
+
+### Dedicated Machine Sandbox
+
+
+A low end PostgreSQL sandbox that uses a dedicated machine.
+Uses plan: `c4e68ab5-34ca-4d02-857d-3e6b3ab079a7`.
+
+**Provision**
+
+```javascript
+{
+    "backups_enabled": "false",
+    "binlog": "false",
+    "disk_size": "25"
+}
+```
+
+**Bind**
+
+```javascript
+{
+    "role": "cloudsql.editor"
+}
+```
+
+**Cloud Foundry Example**
+
+<pre>
+$ cf create-service google-cloudsql-postgres postgres-db-n1-standard-1 my-google-cloudsql-postgres-example -c `{"backups_enabled":"false","binlog":"false","disk_size":"25"}`
+$ cf bind-service my-app my-google-cloudsql-postgres-example -c `{"role":"cloudsql.editor"}`
+</pre>
 
 
 ### Development Sandbox
@@ -566,8 +594,7 @@ $ cf bind-service my-app my-google-cloudsql-postgres-example -c `{"role":"clouds
 
 --------------------------------------------------------------------------------
 
-# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/dataflow.svg) Google Cloud Dataflow
-
+# <a name="google-dataflow"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/dataflow.svg) Google Cloud Dataflow
 A managed service for executing a wide variety of data processing patterns built on Apache Beam.
 
  * [Documentation](https://cloud.google.com/dataflow/docs/)
@@ -681,8 +708,7 @@ $ cf bind-service my-app my-google-dataflow-example -c `{"role":"dataflow.viewer
 
 --------------------------------------------------------------------------------
 
-# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/datastore.svg) Google Cloud Datastore
-
+# <a name="google-datastore"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/datastore.svg) Google Cloud Datastore
 Google Cloud Datastore is a NoSQL document database built for automatic scaling, high performance, and ease of application development.
 
  * [Documentation](https://cloud.google.com/datastore/docs/)
@@ -800,8 +826,7 @@ $ cf bind-service my-app my-google-datastore-example -c `{}`
 
 --------------------------------------------------------------------------------
 
-# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/dialogflow-enterprise.svg) Google Cloud Dialogflow
-
+# <a name="google-dialogflow"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/dialogflow-enterprise.svg) Google Cloud Dialogflow
 Dialogflow is an end-to-end, build-once deploy-everywhere development suite for creating conversational interfaces for websites, mobile applications, popular messaging platforms, and IoT devices.
 
  * [Documentation](https://cloud.google.com/dialogflow-enterprise/docs/)
@@ -885,8 +910,7 @@ $ cf bind-service my-app my-google-dialogflow-example -c `{}`
 
 --------------------------------------------------------------------------------
 
-# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/firestore.svg) Google Cloud Firestore
-
+# <a name="google-firestore"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/firestore.svg) Google Cloud Firestore
 Cloud Firestore is a fast, fully managed, serverless, cloud-native NoSQL document database that simplifies storing, syncing, and querying data for your mobile, web, and IoT apps at global scale.
 
  * [Documentation](https://cloud.google.com/firestore/docs/)
@@ -1000,8 +1024,7 @@ $ cf bind-service my-app my-google-firestore-example -c `{"role":"datastore.view
 
 --------------------------------------------------------------------------------
 
-# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/machine-learning.svg) Google Machine Learning APIs
-
+# <a name="google-ml-apis"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/machine-learning.svg) Google Machine Learning APIs
 Machine Learning APIs including Vision, Translate, Speech, and Natural Language.
 
  * [Documentation](https://cloud.google.com/ml/)
@@ -1089,8 +1112,7 @@ $ cf bind-service my-app my-google-ml-apis-example -c `{"role":"ml.developer"}`
 
 --------------------------------------------------------------------------------
 
-# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/pubsub.svg) Google PubSub
-
+# <a name="google-pubsub"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/pubsub.svg) Google PubSub
 A global service for real-time and reliable messaging and streaming data.
 
  * [Documentation](https://cloud.google.com/pubsub/docs/)
@@ -1263,8 +1285,7 @@ $ cf bind-service my-app my-google-pubsub-example -c `{"role":"pubsub.publisher"
 
 --------------------------------------------------------------------------------
 
-# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg) Google Spanner
-
+# <a name="google-spanner"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/spanner.svg) Google Spanner
 The first horizontally scalable, globally consistent, relational database service.
 
  * [Documentation](https://cloud.google.com/spanner/)
@@ -1400,8 +1421,7 @@ $ cf bind-service my-app my-google-spanner-example -c `{"role":"spanner.database
 
 --------------------------------------------------------------------------------
 
-# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg) Stackdriver Debugger
-
+# <a name="google-stackdriver-debugger"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg) Stackdriver Debugger
 Stackdriver Debugger is a feature of the Google Cloud Platform that lets you inspect the state of an application at any code location without using logging statements and without stopping or slowing down your applications. Your users are not impacted during debugging. Using the production debugger you can capture the local variables and call stack and link it back to a specific line location in your source code.
 
  * [Documentation](https://cloud.google.com/debugger/docs/)
@@ -1485,8 +1505,7 @@ $ cf bind-service my-app my-google-stackdriver-debugger-example -c `{}`
 
 --------------------------------------------------------------------------------
 
-# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg) Stackdriver Monitoring
-
+# <a name="google-stackdriver-monitoring"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg) Stackdriver Monitoring
 Stackdriver Monitoring provides visibility into the performance, uptime, and overall health of cloud-powered applications.
 
  * [Documentation](https://cloud.google.com/monitoring/docs/)
@@ -1570,8 +1589,7 @@ $ cf bind-service my-app my-google-stackdriver-monitoring-example -c `{}`
 
 --------------------------------------------------------------------------------
 
-# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg) Stackdriver Profiler
-
+# <a name="google-stackdriver-profiler"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/stackdriver.svg) Stackdriver Profiler
 Continuous CPU and heap profiling to improve performance and reduce costs.
 
  * [Documentation](https://cloud.google.com/profiler/docs/)
@@ -1655,8 +1673,7 @@ $ cf bind-service my-app my-google-stackdriver-profiler-example -c `{}`
 
 --------------------------------------------------------------------------------
 
-# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg) Stackdriver Trace
-
+# <a name="google-stackdriver-trace"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/trace.svg) Stackdriver Trace
 Stackdriver Trace is a distributed tracing system that collects latency data from your applications and displays it in the Google Cloud Platform Console. You can track how requests propagate through your application and receive detailed near real-time performance insights.
 
  * [Documentation](https://cloud.google.com/trace/docs/)
@@ -1740,8 +1757,7 @@ $ cf bind-service my-app my-google-stackdriver-trace-example -c `{}`
 
 --------------------------------------------------------------------------------
 
-# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/storage.svg) Google Cloud Storage
-
+# <a name="google-storage"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/storage.svg) Google Cloud Storage
 Unified object storage for developers and enterprises. Cloud Storage allows world-wide storage and retrieval of any amount of data at any time.
 
  * [Documentation](https://cloud.google.com/storage/docs/overview)
@@ -1800,10 +1816,12 @@ The following plans are built-in to the GCP Service Broker and may be overriden
 or disabled by the broker administrator.
 
 
-  * **standard**: Standard storage class. Plan ID: `e1d11f65-da66-46ad-977c-6d56513baf43`.
+  * **standard**: Standard storage class. Auto-selects either regional or multi-regional based on the location. Plan ID: `e1d11f65-da66-46ad-977c-6d56513baf43`.
   * **nearline**: Nearline storage class. Plan ID: `a42c1182-d1a0-4d40-82c1-28220518b360`.
   * **reduced-availability**: Durable Reduced Availability storage class. Plan ID: `1a1f4fe6-1904-44d0-838c-4c87a9490a6b`.
   * **coldline**: Google Cloud Storage Coldline is a very-low-cost, highly durable storage service for data archiving, online backup, and disaster recovery. Plan ID: `c8538397-8f15-45e3-a229-8bb349c3a98f`.
+  * **regional**: Data is stored in a narrow geographic region, redundant across availability zones with a 99.99% typical monthly availability. Plan ID: `5e6161d2-0202-48be-80c4-1006cce19b9d`.
+  * **multiregional**: Data is stored geo-redundantly with >99.99% typical monthly availability. Plan ID: `a5e8dfb5-e5ec-472a-8d36-33afcaff2fdb`.
 
 
 ## Examples
@@ -1814,7 +1832,7 @@ or disabled by the broker administrator.
 ### Basic Configuration
 
 
-Create a nearline bucket with a service account that can create/read/delete the objects in it.
+Create a nearline bucket with a service account that can create/read/list/delete the objects in it.
 Uses plan: `a42c1182-d1a0-4d40-82c1-28220518b360`.
 
 **Provision**
@@ -1844,7 +1862,7 @@ $ cf bind-service my-app my-google-storage-example -c `{"role":"storage.objectAd
 ### Cold Storage
 
 
-Create a coldline bucket with a service account that can create/read/delete the objects in it.
+Create a coldline bucket with a service account that can create/read/list/delete the objects in it.
 Uses plan: `c8538397-8f15-45e3-a229-8bb349c3a98f`.
 
 **Provision**
@@ -1859,7 +1877,6 @@ Uses plan: `c8538397-8f15-45e3-a229-8bb349c3a98f`.
 
 ```javascript
 {
-    "location": "us-west1",
     "role": "storage.objectAdmin"
 }
 ```
@@ -1868,88 +1885,45 @@ Uses plan: `c8538397-8f15-45e3-a229-8bb349c3a98f`.
 
 <pre>
 $ cf create-service google-storage coldline my-google-storage-example -c `{"location":"us"}`
-$ cf bind-service my-app my-google-storage-example -c `{"location":"us-west1","role":"storage.objectAdmin"}`
+$ cf bind-service my-app my-google-storage-example -c `{"role":"storage.objectAdmin"}`
 </pre>
 
 
+### Regional Storage
 
 
---------------------------------------------------------------------------------
+Create a regional bucket with a service account that can create/read/list/delete the objects in it.
+Uses plan: `5e6161d2-0202-48be-80c4-1006cce19b9d`.
 
-# ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/storage.svg) google-storage-experimental
+**Provision**
 
-Experimental Google Cloud Storage that uses the Terraform back-end and grants service accounts IAM permissions directly on the bucket.
+```javascript
+{
+    "location": "us-west1"
+}
+```
 
- * [Documentation](https://cloud.google.com/storage/docs/overview)
- * [Support](https://cloud.google.com/storage/docs/getting-support)
- * Catalog Metadata ID: `68d094ae-e727-4c14-af07-ee34133c8dfb`
- * Tags: preview, gcp, terraform, storage
- * Service Name: `google-storage-experimental`
+**Bind**
 
-## Provisioning
+```javascript
+{
+    "role": "storage.objectAdmin"
+}
+```
 
-**Request Parameters**
+**Cloud Foundry Example**
 
-
- * `name` _string_ - The name of the bucket. There is a single global namespace shared by all buckets so it MUST be unique. Default: `pcf_sb_${counter.next()}_${time.nano()}`.
-    * The string must have at most 222 characters.
-    * The string must have at least 3 characters.
-    * The string must match the regular expression `^[A-Za-z0-9_\.]+$`.
- * `location` _string_ - The location of the bucket. Object data for objects in the bucket resides in physical storage within this region. See: https://cloud.google.com/storage/docs/bucket-locations Default: `US`.
-    * Examples: [US EU southamerica-east1].
-    * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
-
-
-## Binding
-
-**Request Parameters**
+<pre>
+$ cf create-service google-storage regional my-google-storage-example -c `{"location":"us-west1"}`
+$ cf bind-service my-app my-google-storage-example -c `{"role":"storage.objectAdmin"}`
+</pre>
 
 
- * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Default: `storage.objectAdmin`.
-    * The value must be one of: [storage.objectAdmin storage.objectCreator storage.objectViewer].
-
-**Response Parameters**
-
- * `bucket_name` _string_ - **Required** Name of the bucket this binding is for.
-    * The string must have at most 222 characters.
-    * The string must have at least 3 characters.
-    * The string must match the regular expression `^[A-Za-z0-9_\.]+$`.
- * `id` _string_ - **Required** The GCP ID of this bucket.
- * `Email` _string_ - **Required** Email address of the service account.
-    * Examples: [pcf-binding-ex312029@my-project.iam.gserviceaccount.com].
-    * The string must match the regular expression `^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`.
- * `Name` _string_ - **Required** The name of the service account.
-    * Examples: [pcf-binding-ex312029].
- * `PrivateKeyData` _string_ - **Required** Service account private key data. Base64 encoded JSON.
-    * The string must have at least 512 characters.
-    * The string must match the regular expression `^[A-Za-z0-9+/]*=*$`.
- * `ProjectId` _string_ - **Required** ID of the project that owns the service account.
-    * Examples: [my-project].
-    * The string must have at most 30 characters.
-    * The string must have at least 6 characters.
-    * The string must match the regular expression `^[a-z0-9-]+$`.
- * `UniqueId` _string_ - **Required** Unique and stable ID of the service account.
-    * Examples: [112447814736626230844].
-
-## Plans
-
-The following plans are built-in to the GCP Service Broker and may be overriden
-or disabled by the broker administrator.
+### Multi-Regional Storage
 
 
-  * **standard**: Standard storage class. Plan ID: `e1d11f65-da66-46ad-977c-6d56513baf43`.
-
-
-## Examples
-
-
-
-
-### Basic Configuration
-
-
-Create a bucket with a service account that can create/read/delete the objects in it.
-Uses plan: `e1d11f65-da66-46ad-977c-6d56513baf43`.
+Create a multi-regional bucket with a service account that can create/read/list/delete the objects in it.
+Uses plan: `a5e8dfb5-e5ec-472a-8d36-33afcaff2fdb`.
 
 **Provision**
 
@@ -1970,6 +1944,6 @@ Uses plan: `e1d11f65-da66-46ad-977c-6d56513baf43`.
 **Cloud Foundry Example**
 
 <pre>
-$ cf create-service google-storage-experimental standard my-google-storage-experimental-example -c `{"location":"us"}`
-$ cf bind-service my-app my-google-storage-experimental-example -c `{"role":"storage.objectAdmin"}`
+$ cf create-service google-storage multiregional my-google-storage-example -c `{"location":"us"}`
+$ cf bind-service my-app my-google-storage-example -c `{"role":"storage.objectAdmin"}`
 </pre>

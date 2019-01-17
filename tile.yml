@@ -22,8 +22,8 @@ description: 'A service broker for Google Cloud Platform services.'
 org: system
 
 stemcell_criteria:
-  os: 'ubuntu-trusty'
-  version: '3586.42'
+  os: 'ubuntu-xenial'
+  version: '170.19'
 
 apply_open_security_group: true
 
@@ -124,6 +124,11 @@ forms:
   label: Compatibility
   description: Legacy Compatibility Options
   properties:
+  - name: gsb_compatibility_enable_catalog_schemas
+    type: boolean
+    default: "false"
+    label: enable-catalog-schemas
+    description: Enable generating JSONSchema for the service catalog.
   - name: gsb_compatibility_enable_builtin_services
     type: boolean
     default: "true"
@@ -503,10 +508,10 @@ service_plan_forms:
       you may want to include a trailing dash.
     configurable: true
     optional: true
-  - name: excluded_plans
+  - name: excluded_services
     type: text
-    label: Excluded Plans
-    description: A list of UUIDs of plans to exclude, one per line.
+    label: Excluded Services
+    description: A list of UUIDs of services to exclude, one per line.
     configurable: true
     optional: true
   - name: config
