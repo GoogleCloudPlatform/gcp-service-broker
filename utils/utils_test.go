@@ -181,3 +181,11 @@ func TestSplitNewlineDelimitedList(t *testing.T) {
 		})
 	}
 }
+
+func ExampleIndent() {
+	weirdText := "First\n\tSecond"
+	out := Indent(weirdText, "  ")
+	fmt.Println(out == "  First\n  \tSecond")
+
+	// Output: true
+}

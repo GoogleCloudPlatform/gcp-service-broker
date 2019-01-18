@@ -235,3 +235,14 @@ func SplitNewlineDelimitedList(paksText string) []string {
 
 	return out
 }
+
+// Indent indents every line of the given text with the given string.
+func Indent(text, by string) string {
+	lines := strings.Split(text, "\n")
+
+	for i, line := range lines {
+		lines[i] = by + line
+	}
+
+	return strings.Join(lines, "\n")
+}

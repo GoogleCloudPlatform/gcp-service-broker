@@ -19,6 +19,7 @@ import (
 	"log"
 	"text/template"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/config/migration"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 )
 
@@ -75,11 +76,7 @@ stemcell_criteria:
 apply_open_security_group: true
 
 migration: |
-  properties['properties']['.properties.org']['value'] = 'system';
-  if ('.properties.cloudsql_custom_plans' in properties['properties']){
-      properties['properties']['.properties.cloudsql_mysql_custom_plans'] =
-      {'value': properties['properties']['.properties.cloudsql_custom_plans']['value']};
-  }
+{{.migrationScript}}
 
 packages:
 - name: {{.appName}}
@@ -114,6 +111,8 @@ func GenerateTile() string {
 }
 
 func runPcfTemplate(templateString string) string {
+	migrator := migration.FullMigration()
+
 	vars := map[string]interface{}{
 		"appName":         appName,
 		"appVersion":      utils.Version,
@@ -123,6 +122,7 @@ func runPcfTemplate(templateString string) string {
 		"goVersion":       goVersion,
 		"stemcellOs":      stemcellOs,
 		"stemcellVersion": stemcellVersion,
+		"migrationScript": utils.Indent(migrator.TileScript, "  "),
 	}
 
 	tmpl, err := template.New("tmpl").Parse(templateString)
