@@ -189,3 +189,15 @@ func ExampleIndent() {
 
 	// Output: true
 }
+
+func ExampleCopyStringMap() {
+	m := map[string]string{"a": "one"}
+	copy := CopyStringMap(m)
+	m["a"] = "two"
+
+	fmt.Println(m["a"])
+	fmt.Println(copy["a"])
+
+	// Output: two
+	// one
+}

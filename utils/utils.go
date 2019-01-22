@@ -246,3 +246,14 @@ func Indent(text, by string) string {
 
 	return strings.Join(lines, "\n")
 }
+
+// CopyStringMap makes a copy of the given map.
+func CopyStringMap(m map[string]string) map[string]string {
+	out := make(map[string]string)
+
+	for k, v := range m {
+		out[k] = v
+	}
+
+	return out
+}

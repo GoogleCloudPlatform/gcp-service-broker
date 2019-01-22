@@ -109,10 +109,27 @@ type MigrationTest struct {
 }
 
 func (m *MigrationTest) Run(t *testing.T) {
+	t.Log("Running JS migration function")
+	m.runJs(t)
+
+	t.Log("Running go migration function")
+	m.runGo(t)
+}
+
+func (m *MigrationTest) runJs(t *testing.T) {
 	out := GetMigrationResults(t, m.TileProperties, m.Migration.TileScript)
 
 	if !reflect.DeepEqual(out, m.ExpectedEnv) {
 		t.Errorf("Expected: %v Got: %v", m.ExpectedEnv, out)
+	}
+}
+
+func (m *MigrationTest) runGo(t *testing.T) {
+	envFromTile := GetMigrationResults(t, m.TileProperties, "")
+	m.Migration.GoFunc(envFromTile)
+
+	if !reflect.DeepEqual(envFromTile, m.ExpectedEnv) {
+		t.Errorf("Expected: %v Got: %v", m.ExpectedEnv, envFromTile)
 	}
 }
 
