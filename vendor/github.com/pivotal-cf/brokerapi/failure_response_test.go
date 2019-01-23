@@ -65,7 +65,7 @@ var _ = Describe("FailureResponse", func() {
 			Expect(newError.Error()).To(Equal("my error message and some more details"))
 			Expect(newError.ValidatedStatusCode(nil)).To(Equal(http.StatusForbidden))
 			Expect(newError.LoggerAction()).To(Equal(failureResponse.LoggerAction()))
-			
+
 			errorResponse, typeCast := newError.ErrorResponse().(brokerapi.ErrorResponse)
 			Expect(typeCast).To(BeTrue())
 			Expect(errorResponse.Error).To(Equal("some-key"))

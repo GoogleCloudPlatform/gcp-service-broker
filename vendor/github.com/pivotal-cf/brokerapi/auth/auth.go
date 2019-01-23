@@ -15,18 +15,21 @@
 
 package auth
 
-import "net/http"
+import (
+	"crypto/sha256"
+	"crypto/subtle"
+	"net/http"
+)
 
 type Wrapper struct {
-	username string
-	password string
+	username []byte
+	password []byte
 }
 
 func NewWrapper(username, password string) *Wrapper {
-	return &Wrapper{
-		username: username,
-		password: password,
-	}
+	u := sha256.Sum256([]byte(username))
+	p := sha256.Sum256([]byte(password))
+	return &Wrapper{username: u[:], password: p[:]}
 }
 
 const notAuthorized = "Not Authorized"
@@ -55,5 +58,9 @@ func (wrapper *Wrapper) WrapFunc(handlerFunc http.HandlerFunc) http.HandlerFunc 
 
 func authorized(wrapper *Wrapper, r *http.Request) bool {
 	username, password, isOk := r.BasicAuth()
-	return isOk && username == wrapper.username && password == wrapper.password
+	u := sha256.Sum256([]byte(username))
+	p := sha256.Sum256([]byte(password))
+	return isOk &&
+		subtle.ConstantTimeCompare(wrapper.username, u[:]) == 1 &&
+		subtle.ConstantTimeCompare(wrapper.password, p[:]) == 1
 }
