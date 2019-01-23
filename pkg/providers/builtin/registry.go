@@ -15,19 +15,19 @@
 package builtin
 
 import (
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/api_service"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigquery"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigtable"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/cloudsql"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/dataflow"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/datastore"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/dialogflow"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/firestore"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/storage"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/bigquery"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/bigtable"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/cloudsql"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/dataflow"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/datastore"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/dialogflow"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/firestore"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/ml"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/pubsub"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/spanner"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/stackdriver"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/storage"
 )
 
 // NOTE(josephlewis42) unless there are extenuating circumstances, as of 2019
@@ -44,7 +44,7 @@ func BuiltinBrokerRegistry() broker.BrokerRegistry {
 
 // RegisterBuiltinBrokers adds the built-in brokers to the given registry.
 func RegisterBuiltinBrokers(registry broker.BrokerRegistry) {
-	registry.Register(api_service.ServiceDefinition())
+	registry.Register(ml.ServiceDefinition())
 	registry.Register(bigquery.ServiceDefinition())
 	registry.Register(bigtable.ServiceDefinition())
 	registry.Register(cloudsql.MysqlServiceDefinition())
