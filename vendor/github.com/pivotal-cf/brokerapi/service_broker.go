@@ -22,18 +22,23 @@ import (
 	"net/http"
 )
 
+//go:generate counterfeiter -o fakes/auto_fake_service_broker.go -fake-name AutoFakeServiceBroker . ServiceBroker
+
 type ServiceBroker interface {
 	Services(ctx context.Context) ([]Service, error)
 
 	Provision(ctx context.Context, instanceID string, details ProvisionDetails, asyncAllowed bool) (ProvisionedServiceSpec, error)
 	Deprovision(ctx context.Context, instanceID string, details DeprovisionDetails, asyncAllowed bool) (DeprovisionServiceSpec, error)
+	GetInstance(ctx context.Context, instanceID string) (GetInstanceDetailsSpec, error)
 
-	Bind(ctx context.Context, instanceID, bindingID string, details BindDetails) (Binding, error)
-	Unbind(ctx context.Context, instanceID, bindingID string, details UnbindDetails) error
+	Bind(ctx context.Context, instanceID, bindingID string, details BindDetails, asyncAllowed bool) (Binding, error)
+	Unbind(ctx context.Context, instanceID, bindingID string, details UnbindDetails, asyncAllowed bool) (UnbindSpec, error)
+	GetBinding(ctx context.Context, instanceID, bindingID string) (GetBindingSpec, error)
 
 	Update(ctx context.Context, instanceID string, details UpdateDetails, asyncAllowed bool) (UpdateServiceSpec, error)
 
-	LastOperation(ctx context.Context, instanceID, operationData string) (LastOperation, error)
+	LastOperation(ctx context.Context, instanceID string, details PollDetails) (LastOperation, error)
+	LastBindingOperation(ctx context.Context, instanceID, bindingID string, details PollDetails) (LastOperation, error)
 }
 
 type DetailsWithRawParameters interface {
@@ -71,11 +76,24 @@ type ProvisionDetails struct {
 	SpaceGUID        string          `json:"space_guid"`
 	RawContext       json.RawMessage `json:"context,omitempty"`
 	RawParameters    json.RawMessage `json:"parameters,omitempty"`
+	MaintenanceInfo  MaintenanceInfo `json:"maintenance_info,omitempty"`
 }
 
 type ProvisionedServiceSpec struct {
 	IsAsync       bool
 	DashboardURL  string
+	OperationData string
+}
+
+type GetInstanceDetailsSpec struct {
+	ServiceID    string      `json:"service_id"`
+	PlanID       string      `json:"plan_id"`
+	DashboardURL string      `json:"dashboard_url"`
+	Parameters   interface{} `json:"parameters"`
+}
+
+type UnbindSpec struct {
+	IsAsync       bool
 	OperationData string
 }
 
@@ -102,6 +120,7 @@ type UnbindDetails struct {
 
 type UpdateServiceSpec struct {
 	IsAsync       bool
+	DashboardURL  string
 	OperationData string
 }
 
@@ -116,11 +135,12 @@ type DeprovisionDetails struct {
 }
 
 type UpdateDetails struct {
-	ServiceID      string          `json:"service_id"`
-	PlanID         string          `json:"plan_id"`
-	RawParameters  json.RawMessage `json:"parameters,omitempty"`
-	PreviousValues PreviousValues  `json:"previous_values"`
-	RawContext     json.RawMessage `json:"context,omitempty"`
+	ServiceID       string          `json:"service_id"`
+	PlanID          string          `json:"plan_id"`
+	RawParameters   json.RawMessage `json:"parameters,omitempty"`
+	PreviousValues  PreviousValues  `json:"previous_values"`
+	RawContext      json.RawMessage `json:"context,omitempty"`
+	MaintenanceInfo MaintenanceInfo `json:"maintenance_info,omitempty"`
 }
 
 type PreviousValues struct {
@@ -128,6 +148,12 @@ type PreviousValues struct {
 	ServiceID string `json:"service_id"`
 	OrgID     string `json:"organization_id"`
 	SpaceID   string `json:"space_id"`
+}
+
+type PollDetails struct {
+	ServiceID     string `json:"service_id"`
+	PlanID        string `json:"plan_id"`
+	OperationData string `json:"operation"`
 }
 
 type LastOperation struct {
@@ -144,10 +170,20 @@ const (
 )
 
 type Binding struct {
+	IsAsync         bool          `json:"is_async"`
+	OperationData   string        `json:"operation_data"`
 	Credentials     interface{}   `json:"credentials"`
-	SyslogDrainURL  string        `json:"syslog_drain_url,omitempty"`
-	RouteServiceURL string        `json:"route_service_url,omitempty"`
-	VolumeMounts    []VolumeMount `json:"volume_mounts,omitempty"`
+	SyslogDrainURL  string        `json:"syslog_drain_url"`
+	RouteServiceURL string        `json:"route_service_url"`
+	VolumeMounts    []VolumeMount `json:"volume_mounts"`
+}
+
+type GetBindingSpec struct {
+	Credentials     interface{}
+	SyslogDrainURL  string
+	RouteServiceURL string
+	VolumeMounts    []VolumeMount
+	Parameters      interface{}
 }
 
 type VolumeMount struct {
@@ -164,17 +200,21 @@ type SharedDevice struct {
 }
 
 const (
-	instanceExistsMsg           = "instance already exists"
-	instanceDoesntExistMsg      = "instance does not exist"
-	serviceLimitReachedMsg      = "instance limit for this service has been reached"
-	servicePlanQuotaExceededMsg = "The quota for this service plan has been exceeded. Please contact your Operator for help."
-	serviceQuotaExceededMsg     = "The quota for this service has been exceeded. Please contact your Operator for help."
-	bindingExistsMsg            = "binding already exists"
-	bindingDoesntExistMsg       = "binding does not exist"
-	asyncRequiredMsg            = "This service plan requires client support for asynchronous service operations."
-	planChangeUnsupportedMsg    = "The requested plan migration cannot be performed"
-	rawInvalidParamsMsg         = "The format of the parameters is not valid JSON"
-	appGuidMissingMsg           = "app_guid is a required field but was not provided"
+	instanceExistsMsg             = "instance already exists"
+	instanceDoesntExistMsg        = "instance does not exist"
+	serviceLimitReachedMsg        = "instance limit for this service has been reached"
+	servicePlanQuotaExceededMsg   = "The quota for this service plan has been exceeded. Please contact your Operator for help."
+	serviceQuotaExceededMsg       = "The quota for this service has been exceeded. Please contact your Operator for help."
+	bindingExistsMsg              = "binding already exists"
+	bindingDoesntExistMsg         = "binding does not exist"
+	bindingNotFoundMsg            = "binding cannot be fetched"
+	asyncRequiredMsg              = "This service plan requires client support for asynchronous service operations."
+	planChangeUnsupportedMsg      = "The requested plan migration cannot be performed"
+	rawInvalidParamsMsg           = "The format of the parameters is not valid JSON"
+	appGuidMissingMsg             = "app_guid is a required field but was not provided"
+	concurrentInstanceAccessMsg   = "instance is being updated and cannot be retrieved"
+	maintenanceInfoConflictMsg    = "passed maintenance_info does not match the catalog maintenance_info"
+	maintenanceInfoNilConflictMsg = "maintenance_info was passed, but the broker catalog contains no maintenance_info"
 )
 
 var (
@@ -198,6 +238,10 @@ var (
 		errors.New(bindingDoesntExistMsg), http.StatusGone, bindingMissingErrorKey,
 	).WithEmptyResponse().Build()
 
+	ErrBindingNotFound = NewFailureResponseBuilder(
+		errors.New(bindingNotFoundMsg), http.StatusNotFound, bindingNotFoundErrorKey,
+	).WithEmptyResponse().Build()
+
 	ErrAsyncRequired = NewFailureResponseBuilder(
 		errors.New(asyncRequiredMsg), http.StatusUnprocessableEntity, asyncRequiredKey,
 	).WithErrorKey("AsyncRequired").Build()
@@ -216,4 +260,16 @@ var (
 
 	ErrPlanQuotaExceeded    = errors.New(servicePlanQuotaExceededMsg)
 	ErrServiceQuotaExceeded = errors.New(serviceQuotaExceededMsg)
+
+	ErrConcurrentInstanceAccess = NewFailureResponseBuilder(
+		errors.New(concurrentInstanceAccessMsg), http.StatusUnprocessableEntity, concurrentAccessKey,
+	).WithErrorKey("ConcurrencyError")
+
+	ErrMaintenanceInfoConflict = NewFailureResponseBuilder(
+		errors.New(maintenanceInfoConflictMsg), http.StatusUnprocessableEntity, maintenanceInfoConflictKey,
+	).WithErrorKey("MaintenanceInfoConflict").Build()
+
+	ErrMaintenanceInfoNilConflict = NewFailureResponseBuilder(
+		errors.New(maintenanceInfoNilConflictMsg), http.StatusUnprocessableEntity, maintenanceInfoConflictKey,
+	).WithErrorKey("MaintenanceInfoConflict").Build()
 )

@@ -19,19 +19,23 @@ import (
 	"encoding/json"
 	"reflect"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 type Service struct {
-	ID              string                  `json:"id"`
-	Name            string                  `json:"name"`
-	Description     string                  `json:"description"`
-	Bindable        bool                    `json:"bindable"`
-	Tags            []string                `json:"tags,omitempty"`
-	PlanUpdatable   bool                    `json:"plan_updateable"`
-	Plans           []ServicePlan           `json:"plans"`
-	Requires        []RequiredPermission    `json:"requires,omitempty"`
-	Metadata        *ServiceMetadata        `json:"metadata,omitempty"`
-	DashboardClient *ServiceDashboardClient `json:"dashboard_client,omitempty"`
+	ID                   string                  `json:"id"`
+	Name                 string                  `json:"name"`
+	Description          string                  `json:"description"`
+	Bindable             bool                    `json:"bindable"`
+	InstancesRetrievable bool                    `json:"instances_retrievable,omitempty"`
+	BindingsRetrievable  bool                    `json:"bindings_retrievable,omitempty"`
+	Tags                 []string                `json:"tags,omitempty"`
+	PlanUpdatable        bool                    `json:"plan_updateable"`
+	Plans                []ServicePlan           `json:"plans"`
+	Requires             []RequiredPermission    `json:"requires,omitempty"`
+	Metadata             *ServiceMetadata        `json:"metadata,omitempty"`
+	DashboardClient      *ServiceDashboardClient `json:"dashboard_client,omitempty"`
 }
 
 type ServiceDashboardClient struct {
@@ -41,13 +45,14 @@ type ServiceDashboardClient struct {
 }
 
 type ServicePlan struct {
-	ID          string               `json:"id"`
-	Name        string               `json:"name"`
-	Description string               `json:"description"`
-	Free        *bool                `json:"free,omitempty"`
-	Bindable    *bool                `json:"bindable,omitempty"`
-	Metadata    *ServicePlanMetadata `json:"metadata,omitempty"`
-	Schemas     *ServiceSchemas      `json:"schemas,omitempty"`
+	ID              string               `json:"id"`
+	Name            string               `json:"name"`
+	Description     string               `json:"description"`
+	Free            *bool                `json:"free,omitempty"`
+	Bindable        *bool                `json:"bindable,omitempty"`
+	Metadata        *ServicePlanMetadata `json:"metadata,omitempty"`
+	Schemas         *ServiceSchemas      `json:"schemas,omitempty"`
+	MaintenanceInfo *MaintenanceInfo     `json:"maintenance_info,omitempty"`
 }
 
 type ServiceSchemas struct {
@@ -91,6 +96,11 @@ type ServiceMetadata struct {
 	AdditionalMetadata  map[string]interface{}
 }
 
+type MaintenanceInfo struct {
+	Public  map[string]string `json:"public,omitempty"`
+	Private string            `json:"private,omitempty"`
+}
+
 func FreeValue(v bool) *bool {
 	return &v
 }
@@ -112,10 +122,18 @@ const (
 func (spm ServicePlanMetadata) MarshalJSON() ([]byte, error) {
 	type Alias ServicePlanMetadata
 
-	b, _ := json.Marshal(Alias(spm))
-	m := spm.AdditionalMetadata
+	b, err := json.Marshal(Alias(spm))
+	if err != nil {
+		return []byte{}, errors.Wrap(err, "unmarshallable content in AdditionalMetadata")
+	}
+
+	var m map[string]interface{}
 	json.Unmarshal(b, &m)
 	delete(m, additionalMetadataName)
+
+	for k, v := range spm.AdditionalMetadata {
+		m[k] = v
+	}
 
 	return json.Marshal(m)
 }
@@ -166,11 +184,18 @@ func GetJsonNames(s reflect.Value) (res []string) {
 func (sm ServiceMetadata) MarshalJSON() ([]byte, error) {
 	type Alias ServiceMetadata
 
-	b, _ := json.Marshal(Alias(sm))
-	m := sm.AdditionalMetadata
+	b, err := json.Marshal(Alias(sm))
+	if err != nil {
+		return []byte{}, errors.Wrap(err, "unmarshallable content in AdditionalMetadata")
+	}
+
+	var m map[string]interface{}
 	json.Unmarshal(b, &m)
 	delete(m, additionalMetadataName)
 
+	for k, v := range sm.AdditionalMetadata {
+		m[k] = v
+	}
 	return json.Marshal(m)
 }
 
