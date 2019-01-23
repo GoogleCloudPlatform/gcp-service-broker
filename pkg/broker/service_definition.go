@@ -29,7 +29,7 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
-var enableCatalogSchemas = toggles.Compatibility.Toggle("enable-catalog-schemas", false, `Enable generating JSONSchema for the service catalog.`)
+var enableCatalogSchemas = toggles.Features.Toggle("enable-catalog-schemas", false, `Enable generating JSONSchema for the service catalog.`)
 
 // ServiceDefinition holds the necessary details to describe an OSB service and
 // provision it.

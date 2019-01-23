@@ -28,15 +28,15 @@ var (
 	// The following flags enable and disable services based on their tags.
 	// The guiding philosophy for defaults is optimistic about new technology and pessimistic about old.
 	lifecycleTagToggles = map[string]toggles.Toggle{
-		"preview":      toggles.Compatibility.Toggle("enable-preview-services", true, `Enable services that are new to the broker this release.`),
-		"unmaintained": toggles.Compatibility.Toggle("enable-unmaintained-services", false, `Enable broker services that are unmaintained.`),
-		"eol":          toggles.Compatibility.Toggle("enable-eol-services", false, `Enable broker services that are end of life.`),
-		"beta":         toggles.Compatibility.Toggle("enable-gcp-beta-services", true, "Enable services that are in GCP Beta. These have no SLA or support policy."),
-		"deprecated":   toggles.Compatibility.Toggle("enable-gcp-deprecated-services", false, "Enable services that use deprecated GCP components."),
-		"terraform":    toggles.Compatibility.Toggle("enable-terraform-services", false, "Enable services that use the experimental, unstable, Terraform back-end."),
+		"preview":      toggles.Features.Toggle("enable-preview-services", true, `Enable services that are new to the broker this release.`),
+		"unmaintained": toggles.Features.Toggle("enable-unmaintained-services", false, `Enable broker services that are unmaintained.`),
+		"eol":          toggles.Features.Toggle("enable-eol-services", false, `Enable broker services that are end of life.`),
+		"beta":         toggles.Features.Toggle("enable-gcp-beta-services", true, "Enable services that are in GCP Beta. These have no SLA or support policy."),
+		"deprecated":   toggles.Features.Toggle("enable-gcp-deprecated-services", false, "Enable services that use deprecated GCP components."),
+		"terraform":    toggles.Features.Toggle("enable-terraform-services", false, "Enable services that use the experimental, unstable, Terraform back-end."),
 	}
 
-	enableBuiltinServices = toggles.Compatibility.Toggle("enable-builtin-services", true, `Enable services that are built in to the broker i.e. not brokerpaks.`)
+	enableBuiltinServices = toggles.Features.Toggle("enable-builtin-services", true, `Enable services that are built in to the broker i.e. not brokerpaks.`)
 )
 
 // BrokerRegistry holds the list of ServiceDefinitions that can be provisioned

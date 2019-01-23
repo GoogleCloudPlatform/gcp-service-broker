@@ -85,7 +85,7 @@ func GenerateForms() TileFormsSections {
 			generateServiceAccountForm(),
 			generateDatabaseForm(),
 			generateBrokerpakForm(),
-			generateCompatibilityForm(),
+			generateFeatureFlagForm(),
 			generateDefaultOverrideForm(),
 		},
 
@@ -170,10 +170,10 @@ func generateServiceAccountForm() Form {
 	}
 }
 
-func generateCompatibilityForm() Form {
+func generateFeatureFlagForm() Form {
 	var formEntries []FormProperty
 
-	for _, toggle := range toggles.Compatibility.Toggles() {
+	for _, toggle := range toggles.Features.Toggles() {
 		toggleEntry := FormProperty{
 			Name:         strings.ToLower(toggle.EnvironmentVariable()),
 			Type:         "boolean",
@@ -187,9 +187,9 @@ func generateCompatibilityForm() Form {
 	}
 
 	return Form{
-		Name:        "compatibility",
-		Label:       "Compatibility",
-		Description: "Legacy Compatibility Options",
+		Name:        "features",
+		Label:       "Feature Flags",
+		Description: "Service broker feature flags.",
 		Properties:  formEntries,
 	}
 }
