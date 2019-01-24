@@ -13,11 +13,11 @@
 // limitations under the License.
 
 /*
-  Package toggles defines a standard way to define, list, and use feature
-  toggles in the service broker.
+Package toggles defines a standard way to define, list, and use feature
+toggles in the service broker.
 
-  It mimics Go's `flags` package, but uses Viper as a backing store to abstract
-  out how a particular flag is set.
+It mimics Go's `flags` package, but uses Viper as a backing store to abstract
+out how a particular flag is set.
 
 */
 package toggles
@@ -29,11 +29,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Compatibility is the default set of flags for enabling compatibility modes.
-var Compatibility = NewToggleSet("compatibility.")
-
-// Feature is the default set of flags for enabling or disabling features.
-var Feature = NewToggleSet("feature.")
+// Features is the default set of flags for enabling different features.
+// For legacy compatibility reasons the flags are put under the "compatibility"
+// namespace.
+var Features = NewToggleSet("compatibility.")
 
 // Toggle represents a single feature that the user can enable or disable.
 type Toggle struct {

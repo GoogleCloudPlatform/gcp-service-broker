@@ -35,7 +35,7 @@ const (
 	apiPortProp     = "api.port"
 )
 
-var cfCompatibilityToggle = toggles.Compatibility.Toggle("enable-cf-sharing", false, `Set all services to have the Sharable flag so they can be shared
+var cfCompatibilityToggle = toggles.Features.Toggle("enable-cf-sharing", false, `Set all services to have the Sharable flag so they can be shared
 	across spaces in PCF.`)
 
 func init() {
