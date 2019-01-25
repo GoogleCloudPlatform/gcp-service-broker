@@ -23,8 +23,8 @@ import (
 	"testing"
 
 	. "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker/brokerfakes"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
@@ -53,8 +53,9 @@ const (
 )
 
 const (
-	fakeInstanceId = "newid"
-	fakeBindingId  = "newbinding"
+	fakeInstanceId     = "newid"
+	fakeBindingId      = "newbinding"
+	fakeOperationToken = "operationtoken"
 )
 
 // serviceStub holds a stubbed out ServiceDefinition with easy access to
@@ -72,6 +73,16 @@ func (s *serviceStub) ProvisionDetails() brokerapi.ProvisionDetails {
 	return brokerapi.ProvisionDetails{
 		ServiceID: s.ServiceId,
 		PlanID:    s.PlanId,
+	}
+}
+
+// PollDetails creates a brokerapi.PollDetails object valid for
+// the given service.
+func (s *serviceStub) PollDetails() brokerapi.PollDetails {
+	return brokerapi.PollDetails{
+		OperationData: fakeOperationToken,
+		ServiceID:     s.ServiceId,
+		PlanID:        s.PlanId,
 	}
 }
 
@@ -448,14 +459,14 @@ func TestGCPServiceBroker_LastOperation(t *testing.T) {
 		"missing-instance": {
 			ServiceState: StateProvisioned,
 			Check: func(t *testing.T, broker *GCPServiceBroker, stub *serviceStub) {
-				_, err := broker.LastOperation(context.Background(), "invalid-instance-id", brokerapi.PollDetails{OperationData: "operationtoken"})
+				_, err := broker.LastOperation(context.Background(), "invalid-instance-id", stub.PollDetails())
 				assertEqual(t, "errors should match", brokerapi.ErrInstanceDoesNotExist, err)
 			},
 		},
 		"called-on-synchronous-service": {
 			ServiceState: StateProvisioned,
 			Check: func(t *testing.T, broker *GCPServiceBroker, stub *serviceStub) {
-				_, err := broker.LastOperation(context.Background(), fakeInstanceId, brokerapi.PollDetails{OperationData: "operationtoken"})
+				_, err := broker.LastOperation(context.Background(), fakeInstanceId, stub.PollDetails())
 				assertEqual(t, "errors should match", brokerapi.ErrAsyncRequired, err)
 			},
 		},
@@ -463,7 +474,7 @@ func TestGCPServiceBroker_LastOperation(t *testing.T) {
 			AsyncService: true,
 			ServiceState: StateProvisioned,
 			Check: func(t *testing.T, broker *GCPServiceBroker, stub *serviceStub) {
-				_, err := broker.LastOperation(context.Background(), fakeInstanceId, brokerapi.PollDetails{OperationData: "operationtoken"})
+				_, err := broker.LastOperation(context.Background(), fakeInstanceId, stub.PollDetails())
 				failIfErr(t, "shouldn't be called on async service", err)
 
 				assertEqual(t, "PollInstanceCallCount should match", 1, stub.Provider.PollInstanceCallCount())
@@ -474,7 +485,7 @@ func TestGCPServiceBroker_LastOperation(t *testing.T) {
 			ServiceState: StateProvisioned,
 			Check: func(t *testing.T, broker *GCPServiceBroker, stub *serviceStub) {
 				stub.Provider.PollInstanceReturns(false, &googleapi.Error{Code: 503})
-				status, _ := broker.LastOperation(context.Background(), fakeInstanceId, brokerapi.PollDetails{OperationData: "operationtoken"})
+				status, _ := broker.LastOperation(context.Background(), fakeInstanceId, stub.PollDetails())
 				assertEqual(t, "retryable errors should result in in-progress state", brokerapi.InProgress, status.State)
 			},
 		},
@@ -483,7 +494,7 @@ func TestGCPServiceBroker_LastOperation(t *testing.T) {
 			ServiceState: StateProvisioned,
 			Check: func(t *testing.T, broker *GCPServiceBroker, stub *serviceStub) {
 				stub.Provider.PollInstanceReturns(false, errors.New("not-retryable"))
-				status, _ := broker.LastOperation(context.Background(), fakeInstanceId, brokerapi.PollDetails{OperationData: "operationtoken"})
+				status, _ := broker.LastOperation(context.Background(), fakeInstanceId, stub.PollDetails())
 				assertEqual(t, "non-retryable errors should result in a failure state", brokerapi.Failed, status.State)
 			},
 		},
@@ -492,7 +503,7 @@ func TestGCPServiceBroker_LastOperation(t *testing.T) {
 			ServiceState: StateProvisioned,
 			Check: func(t *testing.T, broker *GCPServiceBroker, stub *serviceStub) {
 				stub.Provider.PollInstanceReturns(false, nil)
-				status, err := broker.LastOperation(context.Background(), fakeInstanceId, brokerapi.PollDetails{OperationData: "operationtoken"})
+				status, err := broker.LastOperation(context.Background(), fakeInstanceId, stub.PollDetails())
 				failIfErr(t, "checking last operation", err)
 				assertEqual(t, "polls that return no error should result in an in-progress state", brokerapi.InProgress, status.State)
 			},
@@ -502,7 +513,7 @@ func TestGCPServiceBroker_LastOperation(t *testing.T) {
 			ServiceState: StateProvisioned,
 			Check: func(t *testing.T, broker *GCPServiceBroker, stub *serviceStub) {
 				stub.Provider.PollInstanceReturns(true, nil)
-				status, err := broker.LastOperation(context.Background(), fakeInstanceId, brokerapi.PollDetails{OperationData: "operationtoken"})
+				status, err := broker.LastOperation(context.Background(), fakeInstanceId, stub.PollDetails())
 				failIfErr(t, "checking last operation", err)
 				assertEqual(t, "polls that return finished should result in a succeeded state", brokerapi.Succeeded, status.State)
 			},
@@ -518,8 +529,15 @@ func TestGCPServiceBroker_GetBinding(t *testing.T) {
 			ServiceState: StateBound,
 			Check: func(t *testing.T, broker *GCPServiceBroker, stub *serviceStub) {
 				_, err := broker.GetBinding(context.Background(), fakeInstanceId, fakeBindingId)
+				failIfErr(t, "expect get binding has no err", err)
+			},
+		},
+		"called-before-bound": {
+			ServiceState: StateProvisioned,
+			Check: func(t *testing.T, broker *GCPServiceBroker, stub *serviceStub) {
+				_, err := broker.GetBinding(context.Background(), fakeInstanceId, fakeBindingId)
 
-				assertEqual(t, "expect get binding not supported err", ErrGetBindingsUnsupported, err)
+				assertEqual(t, "expect get binding does not exist err", brokerapi.ErrBindingDoesNotExist, err)
 			},
 		},
 	}
@@ -532,9 +550,19 @@ func TestGCPServiceBroker_GetInstance(t *testing.T) {
 		"called-while-provisioned": {
 			ServiceState: StateProvisioned,
 			Check: func(t *testing.T, broker *GCPServiceBroker, stub *serviceStub) {
+				resp, err := broker.GetInstance(context.Background(), fakeInstanceId)
+				assertEqual(t, "expect no error when getting existing instance", nil, err)
+
+				assertEqual(t, "ServiceID is set", stub.ServiceId, resp.ServiceID)
+				assertEqual(t, "PlanID is set", stub.PlanId, resp.PlanID)
+			},
+		},
+		"called-before-provisioned": {
+			ServiceState: StateNone,
+			Check: func(t *testing.T, broker *GCPServiceBroker, stub *serviceStub) {
 				_, err := broker.GetInstance(context.Background(), fakeInstanceId)
 
-				assertEqual(t, "expect get instances not supported err", ErrGetInstancesUnsupported, err)
+				assertEqual(t, "expect get instances does not exist err", brokerapi.ErrInstanceDoesNotExist, err)
 			},
 		},
 	}
