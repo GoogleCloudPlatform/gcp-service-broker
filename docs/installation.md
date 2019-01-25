@@ -31,11 +31,12 @@ Documentation for installing as a Pivotal Ops Manager tile is available [here](h
 
 #### [Enable APIs](#apis)
 
-Enable the following services in **[API Manager > Library](https://console.cloud.google.com/apis/library)**.
+Enable the following services in **[APIs and services > Library](https://console.cloud.google.com/apis/library)**.
 
 1. Enable the [Google Cloud Resource Manager API](https://console.cloud.google.com/apis/api/cloudresourcemanager.googleapis.com/overview)
 1. Enable the [Google Identity and Access Management (IAM) API](https://console.cloud.google.com/apis/api/iam.googleapis.com/overview)
-1. If you want to enable CloudSQL as a service, enable the [CloudSQL API](https://console.cloud.google.com/apis/api/sqladmin/overview)
+1. If you want to enable CloudSQL as a service, enable the [CloudSQL API]
+(https://console.cloud.google.com/apis/library/sql-component.googleapis.com)
 1. If you want to enable BigQuery as a service, enable the [BigQuery API](https://console.cloud.google.com/apis/api/bigquery/overview)
 1. If you want to enable Cloud Storage as a service, enable the [Cloud Storage API](https://console.cloud.google.com/apis/api/storage_component/overview)
 1. If you want to enable Pub/Sub as a service, enable the [Cloud Pub/Sub API](https://console.cloud.google.com/apis/api/pubsub/overview)
