@@ -58,23 +58,23 @@ func TestBigTableBroker_ProvisionVariables(t *testing.T) {
 			},
 		},
 		"cluster truncates": {
-			UserParams: `{"name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
+			UserParams: `{"name":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}`,
 			PlanId:     ssdPlan,
 			ExpectedContext: map[string]interface{}{
 				"num_nodes":    "3",
-				"name":         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				"name":         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 				"cluster_id":   "aaaaaaaaaaaaaaaaaaaa-cluster",
-				"display_name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				"display_name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 				"zone":         "us-east1-b",
 				"storage_type": "SSD",
 			},
 		},
 		"no defaults": {
-			UserParams: `{"name":"test", "cluster_id": "testcluster", "display_name":"test display"}`,
+			UserParams: `{"name":"test-no-defaults", "cluster_id": "testcluster", "display_name":"test display"}`,
 			PlanId:     ssdPlan,
 			ExpectedContext: map[string]interface{}{
 				"num_nodes":    "3",
-				"name":         "test",
+				"name":         "test-no-defaults",
 				"cluster_id":   "testcluster",
 				"display_name": "test display",
 				"zone":         "us-east1-b",
@@ -93,7 +93,7 @@ func TestBigTableBroker_ProvisionVariables(t *testing.T) {
 			vars, err := service.ProvisionVariables("instance-id-here", details, *plan)
 
 			if err != nil {
-				t.Errorf("got error while creating provision variables: %v", err)
+				t.Fatalf("got error while creating provision variables: %v", err)
 			}
 
 			if !reflect.DeepEqual(vars.ToMap(), tc.ExpectedContext) {

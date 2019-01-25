@@ -115,7 +115,7 @@ func commonProvisionVariables() []broker.BrokerVariable {
 			Details:   "(only for 2nd generation instances)",
 			Default:   "",
 			Constraints: validation.NewConstraintBuilder().
-				Pattern("^[A-Za-z][-a-z0-9A-Z]+$").
+				Pattern("^(|[A-Za-z][-a-z0-9A-Z]+)$").
 				Build(),
 		},
 		{
