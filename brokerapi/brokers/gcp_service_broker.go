@@ -125,11 +125,13 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrAsyncRequired
 	}
 
-	// validate parameters meet the service's schema
-	if err := gcpBroker.validateProvisionVariables(details, brokerService); err != nil {
-		return brokerapi.ProvisionedServiceSpec{}, err
+	// Give the user a better error message if they give us a bad request
+	if !isValidOrEmptyJSON(details.GetRawParameters()) {
+		return brokerapi.ProvisionedServiceSpec{}, ErrInvalidUserInput
 	}
 
+	// validate parameters meet the service's schema and merge the user vars with
+	// the plan's
 	vars, err := brokerService.ProvisionVariables(instanceID, details, *plan)
 	if err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, err
@@ -163,28 +165,6 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 	}
 
 	return brokerapi.ProvisionedServiceSpec{IsAsync: shouldProvisionAsync, DashboardURL: "", OperationData: instanceDetails.OperationId}, nil
-}
-
-func (gcpBroker *GCPServiceBroker) validateProvisionVariables(details brokerapi.ProvisionDetails, serviceDefinition *broker.ServiceDefinition) error {
-	params := make(map[string]interface{})
-	if len(details.RawParameters) > 0 {
-		if err := json.Unmarshal([]byte(details.RawParameters), &params); err != nil {
-			return ErrInvalidUserInput
-		}
-	}
-
-	return broker.ValidateVariables(params, serviceDefinition.ProvisionInputVariables)
-}
-
-func (gcpBroker *GCPServiceBroker) validateBindVariables(details brokerapi.BindDetails, serviceDefinition *broker.ServiceDefinition) error {
-	params := make(map[string]interface{})
-	if len(details.RawParameters) > 0 {
-		if err := json.Unmarshal([]byte(details.RawParameters), &params); err != nil {
-			return ErrInvalidUserInput
-		}
-	}
-
-	return broker.ValidateVariables(params, serviceDefinition.BindInputVariables)
 }
 
 // Deprovision destroys an existing instance of a service.
@@ -268,11 +248,13 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 		return brokerapi.Binding{}, err
 	}
 
-	// validate parameters meet the service's schema
-	if err := gcpBroker.validateBindVariables(details, serviceDefinition); err != nil {
-		return brokerapi.Binding{}, err
+	// Give the user a better error message if they give us a bad request
+	if !isValidOrEmptyJSON(details.GetRawParameters()) {
+		return brokerapi.Binding{}, ErrInvalidUserInput
 	}
 
+	// validate parameters meet the service's schema and merge the plan's vars with
+	// the user's
 	vars, err := serviceDefinition.BindVariables(*instanceRecord, bindingID, details)
 	if err != nil {
 		return brokerapi.Binding{}, err
@@ -475,4 +457,8 @@ func (gcpBroker *GCPServiceBroker) updateStateOnOperationCompletion(ctx context.
 // This functionality is not implemented and will return an error indicating that plan changes are not supported.
 func (gcpBroker *GCPServiceBroker) Update(ctx context.Context, instanceID string, details brokerapi.UpdateDetails, asyncAllowed bool) (brokerapi.UpdateServiceSpec, error) {
 	return brokerapi.UpdateServiceSpec{}, brokerapi.ErrPlanChangeNotSupported
+}
+
+func isValidOrEmptyJSON(msg json.RawMessage) bool {
+	return msg == nil || len(msg) == 0 || json.Valid(msg)
 }

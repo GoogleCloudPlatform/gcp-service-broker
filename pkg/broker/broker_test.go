@@ -16,11 +16,13 @@ package broker
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/viper"
@@ -188,7 +190,6 @@ func TestServiceDefinition_CatalogEntry(t *testing.T) {
 			ExpectError: false,
 		},
 		"bad-plan-json": {
-
 			UserPlans:   `333`,
 			PlanIds:     map[string]bool{},
 			ExpectError: true,
@@ -224,7 +225,7 @@ func TestServiceDefinition_CatalogEntry(t *testing.T) {
 	}
 }
 
-func ExampleServiceDefinition_CatalogEntrySchema() {
+func ExampleServiceDefinition_CatalogEntry() {
 	service := ServiceDefinition{
 		Id:   "00000000-0000-0000-0000-000000000000",
 		Name: "left-handed-smoke-sifter",
@@ -280,6 +281,9 @@ func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 				FieldName: "name",
 				Type:      JsonTypeString,
 				Default:   "name-${location}",
+				Constraints: validation.NewConstraintBuilder().
+					MaxLength(30).
+					Build(),
 			},
 		},
 		ProvisionComputedVariables: []varcontext.DefaultVariable{
@@ -300,6 +304,7 @@ func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 		UserParams        string
 		ServiceProperties map[string]string
 		DefaultOverride   string
+		ExpectedError     error
 		ExpectedContext   map[string]interface{}
 	}{
 		"empty": {
@@ -378,6 +383,10 @@ func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 				"maybe-missing": "default",
 			},
 		},
+		"invalid-request": {
+			UserParams:    `{"name":"some-name-that-is-longer-than-thirty-characters"}`,
+			ExpectedError: errors.New("1 error(s) occurred: name: String length must be less than or equal to 30"),
+		},
 	}
 
 	for tn, tc := range cases {
@@ -389,11 +398,9 @@ func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 			plan := ServicePlan{ServiceProperties: tc.ServiceProperties}
 			vars, err := service.ProvisionVariables("instance-id-here", details, plan)
 
-			if err != nil {
-				t.Errorf("got error while creating provision variables: %v", err)
-			}
+			expectError(t, tc.ExpectedError, err)
 
-			if !reflect.DeepEqual(vars.ToMap(), tc.ExpectedContext) {
+			if tc.ExpectedError == nil && !reflect.DeepEqual(vars.ToMap(), tc.ExpectedContext) {
 				t.Errorf("Expected context: %v got %v", tc.ExpectedContext, vars.ToMap())
 			}
 		})
@@ -417,6 +424,9 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 				FieldName: "name",
 				Type:      JsonTypeString,
 				Default:   "name-${location}",
+				Constraints: validation.NewConstraintBuilder().
+					MaxLength(30).
+					Build(),
 			},
 		},
 		BindComputedVariables: []varcontext.DefaultVariable{
@@ -436,6 +446,7 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 	cases := map[string]struct {
 		UserParams      string
 		DefaultOverride string
+		ExpectedError   error
 		ExpectedContext map[string]interface{}
 		InstanceVars    string
 	}{
@@ -505,6 +516,11 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 				"instance-foo": "bar",
 			},
 		},
+		"invalid-request": {
+			UserParams:    `{"name":"some-name-that-is-longer-than-thirty-characters"}`,
+			InstanceVars:  `{"foo":""}`,
+			ExpectedError: errors.New("1 error(s) occurred: name: String length must be less than or equal to 30"),
+		},
 	}
 
 	for tn, tc := range cases {
@@ -516,11 +532,9 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 			instance := models.ServiceInstanceDetails{OtherDetails: tc.InstanceVars}
 			vars, err := service.BindVariables(instance, "binding-id-here", details)
 
-			if err != nil {
-				t.Fatalf("got error while creating provision variables: %v", err)
-			}
+			expectError(t, tc.ExpectedError, err)
 
-			if !reflect.DeepEqual(vars.ToMap(), tc.ExpectedContext) {
+			if tc.ExpectedError == nil && !reflect.DeepEqual(vars.ToMap(), tc.ExpectedContext) {
 				t.Errorf("Expected context: %v got %v", tc.ExpectedContext, vars.ToMap())
 			}
 		})
@@ -573,5 +587,22 @@ func TestServiceDefinition_createSchemas(t *testing.T) {
 	expectedBindCreateParams := createJsonSchema(service.BindInputVariables)
 	if !reflect.DeepEqual(bindCreate.Parameters, expectedBindCreateParams) {
 		t.Errorf("expected create params to be: %v got %v", expectedBindCreateParams, bindCreate.Parameters)
+	}
+}
+
+func expectError(t *testing.T, expected, actual error) {
+	t.Helper()
+	expectedErr := expected != nil
+	gotErr := actual != nil
+
+	switch {
+	case expectedErr && gotErr:
+		if expected.Error() != actual.Error() {
+			t.Fatalf("Expected: %v, got: %v", expected, actual)
+		}
+	case expectedErr && !gotErr:
+		t.Fatalf("Expected: %v, got: %v", expected, actual)
+	case !expectedErr && gotErr:
+		t.Fatalf("Expected no error but got: %v", actual)
 	}
 }

@@ -208,7 +208,7 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 				Details:   "(only for 2nd generation instances) If specified, creates a failover replica with the given name.",
 				Default:   "",
 				Constraints: validation.NewConstraintBuilder().
-					Pattern("^[a-z][a-z0-9-]+$").
+					Pattern("^(|[a-z][a-z0-9-]+)$").
 					MaxLength(75).
 					Build(),
 			},

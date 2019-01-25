@@ -285,8 +285,6 @@ func (svc *ServiceDefinition) bindDefaults() []varcontext.DefaultVariable {
 // Therefore, they get executed conditionally if a user-provided variable does not exist.
 // Computed variables get executed either unconditionally or conditionally for greater flexibility.
 func (svc *ServiceDefinition) ProvisionVariables(instanceId string, details brokerapi.ProvisionDetails, plan ServicePlan) (*varcontext.VarContext, error) {
-	defaults := svc.provisionDefaults()
-
 	// The namespaces of these values roughly align with the OSB spec.
 	constants := map[string]interface{}{
 		"request.plan_id":        details.PlanID,
@@ -295,14 +293,15 @@ func (svc *ServiceDefinition) ProvisionVariables(instanceId string, details brok
 		"request.default_labels": utils.ExtractDefaultLabels(instanceId, details),
 	}
 
-	return varcontext.Builder().
+	builder := varcontext.Builder().
 		SetEvalConstants(constants).
 		MergeMap(svc.ProvisionDefaultOverrides()).
 		MergeJsonObject(details.GetRawParameters()).
-		MergeDefaults(defaults).
+		MergeDefaults(svc.provisionDefaults()).
 		MergeMap(plan.GetServiceProperties()).
-		MergeDefaults(svc.ProvisionComputedVariables).
-		Build()
+		MergeDefaults(svc.ProvisionComputedVariables)
+
+	return buildAndValidate(builder, svc.ProvisionInputVariables)
 }
 
 // BindVariables gets the variable resolution context for a bind request.
@@ -315,13 +314,9 @@ func (svc *ServiceDefinition) ProvisionVariables(instanceId string, details brok
 // 5. Default variables (in `bind_input_variables`).
 //
 func (svc *ServiceDefinition) BindVariables(instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (*varcontext.VarContext, error) {
-	defaults := svc.bindDefaults()
-
 	otherDetails := make(map[string]interface{})
-	if instance.OtherDetails != "" {
-		if err := json.Unmarshal(json.RawMessage(instance.OtherDetails), &otherDetails); err != nil {
-			return nil, err
-		}
+	if err := instance.GetOtherDetails(&otherDetails); err != nil {
+		return nil, err
 	}
 
 	appGuid := ""
@@ -348,11 +343,28 @@ func (svc *ServiceDefinition) BindVariables(instance models.ServiceInstanceDetai
 		"instance.details": otherDetails,
 	}
 
-	return varcontext.Builder().
+	builder := varcontext.Builder().
 		SetEvalConstants(constants).
 		MergeMap(svc.BindDefaultOverrides()).
 		MergeJsonObject(details.GetRawParameters()).
-		MergeDefaults(defaults).
-		MergeDefaults(svc.BindComputedVariables).
-		Build()
+		MergeDefaults(svc.bindDefaults()).
+		MergeDefaults(svc.BindComputedVariables)
+
+	return buildAndValidate(builder, svc.BindInputVariables)
+}
+
+// buildAndValidate builds the varcontext and if it's valid validates the
+// resulting context against the JSONSchema defined by the BrokerVariables
+// exactly one of VarContext and error will be nil upon return.
+func buildAndValidate(builder *varcontext.ContextBuilder, vars []BrokerVariable) (*varcontext.VarContext, error) {
+	vc, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := ValidateVariables(vc.ToMap(), vars); err != nil {
+		return nil, err
+	}
+
+	return vc, nil
 }
