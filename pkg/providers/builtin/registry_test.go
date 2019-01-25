@@ -85,6 +85,26 @@ func validateServiceDefinition(t *testing.T, svc *broker.ServiceDefinition) {
 			t.Error("Expected PlanUpdatable to be false")
 		}
 
+		if catalog.InstancesRetrievable {
+			t.Error("Expected InstancesRetrievable to be false")
+		}
+
+		if catalog.BindingsRetrievable {
+			t.Error("Expected BindingsRetrievable to be false")
+		}
+
+		for _, v := range svc.Examples {
+			t.Run("example:"+v.Name, func(t *testing.T) {
+				if err := broker.ValidateVariables(v.ProvisionParams, svc.ProvisionInputVariables); err != nil {
+					t.Errorf("expected valid provision vars: %v", err)
+				}
+
+				if err := broker.ValidateVariables(v.BindParams, svc.BindInputVariables); err != nil {
+					t.Errorf("expected valid bind vars: %v", err)
+				}
+			})
+		}
+
 		// All fields should be optional for UX purposes when using with Cloud Foundry
 		for _, v := range svc.ProvisionInputVariables {
 			if v.Required {
