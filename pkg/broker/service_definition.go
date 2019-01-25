@@ -355,7 +355,7 @@ func (svc *ServiceDefinition) BindVariables(instance models.ServiceInstanceDetai
 
 // buildAndValidate builds the varcontext and if it's valid validates the
 // resulting context against the JSONSchema defined by the BrokerVariables
-// exactly one of VarContext and error will be nil upon return
+// exactly one of VarContext and error will be nil upon return.
 func buildAndValidate(builder *varcontext.ContextBuilder, vars []BrokerVariable) (*varcontext.VarContext, error) {
 	vc, err := builder.Build()
 	if err != nil {
