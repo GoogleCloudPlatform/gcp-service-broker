@@ -274,7 +274,6 @@ import (
 	"context"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
-	"github.com/jinzhu/gorm"
 )
 
 {{- range .Models}}
@@ -325,28 +324,9 @@ func (ds *SqlDatastore) {{$getFn}}(ctx context.Context, {{ $key.Args }}) (*model
 	return &record, nil
 }
 
-{{ $existsFn := (print "Exists" $type $key.FuncName) -}}
-// {{$existsFn}} checks to see if an instance of {{$type}} exists by its key ({{$key.CallParams}}).
-func {{$existsFn}}(ctx context.Context, {{ $key.Args }}) (bool, error) { return defaultDatastore().{{$existsFn}}(ctx, {{$key.CallParams}}) }
-func (ds *SqlDatastore) {{$existsFn}}(ctx context.Context, {{ $key.Args }}) (bool, error) {
-	return recordToExists(ds.{{$getFn}}(ctx, {{ $key.CallParams }}))
-}
-
 {{ end }}
 
 {{- end }}
-
-func recordToExists(_ interface{}, err error) (bool, error) {
-	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
-			return false, nil
-		}
-
-		return false, err
-	}
-
-	return true, nil
-}
 `))
 
 var daoTestTemplate = template.Must(template.New("").Funcs(
@@ -419,9 +399,6 @@ func TestSqlDatastore_{{.Type}}DAO(t *testing.T) {
 	testCtx := context.Background()
 
 	// on startup, there should be no objects to find or delete
-	exists, err := ds.{{funcName "Exists" .Type .PrimaryKeyField}}(testCtx, testPk)
-	ensureExistance(t, false, exists, err)
-
 	if _, err := ds.{{funcName "Get" .Type .PrimaryKeyField}}(testCtx, testPk); err != gorm.ErrRecordNotFound {
 		t.Errorf("Expected an ErrRecordNotFound trying to get non-existing PK got %v", err)
 	}
@@ -505,41 +482,7 @@ func TestSqlDatastore_{{$fn}}(t *testing.T) {
 	ensure{{$type}}FieldsMatch(t, &instance, ret)
 }
 
-{{ $fn := (print "Exists" $type $key.FuncName) -}}
-func TestSqlDatastore_{{$fn}}(t *testing.T) {
-	ds := newInMemoryDatastore(t)
-	_, instance := create{{$type}}Instance()
-	testCtx := context.Background()
-
-	exists, err := ds.{{$fn}}(testCtx, {{$key.ExampleArgs "instance"}})
-	ensureExistance(t, false, exists, err)
-
-	if err := ds.{{funcName "Create" $type}}(testCtx, &instance); err != nil {
-		t.Errorf("Expected to be able to create the item %#v, got error: %s", instance, err)
-	}
-
-	exists, err = ds.{{$fn}}(testCtx, {{$key.ExampleArgs "instance"}})
-	ensureExistance(t, true, exists, err)
-
-	if err := ds.{{funcName "Delete" $type}}(testCtx, &instance); err != nil {
-		t.Errorf("Expected no error when deleting by pk got: %v", err)
-	}
-
-	// we should be able to see that it was soft-deleted
-	exists, err = ds.{{$fn}}(testCtx, {{$key.ExampleArgs "instance"}})
-	ensureExistance(t, false, exists, err)
-}
 {{ end }}
 
 {{- end }}
-
-func ensureExistance(t *testing.T, expected, actual bool, err error) {
-	if err != nil {
-		t.Fatalf("Expected err to be nil, got %v", err)
-	}
-
-	if expected != actual {
-		t.Fatalf("Expected exists to be %t got %t", expected, actual)
-	}
-}
 `))

@@ -94,11 +94,7 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 	})
 
 	// make sure that instance hasn't already been provisioned
-	exists, err := db_service.ExistsServiceInstanceDetailsById(ctx, instanceID)
-	if err != nil {
-		return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("Database error checking for existing instance: %s", err)
-	}
-	if exists {
+	if _, err := gcpBroker.GetInstance(ctx, instanceID); err != brokerapi.ErrInstanceDoesNotExist {
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrInstanceAlreadyExists
 	}
 
@@ -215,11 +211,8 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 	})
 
 	// check for existing binding
-	exists, err := db_service.ExistsServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, instanceID, bindingID)
-	if err != nil {
-		return brokerapi.Binding{}, fmt.Errorf("Error checking for existing binding: %s", err)
-	}
-	if exists {
+	// make sure that instance hasn't already been provisioned
+	if _, err := gcpBroker.GetBinding(ctx, instanceID, bindingID); err != brokerapi.ErrBindingDoesNotExist {
 		return brokerapi.Binding{}, brokerapi.ErrBindingAlreadyExists
 	}
 

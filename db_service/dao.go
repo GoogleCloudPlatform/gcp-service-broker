@@ -20,7 +20,6 @@ import (
 	"context"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
-	"github.com/jinzhu/gorm"
 )
 
 // CreateServiceInstanceDetails creates a new record in the database and assigns it a primary key.
@@ -56,12 +55,6 @@ func (ds *SqlDatastore) GetServiceInstanceDetailsById(ctx context.Context, id st
 	}
 
 	return &record, nil
-}
-
-// ExistsServiceInstanceDetailsById checks to see if an instance of ServiceInstanceDetails exists by its key (id).
-func ExistsServiceInstanceDetailsById(ctx context.Context, id string) (bool, error) { return defaultDatastore().ExistsServiceInstanceDetailsById(ctx, id) }
-func (ds *SqlDatastore) ExistsServiceInstanceDetailsById(ctx context.Context, id string) (bool, error) {
-	return recordToExists(ds.GetServiceInstanceDetailsById(ctx, id))
 }
 
 
@@ -113,12 +106,6 @@ func (ds *SqlDatastore) GetServiceBindingCredentialsByServiceInstanceIdAndBindin
 	return &record, nil
 }
 
-// ExistsServiceBindingCredentialsByServiceInstanceIdAndBindingId checks to see if an instance of ServiceBindingCredentials exists by its key (serviceInstanceId, bindingId).
-func ExistsServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx context.Context, serviceInstanceId string, bindingId string) (bool, error) { return defaultDatastore().ExistsServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, serviceInstanceId, bindingId) }
-func (ds *SqlDatastore) ExistsServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx context.Context, serviceInstanceId string, bindingId string) (bool, error) {
-	return recordToExists(ds.GetServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, serviceInstanceId, bindingId))
-}
-
 // GetServiceBindingCredentialsByBindingId gets an instance of ServiceBindingCredentials by its key (bindingId).
 func GetServiceBindingCredentialsByBindingId(ctx context.Context, bindingId string) (*models.ServiceBindingCredentials, error) { return defaultDatastore().GetServiceBindingCredentialsByBindingId(ctx, bindingId) }
 func (ds *SqlDatastore) GetServiceBindingCredentialsByBindingId(ctx context.Context, bindingId string) (*models.ServiceBindingCredentials, error) {
@@ -130,12 +117,6 @@ func (ds *SqlDatastore) GetServiceBindingCredentialsByBindingId(ctx context.Cont
 	return &record, nil
 }
 
-// ExistsServiceBindingCredentialsByBindingId checks to see if an instance of ServiceBindingCredentials exists by its key (bindingId).
-func ExistsServiceBindingCredentialsByBindingId(ctx context.Context, bindingId string) (bool, error) { return defaultDatastore().ExistsServiceBindingCredentialsByBindingId(ctx, bindingId) }
-func (ds *SqlDatastore) ExistsServiceBindingCredentialsByBindingId(ctx context.Context, bindingId string) (bool, error) {
-	return recordToExists(ds.GetServiceBindingCredentialsByBindingId(ctx, bindingId))
-}
-
 // GetServiceBindingCredentialsById gets an instance of ServiceBindingCredentials by its key (id).
 func GetServiceBindingCredentialsById(ctx context.Context, id uint) (*models.ServiceBindingCredentials, error) { return defaultDatastore().GetServiceBindingCredentialsById(ctx, id) }
 func (ds *SqlDatastore) GetServiceBindingCredentialsById(ctx context.Context, id uint) (*models.ServiceBindingCredentials, error) {
@@ -145,12 +126,6 @@ func (ds *SqlDatastore) GetServiceBindingCredentialsById(ctx context.Context, id
 	}
 
 	return &record, nil
-}
-
-// ExistsServiceBindingCredentialsById checks to see if an instance of ServiceBindingCredentials exists by its key (id).
-func ExistsServiceBindingCredentialsById(ctx context.Context, id uint) (bool, error) { return defaultDatastore().ExistsServiceBindingCredentialsById(ctx, id) }
-func (ds *SqlDatastore) ExistsServiceBindingCredentialsById(ctx context.Context, id uint) (bool, error) {
-	return recordToExists(ds.GetServiceBindingCredentialsById(ctx, id))
 }
 
 
@@ -190,12 +165,6 @@ func (ds *SqlDatastore) GetProvisionRequestDetailsById(ctx context.Context, id u
 	return &record, nil
 }
 
-// ExistsProvisionRequestDetailsById checks to see if an instance of ProvisionRequestDetails exists by its key (id).
-func ExistsProvisionRequestDetailsById(ctx context.Context, id uint) (bool, error) { return defaultDatastore().ExistsProvisionRequestDetailsById(ctx, id) }
-func (ds *SqlDatastore) ExistsProvisionRequestDetailsById(ctx context.Context, id uint) (bool, error) {
-	return recordToExists(ds.GetProvisionRequestDetailsById(ctx, id))
-}
-
 
 
 // CreateTerraformDeployment creates a new record in the database and assigns it a primary key.
@@ -233,22 +202,4 @@ func (ds *SqlDatastore) GetTerraformDeploymentById(ctx context.Context, id strin
 	return &record, nil
 }
 
-// ExistsTerraformDeploymentById checks to see if an instance of TerraformDeployment exists by its key (id).
-func ExistsTerraformDeploymentById(ctx context.Context, id string) (bool, error) { return defaultDatastore().ExistsTerraformDeploymentById(ctx, id) }
-func (ds *SqlDatastore) ExistsTerraformDeploymentById(ctx context.Context, id string) (bool, error) {
-	return recordToExists(ds.GetTerraformDeploymentById(ctx, id))
-}
 
-
-
-func recordToExists(_ interface{}, err error) (bool, error) {
-	if err != nil {
-		if gorm.IsRecordNotFoundError(err) {
-			return false, nil
-		}
-
-		return false, err
-	}
-
-	return true, nil
-}
