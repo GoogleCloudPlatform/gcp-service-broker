@@ -18,22 +18,22 @@ import (
 	"context"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/api_service"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigquery"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigtable"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/broker_base/broker_basefakes"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/cloudsql"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/dataflow"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/datastore"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/dialogflow"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/firestore"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/storage"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base/basefakes"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/bigquery"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/bigtable"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/cloudsql"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/dataflow"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/datastore"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/dialogflow"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/firestore"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/ml"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/pubsub"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/spanner"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/stackdriver"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/storage"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 )
 
@@ -44,7 +44,7 @@ func TestServiceProviderAsync(t *testing.T) {
 		Provider                 broker.ServiceProvider
 	}{
 		"ml": {
-			Provider: &api_service.ApiServiceBroker{},
+			Provider: &ml.ApiServiceBroker{},
 		},
 		"bigquery": {
 			Provider: &bigquery.BigQueryBroker{},
@@ -97,43 +97,43 @@ func TestServiceProviderAsync(t *testing.T) {
 }
 
 func TestThinWrapperServiceProviders(t *testing.T) {
-	cases := map[string]func(broker_base.BrokerBase) broker.ServiceProvider{
-		"pubsub": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
+	cases := map[string]func(base.BrokerBase) broker.ServiceProvider{
+		"pubsub": func(brokerBase base.BrokerBase) broker.ServiceProvider {
 			return &pubsub.PubSubBroker{BrokerBase: brokerBase}
 		},
-		"stackdriver": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
+		"stackdriver": func(brokerBase base.BrokerBase) broker.ServiceProvider {
 			return &stackdriver.StackdriverAccountProvider{BrokerBase: brokerBase}
 		},
-		"ml": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
-			return &api_service.ApiServiceBroker{BrokerBase: brokerBase}
+		"ml": func(brokerBase base.BrokerBase) broker.ServiceProvider {
+			return &ml.ApiServiceBroker{BrokerBase: brokerBase}
 		},
-		"bigquery": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
+		"bigquery": func(brokerBase base.BrokerBase) broker.ServiceProvider {
 			return &bigquery.BigQueryBroker{BrokerBase: brokerBase}
 		},
-		"dataflow": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
+		"dataflow": func(brokerBase base.BrokerBase) broker.ServiceProvider {
 			return &dataflow.DataflowBroker{BrokerBase: brokerBase}
 		},
-		"datastore": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
+		"datastore": func(brokerBase base.BrokerBase) broker.ServiceProvider {
 			return &datastore.DatastoreBroker{BrokerBase: brokerBase}
 		},
-		"dialogflow": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
+		"dialogflow": func(brokerBase base.BrokerBase) broker.ServiceProvider {
 			return &dialogflow.DialogflowBroker{BrokerBase: brokerBase}
 		},
-		"firestore": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
+		"firestore": func(brokerBase base.BrokerBase) broker.ServiceProvider {
 			return &firestore.FirestoreBroker{BrokerBase: brokerBase}
 		},
-		"spanner": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
+		"spanner": func(brokerBase base.BrokerBase) broker.ServiceProvider {
 			return &spanner.SpannerBroker{BrokerBase: brokerBase}
 		},
-		"storage": func(brokerBase broker_base.BrokerBase) broker.ServiceProvider {
+		"storage": func(brokerBase base.BrokerBase) broker.ServiceProvider {
 			return &storage.StorageBroker{BrokerBase: brokerBase}
 		},
 	}
 
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
-			accountManager := broker_basefakes.FakeServiceAccountManager{}
-			brokerBase := broker_base.BrokerBase{
+			accountManager := basefakes.FakeServiceAccountManager{}
+			brokerBase := base.BrokerBase{
 				AccountManager: &accountManager,
 			}
 			serviceProvider := tc(brokerBase)

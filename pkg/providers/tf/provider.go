@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 
 	"code.cloudfoundry.org/lager"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf/wrapper"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
@@ -36,7 +36,7 @@ func NewTerraformProvider(jobRunner *TfJobRunner, logger lager.Logger, serviceDe
 }
 
 type terraformProvider struct {
-	// broker_base.BrokerBase
+	// base.BrokerBase
 	logger            lager.Logger
 	jobRunner         *TfJobRunner
 	serviceDefinition TfServiceDefinitionV1
