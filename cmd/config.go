@@ -15,9 +15,14 @@
 package cmd
 
 import (
+	"fmt"
+	"log"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/config/migration"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	yaml "gopkg.in/yaml.v2"
 )
 
 func init() {
@@ -91,6 +96,27 @@ out.toml:
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return viper.WriteConfigAs(args[0])
+		},
+	})
+
+	configCmd.AddCommand(&cobra.Command{
+		Use:   "migrate-env",
+		Short: "Run migrations on environment variables and print the changes.",
+		Long: `Runs migration scripts on the environment variables and prints the changes in a human-readable format.
+The original environment variables will not be changed.
+
+		This function WILL NOT migrate configuration files.
+		`,
+		Args: cobra.ExactArgs(0),
+		Run: func(cmd *cobra.Command, args []string) {
+			diff := migration.MigrateEnv()
+
+			response, err := yaml.Marshal(diff)
+			if err != nil {
+				log.Fatalf("Error marshaling YAML: %s", err)
+			}
+
+			fmt.Println(string(response))
 		},
 	})
 }

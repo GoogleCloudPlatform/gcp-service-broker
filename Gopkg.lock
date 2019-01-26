@@ -363,6 +363,22 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:76695a5588998a21701d17ea689a45fa39a8c5f52c47607f74f9a92416bb6961"
+  name = "github.com/robertkrimen/otto"
+  packages = [
+    ".",
+    "ast",
+    "dbg",
+    "file",
+    "parser",
+    "registry",
+    "token",
+  ]
+  pruneopts = ""
+  revision = "15f95af6e78dcd2030d8195a138bd88d4f403546"
+
+[[projects]]
+  branch = "master"
   digest = "1:606fa779c7a80ab6a9ec5836cd12759f86cd6e1d82d5d60cf7ec5133e78c6cf8"
   name = "github.com/shurcooL/sanitized_anchor_name"
   packages = ["."]
@@ -671,6 +687,17 @@
   version = "v2.0.1"
 
 [[projects]]
+  digest = "1:be5b8bdf182abbef3c4e0d0926bba912ef41b097f001259cb5d2187370bb2e5b"
+  name = "gopkg.in/sourcemap.v1"
+  packages = [
+    ".",
+    "base64vlq",
+  ]
+  pruneopts = ""
+  revision = "6e83acea0053641eff084973fee085f0c193c61a"
+  version = "v1.0.5"
+
+[[projects]]
   digest = "1:f0620375dd1f6251d9973b5f2596228cc8042e887cd7f827e4220bc1ce8c30e2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -696,6 +723,7 @@
     "github.com/jinzhu/gorm",
     "github.com/jinzhu/gorm/dialects/sqlite",
     "github.com/pivotal-cf/brokerapi",
+    "github.com/robertkrimen/otto",
     "github.com/spf13/cast",
     "github.com/spf13/cobra",
     "github.com/spf13/viper",
