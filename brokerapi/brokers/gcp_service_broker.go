@@ -27,8 +27,8 @@ import (
 
 	"encoding/json"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
@@ -41,7 +41,7 @@ var (
 
 // GCPServiceBroker is a brokerapi.ServiceBroker that can be used to generate an OSB compatible service broker.
 type GCPServiceBroker struct {
-	registry  broker.BrokerRegistry
+	registry  *broker.ServiceRegistry
 	jwtConfig *jwt.Config
 	projectId string
 
@@ -64,17 +64,10 @@ func New(cfg *BrokerConfig, logger lager.Logger) (*GCPServiceBroker, error) {
 func (gcpBroker *GCPServiceBroker) Services(ctx context.Context) ([]brokerapi.Service, error) {
 	svcs := []brokerapi.Service{}
 
-	enabledServices, err := gcpBroker.registry.GetEnabledServices()
-	if err != nil {
-		return nil, err
-	}
+	enabledServices := gcpBroker.registry.GetEnabledServices()
 
 	for _, service := range enabledServices {
-		entry, err := service.CatalogEntry()
-		if err != nil {
-			return svcs, err
-		}
-		svcs = append(svcs, entry.ToPlain())
+		svcs = append(svcs, service.CatalogEntry().ToPlain())
 	}
 
 	return svcs, nil

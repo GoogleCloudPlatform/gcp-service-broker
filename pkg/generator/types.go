@@ -28,7 +28,7 @@ import (
 
 // CatalogDocumentation generates markdown documentation for the service catalog
 // of the given registry.
-func CatalogDocumentation(registry broker.BrokerRegistry) string {
+func CatalogDocumentation(registry *broker.ServiceRegistry) string {
 	out := ""
 
 	services := registry.GetAllServices()
@@ -42,10 +42,7 @@ func CatalogDocumentation(registry broker.BrokerRegistry) string {
 
 // generateServiceDocumentation creates documentation for a single catalog entry
 func generateServiceDocumentation(svc *broker.ServiceDefinition) string {
-	catalog, err := svc.CatalogEntry()
-	if err != nil {
-		log.Fatalf("Error getting catalog entry for service %s, %v", svc.Name, err)
-	}
+	catalog := svc.CatalogEntry()
 
 	vars := map[string]interface{}{
 		"catalog":            catalog,

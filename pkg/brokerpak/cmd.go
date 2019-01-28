@@ -161,7 +161,7 @@ func Validate(pack string) error {
 
 // RegisterAll fetches all brokerpaks from the settings file and registers them
 // with the given registry.
-func RegisterAll(registry broker.BrokerRegistry) error {
+func RegisterAll(registry *broker.ServiceRegistry) error {
 	pakConfig, err := NewServerConfigFromEnv()
 	if err != nil {
 		return err
@@ -196,10 +196,15 @@ func Docs(pack string) error {
 	return nil
 }
 
-func registryFromLocalBrokerpak(packPath string) (broker.BrokerRegistry, error) {
+func registryFromLocalBrokerpak(packPath string) (*broker.ServiceRegistry, error) {
 	config := newLocalFileServerConfig(packPath)
 
-	registry := broker.BrokerRegistry{}
+	serviceConfig, err := broker.NewServiceConfigMapFromEnv()
+	if err != nil {
+		return nil, err
+	}
+	registry := broker.NewServiceRegistry(serviceConfig)
+
 	if err := NewRegistrar(config).Register(registry); err != nil {
 		return nil, err
 	}

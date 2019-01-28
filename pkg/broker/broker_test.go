@@ -28,43 +28,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-func ExampleServiceDefinition_UserDefinedPlansProperty() {
-	service := ServiceDefinition{
-		Id:   "00000000-0000-0000-0000-000000000000",
-		Name: "left-handed-smoke-sifter",
-	}
-
-	fmt.Println(service.UserDefinedPlansProperty())
-
-	// Output: service.left-handed-smoke-sifter.plans
-}
-
-func ExampleServiceDefinition_IsRoleWhitelistEnabled() {
-	service := ServiceDefinition{
-		Id:                   "00000000-0000-0000-0000-000000000000",
-		Name:                 "left-handed-smoke-sifter",
-		DefaultRoleWhitelist: []string{"a", "b", "c"},
-	}
-	fmt.Println(service.IsRoleWhitelistEnabled())
-
-	service.DefaultRoleWhitelist = nil
-	fmt.Println(service.IsRoleWhitelistEnabled())
-
-	// Output: true
-	// false
-}
-
-func ExampleServiceDefinition_TileUserDefinedPlansVariable() {
-	service := ServiceDefinition{
-		Id:   "00000000-0000-0000-0000-000000000000",
-		Name: "google-spanner",
-	}
-
-	fmt.Println(service.TileUserDefinedPlansVariable())
-
-	// Output: SPANNER_CUSTOM_PLANS
-}
-
 func ExampleServiceDefinition_GetPlanById() {
 	service := ServiceDefinition{
 		Id:   "00000000-0000-0000-0000-000000000000",
@@ -72,10 +35,15 @@ func ExampleServiceDefinition_GetPlanById() {
 		Plans: []ServicePlan{
 			{ServicePlan: brokerapi.ServicePlan{ID: "builtin-plan", Name: "Builtin!"}},
 		},
+		config: ServiceConfig{
+			CustomPlans: []CustomPlan{
+				{
+					GUID: "custom-plan",
+					Name: "Custom!",
+				},
+			},
+		},
 	}
-
-	viper.Set(service.UserDefinedPlansProperty(), `[{"id":"custom-plan", "name": "Custom!"}]`)
-	defer viper.Reset()
 
 	plan, err := service.GetPlanById("builtin-plan")
 	fmt.Printf("builtin-plan: %q %v\n", plan.Name, err)
@@ -93,7 +61,7 @@ func ExampleServiceDefinition_GetPlanById() {
 
 func TestServiceDefinition_UserDefinedPlans(t *testing.T) {
 	cases := map[string]struct {
-		Value       interface{}
+		Value       []CustomPlan
 		PlanIds     map[string]bool
 		ExpectError bool
 	}{
@@ -103,32 +71,59 @@ func TestServiceDefinition_UserDefinedPlans(t *testing.T) {
 			ExpectError: false,
 		},
 		"single-plan": {
-			Value:       `[{"id":"aaa","name":"aaa","instances":"3"}]`,
+			Value: []CustomPlan{
+				{
+					GUID:       "aaa",
+					Name:       "aaa",
+					Properties: map[string]string{"instances": "3"},
+				},
+			},
 			PlanIds:     map[string]bool{"aaa": true},
 			ExpectError: false,
 		},
-		"bad-json": {
-			Value:       `42`,
-			PlanIds:     map[string]bool{},
-			ExpectError: true,
-		},
 		"multiple-plans": {
-			Value:       `[{"id":"aaa","name":"aaa","instances":"3"},{"id":"bbb","name":"bbb","instances":"3"}]`,
+			Value: []CustomPlan{
+				{
+					GUID:       "aaa",
+					Name:       "aaa",
+					Properties: map[string]string{"instances": "3"},
+				},
+				{
+					GUID:       "bbb",
+					Name:       "bbb",
+					Properties: map[string]string{"instances": "3"},
+				},
+			},
 			PlanIds:     map[string]bool{"aaa": true, "bbb": true},
 			ExpectError: false,
 		},
 		"missing-name": {
-			Value:       `[{"id":"aaa","instances":"3"}]`,
+			Value: []CustomPlan{
+				{
+					GUID:       "aaa",
+					Properties: map[string]string{"instances": "3"},
+				},
+			},
 			PlanIds:     map[string]bool{},
 			ExpectError: true,
 		},
 		"missing-id": {
-			Value:       `[{"name":"aaa","instances":"3"}]`,
+			Value: []CustomPlan{
+				{
+					Name:       "aaa",
+					Properties: map[string]string{"instances": "3"},
+				},
+			},
 			PlanIds:     map[string]bool{},
 			ExpectError: true,
 		},
 		"missing-instances": {
-			Value:       `[{"name":"aaa","id":"aaa"}]`,
+			Value: []CustomPlan{
+				{
+					Name: "aaa",
+					GUID: "aaa",
+				},
+			},
 			PlanIds:     map[string]bool{},
 			ExpectError: true,
 		},
@@ -148,16 +143,18 @@ func TestServiceDefinition_UserDefinedPlans(t *testing.T) {
 
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
-			viper.Set(service.UserDefinedPlansProperty(), tc.Value)
-			defer viper.Reset()
-
-			plans, err := service.UserDefinedPlans()
+			err := service.SetConfig(ServiceConfig{
+				CustomPlans: tc.Value,
+			})
+			defer service.SetConfig(ServiceConfig{})
 
 			// Check errors
 			hasErr := err != nil
 			if hasErr != tc.ExpectError {
 				t.Fatalf("Expected Error? %v, got error: %v", tc.ExpectError, err)
 			}
+
+			plans := service.UserDefinedPlans()
 
 			// Check IDs
 			if len(plans) != len(tc.PlanIds) {
@@ -175,7 +172,7 @@ func TestServiceDefinition_UserDefinedPlans(t *testing.T) {
 
 func TestServiceDefinition_CatalogEntry(t *testing.T) {
 	cases := map[string]struct {
-		UserPlans   interface{}
+		UserPlans   []CustomPlan
 		PlanIds     map[string]bool
 		ExpectError bool
 	}{
@@ -185,14 +182,20 @@ func TestServiceDefinition_CatalogEntry(t *testing.T) {
 			ExpectError: false,
 		},
 		"custom-plans": {
-			UserPlans:   `[{"id":"aaa","name":"aaa"},{"id":"bbb","name":"bbb"}]`,
+			UserPlans: []CustomPlan{
+				{
+					GUID:       "aaa",
+					Name:       "aaa",
+					Properties: map[string]string{"instances": "3"},
+				},
+				{
+					GUID:       "bbb",
+					Name:       "bbb",
+					Properties: map[string]string{"instances": "3"},
+				},
+			},
 			PlanIds:     map[string]bool{"aaa": true, "bbb": true},
 			ExpectError: false,
-		},
-		"bad-plan-json": {
-			UserPlans:   `333`,
-			PlanIds:     map[string]bool{},
-			ExpectError: true,
 		},
 	}
 
@@ -203,15 +206,16 @@ func TestServiceDefinition_CatalogEntry(t *testing.T) {
 
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
-			viper.Set(service.UserDefinedPlansProperty(), tc.UserPlans)
-			defer viper.Reset()
+			err := service.SetConfig(ServiceConfig{
+				CustomPlans: tc.UserPlans,
+			})
 
-			srvc, err := service.CatalogEntry()
 			hasErr := err != nil
 			if hasErr != tc.ExpectError {
 				t.Errorf("Expected Error? %v, got error: %v", tc.ExpectError, err)
 			}
 
+			srvc := service.CatalogEntry()
 			if err == nil && len(srvc.Plans) != len(tc.PlanIds) {
 				t.Errorf("Expected %d plans, but got %d (%+v)", len(tc.PlanIds), len(srvc.Plans), srvc.Plans)
 
@@ -240,22 +244,14 @@ func ExampleServiceDefinition_CatalogEntry() {
 		},
 	}
 
-	srvc, err := service.CatalogEntry()
-	if err != nil {
-		panic(err)
-	}
-
 	// Schemas should be nil by default
+	srvc := service.CatalogEntry()
 	fmt.Println("schemas with flag off:", srvc.ToPlain().Plans[0].Schemas)
 
 	viper.Set("compatibility.enable-catalog-schemas", true)
 	defer viper.Reset()
 
-	srvc, err = service.CatalogEntry()
-	if err != nil {
-		panic(err)
-	}
-
+	srvc = service.CatalogEntry()
 	eq := reflect.DeepEqual(srvc.ToPlain().Plans[0].Schemas, service.createSchemas())
 
 	fmt.Println("schema was generated?", eq)
@@ -303,7 +299,7 @@ func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 	cases := map[string]struct {
 		UserParams        string
 		ServiceProperties map[string]string
-		DefaultOverride   string
+		DefaultOverride   map[string]interface{}
 		ExpectedError     error
 		ExpectedContext   map[string]interface{}
 	}{
@@ -355,7 +351,7 @@ func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 		},
 		"operator defaults override computed defaults": {
 			UserParams:        "",
-			DefaultOverride:   `{"location":"eu"}`,
+			DefaultOverride:   map[string]interface{}{"location": "eu"},
 			ServiceProperties: map[string]string{},
 			ExpectedContext: map[string]interface{}{
 				"location":      "eu",
@@ -365,7 +361,7 @@ func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 		},
 		"user values override operator defaults": {
 			UserParams:        `{"location":"nz"}`,
-			DefaultOverride:   `{"location":"eu"}`,
+			DefaultOverride:   map[string]interface{}{"location": "eu"},
 			ServiceProperties: map[string]string{},
 			ExpectedContext: map[string]interface{}{
 				"location":      "nz",
@@ -375,7 +371,7 @@ func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 		},
 		"operator defaults are not evaluated": {
 			UserParams:        `{"location":"us"}`,
-			DefaultOverride:   `{"name":"foo-${location}"}`,
+			DefaultOverride:   map[string]interface{}{"name": "foo-${location}"},
 			ServiceProperties: map[string]string{},
 			ExpectedContext: map[string]interface{}{
 				"location":      "us",
@@ -391,8 +387,9 @@ func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
-			viper.Set(service.ProvisionDefaultOverrideProperty(), tc.DefaultOverride)
-			defer viper.Reset()
+			if err := service.SetConfig(ServiceConfig{ProvisionDefaults: tc.DefaultOverride}); err != nil {
+				t.Fatal(err)
+			}
 
 			details := brokerapi.ProvisionDetails{RawParameters: json.RawMessage(tc.UserParams)}
 			plan := ServicePlan{ServiceProperties: tc.ServiceProperties}
@@ -445,7 +442,7 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 
 	cases := map[string]struct {
 		UserParams      string
-		DefaultOverride string
+		DefaultOverride map[string]interface{}
 		ExpectedError   error
 		ExpectedContext map[string]interface{}
 		InstanceVars    string
@@ -480,7 +477,7 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 		"operator defaults override computed defaults": {
 			UserParams:      "",
 			InstanceVars:    `{"foo":"default"}`,
-			DefaultOverride: `{"location":"eu"}`,
+			DefaultOverride: map[string]interface{}{"location": "eu"},
 			ExpectedContext: map[string]interface{}{
 				"location":     "eu",
 				"name":         "name-eu",
@@ -490,7 +487,7 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 		"user values override operator defaults": {
 			UserParams:      `{"location":"nz"}`,
 			InstanceVars:    `{"foo":"default"}`,
-			DefaultOverride: `{"location":"eu"}`,
+			DefaultOverride: map[string]interface{}{"location": "eu"},
 			ExpectedContext: map[string]interface{}{
 				"location":     "nz",
 				"name":         "name-nz",
@@ -500,7 +497,7 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 		"operator defaults are not evaluated": {
 			UserParams:      `{"location":"us"}`,
 			InstanceVars:    `{"foo":"default"}`,
-			DefaultOverride: `{"name":"foo-${location}"}`,
+			DefaultOverride: map[string]interface{}{"name": "foo-${location}"},
 			ExpectedContext: map[string]interface{}{
 				"location":     "us",
 				"name":         "foo-${location}",
@@ -525,8 +522,10 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
-			viper.Set(service.BindDefaultOverrideProperty(), tc.DefaultOverride)
-			defer viper.Reset()
+			if err := service.SetConfig(ServiceConfig{BindDefaults: tc.DefaultOverride}); err != nil {
+				t.Fatal(err)
+			}
+			defer service.SetConfig(ServiceConfig{})
 
 			details := brokerapi.BindDetails{RawParameters: json.RawMessage(tc.UserParams)}
 			instance := models.ServiceInstanceDetails{OtherDetails: tc.InstanceVars}

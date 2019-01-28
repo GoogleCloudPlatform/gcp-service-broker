@@ -27,7 +27,7 @@ import (
 type BrokerConfig struct {
 	HttpConfig *jwt.Config
 	ProjectId  string
-	Registry   broker.BrokerRegistry
+	Registry   *broker.ServiceRegistry
 }
 
 func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
@@ -41,7 +41,12 @@ func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
 		return nil, err
 	}
 
-	registry := builtin.BuiltinBrokerRegistry()
+	serviceRegistryConfig, err := broker.NewServiceConfigMapFromEnv()
+	if err != nil {
+		return nil, err
+	}
+
+	registry := builtin.BuiltinBrokerRegistry(serviceRegistryConfig)
 	if err := brokerpak.RegisterAll(registry); err != nil {
 		return nil, fmt.Errorf("Error loading brokerpaks: %v", err)
 	}

@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
@@ -121,7 +122,11 @@ user-defined plans.
 				log.Fatalf("Error creating client: %v", err)
 			}
 
-			if err := client.RunExamplesForService(builtin.BuiltinBrokerRegistry(), apiClient, serviceName); err != nil {
+			// for tests we dnon't load custom plans or overrides because it may
+			// cause conflicts in the object equality tests if the user overrides
+			// something
+			emptyConfig := broker.ServiceConfigMap{}
+			if err := client.RunExamplesForService(builtin.BuiltinBrokerRegistry(emptyConfig), apiClient, serviceName); err != nil {
 				log.Fatalf("Error executing examples: %v", err)
 			}
 

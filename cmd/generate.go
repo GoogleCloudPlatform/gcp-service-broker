@@ -17,6 +17,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 	"github.com/spf13/cobra"
@@ -40,10 +41,14 @@ func init() {
 
 	 * details about what each service is
 	 * available parameters
-
 	`,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(generator.CatalogDocumentation(builtin.BuiltinBrokerRegistry()))
+			// by default, don't include overrides in generated documentation
+			// this will be available under the docs endpoint for a running
+			// installation.
+			emptyConfig := broker.ServiceConfigMap{}
+			registry := builtin.BuiltinBrokerRegistry(emptyConfig)
+			fmt.Println(generator.CatalogDocumentation(registry))
 		},
 	})
 
