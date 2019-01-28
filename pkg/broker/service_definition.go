@@ -145,13 +145,10 @@ func (svc *ServiceDefinition) GetPlanById(planId string) (*ServicePlan, error) {
 // UserDefinedPlans extracts user defined plans from the environment, failing if
 // the plans were not valid JSON or were missing required properties/variables.
 func (svc *ServiceDefinition) UserDefinedPlans() []ServicePlan {
-	// TODO refactor this to work with custom plans
 	plans := []ServicePlan{}
 
 	for _, customPlan := range svc.config.CustomPlans {
-		plan := customPlan.ToServicePlan()
-
-		plans = append(plans, plan)
+		plans = append(plans, customPlan.ToServicePlan())
 	}
 
 	return plans

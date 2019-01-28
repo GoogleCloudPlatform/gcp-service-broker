@@ -248,10 +248,9 @@ func TestGCPServiceBroker_Services(t *testing.T) {
 	broker, closer := newStubbedBroker(t, registry)
 	defer closer()
 
-	registryServices := registry.GetAllServices()
 	services, err := broker.Services(context.Background())
 	failIfErr(t, "getting services", err)
-	assertEqual(t, "service count should be the same", len(registryServices), len(services))
+	assertEqual(t, "service count should be the same", registry.ServiceCount(), len(services))
 }
 
 func TestGCPServiceBroker_Provision(t *testing.T) {
