@@ -133,30 +133,19 @@ func TestServiceDefinition_SetConfig(t *testing.T) {
 
 func TestServiceDefinition_CatalogEntry(t *testing.T) {
 	cases := map[string]struct {
-		UserPlans   []CustomPlan
-		PlanIds     map[string]bool
-		ExpectError bool
+		UserPlans []CustomPlan
+		PlanIds   map[string]bool
 	}{
 		"no-customization": {
-			UserPlans:   nil,
-			PlanIds:     map[string]bool{},
-			ExpectError: false,
+			UserPlans: nil,
+			PlanIds:   map[string]bool{},
 		},
 		"custom-plans": {
 			UserPlans: []CustomPlan{
-				{
-					GUID:       "aaa",
-					Name:       "aaa",
-					Properties: map[string]string{"instances": "3"},
-				},
-				{
-					GUID:       "bbb",
-					Name:       "bbb",
-					Properties: map[string]string{"instances": "3"},
-				},
+				{GUID: "aaa", Name: "aaa", Properties: map[string]string{"instances": "3"}},
+				{GUID: "bbb", Name: "bbb", Properties: map[string]string{"instances": "3"}},
 			},
-			PlanIds:     map[string]bool{"aaa": true, "bbb": true},
-			ExpectError: false,
+			PlanIds: map[string]bool{"aaa": true, "bbb": true},
 		},
 	}
 
@@ -167,23 +156,18 @@ func TestServiceDefinition_CatalogEntry(t *testing.T) {
 
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
-			err := service.SetConfig(ServiceConfig{
-				CustomPlans: tc.UserPlans,
-			})
-
-			hasErr := err != nil
-			if hasErr != tc.ExpectError {
-				t.Errorf("Expected Error? %v, got error: %v", tc.ExpectError, err)
+			if err := service.SetConfig(ServiceConfig{CustomPlans: tc.UserPlans}); err != nil {
+				t.Fatal(err)
 			}
 
 			srvc := service.CatalogEntry()
-			if err == nil && len(srvc.Plans) != len(tc.PlanIds) {
-				t.Errorf("Expected %d plans, but got %d (%+v)", len(tc.PlanIds), len(srvc.Plans), srvc.Plans)
+			if len(srvc.Plans) != len(tc.PlanIds) {
+				t.Fatalf("Expected %d plans, but got %d (%+v)", len(tc.PlanIds), len(srvc.Plans), srvc.Plans)
+			}
 
-				for _, plan := range srvc.Plans {
-					if _, ok := tc.PlanIds[plan.ID]; !ok {
-						t.Errorf("Got unexpected plan id %s, expected %+v", plan.ID, tc.PlanIds)
-					}
+			for _, plan := range srvc.Plans {
+				if _, ok := tc.PlanIds[plan.ID]; !ok {
+					t.Errorf("Got unexpected plan id %s, expected %+v", plan.ID, tc.PlanIds)
 				}
 			}
 		})
