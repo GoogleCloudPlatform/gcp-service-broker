@@ -59,73 +59,45 @@ func ExampleServiceDefinition_GetPlanById() {
 	// missing-plan: Plan ID "missing-plan" could not be found
 }
 
-func TestServiceDefinition_UserDefinedPlans(t *testing.T) {
+func TestServiceDefinition_SetConfig(t *testing.T) {
 	cases := map[string]struct {
 		Value       []CustomPlan
-		PlanIds     map[string]bool
-		ExpectError bool
+		ExpectError error
 	}{
 		"default-no-plans": {
 			Value:       nil,
-			PlanIds:     map[string]bool{},
-			ExpectError: false,
+			ExpectError: nil,
 		},
 		"single-plan": {
 			Value: []CustomPlan{
-				{
-					GUID:       "aaa",
-					Name:       "aaa",
-					Properties: map[string]string{"instances": "3"},
-				},
+				{GUID: "aaa", Name: "aaa", Properties: map[string]string{"instances": "3"}},
 			},
-			PlanIds:     map[string]bool{"aaa": true},
-			ExpectError: false,
+			ExpectError: nil,
 		},
 		"multiple-plans": {
 			Value: []CustomPlan{
-				{
-					GUID:       "aaa",
-					Name:       "aaa",
-					Properties: map[string]string{"instances": "3"},
-				},
-				{
-					GUID:       "bbb",
-					Name:       "bbb",
-					Properties: map[string]string{"instances": "3"},
-				},
+				{GUID: "aaa", Name: "aaa", Properties: map[string]string{"instances": "3"}},
+				{GUID: "bbb", Name: "bbb", Properties: map[string]string{"instances": "3"}},
 			},
-			PlanIds:     map[string]bool{"aaa": true, "bbb": true},
-			ExpectError: false,
+			ExpectError: nil,
 		},
 		"missing-name": {
 			Value: []CustomPlan{
-				{
-					GUID:       "aaa",
-					Properties: map[string]string{"instances": "3"},
-				},
+				{GUID: "aaa", Properties: map[string]string{"instances": "3"}},
 			},
-			PlanIds:     map[string]bool{},
-			ExpectError: true,
+			ExpectError: errors.New("left-handed-smoke-sifter custom_plans[0] is missing a name"),
 		},
 		"missing-id": {
 			Value: []CustomPlan{
-				{
-					Name:       "aaa",
-					Properties: map[string]string{"instances": "3"},
-				},
+				{Name: "aaa", Properties: map[string]string{"instances": "3"}},
 			},
-			PlanIds:     map[string]bool{},
-			ExpectError: true,
+			ExpectError: errors.New("left-handed-smoke-sifter custom_plans[0] is missing an id"),
 		},
 		"missing-instances": {
 			Value: []CustomPlan{
-				{
-					Name: "aaa",
-					GUID: "aaa",
-				},
+				{Name: "aaa", GUID: "aaa"},
 			},
-			PlanIds:     map[string]bool{},
-			ExpectError: true,
+			ExpectError: errors.New("left-handed-smoke-sifter custom_plans[0] is missing required property instances"),
 		},
 	}
 
@@ -138,33 +110,22 @@ func TestServiceDefinition_UserDefinedPlans(t *testing.T) {
 				FieldName: "instances",
 				Type:      JsonTypeString,
 			},
+			{
+				Required:  false,
+				FieldName: "optional_field",
+				Type:      JsonTypeString,
+			},
 		},
 	}
 
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
-			err := service.SetConfig(ServiceConfig{
-				CustomPlans: tc.Value,
-			})
+			config := ServiceConfig{CustomPlans: tc.Value}
+			err := service.SetConfig(config)
 			defer service.SetConfig(ServiceConfig{})
 
-			// Check errors
-			hasErr := err != nil
-			if hasErr != tc.ExpectError {
+			if !reflect.DeepEqual(err, tc.ExpectError) {
 				t.Fatalf("Expected Error? %v, got error: %v", tc.ExpectError, err)
-			}
-
-			plans := service.UserDefinedPlans()
-
-			// Check IDs
-			if len(plans) != len(tc.PlanIds) {
-				t.Errorf("Expected %d plans, but got %d (%v)", len(tc.PlanIds), len(plans), plans)
-			}
-
-			for _, plan := range plans {
-				if _, ok := tc.PlanIds[plan.ID]; !ok {
-					t.Errorf("Got unexpected plan id %s, expected %+v", plan.ID, tc.PlanIds)
-				}
 			}
 		})
 	}

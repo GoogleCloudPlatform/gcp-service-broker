@@ -67,8 +67,8 @@ type ServiceDefinition struct {
 // It returns an error if the config is invalid for the service.
 func (svc *ServiceDefinition) SetConfig(cfg ServiceConfig) error {
 	// all plans should have valid values
-	for _, plan := range cfg.CustomPlans {
-		if err := svc.validatePlan(plan); err != nil {
+	for idx, plan := range cfg.CustomPlans {
+		if err := svc.validatePlan(idx, plan); err != nil {
 			return err
 		}
 	}
@@ -81,7 +81,10 @@ func (svc *ServiceDefinition) SetConfig(cfg ServiceConfig) error {
 // has metadata about the service so operators and programmers know which
 // service and plan will work best for their purposes.
 func (svc *ServiceDefinition) CatalogEntry() *Service {
-	userPlans := svc.UserDefinedPlans()
+	userPlans := []ServicePlan{}
+	for _, customPlan := range svc.config.CustomPlans {
+		userPlans = append(userPlans, customPlan.ToServicePlan())
+	}
 
 	sd := &Service{
 		Service: brokerapi.Service{
@@ -142,25 +145,13 @@ func (svc *ServiceDefinition) GetPlanById(planId string) (*ServicePlan, error) {
 	return nil, fmt.Errorf("Plan ID %q could not be found", planId)
 }
 
-// UserDefinedPlans extracts user defined plans from the environment, failing if
-// the plans were not valid JSON or were missing required properties/variables.
-func (svc *ServiceDefinition) UserDefinedPlans() []ServicePlan {
-	plans := []ServicePlan{}
-
-	for _, customPlan := range svc.config.CustomPlans {
-		plans = append(plans, customPlan.ToServicePlan())
-	}
-
-	return plans
-}
-
-func (svc *ServiceDefinition) validatePlan(plan CustomPlan) error {
+func (svc *ServiceDefinition) validatePlan(index int, plan CustomPlan) error {
 	if plan.GUID == "" {
-		return fmt.Errorf("%s custom plan %+v is missing an id", svc.Name, plan)
+		return fmt.Errorf("%s custom_plans[%d] is missing an id", svc.Name, index)
 	}
 
 	if plan.Name == "" {
-		return fmt.Errorf("%s custom plan %+v is missing a name", svc.Name, plan)
+		return fmt.Errorf("%s custom_plans[%d] is missing a name", svc.Name, index)
 	}
 
 	if svc.PlanVariables == nil {
@@ -173,7 +164,7 @@ func (svc *ServiceDefinition) validatePlan(plan CustomPlan) error {
 		}
 
 		if _, ok := plan.Properties[customVar.FieldName]; !ok {
-			return fmt.Errorf("%s custom plan %+v is missing required property %s", svc.Name, plan, customVar.FieldName)
+			return fmt.Errorf("%s custom_plans[%d] is missing required property %s", svc.Name, index, customVar.FieldName)
 		}
 	}
 
