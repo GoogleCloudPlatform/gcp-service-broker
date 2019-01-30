@@ -43,7 +43,7 @@ func init() {
 	 * available parameters
 	`,
 		Run: func(cmd *cobra.Command, args []string) {
-			// by default, don't include overrides in generated documentation
+			// by default, don't include overrides in generated documentation.
 			// this will be available under the docs endpoint for a running
 			// installation.
 			emptyConfig := broker.ServiceConfigMap{}
