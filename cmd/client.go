@@ -122,7 +122,7 @@ user-defined plans.
 				log.Fatalf("Error creating client: %v", err)
 			}
 
-			// for tests we dnon't load custom plans or overrides because it may
+			// for tests we don't load custom plans or overrides because it may
 			// cause conflicts in the object equality tests if the user overrides
 			// something.
 			emptyConfig := broker.ServiceConfigMap{}
