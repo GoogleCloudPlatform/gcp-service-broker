@@ -109,6 +109,7 @@ type MigrationTest struct {
 }
 
 func (m *MigrationTest) Run(t *testing.T) {
+	t.Helper()
 	t.Log("Running JS migration function")
 	m.runJs(t)
 
@@ -117,6 +118,7 @@ func (m *MigrationTest) Run(t *testing.T) {
 }
 
 func (m *MigrationTest) runJs(t *testing.T) {
+	t.Helper()
 	out := GetMigrationResults(t, m.TileProperties, m.Migration.TileScript)
 
 	if !reflect.DeepEqual(out, m.ExpectedEnv) {
@@ -125,6 +127,7 @@ func (m *MigrationTest) runJs(t *testing.T) {
 }
 
 func (m *MigrationTest) runGo(t *testing.T) {
+	t.Helper()
 	// runGo runs a no-op JS migration to get the environment variables as the
 	// application would see them, then applies the go migration function to
 	// ensure it produces the same result for people migrating by hand as the
@@ -318,7 +321,7 @@ func TestFullMigration(t *testing.T) {
           "properties": {}
         }`,
 			Migration:   FullMigration(),
-			ExpectedEnv: map[string]string{},
+			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": "{}"},
 		},
 	}
 
