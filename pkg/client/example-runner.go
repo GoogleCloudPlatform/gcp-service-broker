@@ -29,7 +29,7 @@ import (
 // RunExamplesForService runs all the exmaples for a given service name against
 // the service broker pointed to by client. All examples in the registry get run
 // if serviceName is blank.
-func RunExamplesForService(registry broker.BrokerRegistry, client *Client, serviceName string) error {
+func RunExamplesForService(registry *broker.ServiceRegistry, client *Client, serviceName string) error {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	services := registry.GetAllServices()
@@ -165,11 +165,7 @@ func newExampleExecutor(client *Client, example broker.ServiceExample, service *
 		return nil, err
 	}
 
-	catalog, err := service.CatalogEntry()
-	if err != nil {
-		return nil, err
-	}
-
+	catalog := service.CatalogEntry()
 	testid := rand.Uint32()
 
 	return &exampleExecutor{

@@ -20,11 +20,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 )
 
 func TestNewDocsHandler(t *testing.T) {
-	registry := builtin.BuiltinBrokerRegistry()
+	registry := builtin.BuiltinBrokerRegistry(broker.ServiceConfigMap{})
 	// Test that the handler sets the correct header and contains some imporant
 	// strings that will indicate (but not prove!) that the rendering was correct.
 	handler := NewDocsHandler(registry)

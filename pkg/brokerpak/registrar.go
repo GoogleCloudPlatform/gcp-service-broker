@@ -39,7 +39,7 @@ type Registrar struct {
 }
 
 // Register fetches the brokerpaks and registers them with the given registry.
-func (r *Registrar) Register(registry broker.BrokerRegistry) error {
+func (r *Registrar) Register(registry *broker.ServiceRegistry) error {
 	registerLogger := utils.NewLogger("brokerpak-registration")
 
 	return r.walk(func(name string, pak BrokerpakSourceConfig, vc *varcontext.VarContext) error {

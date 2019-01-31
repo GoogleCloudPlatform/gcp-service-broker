@@ -118,42 +118,6 @@ func SetParameter(input json.RawMessage, key string, value interface{}) (json.Ra
 	return json.Marshal(params)
 }
 
-// UnmarshalObjectRemaidner unmarshals an object into v and returns the
-// remaining key/value pairs as a JSON string by doing a set difference.
-func UnmarshalObjectRemainder(data []byte, v interface{}) ([]byte, error) {
-	if err := json.Unmarshal(data, v); err != nil {
-		return nil, err
-	}
-
-	encoded, err := json.Marshal(v)
-	if err != nil {
-		return nil, err
-	}
-
-	return jsonDiff(data, encoded)
-}
-
-func jsonDiff(superset, subset json.RawMessage) ([]byte, error) {
-	usedKeys := make(map[string]json.RawMessage)
-	if err := json.Unmarshal(subset, &usedKeys); err != nil {
-		return nil, err
-	}
-
-	allKeys := make(map[string]json.RawMessage)
-	if err := json.Unmarshal(superset, &allKeys); err != nil {
-		return nil, err
-	}
-
-	remainder := make(map[string]json.RawMessage)
-	for key, value := range allKeys {
-		if _, ok := usedKeys[key]; !ok {
-			remainder[key] = value
-		}
-	}
-
-	return json.Marshal(remainder)
-}
-
 // GetDefaultProject gets the default project id for the service broker based
 // on the JSON Service Account key.
 func GetDefaultProjectId() (string, error) {

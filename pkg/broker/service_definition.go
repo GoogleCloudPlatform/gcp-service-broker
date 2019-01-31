@@ -15,9 +15,7 @@
 package broker
 
 import (
-	"encoding/json"
 	"fmt"
-	"strings"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
@@ -25,7 +23,6 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
-	"github.com/spf13/viper"
 	"golang.org/x/oauth2/jwt"
 )
 
@@ -60,64 +57,33 @@ type ServiceDefinition struct {
 
 	// IsBuiltin is true if the service is built-in to the platform.
 	IsBuiltin bool
+
+	// config is set by the owning registry and is used to augment the data in the
+	// definition.
+	config ServiceConfig
 }
 
-// UserDefinedPlansProperty computes the Viper property name for the JSON list
-// of user-defined service plans.
-func (svc *ServiceDefinition) UserDefinedPlansProperty() string {
-	return fmt.Sprintf("service.%s.plans", svc.Name)
-}
-
-// ProvisionDefaultOverrideProperty returns the Viper property name for the
-// object users can set to override the default values on provision.
-func (svc *ServiceDefinition) ProvisionDefaultOverrideProperty() string {
-	return fmt.Sprintf("service.%s.provision.defaults", svc.Name)
-}
-
-// ProvisionDefaultOverrides returns the deserialized JSON object for the
-// operator-provided property overrides.
-func (svc *ServiceDefinition) ProvisionDefaultOverrides() map[string]interface{} {
-	return viper.GetStringMap(svc.ProvisionDefaultOverrideProperty())
-}
-
-// IsRoleWhitelistEnabled returns false if the service has no default whitelist
-// meaning it does not allow any roles.
-func (svc *ServiceDefinition) IsRoleWhitelistEnabled() bool {
-	return len(svc.DefaultRoleWhitelist) > 0
-}
-
-// BindDefaultOverrideProperty returns the Viper property name for the
-// object users can set to override the default values on bind.
-func (svc *ServiceDefinition) BindDefaultOverrideProperty() string {
-	return fmt.Sprintf("service.%s.bind.defaults", svc.Name)
-}
-
-// BindDefaultOverrides returns the deserialized JSON object for the
-// operator-provided property overrides.
-func (svc *ServiceDefinition) BindDefaultOverrides() map[string]interface{} {
-	return viper.GetStringMap(svc.BindDefaultOverrideProperty())
-}
-
-// TileUserDefinedPlansVariable returns the name of the user defined plans
-// variable for the broker tile.
-func (svc *ServiceDefinition) TileUserDefinedPlansVariable() string {
-	prefix := "GOOGLE_"
-
-	v := utils.PropertyToEnvUnprefixed(svc.Name)
-	if strings.HasPrefix(v, prefix) {
-		v = v[len(prefix):]
+// SetConfig sets user-defined overrides for the ServiceDefinition.
+// It returns an error if the config is invalid for the service.
+func (svc *ServiceDefinition) SetConfig(cfg ServiceConfig) error {
+	// all plans should have valid values
+	for idx, plan := range cfg.CustomPlans {
+		if err := svc.validatePlan(idx, plan); err != nil {
+			return err
+		}
 	}
 
-	return v + "_CUSTOM_PLANS"
+	svc.config = cfg
+	return nil
 }
 
 // CatalogEntry returns the service broker catalog entry for this service, it
 // has metadata about the service so operators and programmers know which
 // service and plan will work best for their purposes.
-func (svc *ServiceDefinition) CatalogEntry() (*Service, error) {
-	userPlans, err := svc.UserDefinedPlans()
-	if err != nil {
-		return nil, err
+func (svc *ServiceDefinition) CatalogEntry() *Service {
+	customPlans := []ServicePlan{}
+	for _, customPlan := range svc.config.CustomPlans {
+		customPlans = append(customPlans, customPlan.ToServicePlan())
 	}
 
 	sd := &Service{
@@ -137,16 +103,16 @@ func (svc *ServiceDefinition) CatalogEntry() (*Service, error) {
 			Bindable:      svc.Bindable,
 			PlanUpdatable: svc.PlanUpdateable,
 		},
-		Plans: append(svc.Plans, userPlans...),
+		Plans: append(svc.Plans, customPlans...),
 	}
 
 	if enableCatalogSchemas.IsActive() {
-		for i, _ := range sd.Plans {
+		for i := range sd.Plans {
 			sd.Plans[i].Schemas = svc.createSchemas()
 		}
 	}
 
-	return sd, nil
+	return sd
 }
 
 // createSchemas creates JSONSchemas compatible with the OSB spec for provision and bind.
@@ -168,10 +134,7 @@ func (svc *ServiceDefinition) createSchemas() *brokerapi.ServiceSchemas {
 
 // GetPlanById finds a plan in this service by its UUID.
 func (svc *ServiceDefinition) GetPlanById(planId string) (*ServicePlan, error) {
-	catalogEntry, err := svc.CatalogEntry()
-	if err != nil {
-		return nil, err
-	}
+	catalogEntry := svc.CatalogEntry()
 
 	for _, plan := range catalogEntry.Plans {
 		if plan.ID == planId {
@@ -182,56 +145,13 @@ func (svc *ServiceDefinition) GetPlanById(planId string) (*ServicePlan, error) {
 	return nil, fmt.Errorf("Plan ID %q could not be found", planId)
 }
 
-// UserDefinedPlans extracts user defined plans from the environment, failing if
-// the plans were not valid JSON or were missing required properties/variables.
-func (svc *ServiceDefinition) UserDefinedPlans() ([]ServicePlan, error) {
-	plans := []ServicePlan{}
-
-	userPlanJson := viper.GetString(svc.UserDefinedPlansProperty())
-	if userPlanJson == "" {
-		return plans, nil
-	}
-
-	// There's a mismatch between how plans are used internally and defined by
-	// the user and the tile. In the environment variables we parse an array of
-	// flat maps, but internally extra variables need to be put into a sub-map.
-	// e.g. they come in as [{"id":"1234", "name":"foo", "A": 1, "B": 2}]
-	// but we need [{"id":"1234", "name":"foo", "service_properties":{"A": 1, "B": 2}}]
-	// Go doesn't support this natively so we do it manually here.
-	rawPlans := []json.RawMessage{}
-	if err := json.Unmarshal([]byte(userPlanJson), &rawPlans); err != nil {
-		return plans, err
-	}
-
-	for _, rawPlan := range rawPlans {
-		plan := ServicePlan{}
-		remainder, err := utils.UnmarshalObjectRemainder(rawPlan, &plan)
-		if err != nil {
-			return []ServicePlan{}, err
-		}
-
-		plan.ServiceProperties = make(map[string]string)
-		if err := json.Unmarshal(remainder, &plan.ServiceProperties); err != nil {
-			return []ServicePlan{}, err
-		}
-
-		if err := svc.validatePlan(plan); err != nil {
-			return []ServicePlan{}, err
-		}
-
-		plans = append(plans, plan)
-	}
-
-	return plans, nil
-}
-
-func (svc *ServiceDefinition) validatePlan(plan ServicePlan) error {
-	if plan.ID == "" {
-		return fmt.Errorf("%s custom plan %+v is missing an id", svc.Name, plan)
+func (svc *ServiceDefinition) validatePlan(index int, plan CustomPlan) error {
+	if plan.GUID == "" {
+		return fmt.Errorf("%s custom_plans[%d] is missing an id", svc.Name, index)
 	}
 
 	if plan.Name == "" {
-		return fmt.Errorf("%s custom plan %+v is missing a name", svc.Name, plan)
+		return fmt.Errorf("%s custom_plans[%d] is missing a name", svc.Name, index)
 	}
 
 	if svc.PlanVariables == nil {
@@ -243,8 +163,8 @@ func (svc *ServiceDefinition) validatePlan(plan ServicePlan) error {
 			continue
 		}
 
-		if _, ok := plan.ServiceProperties[customVar.FieldName]; !ok {
-			return fmt.Errorf("%s custom plan %+v is missing required property %s", svc.Name, plan, customVar.FieldName)
+		if _, ok := plan.Properties[customVar.FieldName]; !ok {
+			return fmt.Errorf("%s custom_plans[%d] is missing required property %s", svc.Name, index, customVar.FieldName)
 		}
 	}
 
@@ -295,7 +215,7 @@ func (svc *ServiceDefinition) ProvisionVariables(instanceId string, details brok
 
 	builder := varcontext.Builder().
 		SetEvalConstants(constants).
-		MergeMap(svc.ProvisionDefaultOverrides()).
+		MergeMap(svc.config.ProvisionDefaults).
 		MergeJsonObject(details.GetRawParameters()).
 		MergeDefaults(svc.provisionDefaults()).
 		MergeMap(plan.GetServiceProperties()).
@@ -345,7 +265,7 @@ func (svc *ServiceDefinition) BindVariables(instance models.ServiceInstanceDetai
 
 	builder := varcontext.Builder().
 		SetEvalConstants(constants).
-		MergeMap(svc.BindDefaultOverrides()).
+		MergeMap(svc.config.BindDefaults).
 		MergeJsonObject(details.GetRawParameters()).
 		MergeDefaults(svc.bindDefaults()).
 		MergeDefaults(svc.BindComputedVariables)
