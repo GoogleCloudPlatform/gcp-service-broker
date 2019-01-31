@@ -46,8 +46,7 @@ func init() {
 			// by default, don't include overrides in generated documentation.
 			// this will be available under the docs endpoint for a running
 			// installation.
-			emptyConfig := broker.ServiceConfigMap{}
-			registry := builtin.BuiltinBrokerRegistry(emptyConfig)
+			registry := builtin.BuiltinBrokerRegistry(broker.ServiceConfigMap{})
 			fmt.Println(generator.CatalogDocumentation(registry))
 		},
 	})

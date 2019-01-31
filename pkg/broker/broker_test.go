@@ -120,8 +120,7 @@ func TestServiceDefinition_SetConfig(t *testing.T) {
 
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
-			config := ServiceConfig{CustomPlans: tc.Value}
-			err := service.SetConfig(config)
+			err := service.SetConfig(ServiceConfig{CustomPlans: tc.Value})
 			defer service.SetConfig(ServiceConfig{})
 
 			if !reflect.DeepEqual(err, tc.ExpectError) {
@@ -133,15 +132,15 @@ func TestServiceDefinition_SetConfig(t *testing.T) {
 
 func TestServiceDefinition_CatalogEntry(t *testing.T) {
 	cases := map[string]struct {
-		UserPlans []CustomPlan
-		PlanIds   map[string]bool
+		CustomPlans []CustomPlan
+		PlanIds     map[string]bool
 	}{
 		"no-customization": {
-			UserPlans: nil,
-			PlanIds:   map[string]bool{},
+			CustomPlans: nil,
+			PlanIds:     map[string]bool{},
 		},
 		"custom-plans": {
-			UserPlans: []CustomPlan{
+			CustomPlans: []CustomPlan{
 				{GUID: "aaa", Name: "aaa", Properties: map[string]string{"instances": "3"}},
 				{GUID: "bbb", Name: "bbb", Properties: map[string]string{"instances": "3"}},
 			},
@@ -156,7 +155,7 @@ func TestServiceDefinition_CatalogEntry(t *testing.T) {
 
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
-			if err := service.SetConfig(ServiceConfig{CustomPlans: tc.UserPlans}); err != nil {
+			if err := service.SetConfig(ServiceConfig{CustomPlans: tc.CustomPlans}); err != nil {
 				t.Fatal(err)
 			}
 

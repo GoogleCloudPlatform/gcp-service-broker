@@ -81,9 +81,9 @@ func (svc *ServiceDefinition) SetConfig(cfg ServiceConfig) error {
 // has metadata about the service so operators and programmers know which
 // service and plan will work best for their purposes.
 func (svc *ServiceDefinition) CatalogEntry() *Service {
-	userPlans := []ServicePlan{}
+	customPlans := []ServicePlan{}
 	for _, customPlan := range svc.config.CustomPlans {
-		userPlans = append(userPlans, customPlan.ToServicePlan())
+		customPlans = append(customPlans, customPlan.ToServicePlan())
 	}
 
 	sd := &Service{
@@ -103,7 +103,7 @@ func (svc *ServiceDefinition) CatalogEntry() *Service {
 			Bindable:      svc.Bindable,
 			PlanUpdatable: svc.PlanUpdateable,
 		},
-		Plans: append(svc.Plans, userPlans...),
+		Plans: append(svc.Plans, customPlans...),
 	}
 
 	if enableCatalogSchemas.IsActive() {

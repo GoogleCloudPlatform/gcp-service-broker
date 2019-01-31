@@ -125,8 +125,7 @@ user-defined plans.
 			// for tests we don't load custom plans or overrides because it may
 			// cause conflicts in the object equality tests if the user overrides
 			// something.
-			emptyConfig := broker.ServiceConfigMap{}
-			if err := client.RunExamplesForService(builtin.BuiltinBrokerRegistry(emptyConfig), apiClient, serviceName); err != nil {
+			if err := client.RunExamplesForService(builtin.BuiltinBrokerRegistry(broker.ServiceConfigMap{}), apiClient, serviceName); err != nil {
 				log.Fatalf("Error executing examples: %v", err)
 			}
 
