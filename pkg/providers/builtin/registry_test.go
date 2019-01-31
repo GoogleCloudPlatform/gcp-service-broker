@@ -46,7 +46,8 @@ func TestBuiltinBrokerRegistry(t *testing.T) {
 
 	t.Run("service-count", func(t *testing.T) {
 		expectedServiceCount := len(builtinServiceNames)
-		actualServiceCount := len(BuiltinBrokerRegistry())
+		builtinRegistry := BuiltinBrokerRegistry(broker.ServiceConfigMap{})
+		actualServiceCount := len(builtinRegistry.GetAllServices())
 		if actualServiceCount != expectedServiceCount {
 			t.Errorf("Expected %d services, registered: %d", expectedServiceCount, actualServiceCount)
 		}
@@ -54,9 +55,9 @@ func TestBuiltinBrokerRegistry(t *testing.T) {
 
 	t.Run("service-names", func(t *testing.T) {
 		var actual []string
-		registry := BuiltinBrokerRegistry()
-		for name, _ := range registry {
-			actual = append(actual, name)
+		registry := BuiltinBrokerRegistry(broker.ServiceConfigMap{})
+		for _, svc := range registry.GetAllServices() {
+			actual = append(actual, svc.Name)
 		}
 
 		sort.Strings(actual)
@@ -65,7 +66,8 @@ func TestBuiltinBrokerRegistry(t *testing.T) {
 		}
 	})
 
-	for _, svc := range BuiltinBrokerRegistry() {
+	builtinRegistry := BuiltinBrokerRegistry(broker.ServiceConfigMap{})
+	for _, svc := range builtinRegistry.GetAllServices() {
 		validateServiceDefinition(t, svc)
 	}
 }
@@ -76,10 +78,7 @@ func validateServiceDefinition(t *testing.T, svc *broker.ServiceDefinition) {
 			t.Errorf("Expected flag 'builtin' to be set, but it was: %t", svc.IsBuiltin)
 		}
 
-		catalog, err := svc.CatalogEntry()
-		if err != nil {
-			t.Fatal(err)
-		}
+		catalog := svc.CatalogEntry()
 
 		if catalog.PlanUpdatable {
 			t.Error("Expected PlanUpdatable to be false")

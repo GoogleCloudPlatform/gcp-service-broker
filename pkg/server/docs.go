@@ -24,7 +24,7 @@ import (
 
 // NewDocsHandler returns a handler func that generates HTML documentation for
 // the given registry.
-func NewDocsHandler(registry broker.BrokerRegistry) http.HandlerFunc {
+func NewDocsHandler(registry *broker.ServiceRegistry) http.HandlerFunc {
 	docsPageMd := generator.CatalogDocumentation(registry)
 
 	params := blackfriday.HTMLRendererParameters{

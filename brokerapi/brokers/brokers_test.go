@@ -23,8 +23,8 @@ import (
 	"testing"
 
 	. "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker/brokerfakes"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
@@ -106,10 +106,7 @@ func (s *serviceStub) UnbindDetails() brokerapi.UnbindDetails {
 // references to some important properties.
 func fakeService(t *testing.T, isAsync bool) *serviceStub {
 	defn := storage.ServiceDefinition()
-	svc, err := defn.CatalogEntry()
-	if err != nil {
-		t.Fatal(err)
-	}
+	svc := defn.CatalogEntry()
 
 	stub := serviceStub{
 		ServiceId:         svc.ID,
@@ -137,7 +134,7 @@ func fakeService(t *testing.T, isAsync bool) *serviceStub {
 
 // newStubbedBroker creates a new GCPServiceBroker with a dummy database for the given registry.
 // It returns the broker and a callback used to clean up the database when done with it.
-func newStubbedBroker(t *testing.T, registry broker.BrokerRegistry) (broker *GCPServiceBroker, closer func()) {
+func newStubbedBroker(t *testing.T, registry *broker.ServiceRegistry) (broker *GCPServiceBroker, closer func()) {
 	// Set up database
 	db, err := gorm.Open("sqlite3", "test.db")
 	if err != nil {
@@ -208,7 +205,7 @@ func (cases BrokerEndpointTestSuite) Run(t *testing.T) {
 			stub := fakeService(t, tc.AsyncService)
 
 			t.Log("Creating broker")
-			registry := broker.BrokerRegistry{}
+			registry := broker.NewServiceRegistry(broker.ServiceConfigMap{})
 			registry.Register(stub.ServiceDefinition)
 
 			broker, closer := newStubbedBroker(t, registry)
@@ -247,13 +244,13 @@ func initService(t *testing.T, state InstanceState, broker *GCPServiceBroker, st
 }
 
 func TestGCPServiceBroker_Services(t *testing.T) {
-	registry := builtin.BuiltinBrokerRegistry()
+	registry := builtin.BuiltinBrokerRegistry(broker.ServiceConfigMap{})
 	broker, closer := newStubbedBroker(t, registry)
 	defer closer()
 
 	services, err := broker.Services(context.Background())
 	failIfErr(t, "getting services", err)
-	assertEqual(t, "service count should be the same", len(registry), len(services))
+	assertEqual(t, "service count should be the same", registry.ServiceCount(), len(services))
 }
 
 func TestGCPServiceBroker_Provision(t *testing.T) {

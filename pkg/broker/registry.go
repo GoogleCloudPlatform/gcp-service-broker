@@ -39,21 +39,24 @@ var (
 	enableBuiltinServices = toggles.Features.Toggle("enable-builtin-services", true, `Enable services that are built in to the broker i.e. not brokerpaks.`)
 )
 
-// BrokerRegistry holds the list of ServiceDefinitions that can be provisioned
+// ServiceRegistry holds the list of ServiceDefinitions that can be provisioned
 // by the GCP Service Broker.
-type BrokerRegistry map[string]*ServiceDefinition
+type ServiceRegistry struct {
+	services map[string]*ServiceDefinition
+	config   ServiceConfigMap
+}
 
-// Registers a ServiceDefinition with the service registry that various commands
+// Register a ServiceDefinition with the service registry that various commands
 // poll to create the catalog, documentation, etc.
-func (brokerRegistry BrokerRegistry) Register(service *ServiceDefinition) {
+func (registry *ServiceRegistry) Register(service *ServiceDefinition) {
 	name := service.Name
 
-	if _, ok := brokerRegistry[name]; ok {
+	if _, ok := registry.services[name]; ok {
 		log.Fatalf("Tried to register multiple instances of: %q", name)
 	}
 
-	// Test deserializing the user defined plans and service definition
-	if _, err := service.CatalogEntry(); err != nil {
+	cfg := registry.config[service.Id]
+	if err := service.SetConfig(cfg); err != nil {
 		log.Fatalf("Error registering service %q, %s", name, err)
 	}
 
@@ -61,30 +64,26 @@ func (brokerRegistry BrokerRegistry) Register(service *ServiceDefinition) {
 		log.Fatalf("Error validating service %q, %s", name, err)
 	}
 
-	brokerRegistry[name] = service
+	registry.services[name] = service
 }
 
 // GetEnabledServices returns a list of all registered brokers that the user
 // has enabled the use of.
-func (brokerRegistry *BrokerRegistry) GetEnabledServices() ([]*ServiceDefinition, error) {
+func (registry *ServiceRegistry) GetEnabledServices() []*ServiceDefinition {
 	var out []*ServiceDefinition
 
-	for _, svc := range brokerRegistry.GetAllServices() {
+	for _, svc := range registry.GetAllServices() {
 		isEnabled := true
 
 		if svc.IsBuiltin {
 			isEnabled = enableBuiltinServices.IsActive()
 		}
 
-		if entry, err := svc.CatalogEntry(); err != nil {
-			return nil, err
-		} else {
-			tags := utils.NewStringSet(entry.Tags...)
-			for tag, toggle := range lifecycleTagToggles {
-				if !toggle.IsActive() && tags.Contains(tag) {
-					isEnabled = false
-					break
-				}
+		tags := utils.NewStringSet(svc.Tags...)
+		for tag, toggle := range lifecycleTagToggles {
+			if !toggle.IsActive() && tags.Contains(tag) {
+				isEnabled = false
+				break
 			}
 		}
 
@@ -93,16 +92,16 @@ func (brokerRegistry *BrokerRegistry) GetEnabledServices() ([]*ServiceDefinition
 		}
 	}
 
-	return out, nil
+	return out
 }
 
 // GetAllServices returns a list of all registered brokers whether or not the
 // user has enabled them. The brokers are sorted in lexocographic order based
 // on name.
-func (brokerRegistry BrokerRegistry) GetAllServices() []*ServiceDefinition {
+func (registry *ServiceRegistry) GetAllServices() []*ServiceDefinition {
 	var out []*ServiceDefinition
 
-	for _, svc := range brokerRegistry {
+	for _, svc := range registry.services {
 		out = append(out, svc)
 	}
 
@@ -114,12 +113,25 @@ func (brokerRegistry BrokerRegistry) GetAllServices() []*ServiceDefinition {
 
 // GetServiceById returns the service with the given ID, if it does not exist
 // or one of the services has a parse error then an error is returned.
-func (brokerRegistry BrokerRegistry) GetServiceById(id string) (*ServiceDefinition, error) {
-	for _, svc := range brokerRegistry {
+func (registry *ServiceRegistry) GetServiceById(id string) (*ServiceDefinition, error) {
+	for _, svc := range registry.services {
 		if svc.Id == id {
 			return svc, nil
 		}
 	}
 
 	return nil, fmt.Errorf("Unknown service ID: %q", id)
+}
+
+// ServiceCount returns the total number of registered services.
+func (registry *ServiceRegistry) ServiceCount() int {
+	return len(registry.services)
+}
+
+// NewServiceRegistry creates a blank registry with the given config map.
+func NewServiceRegistry(cfg ServiceConfigMap) *ServiceRegistry {
+	return &ServiceRegistry{
+		config:   cfg,
+		services: make(map[string]*ServiceDefinition),
+	}
 }

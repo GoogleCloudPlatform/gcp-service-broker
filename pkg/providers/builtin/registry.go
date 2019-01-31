@@ -36,14 +36,14 @@ import (
 
 // BuiltinBrokerRegistry creates a new registry with all the built-in brokers
 // added to it.
-func BuiltinBrokerRegistry() broker.BrokerRegistry {
-	out := broker.BrokerRegistry{}
+func BuiltinBrokerRegistry(cfg broker.ServiceConfigMap) *broker.ServiceRegistry {
+	out := broker.NewServiceRegistry(cfg)
 	RegisterBuiltinBrokers(out)
 	return out
 }
 
 // RegisterBuiltinBrokers adds the built-in brokers to the given registry.
-func RegisterBuiltinBrokers(registry broker.BrokerRegistry) {
+func RegisterBuiltinBrokers(registry *broker.ServiceRegistry) {
 	registry.Register(ml.ServiceDefinition())
 	registry.Register(bigquery.ServiceDefinition())
 	registry.Register(bigtable.ServiceDefinition())

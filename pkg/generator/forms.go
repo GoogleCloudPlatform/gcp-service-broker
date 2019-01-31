@@ -17,13 +17,9 @@ package generator
 import (
 	"fmt"
 	"log"
-	"sort"
 	"strings"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -86,55 +82,9 @@ func GenerateForms() TileFormsSections {
 			generateDatabaseForm(),
 			generateBrokerpakForm(),
 			generateFeatureFlagForm(),
-			generateDefaultOverrideForm(),
 		},
 
-		ServicePlanForms: append(generateServicePlanForms(), brokerpakConfigurationForm()),
-	}
-}
-
-// generateDefaultOverrideForm generates a form for users to override the
-// defaults in a plan.
-func generateDefaultOverrideForm() Form {
-	builtinServices := builtin.BuiltinBrokerRegistry()
-
-	formElements := []FormProperty{}
-	for _, svc := range builtinServices.GetAllServices() {
-		entry, err := svc.CatalogEntry()
-		if err != nil {
-			log.Fatalf("Error getting catalog entry for service %s, %v", svc.Name, err)
-		}
-
-		if !svc.IsRoleWhitelistEnabled() {
-			continue
-		}
-
-		provisionForm := FormProperty{
-			Name:         strings.ToLower(utils.PropertyToEnv(svc.ProvisionDefaultOverrideProperty())),
-			Label:        fmt.Sprintf("Provision default override %s instances.", entry.Metadata.DisplayName),
-			Description:  "A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default.",
-			Type:         "text",
-			Default:      "{}",
-			Configurable: true,
-		}
-		formElements = append(formElements, provisionForm)
-
-		bindForm := FormProperty{
-			Name:         strings.ToLower(utils.PropertyToEnv(svc.BindDefaultOverrideProperty())),
-			Label:        fmt.Sprintf("Bind default override %s instances.", entry.Metadata.DisplayName),
-			Description:  "A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default.",
-			Type:         "text",
-			Default:      "{}",
-			Configurable: true,
-		}
-		formElements = append(formElements, bindForm)
-	}
-
-	return Form{
-		Name:        "default_override",
-		Label:       "Default Overrides",
-		Description: "Override the default values your users get when provisioning.",
-		Properties:  formElements,
+		ServicePlanForms: []Form{brokerpakConfigurationForm()},
 	}
 }
 
@@ -192,86 +142,6 @@ func generateFeatureFlagForm() Form {
 		Description: "Service broker feature flags.",
 		Properties:  formEntries,
 	}
-}
-
-// generateServicePlanForms generates customized service plan forms for all
-// registered services that have the ability to customize their variables.
-func generateServicePlanForms() []Form {
-	builtinServices := builtin.BuiltinBrokerRegistry()
-	out := []Form{}
-
-	for _, svc := range builtinServices.GetAllServices() {
-		planVars := svc.PlanVariables
-
-		if planVars == nil || len(planVars) == 0 {
-			continue
-		}
-
-		form, err := generateServicePlanForm(svc)
-		if err != nil {
-			log.Fatalf("Error generating form for %+v, %s", form, err)
-		}
-
-		out = append(out, form)
-	}
-
-	return out
-}
-
-// generateServicePlanForm creates a form for adding additional service plans
-// to the broker for an existing service.
-func generateServicePlanForm(svc *broker.ServiceDefinition) (Form, error) {
-	entry, err := svc.CatalogEntry()
-	if err != nil {
-		return Form{}, err
-	}
-
-	displayName := entry.Metadata.DisplayName
-	planForm := Form{
-		Name:        strings.ToLower(svc.TileUserDefinedPlansVariable()),
-		Description: fmt.Sprintf("Generate custom plans for %s.", displayName),
-		Label:       fmt.Sprintf("%s Custom Plans", displayName),
-		Optional:    true,
-		Properties: []FormProperty{
-			{
-				Name:         "display_name",
-				Label:        "Display Name",
-				Type:         "string",
-				Description:  "Name of the plan to be displayed to users.",
-				Configurable: true,
-			},
-			{
-				Name:         "description",
-				Label:        "Plan description",
-				Type:         "string",
-				Description:  "The description of the plan shown to users.",
-				Configurable: true,
-			},
-			{
-				Name:        "service",
-				Label:       "Service",
-				Type:        "dropdown_select",
-				Description: "The service this plan is associated with.",
-				Default:     entry.ID,
-				Options: []FormOption{
-					{
-						Name:  entry.ID,
-						Label: displayName,
-					},
-				},
-			},
-		},
-	}
-
-	// Along with the above three fixed properties, each plan has optional
-	// additional properties.
-
-	for _, v := range svc.PlanVariables {
-		prop := brokerVariableToFormProperty(v)
-		planForm.Properties = append(planForm.Properties, prop)
-	}
-
-	return planForm, nil
 }
 
 func generateBrokerpakForm() Form {
@@ -347,42 +217,6 @@ func brokerpakConfigurationForm() Form {
 			},
 		},
 	}
-}
-
-func brokerVariableToFormProperty(v broker.BrokerVariable) FormProperty {
-	formInput := FormProperty{
-		Name:         v.FieldName,
-		Label:        propertyToLabel(v.FieldName),
-		Type:         string(v.Type),
-		Description:  v.Details,
-		Configurable: true,
-		Optional:     !v.Required,
-		Default:      v.Default,
-	}
-
-	if v.Enum != nil {
-		formInput.Type = "dropdown_select"
-
-		opts := []FormOption{}
-		for name, label := range v.Enum {
-			opts = append(opts, FormOption{Name: fmt.Sprintf("%v", name), Label: label})
-		}
-
-		// Sort the options by human-readable label so they end up in a deterministic
-		// order to prevent odd stuff from coming up during diffs.
-		sort.Slice(opts, func(i, j int) bool {
-			return opts[i].Label < opts[j].Label
-		})
-
-		formInput.Options = opts
-
-		if len(opts) == 1 {
-			formInput.Configurable = false
-			formInput.Default = opts[0].Name
-		}
-	}
-
-	return formInput
 }
 
 // propertyToLabel converts a JSON snake-case property into a title case

@@ -51,22 +51,6 @@ func ExampleSetParameter() {
 	// {"replace":"new"}, <nil>
 }
 
-func ExampleUnmarshalObjectRemainder() {
-	var obj struct {
-		A string `json:"a_str"`
-		B int
-	}
-
-	remainder, err := UnmarshalObjectRemainder([]byte(`{"a_str":"hello", "B": 33, "C": 123}`), &obj)
-	fmt.Printf("%s, %v\n", string(remainder), err)
-
-	remainder, err = UnmarshalObjectRemainder([]byte(`{"a_str":"hello", "B": 33}`), &obj)
-	fmt.Printf("%s, %v\n", string(remainder), err)
-
-	// Output: {"C":123}, <nil>
-	// {}, <nil>
-}
-
 func ExampleGetDefaultProjectId() {
 	serviceAccountJson := `{
 	  "//": "Dummy account from https://github.com/GoogleCloudPlatform/google-cloud-java/google-cloud-clients/google-cloud-core/src/test/java/com/google/cloud/ServiceOptionsTest.java",

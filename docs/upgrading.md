@@ -1,5 +1,32 @@
 ## Upgrading
 
+### v4.X to 5.0
+
+Version 5 of the broker changes the environment variables the broker uses for configuration.
+
+The following fields have been combined into a single new field `GSB_SERVICE_CONFIG`:
+
+ * `GSB_SERVICE_*_WHITELIST`
+ * `GSB_SERVICE_*_PROVISION_DEFAULTS`
+ * `GSB_SERVICE_*_BIND_DEFAULTS`
+ * `GSB_SERVICE_*_ENABLED`
+ * `*_CUSTOM_PLANS`
+
+Version 5 of the broker provides an automatic upgrade if you're using the tile.
+If you are running the broker in another way, you can use the `migrate-env`
+command to show the changes you'll need to make to upgrade your environment.
+
+```
+$ GSB_SERVICE_GOOGLE_STORAGE_WHITELIST=foo,bar,bazz ./gcp-service-broker config migrate-env
+GSB_SERVICE_GOOGLE_STORAGE_WHITELIST:
+  old: foo,bar,bazz
+  new: ""
+```
+
+### v3.X to 5.0
+
+You MUST upgrade your 3.X version to 4.x before upgrading to 5.x.
+
 ### v3.X to 4.0
 
 Version 4.0 of the broker contains significant improvements to security, ability to self-service, and documentation.
@@ -30,7 +57,3 @@ If you:
   * You can now set it in the database form of the PCF tile.
 * Use a BigQuery billing export for chargebacks:
   * Read the [billing docs](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/billing.md) to understand how labels are automatically applied to services now.
-
-### v3.X to 5.0
-
-You MUST upgrade your 3.X version to 4.x before upgrading to 5.x.
