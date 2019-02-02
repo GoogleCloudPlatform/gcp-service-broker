@@ -17,11 +17,35 @@ package migration
 import (
 	"bytes"
 	"fmt"
-	"strings"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/robertkrimen/otto"
 )
+
+const jsTransformContext = `
+// env2prop converts an environment variable to property name
+function env2prop(envVar) {return '.properties.' + envVar.toLowerCase();}
+
+// lookupProp lookus up an environment variable as a prop and returns the value.
+function lookupProp(envVar) {
+	var prop = env2prop(envVar);
+	return (prop in properties.properties) ? properties.properties[prop].value : null;
+}
+
+// deleteProp removes a property from the properties list.
+function deleteProp(envVar) { delete properties.properties[env2prop(envVar)];}
+
+// setProp sets a property on the properties list.
+function setProp(envVar, value) {
+	var prop = env2prop(envVar);
+
+	if (!(prop in properties.properties)) {
+		properties.properties[prop] = {'value': value, 'type': 'text'};
+	} else {
+		properties['properties'][prop].value = value;
+	}
+}
+`
 
 // JsTransform is a backing tech for building config migrations in JavaScript.
 // It works for tile variables that have string values that can be replaced
@@ -29,15 +53,6 @@ import (
 type JsTransform struct {
 	// EnvironmentVariables holds the environment vars this migratino operates on.
 	EnvironmentVariables []string
-
-	// CreateIfNotExists creates the environment varible or property
-	// if it doesn't exist yet.
-	CreateIfNotExists bool
-
-	// Context returns a map of name->env-vars to look up and call the function
-	// with. It's given the name of the environment variable in case the
-	// other variables are based on that name.
-	Context func(environmentVariable string) map[string]string
 
 	// MigrationJs holds the JavaScript migration function. It MUST follow the
 	// signature func(string) -> string. The param is the value of the environment
@@ -49,111 +64,59 @@ type JsTransform struct {
 	TransformFuncName string
 }
 
-func (j *JsTransform) lookupContext(variable string, env map[string]string) map[string]string {
-	context := make(map[string]string)
-	if j.Context == nil {
-		return context
-	}
-
-	for k, v := range j.Context(variable) {
-		variable, ok := env[v]
-		if ok {
-			context[k] = variable
-		}
-	}
-
-	return context
-}
-
 func (j *JsTransform) RunGo(env map[string]string) error {
-	for _, varname := range j.EnvironmentVariables {
-		value, exists := env[varname]
-		if !exists && !j.CreateIfNotExists {
-			continue
+	var runtimeErrors *multierror.Error
+
+	vm := otto.New()
+
+	vm.Set("lookupProp", func(call otto.FunctionCall) otto.Value {
+		value, exists := env[call.Argument(0).String()]
+		if !exists {
+			return otto.NullValue()
 		}
 
-		vm := otto.New()
-		if _, err := vm.Run(j.MigrationJs); err != nil {
-			return fmt.Errorf("processing %s loading JS function: %v", varname, err)
-		}
-
-		jsValue, err := vm.ToValue(value)
+		jsOut, err := vm.ToValue(value)
 		if err != nil {
-			return fmt.Errorf("processing %s converting value to JS value: %v", varname, err)
+			runtimeErrors = multierror.Append(runtimeErrors, err)
 		}
+		return jsOut
+	})
 
-		additionalContext, err := vm.ToValue(j.lookupContext(varname, env))
-		if err != nil {
-			return fmt.Errorf("processing %s converting context to JS value: %v", varname, err)
-		}
+	vm.Set("deleteProp", func(call otto.FunctionCall) otto.Value {
+		delete(env, call.Argument(0).String())
+		return otto.UndefinedValue()
+	})
 
-		result, err := vm.Call(j.TransformFuncName, nil, jsValue, additionalContext)
-		if err != nil {
-			return fmt.Errorf("processing %s calling: %s: %v", varname, j.TransformFuncName, err)
-		}
+	vm.Set("setProp", func(call otto.FunctionCall) otto.Value {
+		env[call.Argument(0).String()] = call.Argument(1).String()
+		return otto.UndefinedValue()
+	})
 
-		str, err := result.ToString()
-		if err != nil {
-			return fmt.Errorf("processing %s couldn't convert result to string: %v", varname, err)
-		}
-
-		env[varname] = str
+	if _, err := vm.Run(j.toJs(false)); err != nil {
+		return fmt.Errorf("loading JS function: %v", err)
 	}
 
-	return nil
-}
-
-func (*JsTransform) propName(prop string) string {
-	return fmt.Sprintf("'.properties.%s'", strings.ToLower(prop))
-}
-
-func (j *JsTransform) propValue(prop string) string {
-	propName := j.propName(prop)
-	return fmt.Sprintf("((%s in properties['properties'])? properties['properties'][%s].value : null)", propName, propName)
-}
-
-func (j *JsTransform) jsContext(envVar string) string {
-	if j.Context == nil {
-		return "var context = {}; // no additional context defined"
-	}
-
-	buf := &bytes.Buffer{}
-	fmt.Fprintln(buf, "var context = {")
-
-	context := j.Context(envVar)
-	sortedKeys := utils.NewStringSetFromStringMapKeys(context).ToSlice()
-
-	for _, k := range sortedKeys {
-		fmt.Fprintf(buf, " %q: %s,\n", k, j.propValue(context[k]))
-	}
-	fmt.Fprintln(buf, "};")
-	return buf.String()
+	return runtimeErrors.ErrorOrNil()
 }
 
 // ToJs converts this migration to a JavaScript suitable for running in the
 // tile.
 func (j *JsTransform) ToJs() string {
+	return j.toJs(true)
+}
+
+func (j *JsTransform) toJs(includeFunctions bool) string {
 	buf := &bytes.Buffer{}
 	fmt.Fprintln(buf, "{")
+	if includeFunctions {
+		fmt.Fprintln(buf, jsTransformContext)
+	}
 	fmt.Fprintln(buf, j.MigrationJs)
 	fmt.Fprintln(buf)
 
 	for _, v := range j.EnvironmentVariables {
-		fmt.Fprintln(buf, "{")
-		fmt.Fprintf(buf, "  // %s\n", v)
-		fmt.Fprintf(buf, "  var prop = %s\n", j.propName(v))
-		fmt.Fprintln(buf, utils.Indent(j.jsContext(v), "  "))
-
-		if j.CreateIfNotExists {
-			fmt.Fprintln(buf, "  if (!(prop in properties['properties'])) {")
-			fmt.Fprintln(buf, "    properties['properties'][prop] = {'value': ''};")
-			fmt.Fprintln(buf, "  }")
-		}
-
-		fmt.Fprintln(buf, "  if (prop in properties['properties']) {")
-		fmt.Fprintf(buf, "    properties['properties'][prop].value = %s(properties['properties'][prop].value, context);\n", j.TransformFuncName)
-		fmt.Fprintln(buf, "  }")
-		fmt.Fprintln(buf, "}")
+		fmt.Fprintf(buf, "%s(%q);", j.TransformFuncName, v)
+		fmt.Fprintln(buf)
 	}
 
 	fmt.Fprintln(buf, "}")

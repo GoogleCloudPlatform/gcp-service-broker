@@ -24,7 +24,7 @@ import (
 func ExampleJsTransform_RunGo() {
 	em := JsTransform{
 		EnvironmentVariables: []string{"GSB_FOO", "GSB_BAR"},
-		MigrationJs:          `function format(input){return "[" + input + "]"}`,
+		MigrationJs:          `function format(input){setProp(input, "[" + lookupProp(input) + "]")}`,
 		TransformFuncName:    "format",
 	}
 
@@ -42,37 +42,6 @@ func ExampleJsTransform_RunGo() {
 	// Output: [to,encapsulate]
 }
 
-func ExampleJsTransform_ToJs() {
-	em := JsTransform{
-		EnvironmentVariables: []string{"GSB_FOO", "GSB_BAR"},
-		MigrationJs:          `function format(input){return "[" + input + "]"}`,
-		TransformFuncName:    "format",
-	}
-
-	fmt.Println(em.ToJs())
-
-	// Output: {
-	// function format(input){return "[" + input + "]"}
-	//
-	// {
-	//   // GSB_FOO
-	//   var prop = '.properties.gsb_foo'
-	//   var context = {}; // no additional context defined
-	//   if (prop in properties['properties']) {
-	//     properties['properties'][prop].value = format(properties['properties'][prop].value, context);
-	//   }
-	// }
-	// {
-	//   // GSB_BAR
-	//   var prop = '.properties.gsb_bar'
-	//   var context = {}; // no additional context defined
-	//   if (prop in properties['properties']) {
-	//     properties['properties'][prop].value = format(properties['properties'][prop].value, context);
-	//   }
-	// }
-	// }
-}
-
 func TestJsTransform_RunGo(t *testing.T) {
 	cases := map[string]struct {
 		Migration   JsTransform
@@ -83,16 +52,25 @@ func TestJsTransform_RunGo(t *testing.T) {
 		"set value": {
 			Migration: JsTransform{
 				EnvironmentVariables: []string{"FOO"},
-				MigrationJs:          `function set(input){return "new-value"}`,
+				MigrationJs:          `function set(envVar){setProp(envVar, "new-value")}`,
 				TransformFuncName:    "set",
 			},
 			Env:         map[string]string{"FOO": "old-value"},
 			ExpectedEnv: map[string]string{"FOO": "new-value"},
 		},
+		"delete value": {
+			Migration: JsTransform{
+				EnvironmentVariables: []string{"FOO"},
+				MigrationJs:          `function process(envVar){deleteProp(envVar)}`,
+				TransformFuncName:    "process",
+			},
+			Env:         map[string]string{"FOO": "old-value"},
+			ExpectedEnv: map[string]string{},
+		},
 		"ignores unknown": {
 			Migration: JsTransform{
 				EnvironmentVariables: []string{"FOO"},
-				MigrationJs:          `function set(input){return "new-value"}`,
+				MigrationJs:          `function set(input){return (lookupProp(input)) ? "new-value": null; }`,
 				TransformFuncName:    "set",
 			},
 			Env:         map[string]string{"BAR": "old-value"},
@@ -105,7 +83,7 @@ func TestJsTransform_RunGo(t *testing.T) {
 				TransformFuncName:    "set",
 			},
 			Env:         map[string]string{"FOO": "old-value"},
-			ExpectedErr: errors.New("processing FOO loading JS function: (anonymous): Line 1:5 Unexpected token function (and 3 more errors)"),
+			ExpectedErr: errors.New("loading JS function: (anonymous): Line 2:5 Unexpected token function (and 4 more errors)"),
 			ExpectedEnv: map[string]string{"FOO": "old-value"},
 		},
 		"bad func": {
@@ -115,8 +93,17 @@ func TestJsTransform_RunGo(t *testing.T) {
 				TransformFuncName:    "invalidFuncName",
 			},
 			Env:         map[string]string{"FOO": "old-value"},
-			ExpectedErr: errors.New("processing FOO calling: invalidFuncName: ReferenceError: 'invalidFuncName' is not defined"),
+			ExpectedErr: errors.New("loading JS function: ReferenceError: 'invalidFuncName' is not defined"),
 			ExpectedEnv: map[string]string{"FOO": "old-value"},
+		},
+		"access props": {
+			Migration: JsTransform{
+				EnvironmentVariables: []string{"FOO"},
+				MigrationJs:          `function getRelated(envVar){setProp(envVar, lookupProp(envVar+"_PLUS"))}`,
+				TransformFuncName:    "getRelated",
+			},
+			Env:         map[string]string{"FOO": "old-value", "FOO_PLUS": "new-vlaue"},
+			ExpectedEnv: map[string]string{"FOO": "new-vlaue", "FOO_PLUS": "new-vlaue"},
 		},
 	}
 

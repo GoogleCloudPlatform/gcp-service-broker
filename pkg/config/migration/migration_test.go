@@ -25,7 +25,8 @@ import (
 
 const tileToEnvFunctionJs = `
 function defnToEnv(defn) {
-  if (defn.type !== 'collection') {
+  var shouldRecurse = defn.type === 'collection' && typeof(defn.value) === 'object'
+  if (!shouldRecurse) {
     return defn.value;
   }
 
@@ -109,34 +110,29 @@ type MigrationTest struct {
 }
 
 func (m *MigrationTest) Run(t *testing.T) {
-	t.Helper()
+	if !json.Valid([]byte(m.TileProperties)) {
+		t.Fatalf("invalid tile properties")
+	}
+
 	t.Log("Running JS migration function")
-	m.runJs(t)
-
-	t.Log("Running go migration function")
-	m.runGo(t)
-}
-
-func (m *MigrationTest) runJs(t *testing.T) {
-	t.Helper()
 	out := GetMigrationResults(t, m.TileProperties, m.Migration.TileScript)
 
 	if !reflect.DeepEqual(out, m.ExpectedEnv) {
-		t.Errorf("Expected: %v Got: %v", m.ExpectedEnv, out)
+		t.Fatalf("Expected: %#v Got: %#v", m.ExpectedEnv, out)
 	}
-}
 
-func (m *MigrationTest) runGo(t *testing.T) {
-	t.Helper()
+	t.Log("Running go migration function")
 	// runGo runs a no-op JS migration to get the environment variables as the
 	// application would see them, then applies the go migration function to
 	// ensure it produces the same result for people migrating by hand as the
 	// JavaScript does for the tile users
 	envFromTile := GetMigrationResults(t, m.TileProperties, "")
-	m.Migration.GoFunc(envFromTile)
+	if err := m.Migration.GoFunc(envFromTile); err != nil {
+		t.Fatal(err)
+	}
 
 	if !reflect.DeepEqual(envFromTile, m.ExpectedEnv) {
-		t.Errorf("Expected: %v Got: %v", m.ExpectedEnv, envFromTile)
+		t.Fatalf("Expected: %#v Got: %#v", m.ExpectedEnv, envFromTile)
 	}
 }
 
@@ -149,17 +145,11 @@ func TestNoOp(t *testing.T) {
           "properties": {
             ".properties.org": {
               "type": "string",
-              "configurable": true,
-              "credential": false,
-              "value": "system",
-              "optional": false
+              "value": "system"
             },
             ".properties.space": {
               "type": "string",
-              "configurable": true,
-              "credential": false,
-              "value": "gcp-service-broker-space",
-              "optional": false
+              "value": "gcp-service-broker-space"
             }
           }
         }
@@ -187,51 +177,27 @@ func TestNoOp(t *testing.T) {
               {
                 "guid": {
                   "type": "uuid",
-                  "configurable": false,
-                  "credential": false,
-                  "value": "424b9afa-b31a-4517-a764-fbd137e58d3d",
-                  "optional": false
+                  "value": "424b9afa-b31a-4517-a764-fbd137e58d3d"
                 },
                 "name": {
                   "type": "string",
-                  "configurable": true,
-                  "credential": false,
-                  "value": "custom-storage-plan",
-                  "optional": false
+                  "value": "custom-storage-plan"
                 },
                 "display_name": {
                   "type": "string",
-                  "configurable": true,
-                  "credential": false,
-                  "value": "custom cloud storage plan",
-                  "optional": false
+                  "value": "custom cloud storage plan"
                 },
                 "description": {
                   "type": "string",
-                  "configurable": true,
-                  "credential": false,
-                  "value": "custom storage plan description",
-                  "optional": false
+                  "value": "custom storage plan description"
                 },
                 "service": {
                   "type": "dropdown_select",
-                  "configurable": false,
-                  "credential": false,
-                  "value": "b9e4332e-b42b-4680-bda5-ea1506797474",
-                  "optional": false,
-                  "options": [
-                    {
-                      "label": "Google Cloud Storage",
-                      "value": "b9e4332e-b42b-4680-bda5-ea1506797474"
-                    }
-                  ]
+                  "value": "b9e4332e-b42b-4680-bda5-ea1506797474"
                 },
                 "storage_class": {
                   "type": "string",
-                  "configurable": true,
-                  "credential": false,
-                  "value": "standard",
-                  "optional": false
+                  "value": "standard"
                 }
               }
             ],
@@ -260,72 +226,27 @@ func TestNoOp(t *testing.T) {
 	}
 }
 
-func TestDeleteWhitelistKeys(t *testing.T) {
-	cases := map[string]MigrationTest{
-		"no-overlap": {
-			TileProperties: `
-        {
-          "properties": {
-            ".properties.org": {
-              "type": "string",
-              "configurable": true,
-              "credential": false,
-              "value": "system",
-              "optional": false
-            }
-          }
-        }`,
-			Migration:   DeleteWhitelistKeys(),
-			ExpectedEnv: map[string]string{"ORG": "system"},
-		},
-		"one-key": {
-			TileProperties: `
-      {
-        "properties": {
-          ".properties.org": {"type": "string", "value": "system"},
-          ".properties.gsb_service_google_bigquery_whitelist": { "value": 1 },
-        }
-      }`,
-			Migration:   DeleteWhitelistKeys(),
-			ExpectedEnv: map[string]string{"ORG": "system"},
-		},
-		"all-keys": {
-			TileProperties: `
-      {
-        "properties": {
-          ".properties.gsb_service_google_bigquery_whitelist": { "value": 1 },
-          ".properties.gsb_service_google_bigtable_whitelist": { "value": 1 },
-          ".properties.gsb_service_google_cloudsql_mysql_whitelist": { "value": 1 },
-          ".properties.gsb_service_google_cloudsql_postgres_whitelist": { "value": 1 },
-          ".properties.gsb_service_google_ml_apis_whitelist": { "value": 1 },
-          ".properties.gsb_service_google_pubsub_whitelist": { "value": 1 },
-          ".properties.gsb_service_google_spanner_whitelist": { "value": 1 },
-          ".properties.gsb_service_google_storage_whitelist": { "value": 1 },
-        }
-      }`,
-			Migration:   DeleteWhitelistKeys(),
-			ExpectedEnv: map[string]string{},
-		},
-	}
-
-	for tn, tc := range cases {
-		t.Run(tn, tc.Run)
-	}
-}
-
 func TestFullMigration(t *testing.T) {
-	cases := map[string]MigrationTest{
-		"no-fail-on-empty-properties": {
-			TileProperties: `
-        {
-          "properties": {}
-        }`,
-			Migration:   FullMigration(),
-			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": "{}"},
-		},
-	}
+	migration := FullMigration()
 
-	for tn, tc := range cases {
-		t.Run(tn, tc.Run)
-	}
+	t.Run("migration creates valid JS", func(t *testing.T) {
+		vm := otto.New()
+		fakeProps := map[string]interface{}{
+			"properties": map[string]interface{}{},
+		}
+		if err := vm.Set("properties", fakeProps); err != nil {
+			t.Fatal(err)
+		}
+
+		if _, err := vm.Run(migration.TileScript); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("go migration executes without failure", func(t *testing.T) {
+		env := map[string]string{}
+		if err := migration.GoFunc(env); err != nil {
+			t.Fatal(err)
+		}
+	})
 }
