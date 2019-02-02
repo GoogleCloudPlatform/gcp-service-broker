@@ -15,6 +15,7 @@
 package migration
 
 import (
+	"bytes"
 	"encoding/json"
 	"reflect"
 	"strings"
@@ -116,8 +117,11 @@ func (m *MigrationTest) Run(t *testing.T) {
 
 	t.Log("Running JS migration function")
 	out := GetMigrationResults(t, m.TileProperties, m.Migration.TileScript)
+	normalizeJson(t, out)
+	normalizeJson(t, m.ExpectedEnv)
 
 	if !reflect.DeepEqual(out, m.ExpectedEnv) {
+		t.Logf("Diff %#v", DiffStringMap(out, m.ExpectedEnv))
 		t.Fatalf("Expected: %#v Got: %#v", m.ExpectedEnv, out)
 	}
 
@@ -131,8 +135,24 @@ func (m *MigrationTest) Run(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	normalizeJson(t, envFromTile)
+	normalizeJson(t, m.ExpectedEnv)
+
 	if !reflect.DeepEqual(envFromTile, m.ExpectedEnv) {
 		t.Fatalf("Expected: %#v Got: %#v", m.ExpectedEnv, envFromTile)
+	}
+}
+
+func normalizeJson(t *testing.T, env map[string]string) {
+	for k, v := range env {
+		if !json.Valid([]byte(v)) {
+			continue
+		}
+		dst := &bytes.Buffer{}
+		if err := json.Compact(dst, []byte(v)); err != nil {
+			t.Errorf("couldn't compact %q: %v", k, err)
+		}
+		env[k] = dst.String()
 	}
 }
 

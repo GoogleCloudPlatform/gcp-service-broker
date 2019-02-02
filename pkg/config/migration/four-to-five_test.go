@@ -209,17 +209,9 @@ func TestCollapseCustomPlans(t *testing.T) {
 `,
 			Migration: CollapseCustomPlans(),
 			ExpectedEnv: map[string]string{
-				"CLOUDSQL_MYSQL_CUSTOM_PLANS": `[
-  {
-    "name": "plan1"
-  },
-  {
-    "name": "plan2"
-  }
-]`,
+				"CLOUDSQL_MYSQL_CUSTOM_PLANS": `[{"name": "plan1"},{"name": "plan2"}]`,
 			},
 		},
-
 		"real-example": {
 			TileProperties: `{
       	"properties": {
@@ -239,22 +231,64 @@ func TestCollapseCustomPlans(t *testing.T) {
       			]
       		}
       	}
+      }`,
+			Migration: CollapseCustomPlans(),
+			ExpectedEnv: map[string]string{
+				"CLOUDSQL_MYSQL_CUSTOM_PLANS": `[
+          {
+            "description": "custom mysql plan description",
+            "display_name": "custom mysql plan",
+            "guid": "69b4b7c9-2175-4d00-a298-81ebf11de59f",
+            "max_disk_size": "10",
+            "name": "custom-mysql-plan",
+            "pricing_plan": "PER_USE",
+            "service": "4bc59b9a-8520-409f-85da-1c7552315863",
+            "tier": "db-n1-standard-1"
+            }
+          ]`,
+			},
+		},
+		"all-4x-services": {
+			TileProperties: `
+      {
+        "properties": {
+          ".properties.bigquery_custom_plans": { "type": "collection", "value": [{"name": {"type": "string", "value": "plan1"}}]},
+          ".properties.bigtable_custom_plans": { "type": "collection", "value": [{"name": {"type": "string", "value": "plan1"}}]},
+          ".properties.cloudsql_mysql_custom_plans": { "type": "collection", "value": [{"name": {"type": "string", "value": "plan1"}}]},
+          ".properties.cloudsql_postgres_custom_plans": { "type": "collection", "value": [{"name": {"type": "string", "value": "plan1"}}]},
+          ".properties.dataflow_custom_plans": { "type": "collection", "value": [{"name": {"type": "string", "value": "plan1"}}]},
+          ".properties.datastore_custom_plans": { "type": "collection", "value": [{"name": {"type": "string", "value": "plan1"}}]},
+          ".properties.dialogflow_custom_plans": { "type": "collection", "value": [{"name": {"type": "string", "value": "plan1"}}]},
+          ".properties.firestore_custom_plans": { "type": "collection", "value": [{"name": {"type": "string", "value": "plan1"}}]},
+          ".properties.ml_apis_custom_plans": { "type": "collection", "value": [{"name": {"type": "string", "value": "plan1"}}]},
+          ".properties.pubsub_custom_plans": { "type": "collection", "value": [{"name": {"type": "string", "value": "plan1"}}]},
+          ".properties.spanner_custom_plans": { "type": "collection", "value": [{"name": {"type": "string", "value": "plan1"}}]},
+          ".properties.stackdriver_debugger_custom_plans": { "type": "collection", "value": [{"name": {"type": "string", "value": "plan1"}}]},
+          ".properties.stackdriver_monitoring_custom_plans": { "type": "collection", "value": [{"name": {"type": "string", "value": "plan1"}}]},
+          ".properties.stackdriver_profiler_custom_plans": { "type": "collection", "value": [{"name": {"type": "string", "value": "plan1"}}]},
+          ".properties.stackdriver_trace_custom_plans": { "type": "collection", "value": [{"name": {"type": "string", "value": "plan1"}}]},
+          ".properties.storage_custom_plans": { "type": "collection", "value": [{"name": {"type": "string", "value": "plan1"}}]}
+        }
       }
 `,
 			Migration: CollapseCustomPlans(),
 			ExpectedEnv: map[string]string{
-				"CLOUDSQL_MYSQL_CUSTOM_PLANS": `[
-  {
-    "description": "custom mysql plan description",
-    "display_name": "custom mysql plan",
-    "guid": "69b4b7c9-2175-4d00-a298-81ebf11de59f",
-    "max_disk_size": "10",
-    "name": "custom-mysql-plan",
-    "pricing_plan": "PER_USE",
-    "service": "4bc59b9a-8520-409f-85da-1c7552315863",
-    "tier": "db-n1-standard-1"
-  }
-]`,
+				"BIGQUERY_CUSTOM_PLANS":               `[{"name":"plan1"}]`,
+				"BIGTABLE_CUSTOM_PLANS":               `[{"name":"plan1"}]`,
+				"CLOUDSQL_MYSQL_CUSTOM_PLANS":         `[{"name":"plan1"}]`,
+				"CLOUDSQL_POSTGRES_CUSTOM_PLANS":      `[{"name":"plan1"}]`,
+				"DATAFLOW_CUSTOM_PLANS":               `[{"name":"plan1"}]`,
+				"DATASTORE_CUSTOM_PLANS":              `[{"name":"plan1"}]`,
+				"DIALOGFLOW_CUSTOM_PLANS":             `[{"name":"plan1"}]`,
+				"FIRESTORE_CUSTOM_PLANS":              `[{"name":"plan1"}]`,
+				"ML_APIS_CUSTOM_PLANS":                `[{"name":"plan1"}]`,
+				"PUBSUB_CUSTOM_PLANS":                 `[{"name":"plan1"}]`,
+				"SPANNER_CUSTOM_PLANS":                `[{"name":"plan1"}]`,
+				"STACKDRIVER_DEBUGGER_CUSTOM_PLANS":   `[{"name":"plan1"}]`,
+				"STACKDRIVER_MONITORING_CUSTOM_PLANS": `[{"name":"plan1"}]`,
+				"STACKDRIVER_PROFILER_CUSTOM_PLANS":   `[{"name":"plan1"}]`,
+				"STACKDRIVER_TRACE_CUSTOM_PLANS":      `[{"name":"plan1"}]`,
+				"STORAGE_CUSTOM_PLANS":                `[{"name":"plan1"}]`,
 			},
 		},
 	}
