@@ -394,7 +394,7 @@ func TestFormatCustomPlans(t *testing.T) {
 				"CLOUDSQL_MYSQL_CUSTOM_PLANS": `[{"properties":{"prop1":"some-value1","prop2":"some-value2"}}]`,
 			},
 		},
-		// The v4 tile only supports MySQL, Postgres, BigTable, Spanner, and Storage custom plans
+		// The v4 tile only supports MySQL, Postgres, BigTable, Spanner, and Storage custom plans.
 		"applies-to-v4-tile-values": {
 			TileProperties: `
         {
@@ -438,11 +438,22 @@ func TestMergeToServiceConfig(t *testing.T) {
 			TileProperties: `
         {
           "properties": {
-            ".properties.org": {"type": "string","value": "system"}
+            ".properties.bigquery_custom_plans": { "type": "collection", "value": "[{\"name\": \"my-plan\"}]"},
+            ".properties.gsb_service_bigquery_enabled": { "type": "boolean", "value": true },
+            ".properties.gsb_service_bigquery_bind_defaults": { "type": "text", "value": "{\"bind\":\"default\"}" },
+            ".properties.gsb_service_bigquery_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
           }
         }`,
-			Migration:   MergeToServiceConfig(),
-			ExpectedEnv: map[string]string{"ORG": "system", "GSB_SERVICE_CONFIG": defaultEmptyGsbServiceConfig},
+			Migration: MergeToServiceConfig(),
+			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
+        "f80c0a3e-bd4d-4809-a900-b4e33a6450f1": {
+          "//": "Builtin BIGQUERY",
+          "bind_defaults": {"bind":"default"},
+          "custom_plans": [{"name":"my-plan"}],
+          "disabled": false,
+          "provision_defaults": {"provision":"default"}
+        }
+      }`},
 		},
 	}
 

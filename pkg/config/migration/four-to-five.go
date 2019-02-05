@@ -43,16 +43,32 @@ func customPlanKeys() (out []string) {
 	return
 }
 
+// MergeToServiceConfig merges the custom plans, enabled, bind defaults, and
+// provision defaults for every 4.x service into a single configuration option.
 func MergeToServiceConfig() Migration {
 	jst := JsTransform{
 		EnvironmentVariables: []string{"GSB_SERVICE_CONFIG"},
 		MigrationJs: `
+
+		function anyExist(envVars) {
+			for(var i in envVars) {
+				if(lookupProp(envVars[i]) !== null) {
+					return true;
+				}
+			}
+
+			return false;
+		}
 
     function mergeService(svcName) {
       var customPlanVar = svcName+"_CUSTOM_PLANS";
       var enabledVar = "GSB_SERVICE_GOOGLE_"+svcName+"_ENABLED";
       var bindDefaultsVar = "GSB_SERVICE_GOOGLE_"+svcName+"_BIND_DEFAULTS";
       var provisionDefaultsVar = "GSB_SERVICE_GOOGLE_"+svcName+"_PROVISION_DEFAULTS";
+
+			if (! anyExist([customPlanVar, enabledVar, bindDefaultsVar, provisionDefaultsVar])) {
+				return null;
+			}
 
       var context = {
         "custom_plans": lookupProp(customPlanVar) || '[]',
@@ -97,6 +113,17 @@ func MergeToServiceConfig() Migration {
         "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a": mergeService("STACKDRIVER_TRACE"),
         "b9e4332e-b42b-4680-bda5-ea1506797474": mergeService("STORAGE")
       };
+
+			Object.keys(out).forEach(function(key) {
+			if (out[key] == null) delete out[key];
+		});
+
+
+			for (var key in out) {
+				if(out[key] == null) {
+					delete out[key];
+				}
+			}
 
       setProp(envVar, JSON.stringify(out, null, "  "));
     }`,
