@@ -162,13 +162,13 @@ func ValidateVariables(parameters map[string]interface{}, variables []BrokerVari
 }
 
 func createJsonSchema(schemaVariables []BrokerVariable) map[string]interface{} {
-	var required []string
+	required := utils.NewStringSet()
 	properties := make(map[string]interface{})
 
 	for _, variable := range schemaVariables {
 		properties[variable.FieldName] = variable.ToSchema()
 		if variable.Required {
-			required = append(required, variable.FieldName)
+			required.Add(variable.FieldName)
 		}
 	}
 
@@ -178,8 +178,8 @@ func createJsonSchema(schemaVariables []BrokerVariable) map[string]interface{} {
 		"properties": properties,
 	}
 
-	if required != nil {
-		schema["required"] = required
+	if !required.IsEmpty() {
+		schema["required"] = required.ToSlice()
 	}
 
 	return schema
