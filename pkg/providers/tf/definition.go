@@ -203,6 +203,7 @@ func (tfb *TfServiceDefinitionV1) ToService(executor wrapper.TerraformExecutor) 
 		return nil, err
 	}
 
+	constDefn := *tfb
 	return &broker.ServiceDefinition{
 		Name:                     tfb.Name,
 		DefaultServiceDefinition: string(defaultServiceDefinition),
@@ -224,7 +225,7 @@ func (tfb *TfServiceDefinitionV1) ToService(executor wrapper.TerraformExecutor) 
 		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
 			jobRunner := NewTfJobRunnerForProject(projectId)
 			jobRunner.Executor = executor
-			return NewTerraformProvider(jobRunner, logger, *tfb)
+			return NewTerraformProvider(jobRunner, logger, constDefn)
 		},
 	}, nil
 }
