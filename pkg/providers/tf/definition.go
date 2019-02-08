@@ -177,6 +177,7 @@ func (tfb *TfServiceDefinitionV1) ToService(executor wrapper.TerraformExecutor) 
 		rawPlans = append(rawPlans, plan.ToPlan())
 	}
 
+	constDefn := *tfb
 	return &broker.ServiceDefinition{
 		Id:               tfb.Id,
 		Name:             tfb.Name,
