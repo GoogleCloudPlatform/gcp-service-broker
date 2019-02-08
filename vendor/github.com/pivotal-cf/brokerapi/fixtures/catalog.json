@@ -12,6 +12,11 @@
       "metadata": {
         "displayName": "Cassandra"
       },
+      "maintenance_info": {
+        "public": {
+          "name": "foo"
+        }
+      },
       "schemas": {
         "service_instance": {
           "create": {

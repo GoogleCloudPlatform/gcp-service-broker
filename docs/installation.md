@@ -25,17 +25,18 @@ Documentation for installing as a Pivotal Ops Manager tile is available [here](h
 #### [Set up a GCP Project](#project)
 
 1. Go to the [Google Cloud Console](https://console.cloud.google.com) and sign up, walking through the setup wizard.
-1. Next to the Google Cloud Platform logo in the upper left-hand corner, click the dropdown and select "Create Project".
+1. A page then displays with a collection of options. Select "Create Project" option.
 1. Give your project a name and click "Create".
-1. When the project is created (a notification will show in the upper right), refresh the page.
+1. The dashboard for the newly created project will be displayed.
 
 #### [Enable APIs](#apis)
 
-Enable the following services in **[API Manager > Library](https://console.cloud.google.com/apis/library)**.
+Enable the following services in **[APIs and services > Library](https://console.cloud.google.com/apis/library)**.
 
 1. Enable the [Google Cloud Resource Manager API](https://console.cloud.google.com/apis/api/cloudresourcemanager.googleapis.com/overview)
 1. Enable the [Google Identity and Access Management (IAM) API](https://console.cloud.google.com/apis/api/iam.googleapis.com/overview)
-1. If you want to enable CloudSQL as a service, enable the [CloudSQL API](https://console.cloud.google.com/apis/api/sqladmin/overview)
+1. If you want to enable CloudSQL as a service, enable the [CloudSQL API]
+(https://console.cloud.google.com/apis/library/sql-component.googleapis.com)
 1. If you want to enable BigQuery as a service, enable the [BigQuery API](https://console.cloud.google.com/apis/api/bigquery/overview)
 1. If you want to enable Cloud Storage as a service, enable the [Cloud Storage API](https://console.cloud.google.com/apis/api/storage_component/overview)
 1. If you want to enable Pub/Sub as a service, enable the [Cloud Pub/Sub API](https://console.cloud.google.com/apis/api/pubsub/overview)

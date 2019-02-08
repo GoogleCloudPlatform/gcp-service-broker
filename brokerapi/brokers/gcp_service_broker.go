@@ -16,7 +16,9 @@ package brokers
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/pivotal-cf/brokerapi"
@@ -25,32 +27,23 @@ import (
 
 	"encoding/json"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+)
 
-	// import the brokers to register them
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/api_service"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigquery"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/bigtable"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/cloudsql"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/dataflow"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/datastore"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/dialogflow"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/firestore"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/pubsub"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/spanner"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/stackdriver"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/storage"
-	_ "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
+var (
+	invalidUserInputMsg        = "User supplied paramaters must be in the form of a valid JSON map."
+	ErrInvalidUserInput        = brokerapi.NewFailureResponse(errors.New(invalidUserInputMsg), http.StatusBadRequest, "parsing-user-request")
+	ErrGetInstancesUnsupported = brokerapi.NewFailureResponse(errors.New("the service_instances endpoint is unsupported"), http.StatusBadRequest, "unsupported")
+	ErrGetBindingsUnsupported  = brokerapi.NewFailureResponse(errors.New("the service_bindings endpoint is unsupported"), http.StatusBadRequest, "unsupported")
 )
 
 // GCPServiceBroker is a brokerapi.ServiceBroker that can be used to generate an OSB compatible service broker.
 type GCPServiceBroker struct {
-	enableInputValidation bool
-	registry              broker.BrokerRegistry
-	jwtConfig             *jwt.Config
-	projectId             string
+	registry  broker.BrokerRegistry
+	jwtConfig *jwt.Config
+	projectId string
 
 	Logger lager.Logger
 }
@@ -59,11 +52,10 @@ type GCPServiceBroker struct {
 // Exactly one of GCPServiceBroker or error will be nil when returned.
 func New(cfg *BrokerConfig, logger lager.Logger) (*GCPServiceBroker, error) {
 	return &GCPServiceBroker{
-		enableInputValidation: cfg.EnableInputValidation,
-		registry:              cfg.Registry,
-		jwtConfig:             cfg.HttpConfig,
-		projectId:             cfg.ProjectId,
-		Logger:                logger,
+		registry:  cfg.Registry,
+		jwtConfig: cfg.HttpConfig,
+		projectId: cfg.ProjectId,
+		Logger:    logger,
 	}, nil
 }
 
@@ -72,7 +64,7 @@ func New(cfg *BrokerConfig, logger lager.Logger) (*GCPServiceBroker, error) {
 func (gcpBroker *GCPServiceBroker) Services(ctx context.Context) ([]brokerapi.Service, error) {
 	svcs := []brokerapi.Service{}
 
-	enabledServices, err := broker.GetEnabledServices()
+	enabledServices, err := gcpBroker.registry.GetEnabledServices()
 	if err != nil {
 		return nil, err
 	}
@@ -108,11 +100,11 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 	})
 
 	// make sure that instance hasn't already been provisioned
-	count, err := db_service.CountServiceInstanceDetailsById(ctx, instanceID)
+	exists, err := db_service.ExistsServiceInstanceDetailsById(ctx, instanceID)
 	if err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, fmt.Errorf("Database error checking for existing instance: %s", err)
 	}
-	if count > 0 {
+	if exists {
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrInstanceAlreadyExists
 	}
 
@@ -133,13 +125,13 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 		return brokerapi.ProvisionedServiceSpec{}, brokerapi.ErrAsyncRequired
 	}
 
-	if gcpBroker.enableInputValidation {
-		// validate parameters meet the service's schema
-		if err := gcpBroker.validateProvisionVariables(details); err != nil {
-			return brokerapi.ProvisionedServiceSpec{}, err
-		}
+	// Give the user a better error message if they give us a bad request
+	if !isValidOrEmptyJSON(details.GetRawParameters()) {
+		return brokerapi.ProvisionedServiceSpec{}, ErrInvalidUserInput
 	}
 
+	// validate parameters meet the service's schema and merge the user vars with
+	// the plan's
 	vars, err := brokerService.ProvisionVariables(instanceID, details, *plan)
 	if err != nil {
 		return brokerapi.ProvisionedServiceSpec{}, err
@@ -173,38 +165,6 @@ func (gcpBroker *GCPServiceBroker) Provision(ctx context.Context, instanceID str
 	}
 
 	return brokerapi.ProvisionedServiceSpec{IsAsync: shouldProvisionAsync, DashboardURL: "", OperationData: instanceDetails.OperationId}, nil
-}
-
-func (gcpBroker *GCPServiceBroker) validateProvisionVariables(details brokerapi.ProvisionDetails) error {
-	serviceDefinition, err := gcpBroker.registry.GetServiceById(details.ServiceID)
-	if err != nil {
-		return err
-	}
-
-	params := make(map[string]interface{})
-	if len(details.RawParameters) > 0 {
-		if err := json.Unmarshal([]byte(details.RawParameters), &params); err != nil {
-			return err
-		}
-	}
-
-	return broker.ValidateVariables(params, serviceDefinition.ProvisionInputVariables)
-}
-
-func (gcpBroker *GCPServiceBroker) validateBindVariables(details brokerapi.BindDetails) error {
-	serviceDefinition, err := gcpBroker.registry.GetServiceById(details.ServiceID)
-	if err != nil {
-		return err
-	}
-
-	params := make(map[string]interface{})
-	if len(details.RawParameters) > 0 {
-		if err := json.Unmarshal([]byte(details.RawParameters), &params); err != nil {
-			return err
-		}
-	}
-
-	return broker.ValidateVariables(params, serviceDefinition.BindInputVariables)
 }
 
 // Deprovision destroys an existing instance of a service.
@@ -261,7 +221,7 @@ func (gcpBroker *GCPServiceBroker) Deprovision(ctx context.Context, instanceID s
 
 // Bind creates an account with credentials to access an instance of a service.
 // It is bound to the `PUT /v2/service_instances/:instance_id/service_bindings/:binding_id` endpoint and can be called using the `cf bind-service` command.
-func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (brokerapi.Binding, error) {
+func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, bindingID string, details brokerapi.BindDetails, clientSupportsAsync bool) (brokerapi.Binding, error) {
 	gcpBroker.Logger.Info("Binding", lager.Data{
 		"instance_id": instanceID,
 		"binding_id":  bindingID,
@@ -269,11 +229,11 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 	})
 
 	// check for existing binding
-	count, err := db_service.CountServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, instanceID, bindingID)
+	exists, err := db_service.ExistsServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, instanceID, bindingID)
 	if err != nil {
 		return brokerapi.Binding{}, fmt.Errorf("Error checking for existing binding: %s", err)
 	}
-	if count > 0 {
+	if exists {
 		return brokerapi.Binding{}, brokerapi.ErrBindingAlreadyExists
 	}
 
@@ -288,13 +248,13 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 		return brokerapi.Binding{}, err
 	}
 
-	if gcpBroker.enableInputValidation {
-		// validate parameters meet the service's schema
-		if err := gcpBroker.validateBindVariables(details); err != nil {
-			return brokerapi.Binding{}, err
-		}
+	// Give the user a better error message if they give us a bad request
+	if !isValidOrEmptyJSON(details.GetRawParameters()) {
+		return brokerapi.Binding{}, ErrInvalidUserInput
 	}
 
+	// validate parameters meet the service's schema and merge the plan's vars with
+	// the user's
 	vars, err := serviceDefinition.BindVariables(*instanceRecord, bindingID, details)
 	if err != nil {
 		return brokerapi.Binding{}, err
@@ -332,9 +292,50 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 	return brokerapi.Binding{Credentials: updatedCreds}, nil
 }
 
+// GetBinding fetches an existing service binding.
+// GET /v2/service_instances/{instance_id}/service_bindings/{binding_id}
+//
+// NOTE: This functionality is not implemented.
+func (broker *GCPServiceBroker) GetBinding(ctx context.Context, instanceID, bindingID string) (brokerapi.GetBindingSpec, error) {
+	broker.Logger.Info("GetBinding", lager.Data{
+		"instance_id": instanceID,
+		"binding_id":  bindingID,
+	})
+
+	return brokerapi.GetBindingSpec{}, ErrGetBindingsUnsupported
+}
+
+// GetInstance fetches information about a service instance
+// GET /v2/service_instances/{instance_id}
+//
+// NOTE: This functionality is not implemented.
+func (broker *GCPServiceBroker) GetInstance(ctx context.Context, instanceID string) (brokerapi.GetInstanceDetailsSpec, error) {
+	broker.Logger.Info("GetInstance", lager.Data{
+		"instance_id": instanceID,
+	})
+
+	return brokerapi.GetInstanceDetailsSpec{}, ErrGetInstancesUnsupported
+}
+
+// LastBindingOperation fetches last operation state for a service binding.
+// GET /v2/service_instances/{instance_id}/service_bindings/{binding_id}/last_operation
+//
+// NOTE: This functionality is not implemented.
+func (broker *GCPServiceBroker) LastBindingOperation(ctx context.Context, instanceID, bindingID string, details brokerapi.PollDetails) (brokerapi.LastOperation, error) {
+	broker.Logger.Info("LastBindingOperation", lager.Data{
+		"instance_id":    instanceID,
+		"binding_id":     bindingID,
+		"plan_id":        details.PlanID,
+		"service_id":     details.ServiceID,
+		"operation_data": details.OperationData,
+	})
+
+	return brokerapi.LastOperation{}, brokerapi.ErrAsyncRequired
+}
+
 // Unbind destroys an account and credentials with access to an instance of a service.
 // It is bound to the `DELETE /v2/service_instances/:instance_id/service_bindings/:binding_id` endpoint and can be called using the `cf unbind-service` command.
-func (gcpBroker *GCPServiceBroker) Unbind(ctx context.Context, instanceID, bindingID string, details brokerapi.UnbindDetails) error {
+func (gcpBroker *GCPServiceBroker) Unbind(ctx context.Context, instanceID, bindingID string, details brokerapi.UnbindDetails, asyncSupported bool) (brokerapi.UnbindSpec, error) {
 	gcpBroker.Logger.Info("Unbinding", lager.Data{
 		"instance_id": instanceID,
 		"binding_id":  bindingID,
@@ -343,41 +344,43 @@ func (gcpBroker *GCPServiceBroker) Unbind(ctx context.Context, instanceID, bindi
 
 	_, serviceProvider, err := gcpBroker.getDefinitionAndProvider(details.ServiceID)
 	if err != nil {
-		return err
+		return brokerapi.UnbindSpec{}, err
 	}
 
 	// validate existence of binding
 	existingBinding, err := db_service.GetServiceBindingCredentialsByServiceInstanceIdAndBindingId(ctx, instanceID, bindingID)
 	if err != nil {
-		return brokerapi.ErrBindingDoesNotExist
+		return brokerapi.UnbindSpec{}, brokerapi.ErrBindingDoesNotExist
 	}
 
 	// get existing service instance details
 	instance, err := db_service.GetServiceInstanceDetailsById(ctx, instanceID)
 	if err != nil {
-		return fmt.Errorf("Error retrieving service instance details: %s", err)
+		return brokerapi.UnbindSpec{}, fmt.Errorf("Error retrieving service instance details: %s", err)
 	}
 
 	// remove binding from Google
 	if err := serviceProvider.Unbind(ctx, *instance, *existingBinding); err != nil {
-		return err
+		return brokerapi.UnbindSpec{}, err
 	}
 
 	// remove binding from database
 	if err := db_service.DeleteServiceBindingCredentials(ctx, existingBinding); err != nil {
-		return fmt.Errorf("Error soft-deleting credentials from database: %s. WARNING: these credentials will remain visible in cf. Contact your operator for cleanup", err)
+		return brokerapi.UnbindSpec{}, fmt.Errorf("Error soft-deleting credentials from database: %s. WARNING: these credentials will remain visible in cf. Contact your operator for cleanup", err)
 	}
 
-	return nil
+	return brokerapi.UnbindSpec{}, nil
 }
 
-// Unbind destroys an account and credentials with access to an instance of a service.
+// LastOperation fetches last operation state for a service instance.
 // It is bound to the `GET /v2/service_instances/:instance_id/last_operation` endpoint.
 // It is called by `cf create-service` or `cf delete-service` if the operation was asynchronous.
-func (gcpBroker *GCPServiceBroker) LastOperation(ctx context.Context, instanceID, operationData string) (brokerapi.LastOperation, error) {
+func (gcpBroker *GCPServiceBroker) LastOperation(ctx context.Context, instanceID string, details brokerapi.PollDetails) (brokerapi.LastOperation, error) {
 	gcpBroker.Logger.Info("Last Operation", lager.Data{
 		"instance_id":    instanceID,
-		"operation_data": operationData,
+		"plan_id":        details.PlanID,
+		"service_id":     details.ServiceID,
+		"operation_data": details.OperationData,
 	})
 
 	instance, err := db_service.GetServiceInstanceDetailsById(ctx, instanceID)
@@ -454,4 +457,8 @@ func (gcpBroker *GCPServiceBroker) updateStateOnOperationCompletion(ctx context.
 // This functionality is not implemented and will return an error indicating that plan changes are not supported.
 func (gcpBroker *GCPServiceBroker) Update(ctx context.Context, instanceID string, details brokerapi.UpdateDetails, asyncAllowed bool) (brokerapi.UpdateServiceSpec, error) {
 	return brokerapi.UpdateServiceSpec{}, brokerapi.ErrPlanChangeNotSupported
+}
+
+func isValidOrEmptyJSON(msg json.RawMessage) bool {
+	return msg == nil || len(msg) == 0 || json.Valid(msg)
 }

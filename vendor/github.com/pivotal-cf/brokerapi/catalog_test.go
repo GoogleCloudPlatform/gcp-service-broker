@@ -18,6 +18,7 @@ package brokerapi_test
 import (
 	"encoding/json"
 	"reflect"
+	"sync"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -120,6 +121,12 @@ var _ = Describe("Catalog", func() {
 						Bullets:     []string{"hello", "its me"},
 						DisplayName: "name",
 					},
+					MaintenanceInfo: &brokerapi.MaintenanceInfo{
+						Public: map[string]string{
+							"name": "foo",
+						},
+						Private: "someprivatehashedvalue",
+					},
 				}
 				jsonString := `{
 					"id":"ID-1",
@@ -130,6 +137,12 @@ var _ = Describe("Catalog", func() {
 					"metadata":{
 						"bullets":["hello", "its me"],
 						"displayName":"name"
+					},
+					"maintenance_info": {
+						"public": {
+							"name": "foo"
+						},
+						"private": "someprivatehashedvalue"
 					}
 				}`
 
@@ -167,6 +180,51 @@ var _ = Describe("Catalog", func() {
 				}`
 
 				Expect(json.Marshal(metadata)).To(MatchJSON(jsonString))
+
+				By("not mutating the AdditionalMetadata during custom JSON marshalling")
+				Expect(len(metadata.AdditionalMetadata)).To(Equal(2))
+			})
+
+			It("it can marshal same structure in parallel requests", func() {
+				metadata := brokerapi.ServicePlanMetadata{
+					Bullets:     []string{"hello", "its me"},
+					DisplayName: "name",
+					AdditionalMetadata: map[string]interface{}{
+						"foo": "bar",
+						"baz": 1,
+					},
+				}
+				jsonString := `{
+					"bullets":["hello", "its me"],
+					"displayName":"name",
+					"foo": "bar",
+					"baz": 1
+				}`
+
+				var wg sync.WaitGroup
+				wg.Add(2)
+
+				for i := 0; i < 2; i++ {
+					go func() {
+						defer wg.Done()
+						defer GinkgoRecover()
+
+						Expect(json.Marshal(metadata)).To(MatchJSON(jsonString))
+					}()
+				}
+				wg.Wait()
+			})
+
+			It("returns an error when additional metadata is not marshallable", func() {
+				metadata := brokerapi.ServicePlanMetadata{
+					Bullets:     []string{"hello", "its me"},
+					DisplayName: "name",
+					AdditionalMetadata: map[string]interface{}{
+						"foo": make(chan int, 0),
+					},
+				}
+				_, err := json.Marshal(metadata)
+				Expect(err).To(MatchError(ContainSubstring("unmarshallable content in AdditionalMetadata")))
 			})
 		})
 
@@ -233,6 +291,48 @@ var _ = Describe("Catalog", func() {
 				}`
 
 				Expect(json.Marshal(metadata)).To(MatchJSON(jsonString))
+
+				By("not mutating the AdditionalMetadata during custom JSON marshalling")
+				Expect(len(metadata.AdditionalMetadata)).To(Equal(2))
+			})
+
+			It("it can marshal same structure in parallel requests", func() {
+				metadata := brokerapi.ServiceMetadata{
+					DisplayName: "name",
+					AdditionalMetadata: map[string]interface{}{
+						"foo": "bar",
+						"baz": 1,
+					},
+				}
+				jsonString := `{
+					"displayName":"name",
+					"foo": "bar",
+					"baz": 1
+				}`
+
+				var wg sync.WaitGroup
+				wg.Add(2)
+
+				for i := 0; i < 2; i++ {
+					go func() {
+						defer wg.Done()
+						defer GinkgoRecover()
+
+						Expect(json.Marshal(metadata)).To(MatchJSON(jsonString))
+					}()
+				}
+				wg.Wait()
+			})
+
+			It("returns an error when additional metadata is not marshallable", func() {
+				metadata := brokerapi.ServiceMetadata{
+					DisplayName: "name",
+					AdditionalMetadata: map[string]interface{}{
+						"foo": make(chan int),
+					},
+				}
+				_, err := json.Marshal(metadata)
+				Expect(err).To(MatchError(ContainSubstring("unmarshallable content in AdditionalMetadata")))
 			})
 		})
 

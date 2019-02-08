@@ -15,6 +15,7 @@ type FakeServiceBroker struct {
 	ProvisionedInstanceIDs   []string
 	DeprovisionedInstanceIDs []string
 	UpdatedInstanceIDs       []string
+	GetInstanceIDs           []string
 
 	BoundInstanceIDs    []string
 	BoundBindingIDs     []string
@@ -33,6 +34,8 @@ type FakeServiceBroker struct {
 	DeprovisionError   error
 	LastOperationError error
 	UpdateError        error
+	GetInstanceError   error
+	GetBindingError    error
 
 	BrokerCalled             bool
 	LastOperationState       brokerapi.LastOperationState
@@ -88,6 +91,11 @@ func (fakeBroker *FakeServiceBroker) Services(ctx context.Context) ([]brokerapi.
 					Metadata: &brokerapi.ServicePlanMetadata{
 						Bullets:     []string{},
 						DisplayName: "Cassandra",
+					},
+					MaintenanceInfo: &brokerapi.MaintenanceInfo{
+						Public: map[string]string{
+							"name": "foo",
+						},
 					},
 					Schemas: &brokerapi.ServiceSchemas{
 						Instance: brokerapi.ServiceInstanceSchema{
@@ -229,7 +237,25 @@ func (fakeBroker *FakeServiceBroker) Update(context context.Context, instanceID 
 	fakeBroker.UpdateDetails = details
 	fakeBroker.UpdatedInstanceIDs = append(fakeBroker.UpdatedInstanceIDs, instanceID)
 	fakeBroker.AsyncAllowed = asyncAllowed
-	return brokerapi.UpdateServiceSpec{IsAsync: fakeBroker.ShouldReturnAsync, OperationData: fakeBroker.OperationDataToReturn}, nil
+	return brokerapi.UpdateServiceSpec{IsAsync: fakeBroker.ShouldReturnAsync, OperationData: fakeBroker.OperationDataToReturn, DashboardURL: fakeBroker.DashboardURL}, nil
+}
+
+func (fakeBroker *FakeServiceBroker) GetInstance(context context.Context, instanceID string) (brokerapi.GetInstanceDetailsSpec, error) {
+	fakeBroker.BrokerCalled = true
+
+	if val, ok := context.Value("test_context").(bool); ok {
+		fakeBroker.ReceivedContext = val
+	}
+
+	fakeBroker.GetInstanceIDs = append(fakeBroker.GetInstanceIDs, instanceID)
+	return brokerapi.GetInstanceDetailsSpec{
+		ServiceID:    fakeBroker.ServiceID,
+		PlanID:       fakeBroker.PlanID,
+		DashboardURL: fakeBroker.DashboardURL,
+		Parameters: map[string]interface{}{
+			"param1": "value1",
+		},
+	}, fakeBroker.GetInstanceError
 }
 
 func (fakeBroker *FakeServiceBroker) Deprovision(context context.Context, instanceID string, details brokerapi.DeprovisionDetails, asyncAllowed bool) (brokerapi.DeprovisionServiceSpec, error) {
@@ -290,7 +316,45 @@ func (fakeBroker *FakeAsyncServiceBroker) Deprovision(context context.Context, i
 	return brokerapi.DeprovisionServiceSpec{OperationData: fakeBroker.OperationDataToReturn, IsAsync: asyncAllowed}, brokerapi.ErrInstanceDoesNotExist
 }
 
-func (fakeBroker *FakeServiceBroker) Bind(context context.Context, instanceID, bindingID string, details brokerapi.BindDetails) (brokerapi.Binding, error) {
+func (fakeBroker *FakeServiceBroker) GetBinding(context context.Context, instanceID, bindingID string) (brokerapi.GetBindingSpec, error) {
+	fakeBroker.BrokerCalled = true
+
+	if val, ok := context.Value("test_context").(bool); ok {
+		fakeBroker.ReceivedContext = val
+	}
+
+	return brokerapi.GetBindingSpec{
+		Credentials: FakeCredentials{
+			Host:     "127.0.0.1",
+			Port:     3000,
+			Username: "batman",
+			Password: "robin",
+		},
+		SyslogDrainURL:  fakeBroker.SyslogDrainURL,
+		RouteServiceURL: fakeBroker.RouteServiceURL,
+		VolumeMounts:    fakeBroker.VolumeMounts,
+	}, fakeBroker.GetBindingError
+}
+
+func (fakeBroker *FakeAsyncServiceBroker) Bind(context context.Context, instanceID, bindingID string, details brokerapi.BindDetails, asyncAllowed bool) (brokerapi.Binding, error) {
+	fakeBroker.BrokerCalled = true
+
+	fakeBroker.BoundBindingDetails = details
+
+	fakeBroker.BoundInstanceIDs = append(fakeBroker.BoundInstanceIDs, instanceID)
+	fakeBroker.BoundBindingIDs = append(fakeBroker.BoundBindingIDs, bindingID)
+
+	if asyncAllowed {
+		return brokerapi.Binding{
+			IsAsync:       true,
+			OperationData: "0xDEADBEEF",
+		}, nil
+	} else {
+		return fakeBroker.FakeServiceBroker.Bind(context, instanceID, bindingID, details, false)
+	}
+}
+
+func (fakeBroker *FakeServiceBroker) Bind(context context.Context, instanceID, bindingID string, details brokerapi.BindDetails, asyncAllowed bool) (brokerapi.Binding, error) {
 	fakeBroker.BrokerCalled = true
 
 	if val, ok := context.Value("test_context").(bool); ok {
@@ -319,7 +383,7 @@ func (fakeBroker *FakeServiceBroker) Bind(context context.Context, instanceID, b
 	}, nil
 }
 
-func (fakeBroker *FakeServiceBroker) Unbind(context context.Context, instanceID, bindingID string, details brokerapi.UnbindDetails) error {
+func (fakeBroker *FakeServiceBroker) Unbind(context context.Context, instanceID, bindingID string, details brokerapi.UnbindDetails, asyncAllowed bool) (brokerapi.UnbindSpec, error) {
 	fakeBroker.BrokerCalled = true
 
 	if val, ok := context.Value("test_context").(bool); ok {
@@ -327,24 +391,37 @@ func (fakeBroker *FakeServiceBroker) Unbind(context context.Context, instanceID,
 	}
 
 	if fakeBroker.UnbindError != nil {
-		return fakeBroker.UnbindError
+		return brokerapi.UnbindSpec{}, fakeBroker.UnbindError
 	}
 
 	fakeBroker.UnbindingDetails = details
 
 	if sliceContains(instanceID, fakeBroker.ProvisionedInstanceIDs) {
 		if sliceContains(bindingID, fakeBroker.BoundBindingIDs) {
-			return nil
+			return brokerapi.UnbindSpec{}, nil
 		}
-		return brokerapi.ErrBindingDoesNotExist
+		return brokerapi.UnbindSpec{}, brokerapi.ErrBindingDoesNotExist
 	}
 
-	return brokerapi.ErrInstanceDoesNotExist
+	return brokerapi.UnbindSpec{}, brokerapi.ErrInstanceDoesNotExist
 }
 
-func (fakeBroker *FakeServiceBroker) LastOperation(context context.Context, instanceID, operationData string) (brokerapi.LastOperation, error) {
+func (fakeBroker *FakeServiceBroker) LastBindingOperation(context context.Context, instanceID, bindingID string, details brokerapi.PollDetails) (brokerapi.LastOperation, error) {
+
+	if val, ok := context.Value("test_context").(bool); ok {
+		fakeBroker.ReceivedContext = val
+	}
+
+	if fakeBroker.LastOperationError != nil {
+		return brokerapi.LastOperation{}, fakeBroker.LastOperationError
+	}
+
+	return brokerapi.LastOperation{State: fakeBroker.LastOperationState, Description: fakeBroker.LastOperationDescription}, nil
+}
+
+func (fakeBroker *FakeServiceBroker) LastOperation(context context.Context, instanceID string, details brokerapi.PollDetails) (brokerapi.LastOperation, error) {
 	fakeBroker.LastOperationInstanceID = instanceID
-	fakeBroker.LastOperationData = operationData
+	fakeBroker.LastOperationData = details.OperationData
 
 	if val, ok := context.Value("test_context").(bool); ok {
 		fakeBroker.ReceivedContext = val

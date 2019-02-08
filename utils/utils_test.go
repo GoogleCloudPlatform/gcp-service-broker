@@ -181,3 +181,23 @@ func TestSplitNewlineDelimitedList(t *testing.T) {
 		})
 	}
 }
+
+func ExampleIndent() {
+	weirdText := "First\n\tSecond"
+	out := Indent(weirdText, "  ")
+	fmt.Println(out == "  First\n  \tSecond")
+
+	// Output: true
+}
+
+func ExampleCopyStringMap() {
+	m := map[string]string{"a": "one"}
+	copy := CopyStringMap(m)
+	m["a"] = "two"
+
+	fmt.Println(m["a"])
+	fmt.Println(copy["a"])
+
+	// Output: two
+	// one
+}

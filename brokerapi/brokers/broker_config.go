@@ -15,19 +15,19 @@
 package brokers
 
 import (
+	"fmt"
+
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/brokerpak"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"golang.org/x/oauth2/jwt"
 )
 
-var enableInputValidation = toggles.Compatibility.Toggle("enable-input-validation", true, "Enables validating user input variables against JSON Schema definitions.")
-
 type BrokerConfig struct {
-	HttpConfig            *jwt.Config
-	ProjectId             string
-	EnableInputValidation bool
-	Registry              broker.BrokerRegistry
+	HttpConfig *jwt.Config
+	ProjectId  string
+	Registry   broker.BrokerRegistry
 }
 
 func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
@@ -41,10 +41,14 @@ func NewBrokerConfigFromEnv() (*BrokerConfig, error) {
 		return nil, err
 	}
 
+	registry := builtin.BuiltinBrokerRegistry()
+	if err := brokerpak.RegisterAll(registry); err != nil {
+		return nil, fmt.Errorf("Error loading brokerpaks: %v", err)
+	}
+
 	return &BrokerConfig{
-		ProjectId:             projectId,
-		HttpConfig:            conf,
-		EnableInputValidation: enableInputValidation.IsActive(),
-		Registry:              broker.DefaultRegistry,
+		ProjectId:  projectId,
+		HttpConfig: conf,
+		Registry:   registry,
 	}, nil
 }

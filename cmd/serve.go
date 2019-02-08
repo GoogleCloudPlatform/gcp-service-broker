@@ -20,11 +20,7 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/brokerpak"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/compatibility"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/server"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
@@ -39,12 +35,7 @@ const (
 	apiPortProp     = "api.port"
 )
 
-var v3CompatibilityToggle = toggles.Compatibility.Toggle("three-to-four.legacy-plans", false, `Enable compatibility with the GCP Service Broker v3.x.
-	Before version 4.0, each installation generated its own plan UUIDs, after 4.0 they have been standardized.
-	This option installs a compatibility layer which checks if a service is using the correct plan GUID.
-	If the service does not use the correct GUID, the request will fail with a message about how to upgrade.`)
-
-var cfCompatibilityToggle = toggles.Compatibility.Toggle("enable-cf-sharing", false, `Set all services to have the Sharable flag so they can be shared
+var cfCompatibilityToggle = toggles.Features.Toggle("enable-cf-sharing", false, `Set all services to have the Sharable flag so they can be shared
 	across spaces in PCF.`)
 
 func init() {
@@ -64,16 +55,8 @@ func init() {
 }
 
 func serve() {
-
 	logger := utils.NewLogger("gcp-service-broker")
-
-	models.ProductionizeUserAgent()
-
 	db_service.New(logger)
-
-	if err := brokerpak.RegisterAll(broker.DefaultRegistry); err != nil {
-		logger.Fatal("Error loading brokerpaks: %v", err)
-	}
 
 	// init broker
 	cfg, err := brokers.NewBrokerConfigFromEnv()
@@ -106,12 +89,6 @@ func serve() {
 		serviceBroker = server.NewCfSharingWrapper(serviceBroker)
 	}
 
-	if v3CompatibilityToggle.IsActive() {
-		logger.Info("Enabling v3 Compatibility Mode")
-
-		serviceBroker = compatibility.NewLegacyPlanUpgrader(serviceBroker)
-	}
-
 	services, err := serviceBroker.Services(context.Background())
 	if err != nil {
 		logger.Error("creating service catalog", err)
@@ -120,6 +97,6 @@ func serve() {
 
 	brokerAPI := brokerapi.New(serviceBroker, logger, credentials)
 	http.Handle("/", brokerAPI)
-	http.Handle("/docs", server.NewDocsHandler(broker.DefaultRegistry))
+	http.Handle("/docs", server.NewDocsHandler(cfg.Registry))
 	http.ListenAndServe(":"+port, nil)
 }

@@ -235,3 +235,25 @@ func SplitNewlineDelimitedList(paksText string) []string {
 
 	return out
 }
+
+// Indent indents every line of the given text with the given string.
+func Indent(text, by string) string {
+	lines := strings.Split(text, "\n")
+
+	for i, line := range lines {
+		lines[i] = by + line
+	}
+
+	return strings.Join(lines, "\n")
+}
+
+// CopyStringMap makes a copy of the given map.
+func CopyStringMap(m map[string]string) map[string]string {
+	out := make(map[string]string)
+
+	for k, v := range m {
+		out[k] = v
+	}
+
+	return out
+}

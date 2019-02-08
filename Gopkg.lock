@@ -334,50 +334,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:b04597acc9d90336e9409114e4e85f03cf253574a70c5c5c61450422e4911f10"
-  name = "github.com/onsi/ginkgo"
-  packages = [
-    ".",
-    "config",
-    "internal/codelocation",
-    "internal/containernode",
-    "internal/failer",
-    "internal/leafnodes",
-    "internal/remote",
-    "internal/spec",
-    "internal/specrunner",
-    "internal/suite",
-    "internal/testingtproxy",
-    "internal/writer",
-    "reporters",
-    "reporters/stenographer",
-    "types",
-  ]
-  pruneopts = ""
-  revision = "462326b1628e124b23f42e87a8f2750e3c4e2d24"
-  version = "v1.2.0"
-
-[[projects]]
-  digest = "1:3d652dc0d00c12c705e619312d46388620a35c347f335c22d6cb2b4f0b8efd67"
-  name = "github.com/onsi/gomega"
-  packages = [
-    ".",
-    "format",
-    "internal/assertion",
-    "internal/asyncassertion",
-    "internal/testingtsupport",
-    "matchers",
-    "matchers/support/goraph/bipartitegraph",
-    "matchers/support/goraph/edge",
-    "matchers/support/goraph/node",
-    "matchers/support/goraph/util",
-    "types",
-  ]
-  pruneopts = ""
-  revision = "a78ae492d53aad5a7a232d0d0462c14c400e3ee7"
-  version = "v1.0"
-
-[[projects]]
   digest = "1:894aef961c056b6d85d12bac890bf60c44e99b46292888bfa66caf529f804457"
   name = "github.com/pelletier/go-toml"
   packages = ["."]
@@ -386,15 +342,40 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:0ddb907d581670c05eb84f02ac1cb39e9666fbb7ca767a144d0d018aab80665c"
+  digest = "1:b5f4b4abdc0a9927dad7d4f50b4355ee6647b832077fe588190929c8fa88f1f3"
   name = "github.com/pivotal-cf/brokerapi"
   packages = [
     ".",
     "auth",
+    "middlewares/originating_identity_header",
   ]
   pruneopts = ""
-  revision = "d1fcddd951a6776bc01659143dda6aca057e98b7"
-  version = "v2.0.4"
+  revision = "644cda48aed126142816ea9fdf0c676e7d66032e"
+  version = "v4.2.1"
+
+[[projects]]
+  digest = "1:1d7e1867c49a6dd9856598ef7c3123604ea3daabf5b83f303ff457bcbc410b1d"
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  pruneopts = ""
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:76695a5588998a21701d17ea689a45fa39a8c5f52c47607f74f9a92416bb6961"
+  name = "github.com/robertkrimen/otto"
+  packages = [
+    ".",
+    "ast",
+    "dbg",
+    "file",
+    "parser",
+    "registry",
+    "token",
+  ]
+  pruneopts = ""
+  revision = "15f95af6e78dcd2030d8195a138bd88d4f403546"
 
 [[projects]]
   branch = "master"
@@ -706,6 +687,17 @@
   version = "v2.0.1"
 
 [[projects]]
+  digest = "1:be5b8bdf182abbef3c4e0d0926bba912ef41b097f001259cb5d2187370bb2e5b"
+  name = "gopkg.in/sourcemap.v1"
+  packages = [
+    ".",
+    "base64vlq",
+  ]
+  pruneopts = ""
+  revision = "6e83acea0053641eff084973fee085f0c193c61a"
+  version = "v1.0.5"
+
+[[projects]]
   digest = "1:f0620375dd1f6251d9973b5f2596228cc8042e887cd7f827e4220bc1ce8c30e2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -730,9 +722,8 @@
     "github.com/hashicorp/hil/ast",
     "github.com/jinzhu/gorm",
     "github.com/jinzhu/gorm/dialects/sqlite",
-    "github.com/onsi/ginkgo",
-    "github.com/onsi/gomega",
     "github.com/pivotal-cf/brokerapi",
+    "github.com/robertkrimen/otto",
     "github.com/spf13/cast",
     "github.com/spf13/cobra",
     "github.com/spf13/viper",

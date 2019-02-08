@@ -76,7 +76,7 @@ func TestRegistrar_toDefinitions(t *testing.T) {
 				fakeDefn("bar", "f71f1327-2bce-41b4-a833-0ec6430dd7ca"),
 			},
 			Config: BrokerpakSourceConfig{
-				ExcludedPlans: "",
+				ExcludedServices: "",
 				ServicePrefix: "",
 			},
 			ExpectedNames: []string{"service-foo", "service-bar"},
@@ -87,7 +87,7 @@ func TestRegistrar_toDefinitions(t *testing.T) {
 				fakeDefn("bar", "f71f1327-2bce-41b4-a833-0ec6430dd7ca"),
 			},
 			Config: BrokerpakSourceConfig{
-				ExcludedPlans: "",
+				ExcludedServices: "",
 				ServicePrefix: "pre-",
 			},
 			ExpectedNames: []string{"pre-service-foo", "pre-service-bar"},
@@ -98,7 +98,7 @@ func TestRegistrar_toDefinitions(t *testing.T) {
 				fakeDefn("bar", "f71f1327-2bce-41b4-a833-0ec6430dd7ca"),
 			},
 			Config: BrokerpakSourceConfig{
-				ExcludedPlans: "b69a96ad-0c38-4e84-84a3-be9513e3c645",
+				ExcludedServices: "b69a96ad-0c38-4e84-84a3-be9513e3c645",
 				ServicePrefix: "",
 			},
 			ExpectedNames: []string{"service-bar"},
