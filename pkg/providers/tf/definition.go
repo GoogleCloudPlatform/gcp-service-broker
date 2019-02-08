@@ -177,6 +177,7 @@ func (tfb *TfServiceDefinitionV1) ToService(executor wrapper.TerraformExecutor) 
 		rawPlans = append(rawPlans, plan.ToPlan())
 	}
 
+	constDefn := *tfb
 	return &broker.ServiceDefinition{
 		Id:               tfb.Id,
 		Name:             tfb.Name,
@@ -208,7 +209,7 @@ func (tfb *TfServiceDefinitionV1) ToService(executor wrapper.TerraformExecutor) 
 		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
 			jobRunner := NewTfJobRunnerForProject(projectId)
 			jobRunner.Executor = executor
-			return NewTerraformProvider(jobRunner, logger, *tfb)
+			return NewTerraformProvider(jobRunner, logger, constDefn)
 		},
 	}, nil
 }
