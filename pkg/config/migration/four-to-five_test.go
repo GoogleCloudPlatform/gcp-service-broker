@@ -319,6 +319,24 @@ func TestMergeToServiceConfig(t *testing.T) {
 			Migration:   MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"ORG": "system", "GSB_SERVICE_CONFIG": "{}"},
 		},
+		"enabled-to-disabled": {
+			TileProperties: `
+        {
+          "properties": {
+            ".properties.gsb_service_google_bigquery_enabled": { "type": "boolean", "value": false }
+          }
+        }`,
+			Migration: MergeToServiceConfig(),
+			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
+        "f80c0a3e-bd4d-4809-a900-b4e33a6450f1": {
+          "//": "Builtin BIGQUERY",
+          "bind_defaults": {},
+          "custom_plans": [],
+          "disabled": true,
+          "provision_defaults": {}
+        }
+      }`},
+		},
 		"bigquery": {
 			TileProperties: `
         {

@@ -70,9 +70,15 @@ func MergeToServiceConfig() Migration {
 				return null;
 			}
 
+			// explicitly check for boolean enabled false and turn it into a string.
+			var enabled = lookupProp(enabledVar);
+			if (enabled === false) {
+				enabled = 'false';
+			}
+
       var context = {
         "custom_plans": lookupProp(customPlanVar) || '[]',
-        "enabled": lookupProp(enabledVar) || 'true',
+        "enabled": enabled || 'true',
         "bind_defaults": lookupProp(bindDefaultsVar) || '{}',
         "provision_defaults": lookupProp(provisionDefaultsVar) || '{}',
       }
