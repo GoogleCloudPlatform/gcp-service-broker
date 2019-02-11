@@ -16,121 +16,6 @@ package migration
 
 import "testing"
 
-const defaultEmptyGsbServiceConfig = `{
-  "00b9ca4a-7cd6-406a-a5b7-2f43f41ade75": {
-    "//": "Builtin STACKDRIVER_PROFILER",
-    "bind_defaults": {},
-    "custom_plans": [],
-    "disabled": false,
-    "provision_defaults": {}
-  },
-  "2bc0d9ed-3f68-4056-b842-4a85cfbc727f": {
-    "//": "Builtin STACKDRIVER_MONITORING",
-    "bind_defaults": {},
-    "custom_plans": [],
-    "disabled": false,
-    "provision_defaults": {}
-  },
-  "3e897eb3-9062-4966-bd4f-85bda0f73b3d": {
-    "//": "Builtin DATAFLOW",
-    "bind_defaults": {},
-    "custom_plans": [],
-    "disabled": false,
-    "provision_defaults": {}
-  },
-  "4bc59b9a-8520-409f-85da-1c7552315863": {
-    "//": "Builtin CLOUDSQL_MYSQL",
-    "bind_defaults": {},
-    "custom_plans": [],
-    "disabled": false,
-    "provision_defaults": {}
-  },
-  "51b3e27e-d323-49ce-8c5f-1211e6409e82": {
-    "//": "Builtin SPANNER",
-    "bind_defaults": {},
-    "custom_plans": [],
-    "disabled": false,
-    "provision_defaults": {}
-  },
-  "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4": {
-    "//": "Builtin ML_APIS",
-    "bind_defaults": {},
-    "custom_plans": [],
-    "disabled": false,
-    "provision_defaults": {}
-  },
-  "628629e3-79f5-4255-b981-d14c6c7856be": {
-    "//": "Builtin PUBSUB",
-    "bind_defaults": {},
-    "custom_plans": [],
-    "disabled": false,
-    "provision_defaults": {}
-  },
-  "76d4abb2-fee7-4c8f-aee1-bcea2837f02b": {
-    "//": "Builtin DATASTORE",
-    "bind_defaults": {},
-    "custom_plans": [],
-    "disabled": false,
-    "provision_defaults": {}
-  },
-  "83837945-1547-41e0-b661-ea31d76eed11": {
-    "//": "Builtin STACKDRIVER_DEBUGGER",
-    "bind_defaults": {},
-    "custom_plans": [],
-    "disabled": false,
-    "provision_defaults": {}
-  },
-  "a2b7b873-1e34-4530-8a42-902ff7d66b43": {
-    "//": "Builtin FIRESTORE",
-    "bind_defaults": {},
-    "custom_plans": [],
-    "disabled": false,
-    "provision_defaults": {}
-  },
-  "b8e19880-ac58-42ef-b033-f7cd9c94d1fe": {
-    "//": "Builtin BIGTABLE",
-    "bind_defaults": {},
-    "custom_plans": [],
-    "disabled": false,
-    "provision_defaults": {}
-  },
-  "b9e4332e-b42b-4680-bda5-ea1506797474": {
-    "//": "Builtin STORAGE",
-    "bind_defaults": {},
-    "custom_plans": [],
-    "disabled": false,
-    "provision_defaults": {}
-  },
-  "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a": {
-    "//": "Builtin STACKDRIVER_TRACE",
-    "bind_defaults": {},
-    "custom_plans": [],
-    "disabled": false,
-    "provision_defaults": {}
-  },
-  "cbad6d78-a73c-432d-b8ff-b219a17a803a": {
-    "//": "Builtin CLOUDSQL_POSTGRES",
-    "bind_defaults": {},
-    "custom_plans": [],
-    "disabled": false,
-    "provision_defaults": {}
-  },
-  "e84b69db-3de9-4688-8f5c-26b9d5b1f129": {
-    "//": "Builtin DIALOGFLOW",
-    "bind_defaults": {},
-    "custom_plans": [],
-    "disabled": false,
-    "provision_defaults": {}
-  },
-  "f80c0a3e-bd4d-4809-a900-b4e33a6450f1": {
-    "//": "Builtin BIGQUERY",
-    "bind_defaults": {},
-    "custom_plans": [],
-    "disabled": false,
-    "provision_defaults": {}
-  }
-}`
-
 func TestDeleteWhitelistKeys(t *testing.T) {
 	cases := map[string]MigrationTest{
 		"no-overlap": {
@@ -432,22 +317,331 @@ func TestMergeToServiceConfig(t *testing.T) {
           }
         }`,
 			Migration:   MergeToServiceConfig(),
-			ExpectedEnv: map[string]string{"ORG": "system", "GSB_SERVICE_CONFIG": defaultEmptyGsbServiceConfig},
+			ExpectedEnv: map[string]string{"ORG": "system", "GSB_SERVICE_CONFIG": "{}"},
 		},
-		"all-keys": {
+		"bigquery": {
 			TileProperties: `
         {
           "properties": {
             ".properties.bigquery_custom_plans": { "type": "collection", "value": "[{\"name\": \"my-plan\"}]"},
-            ".properties.gsb_service_bigquery_enabled": { "type": "boolean", "value": true },
-            ".properties.gsb_service_bigquery_bind_defaults": { "type": "text", "value": "{\"bind\":\"default\"}" },
-            ".properties.gsb_service_bigquery_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
+            ".properties.gsb_service_google_bigquery_enabled": { "type": "boolean", "value": true },
+            ".properties.gsb_service_google_bigquery_bind_defaults": { "type": "text", "value": "{\"bind\":\"default\"}" },
+            ".properties.gsb_service_google_bigquery_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
           }
         }`,
 			Migration: MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
         "f80c0a3e-bd4d-4809-a900-b4e33a6450f1": {
           "//": "Builtin BIGQUERY",
+          "bind_defaults": {"bind":"default"},
+          "custom_plans": [{"name":"my-plan"}],
+          "disabled": false,
+          "provision_defaults": {"provision":"default"}
+        }
+      }`},
+		},
+
+		"bigtable": {
+			TileProperties: `
+        {
+          "properties": {
+            ".properties.bigtable_custom_plans": { "type": "collection", "value": "[{\"name\": \"my-plan\"}]"},
+            ".properties.gsb_service_google_bigtable_enabled": { "type": "boolean", "value": true },
+            ".properties.gsb_service_google_bigtable_bind_defaults": { "type": "text", "value": "{\"bind\":\"default\"}" },
+            ".properties.gsb_service_google_bigtable_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
+          }
+        }`,
+			Migration: MergeToServiceConfig(),
+			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
+        "b8e19880-ac58-42ef-b033-f7cd9c94d1fe": {
+          "//": "Builtin BIGTABLE",
+          "bind_defaults": {"bind":"default"},
+          "custom_plans": [{"name":"my-plan"}],
+          "disabled": false,
+          "provision_defaults": {"provision":"default"}
+        }
+      }`},
+		},
+
+		"cloudsql-mysql": {
+			TileProperties: `
+        {
+          "properties": {
+            ".properties.cloudsql_mysql_custom_plans": { "type": "collection", "value": "[{\"name\": \"my-plan\"}]"},
+            ".properties.gsb_service_google_cloudsql_mysql_enabled": { "type": "boolean", "value": true },
+            ".properties.gsb_service_google_cloudsql_mysql_bind_defaults": { "type": "text", "value": "{\"bind\":\"default\"}" },
+            ".properties.gsb_service_google_cloudsql_mysql_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
+          }
+        }`,
+			Migration: MergeToServiceConfig(),
+			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
+        "4bc59b9a-8520-409f-85da-1c7552315863": {
+          "//": "Builtin CLOUDSQL_MYSQL",
+          "bind_defaults": {"bind":"default"},
+          "custom_plans": [{"name":"my-plan"}],
+          "disabled": false,
+          "provision_defaults": {"provision":"default"}
+        }
+      }`},
+		},
+		"cloudsql-postgres": {
+			TileProperties: `
+        {
+          "properties": {
+            ".properties.cloudsql_postgres_custom_plans": { "type": "collection", "value": "[{\"name\": \"my-plan\"}]"},
+            ".properties.gsb_service_google_cloudsql_postgres_enabled": { "type": "boolean", "value": true },
+            ".properties.gsb_service_google_cloudsql_postgres_bind_defaults": { "type": "text", "value": "{\"bind\":\"default\"}" },
+            ".properties.gsb_service_google_cloudsql_postgres_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
+          }
+        }`,
+			Migration: MergeToServiceConfig(),
+			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
+        "cbad6d78-a73c-432d-b8ff-b219a17a803a": {
+          "//": "Builtin CLOUDSQL_POSTGRES",
+          "bind_defaults": {"bind":"default"},
+          "custom_plans": [{"name":"my-plan"}],
+          "disabled": false,
+          "provision_defaults": {"provision":"default"}
+        }
+      }`},
+		},
+
+		"dataflow": {
+			TileProperties: `
+        {
+          "properties": {
+            ".properties.gsb_service_google_dataflow_enabled": { "type": "boolean", "value": true },
+            ".properties.gsb_service_google_dataflow_bind_defaults": { "type": "text", "value": "{\"bind\":\"default\"}" },
+            ".properties.gsb_service_google_dataflow_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
+          }
+        }`,
+			Migration: MergeToServiceConfig(),
+			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
+        "3e897eb3-9062-4966-bd4f-85bda0f73b3d": {
+          "//": "Builtin DATAFLOW",
+          "bind_defaults": {"bind":"default"},
+          "custom_plans": [],
+          "disabled": false,
+          "provision_defaults": {"provision":"default"}
+        }
+      }`},
+		},
+		"datastore": {
+			TileProperties: `
+        {
+          "properties": {
+            ".properties.gsb_service_google_datastore_enabled": { "type": "boolean", "value": true },
+            ".properties.gsb_service_google_datastore_bind_defaults": { "type": "text", "value": "{\"bind\":\"default\"}" },
+            ".properties.gsb_service_google_datastore_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
+          }
+        }`,
+			Migration: MergeToServiceConfig(),
+			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
+        "76d4abb2-fee7-4c8f-aee1-bcea2837f02b": {
+          "//": "Builtin DATASTORE",
+          "bind_defaults": {"bind":"default"},
+          "custom_plans": [],
+          "disabled": false,
+          "provision_defaults": {"provision":"default"}
+        }
+      }`},
+		},
+		"dialogflow": {
+			TileProperties: `
+        {
+          "properties": {
+            ".properties.gsb_service_google_dialogflow_enabled": { "type": "boolean", "value": true },
+            ".properties.gsb_service_google_dialogflow_bind_defaults": { "type": "text", "value": "{\"bind\":\"default\"}" },
+            ".properties.gsb_service_google_dialogflow_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
+          }
+        }`,
+			Migration: MergeToServiceConfig(),
+			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
+        "e84b69db-3de9-4688-8f5c-26b9d5b1f129": {
+          "//": "Builtin DIALOGFLOW",
+          "bind_defaults": {"bind":"default"},
+          "custom_plans": [],
+          "disabled": false,
+          "provision_defaults": {"provision":"default"}
+        }
+      }`},
+		},
+		"firestore": {
+			TileProperties: `
+        {
+          "properties": {
+            ".properties.gsb_service_google_firestore_enabled": { "type": "boolean", "value": true },
+            ".properties.gsb_service_google_firestore_bind_defaults": { "type": "text", "value": "{\"bind\":\"default\"}" },
+            ".properties.gsb_service_google_firestore_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
+          }
+        }`,
+			Migration: MergeToServiceConfig(),
+			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
+        "a2b7b873-1e34-4530-8a42-902ff7d66b43": {
+          "//": "Builtin FIRESTORE",
+          "bind_defaults": {"bind":"default"},
+          "custom_plans": [],
+          "disabled": false,
+          "provision_defaults": {"provision":"default"}
+        }
+      }`},
+		},
+		"ml-apis": {
+			TileProperties: `
+        {
+          "properties": {
+            ".properties.gsb_service_google_ml_apis_enabled": { "type": "boolean", "value": true },
+            ".properties.gsb_service_google_ml_apis_bind_defaults": { "type": "text", "value": "{\"bind\":\"default\"}" },
+            ".properties.gsb_service_google_ml_apis_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
+          }
+        }`,
+			Migration: MergeToServiceConfig(),
+			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
+        "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4": {
+          "//": "Builtin ML_APIS",
+          "bind_defaults": {"bind":"default"},
+          "custom_plans": [],
+          "disabled": false,
+          "provision_defaults": {"provision":"default"}
+        }
+      }`},
+		},
+		"pubsub": {
+			TileProperties: `
+        {
+          "properties": {
+            ".properties.gsb_service_google_pubsub_enabled": { "type": "boolean", "value": true },
+            ".properties.gsb_service_google_pubsub_bind_defaults": { "type": "text", "value": "{\"bind\":\"default\"}" },
+            ".properties.gsb_service_google_pubsub_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
+          }
+        }`,
+			Migration: MergeToServiceConfig(),
+			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
+        "628629e3-79f5-4255-b981-d14c6c7856be": {
+          "//": "Builtin PUBSUB",
+          "bind_defaults": {"bind":"default"},
+          "custom_plans": [],
+          "disabled": false,
+          "provision_defaults": {"provision":"default"}
+        }
+      }`},
+		},
+		"spanner": {
+			TileProperties: `
+        {
+          "properties": {
+            ".properties.spanner_custom_plans": { "type": "collection", "value": "[{\"name\": \"my-plan\"}]"},
+            ".properties.gsb_service_google_spanner_enabled": { "type": "boolean", "value": true },
+            ".properties.gsb_service_google_spanner_bind_defaults": { "type": "text", "value": "{\"bind\":\"default\"}" },
+            ".properties.gsb_service_google_spanner_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
+          }
+        }`,
+			Migration: MergeToServiceConfig(),
+			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
+        "51b3e27e-d323-49ce-8c5f-1211e6409e82": {
+          "//": "Builtin SPANNER",
+          "bind_defaults": {"bind":"default"},
+          "custom_plans": [{"name":"my-plan"}],
+          "disabled": false,
+          "provision_defaults": {"provision":"default"}
+        }
+      }`},
+		},
+		"stackdriver-debugger": {
+			TileProperties: `
+        {
+          "properties": {
+            ".properties.gsb_service_google_stackdriver_debugger_enabled": { "type": "boolean", "value": true },
+            ".properties.gsb_service_google_stackdriver_debugger_bind_defaults": { "type": "text", "value": "{\"bind\":\"default\"}" },
+            ".properties.gsb_service_google_stackdriver_debugger_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
+          }
+        }`,
+			Migration: MergeToServiceConfig(),
+			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
+        "83837945-1547-41e0-b661-ea31d76eed11": {
+          "//": "Builtin STACKDRIVER_DEBUGGER",
+          "bind_defaults": {"bind":"default"},
+          "custom_plans": [],
+          "disabled": false,
+          "provision_defaults": {"provision":"default"}
+        }
+      }`},
+		},
+		"stackdriver-monitoring": {
+			TileProperties: `
+        {
+          "properties": {
+            ".properties.gsb_service_google_stackdriver_monitoring_enabled": { "type": "boolean", "value": true },
+            ".properties.gsb_service_google_stackdriver_monitoring_bind_defaults": { "type": "text", "value": "{\"bind\":\"default\"}" },
+            ".properties.gsb_service_google_stackdriver_monitoring_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
+          }
+        }`,
+			Migration: MergeToServiceConfig(),
+			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
+        "2bc0d9ed-3f68-4056-b842-4a85cfbc727f": {
+          "//": "Builtin STACKDRIVER_MONITORING",
+          "bind_defaults": {"bind":"default"},
+          "custom_plans": [],
+          "disabled": false,
+          "provision_defaults": {"provision":"default"}
+        }
+      }`},
+		},
+		"stackdriver-profiler": {
+			TileProperties: `
+        {
+          "properties": {
+            ".properties.gsb_service_google_stackdriver_profiler_enabled": { "type": "boolean", "value": true },
+            ".properties.gsb_service_google_stackdriver_profiler_bind_defaults": { "type": "text", "value": "{\"bind\":\"default\"}" },
+            ".properties.gsb_service_google_stackdriver_profiler_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
+          }
+        }`,
+			Migration: MergeToServiceConfig(),
+			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
+        "00b9ca4a-7cd6-406a-a5b7-2f43f41ade75": {
+          "//": "Builtin STACKDRIVER_PROFILER",
+          "bind_defaults": {"bind":"default"},
+          "custom_plans": [],
+          "disabled": false,
+          "provision_defaults": {"provision":"default"}
+        }
+      }`},
+		},
+		"stackdriver-trace": {
+			TileProperties: `
+        {
+          "properties": {
+            ".properties.gsb_service_google_stackdriver_trace_enabled": { "type": "boolean", "value": true },
+            ".properties.gsb_service_google_stackdriver_trace_bind_defaults": { "type": "text", "value": "{\"bind\":\"default\"}" },
+            ".properties.gsb_service_google_stackdriver_trace_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
+          }
+        }`,
+			Migration: MergeToServiceConfig(),
+			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
+        "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a": {
+          "//": "Builtin STACKDRIVER_TRACE",
+          "bind_defaults": {"bind":"default"},
+          "custom_plans": [],
+          "disabled": false,
+          "provision_defaults": {"provision":"default"}
+        }
+      }`},
+		},
+
+		"storage": {
+			TileProperties: `
+        {
+          "properties": {
+            ".properties.storage_custom_plans": { "type": "collection", "value": "[{\"name\": \"my-plan\"}]"},
+            ".properties.gsb_service_google_storage_enabled": { "type": "boolean", "value": true },
+            ".properties.gsb_service_google_storage_bind_defaults": { "type": "text", "value": "{\"bind\":\"default\"}" },
+            ".properties.gsb_service_google_storage_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
+          }
+        }`,
+			Migration: MergeToServiceConfig(),
+			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
+        "b9e4332e-b42b-4680-bda5-ea1506797474": {
+          "//": "Builtin STORAGE",
           "bind_defaults": {"bind":"default"},
           "custom_plans": [{"name":"my-plan"}],
           "disabled": false,
