@@ -31,7 +31,6 @@ func TestDeleteWhitelistKeys(t *testing.T) {
             }
           }
         }`,
-			Migration:   DeleteWhitelistKeys(),
 			ExpectedEnv: map[string]string{"ORG": "system"},
 		},
 		"one-key": {
@@ -42,7 +41,6 @@ func TestDeleteWhitelistKeys(t *testing.T) {
           ".properties.gsb_service_google_bigquery_whitelist": { "value": 1 }
         }
       }`,
-			Migration:   DeleteWhitelistKeys(),
 			ExpectedEnv: map[string]string{"ORG": "system"},
 		},
 		"all-keys": {
@@ -59,12 +57,12 @@ func TestDeleteWhitelistKeys(t *testing.T) {
           ".properties.gsb_service_google_storage_whitelist": { "value": 1 }
         }
       }`,
-			Migration:   DeleteWhitelistKeys(),
 			ExpectedEnv: map[string]string{},
 		},
 	}
 
 	for tn, tc := range cases {
+		tc.Migration = DeleteWhitelistKeys()
 		t.Run(tn, tc.Run)
 	}
 }
@@ -78,7 +76,6 @@ func TestCollapseCustomPlans(t *testing.T) {
             ".properties.org": {"type": "string","value": "system"}
           }
         }`,
-			Migration:   CollapseCustomPlans(),
 			ExpectedEnv: map[string]string{"ORG": "system"},
 		},
 		"multiple-plans": {
@@ -92,7 +89,6 @@ func TestCollapseCustomPlans(t *testing.T) {
         }
       }
 `,
-			Migration: CollapseCustomPlans(),
 			ExpectedEnv: map[string]string{
 				"CLOUDSQL_MYSQL_CUSTOM_PLANS": `[{"name": "plan1"},{"name": "plan2"}]`,
 			},
@@ -117,7 +113,6 @@ func TestCollapseCustomPlans(t *testing.T) {
       		}
       	}
       }`,
-			Migration: CollapseCustomPlans(),
 			ExpectedEnv: map[string]string{
 				"CLOUDSQL_MYSQL_CUSTOM_PLANS": `[
           {
@@ -156,7 +151,6 @@ func TestCollapseCustomPlans(t *testing.T) {
         }
       }
 `,
-			Migration: CollapseCustomPlans(),
 			ExpectedEnv: map[string]string{
 				"BIGQUERY_CUSTOM_PLANS":               `[{"name":"plan1"}]`,
 				"BIGTABLE_CUSTOM_PLANS":               `[{"name":"plan1"}]`,
@@ -179,6 +173,7 @@ func TestCollapseCustomPlans(t *testing.T) {
 	}
 
 	for tn, tc := range cases {
+		tc.Migration = CollapseCustomPlans()
 		t.Run(tn, tc.Run)
 	}
 }
@@ -192,7 +187,6 @@ func TestFormatCustomPlans(t *testing.T) {
             ".properties.org": {"type": "string","value": "system"}
           }
         }`,
-			Migration:   FormatCustomPlans(),
 			ExpectedEnv: map[string]string{"ORG": "system"},
 		},
 		"service-gets-deleted": {
@@ -202,7 +196,6 @@ func TestFormatCustomPlans(t *testing.T) {
             ".properties.cloudsql_mysql_custom_plans": {"value":"[{\"service\":\"4bc59b9a-8520-409f-85da-1c7552315863\"}]"}
           }
         }`,
-			Migration: FormatCustomPlans(),
 			ExpectedEnv: map[string]string{
 				"CLOUDSQL_MYSQL_CUSTOM_PLANS": `[{"properties":{}}]`,
 			},
@@ -214,7 +207,6 @@ func TestFormatCustomPlans(t *testing.T) {
             ".properties.cloudsql_mysql_custom_plans": {"value":"[{\"guid\":\"4bc59b9a-8520-409f-85da-1c7552315863\"}]"}
           }
         }`,
-			Migration: FormatCustomPlans(),
 			ExpectedEnv: map[string]string{
 				"CLOUDSQL_MYSQL_CUSTOM_PLANS": `[{"guid":"4bc59b9a-8520-409f-85da-1c7552315863","properties":{}}]`,
 			},
@@ -226,7 +218,6 @@ func TestFormatCustomPlans(t *testing.T) {
             ".properties.cloudsql_mysql_custom_plans": {"value":"[{\"description\":\"some-value\"}]"}
           }
         }`,
-			Migration: FormatCustomPlans(),
 			ExpectedEnv: map[string]string{
 				"CLOUDSQL_MYSQL_CUSTOM_PLANS": `[{"description":"some-value","properties":{}}]`,
 			},
@@ -238,7 +229,6 @@ func TestFormatCustomPlans(t *testing.T) {
             ".properties.cloudsql_mysql_custom_plans": {"value":"[{\"name\":\"some-value\"}]"}
           }
         }`,
-			Migration: FormatCustomPlans(),
 			ExpectedEnv: map[string]string{
 				"CLOUDSQL_MYSQL_CUSTOM_PLANS": `[{"name":"some-value","properties":{}}]`,
 			},
@@ -250,7 +240,6 @@ func TestFormatCustomPlans(t *testing.T) {
             ".properties.cloudsql_mysql_custom_plans": {"value":"[{\"display_name\":\"some-value\"}]"}
           }
         }`,
-			Migration: FormatCustomPlans(),
 			ExpectedEnv: map[string]string{
 				"CLOUDSQL_MYSQL_CUSTOM_PLANS": `[{"display_name":"some-value","properties":{}}]`,
 			},
@@ -262,7 +251,6 @@ func TestFormatCustomPlans(t *testing.T) {
             ".properties.cloudsql_mysql_custom_plans": {"value":"[{\"name\":\"plan1\"},{\"name\":\"plan2\"}]"}
           }
         }`,
-			Migration: FormatCustomPlans(),
 			ExpectedEnv: map[string]string{
 				"CLOUDSQL_MYSQL_CUSTOM_PLANS": `[{"name":"plan1","properties":{}},{"name":"plan2","properties":{}}]`,
 			},
@@ -274,7 +262,6 @@ func TestFormatCustomPlans(t *testing.T) {
             ".properties.cloudsql_mysql_custom_plans": {"value":"[{\"prop1\":\"some-value1\",\"prop2\":\"some-value2\"}]"}
           }
         }`,
-			Migration: FormatCustomPlans(),
 			ExpectedEnv: map[string]string{
 				"CLOUDSQL_MYSQL_CUSTOM_PLANS": `[{"properties":{"prop1":"some-value1","prop2":"some-value2"}}]`,
 			},
@@ -291,7 +278,6 @@ func TestFormatCustomPlans(t *testing.T) {
             ".properties.storage_custom_plans": {"value":"[{\"name\":\"storage\"}]"}
           }
         }`,
-			Migration: FormatCustomPlans(),
 			ExpectedEnv: map[string]string{
 				"CLOUDSQL_MYSQL_CUSTOM_PLANS":    `[{"name":"mysql","properties":{}}]`,
 				"BIGTABLE_CUSTOM_PLANS":          `[{"name":"bigtable","properties":{}}]`,
@@ -303,6 +289,7 @@ func TestFormatCustomPlans(t *testing.T) {
 	}
 
 	for tn, tc := range cases {
+		tc.Migration = FormatCustomPlans()
 		t.Run(tn, tc.Run)
 	}
 }
@@ -316,7 +303,6 @@ func TestMergeToServiceConfig(t *testing.T) {
             ".properties.org": {"type": "string","value": "system"}
           }
         }`,
-			Migration:   MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"ORG": "system", "GSB_SERVICE_CONFIG": "{}"},
 		},
 		"enabled-to-disabled": {
@@ -326,7 +312,6 @@ func TestMergeToServiceConfig(t *testing.T) {
             ".properties.gsb_service_google_bigquery_enabled": { "type": "boolean", "value": false }
           }
         }`,
-			Migration: MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
         "f80c0a3e-bd4d-4809-a900-b4e33a6450f1": {
           "//": "Builtin BIGQUERY",
@@ -347,7 +332,6 @@ func TestMergeToServiceConfig(t *testing.T) {
             ".properties.gsb_service_google_bigquery_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
           }
         }`,
-			Migration: MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
         "f80c0a3e-bd4d-4809-a900-b4e33a6450f1": {
           "//": "Builtin BIGQUERY",
@@ -369,7 +353,6 @@ func TestMergeToServiceConfig(t *testing.T) {
             ".properties.gsb_service_google_bigtable_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
           }
         }`,
-			Migration: MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
         "b8e19880-ac58-42ef-b033-f7cd9c94d1fe": {
           "//": "Builtin BIGTABLE",
@@ -391,7 +374,6 @@ func TestMergeToServiceConfig(t *testing.T) {
             ".properties.gsb_service_google_cloudsql_mysql_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
           }
         }`,
-			Migration: MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
         "4bc59b9a-8520-409f-85da-1c7552315863": {
           "//": "Builtin CLOUDSQL_MYSQL",
@@ -412,7 +394,6 @@ func TestMergeToServiceConfig(t *testing.T) {
             ".properties.gsb_service_google_cloudsql_postgres_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
           }
         }`,
-			Migration: MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
         "cbad6d78-a73c-432d-b8ff-b219a17a803a": {
           "//": "Builtin CLOUDSQL_POSTGRES",
@@ -433,7 +414,6 @@ func TestMergeToServiceConfig(t *testing.T) {
             ".properties.gsb_service_google_dataflow_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
           }
         }`,
-			Migration: MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
         "3e897eb3-9062-4966-bd4f-85bda0f73b3d": {
           "//": "Builtin DATAFLOW",
@@ -453,7 +433,6 @@ func TestMergeToServiceConfig(t *testing.T) {
             ".properties.gsb_service_google_datastore_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
           }
         }`,
-			Migration: MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
         "76d4abb2-fee7-4c8f-aee1-bcea2837f02b": {
           "//": "Builtin DATASTORE",
@@ -473,7 +452,6 @@ func TestMergeToServiceConfig(t *testing.T) {
             ".properties.gsb_service_google_dialogflow_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
           }
         }`,
-			Migration: MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
         "e84b69db-3de9-4688-8f5c-26b9d5b1f129": {
           "//": "Builtin DIALOGFLOW",
@@ -493,7 +471,6 @@ func TestMergeToServiceConfig(t *testing.T) {
             ".properties.gsb_service_google_firestore_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
           }
         }`,
-			Migration: MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
         "a2b7b873-1e34-4530-8a42-902ff7d66b43": {
           "//": "Builtin FIRESTORE",
@@ -513,7 +490,6 @@ func TestMergeToServiceConfig(t *testing.T) {
             ".properties.gsb_service_google_ml_apis_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
           }
         }`,
-			Migration: MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
         "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4": {
           "//": "Builtin ML_APIS",
@@ -533,7 +509,6 @@ func TestMergeToServiceConfig(t *testing.T) {
             ".properties.gsb_service_google_pubsub_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
           }
         }`,
-			Migration: MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
         "628629e3-79f5-4255-b981-d14c6c7856be": {
           "//": "Builtin PUBSUB",
@@ -554,7 +529,6 @@ func TestMergeToServiceConfig(t *testing.T) {
             ".properties.gsb_service_google_spanner_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
           }
         }`,
-			Migration: MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
         "51b3e27e-d323-49ce-8c5f-1211e6409e82": {
           "//": "Builtin SPANNER",
@@ -574,7 +548,6 @@ func TestMergeToServiceConfig(t *testing.T) {
             ".properties.gsb_service_google_stackdriver_debugger_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
           }
         }`,
-			Migration: MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
         "83837945-1547-41e0-b661-ea31d76eed11": {
           "//": "Builtin STACKDRIVER_DEBUGGER",
@@ -594,7 +567,6 @@ func TestMergeToServiceConfig(t *testing.T) {
             ".properties.gsb_service_google_stackdriver_monitoring_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
           }
         }`,
-			Migration: MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
         "2bc0d9ed-3f68-4056-b842-4a85cfbc727f": {
           "//": "Builtin STACKDRIVER_MONITORING",
@@ -614,7 +586,6 @@ func TestMergeToServiceConfig(t *testing.T) {
             ".properties.gsb_service_google_stackdriver_profiler_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
           }
         }`,
-			Migration: MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
         "00b9ca4a-7cd6-406a-a5b7-2f43f41ade75": {
           "//": "Builtin STACKDRIVER_PROFILER",
@@ -634,7 +605,6 @@ func TestMergeToServiceConfig(t *testing.T) {
             ".properties.gsb_service_google_stackdriver_trace_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
           }
         }`,
-			Migration: MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
         "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a": {
           "//": "Builtin STACKDRIVER_TRACE",
@@ -656,7 +626,6 @@ func TestMergeToServiceConfig(t *testing.T) {
             ".properties.gsb_service_google_storage_provision_defaults": { "type": "text", "value": "{\"provision\":\"default\"}" }
           }
         }`,
-			Migration: MergeToServiceConfig(),
 			ExpectedEnv: map[string]string{"GSB_SERVICE_CONFIG": `{
         "b9e4332e-b42b-4680-bda5-ea1506797474": {
           "//": "Builtin STORAGE",
@@ -670,6 +639,7 @@ func TestMergeToServiceConfig(t *testing.T) {
 	}
 
 	for tn, tc := range cases {
+		tc.Migration = MergeToServiceConfig()
 		t.Run(tn, tc.Run)
 	}
 }

@@ -122,3 +122,12 @@ func (j *JsTransform) toJs(includeFunctions bool) string {
 	fmt.Fprintln(buf, "}")
 	return buf.String()
 }
+
+// ToMigration converts this transform into a migration with the given name.
+func (j *JsTransform) ToMigration(name string) Migration {
+	return Migration{
+		Name:       name,
+		TileScript: j.ToJs(),
+		GoFunc:     j.RunGo,
+	}
+}

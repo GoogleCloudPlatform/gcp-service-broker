@@ -30,24 +30,6 @@ type Migration struct {
 	GoFunc     func(env map[string]string) error
 }
 
-func deleteMigration(name string, env []string) Migration {
-	js := ``
-	for _, v := range env {
-		js += "delete properties.properties['.properties." + strings.ToLower(v) + "'];\n"
-	}
-
-	return Migration{
-		Name:       name,
-		TileScript: js,
-		GoFunc: func(envMap map[string]string) error {
-			for _, v := range env {
-				delete(envMap, v)
-			}
-			return nil
-		},
-	}
-}
-
 // NoOp is an empty migration.
 func NoOp() Migration {
 	return Migration{

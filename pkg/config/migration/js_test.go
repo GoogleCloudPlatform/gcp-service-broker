@@ -120,3 +120,85 @@ func TestJsTransform_RunGo(t *testing.T) {
 		})
 	}
 }
+
+func TestJsTransform_lookupProp(t *testing.T) {
+	cases := map[string]MigrationTest{
+		"property-exists": MigrationTest{
+			TileProperties: `{"properties": {".properties.gsb_test":{"value":"example"}}}`,
+			ExpectedEnv:    map[string]string{"GSB_TEST": "found"},
+		},
+		"property-missing": MigrationTest{
+			TileProperties: `{"properties": {}}`,
+			ExpectedEnv:    map[string]string{"GSB_TEST": "not found"},
+		},
+	}
+
+	for tn, tc := range cases {
+		jst := JsTransform{
+			EnvironmentVariables: []string{"GSB_TEST"},
+			MigrationJs: `function gsbTest(varName){
+					if(lookupProp(varName) == null) {
+						setProp(varName, "not found");
+					} else {
+						setProp(varName, "found");
+					}
+				}`,
+			TransformFuncName: "gsbTest",
+		}
+
+		tc.Migration = jst.ToMigration(tn)
+		t.Run(tn, tc.Run)
+	}
+}
+
+func TestJsTransform_deleteProp(t *testing.T) {
+	cases := map[string]MigrationTest{
+		"property-exists": MigrationTest{
+			TileProperties: `{"properties": {".properties.gsb_test":{"value":"example"}}}`,
+			ExpectedEnv:    map[string]string{},
+		},
+		"property-missing": MigrationTest{
+			TileProperties: `{"properties": {}}`,
+			ExpectedEnv:    map[string]string{},
+		},
+	}
+
+	for tn, tc := range cases {
+		jst := JsTransform{
+			EnvironmentVariables: []string{"GSB_TEST"},
+			MigrationJs: `function gsbTest(varName){
+					deleteProp(varName);
+				}`,
+			TransformFuncName: "gsbTest",
+		}
+
+		tc.Migration = jst.ToMigration(tn)
+		t.Run(tn, tc.Run)
+	}
+}
+
+func TestJsTransform_setProp(t *testing.T) {
+	cases := map[string]MigrationTest{
+		"property-exists": MigrationTest{
+			TileProperties: `{"properties": {".properties.gsb_test":{"value":"example"}}}`,
+			ExpectedEnv:    map[string]string{"GSB_TEST": "NEW VALUE"},
+		},
+		"property-missing": MigrationTest{
+			TileProperties: `{"properties": {}}`,
+			ExpectedEnv:    map[string]string{"GSB_TEST": "NEW VALUE"},
+		},
+	}
+
+	for tn, tc := range cases {
+		jst := JsTransform{
+			EnvironmentVariables: []string{"GSB_TEST"},
+			MigrationJs: `function gsbTest(varName){
+					setProp(varName, "NEW VALUE");
+				}`,
+			TransformFuncName: "gsbTest",
+		}
+
+		tc.Migration = jst.ToMigration(tn)
+		t.Run(tn, tc.Run)
+	}
+}

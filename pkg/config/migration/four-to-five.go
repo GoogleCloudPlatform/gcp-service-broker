@@ -136,27 +136,26 @@ func MergeToServiceConfig() Migration {
 		TransformFuncName: "mergeServices",
 	}
 
-	return Migration{
-		Name:       "Merge Service Config",
-		TileScript: jst.ToJs(),
-		GoFunc:     jst.RunGo,
-	}
+	return jst.ToMigration("Merge Service Config")
 }
 
 // DeleteWhitelistKeys removes the whitelist keys used prior to 4.0
 func DeleteWhitelistKeys() Migration {
-	whitelistKeys := []string{
-		"GSB_SERVICE_GOOGLE_BIGQUERY_WHITELIST",
-		"GSB_SERVICE_GOOGLE_BIGTABLE_WHITELIST",
-		"GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_WHITELIST",
-		"GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_WHITELIST",
-		"GSB_SERVICE_GOOGLE_ML_APIS_WHITELIST",
-		"GSB_SERVICE_GOOGLE_PUBSUB_WHITELIST",
-		"GSB_SERVICE_GOOGLE_SPANNER_WHITELIST",
-		"GSB_SERVICE_GOOGLE_STORAGE_WHITELIST",
+	jst := JsTransform{
+		TransformFuncName: "deleteProp",
+		EnvironmentVariables: []string{
+			"GSB_SERVICE_GOOGLE_BIGQUERY_WHITELIST",
+			"GSB_SERVICE_GOOGLE_BIGTABLE_WHITELIST",
+			"GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_WHITELIST",
+			"GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_WHITELIST",
+			"GSB_SERVICE_GOOGLE_ML_APIS_WHITELIST",
+			"GSB_SERVICE_GOOGLE_PUBSUB_WHITELIST",
+			"GSB_SERVICE_GOOGLE_SPANNER_WHITELIST",
+			"GSB_SERVICE_GOOGLE_STORAGE_WHITELIST",
+		},
 	}
 
-	return deleteMigration("Delete whitelist keys from 4.x", whitelistKeys)
+	return jst.ToMigration("Delete whitelist keys from 4.x")
 }
 
 // CollapseCustomPlans converts the Tile object based custom plan structure to
@@ -191,11 +190,7 @@ func CollapseCustomPlans() Migration {
 		TransformFuncName: "replaceCustomPlans",
 	}
 
-	return Migration{
-		Name:       "Collapse custom plans",
-		TileScript: jst.ToJs(),
-		GoFunc:     NoOp().GoFunc,
-	}
+	return jst.ToMigration("Collapse custom plans")
 }
 
 // FormatCustomPlans converts a flat variable map that the tile used to produce
@@ -238,9 +233,5 @@ func FormatCustomPlans() Migration {
 		TransformFuncName: "formatPlans",
 	}
 
-	return Migration{
-		Name:       "Format custom plans",
-		TileScript: jst.ToJs(),
-		GoFunc:     jst.RunGo,
-	}
+	return jst.ToMigration("Format custom plans")
 }
