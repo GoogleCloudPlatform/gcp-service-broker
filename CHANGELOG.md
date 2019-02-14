@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
  - Removed the `GSB_SERVICE_*_ENABLED` environment variables.
  - Merged the environment variables `GSB_SERVICE_*_WHITELIST`, `GSB_SERVICE_*_PROVISION_DEFAULTS`, `GSB_SERVICE_*_BIND_DEFAULTS` and `*_CUSTOM_PLANS` into `GSB_SERVICE_CONFIG`.
 
+## [4.2.2] - 2019-02-06
+
+### Fixed
+ - The `pak run-examples` sub-command now returns a non-zero status code on failure.
+ - JSONSchema validation no longer fails due to erroneous duplicate required fields.
+ - Brokerpaks no longer use incorrect templates due to an invalid pointer.
+
 ## [4.2.0] - 2019-01-04
 
 ### Security
