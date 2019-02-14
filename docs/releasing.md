@@ -14,6 +14,7 @@
 - [ ] Run `./gcp-service-broker generate manifest > manifest.yml`.
 - [ ] Run `./gcp-service-broker generate use > docs/use.md`.
 - [ ] Run `./gcp-service-broker generate customization > docs/customization.md`.
+- [ ] Run `./gcp-service-broker generate service-config > docs/service-config.md`.
 - [ ] Update the `CHANGELOG.md` to match the new version.
 - [ ] Commit the changes on the new branch.
 

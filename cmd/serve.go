@@ -97,6 +97,18 @@ func serve() {
 
 	brokerAPI := brokerapi.New(serviceBroker, logger, credentials)
 	http.Handle("/", brokerAPI)
-	http.Handle("/docs", server.NewDocsHandler(cfg.Registry))
+
+	docsHandler, err := server.NewDocsHandler(cfg.Registry)
+	if err != nil {
+		logger.Error("creating docs endpoint", err)
+	}
+	http.Handle("/docs", docsHandler)
+
+	configHandler, err := server.NewServiceConfigHandler(cfg.Registry)
+	if err != nil {
+		logger.Error("creating service config endpoint", err)
+	}
+	http.Handle("/service-config", configHandler)
+
 	http.ListenAndServe(":"+port, nil)
 }

@@ -55,9 +55,17 @@ func init() {
 		Use:   "customization",
 		Short: "Generate customization documentation",
 		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(generator.GenerateCustomizationMd())
+		},
+	})
+
+	generateCmd.AddCommand(&cobra.Command{
+		Use:   "service-config",
+		Short: "Generate service configuration documentation",
+		Run: func(cmd *cobra.Command, args []string) {
 			// by default, only generate for builtin services.
 			registry := builtin.BuiltinBrokerRegistry(broker.ServiceConfigMap{})
-			fmt.Println(generator.GenerateCustomizationMd(registry))
+			fmt.Println(generator.GenerateServiceConfigMd(registry))
 		},
 	})
 
