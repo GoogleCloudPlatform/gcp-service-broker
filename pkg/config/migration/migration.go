@@ -27,24 +27,7 @@ import (
 type Migration struct {
 	Name       string
 	TileScript string
-	GoFunc     func(env map[string]string)
-}
-
-func deleteMigration(name string, env []string) Migration {
-	js := ``
-	for _, v := range env {
-		js += "delete properties.properties['.properties." + strings.ToLower(v) + "'];\n"
-	}
-
-	return Migration{
-		Name:       name,
-		TileScript: js,
-		GoFunc: func(envMap map[string]string) {
-			for _, v := range env {
-				delete(envMap, v)
-			}
-		},
-	}
+	GoFunc     func(env map[string]string) error
 }
 
 // NoOp is an empty migration.
@@ -52,30 +35,19 @@ func NoOp() Migration {
 	return Migration{
 		Name:       "Noop",
 		TileScript: ``,
-		GoFunc:     func(envMap map[string]string) {},
+		GoFunc: func(envMap map[string]string) error {
+			return nil
+		},
 	}
-}
-
-// DeleteWhitelistKeys removes the whitelist keys used prior to 4.0
-func DeleteWhitelistKeys() Migration {
-	whitelistKeys := []string{
-		"GSB_SERVICE_GOOGLE_BIGQUERY_WHITELIST",
-		"GSB_SERVICE_GOOGLE_BIGTABLE_WHITELIST",
-		"GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_WHITELIST",
-		"GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_WHITELIST",
-		"GSB_SERVICE_GOOGLE_ML_APIS_WHITELIST",
-		"GSB_SERVICE_GOOGLE_PUBSUB_WHITELIST",
-		"GSB_SERVICE_GOOGLE_SPANNER_WHITELIST",
-		"GSB_SERVICE_GOOGLE_STORAGE_WHITELIST",
-	}
-
-	return deleteMigration("Delete whitelist keys from 4.x", whitelistKeys)
 }
 
 // migrations returns a list of all migrations to be performed in order.
 func migrations() []Migration {
 	return []Migration{
 		DeleteWhitelistKeys(),
+		CollapseCustomPlans(),
+		FormatCustomPlans(),
+		MergeToServiceConfig(),
 	}
 }
 
@@ -94,23 +66,29 @@ func FullMigration() Migration {
 	return Migration{
 		Name:       "Full Migration",
 		TileScript: string(buf.Bytes()),
-		GoFunc: func(env map[string]string) {
+		GoFunc: func(env map[string]string) error {
 			for _, migration := range migrations {
-				migration.GoFunc(env)
+				if err := migration.GoFunc(env); err != nil {
+					return err
+				}
 			}
+
+			return nil
 		},
 	}
 }
 
 // MigrateEnv migrates the currently set environment variables and returns
 // the diff.
-func MigrateEnv() map[string]Diff {
+func MigrateEnv() (map[string]Diff, error) {
 	env := splitEnv()
 	orig := utils.CopyStringMap(env)
 
-	FullMigration().GoFunc(env)
+	if err := FullMigration().GoFunc(env); err != nil {
+		return nil, err
+	}
 
-	return DiffStringMap(orig, env)
+	return DiffStringMap(orig, env), nil
 }
 
 // splitEnv splits os.Environ style environment variables that

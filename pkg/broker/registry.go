@@ -79,6 +79,10 @@ func (registry *ServiceRegistry) GetEnabledServices() []*ServiceDefinition {
 			isEnabled = enableBuiltinServices.IsActive()
 		}
 
+		if svc.config.Disabled {
+			isEnabled = false
+		}
+
 		tags := utils.NewStringSet(svc.Tags...)
 		for tag, toggle := range lifecycleTagToggles {
 			if !toggle.IsActive() && tags.Contains(tag) {
