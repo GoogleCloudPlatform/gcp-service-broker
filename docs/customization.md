@@ -11,106 +11,33 @@ Please paste in the contents of the json keyfile (un-encoded) for your service a
 
 You can configure the following environment variables:
 
-<b><tt>ROOT_SERVICE_ACCOUNT_JSON</tt></b> - <i>text</i> - Root Service Account JSON
+| Environment Variable | Type | Description |
+|----------------------|------|-------------|
+| <tt>ROOT_SERVICE_ACCOUNT_JSON</tt> <b>*</b> | text | <p>Root Service Account JSON. </p>|
 
 
-
-
-
-<ul>
-  <li><b>Required</b></li>
-</ul>
-
+\* = Required
 
 
 ## Database Properties
 
-Connection details for the backing database for the service broker.
+Connection details for the service broker's database. It must be MySQL compatible.
 
 You can configure the following environment variables:
 
-<b><tt>DB_HOST</tt></b> - <i>string</i> - Database host
+| Environment Variable | Type | Description |
+|----------------------|------|-------------|
+| <tt>DB_HOST</tt> <b>*</b> | string | <p>Database host. </p>|
+| <tt>DB_USERNAME</tt> | string | <p>Database username. </p>|
+| <tt>DB_PASSWORD</tt> | secret | <p>Database password. </p>|
+| <tt>DB_PORT</tt> <b>*</b> | string | <p>Database port.  Default: <code>3306</code></p>|
+| <tt>DB_NAME</tt> <b>*</b> | string | <p>Database name.  Default: <code>servicebroker</code></p>|
+| <tt>CA_CERT</tt> | text | <p>Server CA cert. </p>|
+| <tt>CLIENT_CERT</tt> | text | <p>Client cert. </p>|
+| <tt>CLIENT_KEY</tt> | text | <p>Client key. </p>|
 
 
-
-
-
-<ul>
-  <li><b>Required</b></li>
-</ul>
-
-<b><tt>DB_USERNAME</tt></b> - <i>string</i> - Database username
-
-
-
-
-
-<ul>
-  <li><i>Optional</i></li>
-</ul>
-
-<b><tt>DB_PASSWORD</tt></b> - <i>secret</i> - Database password
-
-
-
-
-
-<ul>
-  <li><i>Optional</i></li>
-</ul>
-
-<b><tt>DB_PORT</tt></b> - <i>string</i> - Database port (defaults to 3306)
-
-
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>3306</code></li>
-</ul>
-
-<b><tt>DB_NAME</tt></b> - <i>string</i> - Database name
-
-
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>servicebroker</code></li>
-</ul>
-
-<b><tt>CA_CERT</tt></b> - <i>text</i> - Server CA cert
-
-
-
-
-
-<ul>
-  <li><i>Optional</i></li>
-</ul>
-
-<b><tt>CLIENT_CERT</tt></b> - <i>text</i> - Client cert
-
-
-
-
-
-<ul>
-  <li><i>Optional</i></li>
-</ul>
-
-<b><tt>CLIENT_KEY</tt></b> - <i>text</i> - Client key
-
-
-
-
-
-<ul>
-  <li><i>Optional</i></li>
-</ul>
-
+\* = Required
 
 
 ## Brokerpaks
@@ -120,1386 +47,1024 @@ A brokerpak is an archive comprised of a versioned Terraform binary and provider
 
 You can configure the following environment variables:
 
-<b><tt>GSB_BROKERPAK_CONFIG</tt></b> - <i>text</i> - Global Brokerpak Configuration
-
-A JSON map of configuration key/value pairs for all brokerpaks. If a variable isn't found in the specific brokerpak's configuration it's looked up here.
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>{}</code></li>
-</ul>
+| Environment Variable | Type | Description |
+|----------------------|------|-------------|
+| <tt>GSB_BROKERPAK_CONFIG</tt> <b>*</b> | text | <p>Global Brokerpak Configuration. A JSON map of configuration key/value pairs for all brokerpaks. If a variable isn't found in the specific brokerpak's configuration it's looked up here. Default: <code>{}</code></p>|
 
 
+\* = Required
 
-## Enable Services
 
-Enable or disable services.
+## Feature Flags
+
+Service broker feature flags.
 
 You can configure the following environment variables:
 
-<b><tt>GSB_SERVICE_GOOGLE_BIGQUERY_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google BigQuery instances.
+| Environment Variable | Type | Description |
+|----------------------|------|-------------|
+| <tt>GSB_COMPATIBILITY_ENABLE_BUILTIN_SERVICES</tt> <b>*</b> | boolean | <p>enable-builtin-services. Enable services that are built in to the broker i.e. not brokerpaks. Default: <code>true</code></p>|
+| <tt>GSB_COMPATIBILITY_ENABLE_CATALOG_SCHEMAS</tt> <b>*</b> | boolean | <p>enable-catalog-schemas. Enable generating JSONSchema for the service catalog. Default: <code>false</code></p>|
+| <tt>GSB_COMPATIBILITY_ENABLE_CF_SHARING</tt> <b>*</b> | boolean | <p>enable-cf-sharing. Set all services to have the Sharable flag so they can be shared across spaces in PCF. Default: <code>false</code></p>|
+| <tt>GSB_COMPATIBILITY_ENABLE_EOL_SERVICES</tt> <b>*</b> | boolean | <p>enable-eol-services. Enable broker services that are end of life. Default: <code>false</code></p>|
+| <tt>GSB_COMPATIBILITY_ENABLE_GCP_BETA_SERVICES</tt> <b>*</b> | boolean | <p>enable-gcp-beta-services. Enable services that are in GCP Beta. These have no SLA or support policy. Default: <code>true</code></p>|
+| <tt>GSB_COMPATIBILITY_ENABLE_GCP_DEPRECATED_SERVICES</tt> <b>*</b> | boolean | <p>enable-gcp-deprecated-services. Enable services that use deprecated GCP components. Default: <code>false</code></p>|
+| <tt>GSB_COMPATIBILITY_ENABLE_PREVIEW_SERVICES</tt> <b>*</b> | boolean | <p>enable-preview-services. Enable services that are new to the broker this release. Default: <code>true</code></p>|
+| <tt>GSB_COMPATIBILITY_ENABLE_TERRAFORM_SERVICES</tt> <b>*</b> | boolean | <p>enable-terraform-services. Enable services that use the experimental, unstable, Terraform back-end. Default: <code>false</code></p>|
+| <tt>GSB_COMPATIBILITY_ENABLE_UNMAINTAINED_SERVICES</tt> <b>*</b> | boolean | <p>enable-unmaintained-services. Enable broker services that are unmaintained. Default: <code>false</code></p>|
 
 
+\* = Required
 
 
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
+## Install Brokerpaks
 
-<b><tt>GSB_SERVICE_GOOGLE_BIGTABLE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Bigtable instances.
+You can install one or more brokerpaks using the <tt>GSB_BROKERPAK_SOURCES</tt>
+environment variable.
 
+The value should be a JSON array containing zero or more brokerpak configuration
+objects with the following properties:
 
 
+| Property | Type | Description |
+|----------|------|-------------|
+| <tt>uri</tt> <b>*</b> | string | <p>Brokerpak URI. The URI to load. Supported protocols are http, https, gs, and git. Cloud Storage (gs) URIs follow the gs://<bucket>/<path> convention and will be read using the service broker service account. You can validate the checksum of any file on download by appending a checksum query parameter to the URI in the format type:value. Valid checksum types are MD5, SHA1,  SHA256 and SHA512. e.g. gs://foo/bar.brokerpak?checksum=md5:3063a2c62e82ef8614eee6745a7b6b59</p>|
+| <tt>service_prefix</tt> | string | <p>Service Prefix. A prefix to prepend to every service name. This will be exact, so you may want to include a trailing dash.</p>|
+| <tt>excluded_services</tt> | text | <p>Excluded Services. A list of UUIDs of services to exclude, one per line.</p>|
+| <tt>config</tt> <b>*</b> | text | <p>Brokerpak Configuration. A JSON map of configuration key/value pairs for the brokerpak. If a variable isn't found here, it's looked up in the global config. Default: <code>{}</code></p>|
+| <tt>notes</tt> | text | <p>Notes. A place for your notes, not used by the broker.</p>|
 
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
+\* = Required
 
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google CloudSQL MySQL instances.
 
+### Example
 
+Here is an example that loads three brokerpaks.
 
+	[
+		{
+			"notes":"GA services for all users.",
+			"uri":"https://link/to/artifact.brokerpak?checksum=md5:3063a2c62e82ef8614eee6745a7b6b59",
+			"excluded_services":"00000000-0000-0000-0000-000000000000",
+			"config":{}
+		},
+		{
+			"notes":"Beta services for all users.",
+			"uri":"gs://link/to/beta.brokerpak",
+			"service_prefix":"beta-",
+			"config":{}
+		},
+		{
+			"notes":"Services for the marketing department. They use their own GCP Project.",
+			"uri":"https://link/to/marketing.brokerpak",
+			"service_prefix":"marketing-",
+			"config":{"PROJECT_ID":"my-marketing-project"}
+		},
+	]
 
+## Customizing Services
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
+You can customize specific services by changing their defaults, disabling them, or creating custom plans.
 
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google CloudSQL PostgreSQL instances.
+The <tt>GSB_SERVICE_CONFIG</tt> environment variable holds all the customizations as a JSON map.
+The keys of the map are the service's GUID, and the value is a configuration object.
 
+Example:
 
+	{
+		"51b3e27e-d323-49ce-8c5f-1211e6409e82":{ /* Spanner Configuration Object */ },
+		"628629e3-79f5-4255-b981-d14c6c7856be":{ /* Pub/Sub Configuration Object */ },
+		...
+	}
 
+**Configuration Object**
 
+| Property | Type | Description |
+|----------|------|-------------|
+| <tt>//</tt> | string | Space for your notes. |
+| <tt>disabled</tt> | boolean | If set to true, this service will be hidden from the catalog. |
+| <tt>provision_defaults</tt> | string:any map | A map of provision property/default pairs that are used to populate missing values in provision requests. |
+| <tt>bind_defaults</tt> | string:any map | A map of bind property/default pairs that are used to populate missing values in bind requests. |
+| <tt>custom_plans</tt> | array of custom plan objects | You can add custom service plans here. See below for the object structure. |
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
+**Custom Plan Object**
 
-<b><tt>GSB_SERVICE_GOOGLE_DATAFLOW_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Dataflow instances.
+| Property | Type | Description |
+|----------|------|-------------|
+| <tt>guid</tt> \* | string | A GUID for this plan, must be unique. Changing this value after services are using it WILL BREAK your instances. |
+| <tt>name</tt> \* | string | A CLI friendly name for this plan. This can be changed without affecting existing instances, but may break scripts you build referencing it. |
+| <tt>display_name</tt> \* | string | A human readable name for this plan, this can be changed. |
+| <tt>description</tt> \* | string | A human readable description for this plan, this can be changed. |
+| <tt>properties</tt> \* | string:string map | Properties used to configure the plan. Each service has its own set of properties used to customize it. |
 
+\* = Required
 
 
 
+### Google BigQuery<a id="google-bigquery"></a>
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
+A fast, economical and fully managed data warehouse for large-scale data analytics.
 
-<b><tt>GSB_SERVICE_GOOGLE_DATASTORE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Datastore instances.
+Configuration needs to be done under the GUID: <tt>f80c0a3e-bd4d-4809-a900-b4e33a6450f1</tt>.
 
+#### Example
 
+```json
+{
+  "f80c0a3e-bd4d-4809-a900-b4e33a6450f1": {
+    "provision_defaults": {
+      "//": "See the 'provision defaults' section below for defaults you can change."
+    },
+    "bind_defaults": {
+      "//": "See the 'bind defaults' section below for defaults you can change."
+    },
+    "custom_plans": []
+  }
+}```
 
 
+_Note: the example includes the configuration and the GUID it should be nested under._
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
+#### Provision Defaults
 
-<b><tt>GSB_SERVICE_GOOGLE_DIALOGFLOW_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Dialogflow instances.
+Setting a value for any of these in the <tt>provision_defaults</tt> map
+will override the default value the provision call uses for the property.
 
+| Property | Type | Description |
+|----------|------|-------------|
+| `name` | string | The name of the BigQuery dataset. |
+| `location` | string | The location of the BigQuery instance. |
 
 
 
+#### Bind Defaults
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
+Setting a value for any of these in the <tt>bind_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-<b><tt>GSB_SERVICE_GOOGLE_FIRESTORE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Firestore instances.
+| Property | Type | Description |
+|----------|------|-------------|
+| `role` | string | The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. |
 
 
 
+#### Custom Plan Properties
 
+_There are no configurable properties for this object._
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_ML_APIS_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Machine Learning APIs instances.
 
+### Google Bigtable<a id="google-bigtable"></a>
 
+A high performance NoSQL database service for large analytical and operational workloads.
 
+Configuration needs to be done under the GUID: <tt>b8e19880-ac58-42ef-b033-f7cd9c94d1fe</tt>.
 
+#### Example
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
+```json
+{
+  "b8e19880-ac58-42ef-b033-f7cd9c94d1fe": {
+    "provision_defaults": {
+      "//": "See the 'provision defaults' section below for defaults you can change."
+    },
+    "bind_defaults": {
+      "//": "See the 'bind defaults' section below for defaults you can change."
+    },
+    "custom_plans": [
+      {
+        "guid": "00000000-0000-0000-0000-000000000000",
+        "name": "a-cli-friendly-name",
+        "display_name": "A human-readable name",
+        "description": "What makes this plan different?",
+        "properties": {
+          "//": "See the custom plan properties section below for configurable properties."
+        }
+      }
+    ]
+  }
+}```
 
-<b><tt>GSB_SERVICE_GOOGLE_PUBSUB_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google PubSub instances.
 
+_Note: the example includes the configuration and the GUID it should be nested under._
 
+#### Provision Defaults
 
+Setting a value for any of these in the <tt>provision_defaults</tt> map
+will override the default value the provision call uses for the property.
 
+| Property | Type | Description |
+|----------|------|-------------|
+| `name` | string | The name of the Cloud Bigtable instance. |
+| `cluster_id` | string | The ID of the Cloud Bigtable cluster. |
+| `display_name` | string | The human-readable display name of the Bigtable instance. |
+| `zone` | string | The zone to create the Cloud Bigtable cluster in. Zones that support Bigtable instances are noted on the Cloud Bigtable locations page: https://cloud.google.com/bigtable/docs/locations. |
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_SPANNER_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Spanner instances.
 
+#### Bind Defaults
 
+Setting a value for any of these in the <tt>bind_defaults</tt> map
+will override the default value the provision call uses for the property.
 
+| Property | Type | Description |
+|----------|------|-------------|
+| `role` | string | The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. |
 
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_DEBUGGER_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Debugger instances.
+#### Custom Plan Properties
 
+| Property | Type | Description |
+|----------|------|-------------|
+| `storage_type` \* | string | Either HDD or SSD. See: https://cloud.google.com/bigtable/pricing for more information. |
+| `num_nodes` \* | string | Number of nodes, between 3 and 30. See: https://cloud.google.com/bigtable/pricing for more information. |
+\* = Required
 
 
 
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_MONITORING_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Monitoring instances.
+### Google CloudSQL for MySQL<a id="google-cloudsql-mysql"></a>
 
+Google CloudSQL for MySQL is a fully-managed MySQL database service.
 
+Configuration needs to be done under the GUID: <tt>4bc59b9a-8520-409f-85da-1c7552315863</tt>.
 
+#### Example
 
+```json
+{
+  "4bc59b9a-8520-409f-85da-1c7552315863": {
+    "provision_defaults": {
+      "//": "See the 'provision defaults' section below for defaults you can change."
+    },
+    "bind_defaults": {
+      "//": "See the 'bind defaults' section below for defaults you can change."
+    },
+    "custom_plans": [
+      {
+        "guid": "00000000-0000-0000-0000-000000000000",
+        "name": "a-cli-friendly-name",
+        "display_name": "A human-readable name",
+        "description": "What makes this plan different?",
+        "properties": {
+          "//": "See the custom plan properties section below for configurable properties."
+        }
+      }
+    ]
+  }
+}```
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_PROFILER_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Profiler instances.
+_Note: the example includes the configuration and the GUID it should be nested under._
 
+#### Provision Defaults
 
+Setting a value for any of these in the <tt>provision_defaults</tt> map
+will override the default value the provision call uses for the property.
 
+| Property | Type | Description |
+|----------|------|-------------|
+| `instance_name` | string | Name of the Cloud SQL instance. |
+| `database_name` | string | Name of the database inside of the instance. Must be a valid identifier for your chosen database type. |
+| `version` | string | The database engine type and version. Defaults to `MYSQL_5_6` for 1st gen MySQL instances or `MYSQL_5_7` for 2nd gen MySQL instances. |
+| `failover_replica_name` | string | (only for 2nd generation instances) If specified, creates a failover replica with the given name. |
+| `activation_policy` | string | The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE. |
+| `binlog` | string | Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use. |
+| `disk_size` | string | In GB (only for 2nd generation instances). |
+| `region` | string | The geographical region. See the instance locations list https://cloud.google.com/sql/docs/mysql/instance-locations for which regions support which databases. |
+| `zone` | string | (only for 2nd generation instances) |
+| `disk_type` | string | (only for 2nd generation instances) |
+| `maintenance_window_day` | string | (only for 2nd generation instances) This specifies when a v2 CloudSQL instance should preferably be restarted for system maintenance purposes. Day of week (1-7), starting on Monday. |
+| `maintenance_window_hour` | string | (only for 2nd generation instances) The hour of the day when disruptive updates (updates that require an instance restart) to this CloudSQL instance can be made. Hour of day 0-23. |
+| `backups_enabled` | string | Should daily backups be enabled for the service? |
+| `backup_start_time` | string | Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM. |
+| `authorized_networks` | string | A comma separated list without spaces. |
+| `replication_type` | string | The type of replication this instance uses. This can be either ASYNCHRONOUS or SYNCHRONOUS. |
+| `auto_resize` | string | (only for 2nd generation instances) Configuration to increase storage size automatically. |
 
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_TRACE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Trace instances.
+#### Bind Defaults
 
+Setting a value for any of these in the <tt>bind_defaults</tt> map
+will override the default value the provision call uses for the property.
 
+| Property | Type | Description |
+|----------|------|-------------|
+| `role` | string | The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. |
+| `jdbc_uri_format` | string | If `true`, `uri` field will contain a JDBC formatted URI. |
+| `username` | string | The SQL username for the account. |
+| `password` | string | The SQL password for the account. |
 
 
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
+#### Custom Plan Properties
 
-<b><tt>GSB_SERVICE_GOOGLE_STORAGE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Storage instances.
+| Property | Type | Description |
+|----------|------|-------------|
+| `tier` \* | string | Case-sensitive tier/machine type name (see https://cloud.google.com/sql/pricing for more information). |
+| `pricing_plan` \* | string | Select a pricing plan (only for 1st generation instances). |
+| `max_disk_size` \* | string | Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default). |
+\* = Required
 
 
 
 
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
+### Google CloudSQL for PostgreSQL<a id="google-cloudsql-postgres"></a>
 
+Google CloudSQL for PostgreSQL is a fully-managed PostgreSQL database service.
 
+Configuration needs to be done under the GUID: <tt>cbad6d78-a73c-432d-b8ff-b219a17a803a</tt>.
 
-## Role Whitelisting
+#### Example
 
-Enable or disable role whitelisting.
+```json
+{
+  "cbad6d78-a73c-432d-b8ff-b219a17a803a": {
+    "provision_defaults": {
+      "//": "See the 'provision defaults' section below for defaults you can change."
+    },
+    "bind_defaults": {
+      "//": "See the 'bind defaults' section below for defaults you can change."
+    },
+    "custom_plans": [
+      {
+        "guid": "00000000-0000-0000-0000-000000000000",
+        "name": "a-cli-friendly-name",
+        "display_name": "A human-readable name",
+        "description": "What makes this plan different?",
+        "properties": {
+          "//": "See the custom plan properties section below for configurable properties."
+        }
+      }
+    ]
+  }
+}```
 
-You can configure the following environment variables:
 
-<b><tt>GSB_SERVICE_GOOGLE_BIGQUERY_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google BigQuery instances.
+_Note: the example includes the configuration and the GUID it should be nested under._
 
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
+#### Provision Defaults
 
+Setting a value for any of these in the <tt>provision_defaults</tt> map
+will override the default value the provision call uses for the property.
 
+| Property | Type | Description |
+|----------|------|-------------|
+| `instance_name` | string | Name of the CloudSQL instance. |
+| `database_name` | string | Name of the database inside of the instance. Must be a valid identifier for your chosen database type. |
+| `version` | string | The database engine type and version. |
+| `failover_replica_name` | string | (only for 2nd generation instances) If specified, creates a failover replica with the given name. |
+| `activation_policy` | string | The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE. |
+| `binlog` | string | Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use. |
+| `disk_size` | string | In GB (only for 2nd generation instances). |
+| `region` | string | The geographical region. See the instance locations list https://cloud.google.com/sql/docs/mysql/instance-locations for which regions support which databases. |
+| `zone` | string | (only for 2nd generation instances) |
+| `disk_type` | string | (only for 2nd generation instances) |
+| `maintenance_window_day` | string | (only for 2nd generation instances) This specifies when a v2 CloudSQL instance should preferably be restarted for system maintenance purposes. Day of week (1-7), starting on Monday. |
+| `maintenance_window_hour` | string | (only for 2nd generation instances) The hour of the day when disruptive updates (updates that require an instance restart) to this CloudSQL instance can be made. Hour of day 0-23. |
+| `backups_enabled` | string | Should daily backups be enabled for the service? |
+| `backup_start_time` | string | Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM. |
+| `authorized_networks` | string | A comma separated list without spaces. |
+| `replication_type` | string | The type of replication this instance uses. This can be either ASYNCHRONOUS or SYNCHRONOUS. |
+| `auto_resize` | string | (only for 2nd generation instances) Configuration to increase storage size automatically. |
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>bigquery.dataViewer,bigquery.dataEditor,bigquery.dataOwner,bigquery.user,bigquery.jobUser</code></li>
-</ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_BIGTABLE_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Bigtable instances.
 
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
+#### Bind Defaults
 
+Setting a value for any of these in the <tt>bind_defaults</tt> map
+will override the default value the provision call uses for the property.
 
+| Property | Type | Description |
+|----------|------|-------------|
+| `role` | string | The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. |
+| `jdbc_uri_format` | string | If `true`, `uri` field will contain a JDBC formatted URI. |
+| `username` | string | The SQL username for the account. |
+| `password` | string | The SQL password for the account. |
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>bigtable.user,bigtable.reader,bigtable.viewer</code></li>
-</ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google CloudSQL MySQL instances.
 
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
+#### Custom Plan Properties
 
+| Property | Type | Description |
+|----------|------|-------------|
+| `tier` \* | string | A string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840. |
+| `pricing_plan` \* | string | The pricing plan. |
+| `max_disk_size` \* | string | Maximum disk size in GB, 10 is the minimum. |
+\* = Required
 
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>cloudsql.editor,cloudsql.viewer,cloudsql.client</code></li>
-</ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google CloudSQL PostgreSQL instances.
 
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
 
+### Google Cloud Dataflow<a id="google-dataflow"></a>
 
+A managed service for executing a wide variety of data processing patterns built on Apache Beam.
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>cloudsql.editor,cloudsql.viewer,cloudsql.client</code></li>
-</ul>
+Configuration needs to be done under the GUID: <tt>3e897eb3-9062-4966-bd4f-85bda0f73b3d</tt>.
 
-<b><tt>GSB_SERVICE_GOOGLE_ML_APIS_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Machine Learning APIs instances.
+#### Example
 
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
+```json
+{
+  "3e897eb3-9062-4966-bd4f-85bda0f73b3d": {
+    "provision_defaults": {
+      "//": "The provision action takes no params so it can't be overridden."
+    },
+    "bind_defaults": {
+      "//": "See the 'bind defaults' section below for defaults you can change."
+    },
+    "custom_plans": []
+  }
+}```
 
 
+_Note: the example includes the configuration and the GUID it should be nested under._
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>ml.developer,ml.viewer,ml.modelOwner,ml.modelUser,ml.jobOwner,ml.operationOwner</code></li>
-</ul>
+#### Provision Defaults
 
-<b><tt>GSB_SERVICE_GOOGLE_PUBSUB_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google PubSub instances.
+Setting a value for any of these in the <tt>provision_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
+_There are no configurable properties for this object._
 
+#### Bind Defaults
 
+Setting a value for any of these in the <tt>bind_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>pubsub.publisher,pubsub.subscriber,pubsub.viewer,pubsub.editor</code></li>
-</ul>
+| Property | Type | Description |
+|----------|------|-------------|
+| `role` | string | The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. |
 
-<b><tt>GSB_SERVICE_GOOGLE_SPANNER_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Spanner instances.
 
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
 
+#### Custom Plan Properties
 
+_There are no configurable properties for this object._
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>spanner.databaseAdmin,spanner.databaseReader,spanner.databaseUser,spanner.viewer</code></li>
-</ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_STORAGE_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Cloud Storage instances.
 
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
+### Google Cloud Datastore<a id="google-datastore"></a>
 
+Google Cloud Datastore is a NoSQL document database service.
 
+Configuration needs to be done under the GUID: <tt>76d4abb2-fee7-4c8f-aee1-bcea2837f02b</tt>.
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>storage.objectCreator,storage.objectViewer,storage.objectAdmin</code></li>
-</ul>
+#### Example
 
+```json
+{
+  "76d4abb2-fee7-4c8f-aee1-bcea2837f02b": {
+    "provision_defaults": {
+      "//": "See the 'provision defaults' section below for defaults you can change."
+    },
+    "bind_defaults": {
+      "//": "The bind action takes no params so it can't be overridden."
+    },
+    "custom_plans": []
+  }
+}```
 
 
-## Compatibility
+_Note: the example includes the configuration and the GUID it should be nested under._
 
-Legacy Compatibility Options
+#### Provision Defaults
 
-You can configure the following environment variables:
+Setting a value for any of these in the <tt>provision_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-<b><tt>GSB_COMPATIBILITY_ENABLE_CATALOG_SCHEMAS</tt></b> - <i>boolean</i> - enable-catalog-schemas
+| Property | Type | Description |
+|----------|------|-------------|
+| `namespace` | string | A context for the identifiers in your entity’s dataset. This ensures that different systems can all interpret an entity's data the same way, based on the rules for the entity’s particular namespace. Blank means the default namespace will be used. |
 
-Enable generating JSONSchema for the service catalog.
 
 
+#### Bind Defaults
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>false</code></li>
-</ul>
+Setting a value for any of these in the <tt>bind_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-<b><tt>GSB_COMPATIBILITY_ENABLE_CF_SHARING</tt></b> - <i>boolean</i> - enable-cf-sharing
+_There are no configurable properties for this object._
 
-Set all services to have the Sharable flag so they can be shared across spaces in PCF.
+#### Custom Plan Properties
 
+_There are no configurable properties for this object._
 
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>false</code></li>
-</ul>
 
-<b><tt>GSB_COMPATIBILITY_ENABLE_EOL_SERVICES</tt></b> - <i>boolean</i> - enable-eol-services
+### Google Cloud Dialogflow<a id="google-dialogflow"></a>
 
-Enable broker services that are end of life.
+Dialogflow is an end-to-end, build-once deploy-everywhere development suite for creating conversational interfaces for websites, mobile applications, popular messaging platforms, and IoT devices.
 
+Configuration needs to be done under the GUID: <tt>e84b69db-3de9-4688-8f5c-26b9d5b1f129</tt>.
 
+#### Example
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>false</code></li>
-</ul>
+```json
+{
+  "e84b69db-3de9-4688-8f5c-26b9d5b1f129": {
+    "provision_defaults": {
+      "//": "The provision action takes no params so it can't be overridden."
+    },
+    "bind_defaults": {
+      "//": "The bind action takes no params so it can't be overridden."
+    },
+    "custom_plans": []
+  }
+}```
 
-<b><tt>GSB_COMPATIBILITY_ENABLE_GCP_BETA_SERVICES</tt></b> - <i>boolean</i> - enable-gcp-beta-services
 
-Enable services that are in GCP Beta. These have no SLA or support policy.
+_Note: the example includes the configuration and the GUID it should be nested under._
 
+#### Provision Defaults
 
+Setting a value for any of these in the <tt>provision_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
+_There are no configurable properties for this object._
 
-<b><tt>GSB_COMPATIBILITY_ENABLE_GCP_DEPRECATED_SERVICES</tt></b> - <i>boolean</i> - enable-gcp-deprecated-services
+#### Bind Defaults
 
-Enable services that use deprecated GCP components.
+Setting a value for any of these in the <tt>bind_defaults</tt> map
+will override the default value the provision call uses for the property.
 
+_There are no configurable properties for this object._
 
+#### Custom Plan Properties
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>false</code></li>
-</ul>
+_There are no configurable properties for this object._
 
-<b><tt>GSB_COMPATIBILITY_ENABLE_INPUT_VALIDATION</tt></b> - <i>boolean</i> - enable-input-validation
 
-Enables validating user input variables against JSON Schema definitions.
 
+### Google Cloud Firestore<a id="google-firestore"></a>
 
+Cloud Firestore is a fast, fully managed, serverless, cloud-native NoSQL document database that simplifies storing, syncing, and querying data for your mobile, web, and IoT apps at global scale.
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
+Configuration needs to be done under the GUID: <tt>a2b7b873-1e34-4530-8a42-902ff7d66b43</tt>.
 
-<b><tt>GSB_COMPATIBILITY_ENABLE_PREVIEW_SERVICES</tt></b> - <i>boolean</i> - enable-preview-services
+#### Example
 
-Enable services that are new to the broker this release.
+```json
+{
+  "a2b7b873-1e34-4530-8a42-902ff7d66b43": {
+    "provision_defaults": {
+      "//": "The provision action takes no params so it can't be overridden."
+    },
+    "bind_defaults": {
+      "//": "See the 'bind defaults' section below for defaults you can change."
+    },
+    "custom_plans": []
+  }
+}```
 
 
+_Note: the example includes the configuration and the GUID it should be nested under._
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
+#### Provision Defaults
 
-<b><tt>GSB_COMPATIBILITY_ENABLE_TERRAFORM_SERVICES</tt></b> - <i>boolean</i> - enable-terraform-services
+Setting a value for any of these in the <tt>provision_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-Enable services that use the experimental, unstable, Terraform back-end.
+_There are no configurable properties for this object._
 
+#### Bind Defaults
 
+Setting a value for any of these in the <tt>bind_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>false</code></li>
-</ul>
+| Property | Type | Description |
+|----------|------|-------------|
+| `role` | string | The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. |
 
-<b><tt>GSB_COMPATIBILITY_ENABLE_UNMAINTAINED_SERVICES</tt></b> - <i>boolean</i> - enable-unmaintained-services
 
-Enable broker services that are unmaintained.
 
+#### Custom Plan Properties
 
+_There are no configurable properties for this object._
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>false</code></li>
-</ul>
 
-<b><tt>GSB_COMPATIBILITY_THREE_TO_FOUR_LEGACY_PLANS</tt></b> - <i>boolean</i> - three-to-four.legacy-plans
 
-Enable compatibility with the GCP Service Broker v3.x. Before version 4.0, each installation generated its own plan UUIDs, after 4.0 they have been standardized. This option installs a compatibility layer which checks if a service is using the correct plan GUID. If the service does not use the correct GUID, the request will fail with a message about how to upgrade.
+### Google Machine Learning APIs<a id="google-ml-apis"></a>
 
+Machine Learning APIs including Vision, Translate, Speech, and Natural Language.
 
+Configuration needs to be done under the GUID: <tt>5ad2dce0-51f7-4ede-8b46-293d6df1e8d4</tt>.
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>false</code></li>
-</ul>
+#### Example
 
+```json
+{
+  "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4": {
+    "provision_defaults": {
+      "//": "The provision action takes no params so it can't be overridden."
+    },
+    "bind_defaults": {
+      "//": "See the 'bind defaults' section below for defaults you can change."
+    },
+    "custom_plans": []
+  }
+}```
 
 
-## Default Overrides
+_Note: the example includes the configuration and the GUID it should be nested under._
 
-Override the default values your users get when provisioning.
+#### Provision Defaults
 
-You can configure the following environment variables:
+Setting a value for any of these in the <tt>provision_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-<b><tt>GSB_SERVICE_GOOGLE_BIGQUERY_PROVISION_DEFAULTS</tt></b> - <i>text</i> - Provision default override Google BigQuery instances.
+_There are no configurable properties for this object._
 
-A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default.
+#### Bind Defaults
 
+Setting a value for any of these in the <tt>bind_defaults</tt> map
+will override the default value the provision call uses for the property.
 
+| Property | Type | Description |
+|----------|------|-------------|
+| `role` | string | The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. |
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>{}</code></li>
-</ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_BIGQUERY_BIND_DEFAULTS</tt></b> - <i>text</i> - Bind default override Google BigQuery instances.
 
-A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default.
+#### Custom Plan Properties
 
+_There are no configurable properties for this object._
 
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>{}</code></li>
-</ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_BIGTABLE_PROVISION_DEFAULTS</tt></b> - <i>text</i> - Provision default override Google Bigtable instances.
+### Google PubSub<a id="google-pubsub"></a>
 
-A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default.
+A global service for real-time and reliable messaging and streaming data.
 
+Configuration needs to be done under the GUID: <tt>628629e3-79f5-4255-b981-d14c6c7856be</tt>.
 
+#### Example
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>{}</code></li>
-</ul>
+```json
+{
+  "628629e3-79f5-4255-b981-d14c6c7856be": {
+    "provision_defaults": {
+      "//": "See the 'provision defaults' section below for defaults you can change."
+    },
+    "bind_defaults": {
+      "//": "See the 'bind defaults' section below for defaults you can change."
+    },
+    "custom_plans": []
+  }
+}```
 
-<b><tt>GSB_SERVICE_GOOGLE_BIGTABLE_BIND_DEFAULTS</tt></b> - <i>text</i> - Bind default override Google Bigtable instances.
 
-A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default.
+_Note: the example includes the configuration and the GUID it should be nested under._
 
+#### Provision Defaults
 
+Setting a value for any of these in the <tt>provision_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>{}</code></li>
-</ul>
+| Property | Type | Description |
+|----------|------|-------------|
+| `topic_name` | string | Name of the topic. Must not start with "goog". |
+| `subscription_name` | string | Name of the subscription. Blank means no subscription will be created. Must not start with "goog". |
+| `is_push` | string | Are events handled by POSTing to a URL? |
+| `endpoint` | string | If `is_push` == 'true', then this is the URL that will be pushed to. |
+| `ack_deadline` | string | Value is in seconds. Max: 600 This is the maximum time after a subscriber receives a message before the subscriber should acknowledge the message. After message delivery but before the ack deadline expires and before the message is acknowledged, it is an outstanding message and will not be delivered again during that time (on a best-effort basis).  |
 
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_PROVISION_DEFAULTS</tt></b> - <i>text</i> - Provision default override Google CloudSQL MySQL instances.
 
-A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default.
 
+#### Bind Defaults
 
+Setting a value for any of these in the <tt>bind_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>{}</code></li>
-</ul>
+| Property | Type | Description |
+|----------|------|-------------|
+| `role` | string | The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. |
 
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_BIND_DEFAULTS</tt></b> - <i>text</i> - Bind default override Google CloudSQL MySQL instances.
 
-A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default.
 
+#### Custom Plan Properties
 
+_There are no configurable properties for this object._
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>{}</code></li>
-</ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_PROVISION_DEFAULTS</tt></b> - <i>text</i> - Provision default override Google CloudSQL PostgreSQL instances.
 
-A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default.
+### Google Spanner<a id="google-spanner"></a>
 
+The first horizontally scalable, globally consistent, relational database service.
 
+Configuration needs to be done under the GUID: <tt>51b3e27e-d323-49ce-8c5f-1211e6409e82</tt>.
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>{}</code></li>
-</ul>
+#### Example
 
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_BIND_DEFAULTS</tt></b> - <i>text</i> - Bind default override Google CloudSQL PostgreSQL instances.
+```json
+{
+  "51b3e27e-d323-49ce-8c5f-1211e6409e82": {
+    "provision_defaults": {
+      "//": "See the 'provision defaults' section below for defaults you can change."
+    },
+    "bind_defaults": {
+      "//": "See the 'bind defaults' section below for defaults you can change."
+    },
+    "custom_plans": [
+      {
+        "guid": "00000000-0000-0000-0000-000000000000",
+        "name": "a-cli-friendly-name",
+        "display_name": "A human-readable name",
+        "description": "What makes this plan different?",
+        "properties": {
+          "//": "See the custom plan properties section below for configurable properties."
+        }
+      }
+    ]
+  }
+}```
 
-A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default.
 
+_Note: the example includes the configuration and the GUID it should be nested under._
 
+#### Provision Defaults
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>{}</code></li>
-</ul>
+Setting a value for any of these in the <tt>provision_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-<b><tt>GSB_SERVICE_GOOGLE_ML_APIS_PROVISION_DEFAULTS</tt></b> - <i>text</i> - Provision default override Google Machine Learning APIs instances.
+| Property | Type | Description |
+|----------|------|-------------|
+| `name` | string | A unique identifier for the instance, which cannot be changed after the instance is created. |
+| `display_name` | string | The name of this instance configuration as it appears in UIs. |
+| `location` | string | A configuration for a Cloud Spanner instance. Configurations define the geographic placement of nodes and their replication and are slightly different from zones. There are single region configurations, multi-region configurations, and multi-continent configurations. See the instance docs https://cloud.google.com/spanner/docs/instances for a list of configurations. |
 
-A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default.
 
 
+#### Bind Defaults
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>{}</code></li>
-</ul>
+Setting a value for any of these in the <tt>bind_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-<b><tt>GSB_SERVICE_GOOGLE_ML_APIS_BIND_DEFAULTS</tt></b> - <i>text</i> - Bind default override Google Machine Learning APIs instances.
+| Property | Type | Description |
+|----------|------|-------------|
+| `role` | string | The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. |
 
-A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default.
 
 
+#### Custom Plan Properties
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>{}</code></li>
-</ul>
+| Property | Type | Description |
+|----------|------|-------------|
+| `num_nodes` \* | string | Number of nodes, a minimum of 3 nodes is recommended for production environments. See: https://cloud.google.com/spanner/pricing for more information. |
+\* = Required
 
-<b><tt>GSB_SERVICE_GOOGLE_PUBSUB_PROVISION_DEFAULTS</tt></b> - <i>text</i> - Provision default override Google PubSub instances.
 
-A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default.
 
 
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>{}</code></li>
-</ul>
+### Stackdriver Debugger<a id="google-stackdriver-debugger"></a>
 
-<b><tt>GSB_SERVICE_GOOGLE_PUBSUB_BIND_DEFAULTS</tt></b> - <i>text</i> - Bind default override Google PubSub instances.
+Stackdriver Debugger is a feature of the Google Cloud Platform that lets you inspect the state of an application at any code location without using logging statements and without stopping or slowing down your applications. Your users are not impacted during debugging. Using the production debugger you can capture the local variables and call stack and link it back to a specific line location in your source code.
 
-A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default.
+Configuration needs to be done under the GUID: <tt>83837945-1547-41e0-b661-ea31d76eed11</tt>.
 
+#### Example
 
+```json
+{
+  "83837945-1547-41e0-b661-ea31d76eed11": {
+    "provision_defaults": {
+      "//": "The provision action takes no params so it can't be overridden."
+    },
+    "bind_defaults": {
+      "//": "The bind action takes no params so it can't be overridden."
+    },
+    "custom_plans": []
+  }
+}```
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>{}</code></li>
-</ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_SPANNER_PROVISION_DEFAULTS</tt></b> - <i>text</i> - Provision default override Google Spanner instances.
+_Note: the example includes the configuration and the GUID it should be nested under._
 
-A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default.
+#### Provision Defaults
 
+Setting a value for any of these in the <tt>provision_defaults</tt> map
+will override the default value the provision call uses for the property.
 
+_There are no configurable properties for this object._
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>{}</code></li>
-</ul>
+#### Bind Defaults
 
-<b><tt>GSB_SERVICE_GOOGLE_SPANNER_BIND_DEFAULTS</tt></b> - <i>text</i> - Bind default override Google Spanner instances.
+Setting a value for any of these in the <tt>bind_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default.
+_There are no configurable properties for this object._
 
+#### Custom Plan Properties
 
+_There are no configurable properties for this object._
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>{}</code></li>
-</ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_STORAGE_PROVISION_DEFAULTS</tt></b> - <i>text</i> - Provision default override Google Cloud Storage instances.
 
-A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default.
+### Stackdriver Monitoring<a id="google-stackdriver-monitoring"></a>
 
+Stackdriver Monitoring provides visibility into the performance, uptime, and overall health of cloud-powered applications.
 
+Configuration needs to be done under the GUID: <tt>2bc0d9ed-3f68-4056-b842-4a85cfbc727f</tt>.
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>{}</code></li>
-</ul>
+#### Example
 
-<b><tt>GSB_SERVICE_GOOGLE_STORAGE_BIND_DEFAULTS</tt></b> - <i>text</i> - Bind default override Google Cloud Storage instances.
+```json
+{
+  "2bc0d9ed-3f68-4056-b842-4a85cfbc727f": {
+    "provision_defaults": {
+      "//": "The provision action takes no params so it can't be overridden."
+    },
+    "bind_defaults": {
+      "//": "The bind action takes no params so it can't be overridden."
+    },
+    "custom_plans": []
+  }
+}```
 
-A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default.
 
+_Note: the example includes the configuration and the GUID it should be nested under._
 
+#### Provision Defaults
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>{}</code></li>
-</ul>
+Setting a value for any of these in the <tt>provision_defaults</tt> map
+will override the default value the provision call uses for the property.
 
+_There are no configurable properties for this object._
 
+#### Bind Defaults
 
+Setting a value for any of these in the <tt>bind_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-## Custom Plans
+_There are no configurable properties for this object._
 
-You can specify custom plans for the following services.
-The plans MUST be an array of flat JSON objects stored in their associated environment variable e.g. <code>[{...}, {...},...]</code>.
-Each plan MUST have a unique UUID, if you modify the plan the UUID should stay the same to ensure previously provisioned services continue to work.
-If you are using the PCF tile, it will generate the UUIDs for you.
-DO NOT delete plans, instead you should change their labels to mark them as deprecated.
+#### Custom Plan Properties
 
-### Google Bigtable Custom Plans
+_There are no configurable properties for this object._
 
-Generate custom plans for Google Bigtable.
-To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>BIGTABLE_CUSTOM_PLANS</tt>.
 
-For example:
-<code>
-[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "display_name": setme, "description": setme, "service": setme, "storage_type": setme, "num_nodes": setme},...]
-</code>
 
-<table>
-<tr>
-  <th>JSON Property</th>
-  <th>Type</th>
-  <th>Label</th>
-  <th>Details</th>
-</tr>
-<tr>
-  <td><tt>id</tt></td>
-  <td><i>string</i></td>
-  <td>Plan UUID</td>
-  <td>
-    The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
-    <ul><li><b>Required</b></li></ul>
-  </td>
-</tr>
-<tr>
-  <td><tt>name</tt></td>
-  <td><i>string</i></td>
-  <td>Plan CLI Name</td>
-  <td>
-    The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
-    <ul><li><b>Required</b></li></ul>
-  </td>
-</tr>
+### Stackdriver Profiler<a id="google-stackdriver-profiler"></a>
 
+Continuous CPU and heap profiling to improve performance and reduce costs.
 
-<tr>
-  <td><tt>display_name</tt></td>
-  <td><i>string</i></td>
-  <td>Display Name</td>
-  <td>
-  Name of the plan to be displayed to users.
+Configuration needs to be done under the GUID: <tt>00b9ca4a-7cd6-406a-a5b7-2f43f41ade75</tt>.
 
+#### Example
 
-<ul>
-  <li><b>Required</b></li>
-</ul>
+```json
+{
+  "00b9ca4a-7cd6-406a-a5b7-2f43f41ade75": {
+    "provision_defaults": {
+      "//": "The provision action takes no params so it can't be overridden."
+    },
+    "bind_defaults": {
+      "//": "The bind action takes no params so it can't be overridden."
+    },
+    "custom_plans": []
+  }
+}```
 
 
-  </td>
-</tr>
+_Note: the example includes the configuration and the GUID it should be nested under._
 
-<tr>
-  <td><tt>description</tt></td>
-  <td><i>string</i></td>
-  <td>Plan description</td>
-  <td>
-  The description of the plan shown to users.
+#### Provision Defaults
 
+Setting a value for any of these in the <tt>provision_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-<ul>
-  <li><b>Required</b></li>
-</ul>
+_There are no configurable properties for this object._
 
+#### Bind Defaults
 
-  </td>
-</tr>
+Setting a value for any of these in the <tt>bind_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-<tr>
-  <td><tt>service</tt></td>
-  <td><i>dropdown_select</i></td>
-  <td>Service</td>
-  <td>
-  The service this plan is associated with.
+_There are no configurable properties for this object._
 
+#### Custom Plan Properties
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>b8e19880-ac58-42ef-b033-f7cd9c94d1fe</code></li>
-  <li>This option _is not_ user configurable. It must be set to the default.</li>
-  <li>Valid Values:
-  <ul>
-    <li><tt>b8e19880-ac58-42ef-b033-f7cd9c94d1fe</tt> - Google Bigtable</li>
-  </ul>
-  </li>
-</ul>
+_There are no configurable properties for this object._
 
 
-  </td>
-</tr>
 
-<tr>
-  <td><tt>storage_type</tt></td>
-  <td><i>dropdown_select</i></td>
-  <td>Storage Type</td>
-  <td>
-  Either HDD or SSD. See: https://cloud.google.com/bigtable/pricing for more information.
+### Stackdriver Trace<a id="google-stackdriver-trace"></a>
 
+Stackdriver Trace is a distributed tracing system that collects latency data from your applications and displays it in the Google Cloud Platform Console. You can track how requests propagate through your application and receive detailed near real-time performance insights.
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>SSD</code></li>
-  <li>Valid Values:
-  <ul>
-    <li><tt>HDD</tt> - HDD - Hard Disk Drive</li><li><tt>SSD</tt> - SSD - Solid-state Drive</li>
-  </ul>
-  </li>
-</ul>
+Configuration needs to be done under the GUID: <tt>c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a</tt>.
 
+#### Example
 
-  </td>
-</tr>
+```json
+{
+  "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a": {
+    "provision_defaults": {
+      "//": "The provision action takes no params so it can't be overridden."
+    },
+    "bind_defaults": {
+      "//": "The bind action takes no params so it can't be overridden."
+    },
+    "custom_plans": []
+  }
+}```
 
-<tr>
-  <td><tt>num_nodes</tt></td>
-  <td><i>string</i></td>
-  <td>Num Nodes</td>
-  <td>
-  Number of nodes, between 3 and 30. See: https://cloud.google.com/bigtable/pricing for more information.
 
+_Note: the example includes the configuration and the GUID it should be nested under._
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>3</code></li>
-</ul>
+#### Provision Defaults
 
+Setting a value for any of these in the <tt>provision_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-  </td>
-</tr>
+_There are no configurable properties for this object._
 
-</table>
+#### Bind Defaults
 
-### Google CloudSQL MySQL Custom Plans
+Setting a value for any of these in the <tt>bind_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-Generate custom plans for Google CloudSQL MySQL.
-To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>CLOUDSQL_MYSQL_CUSTOM_PLANS</tt>.
+_There are no configurable properties for this object._
 
-For example:
-<code>
-[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "display_name": setme, "description": setme, "service": setme, "tier": setme, "pricing_plan": setme, "max_disk_size": setme},...]
-</code>
+#### Custom Plan Properties
 
-<table>
-<tr>
-  <th>JSON Property</th>
-  <th>Type</th>
-  <th>Label</th>
-  <th>Details</th>
-</tr>
-<tr>
-  <td><tt>id</tt></td>
-  <td><i>string</i></td>
-  <td>Plan UUID</td>
-  <td>
-    The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
-    <ul><li><b>Required</b></li></ul>
-  </td>
-</tr>
-<tr>
-  <td><tt>name</tt></td>
-  <td><i>string</i></td>
-  <td>Plan CLI Name</td>
-  <td>
-    The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
-    <ul><li><b>Required</b></li></ul>
-  </td>
-</tr>
+_There are no configurable properties for this object._
 
 
-<tr>
-  <td><tt>display_name</tt></td>
-  <td><i>string</i></td>
-  <td>Display Name</td>
-  <td>
-  Name of the plan to be displayed to users.
 
+### Google Cloud Storage<a id="google-storage"></a>
 
-<ul>
-  <li><b>Required</b></li>
-</ul>
+Unified object storage for developers and enterprises. Cloud Storage allows world-wide storage and retrieval of any amount of data at any time.
 
+Configuration needs to be done under the GUID: <tt>b9e4332e-b42b-4680-bda5-ea1506797474</tt>.
 
-  </td>
-</tr>
+#### Example
 
-<tr>
-  <td><tt>description</tt></td>
-  <td><i>string</i></td>
-  <td>Plan description</td>
-  <td>
-  The description of the plan shown to users.
+```json
+{
+  "b9e4332e-b42b-4680-bda5-ea1506797474": {
+    "provision_defaults": {
+      "//": "See the 'provision defaults' section below for defaults you can change."
+    },
+    "bind_defaults": {
+      "//": "See the 'bind defaults' section below for defaults you can change."
+    },
+    "custom_plans": [
+      {
+        "guid": "00000000-0000-0000-0000-000000000000",
+        "name": "a-cli-friendly-name",
+        "display_name": "A human-readable name",
+        "description": "What makes this plan different?",
+        "properties": {
+          "//": "See the custom plan properties section below for configurable properties."
+        }
+      }
+    ]
+  }
+}```
 
 
-<ul>
-  <li><b>Required</b></li>
-</ul>
+_Note: the example includes the configuration and the GUID it should be nested under._
 
+#### Provision Defaults
 
-  </td>
-</tr>
+Setting a value for any of these in the <tt>provision_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-<tr>
-  <td><tt>service</tt></td>
-  <td><i>dropdown_select</i></td>
-  <td>Service</td>
-  <td>
-  The service this plan is associated with.
+| Property | Type | Description |
+|----------|------|-------------|
+| `name` | string | The name of the bucket. There is a single global namespace shared by all buckets so it MUST be unique. |
+| `location` | string | The location of the bucket. Object data for objects in the bucket resides in physical storage within this region. See: https://cloud.google.com/storage/docs/bucket-locations |
 
 
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>4bc59b9a-8520-409f-85da-1c7552315863</code></li>
-  <li>This option _is not_ user configurable. It must be set to the default.</li>
-  <li>Valid Values:
-  <ul>
-    <li><tt>4bc59b9a-8520-409f-85da-1c7552315863</tt> - Google CloudSQL MySQL</li>
-  </ul>
-  </li>
-</ul>
 
+#### Bind Defaults
 
-  </td>
-</tr>
+Setting a value for any of these in the <tt>bind_defaults</tt> map
+will override the default value the provision call uses for the property.
 
-<tr>
-  <td><tt>tier</tt></td>
-  <td><i>string</i></td>
-  <td>Tier</td>
-  <td>
-  Case-sensitive tier/machine type name (see https://cloud.google.com/sql/pricing for more information).
+| Property | Type | Description |
+|----------|------|-------------|
+| `role` | string | The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. |
 
 
-<ul>
-  <li><b>Required</b></li>
-</ul>
 
+#### Custom Plan Properties
 
-  </td>
-</tr>
+| Property | Type | Description |
+|----------|------|-------------|
+| `storage_class` \* | string | The storage class of the bucket. See: https://cloud.google.com/storage/docs/storage-classes. |
+\* = Required
 
-<tr>
-  <td><tt>pricing_plan</tt></td>
-  <td><i>dropdown_select</i></td>
-  <td>Pricing Plan</td>
-  <td>
-  Select a pricing plan (only for 1st generation instances).
 
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>PER_USE</code></li>
-  <li>Valid Values:
-  <ul>
-    <li><tt>PACKAGE</tt> - Package</li><li><tt>PER_USE</tt> - Per-Use</li>
-  </ul>
-  </li>
-</ul>
-
-
-  </td>
-</tr>
-
-<tr>
-  <td><tt>max_disk_size</tt></td>
-  <td><i>string</i></td>
-  <td>Max Disk Size</td>
-  <td>
-  Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default).
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>10</code></li>
-</ul>
-
-
-  </td>
-</tr>
-
-</table>
-
-### Google CloudSQL PostgreSQL Custom Plans
-
-Generate custom plans for Google CloudSQL PostgreSQL.
-To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>CLOUDSQL_POSTGRES_CUSTOM_PLANS</tt>.
-
-For example:
-<code>
-[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "display_name": setme, "description": setme, "service": setme, "tier": setme, "pricing_plan": setme, "max_disk_size": setme},...]
-</code>
-
-<table>
-<tr>
-  <th>JSON Property</th>
-  <th>Type</th>
-  <th>Label</th>
-  <th>Details</th>
-</tr>
-<tr>
-  <td><tt>id</tt></td>
-  <td><i>string</i></td>
-  <td>Plan UUID</td>
-  <td>
-    The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
-    <ul><li><b>Required</b></li></ul>
-  </td>
-</tr>
-<tr>
-  <td><tt>name</tt></td>
-  <td><i>string</i></td>
-  <td>Plan CLI Name</td>
-  <td>
-    The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
-    <ul><li><b>Required</b></li></ul>
-  </td>
-</tr>
-
-
-<tr>
-  <td><tt>display_name</tt></td>
-  <td><i>string</i></td>
-  <td>Display Name</td>
-  <td>
-  Name of the plan to be displayed to users.
-
-
-<ul>
-  <li><b>Required</b></li>
-</ul>
-
-
-  </td>
-</tr>
-
-<tr>
-  <td><tt>description</tt></td>
-  <td><i>string</i></td>
-  <td>Plan description</td>
-  <td>
-  The description of the plan shown to users.
-
-
-<ul>
-  <li><b>Required</b></li>
-</ul>
-
-
-  </td>
-</tr>
-
-<tr>
-  <td><tt>service</tt></td>
-  <td><i>dropdown_select</i></td>
-  <td>Service</td>
-  <td>
-  The service this plan is associated with.
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>cbad6d78-a73c-432d-b8ff-b219a17a803a</code></li>
-  <li>This option _is not_ user configurable. It must be set to the default.</li>
-  <li>Valid Values:
-  <ul>
-    <li><tt>cbad6d78-a73c-432d-b8ff-b219a17a803a</tt> - Google CloudSQL PostgreSQL</li>
-  </ul>
-  </li>
-</ul>
-
-
-  </td>
-</tr>
-
-<tr>
-  <td><tt>tier</tt></td>
-  <td><i>string</i></td>
-  <td>Tier</td>
-  <td>
-  A string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840.
-
-
-<ul>
-  <li><b>Required</b></li>
-</ul>
-
-
-  </td>
-</tr>
-
-<tr>
-  <td><tt>pricing_plan</tt></td>
-  <td><i>dropdown_select</i></td>
-  <td>Pricing Plan</td>
-  <td>
-  The pricing plan.
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>PER_USE</code></li>
-  <li>This option _is not_ user configurable. It must be set to the default.</li>
-  <li>Valid Values:
-  <ul>
-    <li><tt>PER_USE</tt> - Per-Use</li>
-  </ul>
-  </li>
-</ul>
-
-
-  </td>
-</tr>
-
-<tr>
-  <td><tt>max_disk_size</tt></td>
-  <td><i>string</i></td>
-  <td>Max Disk Size</td>
-  <td>
-  Maximum disk size in GB, 10 is the minimum.
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>10</code></li>
-</ul>
-
-
-  </td>
-</tr>
-
-</table>
-
-### Google Spanner Custom Plans
-
-Generate custom plans for Google Spanner.
-To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>SPANNER_CUSTOM_PLANS</tt>.
-
-For example:
-<code>
-[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "display_name": setme, "description": setme, "service": setme, "num_nodes": setme},...]
-</code>
-
-<table>
-<tr>
-  <th>JSON Property</th>
-  <th>Type</th>
-  <th>Label</th>
-  <th>Details</th>
-</tr>
-<tr>
-  <td><tt>id</tt></td>
-  <td><i>string</i></td>
-  <td>Plan UUID</td>
-  <td>
-    The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
-    <ul><li><b>Required</b></li></ul>
-  </td>
-</tr>
-<tr>
-  <td><tt>name</tt></td>
-  <td><i>string</i></td>
-  <td>Plan CLI Name</td>
-  <td>
-    The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
-    <ul><li><b>Required</b></li></ul>
-  </td>
-</tr>
-
-
-<tr>
-  <td><tt>display_name</tt></td>
-  <td><i>string</i></td>
-  <td>Display Name</td>
-  <td>
-  Name of the plan to be displayed to users.
-
-
-<ul>
-  <li><b>Required</b></li>
-</ul>
-
-
-  </td>
-</tr>
-
-<tr>
-  <td><tt>description</tt></td>
-  <td><i>string</i></td>
-  <td>Plan description</td>
-  <td>
-  The description of the plan shown to users.
-
-
-<ul>
-  <li><b>Required</b></li>
-</ul>
-
-
-  </td>
-</tr>
-
-<tr>
-  <td><tt>service</tt></td>
-  <td><i>dropdown_select</i></td>
-  <td>Service</td>
-  <td>
-  The service this plan is associated with.
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>51b3e27e-d323-49ce-8c5f-1211e6409e82</code></li>
-  <li>This option _is not_ user configurable. It must be set to the default.</li>
-  <li>Valid Values:
-  <ul>
-    <li><tt>51b3e27e-d323-49ce-8c5f-1211e6409e82</tt> - Google Spanner</li>
-  </ul>
-  </li>
-</ul>
-
-
-  </td>
-</tr>
-
-<tr>
-  <td><tt>num_nodes</tt></td>
-  <td><i>string</i></td>
-  <td>Num Nodes</td>
-  <td>
-  Number of nodes, a minimum of 3 nodes is recommended for production environments. See: https://cloud.google.com/spanner/pricing for more information.
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>1</code></li>
-</ul>
-
-
-  </td>
-</tr>
-
-</table>
-
-### Google Cloud Storage Custom Plans
-
-Generate custom plans for Google Cloud Storage.
-To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>STORAGE_CUSTOM_PLANS</tt>.
-
-For example:
-<code>
-[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "display_name": setme, "description": setme, "service": setme, "storage_class": setme},...]
-</code>
-
-<table>
-<tr>
-  <th>JSON Property</th>
-  <th>Type</th>
-  <th>Label</th>
-  <th>Details</th>
-</tr>
-<tr>
-  <td><tt>id</tt></td>
-  <td><i>string</i></td>
-  <td>Plan UUID</td>
-  <td>
-    The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
-    <ul><li><b>Required</b></li></ul>
-  </td>
-</tr>
-<tr>
-  <td><tt>name</tt></td>
-  <td><i>string</i></td>
-  <td>Plan CLI Name</td>
-  <td>
-    The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
-    <ul><li><b>Required</b></li></ul>
-  </td>
-</tr>
-
-
-<tr>
-  <td><tt>display_name</tt></td>
-  <td><i>string</i></td>
-  <td>Display Name</td>
-  <td>
-  Name of the plan to be displayed to users.
-
-
-<ul>
-  <li><b>Required</b></li>
-</ul>
-
-
-  </td>
-</tr>
-
-<tr>
-  <td><tt>description</tt></td>
-  <td><i>string</i></td>
-  <td>Plan description</td>
-  <td>
-  The description of the plan shown to users.
-
-
-<ul>
-  <li><b>Required</b></li>
-</ul>
-
-
-  </td>
-</tr>
-
-<tr>
-  <td><tt>service</tt></td>
-  <td><i>dropdown_select</i></td>
-  <td>Service</td>
-  <td>
-  The service this plan is associated with.
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>b9e4332e-b42b-4680-bda5-ea1506797474</code></li>
-  <li>This option _is not_ user configurable. It must be set to the default.</li>
-  <li>Valid Values:
-  <ul>
-    <li><tt>b9e4332e-b42b-4680-bda5-ea1506797474</tt> - Google Cloud Storage</li>
-  </ul>
-  </li>
-</ul>
-
-
-  </td>
-</tr>
-
-<tr>
-  <td><tt>storage_class</tt></td>
-  <td><i>string</i></td>
-  <td>Storage Class</td>
-  <td>
-  The storage class of the bucket. See: https://cloud.google.com/storage/docs/storage-classes.
-
-
-<ul>
-  <li><b>Required</b></li>
-</ul>
-
-
-  </td>
-</tr>
-
-</table>
-
-### Configure Brokerpaks
-
-Configure Brokerpaks
-To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>GSB_BROKERPAK_SOURCES</tt>.
-
-For example:
-<code>
-[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "uri": setme, "service_prefix": setme, "excluded_services": setme, "config": setme, "notes": setme},...]
-</code>
-
-<table>
-<tr>
-  <th>JSON Property</th>
-  <th>Type</th>
-  <th>Label</th>
-  <th>Details</th>
-</tr>
-<tr>
-  <td><tt>id</tt></td>
-  <td><i>string</i></td>
-  <td>Plan UUID</td>
-  <td>
-    The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
-    <ul><li><b>Required</b></li></ul>
-  </td>
-</tr>
-<tr>
-  <td><tt>name</tt></td>
-  <td><i>string</i></td>
-  <td>Plan CLI Name</td>
-  <td>
-    The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
-    <ul><li><b>Required</b></li></ul>
-  </td>
-</tr>
-
-
-<tr>
-  <td><tt>uri</tt></td>
-  <td><i>string</i></td>
-  <td>Brokerpak URI</td>
-  <td>
-  The URI to load. Supported protocols are http, https, gs, and git.
-				Cloud Storage (gs) URIs follow the gs://<bucket>/<path> convention and will be read using the service broker service account.
-
-				You can validate the checksum of any file on download by appending a checksum query parameter to the URI in the format type:value.
-				Valid checksum types are md5, sha1, sha256 and sha512. e.g. gs://foo/bar.brokerpak?checksum=md5:3063a2c62e82ef8614eee6745a7b6b59
-
-
-<ul>
-  <li><b>Required</b></li>
-</ul>
-
-
-  </td>
-</tr>
-
-<tr>
-  <td><tt>service_prefix</tt></td>
-  <td><i>string</i></td>
-  <td>Service Prefix</td>
-  <td>
-  A prefix to prepend to every service name. This will be exact, so you may want to include a trailing dash.
-
-
-<ul>
-  <li><i>Optional</i></li>
-</ul>
-
-
-  </td>
-</tr>
-
-<tr>
-  <td><tt>excluded_services</tt></td>
-  <td><i>text</i></td>
-  <td>Excluded Services</td>
-  <td>
-  A list of UUIDs of services to exclude, one per line.
-
-
-<ul>
-  <li><i>Optional</i></li>
-</ul>
-
-
-  </td>
-</tr>
-
-<tr>
-  <td><tt>config</tt></td>
-  <td><i>text</i></td>
-  <td>Brokerpak Configuration</td>
-  <td>
-  A JSON map of configuration key/value pairs for the brokerpak. If a variable isn't found here, it's looked up in the global config.
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>{}</code></li>
-</ul>
-
-
-  </td>
-</tr>
-
-<tr>
-  <td><tt>notes</tt></td>
-  <td><i>text</i></td>
-  <td>Notes</td>
-  <td>
-  A place for your notes, not used by the broker.
-
-
-<ul>
-  <li><i>Optional</i></li>
-</ul>
-
-
-  </td>
-</tr>
-
-</table>
 
 
 

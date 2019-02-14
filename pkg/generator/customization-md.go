@@ -16,9 +16,13 @@ package generator
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"log"
 	"strings"
 	"text/template"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
 const (
@@ -31,17 +35,119 @@ If you are running your own, then you can set them in the application manifest o
 
 {{ range $i, $f := .Forms }}{{ template "normalform" $f }}{{ end }}
 
-## Custom Plans
+## Install Brokerpaks
 
-You can specify custom plans for the following services.
-The plans MUST be an array of flat JSON objects stored in their associated environment variable e.g. <code>[{...}, {...},...]</code>.
-Each plan MUST have a unique UUID, if you modify the plan the UUID should stay the same to ensure previously provisioned services continue to work.
-If you are using the PCF tile, it will generate the UUIDs for you.
-DO NOT delete plans, instead you should change their labels to mark them as deprecated.
+You can install one or more brokerpaks using the <tt>GSB_BROKERPAK_SOURCES</tt>
+environment variable.
 
-{{ range $i, $f := .ServicePlanForms -}}
-	{{ template "customplanform" $f }}
-{{- end }}
+The value should be a JSON array containing zero or more brokerpak configuration
+objects with the following properties:
+
+{{ with .BrokerpakForm  }}
+| Property | Type | Description |
+|----------|------|-------------|
+{{ range .Properties -}}
+| <tt>{{.Name}}</tt>{{ if not .Optional }} <b>*</b>{{end}} | {{ .Type }} | <p>{{ .Label }}. {{ .Description }}{{if .Default }} Default: <code>{{ js .Default }}</code>{{- end }}</p>|
+{{ end }}
+
+\* = Required
+{{ end }}
+
+### Example
+
+Here is an example that loads three brokerpaks.
+
+	[
+		{
+			"notes":"GA services for all users.",
+			"uri":"https://link/to/artifact.brokerpak?checksum=md5:3063a2c62e82ef8614eee6745a7b6b59",
+			"excluded_services":"00000000-0000-0000-0000-000000000000",
+			"config":{}
+		},
+		{
+			"notes":"Beta services for all users.",
+			"uri":"gs://link/to/beta.brokerpak",
+			"service_prefix":"beta-",
+			"config":{}
+		},
+		{
+			"notes":"Services for the marketing department. They use their own GCP Project.",
+			"uri":"https://link/to/marketing.brokerpak",
+			"service_prefix":"marketing-",
+			"config":{"PROJECT_ID":"my-marketing-project"}
+		},
+	]
+
+## Customizing Services
+
+You can customize specific services by changing their defaults, disabling them, or creating custom plans.
+
+The <tt>GSB_SERVICE_CONFIG</tt> environment variable holds all the customizations as a JSON map.
+The keys of the map are the service's GUID, and the value is a configuration object.
+
+Example:
+
+	{
+		"51b3e27e-d323-49ce-8c5f-1211e6409e82":{ /* Spanner Configuration Object */ },
+		"628629e3-79f5-4255-b981-d14c6c7856be":{ /* Pub/Sub Configuration Object */ },
+		...
+	}
+
+**Configuration Object**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| <tt>//</tt> | string | Space for your notes. |
+| <tt>disabled</tt> | boolean | If set to true, this service will be hidden from the catalog. |
+| <tt>provision_defaults</tt> | string:any map | A map of provision property/default pairs that are used to populate missing values in provision requests. |
+| <tt>bind_defaults</tt> | string:any map | A map of bind property/default pairs that are used to populate missing values in bind requests. |
+| <tt>custom_plans</tt> | array of custom plan objects | You can add custom service plans here. See below for the object structure. |
+
+**Custom Plan Object**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| <tt>guid</tt> \* | string | A GUID for this plan, must be unique. Changing this value after services are using it WILL BREAK your instances. |
+| <tt>name</tt> \* | string | A CLI friendly name for this plan. This can be changed without affecting existing instances, but may break scripts you build referencing it. |
+| <tt>display_name</tt> \* | string | A human readable name for this plan, this can be changed. |
+| <tt>description</tt> \* | string | A human readable description for this plan, this can be changed. |
+| <tt>properties</tt> \* | string:string map | Properties used to configure the plan. Each service has its own set of properties used to customize it. |
+
+\* = Required
+
+{{ range .Services }}
+
+### {{ .DisplayName }}<a id="{{.Name}}"></a>
+
+{{ .Description }}
+
+Configuration needs to be done under the GUID: <tt>{{.Id}}</tt>.
+
+#### Example
+
+{{ exampleServiceConfig . }}
+
+_Note: the example includes the configuration and the GUID it should be nested under._
+
+#### Provision Defaults
+
+Setting a value for any of these in the <tt>provision_defaults</tt> map
+will override the default value the provision call uses for the property.
+
+{{ documentBrokerVariables .ProvisionInputVariables true }}
+
+#### Bind Defaults
+
+Setting a value for any of these in the <tt>bind_defaults</tt> map
+will override the default value the provision call uses for the property.
+
+{{ documentBrokerVariables .BindInputVariables true }}
+
+#### Custom Plan Properties
+
+{{ documentBrokerVariables .PlanVariables false }}
+
+{{ end }}
 
 ---------------------------------------
 
@@ -55,95 +161,13 @@ _Note: **Do not edit this file**, it was auto-generated by running <code>gcp-ser
 
 You can configure the following environment variables:
 
-{{ range $i, $p := .Properties }}{{ template "environment-variable-doc" $p }}{{ end }}
+| Environment Variable | Type | Description |
+|----------------------|------|-------------|
+{{ range .Properties -}}
+| <tt>{{upper .Name}}</tt>{{ if not .Optional }} <b>*</b>{{end}} | {{ .Type }} | <p>{{ .Label }}. {{ .Description }}{{if .Default }} Default: <code>{{ js .Default }}</code>{{- end }}</p>|
 {{ end }}
 
-{{/*=======================================================================*/}}
-{{ define "customplanform" -}}
-### {{ .Label }}
-
-{{ .Description }}
-To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>{{ upper .Name }}</tt>.
-
-For example:
-<code>
-[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1"{{ range .Properties }}, "{{.Name}}": setme{{ end }}},...]
-</code>
-
-<table>
-<tr>
-  <th>JSON Property</th>
-  <th>Type</th>
-  <th>Label</th>
-  <th>Details</th>
-</tr>
-<tr>
-  <td><tt>id</tt></td>
-  <td><i>string</i></td>
-  <td>Plan UUID</td>
-  <td>
-    The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
-    <ul><li><b>Required</b></li></ul>
-  </td>
-</tr>
-<tr>
-  <td><tt>name</tt></td>
-  <td><i>string</i></td>
-  <td>Plan CLI Name</td>
-  <td>
-    The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
-    <ul><li><b>Required</b></li></ul>
-  </td>
-</tr>
-
-{{ range .Properties }}
-<tr>
-  <td><tt>{{ .Name }}</tt></td>
-  <td><i>{{ .Type }}</i></td>
-  <td>{{ .Label }}</td>
-  <td>
-  {{ .Description }}
-  {{ template "variable-details-list" . }}
-  </td>
-</tr>
-{{ end }}
-</table>
-
-{{ end }}
-
-{{/*=======================================================================*/}}
-{{ define "environment-variable-doc" -}}
-
-<b><tt>{{ upper .Name }}</tt></b> - <i>{{ .Type }}</i> - {{ .Label }}
-
-{{ .Description }}
-
-{{ template "variable-details-list" . }}
-
-{{- end }}
-
-{{/*=======================================================================*/}}
-{{ define "variable-details-list"}}
-
-<ul>
-  <li>{{ if .Optional }}<i>Optional</i>{{ else }}<b>Required</b>{{ end }}</li>
-
-{{- if .Default }}
-  <li>Default: <code>{{ js .Default }}</code></li>
-{{- end }}
-
-{{- if not .Configurable }}
-  <li>This option _is not_ user configurable. It must be set to the default.</li>
-{{- end }}
-
-{{- if .Options }}
-  <li>Valid Values:
-  <ul>
-    {{ range .Options }}<li><tt>{{ .Name }}</tt> - {{ .Label }}</li>{{ end }}
-  </ul>
-  </li>
-{{- end }}
-</ul>
+\* = Required
 
 {{ end }}
 `
@@ -151,16 +175,24 @@ For example:
 
 var (
 	customizationTemplateFuncs = template.FuncMap{
-		"upper": strings.ToUpper,
+		"upper":                   strings.ToUpper,
+		"exampleServiceConfig":    exampleServiceConfig,
+		"documentBrokerVariables": documentBrokerVariables,
 	}
 	formDocumentationTemplate = template.Must(template.New("name").Funcs(customizationTemplateFuncs).Parse(formDocumentation))
 )
 
-func GenerateCustomizationMd() string {
+func GenerateCustomizationMd(registry *broker.ServiceRegistry) string {
 	tileForms := GenerateForms()
 
+	env := map[string]interface{}{
+		"Forms":         tileForms.Forms,
+		"BrokerpakForm": brokerpakConfigurationForm(),
+		"Services":      registry.GetAllServices(),
+	}
+
 	var buf bytes.Buffer
-	if err := formDocumentationTemplate.Execute(&buf, tileForms); err != nil {
+	if err := formDocumentationTemplate.Execute(&buf, env); err != nil {
 		log.Fatalf("Error rendering template: %s", err)
 	}
 
@@ -177,4 +209,83 @@ func cleanMdOutput(text string) string {
 	}
 
 	return strings.Join(lines, "\n")
+}
+
+func exampleServiceConfig(defn *broker.ServiceDefinition) string {
+	out := map[string]interface{}{
+		defn.Id: broker.ServiceConfig{
+			BindDefaults:      createExampleDefaults(defn.BindInputVariables, "bind"),
+			ProvisionDefaults: createExampleDefaults(defn.ProvisionInputVariables, "provision"),
+			CustomPlans:       createExampleCustomPlan(defn),
+		},
+	}
+
+	bytes, err := json.MarshalIndent(out, "", "  ")
+	if err != nil {
+		return err.Error()
+	}
+
+	return "```json\n" + string(bytes) + "```\n"
+}
+
+func createExampleDefaults(vars []broker.BrokerVariable, action string) map[string]interface{} {
+	example := make(map[string]interface{})
+
+	if len(vars) == 0 {
+		example["//"] = fmt.Sprintf("The %s action takes no params so it can't be overridden.", action)
+	} else {
+		example["//"] = fmt.Sprintf("See the '%s defaults' section below for defaults you can change.", action)
+	}
+
+	return example
+}
+
+func documentBrokerVariables(vars []broker.BrokerVariable, tableOnly bool) string {
+	if len(vars) == 0 {
+		return "_There are no configurable properties for this object._"
+	}
+
+	buf := &bytes.Buffer{}
+
+	fmt.Fprintln(buf, "| Property | Type | Description |")
+	fmt.Fprintln(buf, "|----------|------|-------------|")
+
+	for _, v := range vars {
+		required := ""
+		if !tableOnly && v.Required {
+			required = " \\*"
+		}
+
+		fmt.Fprintf(buf, "| `%s`%s | %s | %s |", v.FieldName, required, v.Type, singleLine(v.Details))
+		fmt.Fprintln(buf)
+	}
+
+	if !tableOnly {
+		fmt.Fprintln(buf, `\* = Required`)
+	}
+
+	fmt.Fprintln(buf)
+
+	return buf.String()
+}
+
+func createExampleCustomPlan(service *broker.ServiceDefinition) []broker.CustomPlan {
+	planVars := service.PlanVariables
+
+	// if this service isn't configurable, don't show an example plan.
+	if len(planVars) == 0 {
+		return []broker.CustomPlan{}
+	}
+
+	return []broker.CustomPlan{
+		{
+			GUID:        "00000000-0000-0000-0000-000000000000",
+			Name:        "a-cli-friendly-name",
+			DisplayName: "A human-readable name",
+			Description: "What makes this plan different?",
+			Properties: map[string]string{
+				"//": "See the custom plan properties section below for configurable properties.",
+			},
+		},
+	}
 }
