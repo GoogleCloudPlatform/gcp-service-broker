@@ -86,12 +86,25 @@ func TestRegistry_GetEnabledServices(t *testing.T) {
 				t.Fatalf("Expected 1 definition with %s enabled, but got %d", tc.Property, len(defns))
 			}
 
-			// should not show up if the service is explicitly disabled
-			viper.Set("compatibility.enable-builtin-services", false)
-			defns = registry.GetEnabledServices()
-			if len(defns) != 0 {
-				t.Fatalf("Expected no definition with builtins disabled, but got %d", len(defns))
-			}
+			// should not show up if builtin services are explicitly disabled
+			t.Run("disable-builtins", func(t *testing.T) {
+				viper.Set("compatibility.enable-builtin-services", false)
+				defer viper.Set("compatibility.enable-builtin-services", true)
+				defns = registry.GetEnabledServices()
+				if len(defns) != 0 {
+					t.Fatalf("Expected no definition with builtins disabled, but got %d", len(defns))
+				}
+			})
+
+			// should not show up if builtin services are explicitly disabled
+			t.Run("config-disabled", func(t *testing.T) {
+				sd.config.Disabled = true
+				defer func() { sd.config.Disabled = false }()
+				defns = registry.GetEnabledServices()
+				if len(defns) != 0 {
+					t.Fatalf("Expected no definition with builtins disabled, but got %d", len(defns))
+				}
+			})
 		})
 	}
 }

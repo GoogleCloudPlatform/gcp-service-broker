@@ -30,6 +30,9 @@ type ServiceConfigMap map[string]ServiceConfig
 
 // ServiceConfig holds user-defined configuration for a specific service.
 type ServiceConfig struct {
+	// Notes contains user-defined notes about this config.
+	Notes             string                 `json:"//,omitempty"`
+	Disabled          bool                   `json:"disabled"`
 	ProvisionDefaults map[string]interface{} `json:"provision_defaults"`
 	BindDefaults      map[string]interface{} `json:"bind_defaults"`
 	CustomPlans       []CustomPlan           `json:"custom_plans"`

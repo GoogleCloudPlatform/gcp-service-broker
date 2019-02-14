@@ -109,7 +109,10 @@ The original environment variables will not be changed.
 		`,
 		Args: cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			diff := migration.MigrateEnv()
+			diff, err := migration.MigrateEnv()
+			if err != nil {
+				log.Fatalf("Error migrating environment: %s", err)
+			}
 
 			response, err := yaml.Marshal(diff)
 			if err != nil {
