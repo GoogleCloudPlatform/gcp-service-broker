@@ -56,7 +56,7 @@ Example:
 | Property | Type | Description |
 |----------|------|-------------|
 | <tt>guid</tt> \* | string | A GUID for this plan, must be unique. Changing this value after services are using it WILL BREAK your instances. |
-| <tt>name</tt> \* | string | A CLI friendly name for this plan. This can be changed without affecting existing instances, but may break scripts you build referencing it. |
+| <tt>name</tt> \* | string | A CLI friendly name for this plan. This can be changed without affecting existing instances, but may break scripts you've previously built referencing it. |
 | <tt>display_name</tt> \* | string | A human readable name for this plan, this can be changed. |
 | <tt>description</tt> \* | string | A human readable description for this plan, this can be changed. |
 | <tt>properties</tt> \* | string:string map | Properties used to configure the plan. Each service has its own set of properties used to customize it. |
