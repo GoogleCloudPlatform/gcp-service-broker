@@ -49,17 +49,13 @@ func Init(directory string) error {
 // manifest.yml file. If the pack was successful, the returned string will be
 // the path to the created brokerpak.
 func Pack(directory string) (string, error) {
-	abs, err := filepath.Abs(directory)
-	if err != nil {
-		return "", err
-	}
 	manifestPath := filepath.Join(directory, manifestName)
 	manifest := &Manifest{}
 	if err := stream.Copy(stream.FromFile(manifestPath), stream.ToYaml(manifest)); err != nil {
 		return "", err
 	}
 
-	packname := filepath.Base(abs) + ".brokerpak"
+	packname := fmt.Sprintf("%s-%s.brokerpak", manifest.Name, manifest.Version)
 	return packname, manifest.Pack(directory, packname)
 }
 
