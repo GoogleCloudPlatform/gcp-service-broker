@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
  - The format of the `/docs` endpoint is now nicely styled with Bootstrap 4.
  - Cleaned up the customization documentation.
  - Merged the environment variables `GSB_SERVICE_*_ENABLED`, `GSB_SERVICE_*_WHITELIST`, `GSB_SERVICE_*_PROVISION_DEFAULTS`, `GSB_SERVICE_*_BIND_DEFAULTS` and `*_CUSTOM_PLANS` into `GSB_SERVICE_CONFIG`.
+ - Built Brokerpaks now have a name of `{name}-{version}.brokerpak` as defined by the manifest rather than the name of the parent directory.
+ - Services inside Brokerpaks now have a file name that includes their CLI friendly name to help differentiate them.
+ - The `pak build` command now includes progress logs.
 
 ## [4.2.2] - 2019-02-06
 
