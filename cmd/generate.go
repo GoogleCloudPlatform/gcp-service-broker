@@ -60,6 +60,16 @@ func init() {
 	})
 
 	generateCmd.AddCommand(&cobra.Command{
+		Use:   "service-config",
+		Short: "Generate service configuration documentation",
+		Run: func(cmd *cobra.Command, args []string) {
+			// by default, only generate for builtin services.
+			registry := builtin.BuiltinBrokerRegistry(broker.ServiceConfigMap{})
+			fmt.Println(generator.GenerateServiceConfigMd(registry))
+		},
+	})
+
+	generateCmd.AddCommand(&cobra.Command{
 		Use:   "tile",
 		Short: "Generate tile.yml file",
 		Run: func(cmd *cobra.Command, args []string) {

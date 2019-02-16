@@ -15,6 +15,8 @@
 package server
 
 import (
+	"bytes"
+	"html/template"
 	"net/http"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
@@ -22,23 +24,77 @@ import (
 	blackfriday "gopkg.in/russross/blackfriday.v2"
 )
 
+var pageTemplate = template.Must(template.New("docs-page").Parse(`
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<title>{{.Title}}</title>
+		<meta charset="utf-8" />
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" crossorigin="anonymous" />
+	</head>
+	<body>
+		<nav class="navbar navbar-expand navbar-dark sticky-top" style="background-color:#4285F4;">
+			<a class="navbar-brand" href="#">
+				<img src="https://cloud.google.com/_static/images/cloud/products/logos/svg/gcp-button-icon.svg" width="30" height="30" class="d-inline-block align-top" alt="">
+				GCP Service Broker
+			</a>
+			<div>
+				<ul class="navbar-nav">
+					<li class="nav-item">
+						<a class="nav-link active" href="/docs">Docs</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link active" href="/service-config">Service Configuration</a>
+					</li>
+				</ul>
+			</div>
+		</nav>
+		<div class="container" id="maincontent">
+			<br />
+			{{ .Contents }}
+		</div>
+		<!-- Fixups for rendering markdown docs in the browser -->
+		<script type="text/javascript">
+			// add classes to the tables to style them nicely
+			document.querySelectorAll("#maincontent > table").forEach( (node) => {node.classList = "table table-striped"});
+		</script>
+	</body>
+</html>
+`))
+
 // NewDocsHandler returns a handler func that generates HTML documentation for
 // the given registry.
-func NewDocsHandler(registry *broker.ServiceRegistry) http.HandlerFunc {
+func NewDocsHandler(registry *broker.ServiceRegistry) (http.HandlerFunc, error) {
 	docsPageMd := generator.CatalogDocumentation(registry)
 
-	params := blackfriday.HTMLRendererParameters{
-		Title: "Service Broker Documents",
-		CSS:   "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css",
-		Flags: blackfriday.CompletePage,
+	return renderAsPage("Service Broker Documents", docsPageMd)
+}
+
+// NewServiceConfigHandler returns a handler func that generates HTML
+// documentation for service configurations on the given registry.
+func NewServiceConfigHandler(registry *broker.ServiceRegistry) (http.HandlerFunc, error) {
+	docsPageMd, err := generator.GenerateServiceConfigMd(registry)
+	if err != nil {
+		return nil, err
 	}
 
-	renderer := blackfriday.NewHTMLRenderer(params)
+	return renderAsPage("Service Broker Configuration", docsPageMd)
+}
 
-	page := blackfriday.Run([]byte(docsPageMd), blackfriday.WithRenderer(renderer))
+func renderAsPage(title, markdownContents string) (http.HandlerFunc, error) {
+	renderer := blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{Flags: blackfriday.HTMLFlagsNone})
+	contents := blackfriday.Run([]byte(markdownContents), blackfriday.WithExtensions(blackfriday.CommonExtensions), blackfriday.WithRenderer(renderer))
+
+	buf := &bytes.Buffer{}
+	err := pageTemplate.Execute(buf, map[string]interface{}{
+		"Title":    title,
+		"Contents": template.HTML(contents),
+	})
+
 	return func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(200)
-		w.Write(page)
-	}
+		w.Write(buf.Bytes())
+	}, err
 }

@@ -152,7 +152,7 @@ dependencies, services it provides, and the contents.
 	pakCmd.AddCommand(&cobra.Command{
 		Use:     "docs [pack.brokerpak]",
 		Aliases: []string{"use"},
-		Short:   "generate the markdown usage docs for the given pack",
+		Short:   "generate the markdown usage and configuration docs for the given pack",
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			brokerpak.Docs(args[0])

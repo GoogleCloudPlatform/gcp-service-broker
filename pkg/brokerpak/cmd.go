@@ -193,6 +193,13 @@ func Docs(pack string) error {
 	}
 
 	fmt.Println(generator.CatalogDocumentation(registry))
+	fmt.Println()
+
+	configDocs, err := generator.GenerateServiceConfigMd(registry)
+	if err != nil {
+		return err
+	}
+	fmt.Println(configDocs)
 	return nil
 }
 

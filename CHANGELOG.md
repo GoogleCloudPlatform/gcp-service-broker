@@ -5,9 +5,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Added
+ - Documentation for the `GSB_SERVICE_CONFIG` environment variable.
+ - A new sub-command for generating service configuration documentation.
+ - Documentation about installing Brokerpaks.
+ - A new web-endpoint `/service-config` that hosts service configuration info.
+
 ### Changed
- - Removed the `GSB_SERVICE_*_ENABLED` environment variables.
- - Merged the environment variables `GSB_SERVICE_*_WHITELIST`, `GSB_SERVICE_*_PROVISION_DEFAULTS`, `GSB_SERVICE_*_BIND_DEFAULTS` and `*_CUSTOM_PLANS` into `GSB_SERVICE_CONFIG`.
+ - The format of the `/docs` endpoint is now nicely styled with Bootstrap 4.
+ - Cleaned up the customization documentation.
+ - Merged the environment variables `GSB_SERVICE_*_ENABLED`, `GSB_SERVICE_*_WHITELIST`, `GSB_SERVICE_*_PROVISION_DEFAULTS`, `GSB_SERVICE_*_BIND_DEFAULTS` and `*_CUSTOM_PLANS` into `GSB_SERVICE_CONFIG`.
 
 ## [4.2.2] - 2019-02-06
 

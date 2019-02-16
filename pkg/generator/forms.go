@@ -93,12 +93,12 @@ func generateDatabaseForm() Form {
 	return Form{
 		Name:        "database_properties",
 		Label:       "Database Properties",
-		Description: "Connection details for the backing database for the service broker.",
+		Description: "Connection details for the service broker's database. It must be MySQL compatible.",
 		Properties: []FormProperty{
 			{Name: "db_host", Type: "string", Label: "Database host", Configurable: true},
 			{Name: "db_username", Type: "string", Label: "Database username", Optional: true, Configurable: true},
 			{Name: "db_password", Type: "secret", Label: "Database password", Optional: true, Configurable: true},
-			{Name: "db_port", Type: "string", Label: "Database port (defaults to 3306)", Default: "3306", Configurable: true},
+			{Name: "db_port", Type: "string", Label: "Database port", Default: "3306", Configurable: true},
 			{Name: "db_name", Type: "string", Label: "Database name", Default: "servicebroker", Configurable: true},
 			{Name: "ca_cert", Type: "text", Label: "Server CA cert", Optional: true, Configurable: true},
 			{Name: "client_cert", Type: "text", Label: "Client cert", Optional: true, Configurable: true},
@@ -146,10 +146,9 @@ func generateFeatureFlagForm() Form {
 
 func generateBrokerpakForm() Form {
 	return Form{
-		Name:  "brokerpaks",
-		Label: "Brokerpaks",
-		Description: `Brokerpaks are ways to extend the broker with custom services defined by Terraform templates.
-A brokerpak is an archive comprised of a versioned Terraform binary and providers for one or more platform, a manifest, one or more service definitions, and source code.`,
+		Name:        "brokerpaks",
+		Label:       "Service Configuration",
+		Description: `Configuration for built-in and Brokerpak services.`,
 		Properties: []FormProperty{
 			{
 				Name:         "gsb_brokerpak_config",
@@ -160,26 +159,37 @@ A brokerpak is an archive comprised of a versioned Terraform binary and provider
 				Optional:     false,
 				Configurable: true,
 			},
+			{
+				Name:         "gsb_service_config",
+				Type:         "text",
+				Label:        "Service Configuration Options",
+				Description:  "See the configuration.md file or /configuration endpoint on the service for how to configure services using this field.",
+				Default:      "{}",
+				Optional:     false,
+				Configurable: true,
+			},
 		},
 	}
 }
 
 func brokerpakConfigurationForm() Form {
 	return Form{
-		Name:        "gsb_brokerpak_sources",
-		Description: "Configure Brokerpaks",
-		Label:       "Configure Brokerpaks",
-		Optional:    true,
+		Name: "gsb_brokerpak_sources",
+		Description: singleLine(`
+			Brokerpaks are ways to extend the broker with custom services defined by Terraform templates.
+			A brokerpak is an archive comprised of a versioned Terraform binary and providers for one or more platform, a manifest, one or more service definitions, and source code.`),
+		Label:    "Install Brokerpaks",
+		Optional: true,
 		Properties: []FormProperty{
 			{
 				Name:  "uri",
 				Label: "Brokerpak URI",
 				Type:  "string",
-				Description: `The URI to load. Supported protocols are http, https, gs, and git.
-				Cloud Storage (gs) URIs follow the gs://<bucket>/<path> convention and will be read using the service broker service account.
-
-				You can validate the checksum of any file on download by appending a checksum query parameter to the URI in the format type:value.
-				Valid checksum types are md5, sha1, sha256 and sha512. e.g. gs://foo/bar.brokerpak?checksum=md5:3063a2c62e82ef8614eee6745a7b6b59`,
+				Description: singleLine(`
+					The URI to load. Supported protocols are http, https, gs, and git.
+					Cloud Storage (gs) URIs follow the gs://<bucket>/<path> convention and will be read using the service broker service account.
+					You can validate the checksum of any file on download by appending a checksum query parameter to the URI in the format type:value.
+					Valid checksum types are MD5, SHA1, SHA256 and SHA512. e.g. gs://foo/bar.brokerpak?checksum=md5:3063a2c62e82ef8614eee6745a7b6b59`),
 				Optional:     false,
 				Configurable: true,
 			},

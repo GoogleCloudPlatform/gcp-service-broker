@@ -28,11 +28,313 @@ stemcell_criteria:
 apply_open_security_group: true
 
 migration: |
-  properties['properties']['.properties.org']['value'] = 'system';
-  if ('.properties.cloudsql_custom_plans' in properties['properties']){
-      properties['properties']['.properties.cloudsql_mysql_custom_plans'] =
-      {'value': properties['properties']['.properties.cloudsql_custom_plans']['value']};
+  {
+  // migration: 0, Delete whitelist keys from 4.x
+  {
+  
+  // env2prop converts an environment variable to property name
+  function env2prop(envVar) {return '.properties.' + envVar.toLowerCase();}
+  
+  // lookupProp lookus up an environment variable as a prop and returns the value.
+  function lookupProp(envVar) {
+  	var prop = env2prop(envVar);
+  	return (prop in properties.properties) ? properties.properties[prop].value : null;
   }
+  
+  // deleteProp removes a property from the properties list.
+  function deleteProp(envVar) { delete properties.properties[env2prop(envVar)];}
+  
+  // setProp sets a property on the properties list.
+  function setProp(envVar, value) {
+  	var prop = env2prop(envVar);
+  
+  	if (!(prop in properties.properties)) {
+  		properties.properties[prop] = {'value': value, 'type': 'text'};
+  	} else {
+  		properties['properties'][prop].value = value;
+  	}
+  }
+  
+  
+  
+  deleteProp("GSB_SERVICE_GOOGLE_BIGQUERY_WHITELIST");
+  deleteProp("GSB_SERVICE_GOOGLE_BIGTABLE_WHITELIST");
+  deleteProp("GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_WHITELIST");
+  deleteProp("GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_WHITELIST");
+  deleteProp("GSB_SERVICE_GOOGLE_ML_APIS_WHITELIST");
+  deleteProp("GSB_SERVICE_GOOGLE_PUBSUB_WHITELIST");
+  deleteProp("GSB_SERVICE_GOOGLE_SPANNER_WHITELIST");
+  deleteProp("GSB_SERVICE_GOOGLE_STORAGE_WHITELIST");
+  }
+  
+  }
+  {
+  // migration: 1, Collapse custom plans
+  {
+  
+  // env2prop converts an environment variable to property name
+  function env2prop(envVar) {return '.properties.' + envVar.toLowerCase();}
+  
+  // lookupProp lookus up an environment variable as a prop and returns the value.
+  function lookupProp(envVar) {
+  	var prop = env2prop(envVar);
+  	return (prop in properties.properties) ? properties.properties[prop].value : null;
+  }
+  
+  // deleteProp removes a property from the properties list.
+  function deleteProp(envVar) { delete properties.properties[env2prop(envVar)];}
+  
+  // setProp sets a property on the properties list.
+  function setProp(envVar, value) {
+  	var prop = env2prop(envVar);
+  
+  	if (!(prop in properties.properties)) {
+  		properties.properties[prop] = {'value': value, 'type': 'text'};
+  	} else {
+  		properties['properties'][prop].value = value;
+  	}
+  }
+  
+  
+      function replaceCustomPlans(envVar) {
+        var planList = lookupProp(envVar);
+  
+        // do nothing if the planList doesn't exist or if it's already a string
+        if (planList == null || typeof (planList) === 'string') {
+          return;
+        }
+  
+        var out = [];
+        for (var i in planList) {
+          var plan = planList[i];
+          var converted = {};
+          for (var k in plan) {
+            converted[k] = plan[k].value;
+          }
+  
+          out.push(converted);
+        }
+  
+        setProp(envVar, JSON.stringify(out, null, "  "));
+      }
+  
+  
+  
+  replaceCustomPlans("BIGQUERY_CUSTOM_PLANS");
+  replaceCustomPlans("BIGTABLE_CUSTOM_PLANS");
+  replaceCustomPlans("CLOUDSQL_MYSQL_CUSTOM_PLANS");
+  replaceCustomPlans("CLOUDSQL_POSTGRES_CUSTOM_PLANS");
+  replaceCustomPlans("DATAFLOW_CUSTOM_PLANS");
+  replaceCustomPlans("DATASTORE_CUSTOM_PLANS");
+  replaceCustomPlans("DIALOGFLOW_CUSTOM_PLANS");
+  replaceCustomPlans("FIRESTORE_CUSTOM_PLANS");
+  replaceCustomPlans("ML_APIS_CUSTOM_PLANS");
+  replaceCustomPlans("PUBSUB_CUSTOM_PLANS");
+  replaceCustomPlans("SPANNER_CUSTOM_PLANS");
+  replaceCustomPlans("STACKDRIVER_DEBUGGER_CUSTOM_PLANS");
+  replaceCustomPlans("STACKDRIVER_MONITORING_CUSTOM_PLANS");
+  replaceCustomPlans("STACKDRIVER_PROFILER_CUSTOM_PLANS");
+  replaceCustomPlans("STACKDRIVER_TRACE_CUSTOM_PLANS");
+  replaceCustomPlans("STORAGE_CUSTOM_PLANS");
+  }
+  
+  }
+  {
+  // migration: 2, Format custom plans
+  {
+  
+  // env2prop converts an environment variable to property name
+  function env2prop(envVar) {return '.properties.' + envVar.toLowerCase();}
+  
+  // lookupProp lookus up an environment variable as a prop and returns the value.
+  function lookupProp(envVar) {
+  	var prop = env2prop(envVar);
+  	return (prop in properties.properties) ? properties.properties[prop].value : null;
+  }
+  
+  // deleteProp removes a property from the properties list.
+  function deleteProp(envVar) { delete properties.properties[env2prop(envVar)];}
+  
+  // setProp sets a property on the properties list.
+  function setProp(envVar, value) {
+  	var prop = env2prop(envVar);
+  
+  	if (!(prop in properties.properties)) {
+  		properties.properties[prop] = {'value': value, 'type': 'text'};
+  	} else {
+  		properties['properties'][prop].value = value;
+  	}
+  }
+  
+  
+      function formatPlans(envVar) {
+        var plansListJson = lookupProp(envVar);
+        if (plansListJson == null) {
+          return;
+        }
+  
+        var planList = JSON.parse(plansListJson);
+  
+        var out = [];
+        for (var i in planList) {
+          var plan = planList[i];
+          var converted = {};
+          var properties = {};
+          for (var k in plan) {
+            var value = plan[k];
+            if (k === 'service') { continue; }  // skip service key, it's no longer needed
+  
+            if (['guid', 'description', 'name', 'display_name'].indexOf(k) >= 0) {
+              converted[k] = value;
+            } else {
+              properties[k] = value;
+            }
+          }
+          converted.properties = properties;
+          out.push(converted);
+        }
+  
+        setProp(envVar, JSON.stringify(out));
+      }
+  
+  
+  formatPlans("BIGQUERY_CUSTOM_PLANS");
+  formatPlans("BIGTABLE_CUSTOM_PLANS");
+  formatPlans("CLOUDSQL_MYSQL_CUSTOM_PLANS");
+  formatPlans("CLOUDSQL_POSTGRES_CUSTOM_PLANS");
+  formatPlans("DATAFLOW_CUSTOM_PLANS");
+  formatPlans("DATASTORE_CUSTOM_PLANS");
+  formatPlans("DIALOGFLOW_CUSTOM_PLANS");
+  formatPlans("FIRESTORE_CUSTOM_PLANS");
+  formatPlans("ML_APIS_CUSTOM_PLANS");
+  formatPlans("PUBSUB_CUSTOM_PLANS");
+  formatPlans("SPANNER_CUSTOM_PLANS");
+  formatPlans("STACKDRIVER_DEBUGGER_CUSTOM_PLANS");
+  formatPlans("STACKDRIVER_MONITORING_CUSTOM_PLANS");
+  formatPlans("STACKDRIVER_PROFILER_CUSTOM_PLANS");
+  formatPlans("STACKDRIVER_TRACE_CUSTOM_PLANS");
+  formatPlans("STORAGE_CUSTOM_PLANS");
+  }
+  
+  }
+  {
+  // migration: 3, Merge Service Config
+  {
+  
+  // env2prop converts an environment variable to property name
+  function env2prop(envVar) {return '.properties.' + envVar.toLowerCase();}
+  
+  // lookupProp lookus up an environment variable as a prop and returns the value.
+  function lookupProp(envVar) {
+  	var prop = env2prop(envVar);
+  	return (prop in properties.properties) ? properties.properties[prop].value : null;
+  }
+  
+  // deleteProp removes a property from the properties list.
+  function deleteProp(envVar) { delete properties.properties[env2prop(envVar)];}
+  
+  // setProp sets a property on the properties list.
+  function setProp(envVar, value) {
+  	var prop = env2prop(envVar);
+  
+  	if (!(prop in properties.properties)) {
+  		properties.properties[prop] = {'value': value, 'type': 'text'};
+  	} else {
+  		properties['properties'][prop].value = value;
+  	}
+  }
+  
+  
+  
+  		function anyExist(envVars) {
+  			for(var i in envVars) {
+  				if(lookupProp(envVars[i]) !== null) {
+  					return true;
+  				}
+  			}
+  
+  			return false;
+  		}
+  
+      function mergeService(svcName) {
+        var customPlanVar = svcName+"_CUSTOM_PLANS";
+        var enabledVar = "GSB_SERVICE_GOOGLE_"+svcName+"_ENABLED";
+        var bindDefaultsVar = "GSB_SERVICE_GOOGLE_"+svcName+"_BIND_DEFAULTS";
+        var provisionDefaultsVar = "GSB_SERVICE_GOOGLE_"+svcName+"_PROVISION_DEFAULTS";
+  
+  			if (! anyExist([customPlanVar, enabledVar, bindDefaultsVar, provisionDefaultsVar])) {
+  				return null;
+  			}
+  
+  			// explicitly check for boolean enabled false and turn it into a string.
+  			var enabled = lookupProp(enabledVar);
+  			if (enabled === false) {
+  				enabled = 'false';
+  			}
+  
+        var context = {
+          "custom_plans": lookupProp(customPlanVar) || '[]',
+          "enabled": enabled || 'true',
+          "bind_defaults": lookupProp(bindDefaultsVar) || '{}',
+          "provision_defaults": lookupProp(provisionDefaultsVar) || '{}',
+        }
+  
+        deleteProp(customPlanVar);
+        deleteProp(enabledVar);
+        deleteProp(bindDefaultsVar);
+        deleteProp(provisionDefaultsVar);
+  
+        // convert to plain object
+        for (var key in context) {
+          context[key] = JSON.parse(context[key]);
+        }
+  
+  			context["disabled"] = !context["enabled"];
+  			delete context["enabled"];
+  
+        context["//"] = "Builtin " + svcName;
+        return context;
+      }
+  
+      function mergeServices(envVar) {
+        var out = {
+          "f80c0a3e-bd4d-4809-a900-b4e33a6450f1": mergeService("BIGQUERY"),
+          "b8e19880-ac58-42ef-b033-f7cd9c94d1fe": mergeService("BIGTABLE"),
+          "4bc59b9a-8520-409f-85da-1c7552315863": mergeService("CLOUDSQL_MYSQL"),
+          "cbad6d78-a73c-432d-b8ff-b219a17a803a": mergeService("CLOUDSQL_POSTGRES"),
+          "3e897eb3-9062-4966-bd4f-85bda0f73b3d": mergeService("DATAFLOW"),
+          "76d4abb2-fee7-4c8f-aee1-bcea2837f02b": mergeService("DATASTORE"),
+          "e84b69db-3de9-4688-8f5c-26b9d5b1f129": mergeService("DIALOGFLOW"),
+          "a2b7b873-1e34-4530-8a42-902ff7d66b43": mergeService("FIRESTORE"),
+          "5ad2dce0-51f7-4ede-8b46-293d6df1e8d4": mergeService("ML_APIS"),
+          "628629e3-79f5-4255-b981-d14c6c7856be": mergeService("PUBSUB"),
+          "51b3e27e-d323-49ce-8c5f-1211e6409e82": mergeService("SPANNER"),
+          "83837945-1547-41e0-b661-ea31d76eed11": mergeService("STACKDRIVER_DEBUGGER"),
+          "2bc0d9ed-3f68-4056-b842-4a85cfbc727f": mergeService("STACKDRIVER_MONITORING"),
+          "00b9ca4a-7cd6-406a-a5b7-2f43f41ade75": mergeService("STACKDRIVER_PROFILER"),
+          "c5ddfe15-24d9-47f8-8ffe-f6b7daa9cf4a": mergeService("STACKDRIVER_TRACE"),
+          "b9e4332e-b42b-4680-bda5-ea1506797474": mergeService("STORAGE")
+        };
+  
+  			Object.keys(out).forEach(function(key) {
+  			if (out[key] == null) delete out[key];
+  		});
+  
+  
+  			for (var key in out) {
+  				if(out[key] == null) {
+  					delete out[key];
+  				}
+  			}
+  
+        setProp(envVar, JSON.stringify(out, null, "  "));
+      }
+  
+  mergeServices("GSB_SERVICE_CONFIG");
+  }
+  
+  }
+  
 
 packages:
 - name: gcp-service-broker
@@ -65,7 +367,8 @@ forms:
     configurable: true
 - name: database_properties
   label: Database Properties
-  description: Connection details for the backing database for the service broker.
+  description: Connection details for the service broker's database. It must be MySQL
+    compatible.
   properties:
   - name: db_host
     type: string
@@ -84,7 +387,7 @@ forms:
   - name: db_port
     type: string
     default: "3306"
-    label: Database port (defaults to 3306)
+    label: Database port
     configurable: true
   - name: db_name
     type: string
@@ -107,10 +410,8 @@ forms:
     configurable: true
     optional: true
 - name: brokerpaks
-  label: Brokerpaks
-  description: |-
-    Brokerpaks are ways to extend the broker with custom services defined by Terraform templates.
-    A brokerpak is an archive comprised of a versioned Terraform binary and providers for one or more platform, a manifest, one or more service definitions, and source code.
+  label: Service Configuration
+  description: Configuration for built-in and Brokerpak services.
   properties:
   - name: gsb_brokerpak_config
     type: text
@@ -120,20 +421,28 @@ forms:
       a variable isn't found in the specific brokerpak's configuration it's looked
       up here.
     configurable: true
-- name: compatibility
-  label: Compatibility
-  description: Legacy Compatibility Options
+  - name: gsb_service_config
+    type: text
+    default: '{}'
+    label: Service Configuration Options
+    description: See the configuration.md file or /configuration endpoint on the service
+      for how to configure services using this field.
+    configurable: true
+- name: features
+  label: Feature Flags
+  description: Service broker feature flags.
   properties:
-  - name: gsb_compatibility_enable_catalog_schemas
-    type: boolean
-    default: "false"
-    label: enable-catalog-schemas
-    description: Enable generating JSONSchema for the service catalog.
   - name: gsb_compatibility_enable_builtin_services
     type: boolean
     default: "true"
     label: enable-builtin-services
     description: Enable services that are built in to the broker i.e. not brokerpaks.
+    configurable: true
+  - name: gsb_compatibility_enable_catalog_schemas
+    type: boolean
+    default: "false"
+    label: enable-catalog-schemas
+    description: Enable generating JSONSchema for the service catalog.
     configurable: true
   - name: gsb_compatibility_enable_cf_sharing
     type: boolean
@@ -179,327 +488,24 @@ forms:
     label: enable-unmaintained-services
     description: Enable broker services that are unmaintained.
     configurable: true
-- name: default_override
-  label: Default Overrides
-  description: Override the default values your users get when provisioning.
-  properties:
-  - name: gsb_service_google_bigquery_provision_defaults
-    type: text
-    default: '{}'
-    label: Provision default override Google BigQuery instances.
-    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
-      provision property and values are the alternative default.
-    configurable: true
-  - name: gsb_service_google_bigquery_bind_defaults
-    type: text
-    default: '{}'
-    label: Bind default override Google BigQuery instances.
-    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
-      bind property and values are the alternative default.
-    configurable: true
-  - name: gsb_service_google_bigtable_provision_defaults
-    type: text
-    default: '{}'
-    label: Provision default override Google Bigtable instances.
-    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
-      provision property and values are the alternative default.
-    configurable: true
-  - name: gsb_service_google_bigtable_bind_defaults
-    type: text
-    default: '{}'
-    label: Bind default override Google Bigtable instances.
-    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
-      bind property and values are the alternative default.
-    configurable: true
-  - name: gsb_service_google_cloudsql_mysql_provision_defaults
-    type: text
-    default: '{}'
-    label: Provision default override Google CloudSQL MySQL instances.
-    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
-      provision property and values are the alternative default.
-    configurable: true
-  - name: gsb_service_google_cloudsql_mysql_bind_defaults
-    type: text
-    default: '{}'
-    label: Bind default override Google CloudSQL MySQL instances.
-    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
-      bind property and values are the alternative default.
-    configurable: true
-  - name: gsb_service_google_cloudsql_postgres_provision_defaults
-    type: text
-    default: '{}'
-    label: Provision default override Google CloudSQL PostgreSQL instances.
-    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
-      provision property and values are the alternative default.
-    configurable: true
-  - name: gsb_service_google_cloudsql_postgres_bind_defaults
-    type: text
-    default: '{}'
-    label: Bind default override Google CloudSQL PostgreSQL instances.
-    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
-      bind property and values are the alternative default.
-    configurable: true
-  - name: gsb_service_google_ml_apis_provision_defaults
-    type: text
-    default: '{}'
-    label: Provision default override Google Machine Learning APIs instances.
-    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
-      provision property and values are the alternative default.
-    configurable: true
-  - name: gsb_service_google_ml_apis_bind_defaults
-    type: text
-    default: '{}'
-    label: Bind default override Google Machine Learning APIs instances.
-    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
-      bind property and values are the alternative default.
-    configurable: true
-  - name: gsb_service_google_pubsub_provision_defaults
-    type: text
-    default: '{}'
-    label: Provision default override Google PubSub instances.
-    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
-      provision property and values are the alternative default.
-    configurable: true
-  - name: gsb_service_google_pubsub_bind_defaults
-    type: text
-    default: '{}'
-    label: Bind default override Google PubSub instances.
-    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
-      bind property and values are the alternative default.
-    configurable: true
-  - name: gsb_service_google_spanner_provision_defaults
-    type: text
-    default: '{}'
-    label: Provision default override Google Spanner instances.
-    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
-      provision property and values are the alternative default.
-    configurable: true
-  - name: gsb_service_google_spanner_bind_defaults
-    type: text
-    default: '{}'
-    label: Bind default override Google Spanner instances.
-    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
-      bind property and values are the alternative default.
-    configurable: true
-  - name: gsb_service_google_storage_provision_defaults
-    type: text
-    default: '{}'
-    label: Provision default override Google Cloud Storage instances.
-    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
-      provision property and values are the alternative default.
-    configurable: true
-  - name: gsb_service_google_storage_bind_defaults
-    type: text
-    default: '{}'
-    label: Bind default override Google Cloud Storage instances.
-    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
-      bind property and values are the alternative default.
-    configurable: true
 service_plan_forms:
-- name: bigtable_custom_plans
-  label: Google Bigtable Custom Plans
-  description: Generate custom plans for Google Bigtable.
-  optional: true
-  properties:
-  - name: display_name
-    type: string
-    label: Display Name
-    description: Name of the plan to be displayed to users.
-    configurable: true
-  - name: description
-    type: string
-    label: Plan description
-    description: The description of the plan shown to users.
-    configurable: true
-  - name: service
-    type: dropdown_select
-    default: b8e19880-ac58-42ef-b033-f7cd9c94d1fe
-    label: Service
-    description: The service this plan is associated with.
-    options:
-    - name: b8e19880-ac58-42ef-b033-f7cd9c94d1fe
-      label: Google Bigtable
-  - name: storage_type
-    type: dropdown_select
-    default: SSD
-    label: Storage Type
-    description: 'Either HDD or SSD. See: https://cloud.google.com/bigtable/pricing
-      for more information.'
-    configurable: true
-    options:
-    - name: HDD
-      label: HDD - Hard Disk Drive
-    - name: SSD
-      label: SSD - Solid-state Drive
-  - name: num_nodes
-    type: string
-    default: "3"
-    label: Num Nodes
-    description: 'Number of nodes, between 3 and 30. See: https://cloud.google.com/bigtable/pricing
-      for more information.'
-    configurable: true
-- name: cloudsql_mysql_custom_plans
-  label: Google CloudSQL MySQL Custom Plans
-  description: Generate custom plans for Google CloudSQL MySQL.
-  optional: true
-  properties:
-  - name: display_name
-    type: string
-    label: Display Name
-    description: Name of the plan to be displayed to users.
-    configurable: true
-  - name: description
-    type: string
-    label: Plan description
-    description: The description of the plan shown to users.
-    configurable: true
-  - name: service
-    type: dropdown_select
-    default: 4bc59b9a-8520-409f-85da-1c7552315863
-    label: Service
-    description: The service this plan is associated with.
-    options:
-    - name: 4bc59b9a-8520-409f-85da-1c7552315863
-      label: Google CloudSQL MySQL
-  - name: tier
-    type: string
-    label: Tier
-    description: Case-sensitive tier/machine type name (see https://cloud.google.com/sql/pricing
-      for more information).
-    configurable: true
-  - name: pricing_plan
-    type: dropdown_select
-    default: PER_USE
-    label: Pricing Plan
-    description: Select a pricing plan (only for 1st generation instances).
-    configurable: true
-    options:
-    - name: PACKAGE
-      label: Package
-    - name: PER_USE
-      label: Per-Use
-  - name: max_disk_size
-    type: string
-    default: "10"
-    label: Max Disk Size
-    description: Maximum disk size in GB (applicable only to Second Generation instances,
-      10 minimum/default).
-    configurable: true
-- name: cloudsql_postgres_custom_plans
-  label: Google CloudSQL PostgreSQL Custom Plans
-  description: Generate custom plans for Google CloudSQL PostgreSQL.
-  optional: true
-  properties:
-  - name: display_name
-    type: string
-    label: Display Name
-    description: Name of the plan to be displayed to users.
-    configurable: true
-  - name: description
-    type: string
-    label: Plan description
-    description: The description of the plan shown to users.
-    configurable: true
-  - name: service
-    type: dropdown_select
-    default: cbad6d78-a73c-432d-b8ff-b219a17a803a
-    label: Service
-    description: The service this plan is associated with.
-    options:
-    - name: cbad6d78-a73c-432d-b8ff-b219a17a803a
-      label: Google CloudSQL PostgreSQL
-  - name: tier
-    type: string
-    label: Tier
-    description: A string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory
-      is at least 3840.
-    configurable: true
-  - name: pricing_plan
-    type: dropdown_select
-    default: PER_USE
-    label: Pricing Plan
-    description: The pricing plan.
-    options:
-    - name: PER_USE
-      label: Per-Use
-  - name: max_disk_size
-    type: string
-    default: "10"
-    label: Max Disk Size
-    description: Maximum disk size in GB, 10 is the minimum.
-    configurable: true
-- name: spanner_custom_plans
-  label: Google Spanner Custom Plans
-  description: Generate custom plans for Google Spanner.
-  optional: true
-  properties:
-  - name: display_name
-    type: string
-    label: Display Name
-    description: Name of the plan to be displayed to users.
-    configurable: true
-  - name: description
-    type: string
-    label: Plan description
-    description: The description of the plan shown to users.
-    configurable: true
-  - name: service
-    type: dropdown_select
-    default: 51b3e27e-d323-49ce-8c5f-1211e6409e82
-    label: Service
-    description: The service this plan is associated with.
-    options:
-    - name: 51b3e27e-d323-49ce-8c5f-1211e6409e82
-      label: Google Spanner
-  - name: num_nodes
-    type: string
-    default: "1"
-    label: Num Nodes
-    description: 'Number of nodes, a minimum of 3 nodes is recommended for production
-      environments. See: https://cloud.google.com/spanner/pricing for more information.'
-    configurable: true
-- name: storage_custom_plans
-  label: Google Cloud Storage Custom Plans
-  description: Generate custom plans for Google Cloud Storage.
-  optional: true
-  properties:
-  - name: display_name
-    type: string
-    label: Display Name
-    description: Name of the plan to be displayed to users.
-    configurable: true
-  - name: description
-    type: string
-    label: Plan description
-    description: The description of the plan shown to users.
-    configurable: true
-  - name: service
-    type: dropdown_select
-    default: b9e4332e-b42b-4680-bda5-ea1506797474
-    label: Service
-    description: The service this plan is associated with.
-    options:
-    - name: b9e4332e-b42b-4680-bda5-ea1506797474
-      label: Google Cloud Storage
-  - name: storage_class
-    type: string
-    label: Storage Class
-    description: 'The storage class of the bucket. See: https://cloud.google.com/storage/docs/storage-classes.'
-    configurable: true
 - name: gsb_brokerpak_sources
-  label: Configure Brokerpaks
-  description: Configure Brokerpaks
+  label: Install Brokerpaks
+  description: ' Brokerpaks are ways to extend the broker with custom services defined
+    by Terraform templates. A brokerpak is an archive comprised of a versioned Terraform
+    binary and providers for one or more platform, a manifest, one or more service
+    definitions, and source code.'
   optional: true
   properties:
   - name: uri
     type: string
     label: Brokerpak URI
-    description: "The URI to load. Supported protocols are http, https, gs, and git.\n\t\t\t\tCloud
-      Storage (gs) URIs follow the gs://<bucket>/<path> convention and will be read
-      using the service broker service account.\n\n\t\t\t\tYou can validate the checksum
+    description: ' The URI to load. Supported protocols are http, https, gs, and git.
+      Cloud Storage (gs) URIs follow the gs://<bucket>/<path> convention and will
+      be read using the service broker service account. You can validate the checksum
       of any file on download by appending a checksum query parameter to the URI in
-      the format type:value.\n\t\t\t\tValid checksum types are md5, sha1, sha256 and
-      sha512. e.g. gs://foo/bar.brokerpak?checksum=md5:3063a2c62e82ef8614eee6745a7b6b59"
+      the format type:value. Valid checksum types are MD5, SHA1, SHA256 and SHA512.
+      e.g. gs://foo/bar.brokerpak?checksum=md5:3063a2c62e82ef8614eee6745a7b6b59'
     configurable: true
   - name: service_prefix
     type: string

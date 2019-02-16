@@ -27,7 +27,7 @@ A fast, economical and fully managed data warehouse for large-scale data analyti
 **Request Parameters**
 
 
- * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator. Default: `bigquery.user`.
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Default: `bigquery.user`.
     * The value must be one of: [bigquery.dataEditor bigquery.dataOwner bigquery.dataViewer bigquery.jobUser bigquery.user].
 
 **Response Parameters**
@@ -134,7 +134,7 @@ A high performance NoSQL database service for large analytical and operational w
 **Request Parameters**
 
 
- * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator. Default: `bigtable.user`.
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Default: `bigtable.user`.
     * The value must be one of: [bigtable.reader bigtable.user bigtable.viewer].
 
 **Response Parameters**
@@ -208,8 +208,8 @@ $ cf bind-service my-app my-google-bigtable-example -c `{"role":"bigtable.user"}
 
 --------------------------------------------------------------------------------
 
-# <a name="google-cloudsql-mysql"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg) Google CloudSQL MySQL
-Google Cloud SQL is a fully-managed MySQL database service.
+# <a name="google-cloudsql-mysql"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg) Google CloudSQL for MySQL
+Google CloudSQL for MySQL is a fully-managed MySQL database service.
 
  * [Documentation](https://cloud.google.com/sql/docs/)
  * [Support](https://cloud.google.com/sql/docs/getting-support)
@@ -230,7 +230,7 @@ Google Cloud SQL is a fully-managed MySQL database service.
     * The value must be one of: [MYSQL_5_5 MYSQL_5_6 MYSQL_5_7].
  * `failover_replica_name` _string_ - (only for 2nd generation instances) If specified, creates a failover replica with the given name. Default: ``.
     * The string must have at most 84 characters.
-    * The string must match the regular expression `^[a-z][a-z0-9-]+$`.
+    * The string must match the regular expression `^(|[a-z][a-z0-9-]+)$`.
  * `activation_policy` _string_ - The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE. Default: `ALWAYS`.
     * The value must be one of: [ALWAYS NEVER ON_DEMAND].
  * `binlog` _string_ - Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use.
@@ -243,7 +243,7 @@ Google Cloud SQL is a fully-managed MySQL database service.
     * Examples: [northamerica-northeast1 southamerica-east1 us-east1].
     * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
  * `zone` _string_ - (only for 2nd generation instances) Default: ``.
-    * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
+    * The string must match the regular expression `^(|[A-Za-z][-a-z0-9A-Z]+)$`.
  * `disk_type` _string_ - (only for 2nd generation instances) Default: `PD_SSD`.
     * The value must be one of: [PD_HDD PD_SSD].
  * `maintenance_window_day` _string_ - (only for 2nd generation instances) This specifies when a v2 CloudSQL instance should preferably be restarted for system maintenance purposes. Day of week (1-7), starting on Monday. Default: `1`.
@@ -266,7 +266,7 @@ Google Cloud SQL is a fully-managed MySQL database service.
 **Request Parameters**
 
 
- * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator. Default: `cloudsql.client`.
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Default: `cloudsql.client`.
     * The value must be one of: [cloudsql.client cloudsql.editor cloudsql.viewer].
  * `jdbc_uri_format` _string_ - If `true`, `uri` field will contain a JDBC formatted URI. Default: `false`.
     * The value must be one of: [false true].
@@ -385,8 +385,8 @@ $ cf bind-service my-app my-google-cloudsql-mysql-example -c `{"role":"cloudsql.
 
 --------------------------------------------------------------------------------
 
-# <a name="google-cloudsql-postgres"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg) Google CloudSQL PostgreSQL
-Google Cloud SQL is a fully-managed MySQL database service.
+# <a name="google-cloudsql-postgres"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/sql.svg) Google CloudSQL for PostgreSQL
+Google CloudSQL for PostgreSQL is a fully-managed PostgreSQL database service.
 
  * [Documentation](https://cloud.google.com/sql/docs/)
  * [Support](https://cloud.google.com/support/)
@@ -407,7 +407,7 @@ Google Cloud SQL is a fully-managed MySQL database service.
     * The value must be one of: [POSTGRES_9_6].
  * `failover_replica_name` _string_ - (only for 2nd generation instances) If specified, creates a failover replica with the given name. Default: ``.
     * The string must have at most 75 characters.
-    * The string must match the regular expression `^[a-z][a-z0-9-]+$`.
+    * The string must match the regular expression `^(|[a-z][a-z0-9-]+)$`.
  * `activation_policy` _string_ - The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE. Default: `ALWAYS`.
     * The value must be one of: [ALWAYS NEVER].
  * `binlog` _string_ - Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use.
@@ -420,7 +420,7 @@ Google Cloud SQL is a fully-managed MySQL database service.
     * Examples: [northamerica-northeast1 southamerica-east1 us-east1].
     * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
  * `zone` _string_ - (only for 2nd generation instances) Default: ``.
-    * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
+    * The string must match the regular expression `^(|[A-Za-z][-a-z0-9A-Z]+)$`.
  * `disk_type` _string_ - (only for 2nd generation instances) Default: `PD_SSD`.
     * The value must be one of: [PD_HDD PD_SSD].
  * `maintenance_window_day` _string_ - (only for 2nd generation instances) This specifies when a v2 CloudSQL instance should preferably be restarted for system maintenance purposes. Day of week (1-7), starting on Monday. Default: `1`.
@@ -443,7 +443,7 @@ Google Cloud SQL is a fully-managed MySQL database service.
 **Request Parameters**
 
 
- * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator. Default: `cloudsql.client`.
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Default: `cloudsql.client`.
     * The value must be one of: [cloudsql.client cloudsql.editor cloudsql.viewer].
  * `jdbc_uri_format` _string_ - If `true`, `uri` field will contain a JDBC formatted URI. Default: `false`.
     * The value must be one of: [false true].
@@ -709,7 +709,7 @@ $ cf bind-service my-app my-google-dataflow-example -c `{"role":"dataflow.viewer
 --------------------------------------------------------------------------------
 
 # <a name="google-datastore"></a> ![](https://cloud.google.com/_static/images/cloud/products/logos/svg/datastore.svg) Google Cloud Datastore
-Google Cloud Datastore is a NoSQL document database built for automatic scaling, high performance, and ease of application development.
+Google Cloud Datastore is a NoSQL document database service.
 
  * [Documentation](https://cloud.google.com/datastore/docs/)
  * [Support](https://cloud.google.com/datastore/docs/getting-support)
@@ -1045,7 +1045,7 @@ _No parameters supported._
 **Request Parameters**
 
 
- * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator. Default: `ml.modelUser`.
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Default: `ml.modelUser`.
     * The value must be one of: [ml.developer ml.jobOwner ml.modelOwner ml.modelUser ml.operationOwner ml.viewer].
 
 **Response Parameters**
@@ -1145,7 +1145,7 @@ A global service for real-time and reliable messaging and streaming data.
 **Request Parameters**
 
 
- * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator. Default: `pubsub.editor`.
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Default: `pubsub.editor`.
     * The value must be one of: [pubsub.editor pubsub.publisher pubsub.subscriber pubsub.viewer].
 
 **Response Parameters**
@@ -1316,7 +1316,7 @@ The first horizontally scalable, globally consistent, relational database servic
 **Request Parameters**
 
 
- * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator. Default: `spanner.databaseUser`.
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Default: `spanner.databaseUser`.
     * The value must be one of: [spanner.databaseAdmin spanner.databaseReader spanner.databaseUser spanner.viewer].
 
 **Response Parameters**
@@ -1785,7 +1785,7 @@ Unified object storage for developers and enterprises. Cloud Storage allows worl
 **Request Parameters**
 
 
- * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Note: The default enumeration may be overridden by your operator. Default: `storage.objectAdmin`.
+ * `role` _string_ - The role for the account without the "roles/" prefix. See: https://cloud.google.com/iam/docs/understanding-roles for more details. Default: `storage.objectAdmin`.
     * The value must be one of: [storage.objectAdmin storage.objectCreator storage.objectViewer].
 
 **Response Parameters**
