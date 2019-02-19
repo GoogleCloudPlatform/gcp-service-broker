@@ -17,9 +17,11 @@ package brokerpak
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/ziputil"
@@ -62,30 +64,41 @@ func (m *Manifest) AppliesToCurrentPlatform() bool {
 
 // Pack creates a brokerpak from the manifest and definitions.
 func (m *Manifest) Pack(base, dest string) error {
+	// NOTE: we use "log" rather than Lager because this is used by the CLI and
+	// needs to be human readable rather than JSON.
+	log.Println("Packing...")
+
 	dir, err := ioutil.TempDir("", "brokerpak")
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(dir) // clean up
+	log.Println("Using temp directory:", dir)
 
+	log.Println("Packing sources...")
 	if err := m.packSources(dir); err != nil {
 		return err
 	}
 
+	log.Println("Packing binaries...")
 	if err := m.packBinaries(dir); err != nil {
 		return err
 	}
 
+	log.Println("Packing definitions...")
 	if err := m.packDefinitions(dir, base); err != nil {
 		return err
 	}
 
+	log.Println("Creating archive:", dest)
 	return ziputil.Archive(dir, dest)
 }
 
 func (m *Manifest) packSources(tmp string) error {
 	for _, resource := range m.TerraformResources {
 		destination := filepath.Join(tmp, "src", resource.Name+".zip")
+
+		log.Println("\t", resource.Source, "->", destination)
 		if err := fetchArchive(resource.Source, destination); err != nil {
 			return err
 		}
@@ -97,6 +110,8 @@ func (m *Manifest) packBinaries(tmp string) error {
 	for _, platform := range m.Platforms {
 		platformPath := filepath.Join(tmp, "bin", platform.Os, platform.Arch)
 		for _, resource := range m.TerraformResources {
+
+			log.Println("\t", resource.Url(platform), "->", platformPath)
 			if err := getter.GetAny(platformPath, resource.Url(platform)); err != nil {
 				return err
 			}
@@ -114,8 +129,14 @@ func (m *Manifest) packDefinitions(tmp, base string) error {
 
 	var servicePaths []string
 	for i, sd := range m.ServiceDefinitions {
-		packedName := fmt.Sprintf("service-%d.yml", i)
 
+		defn := &tf.TfServiceDefinitionV1{}
+		if err := stream.Copy(stream.FromFile(base, sd), stream.ToYaml(defn)); err != nil {
+			return fmt.Errorf("couldn't parse %s: %v", sd, err)
+		}
+
+		packedName := fmt.Sprintf("service%d-%s.yml", i, defn.Name)
+		log.Printf("\t%s/%s -> %s/definitions/%s\n", base, sd, tmp, packedName)
 		if err := stream.Copy(stream.FromFile(base, sd), stream.ToFile(tmp, "definitions", packedName)); err != nil {
 			return err
 		}
