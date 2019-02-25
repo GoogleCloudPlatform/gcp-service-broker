@@ -241,6 +241,12 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 		return brokerapi.Binding{}, err
 	}
 
+	// verify the service exists and the plan exists
+	plan, err := serviceDefinition.GetPlanById(details.PlanID)
+	if err != nil {
+		return brokerapi.Binding{}, err
+	}
+
 	// Give the user a better error message if they give us a bad request
 	if !isValidOrEmptyJSON(details.GetRawParameters()) {
 		return brokerapi.Binding{}, ErrInvalidUserInput
@@ -248,7 +254,7 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 
 	// validate parameters meet the service's schema and merge the plan's vars with
 	// the user's
-	vars, err := serviceDefinition.BindVariables(*instanceRecord, bindingID, details)
+	vars, err := serviceDefinition.BindVariables(*instanceRecord, bindingID, details, plan)
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}
