@@ -233,7 +233,7 @@ func (svc *ServiceDefinition) ProvisionVariables(instanceId string, details brok
 // 4. Operator default variables loaded from the environment.
 // 5. Default variables (in `bind_input_variables`).
 //
-func (svc *ServiceDefinition) BindVariables(instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails) (*varcontext.VarContext, error) {
+func (svc *ServiceDefinition) BindVariables(instance models.ServiceInstanceDetails, bindingID string, details brokerapi.BindDetails, plan *ServicePlan) (*varcontext.VarContext, error) {
 	otherDetails := make(map[string]interface{})
 	if err := instance.GetOtherDetails(&otherDetails); err != nil {
 		return nil, err
@@ -254,9 +254,10 @@ func (svc *ServiceDefinition) BindVariables(instance models.ServiceInstanceDetai
 		// Note: the value in instance is considered the official record so values
 		// are pulled from there rather than the request. In a future version of OSB
 		// the duplicate sending of fields is likely to be removed.
-		"request.plan_id":    instance.PlanId,
-		"request.service_id": instance.ServiceId,
-		"request.app_guid":   appGuid,
+		"request.plan_id":         instance.PlanId,
+		"request.service_id":      instance.ServiceId,
+		"request.app_guid":        appGuid,
+		"request.plan_properties": plan.GetServiceProperties(),
 
 		// specified by the existing instance
 		"instance.name":    instance.Name,
