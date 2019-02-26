@@ -136,18 +136,21 @@ dependencies, services it provides, and the contents.
 		},
 	})
 
-	pakCmd.AddCommand(&cobra.Command{
+	var serviceName string
+	runExamplesCmd := &cobra.Command{
 		Use:   "run-examples [pack.brokerpak]",
 		Short: "run the examples from a brokerpak",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := brokerpak.RunExamples(args[0]); err != nil {
+			if err := brokerpak.RunExamples(args[0], serviceName); err != nil {
 				log.Fatalf("Error executing examples: %v", err)
 			}
 
 			log.Println("Success")
 		},
-	})
+	}
+	runExamplesCmd.Flags().StringVarP(&serviceName, "service-name", "", "", "name of the service to run tests for or blank for all")
+	pakCmd.AddCommand(runExamplesCmd)
 
 	pakCmd.AddCommand(&cobra.Command{
 		Use:     "docs [pack.brokerpak]",
