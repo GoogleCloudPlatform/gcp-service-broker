@@ -293,6 +293,10 @@ The following string interpolation functions are available for use:
   * The randomness makes it suitable for using as passwords.
 * `json.marshal(type) -> string`
   * Returns a JSON marshaled string of the given type.
+* `map.flatten(keyValueSeparator, tupleSeparator, map)`
+  * Converts a map into a string with each key/value pair separated by `keyValueSeparator` and each entry separated by `tupleSeparator`.
+  * The output is deterministic.
+  * Example: if `labels = {"key1":"val1", "key2":"val2"}` then `map.flatten(":", ";", labels)` produces `key1:val1;key2:val2`.
 
 ### Variables
 

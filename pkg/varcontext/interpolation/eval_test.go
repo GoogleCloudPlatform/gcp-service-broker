@@ -56,6 +56,9 @@ func TestEval(t *testing.T) {
 		"json marshal string":   {Template: `${json.marshal("str")}`, Expected: `"str"`},
 		"json marshal true":     {Template: "${json.marshal(true)}", Expected: `true`},
 		"json marshal false":    {Template: "${json.marshal(false)}", Expected: `false`},
+		"map flatten blank":     {Template: `${map.flatten(":", ";", mapval)}`, Variables: map[string]interface{}{"mapval": map[string]string{}}, Expected: ``},
+		"map flatten one":       {Template: `${map.flatten(":", ";", mapval)}`, Variables: map[string]interface{}{"mapval": map[string]string{"key1": "val1"}}, Expected: `key1:val1`},
+		"map flatten":           {Template: `${map.flatten(":", ";", mapval)}`, Variables: map[string]interface{}{"mapval": map[string]string{"key1": "val1", "key2": "val2"}}, Expected: `key1:val1;key2:val2`},
 	}
 
 	for tn, tc := range tests {
