@@ -307,8 +307,9 @@ The broker makes additional variables available to be used during provision and 
 The variables fed into your Terraform services file are resolved in the following order:
 
 * Variables defined in your `computed_variables` JSON list.
-* (Only for Provision) Variables defined by the selected service plan in its `service_properties` map.
-* User defined variables (in `provision_input_variables` or `bind_input_variables`)
+* Variables defined by the selected service plan in its `service_properties` map.
+* Variables overridden by the plan (in `provision_overrides` or `bind_overrides`).
+* User defined variables (in `provision_input_variables` or `bind_input_variables`).
 * Operator default variables loaded from the environment.
 * Default variables (in `provision_input_variables` or `bind_input_variables`).
 

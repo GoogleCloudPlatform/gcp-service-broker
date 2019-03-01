@@ -28,7 +28,7 @@ Example:
 | Property | Type | Description |
 |----------|------|-------------|
 | <tt>guid</tt> \* | string | A GUID for this plan, must be unique. Changing this value after services are using it WILL BREAK your instances. |
-| <tt>name</tt> \* | string | A CLI friendly name for this plan. This can be changed without affecting existing instances, but may break scripts you build referencing it. |
+| <tt>name</tt> \* | string | A CLI friendly name for this plan. This can be changed without affecting existing instances, but may break scripts you've previously built referencing it. |
 | <tt>display_name</tt> \* | string | A human readable name for this plan, this can be changed. |
 | <tt>description</tt> \* | string | A human readable description for this plan, this can be changed. |
 | <tt>properties</tt> \* | string:string map | Properties used to configure the plan. Each service has its own set of properties used to customize it. |
@@ -119,6 +119,12 @@ Configuration needs to be done under the GUID: <tt>b8e19880-ac58-42ef-b033-f7cd9
 	        "description": "What makes this plan different?",
 	        "properties": {
 	          "//": "See the custom plan properties section below for configurable properties."
+	        },
+	        "provision_overrides": {
+	          "//": "You can override any user-settable provision variable here."
+	        },
+	        "bind_overrides": {
+	          "//": "You can override any user-settable bind variable here."
 	        }
 	      }
 	    ]
@@ -192,6 +198,12 @@ Configuration needs to be done under the GUID: <tt>4bc59b9a-8520-409f-85da-1c755
 	        "description": "What makes this plan different?",
 	        "properties": {
 	          "//": "See the custom plan properties section below for configurable properties."
+	        },
+	        "provision_overrides": {
+	          "//": "You can override any user-settable provision variable here."
+	        },
+	        "bind_overrides": {
+	          "//": "You can override any user-settable bind variable here."
 	        }
 	      }
 	    ]
@@ -282,6 +294,12 @@ Configuration needs to be done under the GUID: <tt>cbad6d78-a73c-432d-b8ff-b219a
 	        "description": "What makes this plan different?",
 	        "properties": {
 	          "//": "See the custom plan properties section below for configurable properties."
+	        },
+	        "provision_overrides": {
+	          "//": "You can override any user-settable provision variable here."
+	        },
+	        "bind_overrides": {
+	          "//": "You can override any user-settable bind variable here."
 	        }
 	      }
 	    ]
@@ -676,6 +694,12 @@ Configuration needs to be done under the GUID: <tt>51b3e27e-d323-49ce-8c5f-1211e
 	        "description": "What makes this plan different?",
 	        "properties": {
 	          "//": "See the custom plan properties section below for configurable properties."
+	        },
+	        "provision_overrides": {
+	          "//": "You can override any user-settable provision variable here."
+	        },
+	        "bind_overrides": {
+	          "//": "You can override any user-settable bind variable here."
 	        }
 	      }
 	    ]
@@ -931,6 +955,12 @@ Configuration needs to be done under the GUID: <tt>b9e4332e-b42b-4680-bda5-ea150
 	        "description": "What makes this plan different?",
 	        "properties": {
 	          "//": "See the custom plan properties section below for configurable properties."
+	        },
+	        "provision_overrides": {
+	          "//": "You can override any user-settable provision variable here."
+	        },
+	        "bind_overrides": {
+	          "//": "You can override any user-settable bind variable here."
 	        }
 	      }
 	    ]

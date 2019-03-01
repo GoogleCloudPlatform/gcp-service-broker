@@ -50,13 +50,15 @@ type TfServiceDefinitionV1 struct {
 // TfServiceDefinitionV1Plan represents a service plan in a human-friendly format
 // that can be converted into an OSB compatible plan.
 type TfServiceDefinitionV1Plan struct {
-	Name        string            `yaml:"name" validate:"required"`
-	Id          string            `yaml:"id" validate:"required,uuid"`
-	Description string            `yaml:"description" validate:"required"`
-	DisplayName string            `yaml:"display_name" validate:"required"`
-	Bullets     []string          `yaml:"bullets,omitempty"`
-	Free        bool              `yaml:"free,omitempty"`
-	Properties  map[string]string `yaml:"properties" validate:"required"`
+	Name               string                 `yaml:"name" validate:"required"`
+	Id                 string                 `yaml:"id" validate:"required,uuid"`
+	Description        string                 `yaml:"description" validate:"required"`
+	DisplayName        string                 `yaml:"display_name" validate:"required"`
+	Bullets            []string               `yaml:"bullets,omitempty"`
+	Free               bool                   `yaml:"free,omitempty"`
+	Properties         map[string]string      `yaml:"properties" validate:"required"`
+	ProvisionOverrides map[string]interface{} `yaml:"provision_overrides,omitempty"`
+	BindOverrides      map[string]interface{} `yaml:"bind_overrides,omitempty"`
 }
 
 // Converts this plan definition to a broker.ServicePlan.
@@ -73,8 +75,10 @@ func (plan *TfServiceDefinitionV1Plan) ToPlan() broker.ServicePlan {
 	}
 
 	return broker.ServicePlan{
-		ServicePlan:       masterPlan,
-		ServiceProperties: plan.Properties,
+		ServicePlan:        masterPlan,
+		ServiceProperties:  plan.Properties,
+		ProvisionOverrides: plan.ProvisionOverrides,
+		BindOverrides:      plan.BindOverrides,
 	}
 }
 

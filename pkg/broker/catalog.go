@@ -45,7 +45,9 @@ func (s Service) ToPlain() brokerapi.Service {
 type ServicePlan struct {
 	brokerapi.ServicePlan
 
-	ServiceProperties map[string]string `json:"service_properties"`
+	ServiceProperties  map[string]string      `json:"service_properties"`
+	ProvisionOverrides map[string]interface{} `json:"provision_overrides,omitempty"`
+	BindOverrides      map[string]interface{} `json:"bind_overrides,omitempty"`
 }
 
 // GetServiceProperties gets the plan settings variables as a string->interface map.
