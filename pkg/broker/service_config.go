@@ -40,11 +40,13 @@ type ServiceConfig struct {
 
 // CustomPlan holds operator defined variables for each service.
 type CustomPlan struct {
-	GUID        string            `json:"guid" validate:"required,uuid"`
-	Name        string            `json:"name" validate:"required"`
-	DisplayName string            `json:"display_name" validate:"required"`
-	Description string            `json:"description" validate:"required"`
-	Properties  map[string]string `json:"properties"`
+	GUID               string                 `json:"guid" validate:"required,uuid"`
+	Name               string                 `json:"name" validate:"required"`
+	DisplayName        string                 `json:"display_name" validate:"required"`
+	Description        string                 `json:"description" validate:"required"`
+	Properties         map[string]string      `json:"properties"`
+	ProvisionOverrides map[string]interface{} `json:"provision_overrides"`
+	BindOverrides      map[string]interface{} `json:"bind_overrides"`
 }
 
 // ToServicePlan converts the CustomPlan to a ServicePlan.
@@ -58,7 +60,9 @@ func (c *CustomPlan) ToServicePlan() ServicePlan {
 				DisplayName: c.DisplayName,
 			},
 		},
-		ServiceProperties: c.Properties,
+		ServiceProperties:  c.Properties,
+		ProvisionOverrides: c.ProvisionOverrides,
+		BindOverrides:      c.BindOverrides,
 	}
 }
 

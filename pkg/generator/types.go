@@ -118,8 +118,16 @@ The following plans are built-in to the GCP Service Broker and may be overriden
 or disabled by the broker administrator.
 
 {{ if eq (len .catalog.Plans) 0 }}_No plans available_{{ end }}
-{{ range $i, $plan := .catalog.Plans }}  * **{{ $plan.Name }}**: {{ $plan.Description }} Plan ID: {{code $plan.ID}}.
+{{ range $i, $plan := .catalog.Plans -}}
+* **{{code $plan.Name }}**
+  * Plan ID: {{code $plan.ID}}.
+  * Description: {{ $plan.Description }}
+  * This plan {{ if eq (len $plan.ProvisionOverrides) 0 -}} doesn't override {{- else -}} overrides the following {{- end}} user variables on provision.
+{{ range $k, $v := $plan.ProvisionOverrides}}    * {{ code $k }} = {{code $v}}
+{{ end }}  * This plan {{ if eq (len $plan.BindOverrides) 0 -}} doesn't override {{- else -}} overrides the following {{- end}} user variables on bind.
+{{ range $k, $v := $plan.BindOverrides}}    * {{ code $k }} = {{code $v}}
 {{ end }}
+{{- end }}
 
 ## Examples
 

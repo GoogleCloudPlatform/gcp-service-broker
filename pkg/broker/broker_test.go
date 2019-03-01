@@ -241,11 +241,12 @@ func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 	}
 
 	cases := map[string]struct {
-		UserParams        string
-		ServiceProperties map[string]string
-		DefaultOverride   map[string]interface{}
-		ExpectedError     error
-		ExpectedContext   map[string]interface{}
+		UserParams         string
+		ServiceProperties  map[string]string
+		DefaultOverride    map[string]interface{}
+		ProvisionOverrides map[string]interface{}
+		ExpectedError      error
+		ExpectedContext    map[string]interface{}
 	}{
 		"empty": {
 			UserParams:        "",
@@ -327,6 +328,17 @@ func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 			UserParams:    `{"name":"some-name-that-is-longer-than-thirty-characters"}`,
 			ExpectedError: errors.New("1 error(s) occurred: name: String length must be less than or equal to 30"),
 		},
+		"provision_overrides override user params but not computed defaults": {
+			UserParams:         `{"location":"us"}`,
+			DefaultOverride:    map[string]interface{}{},
+			ServiceProperties:  map[string]string{},
+			ProvisionOverrides: map[string]interface{}{"location": "eu"},
+			ExpectedContext: map[string]interface{}{
+				"location":      "eu",
+				"name":          "name-eu",
+				"maybe-missing": "default",
+			},
+		},
 	}
 
 	for tn, tc := range cases {
@@ -336,7 +348,7 @@ func TestServiceDefinition_ProvisionVariables(t *testing.T) {
 			}
 
 			details := brokerapi.ProvisionDetails{RawParameters: json.RawMessage(tc.UserParams)}
-			plan := ServicePlan{ServiceProperties: tc.ServiceProperties}
+			plan := ServicePlan{ServiceProperties: tc.ServiceProperties, ProvisionOverrides: tc.ProvisionOverrides}
 			vars, err := service.ProvisionVariables("instance-id-here", details, plan)
 
 			expectError(t, tc.ExpectedError, err)
@@ -400,6 +412,7 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 	cases := map[string]struct {
 		UserParams      string
 		DefaultOverride map[string]interface{}
+		BindOverrides   map[string]interface{}
 		ExpectedError   error
 		ExpectedContext map[string]interface{}
 		InstanceVars    string
@@ -482,6 +495,17 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 			InstanceVars:  `{"foo":""}`,
 			ExpectedError: errors.New("1 error(s) occurred: name: String length must be less than or equal to 30"),
 		},
+		"bind_overrides override user params but not computed defaults": {
+			UserParams:    `{"location":"us"}`,
+			InstanceVars:  `{"foo":"default"}`,
+			BindOverrides: map[string]interface{}{"location": "eu"},
+			ExpectedContext: map[string]interface{}{
+				"location":     "eu",
+				"name":         "name-eu",
+				"instance-foo": "default",
+				"service-prop": "operator-set",
+			},
+		},
 	}
 
 	for tn, tc := range cases {
@@ -490,6 +514,7 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 				t.Fatal(err)
 			}
 			defer service.SetConfig(ServiceConfig{})
+			service.Plans[0].BindOverrides = tc.BindOverrides
 
 			details := brokerapi.BindDetails{RawParameters: json.RawMessage(tc.UserParams)}
 			instance := models.ServiceInstanceDetails{OtherDetails: tc.InstanceVars}

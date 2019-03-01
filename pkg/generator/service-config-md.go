@@ -200,6 +200,12 @@ func createExampleCustomPlan(service *broker.ServiceDefinition) []broker.CustomP
 			Properties: map[string]string{
 				"//": "See the custom plan properties section below for configurable properties.",
 			},
+			ProvisionOverrides: map[string]interface{}{
+				"//": "You can override any user-settable provision variable here.",
+			},
+			BindOverrides: map[string]interface{}{
+				"//": "You can override any user-settable bind variable here.",
+			},
 		},
 	}
 }

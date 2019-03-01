@@ -193,9 +193,10 @@ func (svc *ServiceDefinition) bindDefaults() []varcontext.DefaultVariable {
 //
 // 1. Variables defined in your `computed_variables` JSON list.
 // 2. Variables defined by the selected service plan in its `service_properties` map.
-// 3. User defined variables (in `provision_input_variables` or `bind_input_variables`)
-// 4. Operator default variables loaded from the environment.
-// 5. Default variables (in `provision_input_variables` or `bind_input_variables`).
+// 3. Variables overridden in the plan's `provision_overrides` map.
+// 4. User defined variables (in `provision_input_variables` or `bind_input_variables`)
+// 5. Operator default variables loaded from the environment.
+// 6. Default variables (in `provision_input_variables` or `bind_input_variables`).
 //
 // Loading into the map occurs slightly differently.
 // Default variables and computed_variables get executed by interpolation.
@@ -217,6 +218,7 @@ func (svc *ServiceDefinition) ProvisionVariables(instanceId string, details brok
 		SetEvalConstants(constants).
 		MergeMap(svc.config.ProvisionDefaults).
 		MergeJsonObject(details.GetRawParameters()).
+		MergeMap(plan.ProvisionOverrides).
 		MergeDefaults(svc.provisionDefaults()).
 		MergeMap(plan.GetServiceProperties()).
 		MergeDefaults(svc.ProvisionComputedVariables)
@@ -229,6 +231,7 @@ func (svc *ServiceDefinition) ProvisionVariables(instanceId string, details brok
 // The variable resolution order is the following:
 //
 // 1. Variables defined in your `computed_variables` JSON list.
+// 2. Variables overridden in the plan's `bind_overrides` map.
 // 3. User defined variables (in `bind_input_variables`)
 // 4. Operator default variables loaded from the environment.
 // 5. Default variables (in `bind_input_variables`).
@@ -268,6 +271,7 @@ func (svc *ServiceDefinition) BindVariables(instance models.ServiceInstanceDetai
 		SetEvalConstants(constants).
 		MergeMap(svc.config.BindDefaults).
 		MergeJsonObject(details.GetRawParameters()).
+		MergeMap(plan.BindOverrides).
 		MergeDefaults(svc.bindDefaults()).
 		MergeDefaults(svc.BindComputedVariables)
 

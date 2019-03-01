@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
  - Documentation about installing Brokerpaks.
  - A new web-endpoint `/service-config` that hosts service configuration info.
  - Ability to get plan information from HIL execution environment on bind.
+ - Ability for plans to selectively override user variables.
 
 ### Changed
  - The format of the `/docs` endpoint is now nicely styled with Bootstrap 4.
