@@ -1,0 +1,5 @@
+dependencies:
+- name: mysql
+  version: "0.15.0"
+  condition: mysql.embedded
+  repository: https://kubernetes-charts.storage.googleapis.com/

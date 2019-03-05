@@ -1,0 +1,14 @@
+apiVersion: v1
+appVersion: "1.0"
+description: A Helm chart for the Google Cloud Platform (GCP) Service Broker
+name: gcp-service-broker
+version: 0.1.0
+icon: https://cloud.google.com/_static/images/cloud/products/logos/svg/gcp.svg
+keywords:
+  - gcp
+  - google cloud
+  - services
+  - service broker
+home: https://github.com/GoogleCloudPlatform/gcp-service-broker
+sources:
+  - https://github.com/GoogleCloudPlatform/gcp-service-broker
