@@ -140,21 +140,41 @@ func GetServiceAccountJson() string {
 // These include the organization, space, and instance id.
 func ExtractDefaultLabels(instanceId string, details brokerapi.ProvisionDetails) map[string]string {
 	labels := map[string]string{
-		"pcf-organization-guid": details.OrganizationGUID,
-		"pcf-space-guid":        details.SpaceGUID,
-		"pcf-instance-id":       instanceId,
+		"managed-by": "gcp-service-broker",
+	}
+
+	if instanceId != "" {
+		labels["instance-id"] = instanceId
+	}
+
+	if details.OrganizationGUID != "" {
+		labels["cf-organization-guid"] = details.OrganizationGUID
+	}
+
+	if details.SpaceGUID != "" {
+		labels["cf-space-guid"] = details.SpaceGUID
 	}
 
 	// After v 2.14 of the OSB the top-level organization_guid and space_guid are
 	// deprecated in favor of context, so we'll override those.
+	//
+	// See the custom profiles document for a listing of custom context vars:
+	// https://github.com/openservicebrokerapi/servicebroker/blob/master/profile.md
 	requestContext := map[string]string{}
 	json.Unmarshal(details.GetRawContext(), &requestContext) // explicitly ignore parse errors
-	if orgGuid, ok := requestContext["organization_guid"]; ok {
-		labels["pcf-organization-guid"] = orgGuid
-	}
 
-	if spaceGuid, ok := requestContext["space_guid"]; ok {
-		labels["pcf-space-guid"] = spaceGuid
+	for labelName, contextKey := range map[string]string{
+		"cf-organization-guid": "organization_guid",
+		"cf-space-guid":        "space_guid",
+		"cf-organization-name": "organization_name",
+		"cf-space-name":        "space_name",
+		"instance-name":        "instance_name",
+		"k8s-namespace":        "namespace",
+		"k8s-clusterid":        "clusterid",
+	} {
+		if v, ok := requestContext[contextKey]; ok {
+			labels[labelName] = v
+		}
 	}
 
 	sanitized := map[string]string{}
