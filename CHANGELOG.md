@@ -13,8 +13,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
  - A new web-endpoint `/service-config` that hosts service configuration info.
  - Ability to get plan information from HIL execution environment on bind.
  - Ability for plans to selectively override user variables.
+ - Expanded default labels to include org and space name for CF, namespace and clusterid for Kubernetes, and instance-name for all.
+ - A new default label `managed-by:gcp-service-broker` to help identify services which shouldn't be touched.
  - Health and liveness checking endpoints at `/live` and `/ready`.
-
 
 ### Changed
  - The format of the `/docs` endpoint is now nicely styled with Bootstrap 4.
@@ -23,6 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
  - Built Brokerpaks now have a name of `{name}-{version}.brokerpak` as defined by the manifest rather than the name of the parent directory.
  - Services inside Brokerpaks now have a file name that includes their CLI friendly name to help differentiate them.
  - The `pak build` command now includes progress logs.
+ - Instance label prefixes are now `cf-` rather than `pcf-`.
  - Docs now serve from the root `/` as well as the `/docs` endpoint.
 
 ## [4.2.2] - 2019-02-06
