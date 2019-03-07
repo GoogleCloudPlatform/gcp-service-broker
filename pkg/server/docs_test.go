@@ -22,20 +22,21 @@ import (
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
+	"github.com/gorilla/mux"
 )
 
 func TestNewDocsHandler(t *testing.T) {
 	registry := builtin.BuiltinBrokerRegistry(broker.ServiceConfigMap{})
+	router := mux.NewRouter()
 	// Test that the handler sets the correct header and contains some imporant
 	// strings that will indicate (but not prove!) that the rendering was correct.
-	handler, err := NewDocsHandler(registry)
-	if err != nil {
+	if err := NewDocsHandler(router, registry); err != nil {
 		t.Fatal(err)
 	}
 	request := httptest.NewRequest(http.MethodGet, "/docs", nil)
 	w := httptest.NewRecorder()
 
-	handler(w, request)
+	router.ServeHTTP(w, request)
 
 	if w.Code != http.StatusOK {
 		t.Errorf("Expected response code: %d got: %d", http.StatusOK, w.Code)
@@ -62,16 +63,17 @@ func TestNewDocsHandler(t *testing.T) {
 
 func TestNewServiceConfigHandler(t *testing.T) {
 	registry := builtin.BuiltinBrokerRegistry(broker.ServiceConfigMap{})
+	router := mux.NewRouter()
+
 	// Test that the handler sets the correct header and contains some imporant
 	// strings that will indicate (but not prove!) that the rendering was correct.
-	handler, err := NewServiceConfigHandler(registry)
-	if err != nil {
+
+	if err := NewServiceConfigHandler(router, registry); err != nil {
 		t.Fatal(err)
 	}
 	request := httptest.NewRequest(http.MethodGet, "/service-config", nil)
 	w := httptest.NewRecorder()
-
-	handler(w, request)
+	router.ServeHTTP(w, request)
 
 	if w.Code != http.StatusOK {
 		t.Errorf("Expected response code: %d got: %d", http.StatusOK, w.Code)

@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/server"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"github.com/gorilla/mux"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -56,7 +57,7 @@ func init() {
 
 func serve() {
 	logger := utils.NewLogger("gcp-service-broker")
-	db_service.New(logger)
+	db := db_service.New(logger)
 
 	// init broker
 	cfg, err := brokers.NewBrokerConfigFromEnv()
@@ -72,11 +73,6 @@ func serve() {
 	username := viper.GetString(apiUserProp)
 	password := viper.GetString(apiPasswordProp)
 	port := viper.GetString(apiPortProp)
-
-	credentials := brokerapi.BrokerCredentials{
-		Username: username,
-		Password: password,
-	}
 
 	// init api
 	logger.Info("Serving", lager.Data{
@@ -95,20 +91,23 @@ func serve() {
 	}
 	logger.Info("service catalog", lager.Data{"catalog": services})
 
-	brokerAPI := brokerapi.New(serviceBroker, logger, credentials)
-	http.Handle("/", brokerAPI)
+	router := mux.NewRouter()
+	router.PathPrefix("/v2").Handler(brokerapi.New(serviceBroker, logger, brokerapi.BrokerCredentials{
+		Username: username,
+		Password: password,
+	}))
 
-	docsHandler, err := server.NewDocsHandler(cfg.Registry)
-	if err != nil {
-		logger.Error("creating docs endpoint", err)
-	}
-	http.Handle("/docs", docsHandler)
+	server.NewHealthHandler(router, db.DB())
 
-	configHandler, err := server.NewServiceConfigHandler(cfg.Registry)
-	if err != nil {
+	if err := server.NewServiceConfigHandler(router, cfg.Registry); err != nil {
 		logger.Error("creating service config endpoint", err)
 	}
-	http.Handle("/service-config", configHandler)
 
-	http.ListenAndServe(":"+port, nil)
+	// The docs handler goes last because it overrides serving the root page
+	// to show docs.
+	if err := server.NewDocsHandler(router, cfg.Registry); err != nil {
+		logger.Error("creating docs endpoint", err)
+	}
+
+	http.ListenAndServe(":"+port, router)
 }

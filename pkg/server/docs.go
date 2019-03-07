@@ -21,6 +21,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/generator"
+	"github.com/gorilla/mux"
 	blackfriday "gopkg.in/russross/blackfriday.v2"
 )
 
@@ -65,21 +66,34 @@ var pageTemplate = template.Must(template.New("docs-page").Parse(`
 
 // NewDocsHandler returns a handler func that generates HTML documentation for
 // the given registry.
-func NewDocsHandler(registry *broker.ServiceRegistry) (http.HandlerFunc, error) {
+func NewDocsHandler(router *mux.Router, registry *broker.ServiceRegistry) error {
 	docsPageMd := generator.CatalogDocumentation(registry)
 
-	return renderAsPage("Service Broker Documents", docsPageMd)
+	handler, err := renderAsPage("Service Broker Documents", docsPageMd)
+	if err != nil {
+		return err
+	}
+
+	router.Handle("/docs", handler)
+	router.Handle("/", handler)
+
+	return nil
 }
 
 // NewServiceConfigHandler returns a handler func that generates HTML
 // documentation for service configurations on the given registry.
-func NewServiceConfigHandler(registry *broker.ServiceRegistry) (http.HandlerFunc, error) {
+func NewServiceConfigHandler(router *mux.Router, registry *broker.ServiceRegistry) error {
 	docsPageMd, err := generator.GenerateServiceConfigMd(registry)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return renderAsPage("Service Broker Configuration", docsPageMd)
+	handler, err := renderAsPage("Service Broker Configuration", docsPageMd)
+	if err != nil {
+		return err
+	}
+	router.Handle("/service-config", handler)
+	return nil
 }
 
 func renderAsPage(title, markdownContents string) (http.HandlerFunc, error) {
