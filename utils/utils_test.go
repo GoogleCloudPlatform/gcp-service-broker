@@ -81,18 +81,17 @@ func TestExtractDefaultLabels(t *testing.T) {
 			instanceId: "",
 			details:    brokerapi.ProvisionDetails{},
 			expected: map[string]string{
-				"pcf-organization-guid": "",
-				"pcf-space-guid":        "",
-				"pcf-instance-id":       "",
+				"managed-by": "gcp-service-broker",
 			},
 		},
 		"osb 2.13": {
 			instanceId: "my-instance",
 			details:    brokerapi.ProvisionDetails{OrganizationGUID: "org-guid", SpaceGUID: "space-guid"},
 			expected: map[string]string{
-				"pcf-organization-guid": "org-guid",
-				"pcf-space-guid":        "space-guid",
-				"pcf-instance-id":       "my-instance",
+				"cf-organization-guid": "org-guid",
+				"cf-space-guid":        "space-guid",
+				"instance-id":          "my-instance",
+				"managed-by":           "gcp-service-broker",
 			},
 		},
 		"osb future": {
@@ -103,18 +102,55 @@ func TestExtractDefaultLabels(t *testing.T) {
 				RawContext:       json.RawMessage(`{"organization_guid":"org-override", "space_guid":"space-override"}`),
 			},
 			expected: map[string]string{
-				"pcf-organization-guid": "org-override",
-				"pcf-space-guid":        "space-override",
-				"pcf-instance-id":       "my-instance",
+				"cf-organization-guid": "org-override",
+				"cf-space-guid":        "space-override",
+				"instance-id":          "my-instance",
+				"managed-by":           "gcp-service-broker",
 			},
 		},
 		"osb special characters": {
 			instanceId: "my~instance.",
 			details:    brokerapi.ProvisionDetails{},
 			expected: map[string]string{
-				"pcf-organization-guid": "",
-				"pcf-space-guid":        "",
-				"pcf-instance-id":       "my_instance_",
+				"instance-id": "my_instance_",
+				"managed-by":  "gcp-service-broker",
+			},
+		},
+		"kubernetes": {
+			instanceId: "my-instance",
+			details: brokerapi.ProvisionDetails{
+				RawContext: json.RawMessage(`{"namespace":"ns", "clusterid":"cluster-guid"}`),
+			},
+			expected: map[string]string{
+				"k8s-namespace": "ns",
+				"k8s-clusterid": "cluster-guid",
+				"instance-id":   "my-instance",
+				"managed-by":    "gcp-service-broker",
+			},
+		},
+		"cf": {
+			instanceId: "my-instance",
+			details: brokerapi.ProvisionDetails{
+				RawContext: json.RawMessage(`{"organization_name":"on", "space_name":"sn", "organization_guid":"og", "space_guid": "sg"}`),
+			},
+			expected: map[string]string{
+				"cf-organization-guid": "og",
+				"cf-space-guid":        "sg",
+				"cf-organization-name": "on",
+				"cf-space-name":        "sn",
+				"instance-id":          "my-instance",
+				"managed-by":           "gcp-service-broker",
+			},
+		},
+		"instance-info": {
+			instanceId: "my-instance",
+			details: brokerapi.ProvisionDetails{
+				RawContext: json.RawMessage(`{"instance_name":"mydb"}`),
+			},
+			expected: map[string]string{
+				"instance-name": "mydb",
+				"instance-id":   "my-instance",
+				"managed-by":    "gcp-service-broker",
 			},
 		},
 	}
