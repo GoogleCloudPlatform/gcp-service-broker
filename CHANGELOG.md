@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
  - Built Brokerpaks now have a name of `{name}-{version}.brokerpak` as defined by the manifest rather than the name of the parent directory.
  - Services inside Brokerpaks now have a file name that includes their CLI friendly name to help differentiate them.
  - The `pak build` command now includes progress logs.
+ - Builtin services now use a prefix of `gsb` for their provisioned resources rather than `pcf`.
 
 ## [4.2.2] - 2019-02-06
 

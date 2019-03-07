@@ -16,9 +16,9 @@ package spanner
 
 import (
 	"code.cloudfoundry.org/lager"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
@@ -70,7 +70,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 				FieldName: "name",
 				Type:      broker.JsonTypeString,
 				Details:   "A unique identifier for the instance, which cannot be changed after the instance is created.",
-				Default:   "pcf-sb-${counter.next()}-${time.nano()}",
+				Default:   "gsb-${counter.next()}-${time.nano()}",
 				Constraints: validation.NewConstraintBuilder().
 					MinLength(6).
 					MaxLength(30).

@@ -16,9 +16,9 @@ package pubsub
 
 import (
 	"code.cloudfoundry.org/lager"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
@@ -61,7 +61,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 				FieldName: "topic_name",
 				Type:      broker.JsonTypeString,
 				Details:   `Name of the topic. Must not start with "goog".`,
-				Default:   "pcf_sb_${counter.next()}_${time.nano()}",
+				Default:   "gsb_${counter.next()}_${time.nano()}",
 				Constraints: validation.NewConstraintBuilder().
 					MinLength(3).
 					MaxLength(255).

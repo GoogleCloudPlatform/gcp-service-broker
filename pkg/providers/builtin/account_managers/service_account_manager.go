@@ -223,7 +223,7 @@ func ServiceAccountWhitelistWithDefault(whitelist []string, defaultValue string)
 func ServiceAccountBindComputedVariables() []varcontext.DefaultVariable {
 	return []varcontext.DefaultVariable{
 		// XXX names are truncated to 20 characters because of a bug in the IAM service
-		{Name: "service_account_name", Default: `${str.truncate(20, "pcf-binding-${request.binding_id}")}`, Overwrite: true},
+		{Name: "service_account_name", Default: `${str.truncate(20, "gsb-binding-${request.binding_id}")}`, Overwrite: true},
 		{Name: "service_account_display_name", Default: "${service_account_name}", Overwrite: true},
 	}
 }
@@ -244,8 +244,8 @@ func ServiceAccountBindOutputVariables() []broker.BrokerVariable {
 			Details:   "Email address of the service account.",
 			Required:  true,
 			Constraints: validation.NewConstraintBuilder().
-				Examples("pcf-binding-ex312029@my-project.iam.gserviceaccount.com").
-				Pattern(`^pcf-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`).
+				Examples("gsb-binding-ex312029@my-project.iam.gserviceaccount.com").
+				Pattern(`^gsb-binding-[a-z0-9-]+@.+\.gserviceaccount\.com$`).
 				Build(),
 		},
 		{
@@ -254,7 +254,7 @@ func ServiceAccountBindOutputVariables() []broker.BrokerVariable {
 			Details:   "The name of the service account.",
 			Required:  true,
 			Constraints: validation.NewConstraintBuilder().
-				Examples("pcf-binding-ex312029").
+				Examples("gsb-binding-ex312029").
 				Build(),
 		},
 		{

@@ -107,7 +107,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 				FieldName: "name",
 				Type:      broker.JsonTypeString,
 				Details:   "The name of the bucket. There is a single global namespace shared by all buckets so it MUST be unique.",
-				Default:   "pcf_sb_${counter.next()}_${time.nano()}",
+				Default:   "gsb_${counter.next()}_${time.nano()}",
 				Constraints: validation.NewConstraintBuilder(). // https://cloud.google.com/storage/docs/naming
 										Pattern("^[A-Za-z0-9_\\.]+$").
 										MinLength(3).
