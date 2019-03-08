@@ -22,8 +22,9 @@ import (
 	"github.com/heptiolabs/healthcheck"
 )
 
-// NewHealthHandler creates a new handler for health and liveness checks.
-func NewHealthHandler(router *mux.Router, db *sql.DB) healthcheck.Handler {
+// AddHealthHandler creates a new handler for health and liveness checks and
+// adds it to the /live and /ready endpoints.
+func AddHealthHandler(router *mux.Router, db *sql.DB) healthcheck.Handler {
 	health := healthcheck.NewHandler()
 
 	health.AddReadinessCheck("database", healthcheck.DatabasePingCheck(db, 2*time.Second))

@@ -64,9 +64,9 @@ var pageTemplate = template.Must(template.New("docs-page").Parse(`
 </html>
 `))
 
-// NewDocsHandler returns a handler func that generates HTML documentation for
-// the given registry.
-func NewDocsHandler(router *mux.Router, registry *broker.ServiceRegistry) error {
+// AddDocsHandler creates a handler func that generates HTML documentation for
+// the given registry and adds it to the /docs and / routes.
+func AddDocsHandler(router *mux.Router, registry *broker.ServiceRegistry) error {
 	docsPageMd := generator.CatalogDocumentation(registry)
 
 	handler, err := renderAsPage("Service Broker Documents", docsPageMd)
@@ -80,9 +80,10 @@ func NewDocsHandler(router *mux.Router, registry *broker.ServiceRegistry) error 
 	return nil
 }
 
-// NewServiceConfigHandler returns a handler func that generates HTML
-// documentation for service configurations on the given registry.
-func NewServiceConfigHandler(router *mux.Router, registry *broker.ServiceRegistry) error {
+// AddServiceConfigHandler creates a handler func that generates HTML
+// documentation for service configurations on the given registry and
+// adds it to the /service-config route.
+func AddServiceConfigHandler(router *mux.Router, registry *broker.ServiceRegistry) error {
 	docsPageMd, err := generator.GenerateServiceConfigMd(registry)
 	if err != nil {
 		return err

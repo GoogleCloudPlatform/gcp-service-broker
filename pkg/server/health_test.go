@@ -86,7 +86,7 @@ func TestNewHealthHandler(t *testing.T) {
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
 			router := mux.NewRouter()
-			handler := NewHealthHandler(router, db.DB())
+			handler := AddHealthHandler(router, db.DB())
 			handler.AddLivenessCheck("test-live", func() error {
 				return tc.LiveErr
 			})

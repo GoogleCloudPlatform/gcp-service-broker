@@ -25,12 +25,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func TestNewDocsHandler(t *testing.T) {
+func TestAddDocsHandler(t *testing.T) {
 	registry := builtin.BuiltinBrokerRegistry(broker.ServiceConfigMap{})
 	router := mux.NewRouter()
 	// Test that the handler sets the correct header and contains some imporant
 	// strings that will indicate (but not prove!) that the rendering was correct.
-	if err := NewDocsHandler(router, registry); err != nil {
+	if err := AddDocsHandler(router, registry); err != nil {
 		t.Fatal(err)
 	}
 	request := httptest.NewRequest(http.MethodGet, "/docs", nil)
@@ -61,14 +61,14 @@ func TestNewDocsHandler(t *testing.T) {
 	}
 }
 
-func TestNewServiceConfigHandler(t *testing.T) {
+func TestAddServiceConfigHandler(t *testing.T) {
 	registry := builtin.BuiltinBrokerRegistry(broker.ServiceConfigMap{})
 	router := mux.NewRouter()
 
 	// Test that the handler sets the correct header and contains some imporant
 	// strings that will indicate (but not prove!) that the rendering was correct.
 
-	if err := NewServiceConfigHandler(router, registry); err != nil {
+	if err := AddServiceConfigHandler(router, registry); err != nil {
 		t.Fatal(err)
 	}
 	request := httptest.NewRequest(http.MethodGet, "/service-config", nil)

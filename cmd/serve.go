@@ -97,15 +97,15 @@ func serve() {
 		Password: password,
 	}))
 
-	server.NewHealthHandler(router, db.DB())
+	server.AddHealthHandler(router, db.DB())
 
-	if err := server.NewServiceConfigHandler(router, cfg.Registry); err != nil {
+	if err := server.AddServiceConfigHandler(router, cfg.Registry); err != nil {
 		logger.Error("creating service config endpoint", err)
 	}
 
 	// The docs handler goes last because it overrides serving the root page
 	// to show docs.
-	if err := server.NewDocsHandler(router, cfg.Registry); err != nil {
+	if err := server.AddDocsHandler(router, cfg.Registry); err != nil {
 		logger.Error("creating docs endpoint", err)
 	}
 
