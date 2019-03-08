@@ -21,6 +21,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/generator"
+	"github.com/gorilla/mux"
 	blackfriday "gopkg.in/russross/blackfriday.v2"
 )
 
@@ -63,23 +64,37 @@ var pageTemplate = template.Must(template.New("docs-page").Parse(`
 </html>
 `))
 
-// NewDocsHandler returns a handler func that generates HTML documentation for
-// the given registry.
-func NewDocsHandler(registry *broker.ServiceRegistry) (http.HandlerFunc, error) {
+// AddDocsHandler creates a handler func that generates HTML documentation for
+// the given registry and adds it to the /docs and / routes.
+func AddDocsHandler(router *mux.Router, registry *broker.ServiceRegistry) error {
 	docsPageMd := generator.CatalogDocumentation(registry)
 
-	return renderAsPage("Service Broker Documents", docsPageMd)
-}
-
-// NewServiceConfigHandler returns a handler func that generates HTML
-// documentation for service configurations on the given registry.
-func NewServiceConfigHandler(registry *broker.ServiceRegistry) (http.HandlerFunc, error) {
-	docsPageMd, err := generator.GenerateServiceConfigMd(registry)
+	handler, err := renderAsPage("Service Broker Documents", docsPageMd)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return renderAsPage("Service Broker Configuration", docsPageMd)
+	router.Handle("/docs", handler)
+	router.Handle("/", handler)
+
+	return nil
+}
+
+// AddServiceConfigHandler creates a handler func that generates HTML
+// documentation for service configurations on the given registry and
+// adds it to the /service-config route.
+func AddServiceConfigHandler(router *mux.Router, registry *broker.ServiceRegistry) error {
+	docsPageMd, err := generator.GenerateServiceConfigMd(registry)
+	if err != nil {
+		return err
+	}
+
+	handler, err := renderAsPage("Service Broker Configuration", docsPageMd)
+	if err != nil {
+		return err
+	}
+	router.Handle("/service-config", handler)
+	return nil
 }
 
 func renderAsPage(title, markdownContents string) (http.HandlerFunc, error) {
