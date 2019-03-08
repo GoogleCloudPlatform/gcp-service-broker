@@ -16,9 +16,9 @@ package bigtable
 
 import (
 	"code.cloudfoundry.org/lager"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
@@ -68,7 +68,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 				FieldName: "name",
 				Type:      broker.JsonTypeString,
 				Details:   "The name of the Cloud Bigtable instance.",
-				Default:   "pcf-sb-${counter.next()}-${time.nano()}",
+				Default:   "gsb-${counter.next()}-${time.nano()}",
 				Constraints: validation.NewConstraintBuilder().
 					MinLength(6).
 					MaxLength(33).
