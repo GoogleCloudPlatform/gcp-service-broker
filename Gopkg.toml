@@ -70,3 +70,7 @@ ignored = ["github.com/GoogleCloudPlatform/gcp-service-broker/tools/osdfgen*"]
 [[constraint]]
   branch = "master"
   name = "github.com/robertkrimen/otto"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/heptiolabs/healthcheck"

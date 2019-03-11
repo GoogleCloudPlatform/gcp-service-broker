@@ -76,7 +76,7 @@ func ExampleTfstate_GetModule() {
                 "Name": {
                     "sensitive": false,
                     "type": "string",
-                    "value": "pcf-binding-ex351277"
+                    "value": "gsb-binding-ex351277"
                 }
             },
             "resources": {},
