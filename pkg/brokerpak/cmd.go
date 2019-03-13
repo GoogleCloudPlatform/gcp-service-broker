@@ -167,7 +167,9 @@ func RegisterAll(registry *broker.ServiceRegistry) error {
 }
 
 // RunExamples executes the examples from a brokerpak.
-func RunExamples(pack string) error {
+// If serviceName is not blank then only examples for the service with the
+// given name are run.
+func RunExamples(pack, serviceName string) error {
 	registry, err := registryFromLocalBrokerpak(pack)
 	if err != nil {
 		return err
@@ -178,7 +180,7 @@ func RunExamples(pack string) error {
 		return err
 	}
 
-	return client.RunExamplesForService(registry, apiClient, "")
+	return client.RunExamplesForService(registry, apiClient, serviceName)
 }
 
 // Docs generates the markdown usage docs for the given pack and writes them to stdout.
