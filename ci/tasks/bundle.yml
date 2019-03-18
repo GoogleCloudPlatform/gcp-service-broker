@@ -12,6 +12,7 @@ inputs:
 - name: client-linux
 - name: client-windows
 - name: client-darwin
+- name: helm-chart
 outputs:
 - name: bundle
 run:
