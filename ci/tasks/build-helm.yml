@@ -1,0 +1,14 @@
+---
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: alpine/helm
+inputs:
+- name: gcp-service-broker
+- name: metadata
+- name: gcp-service-broker-ci
+outputs:
+- name: helm-chart
+run:
+  path: gcp-service-broker-ci/ci/tasks/build-helm.sh

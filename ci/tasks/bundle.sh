@@ -23,6 +23,10 @@ echo "Staging server binaries"
 mkdir -p staging/servers
 cp tiles/* staging/servers
 
+echo "Staging helm chart"
+mkdir -p staging/helm
+cp helm-chart/* staging/helm
+
 echo "Staging client binaries"
 mkdir -p staging/clients
 cp client-darwin/* staging/clients
