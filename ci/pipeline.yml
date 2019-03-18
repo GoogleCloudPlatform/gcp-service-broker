@@ -76,6 +76,8 @@ jobs:
         file: gcp-service-broker-ci/ci/tasks/go-build.yml
       - task: metadata
         file: gcp-service-broker-ci/ci/tasks/metadata.yml
+      - task: build-helm
+        file: gcp-service-broker-ci/ci/tasks/build-helm.yml
       - task: build-tile
         file: gcp-service-broker-ci/ci/tasks/build-tile.yml
       - task: build-darwin
