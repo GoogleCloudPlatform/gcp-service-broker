@@ -6,7 +6,6 @@ image_resource:
     repository: alpine/helm
 inputs:
 - name: gcp-service-broker
-  path: broker-source
 - name: metadata
 - name: gcp-service-broker-ci
 outputs:
