@@ -105,12 +105,6 @@ func NewServerConfigFromEnv() (*ServerConfig, error) {
 		Brokerpaks: paks,
 	}
 
-	if err := cfg.Validate(); err != nil {
-		return nil, fmt.Errorf("brokerpak config was invalid: %v", err)
-	}
-
-	// Builtin paks fail validation because they reference the local filesystem
-	// but do work.
 	if loadBuiltinToggle.IsActive() {
 		log.Println("loading builtin brokerpaks")
 		paks, err := ListBrokerpaks(viper.GetString(brokerpakBuiltinPathKey))
@@ -124,6 +118,10 @@ func NewServerConfigFromEnv() (*ServerConfig, error) {
 			config.Notes = fmt.Sprintf("This pak was automatically loaded because the toggle %s was enabled", loadBuiltinToggle.EnvironmentVariable())
 			cfg.Brokerpaks[key] = config
 		}
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("brokerpak config was invalid: %v", err)
 	}
 
 	return &cfg, nil
