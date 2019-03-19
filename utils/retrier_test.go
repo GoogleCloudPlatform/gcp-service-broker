@@ -22,7 +22,7 @@ import (
 func ExampleRetry_full() {
 	i := 0
 
-	err := Retry(3, 1*time.Second, func() error {
+	err := Retry(3, 1*time.Second, 10*time.Millisecond, func() error {
 		i++
 		if i != 3 {
 			fmt.Printf("failing: %d\n", i)
@@ -42,7 +42,7 @@ func ExampleRetry_full() {
 }
 
 func ExampleRetry_fail() {
-	err := Retry(15, 1*time.Millisecond, func() error {
+	err := Retry(15, 1*time.Millisecond, 10*time.Millisecond, func() error {
 		return errors.New("error")
 	})
 

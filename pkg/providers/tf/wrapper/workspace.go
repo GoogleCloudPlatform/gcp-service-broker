@@ -34,8 +34,9 @@ import (
 const (
 	DefaultInstanceName = "instance"
 
-	DeleteRetryCount = 5
-	DeleteRetryDelay = 30 * time.Second
+	DeleteRetryCount  = 5
+	DeleteRetryDelay  = 30 * time.Second
+	DeleteRetryJitter = 2 * time.Second
 )
 
 var (
@@ -276,7 +277,7 @@ func (workspace *TerraformWorkspace) Destroy() error {
 		return err
 	}
 
-	return utils.Retry(DeleteRetryCount, DeleteRetryDelay, func() error {
+	return utils.Retry(DeleteRetryCount, DeleteRetryDelay, DeleteRetryJitter, func() error {
 		return workspace.runTf("destroy", "-auto-approve", "-no-color")
 	})
 }

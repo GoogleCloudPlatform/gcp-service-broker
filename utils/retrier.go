@@ -16,8 +16,8 @@ package utils
 import "math/rand"
 import "time"
 
-// Retry retries the call repeatedly with a given delay and jitter up to 200ms.
-func Retry(times int, delay time.Duration, callback func() error) error {
+// Retry retries the call repeatedly with a given delay and offset between 0 and jitter.
+func Retry(times int, delay, jitter time.Duration, callback func() error) error {
 	var err error
 
 	for i := 0; i < times; i++ {
@@ -26,8 +26,9 @@ func Retry(times int, delay time.Duration, callback func() error) error {
 			return nil
 		}
 
-		jitter := time.Duration(rand.Int63n(200)) * time.Millisecond
-		time.Sleep(delay + jitter)
+		maxJitter := int64(jitter)
+		jitterAmt := time.Duration(rand.Int63n(maxJitter))
+		time.Sleep(delay + jitterAmt)
 	}
 
 	return err
