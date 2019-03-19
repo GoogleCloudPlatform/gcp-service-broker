@@ -24,6 +24,7 @@ import (
 	"path"
 	"strings"
 	"sync"
+	"time"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
@@ -32,6 +33,10 @@ import (
 // DefaultInstanceName is the default name of an instance of a particular module.
 const (
 	DefaultInstanceName = "instance"
+
+	DeleteRetryCount  = 5
+	DeleteRetryDelay  = 30 * time.Second
+	DeleteRetryJitter = 2 * time.Second
 )
 
 var (
@@ -264,6 +269,7 @@ func (workspace *TerraformWorkspace) Apply() error {
 
 // Destroy runs `terraform destroy` on this workspace.
 // This funciton blocks if another Terraform command is running on this workspace.
+// The function will be retried DeleteRetryCount times with a DeleteRetryDelay pause between calls.
 func (workspace *TerraformWorkspace) Destroy() error {
 	err := workspace.initializeFs()
 	defer workspace.teardownFs()
@@ -271,7 +277,9 @@ func (workspace *TerraformWorkspace) Destroy() error {
 		return err
 	}
 
-	return workspace.runTf("destroy", "-auto-approve", "-no-color")
+	return utils.Retry(DeleteRetryCount, DeleteRetryDelay, DeleteRetryJitter, func() error {
+		return workspace.runTf("destroy", "-auto-approve", "-no-color")
+	})
 }
 
 func (workspace *TerraformWorkspace) tfStatePath() string {
