@@ -173,8 +173,8 @@ Uses plan: {{ code $example.PlanId }}.
 
 }
 
-func mdCode(text string) string {
-	return fmt.Sprintf("`%s`", text)
+func mdCode(text interface{}) string {
+	return fmt.Sprintf("`%v`", text)
 }
 
 func varNotes(variable broker.BrokerVariable) string {
