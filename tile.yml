@@ -432,6 +432,12 @@ forms:
   label: Feature Flags
   description: Service broker feature flags.
   properties:
+  - name: gsb_compatibility_enable_builtin_brokerpaks
+    type: boolean
+    default: "true"
+    label: enable-builtin-brokerpaks
+    description: Load brokerpaks that are built-in to the software.
+    configurable: true
   - name: gsb_compatibility_enable_builtin_services
     type: boolean
     default: "true"

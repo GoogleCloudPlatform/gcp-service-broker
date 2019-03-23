@@ -63,6 +63,7 @@ You can configure the following environment variables:
 
 | Environment Variable | Type | Description |
 |----------------------|------|-------------|
+| <tt>GSB_COMPATIBILITY_ENABLE_BUILTIN_BROKERPAKS</tt> <b>*</b> | boolean | <p>enable-builtin-brokerpaks. Load brokerpaks that are built-in to the software. Default: <code>true</code></p>|
 | <tt>GSB_COMPATIBILITY_ENABLE_BUILTIN_SERVICES</tt> <b>*</b> | boolean | <p>enable-builtin-services. Enable services that are built in to the broker i.e. not brokerpaks. Default: <code>true</code></p>|
 | <tt>GSB_COMPATIBILITY_ENABLE_CATALOG_SCHEMAS</tt> <b>*</b> | boolean | <p>enable-catalog-schemas. Enable generating JSONSchema for the service catalog. Default: <code>false</code></p>|
 | <tt>GSB_COMPATIBILITY_ENABLE_CF_SHARING</tt> <b>*</b> | boolean | <p>enable-cf-sharing. Set all services to have the Sharable flag so they can be shared across spaces in PCF. Default: <code>false</code></p>|
