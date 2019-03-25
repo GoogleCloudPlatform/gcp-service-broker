@@ -19,8 +19,7 @@ Choose the project you want to use with the rest of this tutorial.
 The project MUST have a Kubernetes cluster in it to deploy the broker into and
 you MUST be an owner of the project.
 
-
-<walkthrough-project-setup permissions="project.owner">
+<walkthrough-project-setup>
 </walkthrough-project-setup>
 
 ## Create a Service Account for the broker
