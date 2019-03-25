@@ -1,17 +1,27 @@
-# Install the Service Broker into Kubernetes for use with CF
+# Install the Service Broker into Kubernetes for use with Cloud Foundry
 
 ## Introduction
 
 This tutorial will walk you through installing the GCP Service Broker into
 Kubernetes using the Helm release and using it with Cloud Foundry.
 
-**Time to complete**: About 10 minutes
+<walkthrough-tutorial-duration duration="15">
+</walkthrough-tutorial-duration>
 
 **Prerequisites**:
 
 * A Kubernetes cluster you want to install the broker into.
 
-Click the **Continue** button to move to the next step.
+## Select a project
+
+Choose the project you want to use with the rest of this tutorial.
+
+The project MUST have a Kubernetes cluster in it to deploy the broker into and
+you MUST be an owner of the project.
+
+
+<walkthrough-project-setup permissions="project.owner">
+</walkthrough-project-setup>
 
 ## Create a Service Account for the broker
 
@@ -23,17 +33,13 @@ Create the service account:
 
     gcloud iam service-accounts create {{service-account-name}}
 
-Create the environment variable for its email address:
-
-    ACCOUNTEMAIL={{service-account-name}}@{{project-id}}.iam.gserviceaccount.com
-
 Create new credentials to let the broker authenticate:
 
-    gcloud iam service-accounts keys create key.json --iam-account $ACCOUNTEMAIL
+    gcloud iam service-accounts keys create key.json --iam-account {{service-account-name}}@{{project-id}}.iam.gserviceaccount.com
 
 Grant project owner permissions to the broker:
 
-    gcloud projects add-iam-policy-binding {{project-id}} --member serviceAccount:$ACCOUNTEMAIL --role "roles/owner"
+    gcloud projects add-iam-policy-binding {{project-id}} --member serviceAccount:{{service-account-name}}@{{project-id}}.iam.gserviceaccount.com --role "roles/owner"
 
 ## Enable Required APIs
 
@@ -42,20 +48,15 @@ Now you need to enable APIs to let the broker provision those kind of resources.
 The broker has a few APIs that are required for it to run, and a few that are
 optional but must be enabled to provision resources of a particular type.
 
-Enable the following services to allow the service broker to run:
+Enable the Cloud Resourc Manager and IAM APIs to allow the service broker to run:
 
-<walkthrough-enable-apis apis="cloudresourcemanager.googleapis.com,iam.googleapis.com">
-1. [Google Cloud Resource Manager API](https://console.cloud.google.com/apis/api/cloudresourcemanager.googleapis.com/overview)
-1. [Google Identity and Access Management (IAM) API](https://console.cloud.google.com/apis/api/iam.googleapis.com/overview)
-</walkthrough-enable-apis>
-
+    gcloud services enable cloudresourcemanager.googleapis.com iam.googleapis.com
 
 ### Enable Service APIs
 
 The following APIs must be enabled to use their respective services.
 For example, you must enable the BigQuery API on the project if you want to
 provision and use BigQuery instances.
-It doesn't cost anything to enable them, so we recommend enabling them all unless you have a particular reason not to.
 
 1. [BigQuery API](https://console.cloud.google.com/apis/api/bigquery/overview)
 1. [BigTable API](https://console.cloud.google.com/apis/api/bigtableadmin/overview)
@@ -64,6 +65,10 @@ It doesn't cost anything to enable them, so we recommend enabling them all unles
 1. [Pub/Sub API](https://console.cloud.google.com/apis/api/pubsub/overview)
 1. [Redis API](https://console.cloud.google.com/apis/api/redis.googleapis.com/overview)
 1. [Storage API](https://console.cloud.google.com/apis/api/storage_component/overview)
+1. [Spanner API](https://console.cloud.google.com/apis/api/spanner/overview)
+
+You can always enable the APIs later. If you try to provision an instance that
+uses a disabled API then the provisioning will fail.
 
 ## Install the Broker
 
@@ -71,34 +76,36 @@ First, update the dependencies of the helm chart:
 
     helm dependency update
 
-Next, modify the `values.yaml` file.
-
-<walkthrough-editor-open-file filePath="values.yaml" text="Open values.yaml">
-</walkthrough-editor-open-file>
-
-1. Set the value `broker.service_account_json` to the contents of `key.json`.
-2. Set the value `svccat.register` to be `false` because you're using this
-   installation with Cloud Foundry rather than the
-3. **Optional:** read through the rest of the properties and change any you need
+**Optional:** read through the rest of the properties and change any you need
    to fit your environment.
 
-Finally, install the broker:
+Next install the broker:
 
-    helm install .
+    helm install --name gsb-tutorial --set svccat.register=false --set broker.service_account_json='$(cat key.json)' .
 
-## Set up CF
 
-1. `cf create-service-broker <service broker name> <username> <password> <service broker url>`
-1. (for all applicable services, e.g.) `cf enable-service-access google-pubsub`
+## Install the broker into Cloud Foundry
+
+Follow the notes output by the previous command to get the credentials from your
+Kubernetes cluster and install the broker.
+
+If you need to see the notes again run the command:
+
+    helm get notes gsb-tutorial
+
+## Enable services for your developers
+
+You can look at the installed service offerings in Cloud Foundry, you must make
+these available to users before they can be used:
+
+    cf service-offerings
+
+List who has access to each service:
+
+    cf service-access
+
+Run `cf enable-service-access SERVICENAME` for each service you want to enable:
+
+  cf enable-service-access google-storage
 
 For more information, see the Cloud Foundry docs on [managing Service Brokers](https://docs.cloudfoundry.org/services/managing-service-brokers.html).
-
-
-See [the customization documentation](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/customization.md)
-for instructions about providing database name and port overrides, SSL certificates, custom service plans, and more.
-
-#### [(Optional) Increase the default provision/bind timeout](#timeout)
-If you want to use CloudSQL, we recommend increasing the default timeout for provision and bind operations to 90 seconds.
-This is because CloudFoundry does not yet support asynchronous binding, and CloudSQL bind operations may exceed the default 60 second timeout.
-
-Set `broker_client_timeout_seconds` = 90 in your deployment manifest to change this setting.
