@@ -33,4 +33,4 @@ helm package --app-version=$BROKER_VERSION --dependency-update --version=$BROKER
 
 | Tutorial Name | Tutorial Link |
 |:--------------|:--------------|
-| Install the Service Broker into K8s for use with CF | [![Open in Cloud Shell](http://gstatic.com/cloudssh/images/open-btn.svg)](https://console.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FGoogleCloudPlatform%2Fgcp-service-broker&cloudshell_open_in_editor=values.yaml&cloudshell_working_dir=deployments%2Fhelm%2Fgcp-service-broker&cloudshell_tutorial=cf-tutorial.md&cloudshell_git_branch=feature%2Fcloudshell-tutorail) |
+| Install the Service Broker into K8s for use with CF | [![Open in Cloud Shell](http://gstatic.com/cloudssh/images/open-btn.svg)](https://console.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FGoogleCloudPlatform%2Fgcp-service-broker&cloudshell_open_in_editor=values.yaml&cloudshell_working_dir=deployments%2Fhelm%2Fgcp-service-broker&cloudshell_tutorial=cf-tutorial.md&cloudshell_git_branch=develop) |
