@@ -11,6 +11,7 @@ Kubernetes using the Helm release and using it with Cloud Foundry.
 **Prerequisites**:
 
 * A Kubernetes cluster you want to install the broker into.
+* The `cf` and `helm` CLI tools.
 
 ## Select a project
 
@@ -81,7 +82,6 @@ First, update the dependencies of the helm chart:
 Next install the broker:
 
     helm install --name gsb-tutorial --set svccat.register=false --set broker.service_account_json='$(cat key.json)' .
-
 
 ## Install the broker into Cloud Foundry
 
