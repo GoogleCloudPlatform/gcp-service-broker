@@ -23,7 +23,7 @@ you MUST be an owner of the project.
 <walkthrough-project-setup>
 </walkthrough-project-setup>
 
-## Create a Service Account for the broker
+## Create a service account for the broker
 
 <walkthrough-watcher-constant key="service-account-name" value="gcp-service-broker">
 </walkthrough-watcher-constant>
@@ -41,7 +41,7 @@ Grant project owner permissions to the broker:
 
     gcloud projects add-iam-policy-binding {{project-id}} --member serviceAccount:{{service-account-name}}@{{project-id}}.iam.gserviceaccount.com --role "roles/owner"
 
-## Enable Required APIs
+## Enable required APIs
 
 Now you need to enable APIs to let the broker provision those kind of resources.
 
@@ -52,7 +52,7 @@ Enable the Cloud Resourc Manager and IAM APIs to allow the service broker to run
 
     gcloud services enable cloudresourcemanager.googleapis.com iam.googleapis.com
 
-### Enable Service APIs
+### Enable service APIs
 
 The following APIs must be enabled to use their respective services.
 For example, you must enable the BigQuery API on the project if you want to
@@ -70,7 +70,7 @@ provision and use BigQuery instances.
 You can always enable the APIs later. If you try to provision an instance that
 uses a disabled API then the provisioning will fail.
 
-## Install the Broker
+## Install the broker
 
 First, update the dependencies of the helm chart:
 
