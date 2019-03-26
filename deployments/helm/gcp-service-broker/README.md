@@ -28,3 +28,9 @@ You can build a copy of this Helm chart suitable for releasing with the followin
 BROKER_VERSION=5.0.0
 helm package --app-version=$BROKER_VERSION --dependency-update --version=$BROKER_VERSION .
 ```
+
+## Installing
+
+| Tutorial Name | Tutorial Link |
+|:--------------|:--------------|
+| Install the Service Broker into K8s for use with CF | [![Open in Cloud Shell](http://gstatic.com/cloudssh/images/open-btn.svg)](https://console.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FGoogleCloudPlatform%2Fgcp-service-broker&cloudshell_open_in_editor=values.yaml&cloudshell_working_dir=deployments%2Fhelm%2Fgcp-service-broker&cloudshell_tutorial=cf-tutorial.md&cloudshell_git_branch=develop) |
