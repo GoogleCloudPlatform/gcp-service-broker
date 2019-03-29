@@ -48,7 +48,7 @@ Now you need to enable APIs to let the broker provision those kind of resources.
 The broker has a few APIs that are required for it to run, and a few that are
 optional but must be enabled to provision resources of a particular type.
 
-Enable the Cloud Resourc Manager and IAM APIs to allow the service broker to run:
+Enable the Cloud Resource Manager and IAM APIs to allow the service broker to run:
 
     gcloud services enable cloudresourcemanager.googleapis.com iam.googleapis.com
 
@@ -78,10 +78,13 @@ First, update the dependencies of the helm chart:
 
 **Optional:** read through the rest of the properties and change any you need
    to fit your environment.
+   
+Next, copy the contents of the service account key in `key.json` 
+to the `broker.service_account_json` value in `values.yaml`.
 
-Next install the broker:
+Finally, install the broker:
 
-    helm install --name gsb-tutorial --set svccat.register=false --set broker.service_account_json='$(cat key.json)' .
+    helm install --name gsb-tutorial --set svccat.register=false .
 
 ## Install the broker into Cloud Foundry
 
