@@ -96,7 +96,28 @@ func (broker *CloudSQLBroker) deleteSqlUserAccount(ctx context.Context, binding 
 		return err
 	}
 
-	op, err := client.Users.Delete(broker.ProjectId, instance.Name, "", creds.Username).Do()
+	userList, err := client.Users.List(broker.ProjectId, instance.Name).Do()
+	if err != nil {
+		return fmt.Errorf("Error fetching users to delete: %s", err)
+	}
+
+	// XXX: CloudSQL used to allow deleting users without specifying the host,
+	// however that no longer works. They also no longer accept a blank string
+	// which _is_ a valid host, so we expand to a single space string if the
+	// user we're trying to delete doesn't have some other host specified.
+	hostToDelete := ""
+	for _, user := range userList.Items {
+		if user.Name == creds.Username {
+			hostToDelete = user.Host
+			break
+		}
+	}
+
+	if hostToDelete == "" {
+		hostToDelete = " "
+	}
+
+	op, err := client.Users.Delete(broker.ProjectId, instance.Name, hostToDelete, creds.Username).Do()
 	if err != nil {
 		return fmt.Errorf("Error deleting user: %s", err)
 	}
