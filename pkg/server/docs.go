@@ -27,13 +27,11 @@ import (
 func NewDocsHandler(registry broker.BrokerRegistry) http.HandlerFunc {
 	docsPageMd := generator.CatalogDocumentation(registry)
 
-	// params := blackfriday.HTMLRendererParameters{
-	// 	Title: "Service Broker Documents",
-	// 	CSS:   "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css",
-	// 	Flags: blackfriday.CompletePage,
-	// }
-
-	renderer := blackfriday.HtmlRenderer(blackfriday.HTML_COMPLETE_PAGE, "Service Broker Documents", "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css")
+	renderer := blackfriday.HtmlRenderer(
+		blackfriday.HTML_COMPLETE_PAGE,
+		"Service Broker Documents",
+		"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css",
+	)
 
 	page := blackfriday.Markdown([]byte(docsPageMd), renderer, 0)
 	return func(w http.ResponseWriter, req *http.Request) {
