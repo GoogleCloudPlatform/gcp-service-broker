@@ -19,7 +19,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/generator"
-	blackfriday "gopkg.in/russross/blackfriday.v2"
+	"github.com/russross/blackfriday"
 )
 
 // NewDocsHandler returns a handler func that generates HTML documentation for
@@ -27,15 +27,13 @@ import (
 func NewDocsHandler(registry broker.BrokerRegistry) http.HandlerFunc {
 	docsPageMd := generator.CatalogDocumentation(registry)
 
-	params := blackfriday.HTMLRendererParameters{
-		Title: "Service Broker Documents",
-		CSS:   "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css",
-		Flags: blackfriday.CompletePage,
-	}
+	renderer := blackfriday.HtmlRenderer(
+		blackfriday.HTML_COMPLETE_PAGE,
+		"Service Broker Documents",
+		"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css",
+	)
 
-	renderer := blackfriday.NewHTMLRenderer(params)
-
-	page := blackfriday.Run([]byte(docsPageMd), blackfriday.WithRenderer(renderer))
+	page := blackfriday.Markdown([]byte(docsPageMd), renderer, 0)
 	return func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(200)
