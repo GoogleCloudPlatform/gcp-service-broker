@@ -77,9 +77,8 @@ provision:
       pattern: ^[A-Za-z][-a-z0-9A-Z]+$
   - field_name: authorized_network
     type: string
-    details:  The full name of the Google Compute Engine network to which the instance is connected. If left unspecified, the default network will be used.
-      This will look something like /projects/PROJECTID/global/networks/NETWORKNAME.
-    default: ''
+    details:  The name of the Google Compute Engine network to which the instance is connected. If left unspecified, the network named 'default' will be used.
+    default: default
   computed_inputs:
   - name: labels
     default: ${json.marshal(request.default_labels)}
@@ -94,8 +93,8 @@ provision:
     variable memory_size_gb { type = "string" }
     variable labels { type = "map" }
 
-    data "google_compute_network" "default-network" {
-      name = "default"
+    data "google_compute_network" "authorized-network" {
+      name = "${var.authorized_network}"
     }
 
     resource "google_redis_instance" "instance" {
@@ -104,7 +103,7 @@ provision:
       memory_size_gb     = "${var.memory_size_gb}"
       display_name       = "${var.display_name}"
       region             = "${var.region}"
-      authorized_network = "${coalesce(var.authorized_network, data.google_compute_network.default-network.self_link)}"
+      authorized_network = "${data.google_compute_network.authorized-network.self_link}"
       labels             = "${var.labels}"
 
       timeouts {
