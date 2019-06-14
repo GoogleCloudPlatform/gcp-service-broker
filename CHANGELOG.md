@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
  - Added a workaround for an upstream CloudSQL issue that caused SQL user deletion to fail.
 
+### Changed
+ - Removed requirement to have a 'default' network when using google-redis.
+
 ## [4.2.2] - 2019-02-06
 
 ### Fixed
@@ -88,7 +91,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Deprecated
 - Running the service by executing the main executable. Use the `serve` sub-command instead.
 
-### Changed  
+### Changed
 - **Breaking** plan ids are now required and will not be generated if not supplied.
 - **Breaking** changed custom plan id field name from `guid` to `id`.
 - **Breaking** modified `"features"` plan configuration field name to `"service_properties"`.
