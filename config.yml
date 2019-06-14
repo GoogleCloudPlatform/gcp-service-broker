@@ -1,0 +1,26 @@
+db:
+  host: localhost
+  name: servicebroker
+  password: password
+  port: "3306"
+  user: root
+  type: sqlite3
+  path: test.sqlite3
+api:
+  user: user
+  password: pass
+  port: 8000
+
+google.account: |-
+  {
+    "type": "service_account",
+    "project_id": "jlewisiii-gsb",
+    "private_key_id": "47ece04ce902075153081809c24136049a1a7450",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCtQ5u54Z+vWwmh\n8brSk2UqrTd0TL+fZKovpVdaMgZkTw5Fn/KP7i51VP6XkSWnuuBlvWLBQEo5pIyX\n/hgKe+u+zH0BZwLsw1BtPrlSRda28gsfAZ9FaJEdSK4G1ys/zc4KQqDw3jTo3IAu\nW+tlr5Ivy9UQt0FL55s933+5iEIPhfcRIMofsJfjj2yzd9pBWOY0aYs+8RSYVcmL\naKVWh64ROJ3/EmS6E+nv+osSWQBqn3qd44sW84Y7xhyqDiX7iJEdsem+98a/F1wV\nOqYC71v8OspA7u6NUtTGdv/XGI4ZLu10F1RJWWokOnWksjEO1WK6Abo9wjKlb9fP\nAp5EtK2JAgMBAAECggEAAprR2ENLVIZMmIXrDlffbTsR6pptxg5sHY/Bhq5aWL80\ngnjzW1UUFzj6I9qvg3xEe9sTRT77bq7p2y4be+rdgi6OUYtUKK2OA7pt7E32+qSc\nZLCwTYmTJurNDPbGpGyqZI6YX06j4n1QIwJIQWzYiIXqs9fhcCvw8kbuI2KoRZXy\nZ/9Lg+frxWMumVheOYw/bA7EpypDdJyK8e4wA15AW3qPQHBe3et1OISEFmV11ku3\nKB855U+5SFzEYcW/B+dWhWQOxFtknJ4izxWmkxF+MRGIE01FuueX6bqGniBgeZ2A\nr9N5JiulziZhwm0WpbMJgRHeQsq3VcxoVq83jjO4FQKBgQDdh2u/snmvnF8XGQAp\n2GOY46pMF3Qr3s9Fxcbwp1mLN6m9SthyPDh2LkTQpiENv2G6bBmbxvOoSAHwXP1u\nxBy0oDx9LS5x2q9bwUOYB7YXDerXY8SIBAEPE2wvep6LgJeydaIKovBVD162FR2s\n97WoZ7X9m7/KZDkq8u7E74YCPQKBgQDIOY/AYxj7CSp93s/iUdcastlvXtqcwZSp\nMeHmKvyUVjv/CjL7cgPzFLrVJK/uDiim1o2Vh9UZoFjdG1bKqjyGwDcWlkq8f2Wd\n7I/suxeu7TcIR0gkn3N3y74CJQD3fYJM5ubXSVA1rZde8/re9PkW/Ss8n61HcnQn\nq+3Z35oJPQKBgGNonphyXZrJX/58cI9WlDMKjuQAblg1buvPeZuKbWtEuj3AdWql\nzWxzDNxYgGKr7A387mzyFWsBjSUwhWWMSZlggmRlvv7GdISHMG7rnvGvhB/NnGaw\n7Uy3mYegzb6qIOirUuDVB2YUNJse1KdGrVT53TgGCUWoPeMhCraDCa69AoGACfgL\ntzl34e/X5MJ2OT935UVoXAot+kYNH8tzAuG7B6uvewhH94r6tVyf3MLh24lq7ruZ\n+wrzSj5YjlGxJZAKSW9CjuZWvEHfjlhb5h5+lGANMGVUKzahKiLDyBmNjcT6+tc4\nQRnOW43UDo85O2aZDFL4lyEgIIGLVPpTcliWs8UCgYEAghLnGjqZgoOrVW/XKAsq\nmrS5TMJjuOEDuV+0WMp06fx24DaDSY82vXVagENMln6ADkChYTYlch28st+NhGe6\noATTt1VZ3ldWhNHjlQ2Ca9KH8yPuOYa9q89wxQTTFAuXcsvPhViD/CNcIj2U/ZiK\nHFSQkpUhJirGCgsgtZajikM=\n-----END PRIVATE KEY-----\n",
+    "client_email": "hsophia-service-broker@jlewisiii-gsb.iam.gserviceaccount.com",
+    "client_id": "111916856101358598446",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/hsophia-service-broker%40jlewisiii-gsb.iam.gserviceaccount.com"
+  }
