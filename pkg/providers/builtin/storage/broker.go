@@ -18,8 +18,8 @@ import (
 	"fmt"
 
 	googlestorage "cloud.google.com/go/storage"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
@@ -46,6 +46,12 @@ func (b *StorageBroker) Provision(ctx context.Context, provisionContext *varcont
 		StorageClass: provisionContext.GetString("storage_class"),
 		Location:     provisionContext.GetString("location"),
 		Labels:       provisionContext.GetStringMapString("labels"),
+	}
+
+	if provisionContext.GetBool("only_delete_if_empty") {
+		attrs.Labels["sb-force-delete"] = "true"
+	} else {
+		attrs.Labels["sb-force-delete"] = "false"
 	}
 
 	if err := provisionContext.Error(); err != nil {
@@ -85,6 +91,20 @@ func (b *StorageBroker) Deprovision(ctx context.Context, bucket models.ServiceIn
 	storageService, err := b.createClient(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	attrs, err := storageService.Bucket(bucket.Name).Attrs(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if attrs.Labels["sb-force-delete"] == "true" {
+		objects := storageService.Bucket(bucket.Name).Objects(ctx, nil)
+
+		obj, err := objects.Next()
+		for err != nil {
+			storageService.Bucket(bucket.Name).Object(obj.Name).Delete(ctx)
+		}
 	}
 
 	if err = storageService.Bucket(bucket.Name).Delete(ctx); err != nil {

@@ -16,9 +16,9 @@ package storage
 
 import (
 	"code.cloudfoundry.org/lager"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
@@ -123,6 +123,13 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					Pattern("^[A-Za-z][-a-z0-9A-Z]+$").
 					Examples("US", "EU", "southamerica-east1").
 					Build(),
+			},
+			{
+				FieldName:   "only_delete_if_empty",
+				Type:        broker.JsonTypeString,
+				Default:     "true",
+				Details:     `Should this bucket only delete if it's empty?`,
+				Constraints: validation.NewConstraintBuilder().Enum("true", "false").Build(),
 			},
 		},
 		ProvisionComputedVariables: []varcontext.DefaultVariable{
