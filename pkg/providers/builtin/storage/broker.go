@@ -48,7 +48,7 @@ func (b *StorageBroker) Provision(ctx context.Context, provisionContext *varcont
 		Labels:       provisionContext.GetStringMapString("labels"),
 	}
 
-	if provisionContext.GetBool("only_delete_if_empty") {
+	if provisionContext.GetBool("force_delete") {
 		attrs.Labels["sb-force-delete"] = "true"
 	} else {
 		attrs.Labels["sb-force-delete"] = "false"
@@ -101,14 +101,18 @@ func (b *StorageBroker) Deprovision(ctx context.Context, bucket models.ServiceIn
 	if attrs.Labels["sb-force-delete"] == "true" {
 		objects := storageService.Bucket(bucket.Name).Objects(ctx, nil)
 
-		obj, err := objects.Next()
-		for err != nil {
+		for {
+			obj, err := objects.Next()
+			if err != nil || obj == nil {
+				break
+			}
+
 			storageService.Bucket(bucket.Name).Object(obj.Name).Delete(ctx)
 		}
 	}
 
 	if err = storageService.Bucket(bucket.Name).Delete(ctx); err != nil {
-		return nil, fmt.Errorf("Error deleting bucket: %s", err)
+		return nil, fmt.Errorf("error deleting bucket: %s (to delete a non-empty bucket, set the label sb-force-delete=true on it)", err)
 	}
 
 	return nil, nil

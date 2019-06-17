@@ -125,10 +125,10 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					Build(),
 			},
 			{
-				FieldName:   "only_delete_if_empty",
+				FieldName:   "force_delete",
 				Type:        broker.JsonTypeString,
-				Default:     "true",
-				Details:     `Should this bucket only delete if it's empty?`,
+				Default:     "false",
+				Details:     `Attempt to erase bucket contents before deleting bucket on deprovision.`,
 				Constraints: validation.NewConstraintBuilder().Enum("true", "false").Build(),
 			},
 		},
@@ -191,6 +191,18 @@ func ServiceDefinition() *broker.ServiceDefinition {
 				Description:     "Create a multi-regional bucket with a service account that can create/read/list/delete the objects in it.",
 				PlanId:          "a5e8dfb5-e5ec-472a-8d36-33afcaff2fdb",
 				ProvisionParams: map[string]interface{}{"location": "us"},
+				BindParams: map[string]interface{}{
+					"role": "storage.objectAdmin",
+				},
+			},
+			{
+				Name:        "Delete even if not empty",
+				Description: "Sets the label sb-force-delete=true on the bucket. The broker will try to erase all contents before deleting the bucket.",
+				PlanId:      "5e6161d2-0202-48be-80c4-1006cce19b9d",
+				ProvisionParams: map[string]interface{}{
+					"location":     "us-west1",
+					"force_delete": "true",
+				},
 				BindParams: map[string]interface{}{
 					"role": "storage.objectAdmin",
 				},
