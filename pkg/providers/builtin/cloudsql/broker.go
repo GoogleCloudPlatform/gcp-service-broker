@@ -18,11 +18,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
@@ -31,7 +32,9 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	multierror "github.com/hashicorp/go-multierror"
+	googleapi "google.golang.org/api/googleapi"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
+	sqladmin "google.golang.org/api/sqladmin/v1beta4"
 )
 
 const (
@@ -406,13 +409,62 @@ func (b *CloudSQLBroker) Deprovision(ctx context.Context, instance models.Servic
 		return nil, err
 	}
 
-	// delete the instance from google
-	op, err := sqlService.Instances.Delete(b.ProjectId, instance.Name).Do()
+	return nil, b.deleteInstance(ctx, sqlService, instance.Name)
+}
+
+// deleteInstance deprovisions a single CloudSQL instance and its failover if
+// it exists.
+func (b *CloudSQLBroker) deleteInstance(ctx context.Context, sqlService *sqladmin.Service, instanceName string) error {
+	b.Logger.Info("deleting instance", lager.Data{"name": instanceName})
+
+	actualInstance, err := sqlService.Instances.Get(b.ProjectId, instanceName).Do()
 	if err != nil {
-		return nil, fmt.Errorf("Error deleting instance: %s", err)
+		// the instance might have already been deleted
+		if isErrStatus(err, http.StatusNotFound) {
+			b.Logger.Info("instance did not exist, skipping deletion", lager.Data{"name": instanceName})
+			return nil
+		}
+
+		return fmt.Errorf("couldn't delete instance: %s", err)
 	}
 
-	return &op.Name, nil
+	if actualInstance.FailoverReplica != nil {
+		b.Logger.Info("instance has a failover, deleting that first", lager.Data{"name": instanceName, "failover": actualInstance.FailoverReplica.Name})
+
+		if err := b.deleteInstance(ctx, sqlService, actualInstance.FailoverReplica.Name); err != nil {
+			return fmt.Errorf("couldn't delete failover: %s", err)
+		}
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("couldn't delete instance %q, timed out", instanceName)
+
+		default:
+			op, err := sqlService.Instances.Delete(b.ProjectId, instanceName).Do()
+			if err != nil {
+				if isErrStatus(err, http.StatusConflict) {
+					time.Sleep(5 * time.Second)
+					continue
+				}
+
+				return fmt.Errorf("couldn't delete instance: %s", err)
+			}
+
+			b.Logger.Info("started deletion operation", lager.Data{"name": instanceName, "op": op})
+
+			return b.pollOperationUntilDone(ctx, op, b.ProjectId)
+		}
+	}
+}
+
+func isErrStatus(err error, httpStatusCode int) bool {
+	if gerr, ok := err.(*googleapi.Error); ok {
+		return gerr.Code == httpStatusCode
+	}
+
+	return false
 }
 
 // ProvisionsAsync indicates that CloudSQL uses asynchronous provisioning.
@@ -422,7 +474,7 @@ func (b *CloudSQLBroker) ProvisionsAsync() bool {
 
 // DeprovisionsAsync indicates that CloudSQL uses asynchronous deprovisioning.
 func (b *CloudSQLBroker) DeprovisionsAsync() bool {
-	return true
+	return false
 }
 
 func (b *CloudSQLBroker) createClient(ctx context.Context) (*googlecloudsql.Service, error) {

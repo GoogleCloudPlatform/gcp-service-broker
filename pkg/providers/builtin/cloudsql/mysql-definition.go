@@ -16,8 +16,8 @@ package cloudsql
 
 import (
 	"code.cloudfoundry.org/lager"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
@@ -218,6 +218,15 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 					Build(),
 			},
 			{
+				FieldName: "failover_replica_suffix",
+				Type:      broker.JsonTypeString,
+				Details:   "(only for 2nd generation instances) If specified, creates a failover replica with the instance name and this suffix. Overrides `failover_replica_name`.",
+				Default:   "",
+				Constraints: validation.NewConstraintBuilder().
+					Pattern("^(|[a-z0-9-]+)$").
+					Build(),
+			},
+			{
 				FieldName: "activation_policy",
 				Type:      broker.JsonTypeString,
 				Details:   "The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE.",
@@ -239,6 +248,7 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 			{Name: "is_first_gen", Default: `${regexp.matches("^(d|D)[0-9]+$", tier)}`, Overwrite: true},
 			{Name: "version", Default: `${is_first_gen ? "MYSQL_5_6" : "MYSQL_5_7"}`, Overwrite: false},
 			{Name: "binlog", Default: `${is_first_gen ? false : true}`, Overwrite: false},
+			{Name: "failover_replica_name", Default: `${failover_replica_suffix == "" ? failover_replica_name : "${instance_name}${failover_replica_suffix}"}`, Overwrite: true},
 
 			// validation
 			{Name: "_", Default: `${assert(disk_size <= max_disk_size, "disk size (${disk_size}) is greater than max allowed disk size for this plan (${max_disk_size})")}`, Overwrite: true},
@@ -274,6 +284,19 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 			},
 		},
 		Examples: []broker.ServiceExample{
+			{
+				Name:        "HA Instance",
+				Description: "An HA setup for MySQL with failover replica",
+				PlanId:      "7d8f9ade-30c1-4c96-b622-ea0205cc5f0b",
+				ProvisionParams: map[string]interface{}{
+					"backups_enabled":         "true",
+					"binlog":                  "true",
+					"failover_replica_suffix": "-failover",
+				},
+				BindParams: map[string]interface{}{
+					"role": "cloudsql.editor",
+				},
+			},
 			{
 				Name:        "Development Sandbox",
 				Description: "An inexpensive MySQL sandbox for developing with no backups.",

@@ -240,6 +240,36 @@ func TestCreateProvisionRequest(t *testing.T) {
 			Validate:    func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {},
 			ErrContains: "disk size",
 		},
+
+		"failover name specified": {
+			Service:    MysqlServiceDefinition(),
+			PlanId:     mysqlSecondGenPlan,
+			UserParams: `{"failover_replica_name":"my-replica"}`,
+			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
+				if di.FailoverReplica == nil {
+					t.Errorf("Expected FailoverReplica to not be nil")
+				}
+
+				if di.FailoverReplica.Name != "my-replica" {
+					t.Errorf("Expected FailoverReplica.Name to be 'my-replica' got %s.", di.FailoverReplica.Name)
+				}
+			},
+		},
+
+		"failover suffix overrides failover name": {
+			Service:    MysqlServiceDefinition(),
+			PlanId:     mysqlSecondGenPlan,
+			UserParams: `{"instance_name":"my-instance", "failover_replica_name":"my-replica", "failover_replica_suffix":"-failover"}`,
+			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
+				if di.FailoverReplica == nil {
+					t.Errorf("Expected FailoverReplica to not be nil")
+				}
+
+				if di.FailoverReplica.Name != "my-instance-failover" {
+					t.Errorf("Expected FailoverReplica.Name to be 'my-replica-failover' got %s.", di.FailoverReplica.Name)
+				}
+			},
+		},
 	}
 
 	for tn, tc := range cases {
