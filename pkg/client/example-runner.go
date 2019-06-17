@@ -28,21 +28,24 @@ import (
 
 // RunExamplesForService runs all the exmaples for a given service name against
 // the service broker pointed to by client. All examples in the registry get run
-// if serviceName is blank.
-func RunExamplesForService(registry broker.BrokerRegistry, client *Client, serviceName string) error {
+// if serviceName is blank. If exampleName is non-blank then only the example
+// with the given name is run.
+func RunExamplesForService(registry broker.BrokerRegistry, client *Client, serviceName, exampleName string) error {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	services := registry.GetAllServices()
 
 	for _, service := range services {
-
 		if serviceName != "" && serviceName != service.Name {
 			continue
 		}
 
 		for _, example := range service.Examples {
-			err := RunExample(client, example, service)
-			if err != nil {
+			if exampleName != "" && example.Name != exampleName {
+				continue
+			}
+
+			if err := RunExample(client, example, service); err != nil {
 				return err
 			}
 		}

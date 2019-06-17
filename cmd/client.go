@@ -32,6 +32,7 @@ var (
 	parametersJson string
 
 	serviceName string
+	exampleName string
 )
 
 func init() {
@@ -121,7 +122,7 @@ user-defined plans.
 				log.Fatalf("Error creating client: %v", err)
 			}
 
-			if err := client.RunExamplesForService(builtin.BuiltinBrokerRegistry(), apiClient, serviceName); err != nil {
+			if err := client.RunExamplesForService(builtin.BuiltinBrokerRegistry(), apiClient, serviceName, exampleName); err != nil {
 				log.Fatalf("Error executing examples: %v", err)
 			}
 
@@ -148,6 +149,7 @@ user-defined plans.
 	}
 
 	runExamplesCmd.Flags().StringVarP(&serviceName, "service-name", "", "", "name of the service to run tests for")
+	runExamplesCmd.Flags().StringVarP(&exampleName, "example-name", "", "", "only run examples matching this name")
 }
 
 func newClientCommand(use, short string, run func(*client.Client) *client.BrokerResponse) *cobra.Command {
