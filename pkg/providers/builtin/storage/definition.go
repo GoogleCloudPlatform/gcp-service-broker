@@ -16,9 +16,9 @@ package storage
 
 import (
 	"code.cloudfoundry.org/lager"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
@@ -124,6 +124,13 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					Examples("US", "EU", "southamerica-east1").
 					Build(),
 			},
+			{
+				FieldName:   "force_delete",
+				Type:        broker.JsonTypeString,
+				Default:     "false",
+				Details:     `Attempt to erase bucket contents before deleting bucket on deprovision.`,
+				Constraints: validation.NewConstraintBuilder().Enum("true", "false").Build(),
+			},
 		},
 		ProvisionComputedVariables: []varcontext.DefaultVariable{
 			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
@@ -184,6 +191,18 @@ func ServiceDefinition() *broker.ServiceDefinition {
 				Description:     "Create a multi-regional bucket with a service account that can create/read/list/delete the objects in it.",
 				PlanId:          "a5e8dfb5-e5ec-472a-8d36-33afcaff2fdb",
 				ProvisionParams: map[string]interface{}{"location": "us"},
+				BindParams: map[string]interface{}{
+					"role": "storage.objectAdmin",
+				},
+			},
+			{
+				Name:        "Delete even if not empty",
+				Description: "Sets the label sb-force-delete=true on the bucket. The broker will try to erase all contents before deleting the bucket.",
+				PlanId:      "5e6161d2-0202-48be-80c4-1006cce19b9d",
+				ProvisionParams: map[string]interface{}{
+					"location":     "us-west1",
+					"force_delete": "true",
+				},
 				BindParams: map[string]interface{}{
 					"role": "storage.objectAdmin",
 				},
