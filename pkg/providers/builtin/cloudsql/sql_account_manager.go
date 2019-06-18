@@ -106,11 +106,18 @@ func (broker *CloudSQLBroker) deleteSqlUserAccount(ctx context.Context, binding 
 	// which _is_ a valid host, so we expand to a single space string if the
 	// user we're trying to delete doesn't have some other host specified.
 	hostToDelete := ""
+	foundUser := false
 	for _, user := range userList.Items {
 		if user.Name == creds.Username {
 			hostToDelete = user.Host
 			break
 		}
+	}
+
+	// XXX: If the user was already deleted, don't fail here because it could
+	// block deprovisioning.
+	if !foundUser {
+		return nil
 	}
 
 	if hostToDelete == "" {
