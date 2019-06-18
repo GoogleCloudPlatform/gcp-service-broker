@@ -260,7 +260,7 @@ func (ee *exampleExecutor) Unbind() error {
 	// to unbind. Issue #222 was opened to address this. In the meantime this
 	// is a hack to get around it that will still fail if the 500 errors truly
 	// occur because of a real, unrecoverable, server error.
-	return retry(5*time.Minute, 15*time.Second, func() (bool, error) {
+	return retry(15*time.Minute, 15*time.Second, func() (bool, error) {
 		log.Printf("Unbinding %s\n", ee.Name)
 		resp := ee.client.Unbind(ee.InstanceId, ee.BindingId, ee.ServiceId, ee.PlanId)
 
