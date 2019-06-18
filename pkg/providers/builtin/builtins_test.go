@@ -54,7 +54,7 @@ func TestServiceProviderAsync(t *testing.T) {
 		},
 		"cloudsql": {
 			AsyncProvisionExpected:   true,
-			AsyncDeprovisionExpected: true,
+			AsyncDeprovisionExpected: false,
 			Provider:                 &cloudsql.CloudSQLBroker{},
 		},
 		"dataflow": {
