@@ -74,9 +74,9 @@ func ServiceDefinition() *broker.ServiceDefinition {
 				Details:   `Name of the subscription. Blank means no subscription will be created. Must not start with "goog".`,
 				Default:   "",
 				Constraints: validation.NewConstraintBuilder().
-					MinLength(3).
+					MinLength(0).
 					MaxLength(255).
-					Pattern(`^[a-zA-Z][a-zA-Z0-9\d\-_~%\.\+]+`). // adapted from the Pub/Sub create subscription page's validator
+					Pattern(`^(|[a-zA-Z][a-zA-Z0-9\d\-_~%\.\+]+)`). // adapted from the Pub/Sub create subscription page's validator
 					Build(),
 			},
 			{
