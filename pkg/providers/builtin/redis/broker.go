@@ -23,6 +23,8 @@ import (
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/net/context"
 	"google.golang.org/genproto/googleapis/cloud/redis/v1beta1"
+	"strconv"
+	"strings"
 )
 
 // RedisBroker is the service-broker back-end for creating and binding Redis services.
@@ -30,9 +32,17 @@ type RedisBroker struct {
 	base.BrokerBase
 }
 
+// InstanceInformation holds the details needed to connect to a Redis instance after it has been provisioned
+type InstanceInformation struct {
+	RedisVersion string `json:"redis_version"`
+	Host         string `json:"host"`
+	Port         string `json:"port"`
+	MemorySizeGb int    `json:"memory_size_gb"`
+}
+
 // serviceTiers holds the valid value mapping for string service tiers to their REST call equivalent
 var serviceTiers = map[string]redis.Instance_Tier{
-	"basic": redis.Instance_BASIC,
+	"basic":       redis.Instance_BASIC,
 	"standard_ha": redis.Instance_STANDARD_HA,
 }
 
@@ -40,27 +50,27 @@ var serviceTiers = map[string]redis.Instance_Tier{
 func (b *RedisBroker) Provision(ctx context.Context, provisionContext *varcontext.VarContext) (models.ServiceInstanceDetails, error) {
 
 	authorizedNetwork := provisionContext.GetString("authorized_network")
-	capacityTier := int32(provisionContext.GetInt("capacity_tier"))
+	memorySizeGb := int32(provisionContext.GetInt("memory_size_gb"))
 	displayName := provisionContext.GetString("display_name")
 	instanceId := provisionContext.GetString("instance_id")
-	locationId := provisionContext.GetString("location_id")
-	serviceTier := serviceTiers[provisionContext.GetString("service_tier")]
-	parent := fmt.Sprintf("projects/%s/locations/%s", b.ProjectId, locationId)
+	region := provisionContext.GetString("region")
+	serviceTier := serviceTiers[strings.ToLower(provisionContext.GetString("service_tier"))]
+	parent := fmt.Sprintf("projects/%s/locations/%s", b.ProjectId, region)
 	name := fmt.Sprintf("%s/instances/%s", parent, instanceId)
 
 	// Build Redis Instance
 	instance := &redis.Instance{
-		Name: name,
-		DisplayName: displayName,
-		Tier: serviceTier,
-		MemorySizeGb: capacityTier,
+		Name:              name,
+		DisplayName:       displayName,
+		Tier:              serviceTier,
+		MemorySizeGb:      memorySizeGb,
 		AuthorizedNetwork: authorizedNetwork,
 	}
 
 	ir := &redis.CreateInstanceRequest{
-		Parent: parent,
+		Parent:     parent,
 		InstanceId: instanceId,
-		Instance: instance,
+		Instance:   instance,
 	}
 
 	c, err := googleredis.NewCloudRedisClient(ctx)
@@ -78,8 +88,19 @@ func (b *RedisBroker) Provision(ctx context.Context, provisionContext *varcontex
 		return models.ServiceInstanceDetails{}, err
 	}
 
+	ii := InstanceInformation{
+		RedisVersion: resp.RedisVersion,
+		Host:         resp.Host,
+		Port:         strconv.Itoa(int(resp.Port)),
+		MemorySizeGb: int(resp.MemorySizeGb),
+	}
+
 	id := models.ServiceInstanceDetails{
 		Name: resp.Name,
+	}
+
+	if err := id.SetOtherDetails(ii); err != nil {
+		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling json: %s", err)
 	}
 
 	return id, nil

@@ -64,15 +64,15 @@ func ServiceDefinition() *broker.ServiceDefinition {
 		ProvisionInputVariables: []broker.BrokerVariable{
 			{
 				FieldName: "authorized_network",
-				Type: 			broker.JsonTypeString,
-				Details: 		"Optional. The full name of the Google Compute Engine // [network](/compute/docs/networks-and-firewalls#networks) to which the // instance is connected.",
-				Default: 		"",
+				Type:      broker.JsonTypeString,
+				Details:   "Optional. The full name of the Google Compute Engine // [network](/compute/docs/networks-and-firewalls#networks) to which the // instance is connected.",
+				Default:   "",
 			},
 			{
-				FieldName:  "capacity_tier",
-				Type: 			broker.JsonTypeString,
-				Details: 		"The Redis instance's provisioned capacity in GB. See: https://cloud.google.com/memorystore/pricing for more information.",
-				Default: 		"4",
+				FieldName: "memory_size_gb",
+				Type:      broker.JsonTypeString,
+				Details:   "The Redis instance's provisioned capacity in GB. See: https://cloud.google.com/memorystore/pricing for more information.",
+				Default:   "4",
 				Constraints: validation.NewConstraintBuilder().
 					MinLength(1).
 					MaxLength(10).
@@ -81,9 +81,9 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			},
 			{
 				FieldName: "instance_id",
-				Type: 			broker.JsonTypeString,
-				Details:		"The name of the Redis instance.",
-				Default:		"gsb-${counter.next()}-${time.nano()}",
+				Type:      broker.JsonTypeString,
+				Details:   "The name of the Redis instance.",
+				Default:   "gsb-${counter.next()}-${time.nano()}",
 				Constraints: validation.NewConstraintBuilder().
 					MinLength(1).
 					MaxLength(40).
@@ -91,10 +91,10 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					Build(),
 			},
 			{
-				FieldName: "location_id",
-				Type:				broker.JsonTypeString,
-				Details: 		"The region to provision the Regis instance in. See: https://cloud.google.com/memorystore/docs/redis/regions for supported regions.",
-				Default:		"us-east1",
+				FieldName: "region",
+				Type:      broker.JsonTypeString,
+				Details:   "The region to provision the Regis instance in. See: https://cloud.google.com/memorystore/docs/redis/regions for supported regions.",
+				Default:   "us-east1",
 				Constraints: validation.NewConstraintBuilder().
 					Pattern("^[a-z]+[-][a-z0-9]+$").
 					Examples("us-central1", "europe-west2", "asia-northeast1", "australia-southeast1").
@@ -111,17 +111,17 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					Build(),
 			},
 		},
-		DefaultRoleWhitelist:    roleWhitelist,
-		BindInputVariables:      accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "redis.viewer"),
-		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
-		BindComputedVariables:   accountmanagers.ServiceAccountBindComputedVariables(),
+		DefaultRoleWhitelist:  roleWhitelist,
+		BindInputVariables:    accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "redis.viewer"),
+		BindOutputVariables:   accountmanagers.ServiceAccountBindOutputVariables(),
+		BindComputedVariables: accountmanagers.ServiceAccountBindComputedVariables(),
 		PlanVariables: []broker.BrokerVariable{
 			{
 				FieldName: "service_tier",
-				Type: broker.JsonTypeString,
-				Details: "Either BASIC or STANDARD_HA. See: https://cloud.google.com/memorystore/pricing for more information.",
-				Default: "basic",
-				Required: true,
+				Type:      broker.JsonTypeString,
+				Details:   "Either BASIC or STANDARD_HA. See: https://cloud.google.com/memorystore/pricing for more information.",
+				Default:   "basic",
+				Required:  true,
 			},
 		},
 		Examples: []broker.ServiceExample{
