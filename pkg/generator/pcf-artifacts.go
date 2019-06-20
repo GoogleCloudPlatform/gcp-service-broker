@@ -27,7 +27,7 @@ const (
 	appName         = "gcp-service-broker"
 	appDescription  = "A service broker for Google Cloud Platform services."
 	stemcellOs      = "ubuntu-xenial"
-	stemcellVersion = "170.19"
+	stemcellVersion = "170.82"
 
 	buildpack     = "go_buildpack"
 	goPackageName = "github.com/GoogleCloudPlatform/gcp-service-broker"
