@@ -16,11 +16,13 @@ package redis
 
 import (
 	googleredis "cloud.google.com/go/redis/apiv1beta1"
-	"google.golang.org/genproto/googleapis/cloud/redis/v1beta1"
+	"fmt"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/net/context"
+	"google.golang.org/genproto/googleapis/cloud/redis/v1beta1"
 )
 
 // RedisBroker is the service-broker back-end for creating and binding Redis services.
@@ -28,44 +30,78 @@ type RedisBroker struct {
 	base.BrokerBase
 }
 
+// serviceTiers holds the valid value mapping for string service tiers to their REST call equivalent
+var serviceTiers = map[string]redis.Instance_Tier{
+	"basic": redis.Instance_BASIC,
+	"standard_ha": redis.Instance_STANDARD_HA,
+}
+
 // Provision creates a new Redis instance from the settings in the user-provided details and service plan.
 func (b *RedisBroker) Provision(ctx context.Context, provisionContext *varcontext.VarContext) (models.ServiceInstanceDetails, error) {
 
-	// Build Instance parameter
+	authorizedNetwork := provisionContext.GetString("authorized_network")
+	capacityTier := int32(provisionContext.GetInt("capacity_tier"))
+	displayName := provisionContext.GetString("display_name")
+	instanceId := provisionContext.GetString("instance_id")
+	locationId := provisionContext.GetString("location_id")
+	serviceTier := serviceTiers[provisionContext.GetString("service_tier")]
+	parent := fmt.Sprintf("projects/%s/locations/%s", b.ProjectId, locationId)
+	name := fmt.Sprintf("%s/instances/%s", parent, instanceId)
+
+	// Build Redis Instance
 	instance := &redis.Instance{
-		Name: "default",
-		Tier: redis.Instance_BASIC,
-		MemorySizeGb: 32,
+		Name: name,
+		DisplayName: displayName,
+		Tier: serviceTier,
+		MemorySizeGb: capacityTier,
+		AuthorizedNetwork: authorizedNetwork,
 	}
 
-	// Fill in InstanceRequest
 	ir := &redis.CreateInstanceRequest{
-		Parent: "parent",
-		InstanceId: "generic_id",
+		Parent: parent,
+		InstanceId: instanceId,
 		Instance: instance,
 	}
 
-	// CreateInstance creates a Redis instance and executes asynchronously
-	ctx := context.Background()
 	c, err := googleredis.NewCloudRedisClient(ctx)
 	if err != nil {
-		// TODO (hsophia):
+		return models.ServiceInstanceDetails{}, err
 	}
 
 	op, err := c.CreateInstance(ctx, ir)
 	if err != nil {
-		// TODO (hsophia): Handle error
+		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new Redis instance: %s", err)
 	}
 
 	resp, err := op.Wait(ctx)
 	if err != nil {
-		// TODO (hsophia): Handle error
+		return models.ServiceInstanceDetails{}, err
 	}
 
-	// Get ID to return to serviceInstanceDetails
 	id := models.ServiceInstanceDetails{
-		Name: "default",
+		Name: resp.Name,
 	}
 
 	return id, nil
+}
+
+// Deprovision deletes the Redis instance with the given instance ID
+func (b *RedisBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (*string, error) {
+	c, err := googleredis.NewCloudRedisClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	req := &redis.DeleteInstanceRequest{
+		Name: instance.Name,
+	}
+
+	op, err := c.DeleteInstance(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("Error deleting Redis instance: %s", err)
+	}
+
+	err = op.Wait(ctx)
+
+	return nil, nil
 }

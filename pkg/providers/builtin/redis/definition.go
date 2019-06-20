@@ -30,7 +30,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 		"redis.viewer",
 	}
 
-	// TODO (hsophia): Replace with ServiceDefinition for google-redis
 	return &broker.ServiceDefinition{
 		Id:               "3ea92b54-838c-4fe1-b75d-9bda513380aa",
 		Name:             "google-memorystore-redis",
@@ -40,7 +39,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 		DocumentationUrl: "https://cloud.google.com/memorystore/docs/redis",
 		SupportUrl:       "https://cloud.google.com/memorystore/docs/redis/support",
 		Tags:             []string{"gcp", "memorystore", "redis"},
-		Bindable:         true, // TODO (hsophia): Get a blank service account, extend base class
+		Bindable:         true,
 		PlanUpdateable:   false,
 		Plans: []broker.ServicePlan{
 			{
@@ -64,6 +63,23 @@ func ServiceDefinition() *broker.ServiceDefinition {
 		},
 		ProvisionInputVariables: []broker.BrokerVariable{
 			{
+				FieldName: "authorized_network",
+				Type: 			broker.JsonTypeString,
+				Details: 		"Optional. The full name of the Google Compute Engine // [network](/compute/docs/networks-and-firewalls#networks) to which the // instance is connected.",
+				Default: 		"",
+			},
+			{
+				FieldName:  "capacity_tier",
+				Type: 			broker.JsonTypeString,
+				Details: 		"The Redis instance's provisioned capacity in GB. See: https://cloud.google.com/memorystore/pricing for more information.",
+				Default: 		"4",
+				Constraints: validation.NewConstraintBuilder().
+					MinLength(1).
+					MaxLength(10).
+					Pattern("[1-9][0-9]*").
+					Build(),
+			},
+			{
 				FieldName: "instance_id",
 				Type: 			broker.JsonTypeString,
 				Details:		"The name of the Redis instance.",
@@ -72,17 +88,6 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					MinLength(1).
 					MaxLength(40).
 					Pattern("^[a-z]([-0-9a-z]*[a-z0-9]$)*").
-					Build(),
-			},
-			{
-				FieldName:  "capacity_tier",
-				Type: 			broker.JsonTypeString,
-				Details: 		"The Redis instance's provisioned capacity in GB. See: https://cloud.google.com/memorystore/pricing for more information.",
-				Default: 4,
-				Constraints: validation.NewConstraintBuilder().
-					MinLength(1).
-					MaxLength(10).
-					Pattern("[1-9][0-9]*").
 					Build(),
 			},
 			{
@@ -95,34 +100,44 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					Examples("us-central1", "europe-west2", "asia-northeast1", "australia-southeast1").
 					Build(),
 			},
+			{
+				FieldName: "display_name",
+				Type:      broker.JsonTypeString,
+				Details:   "The human-readable display name of the Bigtable instance.",
+				Default:   "${instance_id}",
+				Constraints: validation.NewConstraintBuilder().
+					MinLength(4).
+					MaxLength(30).
+					Build(),
+			},
 		},
 		DefaultRoleWhitelist:    roleWhitelist,
-		BindInputVariables:      accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "ml.modelUser"), // TODO (hsophia)
-		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(), // TODO (hsophia)
-		BindComputedVariables:   accountmanagers.ServiceAccountBindComputedVariables(), // TODO (hsophia)
+		BindInputVariables:      accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "redis.viewer"),
+		BindOutputVariables:     accountmanagers.ServiceAccountBindOutputVariables(),
+		BindComputedVariables:   accountmanagers.ServiceAccountBindComputedVariables(),
 		PlanVariables: []broker.BrokerVariable{
 			{
 				FieldName: "service_tier",
 				Type: broker.JsonTypeString,
 				Details: "Either BASIC or STANDARD_HA. See: https://cloud.google.com/memorystore/pricing for more information.",
-				Default: "BASIC",
+				Default: "basic",
 				Required: true,
 			},
 		},
-/*		Examples: []broker.ServiceExample{
+		Examples: []broker.ServiceExample{
 			{
-				Name:            "Basic Configuration",
-				Description:     "Create an account with developer access to your ML models.",
-				PlanId:          "be7954e1-ecfb-4936-a0b6-db35e6424c7a",
+				Name:            "Basic Redis Configuration",
+				Description:     "Create a Redis instance with basic service tier.",
+				PlanId:          "dd1923b6-ac26-4697-83d6-b3a0c05c2c94",
 				ProvisionParams: map[string]interface{}{},
 				BindParams: map[string]interface{}{
-					"role": "ml.developer",
+					"role": "redis.viewer",
 				},
 			},
-		},*/
-		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider { // TODO (hsophia)
+		},
+		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
 			bb := base.NewBrokerBase(projectId, auth, logger)
-			return &ApiServiceBroker{BrokerBase: bb} // TODO (hsophia): Implement RedisServiceBroker
+			return &RedisBroker{BrokerBase: bb}
 		},
 		IsBuiltin: true,
 	}

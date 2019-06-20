@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/firestore"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/ml"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/pubsub"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/redis"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/spanner"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/stackdriver"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/storage"
@@ -54,6 +55,7 @@ func RegisterBuiltinBrokers(registry *broker.ServiceRegistry) {
 	registry.Register(dialogflow.ServiceDefinition())
 	registry.Register(firestore.ServiceDefinition())
 	registry.Register(pubsub.ServiceDefinition())
+	registry.Register(redis.ServiceDefinition())
 	registry.Register(spanner.ServiceDefinition())
 	registry.Register(stackdriver.StackdriverDebuggerServiceDefinition())
 	registry.Register(stackdriver.StackdriverMonitoringServiceDefinition())
