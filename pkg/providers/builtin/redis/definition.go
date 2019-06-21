@@ -65,7 +65,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			{
 				FieldName: "authorized_network",
 				Type:      broker.JsonTypeString,
-				Details:   "Optional. The full name of the Google Compute Engine // [network](/compute/docs/networks-and-firewalls#networks) to which the // instance is connected.",
+				Details:   "Optional. The full name of the Google Compute Engine [network](/compute/docs/networks-and-firewalls#networks) to which the instance is connected.",
 				Default:   "",
 			},
 			{
@@ -111,9 +111,34 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					Build(),
 			},
 		},
-		DefaultRoleWhitelist:  roleWhitelist,
-		BindInputVariables:    accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "redis.viewer"),
-		BindOutputVariables:   accountmanagers.ServiceAccountBindOutputVariables(),
+		DefaultRoleWhitelist: roleWhitelist,
+		BindInputVariables:   accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "redis.viewer"),
+		BindOutputVariables: append(accountmanagers.ServiceAccountBindOutputVariables(),
+			broker.BrokerVariable{
+				FieldName: "redis_version",
+				Type:      broker.JsonTypeString,
+				Details:   "The version of Redis software.",
+				Required:  true,
+			},
+			broker.BrokerVariable{
+				FieldName: "host",
+				Type:      broker.JsonTypeString,
+				Details:   "Hostname or IP address of the exposed Redis endpoint used by clients to connect to the service.",
+				Required:  true,
+			},
+			broker.BrokerVariable{
+				FieldName: "port",
+				Type:      broker.JsonTypeString,
+				Details:   "The port number of the exposed Redis endpoint.",
+				Required:  true,
+			},
+			broker.BrokerVariable{
+				FieldName: "memory_size_gb",
+				Type:      broker.JsonTypeInteger,
+				Details:   "Redis memory size in GiB.",
+				Required:  true,
+			},
+		),
 		BindComputedVariables: accountmanagers.ServiceAccountBindComputedVariables(),
 		PlanVariables: []broker.BrokerVariable{
 			{
