@@ -67,6 +67,10 @@ func RunMigrations(db *gorm.DB) error {
 		return autoMigrateTables(db, &models.TerraformDeploymentV1{})
 	}
 
+	migrations[5] = func() error { // v4.2.3
+		return autoMigrateTables(db, &models.ProvisionRequestDetailsV2{})
+	}
+
 	var lastMigrationNumber = -1
 
 	// if we've run any migrations before, we should have a migrations table, so find the last one we ran

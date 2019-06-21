@@ -124,6 +124,24 @@ func (ProvisionRequestDetailsV1) TableName() string {
 	return "provision_request_details"
 }
 
+// ProvisionRequestDetailsV2 holds user-defined properties passed to a call
+// to provision a service.
+type ProvisionRequestDetailsV2 struct {
+	gorm.Model
+
+	ServiceInstanceId string
+
+	// is a json.Marshal of models.ProvisionDetails
+	RequestDetails string `gorm:"type:text"`
+}
+
+// TableName returns a consistent table name (`provision_request_details`) for
+// gorm so multiple structs from different versions of the database all operate
+// on the same table.
+func (ProvisionRequestDetailsV2) TableName() string {
+	return "provision_request_details"
+}
+
 // MigrationV1 represents the mgirations table. It holds a monotonically
 // increasing number that gets incremented with every database schema revision.
 type MigrationV1 struct {
