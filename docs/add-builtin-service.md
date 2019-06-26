@@ -36,7 +36,7 @@ The `registry.go` file lists all built-in service providers. You will need to ed
    This will help you fill out fields in the `ServiceDefinition`. The Redis docs can be found [here](https://cloud.google.com/memorystore/docs/redis).
     
 ## Code Walkthrough
-To get an idea of how to create the service template for your new service, I will walk through the changes made to `definition.go`, `broker.go`, and `registry.go` when implementing Redis as a new built-in service. At the end of the code walkthrough, you will also be able to test your new service!
+To get an idea of how to create the service template for your new service, we'll walk through through the changes made to `definition.go`, `broker.go`, and `registry.go` when implementing Redis as a new built-in service. At the end of the code walkthrough, you will also be able to test your new service!
 
 ### Service Definition
 
@@ -53,9 +53,9 @@ The `ServiceDefinition` holds the necessary details to describe an OSB service a
 * `DocumentationUrl`: The url of the Google Cloud documentation.
 * `SupportUrl`: The url of the Google Cloud support page. This can often be found through the Google Cloud documentation.
 * `Tags`: Tags to help find the service.
-* `Bindable`: Boolean value.
-* `PlanUpdateable`: Boolean value.
-* `DefaultRoleWhitelist`: A string array of whitelisted roles. More about GCP roles can be found [here](https://cloud.google.com/iam/docs/understanding-roles), and the Redis roles are listed [here](https://cloud.google.com/iam/docs/understanding-roles#memorystore-redis-roles). 
+* `Bindable`: Boolean value. Represents whether or not the service supports the bind call.
+* `PlanUpdateable`: Boolean value. This should always be false, since the GCP service broker does not support updating plans.
+* `DefaultRoleWhitelist`: String array of whitelisted roles. More about GCP roles can be found [here](https://cloud.google.com/iam/docs/understanding-roles), and the Redis roles are listed [here](https://cloud.google.com/iam/docs/understanding-roles#memorystore-redis-roles). 
 
 **Provision Input Variables**
 
