@@ -73,7 +73,7 @@ takes as input a [`req *redispb.CreateInstanceRequest`](https://godoc.org/google
 
 The [`CreateInstanceRequest`](https://godoc.org/google.golang.org/genproto/googleapis/cloud/redis/v1beta1#CreateInstanceRequest) contains three required fields:
 
-```
+```Go
 type CreateInstanceRequest struct {
     // Required. The resource name of the instance location using the form:
     //     `projects/{project_id}/locations/{location_id}`
@@ -88,7 +88,7 @@ type CreateInstanceRequest struct {
 
 The [`Instance field`](https://godoc.org/google.golang.org/genproto/googleapis/cloud/redis/v1beta1#Instance) also contains a few required fields:
 
-```
+```Go
 type Instance struct {
     // Required. Unique name of the resource in this scope including project and
     // location using the form:
@@ -124,7 +124,7 @@ There are two steps to adding service plans:
 
     The `broker.ServicePlan` struct has a `brokerapi.ServicePlan` and a `ServiceProperties` field:
     
-    ```
+    ```Go
     type ServicePlan struct {
       brokerapi.ServicePlan
       ServiceProperties map[string]string `json:"service_properties"`
@@ -132,7 +132,8 @@ There are two steps to adding service plans:
     ```
     
     The `brokerapi.ServicePlan` struct contains information about the plan. The `ID` field here should also be a unique UUID, separate from the `ServiceDefinition` UUID.
-    ```
+    
+    ```Go
     type ServicePlan struct {
       ID              string               `json:"id"`
       Name            string               `json:"name"`
@@ -153,7 +154,7 @@ There are two steps to adding service plans:
 
     This is so the `ServiceProperties` field can later be parsed by `broker.go`. Here is the `PlanVariables` field in the Redis example:
     
-    ```
+    ```Go
     PlanVariables: []broker.BrokerVariable{
           {
             FieldName: "service_tier",
@@ -179,7 +180,7 @@ Add the folder holding your `definition.go` and `service.go` to the `imports`, a
 
 In the `Examples` field in your service definition, you can add a service definition to test out. 
 
-```
+```Go
 Examples: []broker.ServiceExample{
 	{
 			Name:            "Basic Redis Configuration",
