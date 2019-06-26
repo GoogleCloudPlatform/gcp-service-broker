@@ -118,6 +118,10 @@ func validateServiceDefinition(t *testing.T, svc *broker.ServiceDefinition) {
 			}
 		}
 
+		if len(svc.Description) > 255 {
+			t.Errorf("CF requires description lengths to be less than 255 characters, but got %d", len(svc.Description))
+		}
+
 		for _, plan := range catalog.Plans {
 			validateServicePlan(t, svc, plan)
 		}
