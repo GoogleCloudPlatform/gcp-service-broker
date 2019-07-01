@@ -66,10 +66,7 @@ func init() {
 // pulls db credentials from the environment, connects to the db, and returns the db connection
 func SetupDb(logger lager.Logger) *gorm.DB {
 
-	vcapServices := parseVcapServices(logger)
-	logger.Info(vcapServices[0].BindingName)
-	logger.Info(vcapServices[0].InstanceName)
-
+	useVcapServices(logger)
 	dbType := viper.GetString(dbTypeProp)
 	var db *gorm.DB
 	var err error
