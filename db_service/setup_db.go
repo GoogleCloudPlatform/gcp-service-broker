@@ -69,6 +69,7 @@ func SetupDb(logger lager.Logger) *gorm.DB {
 	dbType := viper.GetString(dbTypeProp)
 	var db *gorm.DB
 	var err error
+	// if provided, use database injected by CF via VCAP_SERVICES environment variable
 	err = useVcapServices(logger)
 	if err != nil {
 		logger.Error("Invalid VCAP_SERVICES environment variable", err)
