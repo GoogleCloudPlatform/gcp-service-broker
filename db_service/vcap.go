@@ -27,12 +27,13 @@ func useVcapServices(logger lager.Logger) error {
 			return fmt.Errorf("Error parsing VCAP_SERVICES: %s", err)
 		}
 
+		// if URI is supplied, we should parse it to fill any missing fields
 		u, err := url.Parse(vcapService.Credentials["uri"])
 		if err != nil {
 			return fmt.Errorf("Error parsing VCAP_SERVICES credentials URI: %s", err)
 		}
 
-		logger.Info("SETTING UP MYSQL DATABASE FROM VCAP_SERVICES")
+		logger.Info("Using MySQL database injected via VCAP_SERVICES environment variable")
 		viper.Set(dbPathProp, u.Path)
 		viper.Set(dbTypeProp, DbTypeMysql)
 		viper.Set(dbHostProp, vcapService.Credentials["host"])
@@ -40,6 +41,7 @@ func useVcapServices(logger lager.Logger) error {
 		viper.Set(dbPassProp, vcapService.Credentials["Password"])
 		viper.Set(dbNameProp, vcapService.Credentials["database_name"])
 
+		//  if database is one provided by gcp service broker, use the client_cert, ca_cert and client_key fields
 		if contains(vcapService.Tags, "gcp") {
 			viper.Set(caCertProp, vcapService.Credentials["CaCert"])
 			viper.Set(clientCertProp, vcapService.Credentials["ClientCert"])
@@ -49,7 +51,6 @@ func useVcapServices(logger lager.Logger) error {
 	return nil
 }
 
-// Parse VCAP_SERVICES environment variable
 func parseVcapServices(vcapServicesEnv string, logger lager.Logger) (VcapService, error) {
 	var vcapServiceMap map[string]*json.RawMessage
 	err := json.Unmarshal([]byte(vcapServicesEnv), &vcapServiceMap)
@@ -70,7 +71,7 @@ func parseVcapServices(vcapServicesEnv string, logger lager.Logger) (VcapService
 	return vcapServices[index], nil
 }
 
-// Returns whether a given string array arr contains string key
+// whether a given string array arr contains string key
 func contains(arr []string, key string) bool {
 	for _, n := range arr {
 		if key == n {
@@ -80,8 +81,7 @@ func contains(arr []string, key string) bool {
 	return false
 }
 
-// Return the index of the VcapService with a tag of "mysql" in the list of VcapServices
-// Fail if we find more or fewer than 1
+// return the index of the VcapService with a tag of "mysql" in the list of VcapServices, fail if we find more or fewer than 1
 func findMySqlTag(VcapServices []VcapService, key string) (int, error) {
 	index := -1
 	count := 0
