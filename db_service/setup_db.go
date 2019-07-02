@@ -66,10 +66,14 @@ func init() {
 // pulls db credentials from the environment, connects to the db, and returns the db connection
 func SetupDb(logger lager.Logger) *gorm.DB {
 
-	useVcapServices(logger)
 	dbType := viper.GetString(dbTypeProp)
 	var db *gorm.DB
 	var err error
+	err = useVcapServices(logger)
+	if err != nil {
+		logger.Error("Invalid VCAP_SERVICES environment variable", err)
+		os.Exit(1)
+	}
 	switch dbType {
 	default:
 		logger.Error("Database Setup", fmt.Errorf("Invalid database type %q, valid types are: sqlite3 and mysql", dbType))

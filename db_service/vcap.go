@@ -3,6 +3,7 @@ package db_service
 import (
 	"code.cloudfoundry.org/lager"
 	"encoding/json"
+	"fmt"
 	"github.com/spf13/viper"
 	"net/url"
 	"os"
@@ -18,16 +19,20 @@ type VcapService struct {
 	Credentials  map[string]string `json:"credentials"`   // The service-specific credentials needed to access the service instance.
 }
 
-func useVcapServices(logger lager.Logger) {
+func useVcapServices(logger lager.Logger) error {
 	vcapData, vcapExists := os.LookupEnv("VCAP_SERVICES")
 	if vcapExists {
-		vcapService := parseVcapServices(vcapData, logger)
+		vcapService, err := parseVcapServices(vcapData, logger)
+		if err != nil {
+			return fmt.Errorf("Error parsing VCAP_SERVICES: %s", err)
+		}
 
 		u, err := url.Parse(vcapService.Credentials["uri"])
 		if err != nil {
-			panic(err)
+			return fmt.Errorf("Error parsing VCAP_SERVICES credentials URI: %s", err)
 		}
 
+		logger.Info("SETTING UP MYSQL DATABASE FROM VCAP_SERVICES")
 		viper.Set(dbPathProp, u.Path)
 		viper.Set(dbTypeProp, DbTypeMysql)
 		viper.Set(dbHostProp, vcapService.Credentials["host"])
@@ -41,31 +46,31 @@ func useVcapServices(logger lager.Logger) {
 			viper.Set(clientKeyProp, vcapService.Credentials["ClientKey"])
 		}
 	}
+	return nil
 }
 
 // Parse VCAP_SERVICES environment variable
-func parseVcapServices(vcapServicesEnv string, logger lager.Logger) VcapService {
+func parseVcapServices(vcapServicesEnv string, logger lager.Logger) (VcapService, error) {
 	var vcapServiceMap map[string]*json.RawMessage
 	err := json.Unmarshal([]byte(vcapServicesEnv), &vcapServiceMap)
 	if err != nil {
-		logger.Error("Error parsing VCAP_SERVICES environment variable", err)
+		return VcapService{}, fmt.Errorf("Error unmarshaling VCAP_SERVICES: %s", err)
 	}
 	var vcapServices []VcapService
 	for _,v := range vcapServiceMap {
 		err := json.Unmarshal(*v, &vcapServices)
 		if err != nil {
-			logger.Error("Error parsing VCAP_SERVICES environment variable", err)
+			return VcapService{}, fmt.Errorf("Error unmarshaling VCAP_SERVICES: %s", err)
 		}
 	}
-	index := findMySqlTag(vcapServices, "mysql")
-	if index == -1 {
-		logger.Info("The VCAP_SERVICES environment variable may only contain one MySQL database.")
-		os.Exit(1)
+	index, err := findMySqlTag(vcapServices, "mysql")
+	if err != nil {
+		return VcapService{}, fmt.Errorf("Error finding MySQL tag: %s", err)
 	}
-	return vcapServices[index]
+	return vcapServices[index], nil
 }
 
-// contains tells whether a given string array arr contains string key
+// Returns whether a given string array arr contains string key
 func contains(arr []string, key string) bool {
 	for _, n := range arr {
 		if key == n {
@@ -75,8 +80,9 @@ func contains(arr []string, key string) bool {
 	return false
 }
 
-// We'll want to search the list for credentials that have a tag of "mysql", fail if we find more or fewer than 1, and use the credentials there.
-func findMySqlTag(VcapServices []VcapService, key string) int {
+// Return the index of the VcapService with a tag of "mysql" in the list of VcapServices
+// Fail if we find more or fewer than 1
+func findMySqlTag(VcapServices []VcapService, key string) (int, error) {
 	index := -1
 	count := 0
 	for i, vcapService := range VcapServices {
@@ -86,8 +92,7 @@ func findMySqlTag(VcapServices []VcapService, key string) int {
 		}
 	}
 	if count != 1 {
-		return -1
-	} else {
-		return index
+		return -1, fmt.Errorf("The variable VCAP_SERVICES must have one VCAP service with a tag of %s. There are currently %d VCAP services with the tag %s.", "'mysql'", count, "'mysql'")
 	}
+	return index, nil
 }
