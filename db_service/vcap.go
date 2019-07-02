@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/spf13/viper"
-	//"net/url"
+	"net/url"
 	"os"
 )
 
@@ -30,33 +30,19 @@ func useVcapServices(logger lager.Logger) error {
 		return fmt.Errorf("Error parsing VCAP_SERVICES: %s", err)
 	}
 
-	// if URI is supplied, we should parse it to fill any missing fields
-	// TODO (hsophia): Decide which URI struct fields to use
-	//u, err := url.Parse(vcapService.Credentials["uri"])
-	//if err != nil {
-	//	return fmt.Errorf("Error parsing VCAP_SERVICES credentials URI: %s", err)
-	//}
-
-	//type URL struct {
-	//	Scheme     string
-	//	Opaque     string    // encoded opaque data
-	//	User       *Userinfo // username and password information
-	//	Host       string    // host or host:port
-	//	Path       string    // path (relative paths may omit leading slash)
-	//	RawPath    string    // encoded path hint (see EscapedPath method)
-	//	ForceQuery bool      // append a query ('?') even if RawQuery is empty
-	//	RawQuery   string    // encoded query values, without '?'
-	//	Fragment   string    // fragment for references, without '#'
-	//}
+	u, err := url.Parse(vcapService.Credentials["uri"])
+	if err != nil {
+		return fmt.Errorf("Error parsing credentials uri field: %s", err)
+	}
 
 	logger.Info("Using MySQL database injected via VCAP_SERVICES environment variable")
 	viper.Set(dbTypeProp, DbTypeMysql)
 	viper.Set(dbHostProp, vcapService.Credentials["host"])
-	viper.Set(dbUserProp, vcapService.Credentials["Username"])
-	viper.Set(dbPassProp, vcapService.Credentials["Password"])
-	viper.Set(dbNameProp, vcapService.Credentials["database_name"])
+	viper.Set(dbUserProp, coalesce(u.User.Username(), vcapService.Credentials["Username"], vcapService.Credentials["username"]))
+	viper.Set(dbPassProp, coalesce(vcapService.Credentials["Password"], vcapService.Credentials["password"]))
+	viper.Set(dbNameProp, coalesce(vcapService.Credentials["database_name"], vcapService.Credentials["name"]))
 
-	//  if database is one provided by gcp service broker, use the client_cert, ca_cert and client_key fields
+	//  if database is provided by gcp service broker, retrieve the client_cert, ca_cert and client_key fields
 	if contains(vcapService.Tags, "gcp") {
 		viper.Set(caCertProp, vcapService.Credentials["CaCert"])
 		viper.Set(clientCertProp, vcapService.Credentials["ClientCert"])
@@ -64,6 +50,16 @@ func useVcapServices(logger lager.Logger) error {
 	}
 
 	return nil
+}
+
+// Return first non-null string in list of arguments
+func coalesce(credentials ...string) string {
+	for _, credential := range credentials {
+		if credential != "" {
+			return credential
+		}
+	}
+	return ""
 }
 
 func parseVcapServices(vcapServicesEnv string) (VcapService, error) {
