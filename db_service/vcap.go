@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/spf13/viper"
+	//"net/url"
 	"os"
 )
 
@@ -20,6 +21,7 @@ type VcapService struct {
 
 func useVcapServices(logger lager.Logger) error {
 	vcapData, vcapExists := os.LookupEnv("VCAP_SERVICES")
+
 	if !vcapExists {
 		return nil
 	}
@@ -60,6 +62,7 @@ func useVcapServices(logger lager.Logger) error {
 		viper.Set(clientCertProp, vcapService.Credentials["ClientCert"])
 		viper.Set(clientKeyProp, vcapService.Credentials["ClientKey"])
 	}
+
 	return nil
 }
 
