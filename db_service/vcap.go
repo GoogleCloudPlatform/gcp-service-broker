@@ -43,10 +43,10 @@ func UseVcapServices() error {
 		return fmt.Errorf("Error parsing VCAP_SERVICES: %s", err)
 	}
 
-	return setDatabaseCredentials(vcapService)
+	return SetDatabaseCredentials(vcapService)
 }
 
-func setDatabaseCredentials(vcapService VcapService) error {
+func SetDatabaseCredentials(vcapService VcapService) error {
 
 	u, err := url.Parse(coalesce(vcapService.Credentials["uri"]))
 	if err != nil {
