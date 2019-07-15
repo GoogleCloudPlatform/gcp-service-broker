@@ -22,7 +22,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-const numMigrations = 5
+const numMigrations = 6
 
 // runs schema migrations on the provided service broker database to get it up to date
 func RunMigrations(db *gorm.DB) error {
