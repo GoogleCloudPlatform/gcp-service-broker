@@ -26,7 +26,7 @@ import (
 	"github.com/pivotal-cf/brokerapi"
 )
 
-// RunExamplesForService runs all the exmaples for a given service name against
+// RunExamplesForService runs all the examples for a given service name against
 // the service broker pointed to by client. All examples in the registry get run
 // if serviceName is blank. If exampleName is non-blank then only the example
 // with the given name is run.
@@ -35,6 +35,7 @@ func RunExamplesForService(registry broker.BrokerRegistry, client *Client, servi
 
 	services := registry.GetAllServices()
 
+	// For all services available in the service broker
 	for _, service := range services {
 		if serviceName != "" && serviceName != service.Name {
 			continue
@@ -45,7 +46,19 @@ func RunExamplesForService(registry broker.BrokerRegistry, client *Client, servi
 				continue
 			}
 
-			if err := RunExample(client, example, service); err != nil {
+			serviceCatalogEntry, err := service.CatalogEntry()
+			if err != nil {
+				return err
+			}
+
+			var completeServiceExample = CompleteServiceExample{
+				Example:                    example,
+				ServiceId:                  serviceCatalogEntry.ID,
+				ServiceName:                service.Name,
+				ServiceBindOutputVariables: service.BindOutputVariables,
+			}
+
+			if err := RunExample(client, completeServiceExample); err != nil {
 				return err
 			}
 		}
@@ -55,10 +68,17 @@ func RunExamplesForService(registry broker.BrokerRegistry, client *Client, servi
 
 }
 
+type CompleteServiceExample struct {
+	Example                    broker.ServiceExample   `json: "service_example"`
+	ServiceName                string                  `json: "service_name"`
+	ServiceId                  string                  `json: "service_id"`
+	ServiceBindOutputVariables []broker.BrokerVariable `json: "broker_variables"`
+}
+
 // RunExample runs a single example against the given service on the broker
 // pointed to by client.
-func RunExample(client *Client, example broker.ServiceExample, service *broker.ServiceDefinition) error {
-	executor, err := newExampleExecutor(client, example, service)
+func RunExample(client *Client, serviceExample CompleteServiceExample) error {
+	executor, err := newExampleExecutor(client, serviceExample)
 	if err != nil {
 		return err
 	}
@@ -97,7 +117,7 @@ func RunExample(client *Client, example broker.ServiceExample, service *broker.S
 	}
 
 	credentialsEntry := binding.Credentials.(map[string]interface{})
-	if err := broker.ValidateVariables(credentialsEntry, service.BindOutputVariables); err != nil {
+	if err := broker.ValidateVariables(credentialsEntry, serviceExample.ServiceBindOutputVariables); err != nil {
 		log.Printf("Error: results don't match JSON Schema: %v", err)
 		return err
 	}
@@ -157,18 +177,13 @@ func pollUntilFinished(client *Client, instanceId string) error {
 	})
 }
 
-func newExampleExecutor(client *Client, example broker.ServiceExample, service *broker.ServiceDefinition) (*exampleExecutor, error) {
-	provisionParams, err := json.Marshal(example.ProvisionParams)
+func newExampleExecutor(client *Client, serviceExample CompleteServiceExample) (*exampleExecutor, error) {
+	provisionParams, err := json.Marshal(serviceExample.Example.ProvisionParams)
 	if err != nil {
 		return nil, err
 	}
 
-	bindParams, err := json.Marshal(example.BindParams)
-	if err != nil {
-		return nil, err
-	}
-
-	catalog, err := service.CatalogEntry()
+	bindParams, err := json.Marshal(serviceExample.Example.BindParams)
 	if err != nil {
 		return nil, err
 	}
@@ -176,9 +191,9 @@ func newExampleExecutor(client *Client, example broker.ServiceExample, service *
 	testid := rand.Uint32()
 
 	return &exampleExecutor{
-		Name:       fmt.Sprintf("%s/%s", service.Name, example.Name),
-		ServiceId:  catalog.ID,
-		PlanId:     example.PlanId,
+		Name:       fmt.Sprintf("%s/%s", serviceExample.ServiceName, serviceExample.Example.Name),
+		ServiceId:  serviceExample.ServiceId,
+		PlanId:     serviceExample.Example.PlanId,
 		InstanceId: fmt.Sprintf("ex%d", testid),
 		BindingId:  fmt.Sprintf("ex%d", testid),
 
