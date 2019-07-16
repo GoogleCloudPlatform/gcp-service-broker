@@ -54,7 +54,6 @@ func getAllCompleteServiceExamples(registry broker.BrokerRegistry) ([]CompleteSe
 
 	services := registry.GetAllServices()
 
-	// For all services available in the service broker
 	for _, service := range services {
 		for _, example := range service.Examples {
 			serviceCatalogEntry, err := service.CatalogEntry()
