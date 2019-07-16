@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"sort"
 	"time"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
@@ -33,21 +34,31 @@ import (
 func RunExamplesForService(registry broker.BrokerRegistry, client *Client, serviceName, exampleName string) error {
 	rand.Seed(time.Now().UTC().UnixNano())
 
+	allExamples, err := getAllCompleteServiceExamples(registry)
+	if err != nil {
+		return err
+	}
+
+	return runMatchingServiceExamples(client, allExamples, serviceName, exampleName)
+}
+
+type CompleteServiceExample struct {
+	Example        broker.ServiceExample   `json: "service_example, inline"`
+	ServiceName    string                  `json: "service_name, inline"`
+	ServiceId      string                  `json: "service_id, inline"`
+	ExpectedOutput []broker.BrokerVariable `json: "broker_variables, inline"`
+}
+
+func getAllCompleteServiceExamples(registry broker.BrokerRegistry) ([]CompleteServiceExample, error) {
+	var allExamples []CompleteServiceExample
+
 	services := registry.GetAllServices()
 
 	for _, service := range services {
-		if serviceName != "" && serviceName != service.Name {
-			continue
-		}
-
 		for _, example := range service.Examples {
-			if exampleName != "" && example.Name != exampleName {
-				continue
-			}
-
 			serviceCatalogEntry, err := service.CatalogEntry()
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			var completeServiceExample = CompleteServiceExample{
@@ -57,21 +68,32 @@ func RunExamplesForService(registry broker.BrokerRegistry, client *Client, servi
 				ExpectedOutput: service.BindOutputVariables,
 			}
 
-			if err := RunExample(client, completeServiceExample); err != nil {
-				return err
-			}
+			allExamples = append(allExamples, completeServiceExample)
+		}
+	}
+
+	// Sort by name so there's a consistent order in the UI and tests.
+	sort.Slice(allExamples, func(i int, j int) bool { return allExamples[i].ServiceName < allExamples[j].ServiceName })
+
+	return allExamples, nil
+}
+
+// Do not run example if:
+// 1. The service name is specified and does not match the current example's ServiceName
+// 2. The service name is specified and matches the current example's ServiceName, and the example name is specified and does not match the current example's ExampleName
+func runMatchingServiceExamples(client *Client, allExamples []CompleteServiceExample, serviceName, exampleName string) error {
+	for _, completeServiceExample := range allExamples {
+
+		if (serviceName != "" && serviceName != completeServiceExample.ServiceName) || (serviceName != "" && exampleName != "" && exampleName != completeServiceExample.Example.Name) {
+			continue
+		}
+
+		if err := RunExample(client, completeServiceExample); err != nil {
+			return err
 		}
 	}
 
 	return nil
-
-}
-
-type CompleteServiceExample struct {
-	Example        broker.ServiceExample   `json: "service_example, inline"`
-	ServiceName    string                  `json: "service_name, inline"`
-	ServiceId      string                  `json: "service_id, inline"`
-	ExpectedOutput []broker.BrokerVariable `json: "broker_variables, inline"`
 }
 
 // RunExample runs a single example against the given service on the broker
