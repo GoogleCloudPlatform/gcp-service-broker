@@ -54,6 +54,7 @@ func getAllCompleteServiceExamples(registry broker.BrokerRegistry) ([]CompleteSe
 
 	services := registry.GetAllServices()
 
+	// For all services available in the service broker
 	for _, service := range services {
 		for _, example := range service.Examples {
 			serviceCatalogEntry, err := service.CatalogEntry()
@@ -66,6 +67,7 @@ func getAllCompleteServiceExamples(registry broker.BrokerRegistry) ([]CompleteSe
 				ServiceId:      serviceCatalogEntry.ID,
 				ServiceName:    service.Name,
 				ExpectedOutput: service.BindOutputVariables,
+
 			}
 
 			allExamples = append(allExamples, completeServiceExample)
@@ -138,7 +140,9 @@ func RunExample(client *Client, serviceExample CompleteServiceExample) error {
 	}
 
 	credentialsEntry := binding.Credentials.(map[string]interface{})
+
 	if err := broker.ValidateVariables(credentialsEntry, serviceExample.ExpectedOutput); err != nil {
+
 		log.Printf("Error: results don't match JSON Schema: %v", err)
 		return err
 	}
