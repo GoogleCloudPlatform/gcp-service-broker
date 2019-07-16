@@ -21,6 +21,7 @@ import (
 	"log"
 	"math/rand"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
@@ -73,15 +74,20 @@ func getAllCompleteServiceExamples(registry broker.BrokerRegistry) ([]CompleteSe
 				ServiceId:      serviceCatalogEntry.ID,
 				ServiceName:    service.Name,
 				ExpectedOutput: service.BindOutputVariables,
-
 			}
 
 			allExamples = append(allExamples, completeServiceExample)
 		}
 	}
 
-	// Sort by name so there's a consistent order in the UI and tests.
-	sort.Slice(allExamples, func(i int, j int) bool { return allExamples[i].ServiceName < allExamples[j].ServiceName })
+	// Sort by ServiceName and ExampleName so there's a consistent order in the UI and tests.
+	sort.Slice(allExamples, func(i int, j int) bool {
+		if strings.Compare(allExamples[i].ServiceName, allExamples[j].ServiceName) != 0 {
+			return allExamples[i].ServiceName < allExamples[j].ServiceName
+		} else {
+			return allExamples[i].Example.Name < allExamples[j].Example.Name
+		}
+	})
 
 	return allExamples, nil
 }
