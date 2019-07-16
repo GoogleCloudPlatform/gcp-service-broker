@@ -51,10 +51,10 @@ func RunExamplesForService(registry broker.BrokerRegistry, client *Client, servi
 			}
 
 			var completeServiceExample = CompleteServiceExample{
-				Example:                    example,
-				ServiceId:                  serviceCatalogEntry.ID,
-				ServiceName:                service.Name,
-				ServiceBindOutputVariables: service.BindOutputVariables,
+				Example:        example,
+				ServiceId:      serviceCatalogEntry.ID,
+				ServiceName:    service.Name,
+				ExpectedOutput: service.BindOutputVariables,
 			}
 
 			if err := RunExample(client, completeServiceExample); err != nil {
@@ -68,10 +68,10 @@ func RunExamplesForService(registry broker.BrokerRegistry, client *Client, servi
 }
 
 type CompleteServiceExample struct {
-	Example                    broker.ServiceExample   `json: "service_example"`
-	ServiceName                string                  `json: "service_name"`
-	ServiceId                  string                  `json: "service_id"`
-	ServiceBindOutputVariables []broker.BrokerVariable `json: "broker_variables"`
+	Example        broker.ServiceExample   `json: "service_example, inline"`
+	ServiceName    string                  `json: "service_name, inline"`
+	ServiceId      string                  `json: "service_id, inline"`
+	ExpectedOutput []broker.BrokerVariable `json: "broker_variables, inline"`
 }
 
 // RunExample runs a single example against the given service on the broker
@@ -116,7 +116,7 @@ func RunExample(client *Client, serviceExample CompleteServiceExample) error {
 	}
 
 	credentialsEntry := binding.Credentials.(map[string]interface{})
-	if err := broker.ValidateVariables(credentialsEntry, serviceExample.ServiceBindOutputVariables); err != nil {
+	if err := broker.ValidateVariables(credentialsEntry, serviceExample.ExpectedOutput); err != nil {
 		log.Printf("Error: results don't match JSON Schema: %v", err)
 		return err
 	}
