@@ -39,7 +39,7 @@ func RunExamplesForService(registry broker.BrokerRegistry, client *Client, servi
 		return err
 	}
 
-	for _, completeServiceExample := range getMatchingServiceExamples(allExamples, serviceName, exampleName) {
+	for _, completeServiceExample := range filterMatchingServiceExamples(allExamples, serviceName, exampleName) {
 		if err := RunExample(client, completeServiceExample); err != nil {
 			return err
 		}
@@ -89,7 +89,7 @@ func getAllCompleteServiceExamples(registry broker.BrokerRegistry) ([]CompleteSe
 // Do not run example if:
 // 1. The service name is specified and does not match the current example's ServiceName
 // 2. The service name is specified and matches the current example's ServiceName, and the example name is specified and does not match the current example's ExampleName
-func getMatchingServiceExamples(allExamples []CompleteServiceExample, serviceName, exampleName string) []CompleteServiceExample {
+func filterMatchingServiceExamples(allExamples []CompleteServiceExample, serviceName, exampleName string) []CompleteServiceExample {
 	var matchingExamples []CompleteServiceExample
 
 	for _, completeServiceExample := range allExamples {
