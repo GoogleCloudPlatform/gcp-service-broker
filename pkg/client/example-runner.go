@@ -33,14 +33,19 @@ import (
 // if serviceName is blank. If exampleName is non-blank then only the example
 // with the given name is run.
 func RunExamplesForService(registry broker.BrokerRegistry, client *Client, serviceName, exampleName string) error {
+
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	allExamples, err := getAllCompleteServiceExamples(registry)
+	if exampleName != "" && serviceName == "" {
+		fmt.Errorf("If an example name is specified, you must provide an accompanying service name.")
+	}
+
+	allExamples, err := GetAllCompleteServiceExamples(registry)
 	if err != nil {
 		return err
 	}
 
-	for _, completeServiceExample := range filterMatchingServiceExamples(allExamples, serviceName, exampleName) {
+	for _, completeServiceExample := range FilterMatchingServiceExamples(allExamples, serviceName, exampleName) {
 		if err := RunExample(client, completeServiceExample); err != nil {
 			return err
 		}
@@ -51,33 +56,26 @@ func RunExamplesForService(registry broker.BrokerRegistry, client *Client, servi
 }
 
 type CompleteServiceExample struct {
-	Example        broker.ServiceExample   `json: "service_example, inline"`
-	ServiceName    string                  `json: "service_name, inline"`
-	ServiceId      string                  `json: "service_id, inline"`
-	ExpectedOutput []broker.BrokerVariable `json: "broker_variables, inline"`
+	broker.ServiceExample `json: ",inline"`
+	ServiceName           string                  `json: "service_name"`
+	ServiceId             string                  `json: "service_id"`
+	ExpectedOutput        []broker.BrokerVariable `json: "expected_output"`
 }
 
-func getAllCompleteServiceExamples(registry broker.BrokerRegistry) ([]CompleteServiceExample, error) {
+func GetAllCompleteServiceExamples(registry broker.BrokerRegistry) ([]CompleteServiceExample, error) {
 	var allExamples []CompleteServiceExample
 
 	services := registry.GetAllServices()
 
 	for _, service := range services {
-		for _, example := range service.Examples {
-			serviceCatalogEntry, err := service.CatalogEntry()
-			if err != nil {
-				return nil, err
-			}
 
-			var completeServiceExample = CompleteServiceExample{
-				Example:        example,
-				ServiceId:      serviceCatalogEntry.ID,
-				ServiceName:    service.Name,
-				ExpectedOutput: service.BindOutputVariables,
-			}
+		serviceExamples, err := GetExamplesForAService(service)
 
-			allExamples = append(allExamples, completeServiceExample)
+		if err != nil {
+			return nil, err
 		}
+
+		allExamples = append(allExamples, serviceExamples...)
 	}
 
 	// Sort by ServiceName and ExampleName so there's a consistent order in the UI and tests.
@@ -85,22 +83,46 @@ func getAllCompleteServiceExamples(registry broker.BrokerRegistry) ([]CompleteSe
 		if strings.Compare(allExamples[i].ServiceName, allExamples[j].ServiceName) != 0 {
 			return allExamples[i].ServiceName < allExamples[j].ServiceName
 		} else {
-			return allExamples[i].Example.Name < allExamples[j].Example.Name
+			return allExamples[i].ServiceExample.Name < allExamples[j].ServiceExample.Name
 		}
 	})
 
 	return allExamples, nil
 }
 
+func GetExamplesForAService(service *broker.ServiceDefinition) ([]CompleteServiceExample, error) {
+
+	var examples []CompleteServiceExample
+
+	for _, example := range service.Examples {
+		serviceCatalogEntry, err := service.CatalogEntry()
+
+		if err != nil {
+			return nil, err
+		}
+
+		var completeServiceExample = CompleteServiceExample{
+			ServiceExample: example,
+			ServiceId:      serviceCatalogEntry.ID,
+			ServiceName:    service.Name,
+			ExpectedOutput: service.BindOutputVariables,
+		}
+
+		examples = append(examples, completeServiceExample)
+	}
+
+	return examples, nil
+}
+
 // Do not run example if:
 // 1. The service name is specified and does not match the current example's ServiceName
 // 2. The service name is specified and matches the current example's ServiceName, and the example name is specified and does not match the current example's ExampleName
-func filterMatchingServiceExamples(allExamples []CompleteServiceExample, serviceName, exampleName string) []CompleteServiceExample {
+func FilterMatchingServiceExamples(allExamples []CompleteServiceExample, serviceName, exampleName string) []CompleteServiceExample {
 	var matchingExamples []CompleteServiceExample
 
 	for _, completeServiceExample := range allExamples {
 
-		if (serviceName != "" && serviceName != completeServiceExample.ServiceName) || (serviceName != "" && exampleName != "" && exampleName != completeServiceExample.Example.Name) {
+		if (serviceName != "" && serviceName != completeServiceExample.ServiceName) || (exampleName != "" && exampleName != completeServiceExample.ServiceExample.Name) {
 			continue
 		}
 
@@ -215,12 +237,12 @@ func pollUntilFinished(client *Client, instanceId string) error {
 }
 
 func newExampleExecutor(client *Client, serviceExample CompleteServiceExample) (*exampleExecutor, error) {
-	provisionParams, err := json.Marshal(serviceExample.Example.ProvisionParams)
+	provisionParams, err := json.Marshal(serviceExample.ServiceExample.ProvisionParams)
 	if err != nil {
 		return nil, err
 	}
 
-	bindParams, err := json.Marshal(serviceExample.Example.BindParams)
+	bindParams, err := json.Marshal(serviceExample.ServiceExample.BindParams)
 	if err != nil {
 		return nil, err
 	}
@@ -228,9 +250,9 @@ func newExampleExecutor(client *Client, serviceExample CompleteServiceExample) (
 	testid := rand.Uint32()
 
 	return &exampleExecutor{
-		Name:       fmt.Sprintf("%s/%s", serviceExample.ServiceName, serviceExample.Example.Name),
+		Name:       fmt.Sprintf("%s/%s", serviceExample.ServiceName, serviceExample.ServiceExample.Name),
 		ServiceId:  serviceExample.ServiceId,
-		PlanId:     serviceExample.Example.PlanId,
+		PlanId:     serviceExample.ServiceExample.PlanId,
 		InstanceId: fmt.Sprintf("ex%d", testid),
 		BindingId:  fmt.Sprintf("ex%d", testid),
 
