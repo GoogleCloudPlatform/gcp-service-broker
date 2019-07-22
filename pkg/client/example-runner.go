@@ -20,34 +20,34 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/pivotal-cf/brokerapi"
 )
 
-// RunExamplesForService runs all the exmaples for a given service name against
+// RunExamplesForService runs all the examples for a given service name against
 // the service broker pointed to by client. All examples in the registry get run
 // if serviceName is blank. If exampleName is non-blank then only the example
 // with the given name is run.
 func RunExamplesForService(registry broker.BrokerRegistry, client *Client, serviceName, exampleName string) error {
+
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	services := registry.GetAllServices()
+	if exampleName != "" && serviceName == "" {
+		fmt.Errorf("If an example name is specified, you must provide an accompanying service name.")
+	}
 
-	for _, service := range services {
-		if serviceName != "" && serviceName != service.Name {
-			continue
-		}
+	allExamples, err := GetAllCompleteServiceExamples(registry)
+	if err != nil {
+		return err
+	}
 
-		for _, example := range service.Examples {
-			if exampleName != "" && example.Name != exampleName {
-				continue
-			}
-
-			if err := RunExample(client, example, service); err != nil {
-				return err
-			}
+	for _, completeServiceExample := range FilterMatchingServiceExamples(allExamples, serviceName, exampleName) {
+		if err := RunExample(client, completeServiceExample); err != nil {
+			return err
 		}
 	}
 
@@ -55,10 +55,87 @@ func RunExamplesForService(registry broker.BrokerRegistry, client *Client, servi
 
 }
 
+type CompleteServiceExample struct {
+	broker.ServiceExample `json: ",inline"`
+	ServiceName           string                  `json: "service_name"`
+	ServiceId             string                  `json: "service_id"`
+	ExpectedOutput        []broker.BrokerVariable `json: "expected_output"`
+}
+
+func GetAllCompleteServiceExamples(registry broker.BrokerRegistry) ([]CompleteServiceExample, error) {
+	var allExamples []CompleteServiceExample
+
+	services := registry.GetAllServices()
+
+	for _, service := range services {
+
+		serviceExamples, err := GetExamplesForAService(service)
+
+		if err != nil {
+			return nil, err
+		}
+
+		allExamples = append(allExamples, serviceExamples...)
+	}
+
+	// Sort by ServiceName and ExampleName so there's a consistent order in the UI and tests.
+	sort.Slice(allExamples, func(i int, j int) bool {
+		if strings.Compare(allExamples[i].ServiceName, allExamples[j].ServiceName) != 0 {
+			return allExamples[i].ServiceName < allExamples[j].ServiceName
+		} else {
+			return allExamples[i].ServiceExample.Name < allExamples[j].ServiceExample.Name
+		}
+	})
+
+	return allExamples, nil
+}
+
+func GetExamplesForAService(service *broker.ServiceDefinition) ([]CompleteServiceExample, error) {
+
+	var examples []CompleteServiceExample
+
+	for _, example := range service.Examples {
+		serviceCatalogEntry, err := service.CatalogEntry()
+
+		if err != nil {
+			return nil, err
+		}
+
+		var completeServiceExample = CompleteServiceExample{
+			ServiceExample: example,
+			ServiceId:      serviceCatalogEntry.ID,
+			ServiceName:    service.Name,
+			ExpectedOutput: service.BindOutputVariables,
+		}
+
+		examples = append(examples, completeServiceExample)
+	}
+
+	return examples, nil
+}
+
+// Do not run example if:
+// 1. The service name is specified and does not match the current example's ServiceName
+// 2. The service name is specified and matches the current example's ServiceName, and the example name is specified and does not match the current example's ExampleName
+func FilterMatchingServiceExamples(allExamples []CompleteServiceExample, serviceName, exampleName string) []CompleteServiceExample {
+	var matchingExamples []CompleteServiceExample
+
+	for _, completeServiceExample := range allExamples {
+
+		if (serviceName != "" && serviceName != completeServiceExample.ServiceName) || (exampleName != "" && exampleName != completeServiceExample.ServiceExample.Name) {
+			continue
+		}
+
+		matchingExamples = append(matchingExamples, completeServiceExample)
+	}
+
+	return matchingExamples
+}
+
 // RunExample runs a single example against the given service on the broker
 // pointed to by client.
-func RunExample(client *Client, example broker.ServiceExample, service *broker.ServiceDefinition) error {
-	executor, err := newExampleExecutor(client, example, service)
+func RunExample(client *Client, serviceExample CompleteServiceExample) error {
+	executor, err := newExampleExecutor(client, serviceExample)
 	if err != nil {
 		return err
 	}
@@ -97,7 +174,9 @@ func RunExample(client *Client, example broker.ServiceExample, service *broker.S
 	}
 
 	credentialsEntry := binding.Credentials.(map[string]interface{})
-	if err := broker.ValidateVariables(credentialsEntry, service.BindOutputVariables); err != nil {
+
+	if err := broker.ValidateVariables(credentialsEntry, serviceExample.ExpectedOutput); err != nil {
+
 		log.Printf("Error: results don't match JSON Schema: %v", err)
 		return err
 	}
@@ -157,18 +236,13 @@ func pollUntilFinished(client *Client, instanceId string) error {
 	})
 }
 
-func newExampleExecutor(client *Client, example broker.ServiceExample, service *broker.ServiceDefinition) (*exampleExecutor, error) {
-	provisionParams, err := json.Marshal(example.ProvisionParams)
+func newExampleExecutor(client *Client, serviceExample CompleteServiceExample) (*exampleExecutor, error) {
+	provisionParams, err := json.Marshal(serviceExample.ServiceExample.ProvisionParams)
 	if err != nil {
 		return nil, err
 	}
 
-	bindParams, err := json.Marshal(example.BindParams)
-	if err != nil {
-		return nil, err
-	}
-
-	catalog, err := service.CatalogEntry()
+	bindParams, err := json.Marshal(serviceExample.ServiceExample.BindParams)
 	if err != nil {
 		return nil, err
 	}
@@ -176,9 +250,9 @@ func newExampleExecutor(client *Client, example broker.ServiceExample, service *
 	testid := rand.Uint32()
 
 	return &exampleExecutor{
-		Name:       fmt.Sprintf("%s/%s", service.Name, example.Name),
-		ServiceId:  catalog.ID,
-		PlanId:     example.PlanId,
+		Name:       fmt.Sprintf("%s/%s", serviceExample.ServiceName, serviceExample.ServiceExample.Name),
+		ServiceId:  serviceExample.ServiceId,
+		PlanId:     serviceExample.ServiceExample.PlanId,
 		InstanceId: fmt.Sprintf("ex%d", testid),
 		BindingId:  fmt.Sprintf("ex%d", testid),
 
