@@ -155,12 +155,12 @@ func (svc *ServiceDefinition) createSchemas() *brokerapi.ServiceSchemas {
 	return &brokerapi.ServiceSchemas{
 		Instance: brokerapi.ServiceInstanceSchema{
 			Create: brokerapi.Schema{
-				Parameters: createJsonSchema(svc.ProvisionInputVariables),
+				Parameters: CreateJsonSchema(svc.ProvisionInputVariables),
 			},
 		},
 		Binding: brokerapi.ServiceBindingSchema{
 			Create: brokerapi.Schema{
-				Parameters: createJsonSchema(svc.BindInputVariables),
+				Parameters: CreateJsonSchema(svc.BindInputVariables),
 			},
 		},
 	}
