@@ -1,19 +1,96 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
+	"github.com/spf13/viper"
+	"os"
 	"reflect"
 	"testing"
 )
 
+// Sanity check to make sure GetAllCompleteServiceExamples returns a result
 func ExampleGetAllCompleteServiceExamples() {
 	allServiceExamples, err := GetAllCompleteServiceExamples(builtin.BuiltinBrokerRegistry())
 	fmt.Println(allServiceExamples != nil)
 	fmt.Println(err)
 	// Output:
 	// true
+	// <nil>
+}
+
+func ExampleGetAllCompleteServiceExamples2() {
+
+	allExamples := []CompleteServiceExample{
+		{
+			ServiceExample: broker.ServiceExample{
+				Name:            "Basic Configuration",
+				Description:     "Creates an account with the permission `clouddebugger.agent`.",
+				PlanId:          "10866183-a775-49e8-96e3-4e7a901e4a79",
+				ProvisionParams: map[string]interface{}{},
+				BindParams:      map[string]interface{}{}},
+			ServiceName: "google-stackdriver-debugger",
+			ServiceId:   "83837945-1547-41e0-b661-ea31d76eed11",
+			ExpectedOutput: broker.CreateJsonSchema([]broker.BrokerVariable{
+				{
+					Required:  true,
+					FieldName: "Email",
+					Type:      "string",
+					Details:   "Email address of the service account.",
+				},
+			}),
+		},
+	}
+
+	b, err := json.MarshalIndent(allExamples, "", "\t")
+
+	if err != nil {
+		panic(err)
+	}
+
+	os.Stdout.Write(b)
+	// Output:
+	//	[
+	//	{
+	//		"name": "Basic Configuration",
+	//		"description": "Creates an account with the permission `clouddebugger.agent`.",
+	//		"plan_id": "10866183-a775-49e8-96e3-4e7a901e4a79",
+	//		"provision_params": {},
+	//		"bind_params": {},
+	//		"ServiceName": "google-stackdriver-debugger",
+	//		"ServiceId": "83837945-1547-41e0-b661-ea31d76eed11",
+	//		"ExpectedOutput": {
+	//			"$schema": "http://json-schema.org/draft-04/schema#",
+	//			"properties": {
+	//				"Email": {
+	//					"description": "Email address of the service account.",
+	//					"title": "Email",
+	//					"type": "string"
+	//				}
+	//			},
+	//			"required": [
+	//				"Email"
+	//			],
+	//			"type": "object"
+	//		}
+	//	}
+	//]
+}
+
+func ExampleRunExamplesFromFile() {
+	viper.Set("api.user", "user")
+	viper.Set("api.password", "pass")
+	viper.Set("api.port", 8000)
+
+	apiClient, err := NewClientFromEnv()
+	if err != nil {
+		panic(err)
+	}
+	err = RunExamplesFromFile(apiClient, "complete-service-examples-testfile.json", "", "")
+	fmt.Println(err)
+	// Output:
 	// <nil>
 }
 
@@ -62,14 +139,14 @@ func TestGetExamplesForAService(t *testing.T) {
 						BindParams:      map[string]interface{}{}},
 					ServiceName: "google-stackdriver-debugger",
 					ServiceId:   "83837945-1547-41e0-b661-ea31d76eed11",
-					ExpectedOutput: []broker.BrokerVariable{
+					ExpectedOutput: broker.CreateJsonSchema([]broker.BrokerVariable{
 						{
 							Required:  true,
 							FieldName: "Email",
 							Type:      "string",
 							Details:   "Email address of the service account.",
 						},
-					},
+					}),
 				},
 			},
 			ExpectedError: nil,
@@ -120,7 +197,7 @@ func TestGetExamplesForAService(t *testing.T) {
 					},
 					ServiceName: "google-dataflow",
 					ServiceId:   "3e897eb3-9062-4966-bd4f-85bda0f73b3d",
-					ExpectedOutput: []broker.BrokerVariable{
+					ExpectedOutput: broker.CreateJsonSchema([]broker.BrokerVariable{
 						{
 							Required:  true,
 							FieldName: "Email",
@@ -133,7 +210,7 @@ func TestGetExamplesForAService(t *testing.T) {
 							Type:      "string",
 							Details:   "The name of the service account.",
 						},
-					},
+					}),
 				},
 				{
 					ServiceExample: broker.ServiceExample{
@@ -145,7 +222,7 @@ func TestGetExamplesForAService(t *testing.T) {
 					},
 					ServiceName: "google-dataflow",
 					ServiceId:   "3e897eb3-9062-4966-bd4f-85bda0f73b3d",
-					ExpectedOutput: []broker.BrokerVariable{
+					ExpectedOutput: broker.CreateJsonSchema([]broker.BrokerVariable{
 						{
 							Required:  true,
 							FieldName: "Email",
@@ -158,7 +235,7 @@ func TestGetExamplesForAService(t *testing.T) {
 							Type:      "string",
 							Details:   "The name of the service account.",
 						},
-					},
+					}),
 				},
 			},
 			ExpectedError: nil,
@@ -204,13 +281,13 @@ func TestFilterMatchingServiceExamples(t *testing.T) {
 			ServiceExamples: []CompleteServiceExample{
 				{
 					ServiceExample: broker.ServiceExample{
-						Name:            "Example-Foo",
+						Name: "Example-Foo",
 					},
 					ServiceName: "Service-Foo",
 				},
 				{
 					ServiceExample: broker.ServiceExample{
-						Name:            "Example-Bar",
+						Name: "Example-Bar",
 					},
 					ServiceName: "Service-Bar",
 				},
@@ -220,13 +297,13 @@ func TestFilterMatchingServiceExamples(t *testing.T) {
 			Response: []CompleteServiceExample{
 				{
 					ServiceExample: broker.ServiceExample{
-						Name:            "Example-Foo",
+						Name: "Example-Foo",
 					},
 					ServiceName: "Service-Foo",
 				},
 				{
 					ServiceExample: broker.ServiceExample{
-						Name:            "Example-Bar",
+						Name: "Example-Bar",
 					},
 					ServiceName: "Service-Bar",
 				},
@@ -236,38 +313,38 @@ func TestFilterMatchingServiceExamples(t *testing.T) {
 			ServiceExamples: []CompleteServiceExample{
 				{
 					ServiceExample: broker.ServiceExample{
-						Name:            "Example-Foo",
+						Name: "Example-Foo",
 					},
 					ServiceName: "Service-Foo",
 				},
 				{
 					ServiceExample: broker.ServiceExample{
-						Name:            "Example-Bar",
+						Name: "Example-Bar",
 					},
 					ServiceName: "Service-Bar",
 				},
 			},
 			ServiceName: "Service-Unicorn",
 			ExampleName: "",
-			Response: []CompleteServiceExample(nil),
+			Response:    []CompleteServiceExample(nil),
 		},
 		"ServiceName is specified, no ExampleName is specified. Two matching CompleteServiceExample exist": {
 			ServiceExamples: []CompleteServiceExample{
 				{
 					ServiceExample: broker.ServiceExample{
-						Name:            "Example-Foo",
+						Name: "Example-Foo",
 					},
 					ServiceName: "Service-Foo",
 				},
 				{
 					ServiceExample: broker.ServiceExample{
-						Name:            "Example-Bar",
+						Name: "Example-Bar",
 					},
 					ServiceName: "Service-Bar",
 				},
 				{
 					ServiceExample: broker.ServiceExample{
-						Name:            "Example-FooBar",
+						Name: "Example-FooBar",
 					},
 					ServiceName: "Service-Bar",
 				},
@@ -277,13 +354,13 @@ func TestFilterMatchingServiceExamples(t *testing.T) {
 			Response: []CompleteServiceExample{
 				{
 					ServiceExample: broker.ServiceExample{
-						Name:            "Example-Bar",
+						Name: "Example-Bar",
 					},
 					ServiceName: "Service-Bar",
 				},
 				{
 					ServiceExample: broker.ServiceExample{
-						Name:            "Example-FooBar",
+						Name: "Example-FooBar",
 					},
 					ServiceName: "Service-Bar",
 				},
@@ -293,32 +370,32 @@ func TestFilterMatchingServiceExamples(t *testing.T) {
 			ServiceExamples: []CompleteServiceExample{
 				{
 					ServiceExample: broker.ServiceExample{
-						Name:            "Example-Foo",
+						Name: "Example-Foo",
 					},
 					ServiceName: "Service-Foo",
 				},
 				{
 					ServiceExample: broker.ServiceExample{
-						Name:            "Example-Bar",
+						Name: "Example-Bar",
 					},
 					ServiceName: "Service-Bar",
 				},
 			},
 			ServiceName: "Service-Bar",
 			ExampleName: "Example-Hello",
-			Response: []CompleteServiceExample(nil),
+			Response:    []CompleteServiceExample(nil),
 		},
 		"Both ServiceName and ExampleName are provided, one matching CompleteServiceExample exists.": {
 			ServiceExamples: []CompleteServiceExample{
 				{
 					ServiceExample: broker.ServiceExample{
-						Name:            "Example-Foo",
+						Name: "Example-Foo",
 					},
 					ServiceName: "Service-Foo",
 				},
 				{
 					ServiceExample: broker.ServiceExample{
-						Name:            "Example-Bar",
+						Name: "Example-Bar",
 					},
 					ServiceName: "Service-Bar",
 				},
@@ -328,7 +405,7 @@ func TestFilterMatchingServiceExamples(t *testing.T) {
 			Response: []CompleteServiceExample{
 				{
 					ServiceExample: broker.ServiceExample{
-						Name:            "Example-Bar",
+						Name: "Example-Bar",
 					},
 					ServiceName: "Service-Bar",
 				},

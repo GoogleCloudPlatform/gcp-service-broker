@@ -16,12 +16,11 @@ package cmd
 
 import (
 	"encoding/json"
-	"log"
-
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/cobra"
+	"log"
 )
 
 var (
@@ -33,6 +32,7 @@ var (
 
 	serviceName string
 	exampleName string
+	fileName    string
 )
 
 func init() {
@@ -122,7 +122,14 @@ user-defined plans.
 				log.Fatalf("Error creating client: %v", err)
 			}
 
-			if err := client.RunExamplesForService(builtin.BuiltinBrokerRegistry(), apiClient, serviceName, exampleName); err != nil {
+			if exampleName != "" && serviceName == "" {
+				log.Fatalf("If an example name is specified, you must provide an accompanying service name.")
+			}
+			if fileName != "" {
+				if err := client.RunExamplesFromFile(apiClient, fileName, serviceName, exampleName); err != nil {
+					log.Fatalf("Error executing examples from file: %v", err)
+				}
+			} else if err := client.RunExamplesForService(builtin.BuiltinBrokerRegistry(), apiClient, serviceName, exampleName); err != nil {
 				log.Fatalf("Error executing examples: %v", err)
 			}
 
@@ -150,6 +157,7 @@ user-defined plans.
 
 	runExamplesCmd.Flags().StringVarP(&serviceName, "service-name", "", "", "name of the service to run tests for")
 	runExamplesCmd.Flags().StringVarP(&exampleName, "example-name", "", "", "only run examples matching this name")
+	runExamplesCmd.Flags().StringVarP(&fileName, "filename", "", "", "json file that contains list of CompleteServiceExamples")
 }
 
 func newClientCommand(use, short string, run func(*client.Client) *client.BrokerResponse) *cobra.Command {
