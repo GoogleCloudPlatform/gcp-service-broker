@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
-	"github.com/spf13/viper"
 	"os"
 	"reflect"
 	"testing"
@@ -21,7 +20,7 @@ func ExampleGetAllCompleteServiceExamples() {
 	// <nil>
 }
 
-func ExampleGetAllCompleteServiceExamples2() {
+func ExampleGetAllCompleteServiceExamples_jsonSpec() {
 
 	allExamples := []CompleteServiceExample{
 		{
@@ -77,21 +76,6 @@ func ExampleGetAllCompleteServiceExamples2() {
 	//		}
 	//	}
 	//]
-}
-
-func ExampleRunExamplesFromFile() {
-	viper.Set("api.user", "user")
-	viper.Set("api.password", "pass")
-	viper.Set("api.port", 8000)
-
-	apiClient, err := NewClientFromEnv()
-	if err != nil {
-		panic(err)
-	}
-	err = RunExamplesFromFile(apiClient, "complete-service-examples-testfile.json", "", "")
-	fmt.Println(err)
-	// Output:
-	// <nil>
 }
 
 func TestGetExamplesForAService(t *testing.T) {

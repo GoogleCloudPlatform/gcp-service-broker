@@ -165,6 +165,7 @@ func ValidateVariablesAgainstSchema(parameters map[string]interface{}, schema ma
 	return allErrors
 }
 
+// CreateJsonSchema outputs a JSONSchema given a list of BrokerVariables
 func CreateJsonSchema(schemaVariables []BrokerVariable) map[string]interface{} {
 	required := utils.NewStringSet()
 	properties := make(map[string]interface{})
