@@ -124,8 +124,7 @@ user-defined plans.
 
 			if exampleName != "" && serviceName == "" {
 				log.Fatalf("If an example name is specified, you must provide an accompanying service name.")
-			}
-			if fileName != "" {
+			} else if fileName != "" {
 				if err := client.RunExamplesFromFile(apiClient, fileName, serviceName, exampleName); err != nil {
 					log.Fatalf("Error executing examples from file: %v", err)
 				}
