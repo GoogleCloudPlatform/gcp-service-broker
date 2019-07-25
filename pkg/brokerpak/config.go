@@ -17,27 +17,39 @@ package brokerpak
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+	"sort"
 	"strings"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/spf13/viper"
 )
 
 const (
-	brokerpakSourcesKey = "brokerpak.sources"
-	brokerpakConfigKey  = "brokerpak.config"
+	// BuiltinPakLocation is the file-system location to load brokerpaks from to
+	// make them look builtin.
+	BuiltinPakLocation      = "/usr/share/gcp-service-broker/builtin-brokerpaks"
+	brokerpakSourcesKey     = "brokerpak.sources"
+	brokerpakConfigKey      = "brokerpak.config"
+	brokerpakBuiltinPathKey = "brokerpak.builtin.path"
 )
+
+var loadBuiltinToggle = toggles.Features.Toggle("enable-builtin-brokerpaks", true, `Load brokerpaks that are built-in to the software.`)
 
 func init() {
 	viper.SetDefault(brokerpakSourcesKey, "{}")
 	viper.SetDefault(brokerpakConfigKey, "{}")
+	viper.SetDefault(brokerpakBuiltinPathKey, BuiltinPakLocation)
 }
 
 // BrokerpakSourceConfig represents a single configuration of a brokerpak.
 type BrokerpakSourceConfig struct {
 	// BrokerpakUri holds the URI for loading the Brokerpak.
-	BrokerpakUri string `json:"uri" validate:"required,uri"`
+	BrokerpakUri string `json:"uri" validate:"required,uri|file"`
 	// ServicePrefix holds an optional prefix that will be prepended to every service name.
 	ServicePrefix string `json:"service_prefix" validate:"omitempty,osbname"`
 	// ExcludedServices holds a newline delimited list of service UUIDs that will be excluded at registration time.
@@ -97,7 +109,48 @@ func NewServerConfigFromEnv() (*ServerConfig, error) {
 		return nil, fmt.Errorf("brokerpak config was invalid: %v", err)
 	}
 
+	// Builtin paks fail validation because they reference the local filesystem
+	// but do work.
+	if loadBuiltinToggle.IsActive() {
+		log.Println("loading builtin brokerpaks")
+		paks, err := ListBrokerpaks(viper.GetString(brokerpakBuiltinPathKey))
+		if err != nil {
+			return nil, fmt.Errorf("couldn't load builtin brokerpaks: %v", err)
+		}
+
+		for i, path := range paks {
+			key := fmt.Sprintf("builtin-%d", i)
+			config := NewBrokerpakSourceConfigFromPath(path)
+			config.Notes = fmt.Sprintf("This pak was automatically loaded because the toggle %s was enabled", loadBuiltinToggle.EnvironmentVariable())
+			cfg.Brokerpaks[key] = config
+		}
+	}
+
 	return &cfg, nil
+}
+
+// ListBrokerpaks gets all brokerpaks in a given directory.
+func ListBrokerpaks(directory string) ([]string, error) {
+	var paks []string
+	err := filepath.Walk(filepath.FromSlash(directory), func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if filepath.Ext(path) == ".brokerpak" {
+			paks = append(paks, path)
+		}
+
+		return nil
+	})
+
+	sort.Strings(paks)
+
+	if os.IsNotExist(err) {
+		return paks, nil
+	}
+
+	return paks, err
 }
 
 func newLocalFileServerConfig(path string) *ServerConfig {

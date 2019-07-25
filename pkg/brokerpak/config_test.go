@@ -16,6 +16,7 @@ package brokerpak
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
@@ -138,6 +139,23 @@ func ExampleNewServerConfigFromEnv() {
 	// num services: 1
 }
 
+func ExampleNewServerConfigFromEnv_customBuiltin() {
+	viper.Set("brokerpak.sources", `{}`)
+	viper.Set("brokerpak.config", `{}`)
+	viper.Set(brokerpakBuiltinPathKey, "testdata/dummy-brokerpaks")
+	viper.Set("compatibility.enable-builtin-brokerpaks", "true")
+	defer viper.Reset() // cleanup
+
+	cfg, err := NewServerConfigFromEnv()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("num services:", len(cfg.Brokerpaks))
+
+	// Output: num services: 2
+}
+
 func TestNewServerConfigFromEnv(t *testing.T) {
 	cases := map[string]struct {
 		Config  string
@@ -183,6 +201,53 @@ func TestNewServerConfigFromEnv(t *testing.T) {
 
 			if err.Error() != tc.Err {
 				t.Fatalf("Expected %q got %q", tc.Err, err.Error())
+			}
+		})
+	}
+}
+
+func TestListBrokerpaks(t *testing.T) {
+	t.Parallel()
+
+	cases := map[string]struct {
+		path         string
+		expectedErr  error
+		expectedPaks []string
+	}{
+		"directory does not exist": {
+			path:         "testdata/dne",
+			expectedErr:  nil,
+			expectedPaks: nil,
+		},
+		"directory contains no brokerpaks": {
+			path:         "testdata/no-brokerpaks",
+			expectedErr:  nil,
+			expectedPaks: nil,
+		},
+		"directory contains brokerpaks": {
+			path:        "testdata/dummy-brokerpaks",
+			expectedErr: nil,
+			expectedPaks: []string{
+				"testdata/dummy-brokerpaks/first.brokerpak",
+				"testdata/dummy-brokerpaks/second.brokerpak",
+			},
+		},
+	}
+
+	for tn, tc := range cases {
+		t.Run(tn, func(t *testing.T) {
+			paks, err := ListBrokerpaks(tc.path)
+
+			if err != nil || tc.expectedErr != nil {
+				if fmt.Sprint(err) != fmt.Sprint(tc.expectedErr) {
+					t.Fatalf("expected err: %v got: %v", err, tc.expectedErr)
+				}
+
+				return
+			}
+
+			if !reflect.DeepEqual(tc.expectedPaks, paks) {
+				t.Fatalf("expected paks: %v got: %v", tc.expectedPaks, paks)
 			}
 		})
 	}

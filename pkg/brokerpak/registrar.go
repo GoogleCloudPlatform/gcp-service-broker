@@ -45,6 +45,8 @@ func (r *Registrar) Register(registry broker.BrokerRegistry) error {
 	return r.walk(func(name string, pak BrokerpakSourceConfig, vc *varcontext.VarContext) error {
 		registerLogger.Info("registering", lager.Data{
 			"name":              name,
+			"location":          pak.BrokerpakUri,
+			"notes":             pak.Notes,
 			"excluded-services": pak.ExcludedServicesSlice(),
 			"prefix":            pak.ServicePrefix,
 		})
