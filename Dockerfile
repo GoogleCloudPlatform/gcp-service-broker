@@ -29,5 +29,8 @@ COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certifica
 COPY --from=build /go/src/github.com/GoogleCloudPlatform/gcp-service-broker /src
 COPY --from=build /bin/gcp-service-broker /bin/gcp-service-broker
 
+WORKDIR /tmp
+WORKDIR /
+
 ENTRYPOINT ["/bin/gcp-service-broker"]
 CMD ["help"]
