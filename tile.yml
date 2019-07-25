@@ -23,7 +23,7 @@ org: system
 
 stemcell_criteria:
   os: 'ubuntu-xenial'
-  version: '170.19'
+  version: '170.82'
 
 apply_open_security_group: true
 
@@ -38,9 +38,9 @@ migration: |
   delete properties.properties['.properties.gsb_service_google_pubsub_whitelist'];
   delete properties.properties['.properties.gsb_service_google_spanner_whitelist'];
   delete properties.properties['.properties.gsb_service_google_storage_whitelist'];
-
+  
   }
-
+  
 
 packages:
 - name: gcp-service-broker
@@ -132,6 +132,12 @@ forms:
   label: Feature Flags
   description: Service broker feature flags.
   properties:
+  - name: gsb_compatibility_enable_builtin_brokerpaks
+    type: boolean
+    default: "true"
+    label: enable-builtin-brokerpaks
+    description: Load brokerpaks that are built-in to the software.
+    configurable: true
   - name: gsb_compatibility_enable_builtin_services
     type: boolean
     default: "true"
@@ -245,6 +251,20 @@ forms:
     type: text
     default: '{}'
     label: Bind default override Google CloudSQL for PostgreSQL instances.
+    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
+      bind property and values are the alternative default.
+    configurable: true
+  - name: gsb_service_google_memorystore_redis_provision_defaults
+    type: text
+    default: '{}'
+    label: Provision default override Google Cloud Memorystore for Redis API instances.
+    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
+      provision property and values are the alternative default.
+    configurable: true
+  - name: gsb_service_google_memorystore_redis_bind_defaults
+    type: text
+    default: '{}'
+    label: Bind default override Google Cloud Memorystore for Redis API instances.
     description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
       bind property and values are the alternative default.
     configurable: true
@@ -436,6 +456,36 @@ service_plan_forms:
     default: "10"
     label: Max Disk Size
     description: Maximum disk size in GB, 10 is the minimum.
+    configurable: true
+- name: memorystore_redis_custom_plans
+  label: Google Cloud Memorystore for Redis API Custom Plans
+  description: Generate custom plans for Google Cloud Memorystore for Redis API.
+  optional: true
+  properties:
+  - name: display_name
+    type: string
+    label: Display Name
+    description: Name of the plan to be displayed to users.
+    configurable: true
+  - name: description
+    type: string
+    label: Plan description
+    description: The description of the plan shown to users.
+    configurable: true
+  - name: service
+    type: dropdown_select
+    default: 3ea92b54-838c-4fe1-b75d-9bda513380aa
+    label: Service
+    description: The service this plan is associated with.
+    options:
+    - name: 3ea92b54-838c-4fe1-b75d-9bda513380aa
+      label: Google Cloud Memorystore for Redis API
+  - name: service_tier
+    type: string
+    default: basic
+    label: Service Tier
+    description: 'Either BASIC or STANDARD_HA. See: https://cloud.google.com/memorystore/pricing
+      for more information.'
     configurable: true
 - name: spanner_custom_plans
   label: Google Spanner Custom Plans
