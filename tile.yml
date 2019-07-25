@@ -50,7 +50,7 @@ packages:
     path: /tmp/gcp-service-broker.zip
     env:
       GOPACKAGENAME: github.com/GoogleCloudPlatform/gcp-service-broker
-      GOVERSION: go1.10
+      GOVERSION: go1.12
       # You can override plans here.
   needs_cf_credentials: true
   enable_global_access_to_plans: true
