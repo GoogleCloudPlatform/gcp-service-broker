@@ -28,11 +28,19 @@ stemcell_criteria:
 apply_open_security_group: true
 
 migration: |
-  properties['properties']['.properties.org']['value'] = 'system';
-  if ('.properties.cloudsql_custom_plans' in properties['properties']){
-      properties['properties']['.properties.cloudsql_mysql_custom_plans'] =
-      {'value': properties['properties']['.properties.cloudsql_custom_plans']['value']};
+  {
+  // migration: 0, Delete whitelist keys from 4.x
+  delete properties.properties['.properties.gsb_service_google_bigquery_whitelist'];
+  delete properties.properties['.properties.gsb_service_google_bigtable_whitelist'];
+  delete properties.properties['.properties.gsb_service_google_cloudsql_mysql_whitelist'];
+  delete properties.properties['.properties.gsb_service_google_cloudsql_postgres_whitelist'];
+  delete properties.properties['.properties.gsb_service_google_ml_apis_whitelist'];
+  delete properties.properties['.properties.gsb_service_google_pubsub_whitelist'];
+  delete properties.properties['.properties.gsb_service_google_spanner_whitelist'];
+  delete properties.properties['.properties.gsb_service_google_storage_whitelist'];
+
   }
+
 
 packages:
 - name: gcp-service-broker
@@ -120,20 +128,21 @@ forms:
       a variable isn't found in the specific brokerpak's configuration it's looked
       up here.
     configurable: true
-- name: compatibility
-  label: Compatibility
-  description: Legacy Compatibility Options
+- name: features
+  label: Feature Flags
+  description: Service broker feature flags.
   properties:
-  - name: gsb_compatibility_enable_catalog_schemas
-    type: boolean
-    default: "false"
-    label: enable-catalog-schemas
-    description: Enable generating JSONSchema for the service catalog.
   - name: gsb_compatibility_enable_builtin_services
     type: boolean
     default: "true"
     label: enable-builtin-services
     description: Enable services that are built in to the broker i.e. not brokerpaks.
+    configurable: true
+  - name: gsb_compatibility_enable_catalog_schemas
+    type: boolean
+    default: "false"
+    label: enable-catalog-schemas
+    description: Enable generating JSONSchema for the service catalog.
     configurable: true
   - name: gsb_compatibility_enable_cf_sharing
     type: boolean
@@ -214,28 +223,28 @@ forms:
   - name: gsb_service_google_cloudsql_mysql_provision_defaults
     type: text
     default: '{}'
-    label: Provision default override Google CloudSQL MySQL instances.
+    label: Provision default override Google CloudSQL for MySQL instances.
     description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
       provision property and values are the alternative default.
     configurable: true
   - name: gsb_service_google_cloudsql_mysql_bind_defaults
     type: text
     default: '{}'
-    label: Bind default override Google CloudSQL MySQL instances.
+    label: Bind default override Google CloudSQL for MySQL instances.
     description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
       bind property and values are the alternative default.
     configurable: true
   - name: gsb_service_google_cloudsql_postgres_provision_defaults
     type: text
     default: '{}'
-    label: Provision default override Google CloudSQL PostgreSQL instances.
+    label: Provision default override Google CloudSQL for PostgreSQL instances.
     description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
       provision property and values are the alternative default.
     configurable: true
   - name: gsb_service_google_cloudsql_postgres_bind_defaults
     type: text
     default: '{}'
-    label: Bind default override Google CloudSQL PostgreSQL instances.
+    label: Bind default override Google CloudSQL for PostgreSQL instances.
     description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
       bind property and values are the alternative default.
     configurable: true
@@ -339,8 +348,8 @@ service_plan_forms:
       for more information.'
     configurable: true
 - name: cloudsql_mysql_custom_plans
-  label: Google CloudSQL MySQL Custom Plans
-  description: Generate custom plans for Google CloudSQL MySQL.
+  label: Google CloudSQL for MySQL Custom Plans
+  description: Generate custom plans for Google CloudSQL for MySQL.
   optional: true
   properties:
   - name: display_name
@@ -360,7 +369,7 @@ service_plan_forms:
     description: The service this plan is associated with.
     options:
     - name: 4bc59b9a-8520-409f-85da-1c7552315863
-      label: Google CloudSQL MySQL
+      label: Google CloudSQL for MySQL
   - name: tier
     type: string
     label: Tier
@@ -386,8 +395,8 @@ service_plan_forms:
       10 minimum/default).
     configurable: true
 - name: cloudsql_postgres_custom_plans
-  label: Google CloudSQL PostgreSQL Custom Plans
-  description: Generate custom plans for Google CloudSQL PostgreSQL.
+  label: Google CloudSQL for PostgreSQL Custom Plans
+  description: Generate custom plans for Google CloudSQL for PostgreSQL.
   optional: true
   properties:
   - name: display_name
@@ -407,7 +416,7 @@ service_plan_forms:
     description: The service this plan is associated with.
     options:
     - name: cbad6d78-a73c-432d-b8ff-b219a17a803a
-      label: Google CloudSQL PostgreSQL
+      label: Google CloudSQL for PostgreSQL
   - name: tier
     type: string
     label: Tier

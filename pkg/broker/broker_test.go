@@ -567,7 +567,7 @@ func TestServiceDefinition_createSchemas(t *testing.T) {
 		t.Error("instance create params were nil, expected a schema")
 	}
 
-	expectedCreateParams := createJsonSchema(service.ProvisionInputVariables)
+	expectedCreateParams := CreateJsonSchema(service.ProvisionInputVariables)
 	if !reflect.DeepEqual(instanceCreate.Parameters, expectedCreateParams) {
 		t.Errorf("expected create params to be: %v got %v", expectedCreateParams, instanceCreate.Parameters)
 	}
@@ -584,7 +584,7 @@ func TestServiceDefinition_createSchemas(t *testing.T) {
 		t.Error("bind create params were not nil, expected a schema")
 	}
 
-	expectedBindCreateParams := createJsonSchema(service.BindInputVariables)
+	expectedBindCreateParams := CreateJsonSchema(service.BindInputVariables)
 	if !reflect.DeepEqual(bindCreate.Parameters, expectedBindCreateParams) {
 		t.Errorf("expected create params to be: %v got %v", expectedBindCreateParams, bindCreate.Parameters)
 	}

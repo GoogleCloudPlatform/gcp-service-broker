@@ -34,6 +34,7 @@ func TestBuiltinBrokerRegistry(t *testing.T) {
 		"google-firestore",
 		"google-ml-apis",
 		"google-pubsub",
+		"google-memorystore-redis",
 		"google-spanner",
 		"google-stackdriver-debugger",
 		"google-stackdriver-monitoring",
@@ -116,6 +117,10 @@ func validateServiceDefinition(t *testing.T, svc *broker.ServiceDefinition) {
 			if v.Required {
 				t.Errorf("No bind fields should be marked as required but %q was", v.FieldName)
 			}
+		}
+
+		if len(svc.Description) > 255 {
+			t.Errorf("CF requires description lengths to be less than 255 characters, but got %d", len(svc.Description))
 		}
 
 		for _, plan := range catalog.Plans {
