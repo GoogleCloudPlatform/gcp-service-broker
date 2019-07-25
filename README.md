@@ -1,4 +1,4 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/GoogleCloudPlatform/gcp-service-broker)](https://goreportcard.com/report/github.com/GoogleCloudPlatform/gcp-service-broker) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 # Open Service Broker for Google Cloud Platform
 
