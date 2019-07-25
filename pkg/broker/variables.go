@@ -136,10 +136,14 @@ func ApplyDefaults(parameters map[string]interface{}, variables []BrokerVariable
 
 }
 
-// ValidateVariables validates a list of BrokerVariables are adhering to their JSONSchema.
 func ValidateVariables(parameters map[string]interface{}, variables []BrokerVariable) error {
+	schema := CreateJsonSchema(variables)
+	return ValidateVariablesAgainstSchema(parameters, schema)
+}
 
-	schema := createJsonSchema(variables)
+// ValidateVariables validates a list of BrokerVariables are adhering to their JSONSchema.
+func ValidateVariablesAgainstSchema(parameters map[string]interface{}, schema map[string]interface{}) error {
+
 	result, err := gojsonschema.Validate(gojsonschema.NewGoLoader(schema), gojsonschema.NewGoLoader(parameters))
 	if err != nil {
 		return err
@@ -161,7 +165,8 @@ func ValidateVariables(parameters map[string]interface{}, variables []BrokerVari
 	return allErrors
 }
 
-func createJsonSchema(schemaVariables []BrokerVariable) map[string]interface{} {
+// CreateJsonSchema outputs a JSONSchema given a list of BrokerVariables
+func CreateJsonSchema(schemaVariables []BrokerVariable) map[string]interface{} {
 	required := utils.NewStringSet()
 	properties := make(map[string]interface{})
 

@@ -18,8 +18,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -36,10 +38,6 @@ func RunExamplesForService(registry broker.BrokerRegistry, client *Client, servi
 
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	if exampleName != "" && serviceName == "" {
-		fmt.Errorf("If an example name is specified, you must provide an accompanying service name.")
-	}
-
 	allExamples, err := GetAllCompleteServiceExamples(registry)
 	if err != nil {
 		return err
@@ -55,11 +53,41 @@ func RunExamplesForService(registry broker.BrokerRegistry, client *Client, servi
 
 }
 
+// RunExamplesFromFile reads a json-encoded list of CompleteServiceExamples.
+// All examples in the list get run if serviceName is blank. If exampleName
+// is non-blank then only the example with the given name is run.
+func RunExamplesFromFile(client *Client, fileName, serviceName, exampleName string) error {
+
+	rand.Seed(time.Now().UTC().UnixNano())
+
+	jsonFile, err := os.Open(fileName)
+
+	if err != nil {
+		log.Fatalf("Error opening file: %v", err)
+	}
+
+	defer jsonFile.Close()
+
+	var allExamples []CompleteServiceExample
+
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	json.Unmarshal(byteValue, &allExamples)
+
+	for _, completeServiceExample := range FilterMatchingServiceExamples(allExamples, serviceName, exampleName) {
+		if err := RunExample(client, completeServiceExample); err != nil {
+			return err
+		}
+	}
+
+	return nil
+
+}
+
 type CompleteServiceExample struct {
 	broker.ServiceExample `json: ",inline"`
 	ServiceName           string                  `json: "service_name"`
 	ServiceId             string                  `json: "service_id"`
-	ExpectedOutput        []broker.BrokerVariable `json: "expected_output"`
+	ExpectedOutput        map[string]interface{} `json: "expected_output"`
 }
 
 func GetAllCompleteServiceExamples(registry broker.BrokerRegistry) ([]CompleteServiceExample, error) {
@@ -105,7 +133,7 @@ func GetExamplesForAService(service *broker.ServiceDefinition) ([]CompleteServic
 			ServiceExample: example,
 			ServiceId:      serviceCatalogEntry.ID,
 			ServiceName:    service.Name,
-			ExpectedOutput: service.BindOutputVariables,
+			ExpectedOutput: broker.CreateJsonSchema(service.BindOutputVariables),
 		}
 
 		examples = append(examples, completeServiceExample)
@@ -135,6 +163,7 @@ func FilterMatchingServiceExamples(allExamples []CompleteServiceExample, service
 // RunExample runs a single example against the given service on the broker
 // pointed to by client.
 func RunExample(client *Client, serviceExample CompleteServiceExample) error {
+
 	executor, err := newExampleExecutor(client, serviceExample)
 	if err != nil {
 		return err
@@ -175,7 +204,7 @@ func RunExample(client *Client, serviceExample CompleteServiceExample) error {
 
 	credentialsEntry := binding.Credentials.(map[string]interface{})
 
-	if err := broker.ValidateVariables(credentialsEntry, serviceExample.ExpectedOutput); err != nil {
+	if err := broker.ValidateVariablesAgainstSchema(credentialsEntry, serviceExample.ExpectedOutput); err != nil {
 
 		log.Printf("Error: results don't match JSON Schema: %v", err)
 		return err
