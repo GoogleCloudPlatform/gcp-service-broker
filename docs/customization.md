@@ -334,6 +334,28 @@ A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind
   <li>Default: <code>{}</code></li>
 </ul>
 
+<b><tt>GSB_SERVICE_GOOGLE_MEMORYSTORE_REDIS_PROVISION_DEFAULTS</tt></b> - <i>text</i> - Provision default override Google Cloud Memorystore for Redis API instances.
+
+A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default.
+
+
+
+<ul>
+  <li><b>Required</b></li>
+  <li>Default: <code>{}</code></li>
+</ul>
+
+<b><tt>GSB_SERVICE_GOOGLE_MEMORYSTORE_REDIS_BIND_DEFAULTS</tt></b> - <i>text</i> - Bind default override Google Cloud Memorystore for Redis API instances.
+
+A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default.
+
+
+
+<ul>
+  <li><b>Required</b></li>
+  <li>Default: <code>{}</code></li>
+</ul>
+
 <b><tt>GSB_SERVICE_GOOGLE_ML_APIS_PROVISION_DEFAULTS</tt></b> - <i>text</i> - Provision default override Google Machine Learning APIs instances.
 
 A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default.
@@ -857,6 +879,117 @@ For example:
 <ul>
   <li><b>Required</b></li>
   <li>Default: <code>10</code></li>
+</ul>
+
+
+  </td>
+</tr>
+
+</table>
+
+### Google Cloud Memorystore for Redis API Custom Plans
+
+Generate custom plans for Google Cloud Memorystore for Redis API.
+To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>MEMORYSTORE_REDIS_CUSTOM_PLANS</tt>.
+
+For example:
+<code>
+[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "display_name": setme, "description": setme, "service": setme, "service_tier": setme},...]
+</code>
+
+<table>
+<tr>
+  <th>JSON Property</th>
+  <th>Type</th>
+  <th>Label</th>
+  <th>Details</th>
+</tr>
+<tr>
+  <td><tt>id</tt></td>
+  <td><i>string</i></td>
+  <td>Plan UUID</td>
+  <td>
+    The UUID of the custom plan, use the <tt>uuidgen</tt> CLI command or [uuidgenerator.net](https://www.uuidgenerator.net/) to create one.
+    <ul><li><b>Required</b></li></ul>
+  </td>
+</tr>
+<tr>
+  <td><tt>name</tt></td>
+  <td><i>string</i></td>
+  <td>Plan CLI Name</td>
+  <td>
+    The name of the custom plan used to provision it, must be lower-case, start with a letter a-z and contain only letters, numbers and dashes (-).
+    <ul><li><b>Required</b></li></ul>
+  </td>
+</tr>
+
+
+<tr>
+  <td><tt>display_name</tt></td>
+  <td><i>string</i></td>
+  <td>Display Name</td>
+  <td>
+  Name of the plan to be displayed to users.
+
+
+<ul>
+  <li><b>Required</b></li>
+</ul>
+
+
+  </td>
+</tr>
+
+<tr>
+  <td><tt>description</tt></td>
+  <td><i>string</i></td>
+  <td>Plan description</td>
+  <td>
+  The description of the plan shown to users.
+
+
+<ul>
+  <li><b>Required</b></li>
+</ul>
+
+
+  </td>
+</tr>
+
+<tr>
+  <td><tt>service</tt></td>
+  <td><i>dropdown_select</i></td>
+  <td>Service</td>
+  <td>
+  The service this plan is associated with.
+
+
+<ul>
+  <li><b>Required</b></li>
+  <li>Default: <code>3ea92b54-838c-4fe1-b75d-9bda513380aa</code></li>
+  <li>This option _is not_ user configurable. It must be set to the default.</li>
+  <li>Valid Values:
+  <ul>
+    <li><tt>3ea92b54-838c-4fe1-b75d-9bda513380aa</tt> - Google Cloud Memorystore for Redis API</li>
+  </ul>
+  </li>
+</ul>
+
+
+  </td>
+</tr>
+
+<tr>
+  <td><tt>service_tier</tt></td>
+  <td><i>string</i></td>
+  <td>Service Tier</td>
+  <td>
+  Either BASIC or STANDARD_HA. See: https://cloud.google.com/memorystore/pricing for more information.
+
+
+<ul>
+  <li><b>Required</b></li>
+  <li>Default: <code>basic</code></li>
 </ul>
 
 
