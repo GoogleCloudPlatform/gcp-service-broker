@@ -15,8 +15,8 @@
 package stackdriver
 
 import (
-	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/account_managers"
 	"github.com/pivotal-cf/brokerapi"
 )
 
@@ -26,7 +26,7 @@ func StackdriverDebuggerServiceDefinition() *broker.ServiceDefinition {
 	return &broker.ServiceDefinition{
 		Id:               "83837945-1547-41e0-b661-ea31d76eed11",
 		Name:             "google-stackdriver-debugger",
-		Description:      "Stackdriver Debugger is a feature of the Google Cloud Platform that lets you inspect the state of an application at any code location without using logging statements and without stopping or slowing down your applications. Your users are not impacted during debugging. Using the production debugger you can capture the local variables and call stack and link it back to a specific line location in your source code.",
+		Description:      "Inspect the state of an app, at any code location, without stopping or slowing it down.",
 		DisplayName:      "Stackdriver Debugger",
 		ImageUrl:         "https://cloud.google.com/_static/images/cloud/products/logos/svg/debugger.svg",
 		DocumentationUrl: "https://cloud.google.com/debugger/docs/",

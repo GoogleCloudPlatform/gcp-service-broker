@@ -133,26 +133,15 @@ A JSON map of configuration key/value pairs for all brokerpaks. If a variable is
 
 
 
-## Enable Services
+## Feature Flags
 
-Enable or disable services.
+Service broker feature flags.
 
 You can configure the following environment variables:
 
-<b><tt>GSB_SERVICE_GOOGLE_BIGQUERY_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google BigQuery instances.
+<b><tt>GSB_COMPATIBILITY_ENABLE_BUILTIN_SERVICES</tt></b> - <i>boolean</i> - enable-builtin-services
 
-
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_BIGTABLE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Bigtable instances.
-
-
+Enable services that are built in to the broker i.e. not brokerpaks.
 
 
 
@@ -160,264 +149,6 @@ You can configure the following environment variables:
   <li><b>Required</b></li>
   <li>Default: <code>true</code></li>
 </ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google CloudSQL MySQL instances.
-
-
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google CloudSQL PostgreSQL instances.
-
-
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_DATAFLOW_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Dataflow instances.
-
-
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_DATASTORE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Datastore instances.
-
-
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_DIALOGFLOW_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Dialogflow instances.
-
-
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_FIRESTORE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Firestore instances.
-
-
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_ML_APIS_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Machine Learning APIs instances.
-
-
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_PUBSUB_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google PubSub instances.
-
-
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_SPANNER_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Spanner instances.
-
-
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_DEBUGGER_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Debugger instances.
-
-
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_MONITORING_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Monitoring instances.
-
-
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_PROFILER_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Profiler instances.
-
-
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_STACKDRIVER_TRACE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Stackdriver Trace instances.
-
-
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_STORAGE_ENABLED</tt></b> - <i>boolean</i> - Let the broker create and bind Google Cloud Storage instances.
-
-
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
-
-
-
-## Role Whitelisting
-
-Enable or disable role whitelisting.
-
-You can configure the following environment variables:
-
-<b><tt>GSB_SERVICE_GOOGLE_BIGQUERY_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google BigQuery instances.
-
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>bigquery.dataViewer,bigquery.dataEditor,bigquery.dataOwner,bigquery.user,bigquery.jobUser</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_BIGTABLE_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Bigtable instances.
-
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>bigtable.user,bigtable.reader,bigtable.viewer</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google CloudSQL MySQL instances.
-
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>cloudsql.editor,cloudsql.viewer,cloudsql.client</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google CloudSQL PostgreSQL instances.
-
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>cloudsql.editor,cloudsql.viewer,cloudsql.client</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_ML_APIS_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Machine Learning APIs instances.
-
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>ml.developer,ml.viewer,ml.modelOwner,ml.modelUser,ml.jobOwner,ml.operationOwner</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_PUBSUB_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google PubSub instances.
-
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>pubsub.publisher,pubsub.subscriber,pubsub.viewer,pubsub.editor</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_SPANNER_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Spanner instances.
-
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>spanner.databaseAdmin,spanner.databaseReader,spanner.databaseUser,spanner.viewer</code></li>
-</ul>
-
-<b><tt>GSB_SERVICE_GOOGLE_STORAGE_WHITELIST</tt></b> - <i>string</i> - Role whitelist for Google Cloud Storage instances.
-
-A comma delimited list of roles (minus the role/ prefix) that can be used when creating bound users for this service.
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>storage.objectCreator,storage.objectViewer,storage.objectAdmin</code></li>
-</ul>
-
-
-
-## Compatibility
-
-Legacy Compatibility Options
-
-You can configure the following environment variables:
 
 <b><tt>GSB_COMPATIBILITY_ENABLE_CATALOG_SCHEMAS</tt></b> - <i>boolean</i> - enable-catalog-schemas
 
@@ -474,17 +205,6 @@ Enable services that use deprecated GCP components.
   <li>Default: <code>false</code></li>
 </ul>
 
-<b><tt>GSB_COMPATIBILITY_ENABLE_INPUT_VALIDATION</tt></b> - <i>boolean</i> - enable-input-validation
-
-Enables validating user input variables against JSON Schema definitions.
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>true</code></li>
-</ul>
-
 <b><tt>GSB_COMPATIBILITY_ENABLE_PREVIEW_SERVICES</tt></b> - <i>boolean</i> - enable-preview-services
 
 Enable services that are new to the broker this release.
@@ -510,17 +230,6 @@ Enable services that use the experimental, unstable, Terraform back-end.
 <b><tt>GSB_COMPATIBILITY_ENABLE_UNMAINTAINED_SERVICES</tt></b> - <i>boolean</i> - enable-unmaintained-services
 
 Enable broker services that are unmaintained.
-
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>false</code></li>
-</ul>
-
-<b><tt>GSB_COMPATIBILITY_THREE_TO_FOUR_LEGACY_PLANS</tt></b> - <i>boolean</i> - three-to-four.legacy-plans
-
-Enable compatibility with the GCP Service Broker v3.x. Before version 4.0, each installation generated its own plan UUIDs, after 4.0 they have been standardized. This option installs a compatibility layer which checks if a service is using the correct plan GUID. If the service does not use the correct GUID, the request will fail with a message about how to upgrade.
 
 
 
@@ -581,7 +290,7 @@ A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind
   <li>Default: <code>{}</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_PROVISION_DEFAULTS</tt></b> - <i>text</i> - Provision default override Google CloudSQL MySQL instances.
+<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_PROVISION_DEFAULTS</tt></b> - <i>text</i> - Provision default override Google CloudSQL for MySQL instances.
 
 A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default.
 
@@ -592,7 +301,7 @@ A JSON object with key/value pairs. Keys MUST be the name of a user-defined prov
   <li>Default: <code>{}</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_BIND_DEFAULTS</tt></b> - <i>text</i> - Bind default override Google CloudSQL MySQL instances.
+<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_BIND_DEFAULTS</tt></b> - <i>text</i> - Bind default override Google CloudSQL for MySQL instances.
 
 A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default.
 
@@ -603,7 +312,7 @@ A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind
   <li>Default: <code>{}</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_PROVISION_DEFAULTS</tt></b> - <i>text</i> - Provision default override Google CloudSQL PostgreSQL instances.
+<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_PROVISION_DEFAULTS</tt></b> - <i>text</i> - Provision default override Google CloudSQL for PostgreSQL instances.
 
 A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default.
 
@@ -614,7 +323,7 @@ A JSON object with key/value pairs. Keys MUST be the name of a user-defined prov
   <li>Default: <code>{}</code></li>
 </ul>
 
-<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_BIND_DEFAULTS</tt></b> - <i>text</i> - Bind default override Google CloudSQL PostgreSQL instances.
+<b><tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_BIND_DEFAULTS</tt></b> - <i>text</i> - Bind default override Google CloudSQL for PostgreSQL instances.
 
 A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default.
 
@@ -857,9 +566,9 @@ For example:
 
 </table>
 
-### Google CloudSQL MySQL Custom Plans
+### Google CloudSQL for MySQL Custom Plans
 
-Generate custom plans for Google CloudSQL MySQL.
+Generate custom plans for Google CloudSQL for MySQL.
 To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>CLOUDSQL_MYSQL_CUSTOM_PLANS</tt>.
 
 For example:
@@ -940,7 +649,7 @@ For example:
   <li>This option _is not_ user configurable. It must be set to the default.</li>
   <li>Valid Values:
   <ul>
-    <li><tt>4bc59b9a-8520-409f-85da-1c7552315863</tt> - Google CloudSQL MySQL</li>
+    <li><tt>4bc59b9a-8520-409f-85da-1c7552315863</tt> - Google CloudSQL for MySQL</li>
   </ul>
   </li>
 </ul>
@@ -1006,9 +715,9 @@ For example:
 
 </table>
 
-### Google CloudSQL PostgreSQL Custom Plans
+### Google CloudSQL for PostgreSQL Custom Plans
 
-Generate custom plans for Google CloudSQL PostgreSQL.
+Generate custom plans for Google CloudSQL for PostgreSQL.
 To specify a custom plan manually, create the plan as JSON in a JSON array and store it in the environment variable: <tt>CLOUDSQL_POSTGRES_CUSTOM_PLANS</tt>.
 
 For example:
@@ -1089,7 +798,7 @@ For example:
   <li>This option _is not_ user configurable. It must be set to the default.</li>
   <li>Valid Values:
   <ul>
-    <li><tt>cbad6d78-a73c-432d-b8ff-b219a17a803a</tt> - Google CloudSQL PostgreSQL</li>
+    <li><tt>cbad6d78-a73c-432d-b8ff-b219a17a803a</tt> - Google CloudSQL for PostgreSQL</li>
   </ul>
   </li>
 </ul>

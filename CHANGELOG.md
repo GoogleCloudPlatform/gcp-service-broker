@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
  - Added a workaround for an upstream CloudSQL issue that caused SQL user deletion to fail.
+ - Delete replicas for CloudSQL instances before attempting to delete the instance.
+
+### Added
+ - A new option to MySQL that allows auto-generating a replica name from the
+   name of the master.
+ - A new option to Cloud Storage that allows buckets to be deleted even if they
+   contain objects. This sets the label `sb-force-delete` to `true` on the
+   bucket and will attempt to delete all contents before deleting the bucket.
 
 ### Changed
  - Removed requirement to have a 'default' network when using google-redis.
