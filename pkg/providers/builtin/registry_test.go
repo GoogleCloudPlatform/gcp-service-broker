@@ -34,6 +34,7 @@ func TestBuiltinBrokerRegistry(t *testing.T) {
 		"google-firestore",
 		"google-ml-apis",
 		"google-pubsub",
+		"google-memorystore-redis",
 		"google-spanner",
 		"google-stackdriver-debugger",
 		"google-stackdriver-monitoring",

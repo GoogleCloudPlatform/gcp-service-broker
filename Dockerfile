@@ -19,7 +19,13 @@ COPY . .
 
 RUN CGO_ENABLED=0 go build -o /bin/gcp-service-broker
 
+# Get latest CA certs
+FROM alpine:latest as certs
+RUN apk --update add ca-certificates
+
 FROM scratch
+
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=build /go/src/github.com/GoogleCloudPlatform/gcp-service-broker /src
 COPY --from=build /bin/gcp-service-broker /bin/gcp-service-broker
 
