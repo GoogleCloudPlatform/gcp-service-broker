@@ -139,6 +139,17 @@ Service broker feature flags.
 
 You can configure the following environment variables:
 
+<b><tt>GSB_COMPATIBILITY_ENABLE_BUILTIN_BROKERPAKS</tt></b> - <i>boolean</i> - enable-builtin-brokerpaks
+
+Load brokerpaks that are built-in to the software.
+
+
+
+<ul>
+  <li><b>Required</b></li>
+  <li>Default: <code>true</code></li>
+</ul>
+
 <b><tt>GSB_COMPATIBILITY_ENABLE_BUILTIN_SERVICES</tt></b> - <i>boolean</i> - enable-builtin-services
 
 Enable services that are built in to the broker i.e. not brokerpaks.
