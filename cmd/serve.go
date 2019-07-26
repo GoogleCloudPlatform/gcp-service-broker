@@ -21,6 +21,8 @@ import (
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/brokerpak"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/server"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
@@ -46,6 +48,14 @@ func init() {
 	PORT environment variable.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			serve()
+		},
+	})
+
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "serve-docs",
+		Short: "Just serve the docs normally available on the broker",
+		Run: func(cmd *cobra.Command, args []string) {
+			serveDocs()
 		},
 	})
 
@@ -98,5 +108,25 @@ func serve() {
 	brokerAPI := brokerapi.New(serviceBroker, logger, credentials)
 	http.Handle("/", brokerAPI)
 	http.Handle("/docs", server.NewDocsHandler(cfg.Registry))
+	http.ListenAndServe(":"+port, nil)
+}
+
+func serveDocs() {
+	logger := utils.NewLogger("gcp-service-broker")
+	// init broker
+	registry := builtin.BuiltinBrokerRegistry()
+	if err := brokerpak.RegisterAll(registry); err != nil {
+		logger.Error("loading brokerpaks", err)
+	}
+
+	port := viper.GetString(apiPortProp)
+
+	// init api
+	logger.Info("Serving", lager.Data{
+		"port": port,
+	})
+
+	http.Handle("/", server.NewDocsHandler(registry))
+	http.Handle("/docs", server.NewDocsHandler(registry))
 	http.ListenAndServe(":"+port, nil)
 }
