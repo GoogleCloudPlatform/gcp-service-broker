@@ -29,6 +29,9 @@ COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certifica
 COPY --from=build /go/src/github.com/GoogleCloudPlatform/gcp-service-broker /src
 COPY --from=build /bin/gcp-service-broker /bin/gcp-service-broker
 
+ENV PORT 8080
+EXPOSE 8080/tcp
+
 WORKDIR /tmp
 WORKDIR /
 
