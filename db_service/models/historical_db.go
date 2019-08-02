@@ -114,7 +114,7 @@ type ProvisionRequestDetailsV1 struct {
 
 	ServiceInstanceId string
 	// is a json.Marshal of models.ProvisionDetails
-	RequestDetails string
+	RequestDetails string `gorm:"type:text"`
 }
 
 // TableName returns a consistent table name (`provision_request_details`) for
