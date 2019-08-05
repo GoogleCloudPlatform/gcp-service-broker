@@ -108,6 +108,7 @@ func serve() {
 	brokerAPI := brokerapi.New(serviceBroker, logger, credentials)
 	http.Handle("/", brokerAPI)
 	http.Handle("/docs", server.NewDocsHandler(cfg.Registry))
+	http.Handle("/examples", server.NewExampleHandler(cfg.Registry))
 	http.ListenAndServe(":"+port, nil)
 }
 
@@ -128,5 +129,6 @@ func serveDocs() {
 
 	http.Handle("/", server.NewDocsHandler(registry))
 	http.Handle("/docs", server.NewDocsHandler(registry))
+	http.Handle("/examples", server.NewExampleHandler(registry))
 	http.ListenAndServe(":"+port, nil)
 }
