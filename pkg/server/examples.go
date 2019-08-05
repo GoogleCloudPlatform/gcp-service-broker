@@ -16,6 +16,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -23,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/viper"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
 )
@@ -59,7 +61,7 @@ func GetAllCompleteServiceExamples(registry broker.BrokerRegistry) ([]client.Com
 func GetExamplesFromServer() []client.CompleteServiceExample {
 
 	var allExamples []client.CompleteServiceExample
-	url := "http://localhost:8000/examples"
+	url := fmt.Sprintf("http://%s:%d/examples", viper.GetString("api.hostname"), viper.GetInt("api.port"))
 
 	serverClient := http.Client{
 		Timeout: time.Second * 2,
