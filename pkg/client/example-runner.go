@@ -84,47 +84,6 @@ type CompleteServiceExample struct {
 	ExpectedOutput        map[string]interface{} `json: "expected_output"`
 }
 
-//func GetAllCompleteServiceExamples() ([]CompleteServiceExample, error) {
-//
-//	handler := server.NewExampleHandler()
-//	request := httptest.NewRequest(http.MethodGet, "/examples", nil)
-//	w := httptest.NewRecorder()
-//
-//	handler(w, request)
-//
-//	var allExamples []CompleteServiceExample
-//
-//	body := w.Body.Bytes()
-//	err := json.Unmarshal(body, &allExamples)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	//services := registry.GetAllServices()
-//	//
-//	//for _, service := range services {
-//	//
-//	//	serviceExamples, err := GetExamplesForAService(service)
-//	//
-//	//	if err != nil {
-//	//		return nil, err
-//	//	}
-//	//
-//	//	allExamples = append(allExamples, serviceExamples...)
-//	//}
-//
-//	// Sort by ServiceName and ExampleName so there's a consistent order in the UI and tests.
-//	sort.Slice(allExamples, func(i int, j int) bool {
-//		if strings.Compare(allExamples[i].ServiceName, allExamples[j].ServiceName) != 0 {
-//			return allExamples[i].ServiceName < allExamples[j].ServiceName
-//		} else {
-//			return allExamples[i].ServiceExample.Name < allExamples[j].ServiceExample.Name
-//		}
-//	})
-//
-//	return allExamples, nil
-//}
-
 func GetExamplesForAService(service *broker.ServiceDefinition) ([]CompleteServiceExample, error) {
 
 	var examples []CompleteServiceExample
