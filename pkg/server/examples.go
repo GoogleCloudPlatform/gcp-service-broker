@@ -16,9 +16,12 @@ package server
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
@@ -51,6 +54,38 @@ func GetAllCompleteServiceExamples(registry broker.BrokerRegistry) ([]client.Com
 	})
 
 	return allExamples, nil
+}
+
+func GetExamplesFromServer() []client.CompleteServiceExample {
+
+	var allExamples []client.CompleteServiceExample
+	url := "http://localhost:8000/examples"
+
+	serverClient := http.Client{
+		Timeout: time.Second * 2,
+	}
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	resp, err := serverClient.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = json.Unmarshal(body, &allExamples)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return allExamples
 }
 
 func NewExampleHandler(registry broker.BrokerRegistry) http.HandlerFunc {

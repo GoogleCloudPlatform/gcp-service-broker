@@ -21,7 +21,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/server"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 )
@@ -125,18 +124,13 @@ user-defined plans.
 				log.Fatalf("Error creating client: %v", err)
 			}
 
-			allExamples, err := server.GetAllCompleteServiceExamples(builtin.BuiltinBrokerRegistry())
-			if err != nil {
-				log.Fatalf("Error fetching all service examples: %v", err)
-			}
-
 			if exampleName != "" && serviceName == "" {
 				log.Fatalf("If an example name is specified, you must provide an accompanying service name.")
 			} else if fileName != "" {
 				if err := client.RunExamplesFromFile(apiClient, fileName, serviceName, exampleName); err != nil {
 					log.Fatalf("Error executing examples from file: %v", err)
 				}
-			} else if err := client.RunExamplesForService(allExamples, apiClient, serviceName, exampleName); err != nil {
+			} else if err := client.RunExamplesForService(server.GetExamplesFromServer(), apiClient, serviceName, exampleName); err != nil {
 				log.Fatalf("Error executing examples: %v", err)
 			}
 
