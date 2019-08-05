@@ -43,6 +43,7 @@ func TestNewExampleHandler(t *testing.T) {
 		t.Errorf("Expected application/json content type got: %q", contentType)
 	}
 
+	// Validate that the results can be unmarshalled to a CompleteServiceExamples type
 	body := w.Body.Bytes()
 	var allExamples []client.CompleteServiceExample
 
