@@ -17,13 +17,45 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"sort"
+	"strings"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
 )
 
+func GetAllCompleteServiceExamples(registry broker.BrokerRegistry) ([]client.CompleteServiceExample, error) {
+
+	var allExamples []client.CompleteServiceExample
+
+	services := registry.GetAllServices()
+
+	for _, service := range services {
+
+		serviceExamples, err := client.GetExamplesForAService(service)
+
+		if err != nil {
+			return nil, err
+		}
+
+		allExamples = append(allExamples, serviceExamples...)
+	}
+
+	// Sort by ServiceName and ExampleName so there's a consistent order in the UI and tests.
+	sort.Slice(allExamples, func(i int, j int) bool {
+		if strings.Compare(allExamples[i].ServiceName, allExamples[j].ServiceName) != 0 {
+			return allExamples[i].ServiceName < allExamples[j].ServiceName
+		} else {
+			return allExamples[i].ServiceExample.Name < allExamples[j].ServiceExample.Name
+		}
+	})
+
+	return allExamples, nil
+}
+
 func NewExampleHandler(registry broker.BrokerRegistry) http.HandlerFunc {
-	allExamples, err := client.GetAllCompleteServiceExamples(registry)
+	allExamples, err := GetAllCompleteServiceExamples(registry)
+
 	if err != nil {
 		return func(w http.ResponseWriter, rep *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

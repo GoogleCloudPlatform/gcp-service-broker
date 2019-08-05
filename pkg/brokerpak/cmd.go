@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/generator"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/server"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/stream"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils/ziputil"
 )
@@ -178,7 +179,12 @@ func RunExamples(pack string) error {
 		return err
 	}
 
-	return client.RunExamplesForService(registry, apiClient, "", "")
+	allExamples, err := server.GetAllCompleteServiceExamples(registry)
+	if err != nil {
+		return err
+	}
+
+	return client.RunExamplesForService(allExamples, apiClient, "", "")
 }
 
 // Docs generates the markdown usage docs for the given pack and writes them to stdout.
