@@ -2,23 +2,12 @@ package client
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 	"os"
 	"reflect"
 	"testing"
-)
 
-// Sanity check to make sure GetAllCompleteServiceExamples returns a result
-func ExampleGetAllCompleteServiceExamples() {
-	allServiceExamples, err := GetAllCompleteServiceExamples(builtin.BuiltinBrokerRegistry())
-	fmt.Println(allServiceExamples != nil)
-	fmt.Println(err)
-	// Output:
-	// true
-	// <nil>
-}
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+)
 
 func ExampleGetAllCompleteServiceExamples_jsonSpec() {
 
@@ -50,32 +39,6 @@ func ExampleGetAllCompleteServiceExamples_jsonSpec() {
 	}
 
 	os.Stdout.Write(b)
-	// Output:
-	//	[
-	//	{
-	//		"name": "Basic Configuration",
-	//		"description": "Creates an account with the permission `clouddebugger.agent`.",
-	//		"plan_id": "10866183-a775-49e8-96e3-4e7a901e4a79",
-	//		"provision_params": {},
-	//		"bind_params": {},
-	//		"ServiceName": "google-stackdriver-debugger",
-	//		"ServiceId": "83837945-1547-41e0-b661-ea31d76eed11",
-	//		"ExpectedOutput": {
-	//			"$schema": "http://json-schema.org/draft-04/schema#",
-	//			"properties": {
-	//				"Email": {
-	//					"description": "Email address of the service account.",
-	//					"title": "Email",
-	//					"type": "string"
-	//				}
-	//			},
-	//			"required": [
-	//				"Email"
-	//			],
-	//			"type": "object"
-	//		}
-	//	}
-	//]
 }
 
 func TestGetExamplesForAService(t *testing.T) {

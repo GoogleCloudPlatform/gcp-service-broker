@@ -16,11 +16,13 @@ package cmd
 
 import (
 	"encoding/json"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
-	"github.com/spf13/cobra"
 	"log"
+
+	"github.com/spf13/cobra"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/client"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/server"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 )
 
 var (
@@ -128,7 +130,7 @@ user-defined plans.
 				if err := client.RunExamplesFromFile(apiClient, fileName, serviceName, exampleName); err != nil {
 					log.Fatalf("Error executing examples from file: %v", err)
 				}
-			} else if err := client.RunExamplesForService(builtin.BuiltinBrokerRegistry(), apiClient, serviceName, exampleName); err != nil {
+			} else if err := client.RunExamplesForService(server.GetExamplesFromServer(), apiClient, serviceName, exampleName); err != nil {
 				log.Fatalf("Error executing examples: %v", err)
 			}
 

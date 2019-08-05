@@ -16,6 +16,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -24,11 +25,20 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 )
 
+// Sanity check to make sure GetAllCompleteServiceExamples returns a result
+func ExampleGetAllCompleteServiceExamples() {
+	allServiceExamples, err := GetAllCompleteServiceExamples(builtin.BuiltinBrokerRegistry())
+	fmt.Println(allServiceExamples != nil)
+	fmt.Println(err)
+	// Output:
+	// true
+	// <nil>
+}
+
 func TestNewExampleHandler(t *testing.T) {
-	registry := builtin.BuiltinBrokerRegistry()
 
 	// Validate that the handler returns the correct Content-Type
-	handler := NewExampleHandler(registry)
+	handler := NewExampleHandler(builtin.BuiltinBrokerRegistry())
 	request := httptest.NewRequest(http.MethodGet, "/examples", nil)
 	w := httptest.NewRecorder()
 

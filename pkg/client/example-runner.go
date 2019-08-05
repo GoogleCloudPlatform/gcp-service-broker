@@ -22,26 +22,20 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"sort"
-	"strings"
 	"time"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/pivotal-cf/brokerapi"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 )
 
 // RunExamplesForService runs all the examples for a given service name against
 // the service broker pointed to by client. All examples in the registry get run
 // if serviceName is blank. If exampleName is non-blank then only the example
 // with the given name is run.
-func RunExamplesForService(registry broker.BrokerRegistry, client *Client, serviceName, exampleName string) error {
+func RunExamplesForService(allExamples []CompleteServiceExample, client *Client, serviceName, exampleName string) error {
 
 	rand.Seed(time.Now().UTC().UnixNano())
-
-	allExamples, err := GetAllCompleteServiceExamples(registry)
-	if err != nil {
-		return err
-	}
 
 	for _, completeServiceExample := range FilterMatchingServiceExamples(allExamples, serviceName, exampleName) {
 		if err := RunExample(client, completeServiceExample); err != nil {
@@ -88,34 +82,6 @@ type CompleteServiceExample struct {
 	ServiceName           string                  `json: "service_name"`
 	ServiceId             string                  `json: "service_id"`
 	ExpectedOutput        map[string]interface{} `json: "expected_output"`
-}
-
-func GetAllCompleteServiceExamples(registry broker.BrokerRegistry) ([]CompleteServiceExample, error) {
-	var allExamples []CompleteServiceExample
-
-	services := registry.GetAllServices()
-
-	for _, service := range services {
-
-		serviceExamples, err := GetExamplesForAService(service)
-
-		if err != nil {
-			return nil, err
-		}
-
-		allExamples = append(allExamples, serviceExamples...)
-	}
-
-	// Sort by ServiceName and ExampleName so there's a consistent order in the UI and tests.
-	sort.Slice(allExamples, func(i int, j int) bool {
-		if strings.Compare(allExamples[i].ServiceName, allExamples[j].ServiceName) != 0 {
-			return allExamples[i].ServiceName < allExamples[j].ServiceName
-		} else {
-			return allExamples[i].ServiceExample.Name < allExamples[j].ServiceExample.Name
-		}
-	})
-
-	return allExamples, nil
 }
 
 func GetExamplesForAService(service *broker.ServiceDefinition) ([]CompleteServiceExample, error) {
