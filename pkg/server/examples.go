@@ -30,7 +30,7 @@ func NewExampleHandler(registry broker.BrokerRegistry) http.HandlerFunc {
 		}
 	}
 
-	json, err := json.Marshal(allExamples)
+	exampleJSON, err := json.Marshal(allExamples)
 
 	if err != nil {
 		return func(w http.ResponseWriter, rep *http.Request) {
@@ -41,6 +41,6 @@ func NewExampleHandler(registry broker.BrokerRegistry) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write(json)
+		w.Write(exampleJSON)
 	}
 }
