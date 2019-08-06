@@ -52,21 +52,19 @@ const (
 ---`
 	manifestYmlTemplate = copyrightHeader + `
 applications:
-  - name: {{.appName}}
-    product_version: "{{.appVersion}}"
-    metadata_version: "1.0"
-    label: 'GCP Service Broker'
-    description: '{{.appDescription}}'
-    memory: 1G
-    buildpack: {{.buildpack}}
-    env:
-      GOPACKAGENAME: {{.goPackageName}}
-      GOVERSION: {{.goVersion}}`
+- name: {{.appName}}
+  memory: 1G
+  buildpacks:
+  - {{.buildpack}}
+  env:
+    GOPACKAGENAME: {{.goPackageName}}
+    GOVERSION: {{.goVersion}}`
 	tileYmlTemplate = copyrightHeader + `
 name: {{.appName}}
 icon_file: gcp_logo.png
 label: Google Cloud Platform Service Broker
 description: '{{.appDescription}}'
+product_version: "{{.appVersion}}"
 org: system
 
 stemcell_criteria:
@@ -82,7 +80,8 @@ packages:
 - name: {{.appName}}
   type: app-broker
   manifest:
-    buildpack: go_buildpack
+    buildpacks:
+    - {{.buildpack}}
     path: /tmp/gcp-service-broker.zip
     env:
       GOPACKAGENAME: {{.goPackageName}}

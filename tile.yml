@@ -19,6 +19,7 @@ name: gcp-service-broker
 icon_file: gcp_logo.png
 label: Google Cloud Platform Service Broker
 description: 'A service broker for Google Cloud Platform services.'
+product_version: "4.2.3"
 org: system
 
 stemcell_criteria:
@@ -46,7 +47,8 @@ packages:
 - name: gcp-service-broker
   type: app-broker
   manifest:
-    buildpack: go_buildpack
+    buildpacks:
+    - go_buildpack
     path: /tmp/gcp-service-broker.zip
     env:
       GOPACKAGENAME: github.com/GoogleCloudPlatform/gcp-service-broker
