@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+- Built Brokerpaks now have a name of `{name}-{version}.brokerpak` as defined by the manifest rather than the name of the parent directory.
+- Services inside Brokerpaks now have a file name that includes their CLI friendly name to help differentiate them.
+- The `pak build` command now includes progress logs.
+
 ### Added
  - Ability for plans to selectively override user variables.
 
