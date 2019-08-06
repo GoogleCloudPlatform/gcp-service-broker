@@ -333,6 +333,7 @@ This is because they can resolve variables to the user's values first.
 * `request.instance_id` - _string_ The ID of the existing instance to bind to.
 * `request.service_id` - _string_ The GUID of the service this binding is for.
 * `request.plan_id` - _string_ The ID of plan the instance was created with.
+* `request.plan_properties` - _map[string]string_ A map of properties set in the service's plan.
 * `request.app_guid` - _string_ The ID of the application this binding is for.
 * `instance.name` - _string_ The name of the instance.
 * `instance.details` - _map[string]any_ Output variables of the instance as specified by ProvisionOutputVariables.

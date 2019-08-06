@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
  - Ability for plans to selectively override user variables.
+ - Ability to get plan information from HIL execution environment on bind.
 
 ## [4.2.3] - 2019-06-12
 

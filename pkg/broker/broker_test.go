@@ -424,7 +424,15 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 		Id:   "00000000-0000-0000-0000-000000000000",
 		Name: "left-handed-smoke-sifter",
 		Plans: []ServicePlan{
-			{ServicePlan: brokerapi.ServicePlan{ID: "builtin-plan", Name: "Builtin!"}},
+			{
+				ServicePlan: brokerapi.ServicePlan{
+					ID:   "builtin-plan",
+					Name: "Builtin!",
+				},
+				ServiceProperties: map[string]string{
+					"service-property": "operator-set",
+				},
+			},
 		},
 		BindInputVariables: []BrokerVariable{
 			{
@@ -452,6 +460,11 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 				Default:   `${instance.details["foo"]}`,
 				Overwrite: true,
 			},
+			{
+				Name:      "service-prop",
+				Default:   `${request.plan_properties["service-property"]}`,
+				Overwrite: true,
+			},
 		},
 	}
 
@@ -470,6 +483,7 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 				"location":     "us",
 				"name":         "name-us",
 				"instance-foo": "",
+				"service-prop": "operator-set",
 			},
 		},
 		"location gets truncated": {
@@ -479,6 +493,7 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 				"location":     "averylongl",
 				"name":         "name-averylonglocation",
 				"instance-foo": "default",
+				"service-prop": "operator-set",
 			},
 		},
 		"user location and name": {
@@ -488,6 +503,7 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 				"location":     "eu",
 				"name":         "foo",
 				"instance-foo": "default",
+				"service-prop": "operator-set",
 			},
 		},
 		"operator defaults override computed defaults": {
@@ -498,6 +514,7 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 				"location":     "eu",
 				"name":         "name-eu",
 				"instance-foo": "default",
+				"service-prop": "operator-set",
 			},
 		},
 		"user values override operator defaults": {
@@ -508,6 +525,7 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 				"location":     "nz",
 				"name":         "name-nz",
 				"instance-foo": "default",
+				"service-prop": "operator-set",
 			},
 		},
 		"operator defaults are not evaluated": {
@@ -518,6 +536,7 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 				"location":     "us",
 				"name":         "foo-${location}",
 				"instance-foo": "default",
+				"service-prop": "operator-set",
 			},
 		},
 		"instance info can get parsed": {
@@ -527,6 +546,7 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 				"location":     "us",
 				"name":         "name-us",
 				"instance-foo": "bar",
+				"service-prop": "operator-set",
 			},
 		},
 		"invalid-request": {
@@ -542,6 +562,7 @@ func TestServiceDefinition_BindVariables(t *testing.T) {
 				"location":     "eu",
 				"name":         "name-eu",
 				"instance-foo": "default",
+				"service-prop": "operator-set",
 			},
 		},
 	}

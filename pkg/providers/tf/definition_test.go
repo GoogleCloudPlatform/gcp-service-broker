@@ -164,6 +164,113 @@ func TestTfServiceDefinitionV1Plan_ToPlan(t *testing.T) {
 	}
 }
 
-func TestTfServiceDefinitionV1Variable_ToBrokerVariable(t *testing.T) {
-	// adsf
+func TestTfServiceDefinitionV1_ToService(t *testing.T) {
+	definition := TfServiceDefinitionV1{
+		Version:     1,
+		Id:          "d34705c8-3edf-4ab8-93b3-d97f080da24c",
+		Name:        "my-service-name",
+		Description: "my-service-description",
+		DisplayName: "My Service Name",
+
+		ImageUrl:         "https://example.com/image.png",
+		SupportUrl:       "https://example.com/support",
+		DocumentationUrl: "https://example.com/docs",
+		Plans:            []TfServiceDefinitionV1Plan{},
+
+		ProvisionSettings: TfServiceDefinitionV1Action{
+			PlanInputs: []broker.BrokerVariable{
+				{
+					FieldName: "plan-input-provision",
+					Type:      "string",
+					Details:   "description",
+				},
+			},
+			UserInputs: []broker.BrokerVariable{
+				{
+					FieldName: "user-input-provision",
+					Type:      "string",
+					Details:   "description",
+				},
+			},
+			Computed: []varcontext.DefaultVariable{{Name: "computed-input-provision", Default: ""}},
+		},
+
+		BindSettings: TfServiceDefinitionV1Action{
+			PlanInputs: []broker.BrokerVariable{
+				{
+					FieldName: "plan-input-bind",
+					Type:      "integer",
+					Details:   "description",
+				},
+			},
+			UserInputs: []broker.BrokerVariable{
+				{
+					FieldName: "user-input-bind",
+					Type:      "string",
+					Details:   "description",
+				},
+			},
+			Computed: []varcontext.DefaultVariable{{Name: "computed-input-bind", Default: ""}},
+		},
+
+		Examples: []broker.ServiceExample{},
+	}
+
+	service, err := definition.ToService(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectEqual := func(field string, expected, actual interface{}) {
+		if !reflect.DeepEqual(expected, actual) {
+			t.Errorf("Expected %q to be equal. Expected: %#v, Actual: %#v", field, expected, actual)
+		}
+	}
+
+	t.Run("basic-info", func(t *testing.T) {
+		expectEqual("Id", definition.Id, service.Id)
+		expectEqual("Name", definition.Name, service.Name)
+		expectEqual("Description", definition.Description, service.Description)
+		expectEqual("Bindable", true, service.Bindable)
+		expectEqual("PlanUpdateable", false, service.PlanUpdateable)
+		expectEqual("DisplayName", definition.DisplayName, service.DisplayName)
+		expectEqual("DocumentationUrl", definition.DocumentationUrl, service.DocumentationUrl)
+		expectEqual("SupportUrl", definition.SupportUrl, service.SupportUrl)
+		expectEqual("ImageUrl", definition.ImageUrl, service.ImageUrl)
+		expectEqual("Tags", definition.Tags, service.Tags)
+	})
+
+	t.Run("vars", func(t *testing.T) {
+		expectEqual("ProvisionInputVariables", definition.ProvisionSettings.UserInputs, service.ProvisionInputVariables)
+		expectEqual("ProvisionComputedVariables", []varcontext.DefaultVariable{
+			{
+				Name:      "computed-input-provision",
+				Default:   "",
+				Overwrite: false,
+			},
+			{
+				Name:      "tf_id",
+				Default:   "tf:${request.instance_id}:",
+				Overwrite: true,
+			},
+		}, service.ProvisionComputedVariables)
+		expectEqual("PlanVariables", append(definition.ProvisionSettings.PlanInputs, definition.BindSettings.PlanInputs...), service.PlanVariables)
+		expectEqual("BindInputVariables", definition.BindSettings.UserInputs, service.BindInputVariables)
+		expectEqual("BindComputedVariables", []varcontext.DefaultVariable{
+			{Name: "plan-input-bind", Default: "${request.plan_properties[\"plan-input-bind\"]}", Overwrite: true, Type: "integer"},
+			{Name: "computed-input-bind", Default: "", Overwrite: false, Type: ""},
+			{Name: "tf_id", Default: "tf:${request.instance_id}:${request.binding_id}", Overwrite: true, Type: ""},
+		}, service.BindComputedVariables)
+		expectEqual("BindOutputVariables", append(definition.ProvisionSettings.Outputs, definition.BindSettings.Outputs...), service.BindOutputVariables)
+	})
+
+	t.Run("examples", func(t *testing.T) {
+		expectEqual("Examples", definition.Examples, service.Examples)
+	})
+
+	t.Run("provider-builder", func(t *testing.T) {
+		if service.ProviderBuilder == nil {
+			t.Fatal("Expected provider builder to not be nil")
+		}
+	})
 }
