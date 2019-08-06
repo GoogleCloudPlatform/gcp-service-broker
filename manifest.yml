@@ -17,10 +17,6 @@
 ---
 applications:
 - name: gcp-service-broker
-  product_version: "4.2.3"
-  metadata_version: "1.0"
-  label: 'GCP Service Broker'
-  description: 'A service broker for Google Cloud Platform services.'
   memory: 1G
   buildpacks:
   - go_buildpack

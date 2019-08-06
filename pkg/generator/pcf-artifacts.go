@@ -53,10 +53,6 @@ const (
 	manifestYmlTemplate = copyrightHeader + `
 applications:
 - name: {{.appName}}
-  product_version: "{{.appVersion}}"
-  metadata_version: "1.0"
-  label: 'GCP Service Broker'
-  description: '{{.appDescription}}'
   memory: 1G
   buildpacks:
   - {{.buildpack}}
@@ -68,6 +64,7 @@ name: {{.appName}}
 icon_file: gcp_logo.png
 label: Google Cloud Platform Service Broker
 description: '{{.appDescription}}'
+product_version: "{{.appVersion}}"
 org: system
 
 stemcell_criteria:
