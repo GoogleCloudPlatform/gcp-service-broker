@@ -181,6 +181,27 @@ func (tfb *TfServiceDefinitionV1) ToService(executor wrapper.TerraformExecutor) 
 		rawPlans = append(rawPlans, plan.ToPlan())
 	}
 
+	// Bindings get special computed properties because the broker didn't
+	// originally support injecting plan variables into a binding
+	// to fix that, we auto-inject the properties from the plan to make it look
+	// like they were to the TF template.
+	bindComputed := []varcontext.DefaultVariable{}
+	for _, pi := range tfb.BindSettings.PlanInputs {
+		bindComputed = append(bindComputed, varcontext.DefaultVariable{
+			Name:      pi.FieldName,
+			Default:   fmt.Sprintf("${request.plan_properties[%q]}", pi.FieldName),
+			Overwrite: true,
+			Type:      string(pi.Type),
+		})
+	}
+
+	bindComputed = append(bindComputed, tfb.BindSettings.Computed...)
+	bindComputed = append(bindComputed, varcontext.DefaultVariable{
+		Name:      "tf_id",
+		Default:   "tf:${request.instance_id}:${request.binding_id}",
+		Overwrite: true,
+	})
+
 	constDefn := *tfb
 	return &broker.ServiceDefinition{
 		Id:               tfb.Id,
@@ -201,15 +222,11 @@ func (tfb *TfServiceDefinitionV1) ToService(executor wrapper.TerraformExecutor) 
 			Default:   "tf:${request.instance_id}:",
 			Overwrite: true,
 		}),
-		BindInputVariables: tfb.BindSettings.UserInputs,
-		BindComputedVariables: append(tfb.BindSettings.Computed, varcontext.DefaultVariable{
-			Name:      "tf_id",
-			Default:   "tf:${request.instance_id}:${request.binding_id}",
-			Overwrite: true,
-		}),
-		BindOutputVariables: append(tfb.ProvisionSettings.Outputs, tfb.BindSettings.Outputs...),
-		PlanVariables:       append(tfb.ProvisionSettings.PlanInputs, tfb.BindSettings.PlanInputs...),
-		Examples:            tfb.Examples,
+		BindInputVariables:    tfb.BindSettings.UserInputs,
+		BindComputedVariables: bindComputed,
+		BindOutputVariables:   append(tfb.ProvisionSettings.Outputs, tfb.BindSettings.Outputs...),
+		PlanVariables:         append(tfb.ProvisionSettings.PlanInputs, tfb.BindSettings.PlanInputs...),
+		Examples:              tfb.Examples,
 		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
 			jobRunner := NewTfJobRunnerForProject(projectId)
 			jobRunner.Executor = executor
@@ -248,7 +265,8 @@ func NewExampleTfServiceDefinition() TfServiceDefinitionV1 {
 				Bullets:     []string{"information point 1", "information point 2", "some caveat here"},
 				Free:        false,
 				Properties: map[string]string{
-					"domain": "example.com",
+					"domain":                 "example.com",
+					"password_special_chars": `@/ \"?`,
 				},
 			},
 		},
@@ -285,17 +303,30 @@ func NewExampleTfServiceDefinition() TfServiceDefinitionV1 {
 			},
 		},
 		BindSettings: TfServiceDefinitionV1Action{
+			PlanInputs: []broker.BrokerVariable{
+				{
+					FieldName: "password_special_chars",
+					Type:      broker.JsonTypeString,
+					Details:   "Supply your own list of special characters to use for string generation.",
+					Required:  true,
+				},
+			},
 			Computed: []varcontext.DefaultVariable{
+				{Name: "domain", Default: `${request.plan_properties["domain"]}`, Overwrite: true},
 				{Name: "address", Default: `${instance.details["email"]}`, Overwrite: true},
 			},
 			Template: `
+			variable domain {type = "string"}
+			variable address {type = "string"}
+			variable password_special_chars {type = "string"}
+
 			resource "random_string" "password" {
 			  length = 16
 			  special = true
-			  override_special = "/@\" "
+				override_special = "${var.password_special_chars}"
 			}
 
-			output uri {value = "smtp://${var.address}:${random_string.password.result}@smtp.mycompany.com"}
+			output uri {value = "smtp://${var.address}:${random_string.password.result}@smtp.${var.domain}"}
 			`,
 			Outputs: []broker.BrokerVariable{
 				{
