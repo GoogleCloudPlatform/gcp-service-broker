@@ -46,7 +46,8 @@ packages:
 - name: gcp-service-broker
   type: app-broker
   manifest:
-    buildpack: go_buildpack
+    buildpacks:
+    - go_buildpack
     path: /tmp/gcp-service-broker.zip
     env:
       GOPACKAGENAME: github.com/GoogleCloudPlatform/gcp-service-broker
