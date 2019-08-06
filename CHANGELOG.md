@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Built Brokerpaks now have a name of `{name}-{version}.brokerpak` as defined by the manifest rather than the name of the parent directory.
+- Services inside Brokerpaks now have a file name that includes their CLI friendly name to help differentiate them.
+- The `pak build` command now includes progress logs.
+
 ## [4.2.3] - 2019-06-12
 
 ### Fixed
