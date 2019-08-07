@@ -110,6 +110,7 @@ func (broker *CloudSQLBroker) deleteSqlUserAccount(ctx context.Context, binding 
 	for _, user := range userList.Items {
 		if user.Name == creds.Username {
 			hostToDelete = user.Host
+			foundUser = true
 			break
 		}
 	}

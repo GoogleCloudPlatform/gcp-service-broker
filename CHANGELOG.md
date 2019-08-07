@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+- Fix bug that caused SQL users to never be deleted.
+
 ### Changed
 - Built Brokerpaks now have a name of `{name}-{version}.brokerpak` as defined by the manifest rather than the name of the parent directory.
 - Services inside Brokerpaks now have a file name that includes their CLI friendly name to help differentiate them.
