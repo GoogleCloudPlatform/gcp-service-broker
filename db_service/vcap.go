@@ -17,9 +17,10 @@ package db_service
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/viper"
 	"net/url"
 	"os"
+
+	"github.com/spf13/viper"
 )
 
 type VcapService struct {
@@ -35,9 +36,11 @@ type VcapService struct {
 func UseVcapServices() error {
 	vcapData, vcapExists := os.LookupEnv("VCAP_SERVICES")
 
-	if !vcapExists {
+	// CloudFoundry provides an empty VCAP_SERVICES hash by default
+	if !vcapExists || vcapData == "{}" {
 		return nil
 	}
+
 	vcapService, err := ParseVcapServices(vcapData)
 	if err != nil {
 		return fmt.Errorf("Error parsing VCAP_SERVICES: %s", err)
