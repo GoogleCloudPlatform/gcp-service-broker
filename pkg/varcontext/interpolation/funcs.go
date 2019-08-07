@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"sort"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -42,7 +44,8 @@ func createStandardLibrary() map[string]ast.Function {
 		"counter.next":    hilFuncCounterNext(),
 		"rand.base64":     hilFuncRandBase64(),
 		"assert":          hilFuncAssert(),
-		"json.marshal":    hilFuncJsonMarshal(),
+		"json.marshal":    hilFuncJSONMarshal(),
+		"map.flatten":     hilFuncMapFlatten(),
 	}
 }
 
@@ -151,8 +154,8 @@ func hilFuncAssert() ast.Function {
 	}
 }
 
-// hilFuncJsonMarshal marshals a value as JSON.
-func hilFuncJsonMarshal() ast.Function {
+// hilFuncJSONMarshal marshals a value as JSON.
+func hilFuncJSONMarshal() ast.Function {
 	return ast.Function{
 		ArgTypes:   []ast.Type{ast.TypeAny},
 		ReturnType: ast.TypeString,
@@ -167,6 +170,32 @@ func hilFuncJsonMarshal() ast.Function {
 				return nil, fmt.Errorf("couldn't convert: %v to JSON %s", args[0], err)
 			}
 			return string(bytes), nil
+		},
+	}
+}
+
+// hilFuncMapFlatten flattens a map into a string of key/value pairs with
+// given separators.
+func hilFuncMapFlatten() ast.Function {
+	return ast.Function{
+		ArgTypes:   []ast.Type{ast.TypeString, ast.TypeString, ast.TypeMap},
+		ReturnType: ast.TypeString,
+		Callback: func(args []interface{}) (interface{}, error) {
+			kvSep := args[0].(string)
+			tupleSep := args[1].(string)
+			unwrapped, err := hilToInterface(args[2])
+			if err != nil {
+				return nil, err
+			}
+
+			outArr := []string{}
+			for k, v := range unwrapped.(map[string]interface{}) {
+				outArr = append(outArr, fmt.Sprintf("%v%s%v", k, kvSep, v))
+			}
+
+			sort.Strings(outArr)
+
+			return strings.Join(outArr, tupleSep), nil
 		},
 	}
 }
