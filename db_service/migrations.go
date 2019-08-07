@@ -22,7 +22,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-const numMigrations = 6
+const numMigrations = 7
 
 // runs schema migrations on the provided service broker database to get it up to date
 func RunMigrations(db *gorm.DB) error {
@@ -69,6 +69,15 @@ func RunMigrations(db *gorm.DB) error {
 
 	migrations[5] = func() error { // v4.2.3
 		return autoMigrateTables(db, &models.ProvisionRequestDetailsV2{})
+	}
+
+	migrations[6] = func() error { // v4.2.4
+		if db.Dialect().GetName() == "sqlite3" {
+			// sqlite does not support changing column data types
+			return nil
+		} else {
+			return db.Model(&models.ProvisionRequestDetailsV2{}).ModifyColumn("request_details", "text").Error
+		}
 	}
 
 	var lastMigrationNumber = -1
