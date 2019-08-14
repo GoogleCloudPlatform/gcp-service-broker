@@ -19,6 +19,7 @@
     "pubsub",
     "pubsub/apiv1",
     "pubsub/internal/distribution",
+    "redis/apiv1beta1",
     "spanner/admin/instance/apiv1",
     "storage",
   ]
@@ -83,6 +84,14 @@
   pruneopts = ""
   revision = "ceab7b7ac6f535d1397f124620720b5145f1ad59"
   version = "v1.15.88"
+
+[[projects]]
+  digest = "1:ac2a05be7167c495fe8aaf8aaf62ecf81e78d2180ecb04e16778dc6c185c96a5"
+  name = "github.com/beorn7/perks"
+  packages = ["quantile"]
+  pruneopts = ""
+  revision = "37c8de3658fcb183f997c4e13e8337516ab753e6"
+  version = "v1.0.1"
 
 [[projects]]
   branch = "master"
@@ -252,6 +261,14 @@
   revision = "fa9f258a92500514cc8e9c67020487709df92432"
 
 [[projects]]
+  branch = "master"
+  digest = "1:561b97cf5d9395a25b10df01505c898625f7695dc092aa783d48fe89a3438ce0"
+  name = "github.com/heptiolabs/healthcheck"
+  packages = ["."]
+  pruneopts = ""
+  revision = "6ff867650f40c632367411120275478876202233"
+
+[[projects]]
   digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
@@ -300,6 +317,14 @@
   pruneopts = ""
   revision = "25ecb14adfc7543176f7d85291ec7dba82c6f7e4"
   version = "v1.9.0"
+
+[[projects]]
+  digest = "1:63722a4b1e1717be7b98fc686e0b30d5e7f734b9e93d7dee86293b6deab7ea28"
+  name = "github.com/matttproud/golang_protobuf_extensions"
+  packages = ["pbutil"]
+  pruneopts = ""
+  revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
+  version = "v1.0.1"
 
 [[projects]]
   digest = "1:096a8a9182648da3d00ff243b88407838902b6703fc12657f76890e08d1899bf"
@@ -360,6 +385,48 @@
   pruneopts = ""
   revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
   version = "v0.8.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:233696f12e9af59b02e41c0501d0c559a90e282be517a3667bf350a9e40a75ac"
+  name = "github.com/prometheus/client_golang"
+  packages = [
+    "prometheus",
+    "prometheus/internal",
+  ]
+  pruneopts = ""
+  revision = "4efc3ccc7a660996803fff4721a2643b33dc3f77"
+
+[[projects]]
+  branch = "master"
+  digest = "1:0a565f69553dd41b3de790fde3532e9237142f2637899e20cd3e7396f0c4f2f7"
+  name = "github.com/prometheus/client_model"
+  packages = ["go"]
+  pruneopts = ""
+  revision = "14fe0d1b01d4d5fc031dd4bec1823bd3ebbe8016"
+
+[[projects]]
+  digest = "1:0f2cee44695a3208fe5d6926076641499c72304e6f015348c9ab2df90a202cdf"
+  name = "github.com/prometheus/common"
+  packages = [
+    "expfmt",
+    "internal/bitbucket.org/ww/goautoneg",
+    "model",
+  ]
+  pruneopts = ""
+  revision = "31bed53e4047fd6c510e43a941f90cb31be0972a"
+  version = "v0.6.0"
+
+[[projects]]
+  digest = "1:9b33e539d6bf6e4453668a847392d1e9e6345225ea1426f9341212c652bcbee4"
+  name = "github.com/prometheus/procfs"
+  packages = [
+    ".",
+    "internal/fs",
+  ]
+  pruneopts = ""
+  revision = "3f98efb27840a48a7a2898ec80be07674d19f9c8"
+  version = "v0.0.3"
 
 [[projects]]
   branch = "master"
@@ -541,7 +608,10 @@
   branch = "master"
   digest = "1:12902fee4e8c9475c3f34ed83326414a240e3d3990ab7ac3e81f210d621003a3"
   name = "golang.org/x/sys"
-  packages = ["unix"]
+  packages = [
+    "unix",
+    "windows",
+  ]
   pruneopts = ""
   revision = "49385e6e15226593f68b26af201feec29d5bba22"
 
@@ -623,6 +693,7 @@
     "googleapis/api/annotations",
     "googleapis/bigtable/admin/v2",
     "googleapis/bigtable/v2",
+    "googleapis/cloud/redis/v1beta1",
     "googleapis/iam/v1",
     "googleapis/longrunning",
     "googleapis/pubsub/v1",
@@ -703,18 +774,22 @@
   input-imports = [
     "cloud.google.com/go/bigtable",
     "cloud.google.com/go/pubsub",
+    "cloud.google.com/go/redis/apiv1beta1",
     "cloud.google.com/go/spanner/admin/instance/apiv1",
     "cloud.google.com/go/storage",
     "code.cloudfoundry.org/lager",
     "github.com/go-sql-driver/mysql",
+    "github.com/gorilla/mux",
     "github.com/hashicorp/go-getter",
     "github.com/hashicorp/go-multierror",
     "github.com/hashicorp/hcl",
     "github.com/hashicorp/hil",
     "github.com/hashicorp/hil/ast",
+    "github.com/heptiolabs/healthcheck",
     "github.com/jinzhu/gorm",
     "github.com/jinzhu/gorm/dialects/sqlite",
     "github.com/pivotal-cf/brokerapi",
+    "github.com/pkg/errors",
     "github.com/robertkrimen/otto",
     "github.com/russross/blackfriday",
     "github.com/spf13/cast",
@@ -730,6 +805,7 @@
     "google.golang.org/api/iam/v1",
     "google.golang.org/api/option",
     "google.golang.org/api/sqladmin/v1beta4",
+    "google.golang.org/genproto/googleapis/cloud/redis/v1beta1",
     "google.golang.org/genproto/googleapis/spanner/admin/instance/v1",
     "gopkg.in/go-playground/validator.v9",
     "gopkg.in/yaml.v2",
