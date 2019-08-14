@@ -16,16 +16,19 @@ package cmd
 
 import (
 	"context"
+	"database/sql"
 	"net/http"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/brokerpak"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/server"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
+	"github.com/gorilla/mux"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -66,7 +69,7 @@ func init() {
 
 func serve() {
 	logger := utils.NewLogger("gcp-service-broker")
-	db_service.New(logger)
+	db := db_service.New(logger)
 
 	// init broker
 	cfg, err := brokers.NewBrokerConfigFromEnv()
@@ -79,20 +82,10 @@ func serve() {
 		logger.Fatal("Error initializing service broker: %s", err)
 	}
 
-	username := viper.GetString(apiUserProp)
-	password := viper.GetString(apiPasswordProp)
-	port := viper.GetString(apiPortProp)
-
 	credentials := brokerapi.BrokerCredentials{
-		Username: username,
-		Password: password,
+		Username: viper.GetString(apiUserProp),
+		Password: viper.GetString(apiPasswordProp),
 	}
-
-	// init api
-	logger.Info("Serving", lager.Data{
-		"port":     port,
-		"username": username,
-	})
 
 	if cfCompatibilityToggle.IsActive() {
 		logger.Info("Enabling Cloud Foundry service sharing")
@@ -106,10 +99,8 @@ func serve() {
 	logger.Info("service catalog", lager.Data{"catalog": services})
 
 	brokerAPI := brokerapi.New(serviceBroker, logger, credentials)
-	http.Handle("/", brokerAPI)
-	http.Handle("/docs", server.NewDocsHandler(cfg.Registry))
-	http.Handle("/examples", server.NewExampleHandler(cfg.Registry))
-	http.ListenAndServe(":"+port, nil)
+
+	startServer(cfg.Registry, db.DB(), brokerAPI)
 }
 
 func serveDocs() {
@@ -120,15 +111,24 @@ func serveDocs() {
 		logger.Error("loading brokerpaks", err)
 	}
 
+	startServer(registry, nil, nil)
+}
+
+func startServer(registry broker.BrokerRegistry, db *sql.DB, brokerapi http.Handler) {
+	logger := utils.NewLogger("gcp-service-broker")
+
+	router := mux.NewRouter()
+
+	// match paths going to the brokerapi first
+	if brokerapi != nil {
+		router.PathPrefix("/v2").Handler(brokerapi)
+	}
+
+	server.AddDocsHandler(router, registry)
+	router.HandleFunc("/examples", server.NewExampleHandler(registry))
+	server.AddHealthHandler(router, db)
+
 	port := viper.GetString(apiPortProp)
-
-	// init api
-	logger.Info("Serving", lager.Data{
-		"port": port,
-	})
-
-	http.Handle("/", server.NewDocsHandler(registry))
-	http.Handle("/docs", server.NewDocsHandler(registry))
-	http.Handle("/examples", server.NewExampleHandler(registry))
-	http.ListenAndServe(":"+port, nil)
+	logger.Info("Serving", lager.Data{"port": port})
+	http.ListenAndServe(":"+port, router)
 }

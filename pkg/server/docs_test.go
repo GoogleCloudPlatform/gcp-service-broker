@@ -21,17 +21,19 @@ import (
 	"testing"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
+	"github.com/gorilla/mux"
 )
 
 func TestNewDocsHandler(t *testing.T) {
 	registry := builtin.BuiltinBrokerRegistry()
+	router := mux.NewRouter()
 	// Test that the handler sets the correct header and contains some imporant
 	// strings that will indicate (but not prove!) that the rendering was correct.
-	handler := NewDocsHandler(registry)
+	AddDocsHandler(router, registry)
 	request := httptest.NewRequest(http.MethodGet, "/docs", nil)
 	w := httptest.NewRecorder()
 
-	handler(w, request)
+	router.ServeHTTP(w, request)
 
 	if w.Code != http.StatusOK {
 		t.Errorf("Expected response code: %d got: %d", http.StatusOK, w.Code)
