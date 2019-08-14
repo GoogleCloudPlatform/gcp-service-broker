@@ -31,7 +31,6 @@ import (
 	"context"
 
 	"code.cloudfoundry.org/lager"
-	multierror "github.com/hashicorp/go-multierror"
 	googleapi "google.golang.org/api/googleapi"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
 	sqladmin "google.golang.org/api/sqladmin/v1beta4"
@@ -246,22 +245,25 @@ func (b *CloudSQLBroker) BuildInstanceCredentials(ctx context.Context, bindRecor
 }
 
 // Unbind deletes the database user, service account and invalidates the ssl certs associated with this binding.
+// It returns early to make an unbind fail if any subcommand fails.
+// -> It is possible that the deletion of a postgres sql user fails because of depending objects in the db.
+// In that case, the service account should not be deleted (BrokerBase.Unbind) because the users would not
+// be able to connect to the db anymore.
+// Terraform handles the issue in a similar way.
 func (b *CloudSQLBroker) Unbind(ctx context.Context, instance models.ServiceInstanceDetails, binding models.ServiceBindingCredentials) error {
-	var accumulator error
-
 	if err := b.deleteSqlSslCert(ctx, binding, instance); err != nil {
-		accumulator = multierror.Append(accumulator, err)
+		return err
 	}
 
 	if err := b.deleteSqlUserAccount(ctx, binding, instance); err != nil {
-		accumulator = multierror.Append(accumulator, err)
+		return err
 	}
 
 	if err := b.BrokerBase.Unbind(ctx, instance, binding); err != nil {
-		accumulator = multierror.Append(accumulator, err)
+		return err
 	}
 
-	return accumulator
+	return nil
 }
 
 // PollInstance gets the last operation for this instance and checks its status.
