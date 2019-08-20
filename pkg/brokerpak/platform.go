@@ -23,8 +23,8 @@ import (
 
 // Platform holds an os/architecture pair.
 type Platform struct {
-	Os   string `yaml:"os" validate:"required"`
-	Arch string `yaml:"arch" validate:"required"`
+	Os   string `yaml:"os"`
+	Arch string `yaml:"arch"`
 }
 
 var _ validation.Validatable = (*Platform)(nil)

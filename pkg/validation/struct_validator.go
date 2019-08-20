@@ -18,83 +18,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"reflect"
 	"regexp"
 
 	"github.com/hashicorp/hcl"
-	validator "gopkg.in/go-playground/validator.v9"
 )
 
 var (
-	osbName                  = `^[a-zA-Z0-9-\.]+$`
-	osbNameRegex             = regexp.MustCompile(osbName)
-	terraformIdentifier      = `^[a-z_]*$`
-	terraformIdentifierRegex = regexp.MustCompile(terraformIdentifier)
-	jsonSchemaType           = `^(|object|boolean|array|number|string|integer)$`
-	jsonSchemaTypeRegex      = regexp.MustCompile(jsonSchemaType)
-
-	uuidRegex = regexp.MustCompile(`^[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}$`)
+	osbNameRegex             = regexp.MustCompile(`^[a-zA-Z0-9-\.]+$`)
+	terraformIdentifierRegex = regexp.MustCompile(`^[a-z_]*$`)
+	jsonSchemaTypeRegex      = regexp.MustCompile(`^(|object|boolean|array|number|string|integer)$`)
+	uuidRegex                = regexp.MustCompile(`^[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}$`)
 )
-
-var validate = validator.New()
-
-func init() {
-	validate.RegisterValidation("osbname", regexValidation(osbNameRegex))
-	validate.RegisterValidation("json", jsonValidation)
-	validate.RegisterValidation("hcl", hclValidation)
-	validate.RegisterValidation("terraform_identifier", regexValidation(terraformIdentifierRegex))
-	validate.RegisterValidation("jsonschema_type", regexValidation(jsonSchemaTypeRegex))
-}
-
-// ValidateStruct executes the validation tags on a struct and returns any
-// failures.
-func ValidateStruct(s interface{}) error {
-	return validate.Struct(s)
-}
-
-func not(inner validator.Func) validator.Func {
-	return func(field validator.FieldLevel) bool {
-		return !inner(field)
-	}
-}
-
-func regexValidation(matcher *regexp.Regexp) validator.Func {
-	return func(field validator.FieldLevel) bool {
-		return matcher.MatchString(field.Field().String())
-	}
-}
-
-func jsonValidation(field validator.FieldLevel) bool {
-	fl := field.Field()
-
-	switch fl.Type().Kind() {
-	case reflect.String:
-		return IsJSONString(fl.String())
-	default:
-		return IsJSONBytes(fl.Bytes())
-	}
-}
-
-func hclValidation(field validator.FieldLevel) bool {
-	value := field.Field().String()
-	return IsHCL(value)
-}
-
-// IsHCL validates that a value is valid HCL.
-func IsHCL(value string) bool {
-	_, err := hcl.Parse(value)
-	return err == nil
-}
-
-// IsJSONString returns true if the string is valid JSON.
-func IsJSONString(value string) bool {
-	return IsJSONBytes([]byte(value))
-}
-
-// IsJSONBytes returns true if the byte array is valid JSON.
-func IsJSONBytes(value []byte) bool {
-	return json.Valid(value)
-}
 
 // ErrIfNotHCL returns an error if the value is not valid HCL.
 func ErrIfNotHCL(value string, field string) *FieldError {

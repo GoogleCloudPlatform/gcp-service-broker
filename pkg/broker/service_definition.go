@@ -47,13 +47,13 @@ type ServiceDefinition struct {
 	PlanUpdateable   bool
 	Plans            []ServicePlan
 
-	ProvisionInputVariables    []BrokerVariable             `validate:"dive"`
-	ProvisionComputedVariables []varcontext.DefaultVariable `validate:"dive"`
-	BindInputVariables         []BrokerVariable             `validate:"dive"`
-	BindOutputVariables        []BrokerVariable             `validate:"dive"`
-	BindComputedVariables      []varcontext.DefaultVariable `validate:"dive"`
-	PlanVariables              []BrokerVariable             `validate:"dive"`
-	Examples                   []ServiceExample             `validate:"dive"`
+	ProvisionInputVariables    []BrokerVariable
+	ProvisionComputedVariables []varcontext.DefaultVariable
+	BindInputVariables         []BrokerVariable
+	BindOutputVariables        []BrokerVariable
+	BindComputedVariables      []varcontext.DefaultVariable
+	PlanVariables              []BrokerVariable
+	Examples                   []ServiceExample
 	DefaultRoleWhitelist       []string
 
 	// ProviderBuilder creates a new provider given the project, auth, and logger.

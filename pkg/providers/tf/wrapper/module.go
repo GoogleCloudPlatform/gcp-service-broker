@@ -23,8 +23,8 @@ import (
 
 // ModuleDefinition represents a module in a Terraform workspace.
 type ModuleDefinition struct {
-	Name       string `validate:"terraform_identifier,required"`
-	Definition string `validate:"hcl"`
+	Name       string
+	Definition string
 }
 
 var _ (validation.Validatable) = (*ModuleDefinition)(nil)
