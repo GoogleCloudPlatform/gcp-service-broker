@@ -49,15 +49,31 @@ func init() {
 // BrokerpakSourceConfig represents a single configuration of a brokerpak.
 type BrokerpakSourceConfig struct {
 	// BrokerpakUri holds the URI for loading the Brokerpak.
-	BrokerpakUri string `json:"uri" validate:"required,uri|file"`
+	BrokerpakUri string `json:"uri"`
 	// ServicePrefix holds an optional prefix that will be prepended to every service name.
-	ServicePrefix string `json:"service_prefix" validate:"omitempty,osbname"`
+	ServicePrefix string `json:"service_prefix"`
 	// ExcludedServices holds a newline delimited list of service UUIDs that will be excluded at registration time.
 	ExcludedServices string `json:"excluded_services"`
 	// Config holds the configuration options for the Brokerpak as a JSON object.
-	Config string `json:"config" validate:"required,json"`
+	Config string `json:"config"`
 	// Notes holds user-defined notes about the Brokerpak and shouldn't be used programatically.
 	Notes string `json:"notes"`
+}
+
+var _ validation.Validatable = (*BrokerpakSourceConfig)(nil)
+
+// Validate implements validation.Validatable.
+func (b *BrokerpakSourceConfig) Validate() (errs *validation.FieldError) {
+
+	errs = errs.Also(validation.ErrIfBlank(b.BrokerpakUri, "uri"))
+
+	if b.ServicePrefix != "" {
+		errs = errs.Also(validation.ErrIfNotOSBName(b.ServicePrefix, "service_prefix"))
+	}
+
+	errs = errs.Also(validation.ErrIfNotJSON(json.RawMessage(b.Config), "config"))
+
+	return errs
 }
 
 // ExcludedServicesSlice gets the ExcludedServices as a slice of UUIDs.
@@ -81,15 +97,24 @@ func NewBrokerpakSourceConfigFromPath(path string) BrokerpakSourceConfig {
 // ServerConfig holds the Brokerpak configuration for the server.
 type ServerConfig struct {
 	// Config holds global configuration options for the Brokerpak as a JSON object.
-	Config string `validate:"required,json"`
+	Config string
 
 	// Brokerpaks holds list of brokerpaks to load.
-	Brokerpaks map[string]BrokerpakSourceConfig `validate:"dive,keys,osbname,endkeys,dive"`
+	Brokerpaks map[string]BrokerpakSourceConfig
 }
 
+var _ validation.Validatable = (*ServerConfig)(nil)
+
 // Validate returns an error if the configuration is invalid.
-func (cfg *ServerConfig) Validate() error {
-	return validation.ValidateStruct(cfg)
+func (cfg *ServerConfig) Validate() (errs *validation.FieldError) {
+	errs = errs.Also(validation.ErrIfNotJSON(json.RawMessage(cfg.Config), "Config"))
+
+	for k, v := range cfg.Brokerpaks {
+		errs = errs.Also(validation.ErrIfNotOSBName(k, "").ViaFieldKey("Brokerpaks", k))
+		errs = errs.Also(v.Validate().ViaFieldKey("Brokerpaks", k))
+	}
+
+	return errs
 }
 
 // NewServerConfigFromEnv loads the global Brokerpak config from Viper.

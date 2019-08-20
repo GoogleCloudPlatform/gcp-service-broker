@@ -17,12 +17,24 @@ package brokerpak
 import (
 	"fmt"
 	"runtime"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 )
 
 // Platform holds an os/architecture pair.
 type Platform struct {
 	Os   string `yaml:"os" validate:"required"`
 	Arch string `yaml:"arch" validate:"required"`
+}
+
+var _ validation.Validatable = (*Platform)(nil)
+
+// Validate implements validation.Validatable.
+func (p Platform) Validate() (errs *validation.FieldError) {
+	return errs.Also(
+		validation.ErrIfBlank(p.Os, "os"),
+		validation.ErrIfBlank(p.Arch, "arch"),
+	)
 }
 
 // String formats the platform as an os/arch pair.

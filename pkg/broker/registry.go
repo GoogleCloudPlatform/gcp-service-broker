@@ -20,7 +20,6 @@ import (
 	"sort"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 )
 
@@ -57,7 +56,7 @@ func (brokerRegistry BrokerRegistry) Register(service *ServiceDefinition) {
 		log.Fatalf("Error registering service %q, %s", name, err)
 	}
 
-	if err := validation.ValidateStruct(service); err != nil {
+	if err := service.Validate(); err != nil {
 		log.Fatalf("Error validating service %q, %s", name, err)
 	}
 

@@ -46,7 +46,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 )
 
@@ -94,19 +93,15 @@ type Policy struct {
 // PolicyList contains the set of policies.
 type PolicyList struct {
 	// Policies are ordered from least to greatest precidence.
-	Policies []Policy `json:"policy" validate:"dive"`
+	Policies []Policy `json:"policy"`
 
 	// Assertions are used to validate the ordering of Policies.
-	Assertions []Policy `json:"assert" validate:"dive"`
+	Assertions []Policy `json:"assert"`
 }
 
 // Validate checks that the PolicyList struct is valid, that the keys for the
 // conditions are valid and that all assertions hold.
 func (pl *PolicyList) Validate(validConditionKeys []string) error {
-	if err := validation.ValidateStruct(pl); err != nil {
-		return fmt.Errorf("invalid PolicyList: %v", err)
-	}
-
 	for i, pol := range pl.Policies {
 		if err := pol.Condition.ValidateKeys(validConditionKeys); err != nil {
 			return fmt.Errorf("error in policy[%d], comment: %q, error: %v", i, pol.Comment, err)

@@ -14,7 +14,13 @@
 
 package brokerpak
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"testing"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
+)
 
 func ExamplePlatform_String() {
 	p := Platform{Os: "bsd", Arch: "amd64"}
@@ -36,4 +42,25 @@ func ExamplePlatform_MatchesCurrent() {
 	fmt.Println(CurrentPlatform().MatchesCurrent())
 
 	// Output: true
+}
+
+func TestPlatform_Validate(t *testing.T) {
+	cases := map[string]validation.ValidatableTest{
+		"blank obj": {
+			Object: &Platform{},
+			Expect: errors.New("missing field(s): arch, os"),
+		},
+		"good obj": {
+			Object: &Platform{
+				Os:   "linux",
+				Arch: "amd64",
+			},
+		},
+	}
+
+	for tn, tc := range cases {
+		t.Run(tn, func(t *testing.T) {
+			tc.Assert(t)
+		})
+	}
 }

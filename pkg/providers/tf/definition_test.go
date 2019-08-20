@@ -66,7 +66,7 @@ func TestTfServiceDefinitionV1Action_ValidateTemplateIO(t *testing.T) {
         variable not_defined {type = "string"}
         `,
 			},
-			ErrContains: "The Terraform template requires the fields [not_defined] which are missing from the declared inputs.",
+			ErrContains: "fields used but not declared: template.not_defined",
 		},
 
 		"extra template outputs": {
@@ -79,7 +79,7 @@ func TestTfServiceDefinitionV1Action_ValidateTemplateIO(t *testing.T) {
         `,
 				Outputs: []broker.BrokerVariable{{FieldName: "bucket_name"}},
 			},
-			ErrContains: "MUST match the service declared outputs",
+			ErrContains: "template outputs [bucket_name labels name storage_class] must match declared outputs [bucket_name]:",
 		},
 
 		"missing template outputs": {
@@ -88,7 +88,7 @@ func TestTfServiceDefinitionV1Action_ValidateTemplateIO(t *testing.T) {
         `,
 				Outputs: []broker.BrokerVariable{{FieldName: "bucket_name"}},
 			},
-			ErrContains: "MUST match the service declared outputs",
+			ErrContains: "template outputs [] must match declared outputs [bucket_name]:",
 		},
 	}
 

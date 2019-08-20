@@ -41,11 +41,11 @@ type BrokerVariable struct {
 	// Is this variable required?
 	Required bool `yaml:"required,omitempty"`
 	// The name of the JSON field this variable serializes/deserializes to
-	FieldName string `yaml:"field_name" validate:"required"`
+	FieldName string `yaml:"field_name"`
 	// The JSONSchema type of the field
-	Type JsonType `yaml:"type" validate:"required,jsonschema_type"`
+	Type JsonType `yaml:"type"`
 	// Human readable info about the field.
-	Details string `yaml:"details" validate:"required"`
+	Details string `yaml:"details"`
 	// The default value of the field.
 	Default interface{} `yaml:"default,omitempty"`
 	// If there are a limited number of valid values for this field then
@@ -56,6 +56,17 @@ type BrokerVariable struct {
 	// associated values.
 	// http://json-schema.org/latest/json-schema-validation.html
 	Constraints map[string]interface{} `yaml:"constraints,omitempty"`
+}
+
+var _ validation.Validatable = (*ServiceDefinition)(nil)
+
+// Validate implements validation.Validatable.
+func (bv *BrokerVariable) Validate() (errs *validation.FieldError) {
+	return errs.Also(
+		validation.ErrIfBlank(bv.FieldName, "field_name"),
+		validation.ErrIfNotJSONSchemaType(string(bv.Type), "type"),
+		validation.ErrIfBlank(bv.Details, "details"),
+	)
 }
 
 // ToSchema converts the BrokerVariable into the value part of a JSON Schema.

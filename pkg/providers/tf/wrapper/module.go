@@ -27,9 +27,15 @@ type ModuleDefinition struct {
 	Definition string `validate:"hcl"`
 }
 
+var _ (validation.Validatable) = (*ModuleDefinition)(nil)
+
 // Validate checks the validity of the ModuleDefinition struct.
-func (module *ModuleDefinition) Validate() error {
-	return validation.ValidateStruct(module)
+func (module *ModuleDefinition) Validate() (errs *validation.FieldError) {
+	return errs.Also(
+		validation.ErrIfBlank(module.Name, "Name"),
+		validation.ErrIfNotTerraformIdentifier(module.Name, "Name"),
+		validation.ErrIfNotHCL(module.Definition, "Definition"),
+	)
 }
 
 // Inputs gets the input parameter names for the module.

@@ -29,19 +29,19 @@ import (
 
 // TfServiceDefinitionV1 is the first version of user defined services.
 type TfServiceDefinitionV1 struct {
-	Version           int                         `yaml:"version" validate:"required,eq=1"`
-	Name              string                      `yaml:"name" validate:"required"`
-	Id                string                      `yaml:"id" validate:"required,uuid"`
-	Description       string                      `yaml:"description" validate:"required"`
-	DisplayName       string                      `yaml:"display_name" validate:"required"`
-	ImageUrl          string                      `yaml:"image_url" validate:"url"`
-	DocumentationUrl  string                      `yaml:"documentation_url" validate:"url"`
-	SupportUrl        string                      `yaml:"support_url" validate:"url"`
+	Version           int                         `yaml:"version"`
+	Name              string                      `yaml:"name"`
+	Id                string                      `yaml:"id"`
+	Description       string                      `yaml:"description"`
+	DisplayName       string                      `yaml:"display_name"`
+	ImageUrl          string                      `yaml:"image_url"`
+	DocumentationUrl  string                      `yaml:"documentation_url"`
+	SupportUrl        string                      `yaml:"support_url"`
 	Tags              []string                    `yaml:"tags,flow"`
-	Plans             []TfServiceDefinitionV1Plan `yaml:"plans" validate:"required,dive"`
-	ProvisionSettings TfServiceDefinitionV1Action `yaml:"provision" validate:"required,dive"`
-	BindSettings      TfServiceDefinitionV1Action `yaml:"bind" validate:"required,dive"`
-	Examples          []broker.ServiceExample     `yaml:"examples" validate:"required,dive"`
+	Plans             []TfServiceDefinitionV1Plan `yaml:"plans"`
+	ProvisionSettings TfServiceDefinitionV1Action `yaml:"provision"`
+	BindSettings      TfServiceDefinitionV1Action `yaml:"bind"`
+	Examples          []broker.ServiceExample     `yaml:"examples"`
 
 	// Internal SHOULD be set to true for Google maintained services.
 	Internal bool `yaml:"-"`
@@ -50,15 +50,27 @@ type TfServiceDefinitionV1 struct {
 // TfServiceDefinitionV1Plan represents a service plan in a human-friendly format
 // that can be converted into an OSB compatible plan.
 type TfServiceDefinitionV1Plan struct {
-	Name               string                 `yaml:"name" validate:"required"`
-	Id                 string                 `yaml:"id" validate:"required,uuid"`
-	Description        string                 `yaml:"description" validate:"required"`
-	DisplayName        string                 `yaml:"display_name" validate:"required"`
+	Name               string                 `yaml:"name"`
+	Id                 string                 `yaml:"id"`
+	Description        string                 `yaml:"description"`
+	DisplayName        string                 `yaml:"display_name"`
 	Bullets            []string               `yaml:"bullets,omitempty"`
 	Free               bool                   `yaml:"free,omitempty"`
-	Properties         map[string]string      `yaml:"properties" validate:"required"`
+	Properties         map[string]string      `yaml:"properties"`
 	ProvisionOverrides map[string]interface{} `yaml:"provision_overrides,omitempty"`
 	BindOverrides      map[string]interface{} `yaml:"bind_overrides,omitempty"`
+}
+
+var _ validation.Validatable = (*TfServiceDefinitionV1Plan)(nil)
+
+// Validate implements validation.Validatable.
+func (plan *TfServiceDefinitionV1Plan) Validate() (errs *validation.FieldError) {
+	return errs.Also(
+		validation.ErrIfBlank(plan.Name, "name"),
+		validation.ErrIfNotUUID(plan.Id, "id"),
+		validation.ErrIfBlank(plan.Description, "description"),
+		validation.ErrIfBlank(plan.DisplayName, "display_name"),
+	)
 }
 
 // Converts this plan definition to a broker.ServicePlan.
@@ -85,27 +97,52 @@ func (plan *TfServiceDefinitionV1Plan) ToPlan() broker.ServicePlan {
 // TfServiceDefinitionV1Action holds information needed to process user inputs
 // for a single provision or bind call.
 type TfServiceDefinitionV1Action struct {
-	PlanInputs []broker.BrokerVariable      `yaml:"plan_inputs" validate:"dive"`
-	UserInputs []broker.BrokerVariable      `yaml:"user_inputs" validate:"dive"`
-	Computed   []varcontext.DefaultVariable `yaml:"computed_inputs" validate:"dive"`
-	Template   string                       `yaml:"template" validate:"hcl"`
-	Outputs    []broker.BrokerVariable      `yaml:"outputs" validate:"dive"`
+	PlanInputs []broker.BrokerVariable      `yaml:"plan_inputs"`
+	UserInputs []broker.BrokerVariable      `yaml:"user_inputs"`
+	Computed   []varcontext.DefaultVariable `yaml:"computed_inputs"`
+	Template   string                       `yaml:"template"`
+	Outputs    []broker.BrokerVariable      `yaml:"outputs"`
 }
 
-// ValidateTemplateIO makes sure that the inputs supplied by the user are a
-// superset of the inputs needed by the Terraform template, and the template
-// outputs match the outputs.
-func (action *TfServiceDefinitionV1Action) ValidateTemplateIO() error {
-	if err := action.validateTemplateInputs(); err != nil {
-		return err
+var _ validation.Validatable = (*TfServiceDefinitionV1Action)(nil)
+
+// Validate implements validation.Validatable.
+func (action *TfServiceDefinitionV1Action) Validate() (errs *validation.FieldError) {
+	for i, v := range action.PlanInputs {
+		errs = errs.Also(v.Validate().ViaFieldIndex("plan_inputs", i))
 	}
 
-	return action.validateTemplateOutputs()
+	for i, v := range action.UserInputs {
+		errs = errs.Also(v.Validate().ViaFieldIndex("user_inputs", i))
+	}
+
+	for i, v := range action.Computed {
+		errs = errs.Also(v.Validate().ViaFieldIndex("computed_inputs", i))
+	}
+
+	errs = errs.Also(
+		validation.ErrIfNotHCL(action.Template, "template"),
+		action.validateTemplateInputs().ViaField("template"),
+		action.validateTemplateOutputs().ViaField("template"),
+	)
+
+	for i, v := range action.Outputs {
+		errs = errs.Also(v.Validate().ViaFieldIndex("outputs", i))
+	}
+
+	return errs
+}
+
+func (action *TfServiceDefinitionV1Action) ValidateTemplateIO() (errs *validation.FieldError) {
+	return errs.Also(
+		action.validateTemplateInputs().ViaField("template"),
+		action.validateTemplateOutputs().ViaField("template"),
+	)
 }
 
 // validateTemplateInputs checks that all the inputs of the Terraform template
 // are defined by the service.
-func (action *TfServiceDefinitionV1Action) validateTemplateInputs() error {
+func (action *TfServiceDefinitionV1Action) validateTemplateInputs() (errs *validation.FieldError) {
 	inputs := utils.NewStringSet()
 
 	for _, in := range action.PlanInputs {
@@ -123,12 +160,17 @@ func (action *TfServiceDefinitionV1Action) validateTemplateInputs() error {
 	tfModule := wrapper.ModuleDefinition{Definition: action.Template}
 	tfIn, err := tfModule.Inputs()
 	if err != nil {
-		return err
+		return &validation.FieldError{
+			Message: err.Error(),
+		}
 	}
 
 	missingFields := utils.NewStringSet(tfIn...).Minus(inputs).ToSlice()
 	if len(missingFields) > 0 {
-		return fmt.Errorf("The Terraform template requires the fields %v which are missing from the declared inputs.", missingFields)
+		return &validation.FieldError{
+			Message: "fields used but not declared",
+			Paths:   missingFields,
+		}
 	}
 
 	return nil
@@ -136,7 +178,7 @@ func (action *TfServiceDefinitionV1Action) validateTemplateInputs() error {
 
 // validateTemplateOutputs checks that the Terraform template outputs match
 // the names of the defined outputs.
-func (action *TfServiceDefinitionV1Action) validateTemplateOutputs() error {
+func (action *TfServiceDefinitionV1Action) validateTemplateOutputs() (errs *validation.FieldError) {
 	definedOutputs := utils.NewStringSet()
 
 	for _, in := range action.Outputs {
@@ -146,27 +188,51 @@ func (action *TfServiceDefinitionV1Action) validateTemplateOutputs() error {
 	tfModule := wrapper.ModuleDefinition{Definition: action.Template}
 	tfOut, err := tfModule.Outputs()
 	if err != nil {
-		return err
+		return &validation.FieldError{
+			Message: err.Error(),
+		}
 	}
 
 	if !definedOutputs.Equals(utils.NewStringSet(tfOut...)) {
-		return fmt.Errorf("The Terraform template outputs %v MUST match the service declared outputs %v.", tfOut, definedOutputs)
+		return &validation.FieldError{
+			Message: fmt.Sprintf("template outputs %v must match declared outputs %v", tfOut, definedOutputs),
+		}
 	}
 
 	return nil
 }
 
+var _ validation.Validatable = (*TfServiceDefinitionV1)(nil)
+
 // Validate checks the service definition for semantic errors.
-func (tfb *TfServiceDefinitionV1) Validate() error {
-	if err := validation.ValidateStruct(tfb); err != nil {
-		return err
+func (tfb *TfServiceDefinitionV1) Validate() (errs *validation.FieldError) {
+
+	if tfb.Version != 1 {
+		errs = errs.Also(validation.ErrInvalidValue(tfb.Version, "version"))
 	}
 
-	if err := tfb.ProvisionSettings.ValidateTemplateIO(); err != nil {
-		return err
+	errs = errs.Also(
+		validation.ErrIfBlank(tfb.Name, "name"),
+		validation.ErrIfNotUUID(tfb.Id, "id"),
+		validation.ErrIfBlank(tfb.Description, "description"),
+		validation.ErrIfBlank(tfb.DisplayName, "display_name"),
+		validation.ErrIfNotURL(tfb.ImageUrl, "image_url"),
+		validation.ErrIfNotURL(tfb.DocumentationUrl, "documentation_url"),
+		validation.ErrIfNotURL(tfb.SupportUrl, "support_url"),
+	)
+
+	for i, v := range tfb.Plans {
+		errs = errs.Also(v.Validate().ViaFieldIndex("plans", i))
 	}
 
-	return tfb.BindSettings.ValidateTemplateIO()
+	errs = errs.Also(tfb.ProvisionSettings.Validate().ViaField("provision"))
+	errs = errs.Also(tfb.BindSettings.Validate().ViaField("bind"))
+
+	for i, v := range tfb.Examples {
+		errs = errs.Also(v.Validate().ViaFieldIndex("examples", i))
+	}
+
+	return errs
 }
 
 // ToService converts the flat TfServiceDefinitionV1 into a broker.ServiceDefinition

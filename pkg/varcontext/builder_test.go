@@ -16,10 +16,13 @@ package varcontext
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 )
 
 func TestContextBuilder(t *testing.T) {
@@ -196,4 +199,35 @@ func ExampleContextBuilder_BuildMap() {
 
 	//Output: Error: 1 error(s) occurred: couldn't compute the value for "a", template: "${assert(false, \"failure!\")}", assert: Assertion failed: failure!
 	// Map: map[a:2]
+}
+
+func TestDefaultVariable_Validate(t *testing.T) {
+	cases := map[string]validation.ValidatableTest{
+		"empty": validation.ValidatableTest{
+			Object: &DefaultVariable{},
+			Expect: errors.New("missing field(s): default, name"),
+		},
+		"bad type": validation.ValidatableTest{
+			Object: &DefaultVariable{
+				Name:    "my-name",
+				Default: 123,
+				Type:    "stringss",
+			},
+			Expect: errors.New("field must match '^(|object|boolean|array|number|string|integer)$': type"),
+		},
+		"good": validation.ValidatableTest{
+			Object: &DefaultVariable{
+				Name:    "my-name",
+				Default: 123,
+				Type:    "string",
+			},
+			Expect: nil,
+		},
+	}
+
+	for tn, tc := range cases {
+		t.Run(tn, func(t *testing.T) {
+			tc.Assert(t)
+		})
+	}
 }
