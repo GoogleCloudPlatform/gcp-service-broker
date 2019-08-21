@@ -62,7 +62,9 @@ jobs:
           DB_USERNAME: ((integration_test_db_username))
           DB_PASSWORD: ((integration_test_db_password))
           DB_HOST: ((integration_test_db_host))
-
+          CA_CERT: ((integration_test_ca_cert))
+          CLIENT_CERT: ((integration_test_client_cert))
+          CLIENT_KEY: ((integration_test_client_key))
   - name: release
     plan:
       - aggregate:
