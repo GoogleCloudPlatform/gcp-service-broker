@@ -22,6 +22,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/toggles"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
@@ -34,25 +35,25 @@ var enableCatalogSchemas = toggles.Features.Toggle("enable-catalog-schemas", fal
 // ServiceDefinition holds the necessary details to describe an OSB service and
 // provision it.
 type ServiceDefinition struct {
-	Id               string `validate:"required,uuid"`
-	Name             string `validate:"required,osbname"`
+	Id               string
+	Name             string
 	Description      string
 	DisplayName      string
-	ImageUrl         string `validate:"omitempty,url"`
-	DocumentationUrl string `validate:"omitempty,url"`
-	SupportUrl       string `validate:"omitempty,url"`
+	ImageUrl         string
+	DocumentationUrl string
+	SupportUrl       string
 	Tags             []string
 	Bindable         bool
 	PlanUpdateable   bool
 	Plans            []ServicePlan
 
-	ProvisionInputVariables    []BrokerVariable             `validate:"dive"`
-	ProvisionComputedVariables []varcontext.DefaultVariable `validate:"dive"`
-	BindInputVariables         []BrokerVariable             `validate:"dive"`
-	BindOutputVariables        []BrokerVariable             `validate:"dive"`
-	BindComputedVariables      []varcontext.DefaultVariable `validate:"dive"`
-	PlanVariables              []BrokerVariable             `validate:"dive"`
-	Examples                   []ServiceExample             `validate:"dive"`
+	ProvisionInputVariables    []BrokerVariable
+	ProvisionComputedVariables []varcontext.DefaultVariable
+	BindInputVariables         []BrokerVariable
+	BindOutputVariables        []BrokerVariable
+	BindComputedVariables      []varcontext.DefaultVariable
+	PlanVariables              []BrokerVariable
+	Examples                   []ServiceExample
 	DefaultRoleWhitelist       []string
 
 	// ProviderBuilder creates a new provider given the project, auth, and logger.
@@ -60,6 +61,54 @@ type ServiceDefinition struct {
 
 	// IsBuiltin is true if the service is built-in to the platform.
 	IsBuiltin bool
+}
+
+var _ validation.Validatable = (*ServiceDefinition)(nil)
+
+// Validate implements validation.Validatable.
+func (sd *ServiceDefinition) Validate() (errs *validation.FieldError) {
+	errs = errs.Also(
+		validation.ErrIfNotUUID(sd.Id, "Id"),
+		validation.ErrIfNotOSBName(sd.Name, "Name"),
+	)
+
+	if sd.ImageUrl != "" {
+		errs = errs.Also(validation.ErrIfNotURL(sd.ImageUrl, "ImageUrl"))
+	}
+
+	if sd.DocumentationUrl != "" {
+		errs = errs.Also(validation.ErrIfNotURL(sd.DocumentationUrl, "DocumentationUrl"))
+	}
+
+	if sd.SupportUrl != "" {
+		errs = errs.Also(validation.ErrIfNotURL(sd.SupportUrl, "SupportUrl"))
+	}
+
+	for i, v := range sd.ProvisionInputVariables {
+		errs = errs.Also(v.Validate().ViaFieldIndex("ProvisionInputVariables", i))
+	}
+
+	for i, v := range sd.ProvisionComputedVariables {
+		errs = errs.Also(v.Validate().ViaFieldIndex("ProvisionComputedVariables", i))
+	}
+
+	for i, v := range sd.BindInputVariables {
+		errs = errs.Also(v.Validate().ViaFieldIndex("BindInputVariables", i))
+	}
+
+	for i, v := range sd.BindOutputVariables {
+		errs = errs.Also(v.Validate().ViaFieldIndex("BindOutputVariables", i))
+	}
+
+	for i, v := range sd.BindComputedVariables {
+		errs = errs.Also(v.Validate().ViaFieldIndex("BindComputedVariables", i))
+	}
+
+	for i, v := range sd.PlanVariables {
+		errs = errs.Also(v.Validate().ViaFieldIndex("PlanVariables", i))
+	}
+
+	return errs
 }
 
 // UserDefinedPlansProperty computes the Viper property name for the JSON list

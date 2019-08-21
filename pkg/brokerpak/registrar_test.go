@@ -77,7 +77,7 @@ func TestRegistrar_toDefinitions(t *testing.T) {
 			},
 			Config: BrokerpakSourceConfig{
 				ExcludedServices: "",
-				ServicePrefix: "",
+				ServicePrefix:    "",
 			},
 			ExpectedNames: []string{"service-foo", "service-bar"},
 		},
@@ -88,7 +88,7 @@ func TestRegistrar_toDefinitions(t *testing.T) {
 			},
 			Config: BrokerpakSourceConfig{
 				ExcludedServices: "",
-				ServicePrefix: "pre-",
+				ServicePrefix:    "pre-",
 			},
 			ExpectedNames: []string{"pre-service-foo", "pre-service-bar"},
 		},
@@ -99,7 +99,7 @@ func TestRegistrar_toDefinitions(t *testing.T) {
 			},
 			Config: BrokerpakSourceConfig{
 				ExcludedServices: "b69a96ad-0c38-4e84-84a3-be9513e3c645",
-				ServicePrefix: "",
+				ServicePrefix:    "",
 			},
 			ExpectedNames: []string{"service-bar"},
 		},
@@ -134,7 +134,7 @@ func TestRegistrar_toDefinitions(t *testing.T) {
 				fakeDefn("foo", "bad uuid"),
 			},
 			Config:        BrokerpakSourceConfig{},
-			ExpectedError: "Key: 'TfServiceDefinitionV1.Id' Error:Field validation for 'Id' failed on the 'uuid' tag",
+			ExpectedError: "field must be a UUID: id",
 		},
 	}
 

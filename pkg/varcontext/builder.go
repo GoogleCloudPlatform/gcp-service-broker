@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext/interpolation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	multierror "github.com/hashicorp/go-multierror"
@@ -61,10 +62,21 @@ func (builder *ContextBuilder) SetEvalConstants(constants map[string]interface{}
 // DefaultVariable holds a value that may or may not be evaluated.
 // If the value is a string then it will be evaluated.
 type DefaultVariable struct {
-	Name      string      `json:"name" yaml:"name" validate:"required"`
-	Default   interface{} `json:"default" yaml:"default" validate:"required"`
+	Name      string      `json:"name" yaml:"name"`
+	Default   interface{} `json:"default" yaml:"default"`
 	Overwrite bool        `json:"overwrite" yaml:"overwrite"`
-	Type      string      `json:"type" yaml:"type" validate:"jsonschema_type"`
+	Type      string      `json:"type" yaml:"type"`
+}
+
+var _ validation.Validatable = (*DefaultVariable)(nil)
+
+// Validate implements validation.Validatable.
+func (dv *DefaultVariable) Validate() (errs *validation.FieldError) {
+	return errs.Also(
+		validation.ErrIfBlank(dv.Name, "name"),
+		validation.ErrIfNil(dv.Default, "default"),
+		validation.ErrIfNotJSONSchemaType(dv.Type, "type"),
+	)
 }
 
 // MergeDefaults gets the default values from the given BrokerVariables and

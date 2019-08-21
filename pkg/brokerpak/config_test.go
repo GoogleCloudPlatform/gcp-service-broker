@@ -19,14 +19,14 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/spf13/viper"
 )
 
 func TestNewBrokerpakSourceConfigFromPath(t *testing.T) {
 	t.Run("is-valid-by-default", func(t *testing.T) {
 		cfg := NewBrokerpakSourceConfigFromPath("/path/to/my/pak.brokerpak")
-		if err := validation.ValidateStruct(cfg); err != nil {
+
+		if err := cfg.Validate(); err != nil {
 			t.Fatalf("Expected no error got %v", err)
 		}
 	})
@@ -76,14 +76,14 @@ func TestServiceConfig_Validate(t *testing.T) {
 				Config:     "",
 				Brokerpaks: nil,
 			},
-			Err: "Key: 'ServerConfig.Config' Error:Field validation for 'Config' failed on the 'required' tag",
+			Err: "invalid JSON: Config",
 		},
 		"bad config": {
 			Cfg: ServerConfig{
 				Config:     "{}aaa",
 				Brokerpaks: nil,
 			},
-			Err: "Key: 'ServerConfig.Config' Error:Field validation for 'Config' failed on the 'json' tag",
+			Err: "invalid JSON: Config",
 		},
 		"bad brokerpak keys": {
 			Cfg: ServerConfig{
@@ -92,7 +92,7 @@ func TestServiceConfig_Validate(t *testing.T) {
 					"bad key": NewBrokerpakSourceConfigFromPath("file:///some/path"),
 				},
 			},
-			Err: "Key: 'ServerConfig.Brokerpaks[bad key]' Error:Field validation for 'Brokerpaks[bad key]' failed on the 'osbname' tag",
+			Err: "field must match '^[a-zA-Z0-9-\\.]+$': Brokerpaks[bad key]",
 		},
 		"bad brokerpak values": {
 			Cfg: ServerConfig{
@@ -104,7 +104,7 @@ func TestServiceConfig_Validate(t *testing.T) {
 					},
 				},
 			},
-			Err: "Key: 'ServerConfig.Brokerpaks[good-key].Config' Error:Field validation for 'Config' failed on the 'json' tag",
+			Err: "invalid JSON: Brokerpaks[good-key].config",
 		},
 	}
 
@@ -165,22 +165,22 @@ func TestNewServerConfigFromEnv(t *testing.T) {
 		"missing config": {
 			Config:  ``,
 			Sources: `{}`,
-			Err:     `brokerpak config was invalid: Key: 'ServerConfig.Config' Error:Field validation for 'Config' failed on the 'required' tag`,
+			Err:     `brokerpak config was invalid: invalid JSON: Config`,
 		},
 		"bad config": {
 			Config:  `{}aaa`,
 			Sources: `{}`,
-			Err:     `brokerpak config was invalid: Key: 'ServerConfig.Config' Error:Field validation for 'Config' failed on the 'json' tag`,
+			Err:     `brokerpak config was invalid: invalid JSON: Config`,
 		},
 		"bad brokerpak keys": {
 			Config:  `{}`,
 			Sources: `{"bad key":{"uri":"file://path/to/brokerpak", "config":"{}"}}`,
-			Err:     `brokerpak config was invalid: Key: 'ServerConfig.Brokerpaks[bad key]' Error:Field validation for 'Brokerpaks[bad key]' failed on the 'osbname' tag`,
+			Err:     `brokerpak config was invalid: field must match '^[a-zA-Z0-9-\.]+$': Brokerpaks[bad key]`,
 		},
 		"bad brokerpak values": {
 			Config:  `{}`,
 			Sources: `{"good-key":{"uri":"file://path/to/brokerpak", "config":"aaa{}"}}`,
-			Err:     `brokerpak config was invalid: Key: 'ServerConfig.Brokerpaks[good-key].Config' Error:Field validation for 'Config' failed on the 'json' tag`,
+			Err:     `brokerpak config was invalid: invalid JSON: Brokerpaks[good-key].config`,
 		},
 	}
 

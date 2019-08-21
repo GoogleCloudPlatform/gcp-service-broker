@@ -21,24 +21,17 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 )
 
-func TestNewExampleManifest(t *testing.T) {
-	exampleManifest := NewExampleManifest()
-
-	if err := exampleManifest.Validate(); err != nil {
-		t.Fatalf("example manifest should be valid, but got error: %v", err)
-	}
-}
-
-func TestManifestParameter_Validate(t *testing.T) {
+func TestTerraformResource_Validate(t *testing.T) {
 	cases := map[string]validation.ValidatableTest{
 		"blank obj": {
-			Object: &ManifestParameter{},
-			Expect: errors.New("missing field(s): description, name"),
+			Object: &TerraformResource{},
+			Expect: errors.New("missing field(s): name, source, version"),
 		},
 		"good obj": {
-			Object: &ManifestParameter{
-				Name:        "TEST",
-				Description: "Usage goes here",
+			Object: &TerraformResource{
+				Name:    "foo",
+				Version: "1.0",
+				Source:  "github.com/myproject",
 			},
 		},
 	}

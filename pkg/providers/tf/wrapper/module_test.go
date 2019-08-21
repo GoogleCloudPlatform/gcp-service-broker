@@ -91,7 +91,7 @@ func TestModuleDefinition_Validate(t *testing.T) {
             storage_class = "STANDARD"
           }`,
 			},
-			ErrContains: "Field validation for 'Name' failed ",
+			ErrContains: "field must match '^[a-z_]*$': Name",
 		},
 		"bad-hcl": {
 			Module: ModuleDefinition{
@@ -100,7 +100,7 @@ func TestModuleDefinition_Validate(t *testing.T) {
           resource "bucket" {
             name     = "my-bucket"`,
 			},
-			ErrContains: "Field validation for 'Definition' failed ",
+			ErrContains: "invalid HCL: Definition",
 		},
 	}
 

@@ -16,56 +16,152 @@ package validation
 
 import (
 	"encoding/json"
-	"reflect"
+	"fmt"
+	"net/url"
 	"regexp"
 
 	"github.com/hashicorp/hcl"
-	validator "gopkg.in/go-playground/validator.v9"
 )
 
-var validate = validator.New()
+var (
+	osbNameRegex             = regexp.MustCompile(`^[a-zA-Z0-9-\.]+$`)
+	terraformIdentifierRegex = regexp.MustCompile(`^[a-z_]*$`)
+	jsonSchemaTypeRegex      = regexp.MustCompile(`^(|object|boolean|array|number|string|integer)$`)
+	uuidRegex                = regexp.MustCompile(`^[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}$`)
+)
 
-func init() {
-	validate.RegisterValidation("osbname", regexValidation(`^[a-zA-Z0-9-\.]+$`))
-	validate.RegisterValidation("json", jsonValidation)
-	validate.RegisterValidation("hcl", hclValidation)
-	validate.RegisterValidation("terraform_identifier", regexValidation(`^[a-z_]*$`))
-	validate.RegisterValidation("jsonschema_type", regexValidation(`^(|object|boolean|array|number|string|integer)$`))
-}
+// ErrIfNotHCL returns an error if the value is not valid HCL.
+func ErrIfNotHCL(value string, field string) *FieldError {
+	if _, err := hcl.Parse(value); err == nil {
+		return nil
+	}
 
-// ValidateStruct executes the validation tags on a struct and returns any
-// failures.
-func ValidateStruct(s interface{}) error {
-	return validate.Struct(s)
-}
-
-func not(inner validator.Func) validator.Func {
-	return func(field validator.FieldLevel) bool {
-		return !inner(field)
+	return &FieldError{
+		Message: "invalid HCL",
+		Paths:   []string{field},
 	}
 }
 
-func regexValidation(matches string) validator.Func {
-	matcher := regexp.MustCompile(matches)
+// ErrIfNotJSON returns an error if the value is not valid JSON.
+func ErrIfNotJSON(value json.RawMessage, field string) *FieldError {
+	if json.Valid(value) {
+		return nil
+	}
 
-	return func(field validator.FieldLevel) bool {
-		return matcher.MatchString(field.Field().String())
+	return &FieldError{
+		Message: "invalid JSON",
+		Paths:   []string{field},
 	}
 }
 
-func jsonValidation(field validator.FieldLevel) bool {
-	fl := field.Field()
+// ErrIfBlank returns an error if the value is a blank string.
+func ErrIfBlank(value string, field string) *FieldError {
+	if value == "" {
+		return ErrMissingField(field)
+	}
 
-	switch fl.Type().Kind() {
-	case reflect.String:
-		return json.Valid([]byte(fl.String()))
-	default:
-		return json.Valid(fl.Bytes())
+	return nil
+}
+
+// ErrIfNil returns an error if the value is nil.
+func ErrIfNil(value interface{}, field string) *FieldError {
+	if value == nil {
+		return ErrMissingField(field)
+	}
+
+	return nil
+}
+
+// ErrIfNotOSBName returns an error if the value is not a valid OSB name.
+func ErrIfNotOSBName(value string, field string) *FieldError {
+	return ErrIfNotMatch(value, osbNameRegex, field)
+}
+
+// ErrIfNotJSONSchemaType returns an error if the value is not a valid JSON
+// schema type.
+func ErrIfNotJSONSchemaType(value string, field string) *FieldError {
+	return ErrIfNotMatch(value, jsonSchemaTypeRegex, field)
+}
+
+// ErrIfNotTerraformIdentifier returns an error if the value is not a valid
+// Terraform identifier.
+func ErrIfNotTerraformIdentifier(value string, field string) *FieldError {
+	return ErrIfNotMatch(value, terraformIdentifierRegex, field)
+}
+
+// ErrIfNotUUID returns an error if the value is not a valid UUID.
+func ErrIfNotUUID(value string, field string) *FieldError {
+	if uuidRegex.MatchString(value) {
+		return nil
+	}
+
+	return &FieldError{
+		Message: "field must be a UUID",
+		Paths:   []string{field},
 	}
 }
 
-func hclValidation(field validator.FieldLevel) bool {
-	value := field.Field().String()
-	_, err := hcl.Parse(value)
-	return err == nil
+// ErrIfNotURL returns an error if the value is not a valid URL.
+func ErrIfNotURL(value string, field string) *FieldError {
+	// Validaiton inspired by: github.com/go-playground/validator/baked_in.go
+	url, err := url.ParseRequestURI(value)
+	if err != nil || url.Scheme == "" {
+		return &FieldError{
+			Message: "field must be a URL",
+			Paths:   []string{field},
+		}
+	}
+
+	return nil
+}
+
+// ErrIfNotMatch returns an error if the value doesn't match the regex.
+func ErrIfNotMatch(value string, regex *regexp.Regexp, field string) *FieldError {
+	if regex.MatchString(value) {
+		return nil
+	}
+
+	return ErrMustMatch(value, regex, field)
+}
+
+// ErrMustMatch notifies the user a field must match a regex.
+func ErrMustMatch(value string, regex *regexp.Regexp, field string) *FieldError {
+	return &FieldError{
+		Message: fmt.Sprintf("field must match '%s'", regex.String()),
+		Paths:   []string{field},
+	}
+}
+
+// Validatable indicates that a particular type may have its fields validated.
+type Validatable interface {
+	// Validate checks the validity of this types fields.
+	Validate() *FieldError
+}
+
+// ValidatableTest is a standard way of testing Validatable types.
+type ValidatableTest struct {
+	Object Validatable
+	Expect error
+}
+
+// Testable is a type derived from testing.T
+type Testable interface {
+	Errorf(format string, a ...interface{})
+}
+
+// Assert runs the validatae function and fails Testable.
+func (vt *ValidatableTest) Assert(t Testable) {
+	actual := vt.Object.Validate()
+	expect := vt.Expect
+
+	switch {
+	case expect == nil && actual == nil:
+		// success
+	case expect == nil && actual != nil:
+		t.Errorf("expected: <nil> got: %s", actual.Error())
+	case expect != nil && actual == nil:
+		t.Errorf("expected: %s got: <nil>", expect.Error())
+	case expect.Error() != actual.Error():
+		t.Errorf("expected: %s got: %s", expect.Error(), actual.Error())
+	}
 }

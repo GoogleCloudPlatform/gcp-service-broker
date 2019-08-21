@@ -33,21 +33,60 @@ const manifestName = "manifest.yml"
 
 type Manifest struct {
 	// Package metadata
-	PackVersion int `yaml:"packversion" validate:"required,eq=1"`
+	PackVersion int `yaml:"packversion"`
 
 	// User modifiable values
-	Name               string              `yaml:"name" validate:"required"`
-	Version            string              `yaml:"version" validate:"required"`
+	Name               string              `yaml:"name"`
+	Version            string              `yaml:"version"`
 	Metadata           map[string]string   `yaml:"metadata"`
-	Platforms          []Platform          `yaml:"platforms" validate:"required,dive"`
-	TerraformResources []TerraformResource `yaml:"terraform_binaries" validate:"required,dive"`
-	ServiceDefinitions []string            `yaml:"service_definitions" validate:"required"`
-	Parameters         []ManifestParameter `yaml:"parameters" validate:"dive"`
+	Platforms          []Platform          `yaml:"platforms"`
+	TerraformResources []TerraformResource `yaml:"terraform_binaries"`
+	ServiceDefinitions []string            `yaml:"service_definitions"`
+	Parameters         []ManifestParameter `yaml:"parameters"`
 }
 
+var _ validation.Validatable = (*Manifest)(nil)
+
 // Validate will run struct validation on the fields of this manifest.
-func (m *Manifest) Validate() error {
-	return validation.ValidateStruct(m)
+func (m *Manifest) Validate() (errs *validation.FieldError) {
+	if m.PackVersion != 1 {
+		errs = errs.Also(validation.ErrInvalidValue(m.PackVersion, "packversion"))
+	}
+
+	errs = errs.Also(
+		validation.ErrIfBlank(m.Name, "name"),
+		validation.ErrIfBlank(m.Version, "version"),
+	)
+
+	// Platforms
+	if len(m.Platforms) == 0 {
+		errs = errs.Also(validation.ErrMissingField("platforms"))
+	}
+
+	for i, platform := range m.Platforms {
+		errs = errs.Also(platform.Validate().ViaFieldIndex("platforms", i))
+	}
+
+	// Terraform Resources
+	if len(m.TerraformResources) == 0 {
+		errs = errs.Also(validation.ErrMissingField("terraform_binaries"))
+	}
+
+	for i, resource := range m.TerraformResources {
+		errs = errs.Also(resource.Validate().ViaFieldIndex("terraform_binaries", i))
+	}
+
+	// Service Definitions
+	if len(m.ServiceDefinitions) == 0 {
+		errs = errs.Also(validation.ErrMissingField("service_definitions"))
+	}
+
+	// Params
+	for i, param := range m.Parameters {
+		errs = errs.Also(param.Validate().ViaFieldIndex("parameters", i))
+	}
+
+	return errs
 }
 
 // AppliesToCurrentPlatform returns true if the one of the platforms in the
@@ -154,8 +193,18 @@ func (m *Manifest) packDefinitions(tmp, base string) error {
 type ManifestParameter struct {
 	// NOTE: Future fields should take inspiration from the CNAB spec because they
 	// solve a similar problem. https://github.com/deislabs/cnab-spec
-	Name        string `yaml:"name" validate:"required"`
-	Description string `yaml:"description" validate:"required"`
+	Name        string `yaml:"name"`
+	Description string `yaml:"description"`
+}
+
+var _ validation.Validatable = (*ManifestParameter)(nil)
+
+// Validate implements validation.Validatable.
+func (param *ManifestParameter) Validate() (errs *validation.FieldError) {
+	return errs.Also(
+		validation.ErrIfBlank(param.Name, "name"),
+		validation.ErrIfBlank(param.Description, "description"),
+	)
 }
 
 // NewExampleManifest creates a new manifest with sample values for the service broker suitable for giving a user a template to manually edit.
