@@ -1,0 +1,103 @@
+code_branch: master
+ci_branch: master
+
+artifacts_bucket_name: gcp-service-broker-tiles
+artifacts_json_key: |
+  {
+    "type": "service_account",
+    "project_id": "gcp-service-broker",
+    "private_key_id": "a2d19b191766bd6c6483e6ba8c612e63fef5b91e",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC3LJfwzJVpzkGT\nqxvkI3RrbOy5AW+OEnDb0YhN53P2Sq/Q3gCB2Pb+xl/k1YNEIKAr4QzBnsFbEeaV\nH6KlpChUMtSCVPmbbIPW+ajsZUemi6nnnMUApCokTqzmEOBPxRCeoJeukm8EVBnw\nuxJlH/J/1lQz1KCsJZdSxxL6ltgewm1X3p9fvJFT9l9da0Dc+mU3vPP2C+0abGpI\n3fuposbAu5wqAf4b9gwLajEuo/qPyEJdYUqwIRYHxu4YEd9T6fQvZonqEKoCI/NQ\ncAm9ZpWvbUVK1JzR1epSOaqMmPWtOcuSN/XDbBSYFCTA4wYH/F2ihAiosqpKm5rp\nvzwW9tPPAgMBAAECggEAcryJE/liIdtjcjb9CoM22k9pXF1M3iYo8VgnU/0FwyF3\nTZKxqKQZ2u6xhGpFhfgVvEaEsgdaQExPLduaCr1v0YXhXR4TF8r6Lj9GE4VBQ046\nh+zH7aXnC8UIQjgR+YWL6oDXYi8xQPnZIdRcKmG/iVncdnbaidomFmDCP5sbFvBM\njbZ0TNTv1lJtn+2F9WJbgaEegu+6VZxBMMoqTQQn7v/itk9TBwtoUVfwzLpVaI1h\nsQ9jz6Vw+x7fHF1CDCIjg++fTEphU1CgpMyUPg30vZk1xiLgWXM2ktYlW8UATdXe\nbcGqh0ERZiqUVMgtANiWzmIE+F2jUWG8GtNvgOwZGQKBgQDoXubfPjz1XiTGM01j\n4yjG/+re6rwA6TC2w8T7bA0HwnBsRIABPJcUzUAwEwwXwuT1DXyLxwQg45q9SgVn\nG3C0gxI4yOho7DYINhUQSPIciA90NFB1eagzV2/Mx1P2p58UW9un7dUR7nxT25GH\nKGF3Ovq16DDqPG1EwbekpK7MpQKBgQDJzQC+MiQqGVz1MGhyvMo4/89WYUN0czIK\n7oLgraVH1p0+fOVtYGTjS4IAbhvxE1n2O+mUXg0+rKbN5eyzOxXdjzZB2fxynXKE\njZkS3pYxgNSc7TqYZ1qVbDHQvNE6WOymltB+ftdk/7B7q5y0cRpmcfVGY7i/rly/\nx9vTAwfwYwKBgQCZ6pKeeMlD9dIB/uVaLpNKDSXz9iQFrnB3/wCxUQbohuCUtmLb\nbtjcDIBh15wA+TVTJFXE+FRBvME4dJlTjJeA2fjt6BYZuayoj7owCUFlqLIj1Kse\nxTCmoVoKmFWDYdA7WgULHLwvnnp3yU6B6jt1EHoUl/IelVwDWRVdVz/5iQKBgEQd\nXzfTouNW5kqYiVjZIoT0y55DfEpNK8IG2cROuHA0H6Vc8O/nToZuETZl9CZ+Oqpj\ndKcwy9Ww3yi2iBvDQNElKtI1awGg5Wuag+WbniSdcKZ7aIDSuf+fonzrjs/b/h0I\n4N0hoUClEYPc3CsH1jpoErsso8qHZyUQp8Fkz4QzAoGBAN4AhYSs/TV1vV7N4td6\nkKQJ9RDI+zkf9ynKE1Rk6V+Ij44g7L0tdlQQ7tTs3Q3DCA4igCuVHTSQ+4S6eG0Y\nEsRj4I3ucHZ7gkvVb9VK8dmugWX0EP98kJpYeeN7XqbckMo3ioW7ilgTE+2ibksj\nf7HOcbUNASjOmN9qb4329ZFD\n-----END PRIVATE KEY-----\n",
+    "client_email": "concourse-uploader@gcp-service-broker.iam.gserviceaccount.com",
+    "client_id": "116872413065505037865",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://accounts.google.com/o/oauth2/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/concourse-uploader%40gcp-service-broker.iam.gserviceaccount.com"
+  }
+integration_test_db_username: root
+integration_test_db_password: testdbpassword
+integration_test_db_host: 104.154.205.94
+integration_test_ca_cert: |
+  -----BEGIN CERTIFICATE-----
+  MIIDITCCAgmgAwIBAgIBADANBgkqhkiG9w0BAQsFADBIMSMwIQYDVQQDExpHb29n
+  bGUgQ2xvdWQgU1FMIFNlcnZlciBDQTEUMBIGA1UEChMLR29vZ2xlLCBJbmMxCzAJ
+  BgNVBAYTAlVTMB4XDTE4MTExOTIyMTQ0NVoXDTI4MTExNjIyMTU0NVowSDEjMCEG
+  A1UEAxMaR29vZ2xlIENsb3VkIFNRTCBTZXJ2ZXIgQ0ExFDASBgNVBAoTC0dvb2ds
+  ZSwgSW5jMQswCQYDVQQGEwJVUzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+  ggEBAJGLppZZ9yLqR5Tf8YIgPXHuGfR/S2BVcUTOngIju9aateAVOz5bWA3BRIdB
+  cfplVL7RdvFjB017SMZYOIanHIti/w5+9I3/omFV6GTXGyoJoLXt0JWrCVHAAAMc
+  yq2E69+oMpekxy8KchyBat7HFJKlfiHZDZE0WYEWmJqpGfd0af6hzwE/DWJJuT+g
+  Koy8gIChBMK8UVeqcNObUCaNScr7gFYGFxrarCNJD7KRoxCkwf1BWoS6vn/Z2CR7
+  R0KSNK6F1LOGdcSmKKAIGA74NUJKJuvPHznOKnm5+bVUl0DnDorxAfTkkBVaoZkM
+  tZ1kM70SqJpoFkDiQCgUwuac/CUCAwEAAaMWMBQwEgYDVR0TAQH/BAgwBgEB/wIB
+  ADANBgkqhkiG9w0BAQsFAAOCAQEARncJOzj0zr8z9trqnAIHtg0yFA+vn1kgBZ3d
+  7nieorXvqu/BU119ovvz32tbgIYLTmJbFOYjLSa/MBzdEKe7JGZIBqypVUF0qdp9
+  5hPDlqaz+T1jp3oFenN3GnfruAxciJ+qSip9tqsczImEB8AacI424cfI2P6vNfpU
+  BHxTGXxwko/r3qmZx6QGYRxbgVVwlzIK0ZdUuwsPVNc7DIVeOSWRHy4XngJ8KI7q
+  juu6wIqDGd42rEFlSF9wtHTC10K4HLq98iR2ST/JVLAv/aAvSbd5R3yZQTS3Z76d
+  3zkeqz/imF55/I1Hju2099HE7spUQeUoLJrWWsb6dyic4QFjaQ==
+  -----END CERTIFICATE-----
+
+integration_test_client_cert: |
+  -----BEGIN CERTIFICATE-----
+  MIIDWjCCAkKgAwIBAgIEabu0QjANBgkqhkiG9w0BAQsFADCBgTEtMCsGA1UELhMk
+  ZGZlMGRmMGUtZjYwNi00ZDg5LWIwMjgtYjQ4MmRmZTNiNWJkMS0wKwYDVQQDEyRH
+  b29nbGUgQ2xvdWQgU1FMIENsaWVudCBDQSBjb25jb3Vyc2UxFDASBgNVBAoTC0dv
+  b2dsZSwgSW5jMQswCQYDVQQGEwJVUzAeFw0xOTA4MjExNDQ4MzdaFw0yOTA4MTgx
+  NDQ5MzdaMDcxEjAQBgNVBAMTCWNvbmNvdXJzZTEUMBIGA1UEChMLR29vZ2xlLCBJ
+  bmMxCzAJBgNVBAYTAlVTMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
+  lB2I1sdPRvH6IPn7eMqPodR07hG6fIB6FrwoJmXOdaCji7uIXDnUxrdTtYrh+76S
+  fVzZPt8KFCvDeV2AwiD8zqzkCjksXNft0GQcMjMODJzUT/627Svccnd/iML0dTOR
+  lKfUF6EeESpfBsGKyLnD7sfIFOyjqGaLDTCEWa9x3YNoEwoIXmIPVPfFnxTRqK8L
+  dNu7dctkFAkDFyVfcCrbdOBlwa0EjSLPYDciwj18gd1PzpgWCRjq1mPPO3r9ss9G
+  rVFQbybDFG+GVW19treyOdqupAk+spUecPRJwO01dgSv+UiNUiS9MCMRkrrJwKcc
+  SEq3t3RdTNvI3Vzw9N9CgwIDAQABoyMwITAfBgNVHREEGDAWgRRqbGV3aXNpaWlA
+  Z29vZ2xlLmNvbTANBgkqhkiG9w0BAQsFAAOCAQEAKEOzghLGwnzcgs7ZY5u4jfbS
+  e5ZUMhv1iQyWCSLphL0PbKgIK/ZnKN9ZPXjlJ8COi3hXicZZTIRf4H/RkSk719HK
+  oOsWutW6BwCwE8avEzhuAERJip3QUoHmTw0oYy4llmfQek9lOVXSxhGi8/TV3KVr
+  EZuqCS2hKbfqV4kPZQEbv65ACZm68fMhhQIrok2xSoSnHTKSKHVcl0uJ/3wYEDpl
+  dTGFDxXhj9emTSqT/0RGsw8U3w/w/InuAxMK1oiVPWrVxSJRMKCfBbMjItyIBh1E
+  9OSYcws0MhZm81UrW1XzfOpnrt+qOrd7RPkI0gSJeeFIjhB9Iyga6718zvTB4Q==
+  -----END CERTIFICATE-----
+integration_test_client_key: |
+  -----BEGIN RSA PRIVATE KEY-----
+  MIIEowIBAAKCAQEAlB2I1sdPRvH6IPn7eMqPodR07hG6fIB6FrwoJmXOdaCji7uI
+  XDnUxrdTtYrh+76SfVzZPt8KFCvDeV2AwiD8zqzkCjksXNft0GQcMjMODJzUT/62
+  7Svccnd/iML0dTORlKfUF6EeESpfBsGKyLnD7sfIFOyjqGaLDTCEWa9x3YNoEwoI
+  XmIPVPfFnxTRqK8LdNu7dctkFAkDFyVfcCrbdOBlwa0EjSLPYDciwj18gd1PzpgW
+  CRjq1mPPO3r9ss9GrVFQbybDFG+GVW19treyOdqupAk+spUecPRJwO01dgSv+UiN
+  UiS9MCMRkrrJwKccSEq3t3RdTNvI3Vzw9N9CgwIDAQABAoIBAF0XvxT3Sm2V0xd8
+  50CBWAtnxGKJhAOSoKm/cyDHJh+qaoB9yvPkaUbInPViqCyZF+txOx4YA3awFvkl
+  +rKJFzwzUFTYoHhuQwuSkGJA0pi8zXjF6GVjBvhvARqNJiav1dVwMo7zdjllvzo4
+  1SjaETr4GFqGbUp/wO/2SYkxC0kkwLPV4OvpG8VHRmkAyv6tf2Oj0VgPA8REtx6j
+  IwgNMlK8+BKpGboHobV1SiimYTdRaH3OkWJrJPjM+zpufFMvFeeghLhALY4DPZoh
+  /YIk/DQuw2vueXLGvnejzDOjYKMe/CM8aeQ3m0mHtUYJ9RdDbBNq5iJWwtgkqBdJ
+  pyY31AECgYEA6TuxGdvMziBjGL7QlASKOh0I5I8iAYLrB/1+IJsXrhZI6ZSS2M1Z
+  Di+Eg1UaCfKmqEkV03c6XSBT8R/PaFx/F7V2245SY2K1AvUrUBDVFsHTluMLLfLg
+  KQmLJH9Q+9Kztmj9Excp+dltdw/4N7CTGW6A7Uhz7FL88MCH0redsIMCgYEAopLR
+  V3UA0AdcSftmV5xMKHBCbdHFXz13lFJGr5ICCk+2GeBqNfjSCnH99OBEXnGKGPSY
+  L2jBEUHUjUx6X/iwTA/opjuLK0t5qzYmBt2pSnZQBX8KQCYSdgUbcnycg/pj3d/q
+  1yVsSdRR3G2YwWzx6e+dhKtX5AceHfzW6vEfhgECgYEAvT1AokGUeH8QyMgyRpc0
+  bJiYWZLFPcKy3sXQa7ZLTWYpfNSfHafoJTlq5IDNYtruXEcInY703RDY6yErUXsT
+  Z/JF4TkmIhu50Q+KOCmgLBnSi2/m5z5UoRdsPY3L8LdyN4QSK0Y1OdMwHVXoyY7M
+  m+rsUxrhbBOdxd4BlniDSu8CgYBrhKv8qj36VxPbPe/me1EG4Y+db8GYBl/icTOc
+  g/TjeupVXM0BmujWzaMGY5fz2iVZ8dIAcMhXMHFxbaX1eNSnyVG1NuYIoSb7a5lk
+  qw5+V5b+u5E88bD96szHP9CHnH6Vy7RVy8M9ZLUrEjSXoASyEa3cgzFidq6daI1+
+  3i9aAQKBgG75gTw4HC1Wm2K2cICAHeJ0563KlnFf6BX/wJ1E6Ev8i8j1Y7ePZ4yG
+  Z4Volf/gCRg1w07LAXLchMNM/0FDQTm76fEp/IaffAaUGbMp+Pt/cYRyN4M7OHfS
+  8VvgEIhhMDJoHcdVfl84mdlr44KH0wwBz4LikbSxmAL+jKXVwRUP
+  -----END RSA PRIVATE KEY-----
+integration_test_service_account_json: |
+  {
+    "type": "service_account",
+    "project_id": "pcf-test-149600",
+    "private_key_id": "311c525ea957c646c94e5fab301039bb25d5c8f1",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC14ZSWm8vNhYOk\ngA+xZgBPLqqNaCbfKPeKJg03JgOryg7NXzQFyKxrsXsbfq2SjolYm/1Z3YYe7VZt\nHAJhvLwyHq6ohLybpW6PE+XSeF0ZtnOHVuI7b9MM6LzpytgcDIEbkvY92cyUbZpX\nbD2DryY2X878yDqoBvemSfTCykB7Ige/oHszfqoD1E1TTnIr8b3+TrrmJpxjWW22\nnuh2GF25zW3ODKjIswil8yEQKn0/hKTnwZvxUsnxu/baB/ltmqkOMtdl2+of0WQy\n1snUjgCX8wZLeeUU8axDdHvCQ2PYxgaSyioMEwHECp5pKVUwwQ0xpWIyVhtMkcAm\nvQ8Dd3cDAgMBAAECggEBAKriul/TG2YLJsd9BsGPa4T5/IaFr9gGPqXO4KXLErHq\nU4QECfXROKaqh1cq61wCjeryDNTNPMF8DrLPGTHJSSzyBPoSVL8MbNcDQ/A+5IJP\nGTa0nDRp+WpslWo4Clo4KWnF55PvObbPT68J5LX/7zAxTmHUor/SZAYaAFyv+Gt2\n1JYgn6tTzMfo7PVH67pJU1UPtdMKZ0jKORNx9Dmz0HUAjqKVBbEWl8MNYojUxlIE\nvb4WkorNEv0Pb9OwoborB6VLU92Qd/shTVEI3jcLABEJj3oYmjOjJ5ZCVat2pNP6\ndQrSM2c4t4TyDevvEfSzWVV6+Erwu1xraALEJbijt6kCgYEA5KX3CiK14btE63JS\n1SfG6MBTqi2RSUxa5BWdP3+leuFCYfKeXBGM2m6i16fZy+4ghJ2sWKeaPItfSeqS\n/ai8GLYuMpTcXtnpnVlbh+g/6WegiGV4pC1Y7lksKFSC6I1269mFmCw85/5HtXIn\naWq8Ckx9HhjEZBB739UFh1LRnsUCgYEAy6Nv/ESrGN2s4n3AXDQi/lNCQESBCvOh\n4ziQpJ6XdqJoamP5U43Z6DaJGePhQfjG+PF2xm580EtB3kSjg0ja+xdcPgncANED\n5GzAwPcSeJueAL3WsiAv/v7VYgbSlAEDQipAfYehMFhbkisLD0iwhIT1hSc0r4Jn\nGrPkZ4c7mycCgYEAhMV69n/Bbhr4ol/4iZ5XesBz1NYxD4cvIFMMxNqylPBJQ+dG\n3d+zEwQ7u07Uwf69E0Ub1z876PxlkN6ODI3268KegPDAJrQTXDOPWxQaSMbMCWgi\n7fMHOSC+64xnl/LNo5bkZMELfQvDSDHJgQVhu/k+jkODhzerNwbT9wi4gKECgYAu\nLfwhSzk5xFuGaVoMDs64ugzWIjLZVvKpYpR6oHRctOvU5KMP7aUy4dspgeH9YftN\nTQTQbxHi8o4XZ51lEkqGkn+amgXIMZ4eWQNFP0JzE2c7Z9GeR2pa+1NMjZuHcMta\nX9aMIQvOuNrbROOXLbbJ9pTvAzsRahMTnSP4zlQYFQKBgEn6O7xco1RCGlbSmafL\nf4+1kqqvJUcwxUK5+DTr18bBHc2pMABaJ+P6NTvtGwS+9sGH52qw8cVD/6xANJ2R\nbhZUnOkYhB2Yg40SwKnENsM78NCdDOU/c3aJLS+5x8xxD/Fb9pVRlNDW14jNlYDC\nkE6H1fti2xNvOFpBaYQhhTme\n-----END PRIVATE KEY-----\n",
+    "client_email": "service-broker-root@pcf-test-149600.iam.gserviceaccount.com",
+    "client_id": "110664838663072626547",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://accounts.google.com/o/oauth2/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/service-broker-root%40pcf-test-149600.iam.gserviceaccount.com"
+  }

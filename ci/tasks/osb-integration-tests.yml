@@ -14,6 +14,8 @@ params:
   DB_USERNAME:
   DB_PASSWORD:
   DB_HOST:
-
+  CA_CERT:
+  CLIENT_CERT:
+  CLIENT_KEY:
 run:
   path: gcp-service-broker-ci/ci/tasks/osb-integration-tests.sh
