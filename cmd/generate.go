@@ -33,7 +33,8 @@ func init() {
 	}
 	rootCmd.AddCommand(generateCmd)
 
-	generateCmd.AddCommand(&cobra.Command{
+	var useDestinationDir string
+	useCmd := &cobra.Command{
 		Use:   "use",
 		Short: "Generate use markdown file",
 		Long: `Generates the use.md file with:
@@ -43,9 +44,16 @@ func init() {
 
 	`,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(generator.CatalogDocumentation(builtin.BuiltinBrokerRegistry()))
+			if useDestinationDir == "" {
+				fmt.Println(generator.CatalogDocumentation(builtin.BuiltinBrokerRegistry()))
+			} else {
+				generator.CatalogDocumentationToDir(builtin.BuiltinBrokerRegistry(), useDestinationDir)
+			}
+
 		},
-	})
+	}
+	useCmd.Flags().StringVar(&useDestinationDir, "destination-dir", "", "Destination directory to generate usage docs about all available broker classes")
+	generateCmd.AddCommand(useCmd)
 
 	generateCmd.AddCommand(&cobra.Command{
 		Use:   "customization",

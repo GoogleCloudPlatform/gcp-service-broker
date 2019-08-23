@@ -20,4 +20,4 @@ go build -o gcp-service-broker
 ./gcp-service-broker generate tile > tile.yml
 ./gcp-service-broker generate manifest > manifest.yml
 ./gcp-service-broker generate customization > docs/customization.md
-./gcp-service-broker generate use > docs/use.md
+./gcp-service-broker generate use --destination-dir="docs/"
