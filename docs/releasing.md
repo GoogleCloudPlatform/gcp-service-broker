@@ -12,7 +12,7 @@
 - [ ] Run `go build`.
 - [ ] Run `./gcp-service-broker generate tile > tile.yml`.
 - [ ] Run `./gcp-service-broker generate manifest > manifest.yml`.
-- [ ] Run `./gcp-service-broker generate use > docs/use.md`.
+- [ ] Run `./gcp-service-broker generate use --destination-dir="docs/"`.
 - [ ] Run `./gcp-service-broker generate customization > docs/customization.md`.
 - [ ] Update the `CHANGELOG.md` to match the new version.
 - [ ] Commit the changes on the new branch.

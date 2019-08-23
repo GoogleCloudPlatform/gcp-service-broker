@@ -18,7 +18,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -27,17 +30,101 @@ import (
 )
 
 // CatalogDocumentation generates markdown documentation for the service catalog
-// of the given registry.
+// of the given registry. Returns all content in one string.
 func CatalogDocumentation(registry broker.BrokerRegistry) string {
+	const contentSeparator = "\n--------------------------------------------------------------------------------\n"
 	out := ""
 
 	services := registry.GetAllServices()
 	for _, svc := range services {
 		out += generateServiceDocumentation(svc)
-		out += "\n"
+		out += contentSeparator
 	}
 
 	return cleanMdOutput(out)
+}
+
+// CatalogDocumentationToDir generates markdown documentation for the service catalog
+// of the given registry. Generated documentation is saved under given `dstDir` with such layout:
+//
+// ./{dstDir}
+// ├── classes
+// │   ├── {class_name}.md # contains all information about given service class
+// │   └── ...
+// └── use.md # contains table of contents (ToC) about all generated service class documentation
+//
+func CatalogDocumentationToDir(registry broker.BrokerRegistry, dstDir string) {
+	const (
+		mdExt    = ".md"
+		classDir = "classes"
+		perms    = 0644
+	)
+
+	classesDir := filepath.Join(dstDir, classDir)
+	if err := ensureDir(classesDir); err != nil {
+		log.Fatalf("Cannot create directory for storing broker classes documentation: %v", err)
+	}
+
+	var tocServiceClasses []ToCServiceClass
+	for _, svc := range registry.GetAllServices() {
+		out := generateServiceDocumentation(svc)
+		out = cleanMdOutput(out)
+
+		saveClassPath := filepath.Join(classesDir, svc.Name+mdExt)
+		err := ioutil.WriteFile(saveClassPath, []byte(out), perms)
+		if err != nil {
+			log.Fatalf("Cannot save %s documentation class into %s: %v", svc.Name, saveClassPath, err)
+		}
+
+		tocClassPath, err := filepath.Rel(dstDir, saveClassPath)
+		if err != nil {
+			log.Fatalf("Cannot resolve relative path to %s file: %v", saveClassPath, err)
+		}
+
+		tocServiceClasses = append(tocServiceClasses, ToCServiceClass{
+			DisplayName: svc.DisplayName,
+			FilePath:    tocClassPath,
+		})
+	}
+
+	toc := generateServiceClassesToC(tocServiceClasses)
+	tocFileName := filepath.Join(dstDir, "use.md")
+	if err := ioutil.WriteFile(tocFileName, []byte(toc), perms); err != nil {
+		log.Fatalf("Cannot save documentation from %s class into %s", "", "")
+	}
+}
+
+type ToCServiceClass struct {
+	DisplayName string
+	FilePath    string
+}
+
+func generateServiceClassesToC(tocServiceClasses []ToCServiceClass) string {
+	tocTemplateText := `# GCP Service Broker usage
+
+# Overview
+
+The GCP service broker is a tool that developers use to provision access Google Cloud resources. The service broker currently supports a list of built-in services.
+ 
+Read about creating and binding specific GCP services:
+{{range .serviceClasses}}
+-   [{{ .DisplayName }}]({{ .FilePath }})
+{{ end -}}
+`
+
+	vars := map[string]interface{}{
+		"serviceClasses": tocServiceClasses,
+	}
+
+	return render(tocTemplateText, vars, nil)
+}
+
+func ensureDir(dirPath string) error {
+	err := os.Mkdir(dirPath, os.ModePerm)
+	if err != nil && !os.IsExist(err) {
+		return err
+	}
+	return nil
 }
 
 // generateServiceDocumentation creates documentation for a single catalog entry
@@ -85,8 +172,6 @@ func generateServiceDocumentation(svc *broker.ServiceDefinition) string {
 	}
 
 	templateText := `
---------------------------------------------------------------------------------
-
 # <a name="{{ .catalog.Name }}"></a> ![]({{ .metadata.ImageUrl }}) {{ .metadata.DisplayName }}
 {{ .metadata.LongDescription }}
 
@@ -117,7 +202,7 @@ func generateServiceDocumentation(svc *broker.ServiceDefinition) string {
 {{ end }}
 ## Plans
 
-The following plans are built-in to the GCP Service Broker and may be overriden
+The following plans are built-in to the GCP Service Broker and may be overridden
 or disabled by the broker administrator.
 
 {{ if eq (len .catalog.Plans) 0 }}_No plans available_{{ end }}
@@ -160,7 +245,11 @@ Uses plan: {{ code $example.PlanId }}.
 {{ end }}
 `
 
-	tmpl, err := template.New("titleTest").Funcs(funcMap).Parse(templateText)
+	return render(templateText, vars, funcMap)
+}
+
+func render(tmplText string, vars interface{}, funcMap template.FuncMap) string {
+	tmpl, err := template.New("rendered").Funcs(funcMap).Parse(tmplText)
 	if err != nil {
 		log.Fatalf("parsing: %s", err)
 	}
@@ -173,7 +262,6 @@ Uses plan: {{ code $example.PlanId }}.
 	}
 
 	return buf.String()
-
 }
 
 func mdCode(text interface{}) string {
