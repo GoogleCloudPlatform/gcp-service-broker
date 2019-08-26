@@ -19,7 +19,7 @@ name: gcp-service-broker
 icon_file: gcp_logo.png
 label: Google Cloud Platform Service Broker
 description: 'A service broker for Google Cloud Platform services.'
-product_version: "4.2.3"
+product_version: "4.3.0"
 org: system
 
 stemcell_criteria:
