@@ -4,7 +4,7 @@ image_resource:
   type: docker-image
   source:
     repository: cfplatformeng/tile-generator
-    tag: latest
+    tag: v13.0.3
 inputs:
 - name: gcp-service-broker-ci
 - name: gcp-service-broker
