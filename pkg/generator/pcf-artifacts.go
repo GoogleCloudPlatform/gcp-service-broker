@@ -79,8 +79,7 @@ packages:
 - name: {{.appName}}
   type: app-broker
   manifest:
-    buildpacks:
-    - {{.buildpack}}
+    buildpack: {{.buildpack}}
     path: /tmp/gcp-service-broker.zip
     env:
       GOPACKAGENAME: {{.goPackageName}}
