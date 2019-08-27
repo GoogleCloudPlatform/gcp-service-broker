@@ -6,8 +6,6 @@ export OUTPUT_DIR=$PWD/tiles
 export SERVICE_BROKER_DIR=src/gcp-service-broker
 export CURRENT_VERSION="$(cat metadata/version)"
 
-apt install -y zip
-
 mkdir -p tiles
 
 pushd "$SERVICE_BROKER_DIR"
