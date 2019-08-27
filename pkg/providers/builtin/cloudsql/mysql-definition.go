@@ -18,6 +18,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
+	. "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/common"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
@@ -28,6 +29,30 @@ const (
 	MySqlServiceId    = "4bc59b9a-8520-409f-85da-1c7552315863"
 	CloudsqlMySQLName = "google-cloudsql-mysql"
 )
+
+var mysqlRegions = map[interface{}]string{
+	NorthAmericaNorthEast1.Region(): NorthAmericaNorthEast1.Region(),
+	UsCentral.Region():              UsCentral.Region(),
+	UsCentral1.Region():             UsCentral1.Region(),
+	UsEast1.Region():                UsEast1.Region(),
+	UsEast4.Region():                UsEast4.Region(),
+	UsWest1.Region():                UsWest1.Region(),
+	UsWest2.Region():                UsWest2.Region(),
+	SouthAmericaEast1.Region():      SouthAmericaEast1.Region(),
+	EuropeNorth1.Region():           EuropeNorth1.Region(),
+	EuropeWest1.Region():            EuropeWest1.Region(),
+	EuropeWest2.Region():            EuropeWest2.Region(),
+	EuropeWest3.Region():            EuropeWest3.Region(),
+	EuropeWest4.Region():            EuropeWest4.Region(),
+	EuropeWest6.Region():            EuropeWest6.Region(),
+	AsiaEast1.Region():              AsiaEast1.Region(),
+	AsiaEast2.Region():              AsiaEast2.Region(),
+	AsiaNorthEast1.Region():         AsiaNorthEast1.Region(),
+	AsiaNorthEast2.Region():         AsiaNorthEast2.Region(),
+	AsiaSouth1.Region():             AsiaSouth1.Region(),
+	AsiaSouthEast1.Region():         AsiaSouthEast1.Region(),
+	AustraliaSouthEast1.Region():    AustraliaSouthEast1.Region(),
+}
 
 // MysqlServiceDefinition creates a new ServiceDefinition object for the Bigtable service.
 func MysqlServiceDefinition() *broker.ServiceDefinition {
@@ -237,6 +262,13 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 					"ON_DEMAND": "On Demand, instance responds to incoming requests and turns off when not in use.",
 				},
 			},
+			{
+				FieldName: "region",
+				Type:      broker.JsonTypeString,
+				Details:   "The geographical region. See the instance locations list https://cloud.google.com/sql/docs/mysql/instance-locations for which regions support which databases.",
+				Default:   UsCentral.Region(),
+				Enum:      mysqlRegions,
+			},
 		}, commonProvisionVariables()...),
 		ProvisionComputedVariables: []varcontext.DefaultVariable{
 			{Name: "labels", Default: `${json.marshal(request.default_labels)}`, Overwrite: true},
@@ -253,9 +285,18 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 			// validation
 			{Name: "_", Default: `${assert(disk_size <= max_disk_size, "disk size (${disk_size}) is greater than max allowed disk size for this plan (${max_disk_size})")}`, Overwrite: true},
 		},
-		DefaultRoleWhitelist:  roleWhitelist(),
-		BindInputVariables:    commonBindVariables(),
-		BindOutputVariables:   commonBindOutputVariables(),
+		DefaultRoleWhitelist: roleWhitelist(),
+		BindInputVariables:   commonBindVariables(),
+		BindOutputVariables: append([]broker.BrokerVariable{
+			{
+				FieldName: "region",
+				Type:      broker.JsonTypeString,
+				Details:   "The region the database is in.",
+				Required:  true,
+				Default:   UsCentral.Region(),
+				Enum:      mysqlRegions,
+			},
+		}, commonBindOutputVariables()...),
 		BindComputedVariables: commonBindComputedVariables(),
 		PlanVariables: []broker.BrokerVariable{
 			{

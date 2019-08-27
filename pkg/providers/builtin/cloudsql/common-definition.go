@@ -15,8 +15,8 @@
 package cloudsql
 
 import (
-	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 )
@@ -97,16 +97,6 @@ func commonProvisionVariables() []broker.BrokerVariable {
 				Pattern("^[1-9][0-9]+$").
 				MaxLength(5).
 				Examples("10", "500", "10230").
-				Build(),
-		},
-		{
-			FieldName: "region",
-			Type:      broker.JsonTypeString,
-			Details:   "The geographical region. See the instance locations list https://cloud.google.com/sql/docs/mysql/instance-locations for which regions support which databases.",
-			Default:   "us-central",
-			Constraints: validation.NewConstraintBuilder().
-				Pattern("^[A-Za-z][-a-z0-9A-Z]+$").
-				Examples("northamerica-northeast1", "southamerica-east1", "us-east1").
 				Build(),
 		},
 		{
@@ -301,16 +291,6 @@ func commonBindOutputVariables() []broker.BrokerVariable {
 			Details:     "(deprecated) The id of the last operation on the database.",
 			Required:    false,
 			Constraints: validation.NewConstraintBuilder().Examples("mysql://user:pass@127.0.0.1/pcf-sb-2-1540412407295372465?ssl_mode=required").Build(),
-		},
-		{
-			FieldName: "region",
-			Type:      broker.JsonTypeString,
-			Details:   "The region the database is in.",
-			Required:  true,
-			Constraints: validation.NewConstraintBuilder().
-				Pattern("^[A-Za-z][-a-z0-9A-Z]+$").
-				Examples("northamerica-northeast1", "southamerica-east1", "us-east1").
-				Build(),
 		},
 	}...)
 }

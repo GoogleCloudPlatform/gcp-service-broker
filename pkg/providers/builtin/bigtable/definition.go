@@ -16,9 +16,10 @@ package bigtable
 
 import (
 	"code.cloudfoundry.org/lager"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	. "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/common"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
@@ -100,11 +101,66 @@ func ServiceDefinition() *broker.ServiceDefinition {
 				FieldName: "zone",
 				Type:      broker.JsonTypeString,
 				Details:   "The zone to create the Cloud Bigtable cluster in. Zones that support Bigtable instances are noted on the Cloud Bigtable locations page: https://cloud.google.com/bigtable/docs/locations.",
-				Default:   "us-east1-b",
-				Constraints: validation.NewConstraintBuilder().
-					Pattern("^[A-Za-z][-a-z0-9A-Z]+$").
-					Examples("us-central1-a", "europe-west2-b", "asia-northeast1-a", "australia-southeast1-c").
-					Build(),
+				Default:   UsEast1B.Zone(),
+				Enum: map[interface{}]string{
+					UsCentral1A.Zone():             UsCentral1A.Zone(),
+					UsCentral1B.Zone():             UsCentral1B.Zone(),
+					UsCentral1C.Zone():             UsCentral1C.Zone(),
+					UsCentral1F.Zone():             UsCentral1F.Zone(),
+					UsWest2A.Zone():                UsWest2A.Zone(),
+					UsWest2B.Zone():                UsWest2B.Zone(),
+					UsWest2C.Zone():                UsWest2C.Zone(),
+					UsEast4A.Zone():                UsEast4A.Zone(),
+					UsEast4B.Zone():                UsEast4B.Zone(),
+					UsEast4C.Zone():                UsEast4C.Zone(),
+					UsWest1A.Zone():                UsWest1A.Zone(),
+					UsWest1B.Zone():                UsWest1B.Zone(),
+					UsWest1C.Zone():                UsWest1C.Zone(),
+					UsEast1B.Zone():                UsEast1B.Zone(),
+					UsEast1C.Zone():                UsEast1C.Zone(),
+					UsEast1D.Zone():                UsEast1D.Zone(),
+					NorthamericaNorthEast1A.Zone(): NorthamericaNorthEast1A.Zone(),
+					NorthamericaNorthEast1B.Zone(): NorthamericaNorthEast1B.Zone(),
+					NorthamericaNorthEast1C.Zone(): NorthamericaNorthEast1C.Zone(),
+					SouthAmericaEast1A.Zone():      SouthAmericaEast1A.Zone(),
+					SouthAmericaEast1B.Zone():      SouthAmericaEast1B.Zone(),
+					SouthAmericaEast1C.Zone():      SouthAmericaEast1C.Zone(),
+					EuropeWest1B.Zone():            EuropeWest1B.Zone(),
+					EuropeWest1D.Zone():            EuropeWest1D.Zone(),
+					EuropeNorth1A.Zone():           EuropeNorth1A.Zone(),
+					EuropeNorth1B.Zone():           EuropeNorth1B.Zone(),
+					EuropeNorth1C.Zone():           EuropeNorth1C.Zone(),
+					EuropeWest2A.Zone():            EuropeWest2A.Zone(),
+					EuropeWest2B.Zone():            EuropeWest2B.Zone(),
+					EuropeWest2C.Zone():            EuropeWest2C.Zone(),
+					EuropeWest4A.Zone():            EuropeWest4A.Zone(),
+					EuropeWest4B.Zone():            EuropeWest4B.Zone(),
+					EuropeWest4C.Zone():            EuropeWest4C.Zone(),
+					EuropeWest6A.Zone():            EuropeWest6A.Zone(),
+					EuropeWest6B.Zone():            EuropeWest6B.Zone(),
+					EuropeWest6C.Zone():            EuropeWest6C.Zone(),
+					AsiaSouth1A.Zone():             AsiaSouth1A.Zone(),
+					AsiaSouth1B.Zone():             AsiaSouth1B.Zone(),
+					AsiaSouth1C.Zone():             AsiaSouth1C.Zone(),
+					AsiaSouthEast1A.Zone():         AsiaSouthEast1A.Zone(),
+					AsiaSouthEast1B.Zone():         AsiaSouthEast1B.Zone(),
+					AsiaSouthEast1C.Zone():         AsiaSouthEast1C.Zone(),
+					AsiaEast1A.Zone():              AsiaEast1A.Zone(),
+					AsiaEast1B.Zone():              AsiaEast1B.Zone(),
+					AsiaEast1C.Zone():              AsiaEast1C.Zone(),
+					AsiaEast2A.Zone():              AsiaEast2A.Zone(),
+					AsiaEast2B.Zone():              AsiaEast2B.Zone(),
+					AsiaEast2C.Zone():              AsiaEast2C.Zone(),
+					AsiaNorthEast1A.Zone():         AsiaNorthEast1A.Zone(),
+					AsiaNorthEast1B.Zone():         AsiaNorthEast1B.Zone(),
+					AsiaNorthEast1C.Zone():         AsiaNorthEast1C.Zone(),
+					AsiaNorthEast2A.Zone():         AsiaNorthEast2A.Zone(),
+					AsiaNorthEast2B.Zone():         AsiaNorthEast2B.Zone(),
+					AsiaNorthEast2C.Zone():         AsiaNorthEast2C.Zone(),
+					AustraliaSouthEast1A.Zone():    AustraliaSouthEast1A.Zone(),
+					AustraliaSouthEast1B.Zone():    AustraliaSouthEast1B.Zone(),
+					AustraliaSouthEast1C.Zone():    AustraliaSouthEast1C.Zone(),
+				},
 			},
 		},
 		DefaultRoleWhitelist: roleWhitelist,

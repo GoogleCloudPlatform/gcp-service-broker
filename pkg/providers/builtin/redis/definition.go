@@ -19,6 +19,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
+	. "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/common"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
@@ -94,11 +95,27 @@ func ServiceDefinition() *broker.ServiceDefinition {
 				FieldName: "region",
 				Type:      broker.JsonTypeString,
 				Details:   "The region in which to provision the Redis instance. See: https://cloud.google.com/memorystore/docs/redis/regions for supported regions.",
-				Default:   "us-east1",
-				Constraints: validation.NewConstraintBuilder().
-					Pattern("^[a-z]+[-][a-z0-9]+$").
-					Examples("us-central1", "europe-west2", "asia-northeast1", "australia-southeast1").
-					Build(),
+				Default:   UsEast1.Region(),
+				Enum: map[interface{}]string{
+					AsiaEast1.Region():              AsiaEast1.Region(),
+					AsiaEast2.Region():              AsiaEast2.Region(),
+					AsiaNorthEast1.Region():         AsiaNorthEast1.Region(),
+					AsiaSouth1.Region():             AsiaSouth1.Region(),
+					AsiaSouthEast1.Region():         AsiaSouthEast1.Region(),
+					AustraliaSouthEast1.Region():    AustraliaSouthEast1.Region(),
+					EuropeNorth1.Region():           EuropeNorth1.Region(),
+					EuropeWest1.Region():            EuropeWest1.Region(),
+					EuropeWest2.Region():            EuropeWest2.Region(),
+					EuropeWest3.Region():            EuropeWest3.Region(),
+					EuropeWest4.Region():            EuropeWest4.Region(),
+					NorthAmericaNorthEast1.Region(): NorthAmericaNorthEast1.Region(),
+					SouthAmericaEast1.Region():      SouthAmericaEast1.Region(),
+					UsCentral1.Region():             UsCentral1.Region(),
+					UsEast1.Region():                UsEast1.Region(),
+					UsEast4.Region():                UsEast4.Region(),
+					UsWest1.Region():                UsWest1.Region(),
+					UsWest2.Region():                UsWest2.Region(),
+				},
 			},
 			{
 				FieldName: "display_name",
