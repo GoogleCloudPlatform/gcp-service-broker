@@ -18,8 +18,7 @@
 applications:
 - name: gcp-service-broker
   memory: 1G
-  buildpacks:
-  - go_buildpack
+  buildpack: go_buildpack
   env:
     GOPACKAGENAME: github.com/GoogleCloudPlatform/gcp-service-broker
     GOVERSION: go1.12
