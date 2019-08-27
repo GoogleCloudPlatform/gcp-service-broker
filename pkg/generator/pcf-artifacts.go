@@ -54,8 +54,7 @@ const (
 applications:
 - name: {{.appName}}
   memory: 1G
-  buildpacks:
-  - {{.buildpack}}
+  buildpack: {{.buildpack}}
   env:
     GOPACKAGENAME: {{.goPackageName}}
     GOVERSION: {{.goVersion}}`
