@@ -79,3 +79,46 @@ func TestIamMergeBindings(t *testing.T) {
 		}
 	}
 }
+
+func TestIamRemoveMemberFromBindings(t *testing.T) {
+	table := map[string]struct {
+		input  []*cloudresourcemanager.Binding
+		expect map[string][]string
+	}{
+		"remove member from one role": {
+			input: []*cloudresourcemanager.Binding{
+				{Role: "role-1", Members: []string{"m1", "m2"}},
+			},
+			expect: map[string][]string{
+				"role-1": {"m2"},
+			},
+		},
+		"remove member from multiple roles": {
+			input: []*cloudresourcemanager.Binding{
+				{Role: "role-1", Members: []string{"m1", "m2"}},
+				{Role: "role-2", Members: []string{"m1", "m3"}},
+			},
+			expect: map[string][]string{
+				"role-1": {"m2"},
+				"role-2": {"m3"},
+			},
+		},
+	}
+
+	for tn, tc := range table {
+		updatedBindings := removeMemberFromBindings(tc.input, "m1")
+
+		if len(updatedBindings) != len(tc.expect) {
+			t.Errorf("%s) expected %d bindings, got: %d", tn, len(tc.expect), len(updatedBindings))
+		}
+
+		for _, binding := range updatedBindings {
+			expset := utils.NewStringSet(tc.expect[binding.Role]...)
+			gotset := utils.NewStringSet(binding.Members...)
+
+			if !expset.Equals(gotset) {
+				t.Errorf("%s) expected %v members in %s role, got %v", tn, expset.ToSlice(), binding.Role, gotset.ToSlice())
+			}
+		}
+	}
+}
