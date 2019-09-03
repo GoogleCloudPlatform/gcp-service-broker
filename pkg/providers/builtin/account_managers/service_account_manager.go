@@ -104,13 +104,18 @@ func (sam *ServiceAccountManager) DeleteCredentials(ctx context.Context, binding
 		return fmt.Errorf("Error creating IAM service: %s", err)
 	}
 
+	// Clean up account permissions
+	if err := sam.revokeRolesFromAccount(ctx, saCreds.Email); err != nil {
+		return fmt.Errorf("Error deleting role bindings from service account: %s", err)
+	}
+
 	resourceName := projectResourcePrefix + sam.ProjectId + "/serviceAccounts/" + saCreds.UniqueId
 	if _, err := iam.NewProjectsServiceAccountsService(iamService).Delete(resourceName).Do(); err != nil {
 		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
 			return nil
 		}
 
-		return fmt.Errorf("error deleting service account: %s", err)
+		return fmt.Errorf("Error deleting service account: %s", err)
 	}
 
 	return nil
@@ -182,6 +187,41 @@ func (sam *ServiceAccountManager) grantRoleToAccount(ctx context.Context, role s
 		}
 	}
 
+	return err
+}
+
+func (sam *ServiceAccountManager) revokeRolesFromAccount(ctx context.Context, email string) error {
+	client := sam.HttpConfig.Client(ctx)
+
+	cloudresService, err := cloudres.New(client)
+	if err != nil {
+		return fmt.Errorf("Error creating new cloud resource management service: %s", err)
+	}
+
+	for attempt := 0; attempt < 3; attempt++ {
+		currPolicy, err := cloudresService.Projects.GetIamPolicy(sam.ProjectId, &cloudres.GetIamPolicyRequest{}).Do()
+		if err != nil {
+			return fmt.Errorf("Error getting current project iam policy: %s", err)
+		}
+
+		currPolicy.Bindings = mergeBindings(removeMemberFromBindings(currPolicy.Bindings, saResourcePrefix+email))
+
+		newPolicyRequest := cloudres.SetIamPolicyRequest{
+			Policy: currPolicy,
+		}
+
+		_, err = cloudresService.Projects.SetIamPolicy(sam.ProjectId, &newPolicyRequest).Do()
+		if err == nil {
+			return nil
+		}
+
+		if isConflictError(err) {
+			time.Sleep(5 * time.Second)
+			continue
+		} else {
+			return fmt.Errorf("Error updating iam policy: %s", err)
+		}
+	}
 	return err
 }
 

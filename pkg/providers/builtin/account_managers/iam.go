@@ -51,3 +51,17 @@ func rolesToMembersMap(bindings []*cloudresourcemanager.Binding) map[string]util
 
 	return bm
 }
+
+// Remove a member from all role bindings to clean up the iam policy before deleting a service account.
+func removeMemberFromBindings(bindings []*cloudresourcemanager.Binding, memberToRemove string) []*cloudresourcemanager.Binding {
+	for _, binding := range bindings {
+		for i, member := range binding.Members {
+			if member == memberToRemove {
+				binding.Members = append(binding.Members[:i], binding.Members[i+1:]...)
+				break
+			}
+		}
+	}
+
+	return bindings
+}
