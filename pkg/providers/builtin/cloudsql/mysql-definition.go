@@ -185,7 +185,7 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 				FieldName: "instance_name",
 				Type:      broker.JsonTypeString,
 				Details:   "Name of the Cloud SQL instance.",
-				Default:   identifierTemplate,
+				Expression:   identifierTemplate,
 				Constraints: validation.NewConstraintBuilder().
 					Pattern("^[a-z][a-z0-9-]+$").
 					MaxLength(84).
@@ -195,7 +195,7 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 				FieldName: "database_name",
 				Type:      broker.JsonTypeString,
 				Details:   "Name of the database inside of the instance. Must be a valid identifier for your chosen database type.",
-				Default:   identifierTemplate,
+				Expression:   identifierTemplate,
 			},
 			{
 				FieldName: "version",
@@ -239,19 +239,19 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 			},
 		}, commonProvisionVariables()...),
 		ProvisionComputedVariables: []varcontext.DefaultVariable{
-			{Name: "labels", Default: `${json.marshal(request.default_labels)}`, Overwrite: true},
+			{Name: "labels", Expression: `${json.marshal(request.default_labels)}`, Overwrite: true},
 
 			// legacy behavior dictates that empty values get defaults
-			{Name: "instance_name", Default: `${instance_name == "" ? "` + identifierTemplate + `" : instance_name}`, Overwrite: true},
-			{Name: "database_name", Default: `${database_name == "" ? "` + identifierTemplate + `" : database_name}`, Overwrite: true},
+			{Name: "instance_name", Expression: `${instance_name == "" ? "` + identifierTemplate + `" : instance_name}`, Overwrite: true},
+			{Name: "database_name", Expression: `${database_name == "" ? "` + identifierTemplate + `" : database_name}`, Overwrite: true},
 
-			{Name: "is_first_gen", Default: `${regexp.matches("^(d|D)[0-9]+$", tier)}`, Overwrite: true},
-			{Name: "version", Default: `${is_first_gen ? "MYSQL_5_6" : "MYSQL_5_7"}`, Overwrite: false},
-			{Name: "binlog", Default: `${is_first_gen ? false : true}`, Overwrite: false},
-			{Name: "failover_replica_name", Default: `${failover_replica_suffix == "" ? failover_replica_name : "${instance_name}${failover_replica_suffix}"}`, Overwrite: true},
+			{Name: "is_first_gen", Expression: `${regexp.matches("^(d|D)[0-9]+$", tier)}`, Overwrite: true},
+			{Name: "version", Expression: `${is_first_gen ? "MYSQL_5_6" : "MYSQL_5_7"}`, Overwrite: false},
+			{Name: "binlog", Expression: `${is_first_gen ? false : true}`, Overwrite: false},
+			{Name: "failover_replica_name", Expression: `${failover_replica_suffix == "" ? failover_replica_name : "${instance_name}${failover_replica_suffix}"}`, Overwrite: true},
 
 			// validation
-			{Name: "_", Default: `${assert(disk_size <= max_disk_size, "disk size (${disk_size}) is greater than max allowed disk size for this plan (${max_disk_size})")}`, Overwrite: true},
+			{Name: "_", Expression: `${assert(disk_size <= max_disk_size, "disk size (${disk_size}) is greater than max allowed disk size for this plan (${max_disk_size})")}`, Overwrite: true},
 		},
 		DefaultRoleWhitelist:  roleWhitelist(),
 		BindInputVariables:    commonBindVariables(),

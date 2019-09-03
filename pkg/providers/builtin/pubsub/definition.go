@@ -58,10 +58,10 @@ func ServiceDefinition() *broker.ServiceDefinition {
 		},
 		ProvisionInputVariables: []broker.BrokerVariable{
 			{
-				FieldName: "topic_name",
-				Type:      broker.JsonTypeString,
-				Details:   `Name of the topic. Must not start with "goog".`,
-				Default:   "pcf_sb_${counter.next()}_${time.nano()}",
+				FieldName:  "topic_name",
+				Type:       broker.JsonTypeString,
+				Details:    `Name of the topic. Must not start with "goog".`,
+				Expression: "pcf_sb_${counter.next()}_${time.nano()}",
 				Constraints: validation.NewConstraintBuilder().
 					MinLength(3).
 					MaxLength(255).
@@ -109,7 +109,7 @@ again during that time (on a best-effort basis).
 			},
 		},
 		ProvisionComputedVariables: []varcontext.DefaultVariable{
-			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
+			{Name: "labels", Expression: "${json.marshal(request.default_labels)}", Overwrite: true},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
 		BindInputVariables:   accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "pubsub.editor"),

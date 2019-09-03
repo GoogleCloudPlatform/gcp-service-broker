@@ -33,6 +33,8 @@ const (
 	JsonTypeNumeric JsonType = "number"
 	JsonTypeInteger JsonType = "integer"
 	JsonTypeBoolean JsonType = "boolean"
+
+	automaticallyGeneratedValueSentence = "If you do not specify this field, it generates automatically."
 )
 
 type JsonType string
@@ -48,6 +50,8 @@ type BrokerVariable struct {
 	Details string `yaml:"details"`
 	// The default value of the field.
 	Default interface{} `yaml:"default,omitempty"`
+	// The expression which will be evaluated if the default value is empty
+	Expression string `yaml:"expression,omitempty"`
 	// If there are a limited number of valid values for this field then
 	// Enum will hold them in value:friendly name pairs
 	Enum map[interface{}]string `yaml:"enum,omitempty"`
@@ -98,7 +102,11 @@ func (bv *BrokerVariable) ToSchema() map[string]interface{} {
 	}
 
 	if bv.Details != "" {
-		schema[validation.KeyDescription] = bv.Details
+		if bv.Expression != "" {
+			schema[validation.KeyDescription] = fmt.Sprintf("%s %s", bv.Details, automaticallyGeneratedValueSentence)
+		} else {
+			schema[validation.KeyDescription] = bv.Details
+		}
 	}
 
 	if bv.Type != "" {

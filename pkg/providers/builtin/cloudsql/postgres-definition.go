@@ -181,7 +181,7 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 				FieldName: "instance_name",
 				Type:      broker.JsonTypeString,
 				Details:   "Name of the CloudSQL instance.",
-				Default:   identifierTemplate,
+				Expression:   identifierTemplate,
 				Constraints: validation.NewConstraintBuilder().
 					Pattern("^[a-z][a-z0-9-]+$").
 					MaxLength(75).
@@ -191,7 +191,7 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 				FieldName: "database_name",
 				Type:      broker.JsonTypeString,
 				Details:   "Name of the database inside of the instance. Must be a valid identifier for your chosen database type.",
-				Default:   identifierTemplate,
+				Expression:   identifierTemplate,
 			},
 			{
 				FieldName: "version",
@@ -224,18 +224,18 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 			},
 		}, commonProvisionVariables()...),
 		ProvisionComputedVariables: []varcontext.DefaultVariable{
-			{Name: "labels", Default: `${json.marshal(request.default_labels)}`, Overwrite: true},
+			{Name: "labels", Expression: `${json.marshal(request.default_labels)}`, Overwrite: true},
 
 			// legacy behavior dictates that empty values get defaults
-			{Name: "instance_name", Default: `${instance_name == "" ? "` + identifierTemplate + `" : instance_name}`, Overwrite: true},
-			{Name: "database_name", Default: `${database_name == "" ? "` + identifierTemplate + `" : database_name}`, Overwrite: true},
+			{Name: "instance_name", Expression: `${instance_name == "" ? "` + identifierTemplate + `" : instance_name}`, Overwrite: true},
+			{Name: "database_name", Expression: `${database_name == "" ? "` + identifierTemplate + `" : database_name}`, Overwrite: true},
 
 			// these variables are fixed for PostgreSQL
 			{Name: "is_first_gen", Default: `false`, Overwrite: true},
 			{Name: "binlog", Default: `false`, Overwrite: true},
 
 			// validation
-			{Name: "_", Default: `${assert(disk_size <= max_disk_size, "disk size (${disk_size}) is greater than max allowed disk size for this plan (${max_disk_size})")}`, Overwrite: true},
+			{Name: "_", Expression: `${assert(disk_size <= max_disk_size, "disk size (${disk_size}) is greater than max allowed disk size for this plan (${max_disk_size})")}`, Overwrite: true},
 		},
 
 		DefaultRoleWhitelist:  roleWhitelist(),

@@ -205,7 +205,7 @@ func TestDefaultVariable_Validate(t *testing.T) {
 	cases := map[string]validation.ValidatableTest{
 		"empty": validation.ValidatableTest{
 			Object: &DefaultVariable{},
-			Expect: errors.New("missing field(s): default, name"),
+			Expect: errors.New("expected exactly one, got neither: default, expression\nmissing field(s): name"),
 		},
 		"bad type": validation.ValidatableTest{
 			Object: &DefaultVariable{

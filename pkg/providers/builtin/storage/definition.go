@@ -104,15 +104,15 @@ func ServiceDefinition() *broker.ServiceDefinition {
 		},
 		ProvisionInputVariables: []broker.BrokerVariable{
 			{
-				FieldName: "name",
-				Type:      broker.JsonTypeString,
-				Details:   "The name of the bucket. There is a single global namespace shared by all buckets so it MUST be unique.",
-				Default:   "pcf_sb_${counter.next()}_${time.nano()}",
+				FieldName:  "name",
+				Type:       broker.JsonTypeString,
+				Details:    "The name of the bucket. There is a single global namespace shared by all buckets so it MUST be unique.",
+				Expression: "pcf_sb_${counter.next()}_${time.nano()}",
 				Constraints: validation.NewConstraintBuilder(). // https://cloud.google.com/storage/docs/naming
-										Pattern("^[A-Za-z0-9_\\.]+$").
-										MinLength(3).
-										MaxLength(222).
-										Build(),
+					Pattern("^[A-Za-z0-9_\\.]+$").
+					MinLength(3).
+					MaxLength(222).
+					Build(),
 			},
 			{
 				FieldName: "location",
@@ -133,7 +133,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			},
 		},
 		ProvisionComputedVariables: []varcontext.DefaultVariable{
-			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
+			{Name: "labels", Expression: "${json.marshal(request.default_labels)}", Overwrite: true},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
 		BindInputVariables:   accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "storage.objectAdmin"),
@@ -144,10 +144,10 @@ func ServiceDefinition() *broker.ServiceDefinition {
 				Details:   "Name of the bucket this binding is for.",
 				Required:  true,
 				Constraints: validation.NewConstraintBuilder(). // https://cloud.google.com/storage/docs/naming
-										Pattern("^[A-Za-z0-9_\\.]+$").
-										MinLength(3).
-										MaxLength(222).
-										Build(),
+					Pattern("^[A-Za-z0-9_\\.]+$").
+					MinLength(3).
+					MaxLength(222).
+					Build(),
 			},
 		),
 		PlanVariables: []broker.BrokerVariable{

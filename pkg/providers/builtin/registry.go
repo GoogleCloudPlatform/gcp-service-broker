@@ -37,7 +37,7 @@ import (
 // BuiltinBrokerRegistry creates a new registry with all the built-in brokers
 // added to it.
 func BuiltinBrokerRegistry() broker.BrokerRegistry {
-	out := broker.BrokerRegistry{}
+   	out := broker.BrokerRegistry{}
 	RegisterBuiltinBrokers(out)
 	return out
 }

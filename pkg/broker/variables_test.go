@@ -64,12 +64,13 @@ func TestBrokerVariable_ToSchema(t *testing.T) {
 				Constraints: map[string]interface{}{
 					"examples": []string{"SAMPLEA", "SAMPLEB"},
 				},
+				Expression: "${time.nano()}",
 			},
 			map[string]interface{}{
 				"title":       "Full Test Field Name",
 				"default":     "some-value",
 				"type":        JsonTypeString,
-				"description": "more information",
+				"description": "more information If you do not specify this field, it generates automatically.",
 				"enum":        []interface{}{"a", "b"},
 				"examples":    []string{"SAMPLEA", "SAMPLEB"},
 			},

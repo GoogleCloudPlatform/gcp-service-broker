@@ -263,8 +263,8 @@ func ServiceAccountWhitelistWithDefault(whitelist []string, defaultValue string)
 func ServiceAccountBindComputedVariables() []varcontext.DefaultVariable {
 	return []varcontext.DefaultVariable{
 		// XXX names are truncated to 20 characters because of a bug in the IAM service
-		{Name: "service_account_name", Default: `${str.truncate(20, "pcf-binding-${request.binding_id}")}`, Overwrite: true},
-		{Name: "service_account_display_name", Default: "${service_account_name}", Overwrite: true},
+		{Name: "service_account_name", Expression: `${str.truncate(20, "pcf-binding-${request.binding_id}")}`, Overwrite: true},
+		{Name: "service_account_display_name", Expression: "${service_account_name}", Overwrite: true},
 	}
 }
 

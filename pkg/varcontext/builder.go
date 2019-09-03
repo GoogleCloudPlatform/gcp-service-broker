@@ -63,7 +63,8 @@ func (builder *ContextBuilder) SetEvalConstants(constants map[string]interface{}
 // If the value is a string then it will be evaluated.
 type DefaultVariable struct {
 	Name      string      `json:"name" yaml:"name"`
-	Default   interface{} `json:"default" yaml:"default"`
+	Default   interface{} `json:"default" yaml:"default""`
+	Expression string     `json:"expression" yaml:"expression"`
 	Overwrite bool        `json:"overwrite" yaml:"overwrite"`
 	Type      string      `json:"type" yaml:"type"`
 }
@@ -72,9 +73,13 @@ var _ validation.Validatable = (*DefaultVariable)(nil)
 
 // Validate implements validation.Validatable.
 func (dv *DefaultVariable) Validate() (errs *validation.FieldError) {
+	var defaultValueErr *validation.FieldError
+	if dv.Default == nil && dv.Expression == "" {
+		defaultValueErr = validation.ErrMissingOneOf("default", "expression")
+	}
 	return errs.Also(
 		validation.ErrIfBlank(dv.Name, "name"),
-		validation.ErrIfNil(dv.Default, "default"),
+		defaultValueErr,
 		validation.ErrIfNotJSONSchemaType(dv.Type, "type"),
 	)
 }
@@ -83,7 +88,7 @@ func (dv *DefaultVariable) Validate() (errs *validation.FieldError) {
 // if they're a string, it tries to evaluet it in the built up context.
 func (builder *ContextBuilder) MergeDefaults(brokerVariables []DefaultVariable) *ContextBuilder {
 	for _, v := range brokerVariables {
-		if v.Default == nil {
+		if v.Default == nil && v.Expression == ""{
 			continue
 		}
 
@@ -91,14 +96,17 @@ func (builder *ContextBuilder) MergeDefaults(brokerVariables []DefaultVariable) 
 			continue
 		}
 
-		if strVal, ok := v.Default.(string); ok {
-			builder.MergeEvalResult(v.Name, strVal, v.Type)
-		} else {
-			builder.context[v.Name] = v.Default
+		if v.Default != nil {
+			if strVal, ok := v.Default.(string); ok {
+				builder.MergeEvalResult(v.Name, strVal, v.Type)
+			} else {
+				builder.context[v.Name] = v.Default
+			}
+			continue
 		}
 
-		if _, exists := builder.context[v.Name]; exists && !v.Overwrite {
-			continue
+		if v.Expression != "" {
+			builder.MergeEvalResult(v.Name, v.Expression, v.Type)
 		}
 	}
 

@@ -51,13 +51,13 @@ func commonBindVariables() []broker.BrokerVariable {
 			FieldName: "username",
 			Type:      broker.JsonTypeString,
 			Details:   "The SQL username for the account.",
-			Default:   `sb${str.truncate(14, time.nano())}`,
+			Expression:   `sb${str.truncate(14, time.nano())}`,
 		},
 		broker.BrokerVariable{
 			FieldName: "password",
 			Type:      broker.JsonTypeString,
 			Details:   "The SQL password for the account.",
-			Default:   "${rand.base64(32)}",
+			Expression:   "${rand.base64(32)}",
 		},
 	)
 }
@@ -66,12 +66,12 @@ func commonBindComputedVariables() []varcontext.DefaultVariable {
 	serviceAccountComputed := accountmanagers.ServiceAccountBindComputedVariables()
 	sqlComputed := []varcontext.DefaultVariable{
 		// legacy behavior dictates that empty values get defaults
-		{Name: "password", Default: `${password == "" ? "` + passwordTemplate + `" : password}`, Overwrite: true},
-		{Name: "username", Default: `${username == "" ? "` + usernameTemplate + `" : username}`, Overwrite: true},
+		{Name: "password", Expression: `${password == "" ? "` + passwordTemplate + `" : password}`, Overwrite: true},
+		{Name: "username", Expression: `${username == "" ? "` + usernameTemplate + `" : username}`, Overwrite: true},
 
 		// necessary additions
-		{Name: "certname", Default: `${str.truncate(10, request.binding_id)}cert`, Overwrite: true},
-		{Name: "db_name", Default: `${instance.name}`, Overwrite: true},
+		{Name: "certname", Expression: `${str.truncate(10, request.binding_id)}cert`, Overwrite: true},
+		{Name: "db_name", Expression: `${instance.name}`, Overwrite: true},
 	}
 
 	return append(serviceAccountComputed, sqlComputed...)

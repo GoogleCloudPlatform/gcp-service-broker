@@ -67,10 +67,11 @@ func ServiceDefinition() *broker.ServiceDefinition {
 		},
 		ProvisionInputVariables: []broker.BrokerVariable{
 			{
-				FieldName: "name",
-				Type:      broker.JsonTypeString,
-				Details:   "A unique identifier for the instance, which cannot be changed after the instance is created.",
-				Default:   "pcf-sb-${counter.next()}-${time.nano()}",
+				FieldName:  "name",
+				Type:       broker.JsonTypeString,
+				Details:    "A unique identifier for the instance, which cannot be changed after the instance is created.",
+				Default:    nil,
+				Expression: "pcf-sb-${counter.next()}-${time.nano()}",
 				Constraints: validation.NewConstraintBuilder().
 					MinLength(6).
 					MaxLength(30).
@@ -81,7 +82,8 @@ func ServiceDefinition() *broker.ServiceDefinition {
 				FieldName: "display_name",
 				Type:      broker.JsonTypeString,
 				Details:   "The name of this instance configuration as it appears in UIs.",
-				Default:   "${name}",
+				Default:   nil,
+				Expression: "${name}",
 				Constraints: validation.NewConstraintBuilder().
 					MinLength(4).
 					MaxLength(30).
@@ -102,7 +104,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			},
 		},
 		ProvisionComputedVariables: []varcontext.DefaultVariable{
-			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
+			{Name: "labels", Expression: "${json.marshal(request.default_labels)}", Overwrite: true},
 		},
 		DefaultRoleWhitelist: roleWhitelist,
 		BindInputVariables:   accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "spanner.databaseUser"),

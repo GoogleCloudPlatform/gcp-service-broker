@@ -80,10 +80,10 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					Build(),
 			},
 			{
-				FieldName: "instance_id",
-				Type:      broker.JsonTypeString,
-				Details:   "The name of the Redis instance.",
-				Default:   "gsb-${counter.next()}-${time.nano()}",
+				FieldName:  "instance_id",
+				Type:       broker.JsonTypeString,
+				Details:    "The name of the Redis instance.",
+				Expression: "gsb-${counter.next()}-${time.nano()}",
 				Constraints: validation.NewConstraintBuilder().
 					MinLength(1).
 					MaxLength(40).
@@ -101,10 +101,10 @@ func ServiceDefinition() *broker.ServiceDefinition {
 					Build(),
 			},
 			{
-				FieldName: "display_name",
-				Type:      broker.JsonTypeString,
-				Details:   "The human-readable display name of the Redis instance.",
-				Default:   "${instance_id}",
+				FieldName:  "display_name",
+				Type:       broker.JsonTypeString,
+				Details:    "The human-readable display name of the Redis instance.",
+				Expression: "${instance_id}",
 				Constraints: validation.NewConstraintBuilder().
 					MinLength(4).
 					MaxLength(30).

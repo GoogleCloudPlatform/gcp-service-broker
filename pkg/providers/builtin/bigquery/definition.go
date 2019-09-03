@@ -62,7 +62,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 				FieldName: "name",
 				Type:      broker.JsonTypeString,
 				Details:   "The name of the BigQuery dataset.",
-				Default:   "pcf_sb_${counter.next()}_${time.nano()}",
+				Expression:   "pcf_sb_${counter.next()}_${time.nano()}",
 				Constraints: validation.NewConstraintBuilder().
 					Pattern("^[A-Za-z0-9_]+$").
 					MaxLength(1024).
@@ -80,7 +80,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			},
 		},
 		ProvisionComputedVariables: []varcontext.DefaultVariable{
-			{Name: "labels", Default: "${json.marshal(request.default_labels)}", Overwrite: true},
+			{Name: "labels", Expression: "${json.marshal(request.default_labels)}", Overwrite: true},
 		},
 		DefaultRoleWhitelist:  roleWhitelist,
 		BindInputVariables:    accountmanagers.ServiceAccountWhitelistWithDefault(roleWhitelist, "bigquery.user"),
