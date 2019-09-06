@@ -20,7 +20,8 @@ import (
 	"net/url"
 	"regexp"
 
-	"github.com/hashicorp/hcl"
+	"github.com/hashicorp/hcl2/hcl"
+	"github.com/hashicorp/hcl2/hclparse"
 )
 
 var (
@@ -30,16 +31,30 @@ var (
 	uuidRegex                = regexp.MustCompile(`^[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}$`)
 )
 
-// ErrIfNotHCL returns an error if the value is not valid HCL.
+// ErrIfNotHCL returns an error if the value is not valid HCL syntax.
 func ErrIfNotHCL(value string, field string) *FieldError {
-	if _, err := hcl.Parse(value); err == nil {
-		return nil
+	parser := hclparse.NewParser()
+	var diag hcl.Diagnostics
+
+	// Check if value is JSON
+	var js json.RawMessage
+	if json.Unmarshal([]byte(value), &js) == nil {
+		// Try to parse JSON terraform syntax
+		_, diag = parser.ParseJSON([]byte(value), field)
+	} else {
+		// Try to parse HCL syntax
+		_, diag = parser.ParseHCL([]byte(value), field)
 	}
 
-	return &FieldError{
-		Message: "invalid HCL",
-		Paths:   []string{field},
+	if diag.HasErrors() {
+		return &FieldError{
+			Message: "invalid HCL",
+			Paths:   []string{field},
+			Details: diag.Error(),
+		}
 	}
+
+	return nil
 }
 
 // ErrIfNotJSON returns an error if the value is not valid JSON.

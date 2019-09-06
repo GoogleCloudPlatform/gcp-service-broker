@@ -49,6 +49,7 @@ func ExampleErrIfNotHCL() {
 	// Output: Good HCL is nil: true
 	// Good JSON is nil: true
 	// Bad: invalid HCL: my-field
+	// my-field:1,15-15: Invalid block definition; Either a quoted string block label or an opening brace ("{") is expected here.
 }
 
 func ExampleErrIfNotTerraformIdentifier() {
