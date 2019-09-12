@@ -20,11 +20,13 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/net/context"
 	"google.golang.org/genproto/googleapis/cloud/redis/v1beta1"
 	"strconv"
 	"strings"
+	"google.golang.org/api/option"
 )
 
 // RedisBroker is the service-broker back-end for creating and binding Redis services.
@@ -73,7 +75,7 @@ func (b *RedisBroker) Provision(ctx context.Context, provisionContext *varcontex
 		Instance:   instance,
 	}
 
-	c, err := googleredis.NewCloudRedisClient(ctx)
+	c, err := b.createClient(ctx)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, err
 	}
@@ -108,7 +110,7 @@ func (b *RedisBroker) Provision(ctx context.Context, provisionContext *varcontex
 
 // Deprovision deletes the Redis instance with the given instance ID
 func (b *RedisBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (*string, error) {
-	c, err := googleredis.NewCloudRedisClient(ctx)
+	c, err := b.createClient(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -128,4 +130,15 @@ func (b *RedisBroker) Deprovision(ctx context.Context, instance models.ServiceIn
 	}
 
 	return nil, nil
+}
+
+func (b *RedisBroker) createClient(ctx context.Context) (*googleredis.CloudRedisClient, error) {
+	co := option.WithUserAgent(utils.CustomUserAgent)
+	ct := option.WithTokenSource(b.HttpConfig.TokenSource(ctx))
+	c, err := googleredis.NewCloudRedisClient(ctx, co, ct)
+	if err != nil {
+		return nil, fmt.Errorf("Couldn't instantiate Redis API client: %s", err)
+	}
+
+	return c, nil
 }
