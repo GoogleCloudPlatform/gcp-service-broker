@@ -36,14 +36,6 @@
   revision = "b60e04e119450552243196105bae0d42179ee0ca"
 
 [[projects]]
-  digest = "1:5f61d4466cef935862c262f6bc00e24beb5b39b551e906f3cfb180dfac096d57"
-  name = "contrib.go.opencensus.io/exporter/stackdriver"
-  packages = ["propagation"]
-  pruneopts = ""
-  revision = "2b93072101d466aa4120b3c23c2e1b08af01541c"
-  version = "v0.6.0"
-
-[[projects]]
   digest = "1:48934db4e5e41f30e83c5650b4e8d3fcc58a431987cdd36d9d019eecc45f2645"
   name = "github.com/aws/aws-sdk-go"
   packages = [
@@ -620,12 +612,12 @@
   version = "v0.3.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:b202518ff4ce9a6a20f86738112b75d7328ceef2e033b805cf12e01b76787bef"
+  digest = "1:2157b1343e063abb582727c6aa2f127fcaeb3871ef1852c974feb5d745203356"
   name = "google.golang.org/api"
   packages = [
     "bigquery/v2",
     "cloudresourcemanager/v1",
+    "file/v1",
     "gensupport",
     "googleapi",
     "googleapi/internal/uritemplates",
@@ -640,9 +632,11 @@
     "transport",
     "transport/grpc",
     "transport/http",
+    "transport/http/internal/propagation",
   ]
   pruneopts = ""
-  revision = "b810576d88a056b90ef18a0b5328544c9c074c68"
+  revision = "02490b97dff7cfde1995bd77de808fd27053bc87"
+  version = "v0.7.0"
 
 [[projects]]
   digest = "1:c1771ca6060335f9768dff6558108bc5ef6c58506821ad43377ee23ff059e472"
@@ -687,25 +681,41 @@
   revision = "c66870c02cf823ceb633bcd05be3c7cda29976f4"
 
 [[projects]]
-  digest = "1:ca75b3775a5d4e5d1fb48f57ef0865b4aaa8b3f00e6b52be68db991c4594e0a7"
+  digest = "1:7ed022f305690d5843ba3f0bb94f9890a1f9c9459f0158a28304798213326d88"
   name = "google.golang.org/grpc"
   packages = [
     ".",
     "balancer",
     "balancer/base",
+    "balancer/grpclb",
+    "balancer/grpclb/grpc_lb_v1",
     "balancer/roundrobin",
+    "binarylog/grpc_binarylog_v1",
     "codes",
     "connectivity",
     "credentials",
+    "credentials/alts",
+    "credentials/alts/internal",
+    "credentials/alts/internal/authinfo",
+    "credentials/alts/internal/conn",
+    "credentials/alts/internal/handshaker",
+    "credentials/alts/internal/handshaker/service",
+    "credentials/alts/internal/proto/grpc_gcp",
+    "credentials/google",
+    "credentials/internal",
     "credentials/oauth",
     "encoding",
     "encoding/proto",
     "grpclog",
     "internal",
     "internal/backoff",
+    "internal/balancerload",
+    "internal/binarylog",
     "internal/channelz",
     "internal/envconfig",
     "internal/grpcrand",
+    "internal/grpcsync",
+    "internal/syscall",
     "internal/transport",
     "keepalive",
     "metadata",
@@ -714,13 +724,14 @@
     "resolver",
     "resolver/dns",
     "resolver/passthrough",
+    "serviceconfig",
     "stats",
     "status",
     "tap",
   ]
   pruneopts = ""
-  revision = "32fb0ac620c32ba40a4626ddf94d90d12cce3455"
-  version = "v1.14.0"
+  revision = "39e8a7b072a67ca2a75f57fa2e0d50995f5b22f6"
+  version = "v1.23.1"
 
 [[projects]]
   digest = "1:be5b8bdf182abbef3c4e0d0926bba912ef41b097f001259cb5d2187370bb2e5b"
@@ -774,6 +785,7 @@
     "golang.org/x/oauth2/jwt",
     "google.golang.org/api/bigquery/v2",
     "google.golang.org/api/cloudresourcemanager/v1",
+    "google.golang.org/api/file/v1",
     "google.golang.org/api/googleapi",
     "google.golang.org/api/iam/v1",
     "google.golang.org/api/option",

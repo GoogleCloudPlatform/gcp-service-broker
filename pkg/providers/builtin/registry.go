@@ -22,6 +22,7 @@ import (
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/dataflow"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/datastore"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/dialogflow"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/filestore"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/firestore"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/ml"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/pubsub"
@@ -61,4 +62,5 @@ func RegisterBuiltinBrokers(registry broker.BrokerRegistry) {
 	registry.Register(stackdriver.StackdriverProfilerServiceDefinition())
 	registry.Register(stackdriver.StackdriverTraceServiceDefinition())
 	registry.Register(storage.ServiceDefinition())
+	registry.Register(filestore.ServiceDefinition())
 }

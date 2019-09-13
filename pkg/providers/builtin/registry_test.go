@@ -31,6 +31,7 @@ func TestBuiltinBrokerRegistry(t *testing.T) {
 		"google-dataflow",
 		"google-datastore",
 		"google-dialogflow",
+		"google-filestore",
 		"google-firestore",
 		"google-ml-apis",
 		"google-pubsub",

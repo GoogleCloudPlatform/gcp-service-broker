@@ -20,6 +20,8 @@ Read about creating and binding specific GCP services:
 
 -   [Google Cloud Dialogflow](classes/google-dialogflow.md)
 
+-   [Google Cloud Filestore](classes/google-filestore.md)
+
 -   [Google Cloud Firestore](classes/google-firestore.md)
 
 -   [Google Machine Learning APIs](classes/google-ml-apis.md)
