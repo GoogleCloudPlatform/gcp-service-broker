@@ -24,6 +24,8 @@ Read about creating and binding specific GCP services:
 
 -   [Google Cloud Firestore](classes/google-firestore.md)
 
+-   [Google Cloud Memorystore for Redis API](classes/google-memorystore-redis.md)
+
 -   [Google Machine Learning APIs](classes/google-ml-apis.md)
 
 -   [Google PubSub](classes/google-pubsub.md)

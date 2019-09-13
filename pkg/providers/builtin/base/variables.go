@@ -99,5 +99,8 @@ func AuthorizedNetwork() broker.BrokerVariable {
 		Type:      broker.JsonTypeString,
 		Details:   "The name of the VPC network to attach the instance to.",
 		Default:   "default",
+		Constraints: validation.NewConstraintBuilder().
+			Examples("default", "projects/MYPROJECT/global/networks/MYNETWORK").
+			Build(),
 	}
 }

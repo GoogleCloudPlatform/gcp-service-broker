@@ -78,6 +78,7 @@ type InstanceInformation struct {
 type Broker struct {
 	base.PeeredNetworkServiceBase
 	base.NoOpBindMixin
+	base.AsynchronousInstanceMixin
 }
 
 var _ (broker.ServiceProvider) = (*Broker)(nil)
@@ -174,11 +175,6 @@ func (b *Broker) instancePath(instanceDetails models.ServiceInstanceDetails) str
 	return fmt.Sprintf("%s/instances/%s", b.parentPath(instanceDetails), instanceDetails.Name)
 }
 
-//
-// func (b *Broker) operationPath(instanceDetails models.ServiceInstanceDetails) string {
-// 	return fmt.Sprintf("%s/operations/%s", b.parentPath(instanceDetails), instanceDetails.OperationId)
-// }
-
 // PollInstance implements ServiceProvider.PollInstance
 func (b *Broker) PollInstance(ctx context.Context, instance models.ServiceInstanceDetails) (done bool, err error) {
 	if instance.OperationType == "" {
@@ -217,14 +213,4 @@ func (b *Broker) UpdateInstanceDetails(ctx context.Context, instance *models.Ser
 	}
 
 	return instance.SetOtherDetails(*instanceInfo)
-}
-
-// ProvisionsAsync indicates if provisioning must be done asynchronously.
-func (b *Broker) ProvisionsAsync() bool {
-	return true
-}
-
-// DeprovisionsAsync indicates if deprovisioning must be done asynchronously.
-func (b *Broker) DeprovisionsAsync() bool {
-	return true
 }

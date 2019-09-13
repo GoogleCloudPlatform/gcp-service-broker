@@ -15,10 +15,7 @@
 package base
 
 import (
-	"context"
-
 	"code.cloudfoundry.org/lager"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"golang.org/x/oauth2/jwt"
 )
 
@@ -35,17 +32,10 @@ func NewPeeredNetworkServiceBase(projectID string, auth *jwt.Config, logger lage
 // PeeredNetworkServiceBase is a base for services that are attached to a
 // project via peered network.
 type PeeredNetworkServiceBase struct {
-	synchronousBase
 	MergedInstanceCredsMixin
 
 	AccountManager   ServiceAccountManager
 	HTTPConfig       *jwt.Config
 	DefaultProjectID string
 	Logger           lager.Logger
-}
-
-// UpdateInstanceDetails updates the ServiceInstanceDetails with the most recent state from GCP.
-// This instance is a no-op method.
-func (b *PeeredNetworkServiceBase) UpdateInstanceDetails(ctx context.Context, instance *models.ServiceInstanceDetails) error {
-	return nil
 }
