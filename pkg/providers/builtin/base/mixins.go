@@ -41,6 +41,20 @@ func (b *synchronousBase) DeprovisionsAsync() bool {
 	return false
 }
 
+// AsynchronousInstanceMixin sets ProvisionAsync and DeprovisionsAsync functions
+// to be true.
+type AsynchronousInstanceMixin struct{}
+
+// ProvisionsAsync indicates if provisioning must be done asynchronously.
+func (b *AsynchronousInstanceMixin) ProvisionsAsync() bool {
+	return true
+}
+
+// DeprovisionsAsync indicates if deprovisioning must be done asynchronously.
+func (b *AsynchronousInstanceMixin) DeprovisionsAsync() bool {
+	return true
+}
+
 // NoOpBindMixin does a no-op binding. This can be used when you still want a
 // service to be bindable but nothing is required server-side to support it.
 // For example, when the service requires no authentication.
