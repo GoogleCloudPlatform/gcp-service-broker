@@ -147,3 +147,25 @@ func TestHilToInterface(t *testing.T) {
 	}
 
 }
+
+func TestIsHILExpression(t *testing.T) {
+	cases := map[string]struct {
+		expr     string
+		expected bool
+	}{
+		"plain string":   {expr: "abcd", expected: false},
+		"bad expression": {expr: "${", expected: false},
+		"expression":     {expr: "${time.now()}", expected: true},
+		"constant":       {expr: `${"abcd"}`, expected: true},
+	}
+
+	for tn, tc := range cases {
+		t.Run(tn, func(t *testing.T) {
+			actual := IsHILExpression(tc.expr)
+
+			if actual != tc.expected {
+				t.Errorf("Expected result: %+v got %+v for %v", tc.expected, actual, tc.expr)
+			}
+		})
+	}
+}

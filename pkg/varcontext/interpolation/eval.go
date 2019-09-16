@@ -15,6 +15,8 @@
 package interpolation
 
 import (
+	"reflect"
+
 	"github.com/hashicorp/hil"
 	"github.com/hashicorp/hil/ast"
 )
@@ -49,4 +51,24 @@ func Eval(templateString string, variables map[string]interface{}) (interface{},
 	}
 
 	return result.Value, err
+}
+
+// IsHILExpression returns true if the template is a HIL expression and false
+// otherwise.
+func IsHILExpression(template string) bool {
+	tree, err := hil.Parse(template)
+	if err != nil {
+		return false
+	}
+
+	// Eval will error if it can't resolve a reference so we know the template is
+	// a HIL expression
+	result, err := hil.Eval(tree, &hil.EvalConfig{GlobalScope: &ast.BasicScope{}})
+	if err != nil {
+		return true
+	}
+
+	// if the template doesn't match the result value then we know something was
+	// evaluated
+	return !reflect.DeepEqual(template, result.Value)
 }
