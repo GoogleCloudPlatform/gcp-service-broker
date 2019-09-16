@@ -37,7 +37,9 @@ type ServiceProvider interface {
 	// This may include creating service accounts, granting permissions, and adding users to services e.g. a SQL database user.
 	// It stores information necessary to access the service _and_ delete the binding in the returned map.
 	Bind(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error)
-	BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instance models.ServiceInstanceDetails) (map[string]interface{}, error)
+	// BuildInstanceCredentials combines the bindRecord with any additional
+	// info from the instance to create credentials for the binding.
+	BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instance models.ServiceInstanceDetails) (*brokerapi.Binding, error)
 	// Unbind deprovisions the resources created with Bind.
 	Unbind(ctx context.Context, instance models.ServiceInstanceDetails, details models.ServiceBindingCredentials) error
 	// Deprovision deprovisions the service.

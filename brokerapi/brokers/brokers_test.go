@@ -23,11 +23,12 @@ import (
 	"testing"
 
 	. "github.com/GoogleCloudPlatform/gcp-service-broker/brokerapi/brokers"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker/brokerfakes"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/storage"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
@@ -124,6 +125,10 @@ func fakeService(t *testing.T, isAsync bool) *serviceStub {
 			},
 			BindStub: func(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error) {
 				return map[string]interface{}{"foo": "bar"}, nil
+			},
+			BuildInstanceCredentialsStub: func(ctx context.Context, bc models.ServiceBindingCredentials, id models.ServiceInstanceDetails) (*brokerapi.Binding, error) {
+				mixin := base.MergedInstanceCredsMixin{}
+				return mixin.BuildInstanceCredentials(ctx, bc, id)
 			},
 		},
 	}

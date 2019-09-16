@@ -222,7 +222,7 @@ func (b *CloudSQLBroker) Bind(ctx context.Context, vc *varcontext.VarContext) (m
 	return combinedCreds.BuildMap()
 }
 
-func (b *CloudSQLBroker) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]interface{}, error) {
+func (b *CloudSQLBroker) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (*brokerapi.Binding, error) {
 	uriFormat := ""
 	switch instanceRecord.ServiceId {
 	case MySqlServiceId:
@@ -230,18 +230,20 @@ func (b *CloudSQLBroker) BuildInstanceCredentials(ctx context.Context, bindRecor
 	case PostgresServiceId:
 		uriFormat = `${str.queryEscape(UriPrefix)}postgres://${str.queryEscape(Username)}:${str.queryEscape(Password)}@${str.queryEscape(host)}/${str.queryEscape(database_name)}?sslmode=require&sslcert=${str.queryEscape(ClientCert)}&sslkey=${str.queryEscape(ClientKey)}&sslrootcert=${str.queryEscape(CaCert)}`
 	default:
-		return map[string]interface{}{}, errors.New("Unknown service")
+		return nil, errors.New("Unknown service")
 	}
 
-	combinedCreds, err := b.BrokerBase.BuildInstanceCredentials(ctx, bindRecord, instanceRecord)
+	creds, err := varcontext.Builder().
+		MergeJsonObject(json.RawMessage(bindRecord.OtherDetails)).
+		MergeJsonObject(json.RawMessage(instanceRecord.OtherDetails)).
+		MergeEvalResult("uri", uriFormat, varcontext.TypeString).
+		BuildMap()
+
 	if err != nil {
 		return nil, err
 	}
 
-	return varcontext.Builder().
-		MergeMap(combinedCreds).
-		MergeEvalResult("uri", uriFormat, varcontext.TypeString).
-		BuildMap()
+	return &brokerapi.Binding{Credentials: creds}, nil
 }
 
 // Unbind deletes the database user, service account and invalidates the ssl certs associated with this binding.

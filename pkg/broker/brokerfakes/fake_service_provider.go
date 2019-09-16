@@ -26,7 +26,7 @@ type FakeServiceProvider struct {
 		result1 map[string]interface{}
 		result2 error
 	}
-	BuildInstanceCredentialsStub        func(context.Context, models.ServiceBindingCredentials, models.ServiceInstanceDetails) (map[string]interface{}, error)
+	BuildInstanceCredentialsStub        func(context.Context, models.ServiceBindingCredentials, models.ServiceInstanceDetails) (*brokerapi.Binding, error)
 	buildInstanceCredentialsMutex       sync.RWMutex
 	buildInstanceCredentialsArgsForCall []struct {
 		arg1 context.Context
@@ -34,11 +34,11 @@ type FakeServiceProvider struct {
 		arg3 models.ServiceInstanceDetails
 	}
 	buildInstanceCredentialsReturns struct {
-		result1 map[string]interface{}
+		result1 *brokerapi.Binding
 		result2 error
 	}
 	buildInstanceCredentialsReturnsOnCall map[int]struct {
-		result1 map[string]interface{}
+		result1 *brokerapi.Binding
 		result2 error
 	}
 	DeprovisionStub        func(context.Context, models.ServiceInstanceDetails, brokerapi.DeprovisionDetails) (*string, error)
@@ -197,7 +197,7 @@ func (fake *FakeServiceProvider) BindReturnsOnCall(i int, result1 map[string]int
 	}{result1, result2}
 }
 
-func (fake *FakeServiceProvider) BuildInstanceCredentials(arg1 context.Context, arg2 models.ServiceBindingCredentials, arg3 models.ServiceInstanceDetails) (map[string]interface{}, error) {
+func (fake *FakeServiceProvider) BuildInstanceCredentials(arg1 context.Context, arg2 models.ServiceBindingCredentials, arg3 models.ServiceInstanceDetails) (*brokerapi.Binding, error) {
 	fake.buildInstanceCredentialsMutex.Lock()
 	ret, specificReturn := fake.buildInstanceCredentialsReturnsOnCall[len(fake.buildInstanceCredentialsArgsForCall)]
 	fake.buildInstanceCredentialsArgsForCall = append(fake.buildInstanceCredentialsArgsForCall, struct {
@@ -223,7 +223,7 @@ func (fake *FakeServiceProvider) BuildInstanceCredentialsCallCount() int {
 	return len(fake.buildInstanceCredentialsArgsForCall)
 }
 
-func (fake *FakeServiceProvider) BuildInstanceCredentialsCalls(stub func(context.Context, models.ServiceBindingCredentials, models.ServiceInstanceDetails) (map[string]interface{}, error)) {
+func (fake *FakeServiceProvider) BuildInstanceCredentialsCalls(stub func(context.Context, models.ServiceBindingCredentials, models.ServiceInstanceDetails) (*brokerapi.Binding, error)) {
 	fake.buildInstanceCredentialsMutex.Lock()
 	defer fake.buildInstanceCredentialsMutex.Unlock()
 	fake.BuildInstanceCredentialsStub = stub
@@ -236,28 +236,28 @@ func (fake *FakeServiceProvider) BuildInstanceCredentialsArgsForCall(i int) (con
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
-func (fake *FakeServiceProvider) BuildInstanceCredentialsReturns(result1 map[string]interface{}, result2 error) {
+func (fake *FakeServiceProvider) BuildInstanceCredentialsReturns(result1 *brokerapi.Binding, result2 error) {
 	fake.buildInstanceCredentialsMutex.Lock()
 	defer fake.buildInstanceCredentialsMutex.Unlock()
 	fake.BuildInstanceCredentialsStub = nil
 	fake.buildInstanceCredentialsReturns = struct {
-		result1 map[string]interface{}
+		result1 *brokerapi.Binding
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeServiceProvider) BuildInstanceCredentialsReturnsOnCall(i int, result1 map[string]interface{}, result2 error) {
+func (fake *FakeServiceProvider) BuildInstanceCredentialsReturnsOnCall(i int, result1 *brokerapi.Binding, result2 error) {
 	fake.buildInstanceCredentialsMutex.Lock()
 	defer fake.buildInstanceCredentialsMutex.Unlock()
 	fake.BuildInstanceCredentialsStub = nil
 	if fake.buildInstanceCredentialsReturnsOnCall == nil {
 		fake.buildInstanceCredentialsReturnsOnCall = make(map[int]struct {
-			result1 map[string]interface{}
+			result1 *brokerapi.Binding
 			result2 error
 		})
 	}
 	fake.buildInstanceCredentialsReturnsOnCall[i] = struct {
-		result1 map[string]interface{}
+		result1 *brokerapi.Binding
 		result2 error
 	}{result1, result2}
 }

@@ -41,20 +41,6 @@ func (b *synchronousBase) DeprovisionsAsync() bool {
 	return false
 }
 
-// AsynchronousInstanceMixin sets ProvisionAsync and DeprovisionsAsync functions
-// to be true.
-type AsynchronousInstanceMixin struct{}
-
-// ProvisionsAsync indicates if provisioning must be done asynchronously.
-func (b *AsynchronousInstanceMixin) ProvisionsAsync() bool {
-	return true
-}
-
-// DeprovisionsAsync indicates if deprovisioning must be done asynchronously.
-func (b *AsynchronousInstanceMixin) DeprovisionsAsync() bool {
-	return true
-}
-
 // NoOpBindMixin does a no-op binding. This can be used when you still want a
 // service to be bindable but nothing is required server-side to support it.
 // For example, when the service requires no authentication.
@@ -76,7 +62,7 @@ type MergedInstanceCredsMixin struct{}
 
 // BuildInstanceCredentials combines the bind credentials with the connection
 // information in the instance details to get a full set of connection details.
-func (b *MergedInstanceCredsMixin) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]interface{}, error) {
+func (b *MergedInstanceCredsMixin) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (*brokerapi.Binding, error) {
 	vc, err := varcontext.Builder().
 		MergeJsonObject(json.RawMessage(bindRecord.OtherDetails)).
 		MergeJsonObject(json.RawMessage(instanceRecord.OtherDetails)).
@@ -85,5 +71,5 @@ func (b *MergedInstanceCredsMixin) BuildInstanceCredentials(ctx context.Context,
 		return nil, err
 	}
 
-	return vc.ToMap(), nil
+	return &brokerapi.Binding{Credentials: vc.ToMap()}, nil
 }

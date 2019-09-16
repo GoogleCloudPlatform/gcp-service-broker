@@ -290,12 +290,12 @@ func (gcpBroker *GCPServiceBroker) Bind(ctx context.Context, instanceID, binding
 			err)
 	}
 
-	updatedCreds, err := serviceProvider.BuildInstanceCredentials(ctx, newCreds, *instanceRecord)
+	binding, err := serviceProvider.BuildInstanceCredentials(ctx, newCreds, *instanceRecord)
 	if err != nil {
 		return brokerapi.Binding{}, err
 	}
 
-	return brokerapi.Binding{Credentials: updatedCreds}, nil
+	return *binding, nil
 }
 
 // GetBinding fetches an existing service binding.

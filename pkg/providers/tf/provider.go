@@ -16,11 +16,11 @@ package tf
 
 import (
 	"context"
-	"encoding/json"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/tf/wrapper"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
@@ -36,7 +36,8 @@ func NewTerraformProvider(jobRunner *TfJobRunner, logger lager.Logger, serviceDe
 }
 
 type terraformProvider struct {
-	// base.BrokerBase
+	base.MergedInstanceCredsMixin
+
 	logger            lager.Logger
 	jobRunner         *TfJobRunner
 	serviceDefinition TfServiceDefinitionV1
@@ -94,19 +95,6 @@ func (provider *terraformProvider) create(ctx context.Context, vars *varcontext.
 	}
 
 	return tfId, provider.jobRunner.Create(ctx, tfId)
-}
-
-// BuildInstanceCredentials unions the OtherDetails maps of the instance and bind records.
-func (provider *terraformProvider) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]interface{}, error) {
-	vc, err := varcontext.Builder().
-		MergeJsonObject(json.RawMessage(bindRecord.OtherDetails)).
-		MergeJsonObject(json.RawMessage(instanceRecord.OtherDetails)).
-		Build()
-	if err != nil {
-		return nil, err
-	}
-
-	return vc.ToMap(), nil
 }
 
 // Unbind performs a terraform destroy on the binding.
