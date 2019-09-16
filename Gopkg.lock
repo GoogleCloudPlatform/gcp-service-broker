@@ -19,7 +19,6 @@
     "pubsub",
     "pubsub/apiv1",
     "pubsub/internal/distribution",
-    "redis/apiv1beta1",
     "spanner/admin/instance/apiv1",
     "storage",
   ]
@@ -626,6 +625,7 @@
     "internal",
     "iterator",
     "option",
+    "redis/v1",
     "sqladmin/v1beta4",
     "storage/v1",
     "support/bundler",
@@ -668,7 +668,6 @@
     "googleapis/api/annotations",
     "googleapis/bigtable/admin/v2",
     "googleapis/bigtable/v2",
-    "googleapis/cloud/redis/v1beta1",
     "googleapis/iam/v1",
     "googleapis/longrunning",
     "googleapis/pubsub/v1",
@@ -758,7 +757,6 @@
   input-imports = [
     "cloud.google.com/go/bigtable",
     "cloud.google.com/go/pubsub",
-    "cloud.google.com/go/redis/apiv1beta1",
     "cloud.google.com/go/spanner/admin/instance/apiv1",
     "cloud.google.com/go/storage",
     "code.cloudfoundry.org/lager",
@@ -789,8 +787,8 @@
     "google.golang.org/api/googleapi",
     "google.golang.org/api/iam/v1",
     "google.golang.org/api/option",
+    "google.golang.org/api/redis/v1",
     "google.golang.org/api/sqladmin/v1beta4",
-    "google.golang.org/genproto/googleapis/cloud/redis/v1beta1",
     "google.golang.org/genproto/googleapis/spanner/admin/instance/v1",
     "gopkg.in/yaml.v2",
   ]

@@ -33,6 +33,7 @@ func TestBuiltinBrokerRegistry(t *testing.T) {
 		"google-dialogflow",
 		"google-filestore",
 		"google-firestore",
+		"google-memorystore-redis",
 		"google-ml-apis",
 		"google-pubsub",
 		"google-spanner",

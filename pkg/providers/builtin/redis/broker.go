@@ -15,130 +15,174 @@
 package redis
 
 import (
-	googleredis "cloud.google.com/go/redis/apiv1beta1"
+	"errors"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/utils"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/net/context"
-	"google.golang.org/genproto/googleapis/cloud/redis/v1beta1"
-	"strconv"
-	"strings"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
+	redis "google.golang.org/api/redis/v1"
 )
 
-// RedisBroker is the service-broker back-end for creating and binding Redis services.
-type RedisBroker struct {
-	base.BrokerBase
+// Broker is the service-broker back-end for creating and binding Redis services.
+type Broker struct {
+	base.PeeredNetworkServiceBase
+	base.NoOpBindMixin
+	base.AsynchronousInstanceMixin
+}
+
+// NewInstanceInformation creates instance information from an instance
+func NewInstanceInformation(instance redis.Instance) InstanceInformation {
+	return InstanceInformation{
+		Network:         instance.AuthorizedNetwork,
+		ReservedIPRange: instance.ReservedIpRange,
+		RedisVersion:    instance.RedisVersion,
+		MemorySizeGb:    instance.MemorySizeGb,
+		Host:            instance.Host,
+		Port:            instance.Port,
+		URI:             fmt.Sprintf("redis://%s:%d", instance.Host, instance.Port),
+	}
 }
 
 // InstanceInformation holds the details needed to connect to a Redis instance after it has been provisioned
 type InstanceInformation struct {
-	RedisVersion string `json:"redis_version"`
-	Host         string `json:"host"`
-	Port         string `json:"port"`
-	MemorySizeGb int    `json:"memory_size_gb"`
-}
+	// Info for admins to diagnose connection issues
+	Network         string `json:"authorized_network"`
+	ReservedIPRange string `json:"reserved_ip_range"`
 
-// serviceTiers holds the valid value mapping for string service tiers to their REST call equivalent
-var serviceTiers = map[string]redis.Instance_Tier{
-	"basic":       redis.Instance_BASIC,
-	"standard_ha": redis.Instance_STANDARD_HA,
+	// Info for developers to diagnose client issues
+	RedisVersion string `json:"redis_version"`
+	MemorySizeGb int64  `json:"memory_size_gb"`
+
+	// Connection info
+	Host string `json:"host"`
+	Port int64  `json:"port"`
+	URI  string `json:"uri"`
 }
 
 // Provision creates a new Redis instance from the settings in the user-provided details and service plan.
-func (b *RedisBroker) Provision(ctx context.Context, provisionContext *varcontext.VarContext) (models.ServiceInstanceDetails, error) {
+func (b *Broker) Provision(ctx context.Context, provisionContext *varcontext.VarContext) (models.ServiceInstanceDetails, error) {
+	details := models.ServiceInstanceDetails{
+		Name:     provisionContext.GetString(base.InstanceIDKey),
+		Location: provisionContext.GetString(base.RegionKey),
+	}
 
-	authorizedNetwork := provisionContext.GetString("authorized_network")
-	memorySizeGb := int32(provisionContext.GetInt("memory_size_gb"))
-	displayName := provisionContext.GetString("display_name")
-	instanceId := provisionContext.GetString("instance_id")
-	region := provisionContext.GetString("region")
-	serviceTier := serviceTiers[strings.ToLower(provisionContext.GetString("service_tier"))]
-	parent := fmt.Sprintf("projects/%s/locations/%s", b.ProjectId, region)
-	name := fmt.Sprintf("%s/instances/%s", parent, instanceId)
-
-	// Build Redis Instance
 	instance := &redis.Instance{
-		Name:              name,
-		DisplayName:       displayName,
-		Tier:              serviceTier,
-		MemorySizeGb:      memorySizeGb,
-		AuthorizedNetwork: authorizedNetwork,
+		Labels:            provisionContext.GetStringMapString("labels"),
+		Tier:              provisionContext.GetString("tier"),
+		MemorySizeGb:      int64(provisionContext.GetInt("memory_size_gb")),
+		AuthorizedNetwork: provisionContext.GetString(base.AuthorizedNetworkKey),
 	}
 
-	ir := &redis.CreateInstanceRequest{
-		Parent:     parent,
-		InstanceId: instanceId,
-		Instance:   instance,
+	// The API only accepts fully qualified networks.
+	// If the user doesn't specify, assume they want the one for the default project.
+	if !strings.Contains(instance.AuthorizedNetwork, "/") {
+		instance.AuthorizedNetwork = fmt.Sprintf("projects/%s/global/networks/%s", b.DefaultProjectID, instance.AuthorizedNetwork)
 	}
 
-	c, err := b.createClient(ctx)
+	if err := provisionContext.Error(); err != nil {
+		return models.ServiceInstanceDetails{}, err
+	}
+
+	client, err := b.createClient(ctx)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, err
 	}
 
-	op, err := c.CreateInstance(ctx, ir)
-	if err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error creating new Redis instance: %s", err)
-	}
+	op, err := client.Projects.Locations.Instances.
+		Create(b.parentPath(details), instance).
+		InstanceId(details.Name).
+		Do()
 
-	resp, err := op.Wait(ctx)
 	if err != nil {
 		return models.ServiceInstanceDetails{}, err
 	}
 
-	ii := InstanceInformation{
-		RedisVersion: resp.RedisVersion,
-		Host:         resp.Host,
-		Port:         strconv.Itoa(int(resp.Port)),
-		MemorySizeGb: int(resp.MemorySizeGb),
-	}
+	details.OperationType = models.ProvisionOperationType
+	details.OperationId = op.Name
 
-	id := models.ServiceInstanceDetails{
-		Name: resp.Name,
-	}
-
-	if err := id.SetOtherDetails(ii); err != nil {
-		return models.ServiceInstanceDetails{}, fmt.Errorf("Error marshalling json: %s", err)
-	}
-
-	return id, nil
+	return details, nil
 }
 
 // Deprovision deletes the Redis instance with the given instance ID
-func (b *RedisBroker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (*string, error) {
-	c, err := b.createClient(ctx)
+func (b *Broker) Deprovision(ctx context.Context, instance models.ServiceInstanceDetails, details brokerapi.DeprovisionDetails) (*string, error) {
+	client, err := b.createClient(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	req := &redis.DeleteInstanceRequest{
-		Name: instance.Name,
-	}
-
-	op, err := c.DeleteInstance(ctx, req)
+	op, err := client.Projects.Locations.Instances.Delete(b.instancePath(instance)).Do()
 	if err != nil {
-		return nil, fmt.Errorf("Error deleting Redis instance: %s", err)
-	}
+		// Mark things that have been deleted out of band as gone.
+		if gerr, ok := err.(*googleapi.Error); ok {
+			if gerr.Code == http.StatusNotFound || gerr.Code == http.StatusGone {
+				return nil, nil
+			}
+		}
 
-	err = op.Wait(ctx)
-	if err != nil {
 		return nil, err
 	}
 
-	return nil, nil
+	return &op.Name, nil
 }
 
-func (b *RedisBroker) createClient(ctx context.Context) (*googleredis.CloudRedisClient, error) {
+func (b *Broker) parentPath(instanceDetails models.ServiceInstanceDetails) string {
+	return fmt.Sprintf("projects/%s/locations/%s", b.DefaultProjectID, instanceDetails.Location)
+}
+
+func (b *Broker) instancePath(instanceDetails models.ServiceInstanceDetails) string {
+	return fmt.Sprintf("%s/instances/%s", b.parentPath(instanceDetails), instanceDetails.Name)
+}
+
+func (b *Broker) createClient(ctx context.Context) (*redis.Service, error) {
 	co := option.WithUserAgent(utils.CustomUserAgent)
-	ct := option.WithTokenSource(b.HttpConfig.TokenSource(ctx))
-	c, err := googleredis.NewCloudRedisClient(ctx, co, ct)
+	ct := option.WithTokenSource(b.HTTPConfig.TokenSource(ctx))
+	c, err := redis.NewService(ctx, co, ct)
 	if err != nil {
-		return nil, fmt.Errorf("Couldn't instantiate Redis API client: %s", err)
+		return nil, fmt.Errorf("couldn't instantiate API client: %s", err)
 	}
 
 	return c, nil
+}
+
+// PollInstance implements ServiceProvider.PollInstance
+func (b *Broker) PollInstance(ctx context.Context, instance models.ServiceInstanceDetails) (done bool, err error) {
+	if instance.OperationType == "" {
+		return false, errors.New("couldn't find any pending operations")
+	}
+
+	client, err := b.createClient(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	op, err := client.Projects.Locations.Operations.Get(instance.OperationId).Do()
+	if op != nil {
+		done = op.Done
+	}
+
+	return done, err
+}
+
+// UpdateInstanceDetails updates the ServiceInstanceDetails with the most recent state from GCP.
+// This instance is a no-op method.
+func (b *Broker) UpdateInstanceDetails(ctx context.Context, instance *models.ServiceInstanceDetails) error {
+	client, err := b.createClient(ctx)
+	if err != nil {
+		return err
+	}
+
+	actualInstance, err := client.Projects.Locations.Instances.Get(b.instancePath(*instance)).Do()
+	if err != nil {
+		return err
+	}
+
+	return instance.SetOtherDetails(NewInstanceInformation(*actualInstance))
 }
