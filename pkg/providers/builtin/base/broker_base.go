@@ -16,14 +16,12 @@ package base
 
 import (
 	"context"
-	"encoding/json"
 
 	"code.cloudfoundry.org/lager"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 
-	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
 )
 
@@ -54,6 +52,9 @@ func NewBrokerBase(projectId string, auth *jwt.Config, logger lager.Logger) Brok
 // BrokerBase is the reference bind and unbind implementation for brokers that
 // bind and unbind with only Service Accounts.
 type BrokerBase struct {
+	synchronousBase
+	MergedInstanceCredsMixin
+
 	AccountManager ServiceAccountManager
 	HttpConfig     *jwt.Config
 	ProjectId      string
@@ -66,39 +67,9 @@ func (b *BrokerBase) Bind(ctx context.Context, vc *varcontext.VarContext) (map[s
 	return b.AccountManager.CreateCredentials(ctx, vc)
 }
 
-// BuildInstanceCredentials combines the bind credentials with the connection
-// information in the instance details to get a full set of connection details.
-func (b *BrokerBase) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (map[string]interface{}, error) {
-	vc, err := varcontext.Builder().
-		MergeJsonObject(json.RawMessage(bindRecord.OtherDetails)).
-		MergeJsonObject(json.RawMessage(instanceRecord.OtherDetails)).
-		Build()
-	if err != nil {
-		return nil, err
-	}
-
-	return vc.ToMap(), nil
-}
-
 // Unbind deletes the created service account from the GCP Project.
 func (b *BrokerBase) Unbind(ctx context.Context, instance models.ServiceInstanceDetails, creds models.ServiceBindingCredentials) error {
 	return b.AccountManager.DeleteCredentials(ctx, creds)
-}
-
-// PollInstance does nothing but return an error because Base services are
-// provisioned synchronously so this method should not be called.
-func (b *BrokerBase) PollInstance(ctx context.Context, instance models.ServiceInstanceDetails) (bool, error) {
-	return true, brokerapi.ErrAsyncRequired
-}
-
-// ProvisionsAsync indicates if provisioning must be done asynchronously.
-func (b *BrokerBase) ProvisionsAsync() bool {
-	return false
-}
-
-// DeprovisionsAsync indicates if deprovisioning must be done asynchronously.
-func (b *BrokerBase) DeprovisionsAsync() bool {
-	return false
 }
 
 // UpdateInstanceDetails updates the ServiceInstanceDetails with the most recent state from GCP.
