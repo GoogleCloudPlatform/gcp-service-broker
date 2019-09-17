@@ -15,10 +15,14 @@
 package wrapper
 
 import (
+	"encoding/json"
+	"fmt"
 	"sort"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
-	"github.com/hashicorp/hcl"
+	"github.com/hashicorp/hcl2/gohcl"
+	"github.com/hashicorp/hcl2/hcl"
+	"github.com/hashicorp/hcl2/hclparse"
 )
 
 // ModuleDefinition represents a module in a Terraform workspace.
@@ -41,31 +45,68 @@ func (module *ModuleDefinition) Validate() (errs *validation.FieldError) {
 // Inputs gets the input parameter names for the module.
 func (module *ModuleDefinition) Inputs() ([]string, error) {
 	defn := terraformModuleHcl{}
-	if err := hcl.Decode(&defn, module.Definition); err != nil {
+
+	hclFile, err := parseHCL(module.Definition, module.Name)
+	if err != nil {
 		return nil, err
 	}
 
-	return sortedKeys(defn.Inputs), nil
+	diag := gohcl.DecodeBody(hclFile.Body, nil, &defn)
+	if diag.HasErrors() {
+		return nil, fmt.Errorf("Error decoding hclFile body: %v", diag.Error())
+	}
+
+	return sortedVariableNames(defn.Inputs), nil
 }
 
 // Outputs gets the output parameter names for the module.
 func (module *ModuleDefinition) Outputs() ([]string, error) {
 	defn := terraformModuleHcl{}
-	if err := hcl.Decode(&defn, module.Definition); err != nil {
+
+	hclFile, err := parseHCL(module.Definition, module.Name)
+	if err != nil {
 		return nil, err
 	}
 
-	return sortedKeys(defn.Outputs), nil
-}
-
-func sortedKeys(m map[string]interface{}) []string {
-	var keys []string
-	for key, _ := range m {
-		keys = append(keys, key)
+	diag := gohcl.DecodeBody(hclFile.Body, nil, &defn)
+	if diag.HasErrors() {
+		return nil, fmt.Errorf("Error decoding hclFile body: %v", diag.Error())
 	}
 
-	sort.Slice(keys, func(i int, j int) bool { return keys[i] < keys[j] })
-	return keys
+	return sortedVariableNames(defn.Outputs), nil
+}
+
+func sortedVariableNames(variables []terraformVariableHcl) []string {
+	var vars []string
+	for _, variable := range variables {
+		vars = append(vars, variable.Name)
+	}
+
+	// Sort variable names alphabetically
+	sort.Strings(vars)
+	return vars
+}
+
+func parseHCL(value string, field string) (*hcl.File, error) {
+	parser := hclparse.NewParser()
+	hclFile := &hcl.File{}
+
+	var diag hcl.Diagnostics
+	// Check if value is JSON
+	var js json.RawMessage
+	if json.Unmarshal([]byte(value), &js) == nil {
+		// Try to parse JSON terraform syntax
+		hclFile, diag = parser.ParseJSON([]byte(value), field)
+	} else {
+		// Try to parse HCL syntax
+		hclFile, diag = parser.ParseHCL([]byte(value), field)
+	}
+
+	if diag.HasErrors() {
+		return hclFile, fmt.Errorf("Error parsing hcl file: %v", diag.Error())
+	}
+
+	return hclFile, nil
 }
 
 // terraformModuleHcl is a struct used for marshaling/unmarshaling details about
@@ -73,6 +114,12 @@ func sortedKeys(m map[string]interface{}) []string {
 //
 // See https://www.terraform.io/docs/modules/create.html for their structure.
 type terraformModuleHcl struct {
-	Inputs  map[string]interface{} `hcl:"variable"`
-	Outputs map[string]interface{} `hcl:"output"`
+	Inputs  []terraformVariableHcl `hcl:"variable,block"`
+	Outputs []terraformVariableHcl `hcl:"output,block"`
+	Remain  hcl.Body               `hcl:",remain"`
+}
+
+type terraformVariableHcl struct {
+	Name   string   `hcl:"name,label"`
+	Remain hcl.Body `hcl:",remain"`
 }
