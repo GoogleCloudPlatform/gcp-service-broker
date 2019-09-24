@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"os"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
@@ -94,6 +95,7 @@ func ExampleServiceDefinition_GetPlanById() {
 func TestServiceDefinition_UserDefinedPlans(t *testing.T) {
 	cases := map[string]struct {
 		Value       interface{}
+		TileValue   string
 		PlanIds     map[string]bool
 		ExpectError bool
 	}{
@@ -132,6 +134,31 @@ func TestServiceDefinition_UserDefinedPlans(t *testing.T) {
 			PlanIds:     map[string]bool{},
 			ExpectError: true,
 		},
+		"tile environment variable": {
+			TileValue: `{
+				"plan-100":{
+					"description":"plan-100",
+					"display_name":"plan-100",
+					"guid":"495bf186-e1c2-4c7e-abc1-84b1a8634858",
+					"instances":"100",
+					"name":"plan-100",
+					"service":"4bc59b9a-8520-409f-85da-1c7552315863"
+				},
+				"custom-plan2":{
+					"description":"test",
+					"display_name":"asdf",
+					"guid":"938cfc91-bca3-4f9d-b384-1e4ad6f965ce",
+					"instances":"10",
+					"name":"custom-plan2",
+					"service":"4bc59b9a-8520-409f-85da-1c7552315863"
+				}
+			}`,
+			PlanIds: map[string]bool{
+				"495bf186-e1c2-4c7e-abc1-84b1a8634858": true,
+				"938cfc91-bca3-4f9d-b384-1e4ad6f965ce": true,
+			},
+			ExpectError: false,
+		},
 	}
 
 	service := ServiceDefinition{
@@ -148,6 +175,9 @@ func TestServiceDefinition_UserDefinedPlans(t *testing.T) {
 
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
+			os.Setenv(service.TileUserDefinedPlansVariable(), tc.TileValue)
+			defer os.Unsetenv(service.TileUserDefinedPlansVariable())
+
 			viper.Set(service.UserDefinedPlansProperty(), tc.Value)
 			defer viper.Reset()
 
