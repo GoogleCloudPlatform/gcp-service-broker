@@ -1,3 +1,0 @@
-[submodule "service-broker-plugins"]
-	path = service-broker-plugins
-	url = https://github.com/GoogleCloudPlatform/service-broker-plugins.git
