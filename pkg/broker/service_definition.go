@@ -17,6 +17,7 @@ package broker
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"code.cloudfoundry.org/lager"
@@ -150,12 +151,8 @@ func (svc *ServiceDefinition) BindDefaultOverrides() map[string]interface{} {
 // TileUserDefinedPlansVariable returns the name of the user defined plans
 // variable for the broker tile.
 func (svc *ServiceDefinition) TileUserDefinedPlansVariable() string {
-	prefix := "GOOGLE_"
-
 	v := utils.PropertyToEnvUnprefixed(svc.Name)
-	if strings.HasPrefix(v, prefix) {
-		v = v[len(prefix):]
-	}
+	v = strings.TrimPrefix(v, "GOOGLE_")
 
 	return v + "_CUSTOM_PLANS"
 }
@@ -234,12 +231,6 @@ func (svc *ServiceDefinition) GetPlanById(planId string) (*ServicePlan, error) {
 // UserDefinedPlans extracts user defined plans from the environment, failing if
 // the plans were not valid JSON or were missing required properties/variables.
 func (svc *ServiceDefinition) UserDefinedPlans() ([]ServicePlan, error) {
-	plans := []ServicePlan{}
-
-	userPlanJson := viper.GetString(svc.UserDefinedPlansProperty())
-	if userPlanJson == "" {
-		return plans, nil
-	}
 
 	// There's a mismatch between how plans are used internally and defined by
 	// the user and the tile. In the environment variables we parse an array of
@@ -248,10 +239,29 @@ func (svc *ServiceDefinition) UserDefinedPlans() ([]ServicePlan, error) {
 	// but we need [{"id":"1234", "name":"foo", "service_properties":{"A": 1, "B": 2}}]
 	// Go doesn't support this natively so we do it manually here.
 	rawPlans := []json.RawMessage{}
-	if err := json.Unmarshal([]byte(userPlanJson), &rawPlans); err != nil {
-		return plans, err
+
+	// Unmarshal the plans from the viper configuration which is just a JSON list
+	// of plans
+	if userPlanJSON := viper.GetString(svc.UserDefinedPlansProperty()); userPlanJSON != "" {
+		if err := json.Unmarshal([]byte(userPlanJSON), &rawPlans); err != nil {
+			return []ServicePlan{}, err
+		}
 	}
 
+	// Unmarshal tile plans if they're included, which are a JSON object where
+	// keys are
+	if tilePlans := os.Getenv(svc.TileUserDefinedPlansVariable()); tilePlans != "" {
+		var rawTilePlans map[string]json.RawMessage
+		if err := json.Unmarshal([]byte(tilePlans), &rawTilePlans); err != nil {
+			return []ServicePlan{}, err
+		}
+
+		for _, v := range rawTilePlans {
+			rawPlans = append(rawPlans, v)
+		}
+	}
+
+	plans := []ServicePlan{}
 	for _, rawPlan := range rawPlans {
 		plan := ServicePlan{}
 		remainder, err := utils.UnmarshalObjectRemainder(rawPlan, &plan)
@@ -262,6 +272,11 @@ func (svc *ServiceDefinition) UserDefinedPlans() ([]ServicePlan, error) {
 		plan.ServiceProperties = make(map[string]string)
 		if err := json.Unmarshal(remainder, &plan.ServiceProperties); err != nil {
 			return []ServicePlan{}, err
+		}
+
+		// reading from a tile we need to move their GUID to an ID field
+		if plan.ID == "" {
+			plan.ID = plan.ServiceProperties["guid"]
 		}
 
 		if err := svc.validatePlan(plan); err != nil {
