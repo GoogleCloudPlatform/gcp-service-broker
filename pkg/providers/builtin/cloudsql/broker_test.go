@@ -15,10 +15,13 @@
 package cloudsql
 
 import (
+	"context"
 	"encoding/json"
+	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/cast"
@@ -341,6 +344,138 @@ func TestPostgresCustomMachineTypes(t *testing.T) {
 
 			if cpu > 64 {
 				t.Errorf("The maximum number of CPUs allowed are 64, got %d", cpu)
+			}
+		})
+	}
+}
+
+func TestBuildInstanceCredentials(t *testing.T) {
+
+	cases := map[string]struct {
+		serviceID       string
+		bindDetails     string
+		instanceDetails string
+
+		expectedCreds map[string]interface{}
+	}{
+		"no prefix mysql": {
+			serviceID: MySqlServiceId,
+			instanceDetails: `{
+				"database_name": "pcf-sb-2-1543346570614873901",
+				"host": "35.202.18.12"
+			}`,
+			bindDetails: `{
+				"Username": "sb15433468744175",
+				"Password": "pass=",
+				"UriPrefix": ""
+			}`,
+			expectedCreds: map[string]interface{}{
+				"Password":      "pass=",
+				"UriPrefix":     "",
+				"Username":      "sb15433468744175",
+				"database_name": "pcf-sb-2-1543346570614873901",
+				"host":          "35.202.18.12",
+				"uri":           "mysql://sb15433468744175:pass%3D@35.202.18.12/pcf-sb-2-1543346570614873901?ssl_mode=required",
+			},
+		},
+
+		"no prefix postgres": {
+			serviceID: PostgresServiceId,
+			instanceDetails: `{
+				"database_name": "pcf-sb-2-1543346570614873901",
+				"host": "35.202.18.12"
+			}`,
+			bindDetails: `{
+				"ClientCert": "@clientcert",
+				"ClientKey": "@clientkey",
+				"CaCert": "@cacert",
+				"Username": "sb15433468744175",
+				"Password": "pass=",
+				"UriPrefix": ""
+			}`,
+			expectedCreds: map[string]interface{}{
+				"ClientCert":    "@clientcert",
+				"ClientKey":     "@clientkey",
+				"CaCert":        "@cacert",
+				"Password":      "pass=",
+				"UriPrefix":     "",
+				"Username":      "sb15433468744175",
+				"database_name": "pcf-sb-2-1543346570614873901",
+				"host":          "35.202.18.12",
+				"uri":           "postgres://sb15433468744175:pass%3D@35.202.18.12/pcf-sb-2-1543346570614873901?sslmode=require&sslcert=%40clientcert&sslkey=%40clientkey&sslrootcert=%40cacert",
+			},
+		},
+
+		"prefix mysql": {
+			serviceID: MySqlServiceId,
+			instanceDetails: `{
+				"database_name": "pcf-sb-2-1543346570614873901",
+				"host": "35.202.18.12"
+			}`,
+			bindDetails: `{
+				"Username": "sb15433468744175",
+				"Password": "pass=",
+				"UriPrefix": "jdbc:"
+			}`,
+			expectedCreds: map[string]interface{}{
+				"Password":      "pass=",
+				"UriPrefix":     "jdbc:",
+				"Username":      "sb15433468744175",
+				"database_name": "pcf-sb-2-1543346570614873901",
+				"host":          "35.202.18.12",
+				"uri":           "jdbc:mysql://sb15433468744175:pass%3D@35.202.18.12/pcf-sb-2-1543346570614873901?ssl_mode=required",
+			},
+		},
+
+		"prefix postgres": {
+			serviceID: PostgresServiceId,
+			instanceDetails: `{
+				"database_name": "pcf-sb-2-1543346570614873901",
+				"host": "35.202.18.12"
+			}`,
+			bindDetails: `{
+				"ClientCert": "@clientcert",
+				"ClientKey": "@clientkey",
+				"CaCert": "@cacert",
+				"Username": "sb15433468744175",
+				"Password": "pass=",
+				"UriPrefix": "jdbc:"
+			}`,
+			expectedCreds: map[string]interface{}{
+				"ClientCert":    "@clientcert",
+				"ClientKey":     "@clientkey",
+				"CaCert":        "@cacert",
+				"Password":      "pass=",
+				"UriPrefix":     "jdbc:",
+				"Username":      "sb15433468744175",
+				"database_name": "pcf-sb-2-1543346570614873901",
+				"host":          "35.202.18.12",
+				"uri":           "jdbc:postgres://sb15433468744175:pass%3D@35.202.18.12/pcf-sb-2-1543346570614873901?sslmode=require&sslcert=%40clientcert&sslkey=%40clientkey&sslrootcert=%40cacert",
+			},
+		},
+	}
+
+	for tn, tc := range cases {
+		t.Run(tn, func(t *testing.T) {
+			broker := CloudSQLBroker{}
+
+			bindRecord := models.ServiceBindingCredentials{
+				OtherDetails: tc.bindDetails,
+			}
+
+			instanceRecord := models.ServiceInstanceDetails{
+				ServiceId:    tc.serviceID,
+				OtherDetails: tc.instanceDetails,
+			}
+
+			binding, err := broker.BuildInstanceCredentials(context.Background(), bindRecord, instanceRecord)
+			if err != nil {
+				t.Error("expected no error, got:", err)
+				return
+			}
+
+			if !reflect.DeepEqual(binding.Credentials, tc.expectedCreds) {
+				t.Errorf("Expected credentials %#v, got %#v", tc.expectedCreds, binding.Credentials)
 			}
 		})
 	}

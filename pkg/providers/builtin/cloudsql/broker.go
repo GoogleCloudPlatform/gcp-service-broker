@@ -226,9 +226,9 @@ func (b *CloudSQLBroker) BuildInstanceCredentials(ctx context.Context, bindRecor
 	uriFormat := ""
 	switch instanceRecord.ServiceId {
 	case MySqlServiceId:
-		uriFormat = `${str.queryEscape(UriPrefix)}mysql://${str.queryEscape(Username)}:${str.queryEscape(Password)}@${str.queryEscape(host)}/${str.queryEscape(database_name)}?ssl_mode=required`
+		uriFormat = `${UriPrefix}mysql://${str.queryEscape(Username)}:${str.queryEscape(Password)}@${str.queryEscape(host)}/${str.queryEscape(database_name)}?ssl_mode=required`
 	case PostgresServiceId:
-		uriFormat = `${str.queryEscape(UriPrefix)}postgres://${str.queryEscape(Username)}:${str.queryEscape(Password)}@${str.queryEscape(host)}/${str.queryEscape(database_name)}?sslmode=require&sslcert=${str.queryEscape(ClientCert)}&sslkey=${str.queryEscape(ClientKey)}&sslrootcert=${str.queryEscape(CaCert)}`
+		uriFormat = `${UriPrefix}postgres://${str.queryEscape(Username)}:${str.queryEscape(Password)}@${str.queryEscape(host)}/${str.queryEscape(database_name)}?sslmode=require&sslcert=${str.queryEscape(ClientCert)}&sslkey=${str.queryEscape(ClientKey)}&sslrootcert=${str.queryEscape(CaCert)}`
 	default:
 		return nil, errors.New("Unknown service")
 	}
