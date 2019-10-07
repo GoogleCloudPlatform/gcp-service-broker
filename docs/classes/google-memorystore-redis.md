@@ -17,6 +17,7 @@ Creates and manages Redis instances on the Google Cloud Platform.
     * The string must have at least 1 characters.
     * The string must match the regular expression `^[a-z]([-0-9a-z]*[a-z0-9]$)*`.
  * `authorized_network` _string_ - The name of the VPC network to attach the instance to. Default: `default`.
+    * Examples: [default projects/MYPROJECT/global/networks/MYNETWORK].
  * `region` _string_ - The region to create the instance in. Supported regions can be found here: https://cloud.google.com/memorystore/docs/redis/regions. Default: `us-east1`.
     * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
  * `memory_size_gb` _integer_ - Redis memory size in GiB. Default: `4`.
