@@ -180,10 +180,11 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 			{
 				FieldName: "version",
 				Type:      broker.JsonTypeString,
-				Details:   "The database engine type and version. Defaults to `POSTGRES_9_6`.",
+				Details:   "The database engine type and version.",
 				Default:   "POSTGRES_9_6",
 				Enum: map[interface{}]string{
 					"POSTGRES_9_6": "PostgreSQL 9.6.X",
+					"POSTGRES_11":  "PostgreSQL 11",
 				},
 			},
 			{

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Added
+- PostgreSQL 11 (GA since 27.09.2019)
 - Support setting database flags (new configuration parameter: `database_flags`).
 - Support setting the storage auto resize limit (new configuration parameter: `auto_resize_limit`).
 
