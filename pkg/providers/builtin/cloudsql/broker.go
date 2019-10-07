@@ -185,6 +185,7 @@ func createInstanceRequest(vars *varcontext.VarContext) *googlecloudsql.Database
 			},
 			PricingPlan:            secondGenPricingPlan,
 			StorageAutoResize:      &autoResize,
+			StorageAutoResizeLimit: int64(vars.GetInt("auto_resize_limit")),
 			Tier:                   vars.GetString("tier"),
 			// UserLabels get defined in createProvisionRequest
 		},

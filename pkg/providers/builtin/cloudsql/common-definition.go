@@ -198,6 +198,17 @@ func commonProvisionVariables() []broker.BrokerVariable {
 				"false": "do not increase storage size automatically",
 			},
 		},
+		{
+			FieldName: "auto_resize_limit",
+			Type:      broker.JsonTypeString,
+			Details:   "(only for 2nd generation instances) The maximum size to which storage capacity can be automatically increased.",
+			Default:   "0",
+			Constraints: validation.NewConstraintBuilder().
+				Pattern("^[0-9][0-9]*$").
+				MaxLength(5).
+				Examples("10", "500", "10230").
+				Build(),
+		},
 	}
 }
 
