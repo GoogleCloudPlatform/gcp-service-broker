@@ -130,12 +130,13 @@ func commonProvisionVariables() []broker.BrokerVariable {
 			},
 		},
 		{
+			FieldName: "database_flags",
 			Type:      broker.JsonTypeString,
-			Details:   "The geographical region. See the instance locations list https://cloud.google.com/sql/docs/mysql/instance-locations for which regions support which databases.",
-			Default:   "us-central",
+			Details:   "The database flags passed to the instance at startup (comma separated list of flags, e.g. general_log=on,skip_show_database=off).",
+			Default:   "",
 			Constraints: validation.NewConstraintBuilder().
-				Pattern("^[A-Za-z][-a-z0-9A-Z]+$").
-				Examples("northamerica-northeast1", "southamerica-east1", "us-east1").
+				Pattern(`^(|([a-z_]+=[a-zA-Z0-9\.\+\:-]+)(,[a-z_]+=[a-zA-Z0-9\.\+\:-]+)*)$`).
+				Examples("long_query_time=10", "general_log=on,skip_show_database=off").
 				Build(),
 		},
 		{

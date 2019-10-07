@@ -155,6 +155,10 @@ func createFirstGenRequest(vars *varcontext.VarContext) *googlecloudsql.Database
 }
 
 func createInstanceRequest(vars *varcontext.VarContext) *googlecloudsql.DatabaseInstance {
+
+	// Split and parse DatabaseFlags
+	databaseFlags := parseDatabaseFlags(vars.GetString("database_flags"))
+
 	autoResize := vars.GetBool("auto_resize")
 
 	// set up instance resource
@@ -190,6 +194,31 @@ func createInstanceRequest(vars *varcontext.VarContext) *googlecloudsql.Database
 			Name: vars.GetString("failover_replica_name"),
 		},
 	}
+}
+
+func parseDatabaseFlags(flagsvar string) []*googlecloudsql.DatabaseFlags {
+	databaseFlags := []*googlecloudsql.DatabaseFlags{}
+
+	// Return empty DatabaseFlags when none is defined
+	if flagsvar == "" {
+		return databaseFlags
+	}
+
+	// Get each separate flag
+	flags := strings.Split(flagsvar, ",")
+
+	// Separate the flags into name and value
+	for _, f := range flags {
+		flag := strings.Split(f, "=")
+
+		databaseFlags = append(databaseFlags, &googlecloudsql.DatabaseFlags{
+			Name:            flag[0],
+			Value:           flag[1],
+			ForceSendFields: []string{"Value"},
+		})
+	}
+
+	return databaseFlags
 }
 
 // Bind creates a new username, password, and set of ssl certs for the given instance.
