@@ -189,7 +189,7 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 			{
 				FieldName: "failover_replica_name",
 				Type:      broker.JsonTypeString,
-				Details:   "(only for 2nd generation instances) If specified, creates a failover replica with the given name.",
+				Details:   "DEPRECATED! Use availability_type for setting up high availability.",
 				Default:   "",
 				Constraints: validation.NewConstraintBuilder().
 					MaxLength(0). // Postgres does not use failover replicas - it uses availability_type
@@ -219,6 +219,16 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 				Enum: map[interface{}]string{
 					"ALWAYS": "Always, instance is always on.",
 					"NEVER":  "Never, instance does not turn on if a request arrives.",
+				},
+			},
+			{
+				FieldName: "availability_type",
+				Type:      broker.JsonTypeString,
+				Details:   "Availability type specifies whether the instance serves data from multiple zones.",
+				Default:   "ZONAL",
+				Enum: map[interface{}]string{
+					"ZONAL":    "The instance serves data from only one zone. Outages in that zone affect data accessibility",
+					"REGIONAL": "The instance can serve data from more than one zone in a region (it is highly available).",
 				},
 			},
 		}, commonProvisionVariables()...),

@@ -259,6 +259,9 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 			{Name: "binlog", Default: `${is_first_gen ? false : true}`, Overwrite: false},
 			{Name: "failover_replica_name", Default: `${failover_replica_suffix == "" ? failover_replica_name : "${instance_name}${failover_replica_suffix}"}`, Overwrite: true},
 
+			// availability_type is only available for Postgres instances
+			{Name: "availability_type", Default: ``, Overwrite: true},
+
 			// validation
 			{Name: "_", Default: `${assert(disk_size <= max_disk_size, "disk size (${disk_size}) is greater than max allowed disk size for this plan (${max_disk_size})")}`, Overwrite: true},
 		},

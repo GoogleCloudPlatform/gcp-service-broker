@@ -166,6 +166,7 @@ func createInstanceRequest(vars *varcontext.VarContext) *googlecloudsql.Database
 	return &googlecloudsql.DatabaseInstance{
 		Settings: &googlecloudsql.Settings{
 			ActivationPolicy: vars.GetString("activation_policy"),
+			AvailabilityType: vars.GetString("availability_type"),
 			// BackupConfiguration gets defined in createProvisionRequest
 			DataDiskSizeGb: int64(vars.GetInt("disk_size")),
 			DataDiskType:   vars.GetString("disk_type"),
