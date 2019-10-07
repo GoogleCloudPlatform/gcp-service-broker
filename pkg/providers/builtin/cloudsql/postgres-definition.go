@@ -16,8 +16,8 @@ package cloudsql
 
 import (
 	"code.cloudfoundry.org/lager"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
@@ -178,25 +178,9 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 		},
 		ProvisionInputVariables: append([]broker.BrokerVariable{
 			{
-				FieldName: "instance_name",
-				Type:      broker.JsonTypeString,
-				Details:   "Name of the CloudSQL instance.",
-				Default:   identifierTemplate,
-				Constraints: validation.NewConstraintBuilder().
-					Pattern("^[a-z][a-z0-9-]+$").
-					MaxLength(75).
-					Build(),
-			},
-			{
-				FieldName: "database_name",
-				Type:      broker.JsonTypeString,
-				Details:   "Name of the database inside of the instance. Must be a valid identifier for your chosen database type.",
-				Default:   identifierTemplate,
-			},
-			{
 				FieldName: "version",
 				Type:      broker.JsonTypeString,
-				Details:   "The database engine type and version.",
+				Details:   "The database engine type and version. Defaults to `POSTGRES_9_6`.",
 				Default:   "POSTGRES_9_6",
 				Enum: map[interface{}]string{
 					"POSTGRES_9_6": "PostgreSQL 9.6.X",
@@ -211,6 +195,22 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 					Pattern("^(|[a-z][a-z0-9-]+)$").
 					MaxLength(75).
 					Build(),
+			},
+			{
+				FieldName: "instance_name",
+				Type:      broker.JsonTypeString,
+				Details:   "Name of the CloudSQL instance.",
+				Default:   identifierTemplate,
+				Constraints: validation.NewConstraintBuilder().
+					Pattern("^[a-z][a-z0-9-]+$").
+					MaxLength(75).
+					Build(),
+			},
+			{
+				FieldName: "database_name",
+				Type:      broker.JsonTypeString,
+				Details:   "Name of the database inside of the instance. Must be a valid identifier for your chosen database type.",
+				Default:   identifierTemplate,
 			},
 			{
 				FieldName: "activation_policy",

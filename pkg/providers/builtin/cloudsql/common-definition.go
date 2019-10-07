@@ -15,8 +15,8 @@
 package cloudsql
 
 import (
-	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 )
@@ -80,13 +80,33 @@ func commonBindComputedVariables() []varcontext.DefaultVariable {
 func commonProvisionVariables() []broker.BrokerVariable {
 	return []broker.BrokerVariable{
 		{
-			FieldName: "binlog",
+			FieldName: "region",
 			Type:      broker.JsonTypeString,
-			Details:   "Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use.",
+			Details:   "The geographical region. See the instance locations list https://cloud.google.com/sql/docs/mysql/instance-locations for which regions support which databases.",
+			Default:   "us-central",
+			Constraints: validation.NewConstraintBuilder().
+				Pattern("^[A-Za-z][-a-z0-9A-Z]+$").
+				Examples("northamerica-northeast1", "southamerica-east1", "us-east1").
+				Build(),
+		},
+		{
+			FieldName: "backups_enabled",
+			Type:      broker.JsonTypeString,
+			Details:   "Should daily backups be enabled for the service?",
+			Default:   "true",
 			Enum: map[interface{}]string{
-				"true":  "use binary log",
-				"false": "do not use binary log",
+				"true":  "enable daily backups",
+				"false": "do not enable daily backups",
 			},
+		},
+		{
+			FieldName: "backup_start_time",
+			Type:      broker.JsonTypeString,
+			Details:   "Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM.",
+			Default:   "06:00",
+			Constraints: validation.NewConstraintBuilder().
+				Pattern("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$").
+				Build(),
 		},
 		{
 			FieldName: "disk_size",
@@ -100,7 +120,16 @@ func commonProvisionVariables() []broker.BrokerVariable {
 				Build(),
 		},
 		{
-			FieldName: "region",
+			FieldName: "disk_type",
+			Type:      broker.JsonTypeString,
+			Details:   "(only for 2nd generation instances)",
+			Default:   "PD_SSD",
+			Enum: map[interface{}]string{
+				"PD_SSD": "flash storage drive",
+				"PD_HDD": "magnetic hard drive",
+			},
+		},
+		{
 			Type:      broker.JsonTypeString,
 			Details:   "The geographical region. See the instance locations list https://cloud.google.com/sql/docs/mysql/instance-locations for which regions support which databases.",
 			Default:   "us-central",
@@ -110,6 +139,12 @@ func commonProvisionVariables() []broker.BrokerVariable {
 				Build(),
 		},
 		{
+			FieldName: "authorized_networks",
+			Type:      broker.JsonTypeString,
+			Details:   "A comma separated list without spaces.",
+			Default:   "",
+		},
+		{
 			FieldName: "zone",
 			Type:      broker.JsonTypeString,
 			Details:   "(only for 2nd generation instances)",
@@ -117,16 +152,6 @@ func commonProvisionVariables() []broker.BrokerVariable {
 			Constraints: validation.NewConstraintBuilder().
 				Pattern("^(|[A-Za-z][-a-z0-9A-Z]+)$").
 				Build(),
-		},
-		{
-			FieldName: "disk_type",
-			Type:      broker.JsonTypeString,
-			Details:   "(only for 2nd generation instances)",
-			Default:   "PD_SSD",
-			Enum: map[interface{}]string{
-				"PD_SSD": "flash storage drive",
-				"PD_HDD": "magnetic hard drive",
-			},
 		},
 		{
 			FieldName: "maintenance_window_day",
@@ -151,31 +176,6 @@ func commonProvisionVariables() []broker.BrokerVariable {
 			Constraints: validation.NewConstraintBuilder().
 				Pattern("^([0-9]|1[0-9]|2[0-3])$").
 				Build(),
-		},
-		{
-			FieldName: "backups_enabled",
-			Type:      broker.JsonTypeString,
-			Details:   "Should daily backups be enabled for the service?",
-			Default:   "true",
-			Enum: map[interface{}]string{
-				"true":  "enable daily backups",
-				"false": "do not enable daily backups",
-			},
-		},
-		{
-			FieldName: "backup_start_time",
-			Type:      broker.JsonTypeString,
-			Details:   "Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM.",
-			Default:   "06:00",
-			Constraints: validation.NewConstraintBuilder().
-				Pattern("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$").
-				Build(),
-		},
-		{
-			FieldName: "authorized_networks",
-			Type:      broker.JsonTypeString,
-			Details:   "A comma separated list without spaces.",
-			Default:   "",
 		},
 		{
 			FieldName: "replication_type",

@@ -29,7 +29,7 @@ const (
 	CloudsqlMySQLName = "google-cloudsql-mysql"
 )
 
-// MysqlServiceDefinition creates a new ServiceDefinition object for the Bigtable service.
+// MysqlServiceDefinition creates a new ServiceDefinition object for the MySQL service.
 func MysqlServiceDefinition() *broker.ServiceDefinition {
 	return &broker.ServiceDefinition{
 		Id:               "4bc59b9a-8520-409f-85da-1c7552315863",
@@ -182,22 +182,6 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 
 		ProvisionInputVariables: append([]broker.BrokerVariable{
 			{
-				FieldName: "instance_name",
-				Type:      broker.JsonTypeString,
-				Details:   "Name of the Cloud SQL instance.",
-				Default:   identifierTemplate,
-				Constraints: validation.NewConstraintBuilder().
-					Pattern("^[a-z][a-z0-9-]+$").
-					MaxLength(84).
-					Build(),
-			},
-			{
-				FieldName: "database_name",
-				Type:      broker.JsonTypeString,
-				Details:   "Name of the database inside of the instance. Must be a valid identifier for your chosen database type.",
-				Default:   identifierTemplate,
-			},
-			{
 				FieldName: "version",
 				Type:      broker.JsonTypeString,
 				Details:   "The database engine type and version. Defaults to `MYSQL_5_6` for 1st gen MySQL instances or `MYSQL_5_7` for 2nd gen MySQL instances.",
@@ -227,6 +211,22 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 					Build(),
 			},
 			{
+				FieldName: "instance_name",
+				Type:      broker.JsonTypeString,
+				Details:   "Name of the CloudSQL instance.",
+				Default:   identifierTemplate,
+				Constraints: validation.NewConstraintBuilder().
+					Pattern("^[a-z][a-z0-9-]+$").
+					MaxLength(87).
+					Build(),
+			},
+			{
+				FieldName: "database_name",
+				Type:      broker.JsonTypeString,
+				Details:   "Name of the database inside of the instance. Must be a valid identifier for your chosen database type.",
+				Default:   identifierTemplate,
+			},
+			{
 				FieldName: "activation_policy",
 				Type:      broker.JsonTypeString,
 				Details:   "The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE.",
@@ -235,6 +235,15 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 					"ALWAYS":    "Always, instance is always on.",
 					"NEVER":     "Never, instance does not turn on if a request arrives.",
 					"ON_DEMAND": "On Demand, instance responds to incoming requests and turns off when not in use.",
+				},
+			},
+			{
+				FieldName: "binlog",
+				Type:      broker.JsonTypeString,
+				Details:   "Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use.",
+				Enum: map[interface{}]string{
+					"true":  "use binary log",
+					"false": "do not use binary log",
 				},
 			},
 		}, commonProvisionVariables()...),
