@@ -186,7 +186,7 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 				Type:      broker.JsonTypeString,
 				Details:   "The database engine type and version. Defaults to `MYSQL_5_6` for 1st gen MySQL instances or `MYSQL_5_7` for 2nd gen MySQL instances.",
 				Enum: map[interface{}]string{
-					"MYSQL_5_5": "MySQL 5.5.X",
+					"MYSQL_5_5": "MySQL 5.5.X (Will be deprecated from 4 March 2020)",
 					"MYSQL_5_6": "MySQL 5.6.X",
 					"MYSQL_5_7": "MySQL 5.7.X",
 				},
@@ -194,17 +194,17 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 			{
 				FieldName: "failover_replica_name",
 				Type:      broker.JsonTypeString,
-				Details:   "(only for 2nd generation instances) If specified, creates a failover replica with the given name.",
+				Details:   "(only for 2nd generation MySQL instances) If specified, creates a failover replica with the given name. (Requires binlog and backups to be enabled).",
 				Default:   "",
 				Constraints: validation.NewConstraintBuilder().
 					Pattern("^(|[a-z][a-z0-9-]+)$").
-					MaxLength(84).
+					MaxLength(87).
 					Build(),
 			},
 			{
 				FieldName: "failover_replica_suffix",
 				Type:      broker.JsonTypeString,
-				Details:   "(only for 2nd generation instances) If specified, creates a failover replica with the instance name and this suffix. Overrides `failover_replica_name`.",
+				Details:   "(only for 2nd generation MySQL instances) If specified, creates a failover replica with the instance name and this suffix. Overrides `failover_replica_name`. (Requires binlog and backups to be enabled).",
 				Default:   "",
 				Constraints: validation.NewConstraintBuilder().
 					Pattern("^(|[a-z0-9-]+)$").

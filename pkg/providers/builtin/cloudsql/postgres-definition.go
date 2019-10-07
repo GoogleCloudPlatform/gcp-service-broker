@@ -192,8 +192,7 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 				Details:   "(only for 2nd generation instances) If specified, creates a failover replica with the given name.",
 				Default:   "",
 				Constraints: validation.NewConstraintBuilder().
-					Pattern("^(|[a-z][a-z0-9-]+)$").
-					MaxLength(75).
+					MaxLength(0). // Postgres does not use failover replicas - it uses availability_type
 					Build(),
 			},
 			{
@@ -203,7 +202,7 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 				Default:   identifierTemplate,
 				Constraints: validation.NewConstraintBuilder().
 					Pattern("^[a-z][a-z0-9-]+$").
-					MaxLength(75).
+					MaxLength(87).
 					Build(),
 			},
 			{

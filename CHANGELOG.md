@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Support setting database flags (new configuration parameter: `database_flags`).
 - Support setting the storage auto resize limit (new configuration parameter: `auto_resize_limit`).
 
+### Changed
+- Deprecate `failover_replica` parameter for PostgreSQL (use `availability_type` instead).
+
+### Fixed
+- PostgreSQL can be configured high available again (new configuration parameter: `availability_type`).
+
 ## [4.3.0] - 2019-08-26
 
 ### Fixed
