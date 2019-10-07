@@ -140,14 +140,14 @@ func createFirstGenRequest(vars *varcontext.VarContext) *googlecloudsql.Database
 	// set up instance resource
 	return &googlecloudsql.DatabaseInstance{
 		Settings: &googlecloudsql.Settings{
+			ActivationPolicy: vars.GetString("activation_policy"),
 			IpConfiguration: &googlecloudsql.IpConfiguration{
 				RequireSsl:  true,
 				Ipv4Enabled: true,
 			},
-			Tier:             vars.GetString("tier"),
-			PricingPlan:      vars.GetString("pricing_plan"),
-			ActivationPolicy: vars.GetString("activation_policy"),
-			ReplicationType:  vars.GetString("replication_type"),
+			Tier:            vars.GetString("tier"),
+			PricingPlan:     vars.GetString("pricing_plan"),
+			ReplicationType: vars.GetString("replication_type"),
 		},
 		DatabaseVersion: vars.GetString("version"),
 		Region:          vars.GetString("region"),
@@ -158,28 +158,31 @@ func createInstanceRequest(vars *varcontext.VarContext) *googlecloudsql.Database
 	autoResize := vars.GetBool("auto_resize")
 
 	// set up instance resource
+	// https://github.com/googleapis/google-api-go-client/blob/master/sqladmin/v1beta4/sqladmin-gen.go#L647
 	return &googlecloudsql.DatabaseInstance{
 		Settings: &googlecloudsql.Settings{
+			ActivationPolicy: vars.GetString("activation_policy"),
+			// BackupConfiguration gets defined in createProvisionRequest
+			DataDiskSizeGb: int64(vars.GetInt("disk_size")),
+			DataDiskType:   vars.GetString("disk_type"),
+			DatabaseFlags:  databaseFlags,
 			IpConfiguration: &googlecloudsql.IpConfiguration{
 				RequireSsl:  true,
 				Ipv4Enabled: true,
 			},
-			Tier:           vars.GetString("tier"),
-			DataDiskSizeGb: int64(vars.GetInt("disk_size")),
 			LocationPreference: &googlecloudsql.LocationPreference{
 				Zone: vars.GetString("zone"),
 			},
-			DataDiskType: vars.GetString("disk_type"),
 			MaintenanceWindow: &googlecloudsql.MaintenanceWindow{
 				Day:             int64(vars.GetInt("maintenance_window_day")),
 				Hour:            int64(vars.GetInt("maintenance_window_hour")),
 				UpdateTrack:     "stable",
 				ForceSendFields: []string{"Day", "Hour"},
 			},
-			PricingPlan:       secondGenPricingPlan,
-			ActivationPolicy:  vars.GetString("activation_policy"),
-			ReplicationType:   vars.GetString("replication_type"),
-			StorageAutoResize: &autoResize,
+			PricingPlan:            secondGenPricingPlan,
+			StorageAutoResize:      &autoResize,
+			Tier:                   vars.GetString("tier"),
+			// UserLabels get defined in createProvisionRequest
 		},
 		DatabaseVersion: vars.GetString("version"),
 		Region:          vars.GetString("region"),
