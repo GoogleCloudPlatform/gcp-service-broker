@@ -12,52 +12,49 @@ Google CloudSQL for MySQL is a fully-managed MySQL database service.
 **Request Parameters**
 
 
- * `version` _string_ - The database engine type and version. Defaults to `MYSQL_5_6` for 1st gen MySQL instances or `MYSQL_5_7` for 2nd gen MySQL instances.
-    * The value must be one of: [MYSQL_5_5 MYSQL_5_6 MYSQL_5_7].
- * `failover_replica_name` _string_ - (only for 2nd generation MySQL instances) If specified, creates a failover replica with the given name. (Requires binlog and backups to be enabled). Default: ``.
-    * The string must have at most 87 characters.
-    * The string must match the regular expression `^(|[a-z][a-z0-9-]+)$`.
- * `failover_replica_suffix` _string_ - (only for 2nd generation MySQL instances) If specified, creates a failover replica with the instance name and this suffix. Overrides `failover_replica_name`. (Requires binlog and backups to be enabled). Default: ``.
-    * The string must match the regular expression `^(|[a-z0-9-]+)$`.
  * `instance_name` _string_ - Name of the CloudSQL instance. Default: `pcf-sb-${counter.next()}-${time.nano()}`.
     * The string must have at most 87 characters.
     * The string must match the regular expression `^[a-z][a-z0-9-]+$`.
  * `database_name` _string_ - Name of the database inside of the instance. Must be a valid identifier for your chosen database type. Default: `pcf-sb-${counter.next()}-${time.nano()}`.
+ * `version` _string_ - The database engine type and version. Default: `MYSQL_5_7`.
+    * The value must be one of: [MYSQL_5_6 MYSQL_5_7].
  * `activation_policy` _string_ - The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE. Default: `ALWAYS`.
-    * The value must be one of: [ALWAYS NEVER ON_DEMAND].
- * `binlog` _string_ - Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use.
+    * The value must be one of: [ALWAYS NEVER].
+ * `binlog` _string_ - Whether binary log is enabled. Must be enabled for high availability. Default: `true`.
     * The value must be one of: [false true].
  * `region` _string_ - The geographical region. See the instance locations list https://cloud.google.com/sql/docs/mysql/instance-locations for which regions support which databases. Default: `us-central`.
     * Examples: [northamerica-northeast1 southamerica-east1 us-east1].
     * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
+ * `disk_size` _string_ - In GB. Default: `10`.
+    * Examples: [10 500 10230].
+    * The string must have at most 5 characters.
+    * The string must match the regular expression `^[1-9][0-9]+$`.
+ * `database_flags` _string_ - The database flags passed to the instance at startup (comma separated list of flags, e.g. general_log=on,skip_show_database=off). Default: ``.
+    * Examples: [long_query_time=10 general_log=on,skip_show_database=off].
+    * The string must match the regular expression `^(|([a-z_]+=[a-zA-Z0-9\.\+\:-]+)(,[a-z_]+=[a-zA-Z0-9\.\+\:-]+)*)$`.
+ * `zone` _string_ - Optional, the specific zone in the region to run the instance. Default: ``.
+    * The string must match the regular expression `^(|[A-Za-z][-a-z0-9A-Z]+)$`.
+ * `disk_type` _string_ - The type of disk backing the database. Default: `PD_SSD`.
+    * The value must be one of: [PD_HDD PD_SSD].
+ * `maintenance_window_day` _string_ - The day of week a CloudSQL instance should preferably be restarted for system maintenance purposes. (1-7), starting on Monday. Default: `1`.
+    * The value must be one of: [1 2 3 4 5 6 7].
+ * `maintenance_window_hour` _string_ - The hour of the day when disruptive updates (updates that require an instance restart) to this CloudSQL instance can be made. Hour of day 0-23. Default: `0`.
+    * The string must match the regular expression `^([0-9]|1[0-9]|2[0-3])$`.
  * `backups_enabled` _string_ - Should daily backups be enabled for the service? Default: `true`.
     * The value must be one of: [false true].
  * `backup_start_time` _string_ - Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM. Default: `06:00`.
     * The string must match the regular expression `^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$`.
- * `disk_size` _string_ - In GB (only for 2nd generation instances). Default: `10`.
-    * Examples: [10 500 10230].
-    * The string must have at most 5 characters.
-    * The string must match the regular expression `^[1-9][0-9]+$`.
- * `disk_type` _string_ - (only for 2nd generation instances) Default: `PD_SSD`.
-    * The value must be one of: [PD_HDD PD_SSD].
- * `database_flags` _string_ - The database flags passed to the instance at startup (comma separated list of flags, e.g. general_log=on,skip_show_database=off). Default: ``.
-    * Examples: [long_query_time=10 general_log=on,skip_show_database=off].
-    * The string must match the regular expression `^(|([a-z_]+=[a-zA-Z0-9\.\+\:-]+)(,[a-z_]+=[a-zA-Z0-9\.\+\:-]+)*)$`.
  * `authorized_networks` _string_ - A comma separated list without spaces. Default: ``.
- * `zone` _string_ - (only for 2nd generation instances) Default: ``.
-    * The string must match the regular expression `^(|[A-Za-z][-a-z0-9A-Z]+)$`.
- * `maintenance_window_day` _string_ - (only for 2nd generation instances) This specifies when a v2 CloudSQL instance should preferably be restarted for system maintenance purposes. Day of week (1-7), starting on Monday. Default: `1`.
-    * The value must be one of: [1 2 3 4 5 6 7].
- * `maintenance_window_hour` _string_ - (only for 2nd generation instances) The hour of the day when disruptive updates (updates that require an instance restart) to this CloudSQL instance can be made. Hour of day 0-23. Default: `0`.
-    * The string must match the regular expression `^([0-9]|1[0-9]|2[0-3])$`.
  * `replication_type` _string_ - The type of replication this instance uses. This can be either ASYNCHRONOUS or SYNCHRONOUS. Default: `SYNCHRONOUS`.
     * The value must be one of: [ASYNCHRONOUS SYNCHRONOUS].
- * `auto_resize` _string_ - (only for 2nd generation instances) Configuration to increase storage size automatically. Default: `false`.
+ * `auto_resize` _string_ - Configuration to increase storage size automatically. Default: `false`.
     * The value must be one of: [false true].
- * `auto_resize_limit` _string_ - (only for 2nd generation instances) The maximum size to which storage capacity can be automatically increased. Default: `0`.
+ * `auto_resize_limit` _string_ - The maximum size to which storage capacity can be automatically increased. Default: `0`.
     * Examples: [10 500 10230].
     * The string must have at most 5 characters.
     * The string must match the regular expression `^[0-9][0-9]*$`.
+ * `availability_type` _string_ - Availability type specifies whether the instance serves data from multiple zones. Default: `ZONAL`.
+    * The value must be one of: [REGIONAL ZONAL].
 
 
 ## Binding
@@ -91,7 +88,7 @@ Google CloudSQL for MySQL is a fully-managed MySQL database service.
     * Examples: [112447814736626230844].
  * `CaCert` _string_ - **Required** The server Certificate Authority's certificate.
     * Examples: [-----BEGIN CERTIFICATE-----BASE64 Certificate Text-----END CERTIFICATE-----].
- * `ClientCert` _string_ - **Required** The client certificate. For First Generation instances, the new certificate does not take effect until the instance is restarted.
+ * `ClientCert` _string_ - **Required** The client certificate.
     * Examples: [-----BEGIN CERTIFICATE-----BASE64 Certificate Text-----END CERTIFICATE-----].
  * `ClientKey` _string_ - **Required** The client certificate key.
     * Examples: [-----BEGIN RSA PRIVATE KEY-----BASE64 Key Text-----END RSA PRIVATE KEY-----].
@@ -211,16 +208,16 @@ or disabled by the broker administrator.
 ### HA Instance
 
 
-An HA setup for MySQL with failover replica
+A regionally available database with automatic failover.
 Uses plan: `7d8f9ade-30c1-4c96-b622-ea0205cc5f0b`.
 
 **Provision**
 
 ```javascript
 {
+    "availability_type": "REGIONAL",
     "backups_enabled": "true",
-    "binlog": "true",
-    "failover_replica_suffix": "-failover"
+    "binlog": "true"
 }
 ```
 
@@ -235,7 +232,7 @@ Uses plan: `7d8f9ade-30c1-4c96-b622-ea0205cc5f0b`.
 **Cloud Foundry Example**
 
 <pre>
-$ cf create-service google-cloudsql-mysql mysql-db-f1-micro my-google-cloudsql-mysql-example -c `{"backups_enabled":"true","binlog":"true","failover_replica_suffix":"-failover"}`
+$ cf create-service google-cloudsql-mysql mysql-db-f1-micro my-google-cloudsql-mysql-example -c `{"availability_type":"REGIONAL","backups_enabled":"true","binlog":"true"}`
 $ cf bind-service my-app my-google-cloudsql-mysql-example -c `{"role":"cloudsql.editor"}`
 </pre>
 

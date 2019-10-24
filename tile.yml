@@ -383,17 +383,6 @@ service_plan_forms:
     description: Case-sensitive tier/machine type name (see https://cloud.google.com/sql/pricing
       for more information).
     configurable: true
-  - name: pricing_plan
-    type: dropdown_select
-    default: PER_USE
-    label: Pricing Plan
-    description: Select a pricing plan (only for 1st generation instances).
-    configurable: true
-    options:
-    - name: PACKAGE
-      label: Package
-    - name: PER_USE
-      label: Per-Use
   - name: max_disk_size
     type: string
     default: "10"
@@ -430,14 +419,6 @@ service_plan_forms:
     description: A string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory
       is at least 3840.
     configurable: true
-  - name: pricing_plan
-    type: dropdown_select
-    default: PER_USE
-    label: Pricing Plan
-    description: The pricing plan.
-    options:
-    - name: PER_USE
-      label: Per-Use
   - name: max_disk_size
     type: string
     default: "10"

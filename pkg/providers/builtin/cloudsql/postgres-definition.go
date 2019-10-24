@@ -178,25 +178,6 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 		},
 		ProvisionInputVariables: append([]broker.BrokerVariable{
 			{
-				FieldName: "version",
-				Type:      broker.JsonTypeString,
-				Details:   "The database engine type and version.",
-				Default:   "POSTGRES_9_6",
-				Enum: map[interface{}]string{
-					"POSTGRES_9_6": "PostgreSQL 9.6.X",
-					"POSTGRES_11":  "PostgreSQL 11",
-				},
-			},
-			{
-				FieldName: "failover_replica_name",
-				Type:      broker.JsonTypeString,
-				Details:   "DEPRECATED! Use availability_type for setting up high availability.",
-				Default:   "",
-				Constraints: validation.NewConstraintBuilder().
-					MaxLength(0). // Postgres does not use failover replicas - it uses availability_type
-					Build(),
-			},
-			{
 				FieldName: "instance_name",
 				Type:      broker.JsonTypeString,
 				Details:   "Name of the CloudSQL instance.",
@@ -213,6 +194,16 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 				Default:   identifierTemplate,
 			},
 			{
+				FieldName: "version",
+				Type:      broker.JsonTypeString,
+				Details:   "The database engine type and version.",
+				Default:   "POSTGRES_9_6",
+				Enum: map[interface{}]string{
+					"POSTGRES_9_6": "PostgreSQL 9.6.X",
+					"POSTGRES_11":  "PostgreSQL 11",
+				},
+			},
+			{
 				FieldName: "activation_policy",
 				Type:      broker.JsonTypeString,
 				Details:   "The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE.",
@@ -220,16 +211,6 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 				Enum: map[interface{}]string{
 					"ALWAYS": "Always, instance is always on.",
 					"NEVER":  "Never, instance does not turn on if a request arrives.",
-				},
-			},
-			{
-				FieldName: "availability_type",
-				Type:      broker.JsonTypeString,
-				Details:   "Availability type specifies whether the instance serves data from multiple zones.",
-				Default:   "ZONAL",
-				Enum: map[interface{}]string{
-					"ZONAL":    "The instance serves data from only one zone. Outages in that zone affect data accessibility",
-					"REGIONAL": "The instance can serve data from more than one zone in a region (it is highly available).",
 				},
 			},
 		}, commonProvisionVariables()...),
@@ -241,7 +222,6 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 			{Name: "database_name", Default: `${database_name == "" ? "` + identifierTemplate + `" : database_name}`, Overwrite: true},
 
 			// these variables are fixed for PostgreSQL
-			{Name: "is_first_gen", Default: `false`, Overwrite: true},
 			{Name: "binlog", Default: `false`, Overwrite: true},
 
 			// validation
@@ -260,15 +240,6 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 				Required:  true,
 			},
 			{
-				FieldName: "pricing_plan",
-				Type:      broker.JsonTypeString,
-				Details:   "The pricing plan.",
-				Enum: map[interface{}]string{
-					"PER_USE": "Per-Use",
-				},
-				Required: true,
-			},
-			{
 				FieldName: "max_disk_size",
 				Type:      broker.JsonTypeString,
 				Details:   "Maximum disk size in GB, 10 is the minimum.",
@@ -283,7 +254,6 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 				PlanId:      "c4e68ab5-34ca-4d02-857d-3e6b3ab079a7",
 				ProvisionParams: map[string]interface{}{
 					"backups_enabled": "false",
-					"binlog":          "false",
 					"disk_size":       "25",
 				},
 				BindParams: map[string]interface{}{
@@ -296,8 +266,20 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 				PlanId:      "2513d4d9-684b-4c3c-add4-6404969006de",
 				ProvisionParams: map[string]interface{}{
 					"backups_enabled": "false",
-					"binlog":          "false",
 					"disk_size":       "10",
+				},
+				BindParams: map[string]interface{}{
+					"role": "cloudsql.editor",
+				},
+			},
+			{
+				Name:        "HA Instance",
+				Description: "A regionally available database with automatic failover.",
+				PlanId:      "c4e68ab5-34ca-4d02-857d-3e6b3ab079a7",
+				ProvisionParams: map[string]interface{}{
+					"backups_enabled":   "false",
+					"disk_size":         "25",
+					"availability_type": "REGIONAL",
 				},
 				BindParams: map[string]interface{}{
 					"role": "cloudsql.editor",

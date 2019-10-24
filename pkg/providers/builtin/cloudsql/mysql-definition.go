@@ -182,35 +182,6 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 
 		ProvisionInputVariables: append([]broker.BrokerVariable{
 			{
-				FieldName: "version",
-				Type:      broker.JsonTypeString,
-				Details:   "The database engine type and version. Defaults to `MYSQL_5_6` for 1st gen MySQL instances or `MYSQL_5_7` for 2nd gen MySQL instances.",
-				Enum: map[interface{}]string{
-					"MYSQL_5_5": "MySQL 5.5.X (Will be deprecated from 4 March 2020)",
-					"MYSQL_5_6": "MySQL 5.6.X",
-					"MYSQL_5_7": "MySQL 5.7.X",
-				},
-			},
-			{
-				FieldName: "failover_replica_name",
-				Type:      broker.JsonTypeString,
-				Details:   "(only for 2nd generation MySQL instances) If specified, creates a failover replica with the given name. (Requires binlog and backups to be enabled).",
-				Default:   "",
-				Constraints: validation.NewConstraintBuilder().
-					Pattern("^(|[a-z][a-z0-9-]+)$").
-					MaxLength(87).
-					Build(),
-			},
-			{
-				FieldName: "failover_replica_suffix",
-				Type:      broker.JsonTypeString,
-				Details:   "(only for 2nd generation MySQL instances) If specified, creates a failover replica with the instance name and this suffix. Overrides `failover_replica_name`. (Requires binlog and backups to be enabled).",
-				Default:   "",
-				Constraints: validation.NewConstraintBuilder().
-					Pattern("^(|[a-z0-9-]+)$").
-					Build(),
-			},
-			{
 				FieldName: "instance_name",
 				Type:      broker.JsonTypeString,
 				Details:   "Name of the CloudSQL instance.",
@@ -227,20 +198,30 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 				Default:   identifierTemplate,
 			},
 			{
+				FieldName: "version",
+				Type:      broker.JsonTypeString,
+				Details:   "The database engine type and version.",
+				Default:   "MYSQL_5_7",
+				Enum: map[interface{}]string{
+					"MYSQL_5_6": "MySQL 5.6.X",
+					"MYSQL_5_7": "MySQL 5.7.X",
+				},
+			},
+			{
 				FieldName: "activation_policy",
 				Type:      broker.JsonTypeString,
 				Details:   "The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE.",
 				Default:   "ALWAYS",
 				Enum: map[interface{}]string{
-					"ALWAYS":    "Always, instance is always on.",
-					"NEVER":     "Never, instance does not turn on if a request arrives.",
-					"ON_DEMAND": "On Demand, instance responds to incoming requests and turns off when not in use.",
+					"ALWAYS": "Always, instance is always on.",
+					"NEVER":  "Never, instance does not turn on if a request arrives.",
 				},
 			},
 			{
 				FieldName: "binlog",
 				Type:      broker.JsonTypeString,
-				Details:   "Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use.",
+				Details:   "Whether binary log is enabled. Must be enabled for high availability.",
+				Default:   "true",
 				Enum: map[interface{}]string{
 					"true":  "use binary log",
 					"false": "do not use binary log",
@@ -254,15 +235,8 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 			{Name: "instance_name", Default: `${instance_name == "" ? "` + identifierTemplate + `" : instance_name}`, Overwrite: true},
 			{Name: "database_name", Default: `${database_name == "" ? "` + identifierTemplate + `" : database_name}`, Overwrite: true},
 
-			{Name: "is_first_gen", Default: `${regexp.matches("^(d|D)[0-9]+$", tier)}`, Overwrite: true},
-			{Name: "version", Default: `${is_first_gen ? "MYSQL_5_6" : "MYSQL_5_7"}`, Overwrite: false},
-			{Name: "binlog", Default: `${is_first_gen ? false : true}`, Overwrite: false},
-			{Name: "failover_replica_name", Default: `${failover_replica_suffix == "" ? failover_replica_name : "${instance_name}${failover_replica_suffix}"}`, Overwrite: true},
-
-			// availability_type is only available for Postgres instances
-			{Name: "availability_type", Default: ``, Overwrite: true},
-
 			// validation
+			{Name: "_", Default: `${assert(regexp.matches("^(d|D)[0-9]+$", tier) == false, "First generation support will end March 25th, 2020, please use a second gen machine type.")}`, Overwrite: true},
 			{Name: "_", Default: `${assert(disk_size <= max_disk_size, "disk size (${disk_size}) is greater than max allowed disk size for this plan (${max_disk_size})")}`, Overwrite: true},
 		},
 		DefaultRoleWhitelist:  roleWhitelist(),
@@ -277,17 +251,6 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 				Required:  true,
 			},
 			{
-				FieldName: "pricing_plan",
-				Type:      broker.JsonTypeString,
-				Details:   "Select a pricing plan (only for 1st generation instances).",
-				Default:   "PER_USE",
-				Enum: map[interface{}]string{
-					"PER_USE": "Per-Use",
-					"PACKAGE": "Package",
-				},
-				Required: true,
-			},
-			{
 				FieldName: "max_disk_size",
 				Type:      broker.JsonTypeString,
 				Details:   "Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default).",
@@ -298,12 +261,12 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 		Examples: []broker.ServiceExample{
 			{
 				Name:        "HA Instance",
-				Description: "An HA setup for MySQL with failover replica",
+				Description: "A regionally available database with automatic failover.",
 				PlanId:      "7d8f9ade-30c1-4c96-b622-ea0205cc5f0b",
 				ProvisionParams: map[string]interface{}{
-					"backups_enabled":         "true",
-					"binlog":                  "true",
-					"failover_replica_suffix": "-failover",
+					"backups_enabled":   "true",
+					"binlog":            "true",
+					"availability_type": "REGIONAL",
 				},
 				BindParams: map[string]interface{}{
 					"role": "cloudsql.editor",
