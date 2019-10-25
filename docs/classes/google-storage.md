@@ -15,7 +15,7 @@ Unified object storage for developers and enterprises. Cloud Storage allows worl
  * `name` _string_ - The name of the bucket. There is a single global namespace shared by all buckets so it MUST be unique. Default: `pcf_sb_${counter.next()}_${time.nano()}`.
     * The string must have at most 222 characters.
     * The string must have at least 3 characters.
-    * The string must match the regular expression `^[A-Za-z0-9_\.]+$`.
+    * The string must match the regular expression `^[a-z0-9_.-]+$`.
  * `location` _string_ - The location of the bucket. Object data for objects in the bucket resides in physical storage within this region. See: https://cloud.google.com/storage/docs/bucket-locations Default: `US`.
     * Examples: [US EU southamerica-east1].
     * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
