@@ -188,7 +188,7 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 				Default:   identifierTemplate,
 				Constraints: validation.NewConstraintBuilder().
 					Pattern("^[a-z][a-z0-9-]+$").
-					MaxLength(87).
+					MaxLength(84).
 					Build(),
 			},
 			{

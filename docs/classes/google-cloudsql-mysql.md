@@ -13,7 +13,7 @@ Google CloudSQL for MySQL is a fully-managed MySQL database service.
 
 
  * `instance_name` _string_ - Name of the CloudSQL instance. Default: `pcf-sb-${counter.next()}-${time.nano()}`.
-    * The string must have at most 87 characters.
+    * The string must have at most 84 characters.
     * The string must match the regular expression `^[a-z][a-z0-9-]+$`.
  * `database_name` _string_ - Name of the database inside of the instance. Must be a valid identifier for your chosen database type. Default: `pcf-sb-${counter.next()}-${time.nano()}`.
  * `version` _string_ - The database engine type and version. Default: `MYSQL_5_7`.
