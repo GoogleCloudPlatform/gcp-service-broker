@@ -8,6 +8,14 @@ install: skip
 services:
   - docker
 
-script:
-  - go test -v ./... -tags=service_broker
-  - docker build -t gcp-service-broker .
+jobs:
+  include:
+    - stage: test
+      name: unit tests
+      script: ./hack/test.sh
+    - stage: test
+      name: verify generated sources
+      script: ./hack/verify-generated.sh
+    - stage: build
+      name: build docker image
+      script: docker build -t gcp-service-broker .
