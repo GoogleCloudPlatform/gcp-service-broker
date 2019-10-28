@@ -18,10 +18,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"time"
 
+	"code.cloudfoundry.org/lager"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
+	sqladmin "google.golang.org/api/sqladmin/v1beta4"
 )
 
 // inserts a new user into the database and creates new ssl certs
@@ -125,16 +129,9 @@ func (broker *CloudSQLBroker) deleteSqlUserAccount(ctx context.Context, binding 
 		hostToDelete = " "
 	}
 
-	op, err := client.Users.Delete(broker.ProjectId, instance.Name, hostToDelete, creds.Username).Do()
-	if err != nil {
-		return fmt.Errorf("Error deleting user: %s", err)
-	}
-
-	if err := broker.pollOperationUntilDone(ctx, op, broker.ProjectId); err != nil {
-		return fmt.Errorf("Error encountered waiting for operation %q to finish: %s", op.Name, err)
-	}
-
-	return nil
+	return broker.retryWhileConflict(ctx, "user", creds.Username, func() (*sqladmin.Operation, error) {
+		return client.Users.Delete(broker.ProjectId, instance.Name, hostToDelete, creds.Username).Do()
+	})
 }
 
 func (broker *CloudSQLBroker) createSqlSslCert(ctx context.Context, vars *varcontext.VarContext) (*sqlSslCert, error) {
@@ -173,24 +170,45 @@ func (broker *CloudSQLBroker) deleteSqlSslCert(ctx context.Context, binding mode
 		return fmt.Errorf("Error unmarshalling credentials: %s", err)
 	}
 
-	client, err := broker.createClient(ctx)
-	if err != nil {
-		return err
-	}
-
 	// If we didn't generate SSL certs for this binding, then we cannot delete them
 	if creds.CaCert == "" {
 		return nil
 	}
 
-	op, err := client.SslCerts.Delete(broker.ProjectId, instance.Name, creds.Sha1Fingerprint).Do()
+	client, err := broker.createClient(ctx)
 	if err != nil {
-		return fmt.Errorf("Error deleting ssl cert: %s", err)
+		return err
 	}
 
-	if err := broker.pollOperationUntilDone(ctx, op, broker.ProjectId); err != nil {
-		return fmt.Errorf("Error encountered waiting for operation %q to finish: %s", op.Name, err)
-	}
+	return broker.retryWhileConflict(ctx, "SSL Cert", creds.Sha1Fingerprint, func() (*sqladmin.Operation, error) {
+		return client.SslCerts.Delete(broker.ProjectId, instance.Name, creds.Sha1Fingerprint).Do()
+	})
+}
 
-	return nil
+func (broker *CloudSQLBroker) retryWhileConflict(ctx context.Context, typeName, instanceName string, callback func() (*sqladmin.Operation, error)) error {
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("couldn't delete %s %q, timed out", typeName, instanceName)
+
+		default:
+			op, err := callback()
+			if err != nil {
+				if isErrStatus(err, http.StatusConflict) {
+					time.Sleep(5 * time.Second)
+					continue
+				}
+
+				return fmt.Errorf("couldn't delete %s: %s", typeName, err)
+			}
+
+			broker.Logger.Info("started deletion operation", lager.Data{"type": typeName, "name": instanceName, "op": op})
+
+			if err := broker.pollOperationUntilDone(ctx, op, broker.ProjectId); err != nil {
+				return fmt.Errorf("Error encountered waiting for operation %q to finish: %s", op.Name, err)
+			}
+
+			return nil
+		}
+	}
 }
