@@ -241,7 +241,7 @@ To specify a custom plan manually, create the plan as JSON in a JSON array and s
 
 For example:
 <code>
-[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "display_name": setme, "description": setme, "service": setme, "tier": setme, "pricing_plan": setme, "max_disk_size": setme},...]
+[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "display_name": setme, "description": setme, "service": setme, "tier": setme, "max_disk_size": setme},...]
 </code>
 
 <table>
@@ -343,28 +343,6 @@ For example:
 </tr>
 
 <tr>
-  <td><tt>pricing_plan</tt></td>
-  <td><i>dropdown_select</i></td>
-  <td>Pricing Plan</td>
-  <td>
-  Select a pricing plan (only for 1st generation instances).
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>PER_USE</code></li>
-  <li>Valid Values:
-  <ul>
-    <li><tt>PACKAGE</tt> - Package</li><li><tt>PER_USE</tt> - Per-Use</li>
-  </ul>
-  </li>
-</ul>
-
-
-  </td>
-</tr>
-
-<tr>
   <td><tt>max_disk_size</tt></td>
   <td><i>string</i></td>
   <td>Max Disk Size</td>
@@ -390,7 +368,7 @@ To specify a custom plan manually, create the plan as JSON in a JSON array and s
 
 For example:
 <code>
-[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "display_name": setme, "description": setme, "service": setme, "tier": setme, "pricing_plan": setme, "max_disk_size": setme},...]
+[{"id":"00000000-0000-0000-0000-000000000000", "name": "custom-plan-1", "display_name": setme, "description": setme, "service": setme, "tier": setme, "max_disk_size": setme},...]
 </code>
 
 <table>
@@ -485,29 +463,6 @@ For example:
 
 <ul>
   <li><b>Required</b></li>
-</ul>
-
-
-  </td>
-</tr>
-
-<tr>
-  <td><tt>pricing_plan</tt></td>
-  <td><i>dropdown_select</i></td>
-  <td>Pricing Plan</td>
-  <td>
-  The pricing plan.
-
-
-<ul>
-  <li><b>Required</b></li>
-  <li>Default: <code>PER_USE</code></li>
-  <li>This option _is not_ user configurable. It must be set to the default.</li>
-  <li>Valid Values:
-  <ul>
-    <li><tt>PER_USE</tt> - Per-Use</li>
-  </ul>
-  </li>
 </ul>
 
 

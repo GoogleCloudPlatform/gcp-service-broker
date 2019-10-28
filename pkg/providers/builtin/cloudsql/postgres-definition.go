@@ -16,8 +16,8 @@ package cloudsql
 
 import (
 	"code.cloudfoundry.org/lager"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
@@ -184,7 +184,7 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 				Default:   identifierTemplate,
 				Constraints: validation.NewConstraintBuilder().
 					Pattern("^[a-z][a-z0-9-]+$").
-					MaxLength(75).
+					MaxLength(86).
 					Build(),
 			},
 			{
@@ -200,17 +200,8 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 				Default:   "POSTGRES_9_6",
 				Enum: map[interface{}]string{
 					"POSTGRES_9_6": "PostgreSQL 9.6.X",
+					"POSTGRES_11":  "PostgreSQL 11",
 				},
-			},
-			{
-				FieldName: "failover_replica_name",
-				Type:      broker.JsonTypeString,
-				Details:   "(only for 2nd generation instances) If specified, creates a failover replica with the given name.",
-				Default:   "",
-				Constraints: validation.NewConstraintBuilder().
-					Pattern("^(|[a-z][a-z0-9-]+)$").
-					MaxLength(75).
-					Build(),
 			},
 			{
 				FieldName: "activation_policy",
@@ -231,7 +222,6 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 			{Name: "database_name", Default: `${database_name == "" ? "` + identifierTemplate + `" : database_name}`, Overwrite: true},
 
 			// these variables are fixed for PostgreSQL
-			{Name: "is_first_gen", Default: `false`, Overwrite: true},
 			{Name: "binlog", Default: `false`, Overwrite: true},
 
 			// validation
@@ -250,15 +240,6 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 				Required:  true,
 			},
 			{
-				FieldName: "pricing_plan",
-				Type:      broker.JsonTypeString,
-				Details:   "The pricing plan.",
-				Enum: map[interface{}]string{
-					"PER_USE": "Per-Use",
-				},
-				Required: true,
-			},
-			{
 				FieldName: "max_disk_size",
 				Type:      broker.JsonTypeString,
 				Details:   "Maximum disk size in GB, 10 is the minimum.",
@@ -273,7 +254,6 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 				PlanId:      "c4e68ab5-34ca-4d02-857d-3e6b3ab079a7",
 				ProvisionParams: map[string]interface{}{
 					"backups_enabled": "false",
-					"binlog":          "false",
 					"disk_size":       "25",
 				},
 				BindParams: map[string]interface{}{
@@ -286,8 +266,20 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 				PlanId:      "2513d4d9-684b-4c3c-add4-6404969006de",
 				ProvisionParams: map[string]interface{}{
 					"backups_enabled": "false",
-					"binlog":          "false",
 					"disk_size":       "10",
+				},
+				BindParams: map[string]interface{}{
+					"role": "cloudsql.editor",
+				},
+			},
+			{
+				Name:        "HA Instance",
+				Description: "A regionally available database with automatic failover.",
+				PlanId:      "c4e68ab5-34ca-4d02-857d-3e6b3ab079a7",
+				ProvisionParams: map[string]interface{}{
+					"backups_enabled":   "false",
+					"disk_size":         "25",
+					"availability_type": "REGIONAL",
 				},
 				BindParams: map[string]interface{}{
 					"role": "cloudsql.editor",

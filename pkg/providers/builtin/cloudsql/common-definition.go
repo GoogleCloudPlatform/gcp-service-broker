@@ -15,8 +15,8 @@
 package cloudsql
 
 import (
-	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 )
@@ -80,26 +80,6 @@ func commonBindComputedVariables() []varcontext.DefaultVariable {
 func commonProvisionVariables() []broker.BrokerVariable {
 	return []broker.BrokerVariable{
 		{
-			FieldName: "binlog",
-			Type:      broker.JsonTypeString,
-			Details:   "Whether binary log is enabled. If backup configuration is disabled, binary log must be disabled as well. Defaults: `false` for 1st gen, `true` for 2nd gen, set to `true` to use.",
-			Enum: map[interface{}]string{
-				"true":  "use binary log",
-				"false": "do not use binary log",
-			},
-		},
-		{
-			FieldName: "disk_size",
-			Type:      broker.JsonTypeString,
-			Details:   "In GB (only for 2nd generation instances).",
-			Default:   "10",
-			Constraints: validation.NewConstraintBuilder().
-				Pattern("^[1-9][0-9]+$").
-				MaxLength(5).
-				Examples("10", "500", "10230").
-				Build(),
-		},
-		{
 			FieldName: "region",
 			Type:      broker.JsonTypeString,
 			Details:   "The geographical region. See the instance locations list https://cloud.google.com/sql/docs/mysql/instance-locations for which regions support which databases.",
@@ -110,9 +90,30 @@ func commonProvisionVariables() []broker.BrokerVariable {
 				Build(),
 		},
 		{
+			FieldName: "disk_size",
+			Type:      broker.JsonTypeString,
+			Details:   "In GB.",
+			Default:   "10",
+			Constraints: validation.NewConstraintBuilder().
+				Pattern("^[1-9][0-9]+$").
+				MaxLength(5).
+				Examples("10", "500", "10230").
+				Build(),
+		},
+		{
+			FieldName: "database_flags",
+			Type:      broker.JsonTypeString,
+			Details:   "The database flags passed to the instance at startup (comma separated list of flags, e.g. general_log=on,skip_show_database=off).",
+			Default:   "",
+			Constraints: validation.NewConstraintBuilder().
+				Pattern(`^(|([a-z_]+=[a-zA-Z0-9\.\+\:-]+)(,[a-z_]+=[a-zA-Z0-9\.\+\:-]+)*)$`).
+				Examples("long_query_time=10", "general_log=on,skip_show_database=off").
+				Build(),
+		},
+		{
 			FieldName: "zone",
 			Type:      broker.JsonTypeString,
-			Details:   "(only for 2nd generation instances)",
+			Details:   "Optional, the specific zone in the region to run the instance.",
 			Default:   "",
 			Constraints: validation.NewConstraintBuilder().
 				Pattern("^(|[A-Za-z][-a-z0-9A-Z]+)$").
@@ -121,7 +122,7 @@ func commonProvisionVariables() []broker.BrokerVariable {
 		{
 			FieldName: "disk_type",
 			Type:      broker.JsonTypeString,
-			Details:   "(only for 2nd generation instances)",
+			Details:   "The type of disk backing the database.",
 			Default:   "PD_SSD",
 			Enum: map[interface{}]string{
 				"PD_SSD": "flash storage drive",
@@ -131,7 +132,7 @@ func commonProvisionVariables() []broker.BrokerVariable {
 		{
 			FieldName: "maintenance_window_day",
 			Type:      broker.JsonTypeString,
-			Details:   "(only for 2nd generation instances) This specifies when a v2 CloudSQL instance should preferably be restarted for system maintenance purposes. Day of week (1-7), starting on Monday.",
+			Details:   "The day of week a CloudSQL instance should preferably be restarted for system maintenance purposes. (1-7), starting on Monday.",
 			Default:   "1",
 			Enum: map[interface{}]string{
 				"1": "Monday",
@@ -146,7 +147,7 @@ func commonProvisionVariables() []broker.BrokerVariable {
 		{
 			FieldName: "maintenance_window_hour",
 			Type:      broker.JsonTypeString,
-			Details:   "(only for 2nd generation instances) The hour of the day when disruptive updates (updates that require an instance restart) to this CloudSQL instance can be made. Hour of day 0-23.",
+			Details:   "The hour of the day when disruptive updates (updates that require an instance restart) to this CloudSQL instance can be made. Hour of day 0-23.",
 			Default:   "0",
 			Constraints: validation.NewConstraintBuilder().
 				Pattern("^([0-9]|1[0-9]|2[0-3])$").
@@ -190,11 +191,32 @@ func commonProvisionVariables() []broker.BrokerVariable {
 		{
 			FieldName: "auto_resize",
 			Type:      broker.JsonTypeString,
-			Details:   "(only for 2nd generation instances) Configuration to increase storage size automatically.",
+			Details:   "Configuration to increase storage size automatically.",
 			Default:   "false",
 			Enum: map[interface{}]string{
 				"true":  "increase storage size automatically",
 				"false": "do not increase storage size automatically",
+			},
+		},
+		{
+			FieldName: "auto_resize_limit",
+			Type:      broker.JsonTypeString,
+			Details:   "The maximum size to which storage capacity can be automatically increased.",
+			Default:   "0",
+			Constraints: validation.NewConstraintBuilder().
+				Pattern("^[0-9][0-9]*$").
+				MaxLength(5).
+				Examples("10", "500", "10230").
+				Build(),
+		},
+		{
+			FieldName: "availability_type",
+			Type:      broker.JsonTypeString,
+			Details:   "Availability type specifies whether the instance serves data from multiple zones.",
+			Default:   "ZONAL",
+			Enum: map[interface{}]string{
+				"ZONAL":    "The instance serves data from only one zone (NOT highly available).",
+				"REGIONAL": "The instance serves data zones in a region (highly available).",
 			},
 		},
 	}
@@ -215,7 +237,7 @@ func commonBindOutputVariables() []broker.BrokerVariable {
 		{
 			FieldName: "ClientCert",
 			Type:      broker.JsonTypeString,
-			Details:   "The client certificate. For First Generation instances, the new certificate does not take effect until the instance is restarted.",
+			Details:   "The client certificate.",
 			Required:  true,
 			Constraints: validation.NewConstraintBuilder().
 				Examples("-----BEGIN CERTIFICATE-----BASE64 Certificate Text-----END CERTIFICATE-----").

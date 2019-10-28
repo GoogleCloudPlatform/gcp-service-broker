@@ -39,7 +39,6 @@ import (
 const (
 	secondGenPricingPlan         string = "PER_USE"
 	postgresDefaultVersion       string = "POSTGRES_9_6"
-	mySqlFirstGenDefaultVersion  string = "MYSQL_5_6"
 	mySqlSecondGenDefaultVersion string = "MYSQL_5_7"
 )
 
@@ -95,12 +94,7 @@ func (b *CloudSQLBroker) Provision(ctx context.Context, provisionContext *varcon
 func createProvisionRequest(vars *varcontext.VarContext) (*googlecloudsql.DatabaseInstance, *InstanceInformation, error) {
 
 	// set up database information
-	var di *googlecloudsql.DatabaseInstance
-	if vars.GetBool("is_first_gen") {
-		di = createFirstGenRequest(vars)
-	} else {
-		di = createInstanceRequest(vars)
-	}
+	di := createInstanceRequest(vars)
 
 	instanceName := vars.GetString("instance_name")
 
@@ -136,30 +130,20 @@ func varctxGetAcls(vars *varcontext.VarContext) []*googlecloudsql.AclEntry {
 	return openAcls
 }
 
-func createFirstGenRequest(vars *varcontext.VarContext) *googlecloudsql.DatabaseInstance {
-	// set up instance resource
-	return &googlecloudsql.DatabaseInstance{
-		Settings: &googlecloudsql.Settings{
-			IpConfiguration: &googlecloudsql.IpConfiguration{
-				RequireSsl:  true,
-				Ipv4Enabled: true,
-			},
-			Tier:             vars.GetString("tier"),
-			PricingPlan:      vars.GetString("pricing_plan"),
-			ActivationPolicy: vars.GetString("activation_policy"),
-			ReplicationType:  vars.GetString("replication_type"),
-		},
-		DatabaseVersion: vars.GetString("version"),
-		Region:          vars.GetString("region"),
-	}
-}
-
 func createInstanceRequest(vars *varcontext.VarContext) *googlecloudsql.DatabaseInstance {
+
+	// Split and parse DatabaseFlags
+	databaseFlags := parseDatabaseFlags(vars.GetString("database_flags"))
+
 	autoResize := vars.GetBool("auto_resize")
 
 	// set up instance resource
+	// https://github.com/googleapis/google-api-go-client/blob/master/sqladmin/v1beta4/sqladmin-gen.go#L647
 	return &googlecloudsql.DatabaseInstance{
 		Settings: &googlecloudsql.Settings{
+			AvailabilityType: vars.GetString("availability_type"),
+			// BackupConfiguration gets defined in createProvisionRequest
+			DatabaseFlags: databaseFlags,
 			IpConfiguration: &googlecloudsql.IpConfiguration{
 				RequireSsl:  true,
 				Ipv4Enabled: true,
@@ -176,17 +160,40 @@ func createInstanceRequest(vars *varcontext.VarContext) *googlecloudsql.Database
 				UpdateTrack:     "stable",
 				ForceSendFields: []string{"Day", "Hour"},
 			},
-			PricingPlan:       secondGenPricingPlan,
-			ActivationPolicy:  vars.GetString("activation_policy"),
-			ReplicationType:   vars.GetString("replication_type"),
-			StorageAutoResize: &autoResize,
+			PricingPlan:            secondGenPricingPlan,
+			ActivationPolicy:       vars.GetString("activation_policy"),
+			StorageAutoResize:      &autoResize,
+			StorageAutoResizeLimit: int64(vars.GetInt("auto_resize_limit")),
+			// UserLabels get defined in createProvisionRequest
 		},
 		DatabaseVersion: vars.GetString("version"),
 		Region:          vars.GetString("region"),
-		FailoverReplica: &googlecloudsql.DatabaseInstanceFailoverReplica{
-			Name: vars.GetString("failover_replica_name"),
-		},
 	}
+}
+
+func parseDatabaseFlags(flagsvar string) []*googlecloudsql.DatabaseFlags {
+	databaseFlags := []*googlecloudsql.DatabaseFlags{}
+
+	// Return empty DatabaseFlags when none is defined
+	if flagsvar == "" {
+		return databaseFlags
+	}
+
+	// Get each separate flag
+	flags := strings.Split(flagsvar, ",")
+
+	// Separate the flags into name and value
+	for _, f := range flags {
+		flag := strings.Split(f, "=")
+
+		databaseFlags = append(databaseFlags, &googlecloudsql.DatabaseFlags{
+			Name:            flag[0],
+			Value:           flag[1],
+			ForceSendFields: []string{"Value"},
+		})
+	}
+
+	return databaseFlags
 }
 
 // Bind creates a new username, password, and set of ssl certs for the given instance.
@@ -432,7 +439,7 @@ func (b *CloudSQLBroker) deleteInstance(ctx context.Context, sqlService *sqladmi
 		return fmt.Errorf("couldn't delete instance: %s", err)
 	}
 
-	if actualInstance.FailoverReplica != nil {
+	if actualInstance.FailoverReplica != nil && actualInstance.FailoverReplica.Name != "" {
 		b.Logger.Info("instance has a failover, deleting that first", lager.Data{"name": instanceName, "failover": actualInstance.FailoverReplica.Name})
 
 		if err := b.deleteInstance(ctx, sqlService, actualInstance.FailoverReplica.Name); err != nil {
@@ -440,27 +447,9 @@ func (b *CloudSQLBroker) deleteInstance(ctx context.Context, sqlService *sqladmi
 		}
 	}
 
-	for {
-		select {
-		case <-ctx.Done():
-			return fmt.Errorf("couldn't delete instance %q, timed out", instanceName)
-
-		default:
-			op, err := sqlService.Instances.Delete(b.ProjectId, instanceName).Do()
-			if err != nil {
-				if isErrStatus(err, http.StatusConflict) {
-					time.Sleep(5 * time.Second)
-					continue
-				}
-
-				return fmt.Errorf("couldn't delete instance: %s", err)
-			}
-
-			b.Logger.Info("started deletion operation", lager.Data{"name": instanceName, "op": op})
-
-			return b.pollOperationUntilDone(ctx, op, b.ProjectId)
-		}
-	}
+	return b.retryWhileConflict(ctx, "instance", instanceName, func() (*sqladmin.Operation, error) {
+		return sqlService.Instances.Delete(b.ProjectId, instanceName).Do()
+	})
 }
 
 func isErrStatus(err error, httpStatusCode int) bool {

@@ -66,7 +66,7 @@ func TestCreateProvisionRequest(t *testing.T) {
 	}{
 		"blank instance names get generated": {
 			Service:    MysqlServiceDefinition(),
-			PlanId:     mysqlFirstgenPlan,
+			PlanId:     mysqlSecondGenPlan,
 			UserParams: `{"instance_name":""}`,
 			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
 				if len(di.Name) == 0 {
@@ -76,38 +76,12 @@ func TestCreateProvisionRequest(t *testing.T) {
 		},
 
 		"tiers matching (D|d)\\d+ get firstgen outputs for MySQL": {
-			Service:    MysqlServiceDefinition(),
-			PlanId:     mysqlFirstgenPlan,
-			UserParams: `{"name":""}`,
-			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
-				if di.Settings.LocationPreference != nil {
-					t.Error("second-gen instance created for first-gen plan")
-				}
-			},
+			Service:     MysqlServiceDefinition(),
+			PlanId:      mysqlFirstgenPlan,
+			UserParams:  `{"name":""}`,
+			ErrContains: "First generation support will end March 25th, 2020, please use a second gen machine type",
 		},
 
-		"first-gen MySQL defaults": {
-			Service:    MysqlServiceDefinition(),
-			PlanId:     mysqlFirstgenPlan,
-			UserParams: `{}`,
-			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
-				if di.DatabaseVersion != mySqlFirstGenDefaultVersion {
-					t.Errorf("expected version to default to %s for first gen plan got %s", mySqlFirstGenDefaultVersion, di.DatabaseVersion)
-				}
-
-				if di.Settings.BackupConfiguration.BinaryLogEnabled == true {
-					t.Error("Expected binlog to be off for first gen MySQL")
-				}
-
-				if len(di.Name) == 0 {
-					t.Error("instance name wasn't generated")
-				}
-
-				if di.Settings.MaintenanceWindow != nil {
-					t.Error("Expected no maintenance window by default")
-				}
-			},
-		},
 		"second-gen MySQL defaults": {
 			Service:    MysqlServiceDefinition(),
 			PlanId:     mysqlSecondGenPlan,
@@ -242,36 +216,6 @@ func TestCreateProvisionRequest(t *testing.T) {
 			UserParams:  `{"disk_size":"99999"}`,
 			Validate:    func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {},
 			ErrContains: "disk size",
-		},
-
-		"failover name specified": {
-			Service:    MysqlServiceDefinition(),
-			PlanId:     mysqlSecondGenPlan,
-			UserParams: `{"failover_replica_name":"my-replica"}`,
-			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
-				if di.FailoverReplica == nil {
-					t.Errorf("Expected FailoverReplica to not be nil")
-				}
-
-				if di.FailoverReplica.Name != "my-replica" {
-					t.Errorf("Expected FailoverReplica.Name to be 'my-replica' got %s.", di.FailoverReplica.Name)
-				}
-			},
-		},
-
-		"failover suffix overrides failover name": {
-			Service:    MysqlServiceDefinition(),
-			PlanId:     mysqlSecondGenPlan,
-			UserParams: `{"instance_name":"my-instance", "failover_replica_name":"my-replica", "failover_replica_suffix":"-failover"}`,
-			Validate: func(t *testing.T, di googlecloudsql.DatabaseInstance, ii InstanceInformation) {
-				if di.FailoverReplica == nil {
-					t.Errorf("Expected FailoverReplica to not be nil")
-				}
-
-				if di.FailoverReplica.Name != "my-instance-failover" {
-					t.Errorf("Expected FailoverReplica.Name to be 'my-replica-failover' got %s.", di.FailoverReplica.Name)
-				}
-			},
 		},
 	}
 
