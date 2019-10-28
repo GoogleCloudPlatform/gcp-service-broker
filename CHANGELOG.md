@@ -18,6 +18,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Support for MySQL 5.5.
 - Support for first generation CloudSQL instances and their associated fields.
 
+## [4.4.0] - 2019-09-25
+
+### Fixed
+- Fixed custom plans from the tile not working.
+
+### Added
+- Built-in support for Redis.
+- Built-in support for Filestore.
+
 ## [4.3.0] - 2019-08-26
 
 ### Fixed
