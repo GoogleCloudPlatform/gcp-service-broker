@@ -15,7 +15,7 @@
 package utils
 
 // Version sets the version for the whole GCP service broker software.
-const Version = "4.4.0"
+const Version = "5.0.0"
 
 // This custom user agent string is added to provision calls so that Google can track the aggregated use of this tool
 // We can better advocate for devoting resources to supporting cloud foundry and this service broker if we can show
