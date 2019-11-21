@@ -253,8 +253,8 @@ func generateServicePlanForm(svc *broker.ServiceDefinition) (Form, error) {
 				Type:         "dropdown_select",
 				Description:  "The service this plan is associated with.",
 				Default:      entry.ID,
+				Optional:     false,
 				Configurable: true,
-				Optional:     true,
 				Options: []FormOption{
 					{
 						Name:  entry.ID,

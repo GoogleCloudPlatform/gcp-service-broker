@@ -179,7 +179,7 @@ For example:
 
 
 <ul>
-  <li><i>Optional</i></li>
+  <li><b>Required</b></li>
   <li>Default: <code>b8e19880-ac58-42ef-b033-f7cd9c94d1fe</code></li>
   <li>Valid Values:
   <ul>
@@ -311,7 +311,7 @@ For example:
 
 
 <ul>
-  <li><i>Optional</i></li>
+  <li><b>Required</b></li>
   <li>Default: <code>4bc59b9a-8520-409f-85da-1c7552315863</code></li>
   <li>Valid Values:
   <ul>
@@ -437,7 +437,7 @@ For example:
 
 
 <ul>
-  <li><i>Optional</i></li>
+  <li><b>Required</b></li>
   <li>Default: <code>cbad6d78-a73c-432d-b8ff-b219a17a803a</code></li>
   <li>Valid Values:
   <ul>
@@ -563,7 +563,7 @@ For example:
 
 
 <ul>
-  <li><i>Optional</i></li>
+  <li><b>Required</b></li>
   <li>Default: <code>51b3e27e-d323-49ce-8c5f-1211e6409e82</code></li>
   <li>Valid Values:
   <ul>
@@ -673,7 +673,7 @@ For example:
 
 
 <ul>
-  <li><i>Optional</i></li>
+  <li><b>Required</b></li>
   <li>Default: <code>b9e4332e-b42b-4680-bda5-ea1506797474</code></li>
   <li>Valid Values:
   <ul>
