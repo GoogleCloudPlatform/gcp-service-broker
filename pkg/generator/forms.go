@@ -248,11 +248,13 @@ func generateServicePlanForm(svc *broker.ServiceDefinition) (Form, error) {
 				Configurable: true,
 			},
 			{
-				Name:        "service",
-				Label:       "Service",
-				Type:        "dropdown_select",
-				Description: "The service this plan is associated with.",
-				Default:     entry.ID,
+				Name:         "service",
+				Label:        "Service",
+				Type:         "dropdown_select",
+				Description:  "The service this plan is associated with.",
+				Default:      entry.ID,
+				Configurable: true,
+				Optional:     true,
 				Options: []FormOption{
 					{
 						Name:  entry.ID,
@@ -377,7 +379,6 @@ func brokerVariableToFormProperty(v broker.BrokerVariable) FormProperty {
 		formInput.Options = opts
 
 		if len(opts) == 1 {
-			formInput.Configurable = false
 			formInput.Default = opts[0].Name
 		}
 	}

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+- Form fields are now optional to work with OpsMan settings.
+
 ## [5.0.0] - 2019-10-28
 
 ### Added

@@ -179,9 +179,8 @@ For example:
 
 
 <ul>
-  <li><b>Required</b></li>
+  <li><i>Optional</i></li>
   <li>Default: <code>b8e19880-ac58-42ef-b033-f7cd9c94d1fe</code></li>
-  <li>This option _is not_ user configurable. It must be set to the default.</li>
   <li>Valid Values:
   <ul>
     <li><tt>b8e19880-ac58-42ef-b033-f7cd9c94d1fe</tt> - Google Bigtable</li>
@@ -312,9 +311,8 @@ For example:
 
 
 <ul>
-  <li><b>Required</b></li>
+  <li><i>Optional</i></li>
   <li>Default: <code>4bc59b9a-8520-409f-85da-1c7552315863</code></li>
-  <li>This option _is not_ user configurable. It must be set to the default.</li>
   <li>Valid Values:
   <ul>
     <li><tt>4bc59b9a-8520-409f-85da-1c7552315863</tt> - Google CloudSQL for MySQL</li>
@@ -439,9 +437,8 @@ For example:
 
 
 <ul>
-  <li><b>Required</b></li>
+  <li><i>Optional</i></li>
   <li>Default: <code>cbad6d78-a73c-432d-b8ff-b219a17a803a</code></li>
-  <li>This option _is not_ user configurable. It must be set to the default.</li>
   <li>Valid Values:
   <ul>
     <li><tt>cbad6d78-a73c-432d-b8ff-b219a17a803a</tt> - Google CloudSQL for PostgreSQL</li>
@@ -566,9 +563,8 @@ For example:
 
 
 <ul>
-  <li><b>Required</b></li>
+  <li><i>Optional</i></li>
   <li>Default: <code>51b3e27e-d323-49ce-8c5f-1211e6409e82</code></li>
-  <li>This option _is not_ user configurable. It must be set to the default.</li>
   <li>Valid Values:
   <ul>
     <li><tt>51b3e27e-d323-49ce-8c5f-1211e6409e82</tt> - Google Spanner</li>
@@ -677,9 +673,8 @@ For example:
 
 
 <ul>
-  <li><b>Required</b></li>
+  <li><i>Optional</i></li>
   <li>Default: <code>b9e4332e-b42b-4680-bda5-ea1506797474</code></li>
-  <li>This option _is not_ user configurable. It must be set to the default.</li>
   <li>Valid Values:
   <ul>
     <li><tt>b9e4332e-b42b-4680-bda5-ea1506797474</tt> - Google Cloud Storage</li>

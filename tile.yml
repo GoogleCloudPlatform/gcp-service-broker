@@ -332,9 +332,11 @@ service_plan_forms:
     default: b8e19880-ac58-42ef-b033-f7cd9c94d1fe
     label: Service
     description: The service this plan is associated with.
+    configurable: true
     options:
     - name: b8e19880-ac58-42ef-b033-f7cd9c94d1fe
       label: Google Bigtable
+    optional: true
   - name: storage_type
     type: dropdown_select
     default: SSD
@@ -374,9 +376,11 @@ service_plan_forms:
     default: 4bc59b9a-8520-409f-85da-1c7552315863
     label: Service
     description: The service this plan is associated with.
+    configurable: true
     options:
     - name: 4bc59b9a-8520-409f-85da-1c7552315863
       label: Google CloudSQL for MySQL
+    optional: true
   - name: tier
     type: string
     label: Tier
@@ -410,9 +414,11 @@ service_plan_forms:
     default: cbad6d78-a73c-432d-b8ff-b219a17a803a
     label: Service
     description: The service this plan is associated with.
+    configurable: true
     options:
     - name: cbad6d78-a73c-432d-b8ff-b219a17a803a
       label: Google CloudSQL for PostgreSQL
+    optional: true
   - name: tier
     type: string
     label: Tier
@@ -445,9 +451,11 @@ service_plan_forms:
     default: 51b3e27e-d323-49ce-8c5f-1211e6409e82
     label: Service
     description: The service this plan is associated with.
+    configurable: true
     options:
     - name: 51b3e27e-d323-49ce-8c5f-1211e6409e82
       label: Google Spanner
+    optional: true
   - name: num_nodes
     type: string
     default: "1"
@@ -475,9 +483,11 @@ service_plan_forms:
     default: b9e4332e-b42b-4680-bda5-ea1506797474
     label: Service
     description: The service this plan is associated with.
+    configurable: true
     options:
     - name: b9e4332e-b42b-4680-bda5-ea1506797474
       label: Google Cloud Storage
+    optional: true
   - name: storage_class
     type: string
     label: Storage Class
