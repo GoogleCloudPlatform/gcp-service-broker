@@ -2,22 +2,24 @@
 
 ## Before continuing
 
-- [ ] The system should build and all tests pass with the Concourse pipeline.
 - [ ] Open a ticket with the name `release-vX.Y.Z` and copy the contents of this file into its description.
 - [ ] Create a new pre-release branch in the GitHub repository labeled `release-vX.Y.Z`.
 
 ## Update the project in the branch
 
 - [ ] Update version in `utils/version.go`.
-- [ ] Run `go build`.
-- [ ] Run `./gcp-service-broker generate tile > tile.yml`.
-- [ ] Run `./gcp-service-broker generate manifest > manifest.yml`.
-- [ ] Run `./gcp-service-broker generate use --destination-dir="docs/"`.
-- [ ] Run `./gcp-service-broker generate customization > docs/customization.md`.
+- [ ] Run `./hack/build.sh`.
 - [ ] Update the `CHANGELOG.md` to match the new version.
 - [ ] Commit the changes on the new branch.
+- [ ] Wait for the system to build and all Concourse tests to pass.
 
-## Generate the OSDF file
+## Generate the OSDF
+
+### Option 1: automatic
+
+- [ ] Run `./hack/update-osdf.sh X.Y.Z`
+
+### Option 2: fallback
 
 - [ ] Get a list of licenses using the [license_finder](https://github.com/pivotal-legacy/LicenseFinder) tool.
 - [ ] Fill in the [license template](https://docs.google.com/spreadsheets/d/1gqS1jwmpSIEdgTadQXhkbQqhm1hO3qOU1-AWwIYQqnw/edit#gid=0) with them.
