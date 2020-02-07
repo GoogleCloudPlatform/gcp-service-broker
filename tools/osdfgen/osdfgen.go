@@ -24,6 +24,7 @@ package main
 import (
 	"bytes"
 	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -63,12 +64,18 @@ func main() {
 	out := flag.String("o", "-", "Sets the output location of the OSDF csv")
 	proj := flag.String("p", ".", "The project root")
 	templateStr := flag.String("t", "{{(csv .dependency.Project.Name .dependency.Project.Revision .spdxCode .licenseText)}}", "Template to use")
+	detectOverrideJSON := flag.String("d", "{}", "A JSON object of dep path -> SPDX overrides")
 
 	flag.Parse()
 
 	outputTemplate, err := parseTemplate(*templateStr)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("couldn't parse template: ", err)
+	}
+
+	var detectOverrides map[string]string
+	if err := json.Unmarshal([]byte(*detectOverrideJSON), &detectOverrides); err != nil {
+		log.Fatal("couldn't parse detect overrides: ", err)
 	}
 
 	buf := &bytes.Buffer{}
@@ -78,15 +85,24 @@ func main() {
 			Project:         project,
 		}
 
-		licenses, err := detectLicenses(dep.Directory())
-		if err != nil {
-			log.Fatal(err)
+		var licenses map[string]float32
+		var err error
+
+		if overrideSPDX, ok := detectOverrides[project.Name]; ok {
+			licenses = map[string]float32{
+				overrideSPDX: 1.0,
+			}
+		} else {
+			licenses, err = detectLicenses(dep.Directory())
+			if err != nil {
+				log.Fatalf("couldn't detect licenses for %q in %q: %s", project.Name, dep.Directory(), err)
+			}
 		}
 
 		spdxCode, probability := mostLikelyLicense(licenses)
 		licenseText, err := getLicenseText(dep, spdxCode)
 		if err != nil {
-			log.Fatalf("Could not get license text for %q: %s", project.Name, err)
+			log.Fatalf("couldn't get license text for %q: %s", project.Name, err)
 		}
 
 		err = outputTemplate.Execute(buf, map[string]interface{}{
@@ -108,7 +124,7 @@ func main() {
 func detectLicenses(directory string) (map[string]float32, error) {
 	dir, err := filer.FromDirectory(directory)
 	if err != nil {
-		return nil, fmt.Errorf("Could not find dep %q in vendor %s", dir, err)
+		return nil, fmt.Errorf("couldn't find dep %q in vendor %s", dir, err)
 	}
 
 	return licensedb.Detect(dir)
