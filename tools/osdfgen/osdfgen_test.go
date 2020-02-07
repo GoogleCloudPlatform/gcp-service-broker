@@ -78,7 +78,7 @@ func TestMostLikelyLicense(t *testing.T) {
 
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
-			actual := mostLikelyLicense(tc.LicenseList)
+			actual, _ := mostLikelyLicense(tc.LicenseList)
 			if tc.Expected != actual {
 				t.Error("Expected", tc.Expected, " Got", actual)
 			}
