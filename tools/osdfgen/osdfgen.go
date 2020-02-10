@@ -24,6 +24,7 @@ package main
 import (
 	"bytes"
 	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -33,6 +34,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"gopkg.in/src-d/go-license-detector.v2/licensedb"
 	"gopkg.in/src-d/go-license-detector.v2/licensedb/filer"
@@ -61,33 +63,59 @@ func (d *Dependency) Directory() string {
 func main() {
 	out := flag.String("o", "-", "Sets the output location of the OSDF csv")
 	proj := flag.String("p", ".", "The project root")
+	templateStr := flag.String("t", "{{(csv .dependency.Project.Name .dependency.Project.Revision .spdxCode .licenseText)}}", "Template to use")
+	detectOverrideJSON := flag.String("d", "{}", "A JSON object of dep path -> SPDX overrides")
 
 	flag.Parse()
 
+	outputTemplate, err := parseTemplate(*templateStr)
+	if err != nil {
+		log.Fatal("couldn't parse template: ", err)
+	}
+
+	var detectOverrides map[string]string
+	if err := json.Unmarshal([]byte(*detectOverrideJSON), &detectOverrides); err != nil {
+		log.Fatal("couldn't parse detect overrides: ", err)
+	}
+
 	buf := &bytes.Buffer{}
-	writer := csv.NewWriter(buf)
 	for _, project := range getProjects(*proj) {
 		dep := &Dependency{
 			ParentDirectory: *proj,
 			Project:         project,
 		}
 
-		licenses, err := detectLicenses(dep.Directory())
+		var licenses map[string]float32
+		var err error
+
+		if overrideSPDX, ok := detectOverrides[project.Name]; ok {
+			licenses = map[string]float32{
+				overrideSPDX: 1.0,
+			}
+		} else {
+			licenses, err = detectLicenses(dep.Directory())
+			if err != nil {
+				log.Fatalf("couldn't detect licenses for %q in %q: %s", project.Name, dep.Directory(), err)
+			}
+		}
+
+		spdxCode, probability := mostLikelyLicense(licenses)
+		licenseText, err := getLicenseText(dep, spdxCode)
+		if err != nil {
+			log.Fatalf("couldn't get license text for %q: %s", project.Name, err)
+		}
+
+		err = outputTemplate.Execute(buf, map[string]interface{}{
+			"dependency":      dep,
+			"spdxCode":        spdxCode,
+			"spdxProbability": probability,
+			"licenseText":     licenseText,
+		})
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		spdxCode := mostLikelyLicense(licenses)
-		licenseText, err := getLicenseText(dep, spdxCode)
-		if err != nil {
-			log.Fatalf("Could not get license text for %q: %s", project.Name, err)
-		}
-
-		// name, hash, spdx, full text
-		writer.Write([]string{project.Name, project.Revision, spdxCode, licenseText})
 	}
 
-	writer.Flush()
 	writeOutput(*out, buf)
 }
 
@@ -96,7 +124,7 @@ func main() {
 func detectLicenses(directory string) (map[string]float32, error) {
 	dir, err := filer.FromDirectory(directory)
 	if err != nil {
-		return nil, fmt.Errorf("Could not find dep %q in vendor %s", dir, err)
+		return nil, fmt.Errorf("couldn't find dep %q in vendor %s", dir, err)
 	}
 
 	return licensedb.Detect(dir)
@@ -141,7 +169,7 @@ func getProjects(projectRoot string) []Project {
 }
 
 // mostLikelyLicense finds the key in a map with the greatest value.
-func mostLikelyLicense(m map[string]float32) string {
+func mostLikelyLicense(m map[string]float32) (spdxCode string, probability float32) {
 	var maxVal float32 = -math.MaxFloat32
 	maxKey := ""
 
@@ -152,7 +180,7 @@ func mostLikelyLicense(m map[string]float32) string {
 		}
 	}
 
-	return maxKey
+	return maxKey, maxVal
 }
 
 // getLicenseText creates a copy of the licence text(s) and notice(s) for a
@@ -206,4 +234,23 @@ func shouldIncludeFileInOsdf(file filer.File, spdxCode string) bool {
 	// We're required to include NOTICE files for Apache 2 licensed products.
 	isNotice := lowerName == "notice" && spdxCode == "Apache-2.0"
 	return isLicense || isNotice
+}
+
+func parseTemplate(templateString string) (*template.Template, error) {
+	return template.New("tmpl").Funcs(template.FuncMap{
+		"csv": csvFormatter,
+	}).Parse(templateString)
+}
+
+func csvFormatter(input ...interface{}) string {
+	var columns []string
+	for _, v := range input {
+		columns = append(columns, fmt.Sprintf("%v", v))
+	}
+
+	buf := &bytes.Buffer{}
+	writer := csv.NewWriter(buf)
+	writer.Write(columns)
+	writer.Flush()
+	return buf.String()
 }
