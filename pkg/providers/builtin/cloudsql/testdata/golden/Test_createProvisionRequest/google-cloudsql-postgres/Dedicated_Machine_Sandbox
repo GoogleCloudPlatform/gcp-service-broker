@@ -1,4 +1,4 @@
-{
+// {
 // 	"example": {
 // 		"name": "Dedicated Machine Sandbox",
 // 		"description": "A low end PostgreSQL sandbox that uses a dedicated machine.",

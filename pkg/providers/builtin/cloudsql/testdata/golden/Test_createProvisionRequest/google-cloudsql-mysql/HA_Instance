@@ -1,4 +1,4 @@
-{
+// {
 // 	"example": {
 // 		"name": "HA Instance",
 // 		"description": "A regionally available database with automatic failover.",

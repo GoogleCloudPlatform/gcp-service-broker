@@ -476,7 +476,7 @@ func assertGolden(t *testing.T, object interface{}, context map[string]interface
 		t.Errorf("creating golden object: %v", err)
 	}
 
-	goldenContents := fmt.Sprintf("%s\n%s", string(contextText), string(objectText))
+	goldenContents := fmt.Sprintf("// %s\n%s", string(contextText), string(objectText))
 
 	testPath := filepath.FromSlash(t.Name())
 	goldenPrefix := append([]string{"testdata", "golden"}, filepath.SplitList(testPath)...)
