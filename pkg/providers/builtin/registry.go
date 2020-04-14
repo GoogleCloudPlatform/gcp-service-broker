@@ -51,6 +51,8 @@ func RegisterBuiltinBrokers(registry broker.BrokerRegistry) {
 	registry.Register(bigtable.ServiceDefinition())
 	registry.Register(cloudsql.MysqlServiceDefinition())
 	registry.Register(cloudsql.PostgresServiceDefinition())
+	registry.Register(cloudsql.MySQLVPCServiceDefinition())
+	registry.Register(cloudsql.PostgresVPCServiceDefinition())
 	registry.Register(dataflow.ServiceDefinition())
 	registry.Register(datastore.ServiceDefinition())
 	registry.Register(dialogflow.ServiceDefinition())

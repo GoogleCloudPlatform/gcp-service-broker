@@ -441,6 +441,8 @@ func Test_createProvisionRequest(t *testing.T) {
 	services := []*broker.ServiceDefinition{
 		MysqlServiceDefinition(),
 		PostgresServiceDefinition(),
+		MySQLVPCServiceDefinition(),
+		PostgresVPCServiceDefinition(),
 	}
 
 	for _, service := range services {

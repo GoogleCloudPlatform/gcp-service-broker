@@ -2,7 +2,7 @@
 Google CloudSQL for PostgreSQL is a fully-managed PostgreSQL database service.
 
  * [Documentation](https://cloud.google.com/sql/docs/)
- * [Support](https://cloud.google.com/support/)
+ * [Support](https://cloud.google.com/sql/docs/getting-support/)
  * Catalog Metadata ID: `cbad6d78-a73c-432d-b8ff-b219a17a803a`
  * Tags: gcp, cloudsql, postgres
  * Service Name: `google-cloudsql-postgres`
@@ -20,6 +20,7 @@ Google CloudSQL for PostgreSQL is a fully-managed PostgreSQL database service.
     * The value must be one of: [POSTGRES_11 POSTGRES_9_6].
  * `activation_policy` _string_ - The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE. Default: `ALWAYS`.
     * The value must be one of: [ALWAYS NEVER].
+ * `authorized_networks` _string_ - A comma separated list without spaces. Default: ``.
  * `region` _string_ - The geographical region. See the instance locations list https://cloud.google.com/sql/docs/mysql/instance-locations for which regions support which databases. Default: `us-central`.
     * Examples: [northamerica-northeast1 southamerica-east1 us-east1].
     * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
@@ -42,7 +43,6 @@ Google CloudSQL for PostgreSQL is a fully-managed PostgreSQL database service.
     * The value must be one of: [false true].
  * `backup_start_time` _string_ - Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM. Default: `06:00`.
     * The string must match the regular expression `^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$`.
- * `authorized_networks` _string_ - A comma separated list without spaces. Default: ``.
  * `replication_type` _string_ - The type of replication this instance uses. This can be either ASYNCHRONOUS or SYNCHRONOUS. Default: `SYNCHRONOUS`.
     * The value must be one of: [ASYNCHRONOUS SYNCHRONOUS].
  * `auto_resize` _string_ - Configuration to increase storage size automatically. Default: `false`.
@@ -53,8 +53,6 @@ Google CloudSQL for PostgreSQL is a fully-managed PostgreSQL database service.
     * The string must match the regular expression `^[0-9][0-9]*$`.
  * `availability_type` _string_ - Availability type specifies whether the instance serves data from multiple zones. Default: `ZONAL`.
     * The value must be one of: [REGIONAL ZONAL].
- * `private_network` _string_ - The private network to attach to. If specified the instance will only be accessible on the VPC. Default: ``.
-    * Examples: [projects/my-project/global/networks/default].
 
 
 ## Binding

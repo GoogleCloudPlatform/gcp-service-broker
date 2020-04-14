@@ -173,12 +173,6 @@ func commonProvisionVariables() []broker.BrokerVariable {
 				Build(),
 		},
 		{
-			FieldName: "authorized_networks",
-			Type:      broker.JsonTypeString,
-			Details:   "A comma separated list without spaces.",
-			Default:   "",
-		},
-		{
 			FieldName: "replication_type",
 			Type:      broker.JsonTypeString,
 			Details:   "The type of replication this instance uses. This can be either ASYNCHRONOUS or SYNCHRONOUS.",
@@ -218,15 +212,6 @@ func commonProvisionVariables() []broker.BrokerVariable {
 				"ZONAL":    "The instance serves data from only one zone (NOT highly available).",
 				"REGIONAL": "The instance serves data zones in a region (highly available).",
 			},
-		},
-		{
-			FieldName: "private_network",
-			Type:      broker.JsonTypeString,
-			Details:   "The private network to attach to. If specified the instance will only be accessible on the VPC.",
-			Default:   "",
-			Constraints: validation.NewConstraintBuilder().
-				Examples("projects/my-project/global/networks/default").
-				Build(),
 		},
 	}
 }

@@ -241,6 +241,20 @@ forms:
     description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
       bind property and values are the alternative default.
     configurable: true
+  - name: gsb_service_google_cloudsql_mysql_vpc_provision_defaults
+    type: text
+    default: '{}'
+    label: Provision default override Google CloudSQL for MySQL instances.
+    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
+      provision property and values are the alternative default.
+    configurable: true
+  - name: gsb_service_google_cloudsql_mysql_vpc_bind_defaults
+    type: text
+    default: '{}'
+    label: Bind default override Google CloudSQL for MySQL instances.
+    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
+      bind property and values are the alternative default.
+    configurable: true
   - name: gsb_service_google_cloudsql_postgres_provision_defaults
     type: text
     default: '{}'
@@ -249,6 +263,20 @@ forms:
       provision property and values are the alternative default.
     configurable: true
   - name: gsb_service_google_cloudsql_postgres_bind_defaults
+    type: text
+    default: '{}'
+    label: Bind default override Google CloudSQL for PostgreSQL instances.
+    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
+      bind property and values are the alternative default.
+    configurable: true
+  - name: gsb_service_google_cloudsql_postgres_vpc_provision_defaults
+    type: text
+    default: '{}'
+    label: Provision default override Google CloudSQL for PostgreSQL instances.
+    description: A JSON object with key/value pairs. Keys MUST be the name of a user-defined
+      provision property and values are the alternative default.
+    configurable: true
+  - name: gsb_service_google_cloudsql_postgres_vpc_bind_defaults
     type: text
     default: '{}'
     label: Bind default override Google CloudSQL for PostgreSQL instances.
@@ -382,15 +410,15 @@ service_plan_forms:
   - name: tier
     type: string
     label: Tier
-    description: Case-sensitive tier/machine type name (see https://cloud.google.com/sql/pricing
-      for more information).
+    description: The machine type the database will run on. MySQL has predefined tiers,
+      other databases use the a string of the form db-custom-[CPUS]-[MEMORY_MBS],
+      where memory is at least 3840.
     configurable: true
   - name: max_disk_size
     type: string
     default: "10"
     label: Max Disk Size
-    description: Maximum disk size in GB (applicable only to Second Generation instances,
-      10 minimum/default).
+    description: Maximum disk size in GB, 10 is the minimum.
     configurable: true
 - name: cloudsql_postgres_custom_plans
   label: Google CloudSQL for PostgreSQL Custom Plans
@@ -419,8 +447,9 @@ service_plan_forms:
   - name: tier
     type: string
     label: Tier
-    description: A string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory
-      is at least 3840.
+    description: The machine type the database will run on. MySQL has predefined tiers,
+      other databases use the a string of the form db-custom-[CPUS]-[MEMORY_MBS],
+      where memory is at least 3840.
     configurable: true
   - name: max_disk_size
     type: string
