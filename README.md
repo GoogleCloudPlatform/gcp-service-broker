@@ -65,13 +65,10 @@ You can set up your own pipeline using the sources in the `ci` directory if you 
 
 ## Support
 
-[File a GitHub issue](https://github.com/GoogleCloudPlatform/gcp-service-broker/issues) for functional issues or feature requests.
+**This is not an officially supported Google product.**
 
-Subscribe to the [gcp-service-broker Google group](https://groups.google.com/forum/#!forum/gcp-service-broker) for discussions and updates.
-
+[File a GitHub issue](https://github.com/GoogleCloudPlatform/gcp-service-broker/issues) for functional issues or feature requests and use GitHub's notification settings to watch the repository for new releases.
 
 ## Contributing
 
 See [the contributing file](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/CONTRIBUTING.md) for more information.
-
-This is not an officially supported Google product.
