@@ -1,0 +1,46 @@
+{
+// 	"example": {
+// 		"name": "Development Sandbox",
+// 		"description": "An inexpensive PostgreSQL sandbox for developing with no backups.",
+// 		"plan_id": "2513d4d9-684b-4c3c-add4-6404969006de",
+// 		"provision_params": {
+// 			"backups_enabled": "false",
+// 			"disk_size": "10"
+// 		},
+// 		"bind_params": {
+// 			"role": "cloudsql.editor"
+// 		}
+// 	}
+// }
+{
+	"databaseVersion": "POSTGRES_9_6",
+	"name": "NONDETERMINISTIC",
+	"region": "us-central",
+	"settings": {
+		"activationPolicy": "ALWAYS",
+		"availabilityType": "ZONAL",
+		"backupConfiguration": {
+			"startTime": "06:00"
+		},
+		"dataDiskSizeGb": "10",
+		"dataDiskType": "PD_SSD",
+		"ipConfiguration": {
+			"ipv4Enabled": true,
+			"requireSsl": true
+		},
+		"locationPreference": {},
+		"maintenanceWindow": {
+			"day": 1,
+			"hour": 0,
+			"updateTrack": "stable"
+		},
+		"pricingPlan": "PER_USE",
+		"storageAutoResize": false,
+		"tier": "db-f1-micro",
+		"userLabels": {
+			"pcf-instance-id": "instance-id-here",
+			"pcf-organization-guid": "",
+			"pcf-space-guid": ""
+		}
+	}
+}

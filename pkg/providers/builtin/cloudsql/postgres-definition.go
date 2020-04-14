@@ -288,7 +288,10 @@ func PostgresServiceDefinition() *broker.ServiceDefinition {
 		},
 		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
 			bb := base.NewBrokerBase(projectId, auth, logger)
-			return &CloudSQLBroker{BrokerBase: bb}
+			return &CloudSQLBroker{
+				BrokerBase: bb,
+				uriFormat:  `${UriPrefix}postgres://${str.queryEscape(Username)}:${str.queryEscape(Password)}@${str.queryEscape(host)}/${str.queryEscape(database_name)}?sslmode=require&sslcert=${str.queryEscape(ClientCert)}&sslkey=${str.queryEscape(ClientKey)}&sslrootcert=${str.queryEscape(CaCert)}`,
+			}
 		},
 		IsBuiltin: true,
 	}

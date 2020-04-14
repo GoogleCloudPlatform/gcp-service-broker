@@ -12,10 +12,10 @@ Google CloudSQL for MySQL is a fully-managed MySQL database service.
 **Request Parameters**
 
 
- * `instance_name` _string_ - Name of the CloudSQL instance. Default: `pcf-sb-${counter.next()}-${time.nano()}`.
+ * `instance_name` _string_ - Name of the CloudSQL instance. Default: `sb-${counter.next()}-${time.nano()}`.
     * The string must have at most 84 characters.
     * The string must match the regular expression `^[a-z][a-z0-9-]+$`.
- * `database_name` _string_ - Name of the database inside of the instance. Must be a valid identifier for your chosen database type. Default: `pcf-sb-${counter.next()}-${time.nano()}`.
+ * `database_name` _string_ - Name of the database inside of the instance. Must be a valid identifier for your chosen database type. Default: `sb-${counter.next()}-${time.nano()}`.
  * `version` _string_ - The database engine type and version. Default: `MYSQL_5_7`.
     * The value must be one of: [MYSQL_5_6 MYSQL_5_7].
  * `activation_policy` _string_ - The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE. Default: `ALWAYS`.
@@ -55,6 +55,8 @@ Google CloudSQL for MySQL is a fully-managed MySQL database service.
     * The string must match the regular expression `^[0-9][0-9]*$`.
  * `availability_type` _string_ - Availability type specifies whether the instance serves data from multiple zones. Default: `ZONAL`.
     * The value must be one of: [REGIONAL ZONAL].
+ * `private_network` _string_ - The private network to attach to. If specified the instance will only be accessible on the VPC. Default: ``.
+    * Examples: [projects/my-project/global/networks/default].
 
 
 ## Binding
@@ -102,17 +104,17 @@ Google CloudSQL for MySQL is a fully-managed MySQL database service.
  * `Password` _string_ - **Required** The database password for the SQL user.
     * Examples: [N-JPz7h2RHPZ81jB5gDHdnluddnIFMWG4nd5rKjR_8A=].
  * `database_name` _string_ - **Required** The name of the database on the instance.
-    * Examples: [pcf-sb-2-1540412407295372465].
+    * Examples: [sb-2-1540412407295372465].
  * `host` _string_ - **Required** The hostname or IP address of the database instance.
     * Examples: [127.0.0.1].
  * `instance_name` _string_ - **Required** The name of the database instance.
-    * Examples: [pcf-sb-1-1540412407295273023].
+    * Examples: [sb-1-1540412407295273023].
     * The string must have at most 84 characters.
     * The string must match the regular expression `^[a-z][a-z0-9-]+$`.
  * `uri` _string_ - **Required** A database connection string.
-    * Examples: [mysql://user:pass@127.0.0.1/pcf-sb-2-1540412407295372465?ssl_mode=required].
+    * Examples: [mysql://user:pass@127.0.0.1/sb-2-1540412407295372465?ssl_mode=required].
  * `last_master_operation_id` _string_ - (deprecated) The id of the last operation on the database.
-    * Examples: [mysql://user:pass@127.0.0.1/pcf-sb-2-1540412407295372465?ssl_mode=required].
+    * Examples: [mysql://user:pass@127.0.0.1/sb-2-1540412407295372465?ssl_mode=required].
  * `region` _string_ - **Required** The region the database is in.
     * Examples: [northamerica-northeast1 southamerica-east1 us-east1].
     * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.

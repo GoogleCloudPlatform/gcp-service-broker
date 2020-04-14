@@ -24,7 +24,7 @@ import (
 const (
 	passwordTemplate   = "${rand.base64(32)}"
 	usernameTemplate   = `sb${str.truncate(14, time.nano())}`
-	identifierTemplate = `pcf-sb-${counter.next()}-${time.nano()}`
+	identifierTemplate = `sb-${counter.next()}-${time.nano()}`
 )
 
 func roleWhitelist() []string {
@@ -219,6 +219,15 @@ func commonProvisionVariables() []broker.BrokerVariable {
 				"REGIONAL": "The instance serves data zones in a region (highly available).",
 			},
 		},
+		{
+			FieldName: "private_network",
+			Type:      broker.JsonTypeString,
+			Details:   "The private network to attach to. If specified the instance will only be accessible on the VPC.",
+			Default:   "",
+			Constraints: validation.NewConstraintBuilder().
+				Examples("projects/my-project/global/networks/default").
+				Build(),
+		},
 	}
 }
 
@@ -290,7 +299,7 @@ func commonBindOutputVariables() []broker.BrokerVariable {
 			Type:        broker.JsonTypeString,
 			Details:     "The name of the database on the instance.",
 			Required:    true,
-			Constraints: validation.NewConstraintBuilder().Examples("pcf-sb-2-1540412407295372465").Build(),
+			Constraints: validation.NewConstraintBuilder().Examples("sb-2-1540412407295372465").Build(),
 		},
 		{
 			FieldName:   "host",
@@ -305,7 +314,7 @@ func commonBindOutputVariables() []broker.BrokerVariable {
 			Details:   "The name of the database instance.",
 			Required:  true,
 			Constraints: validation.NewConstraintBuilder().
-				Examples("pcf-sb-1-1540412407295273023").
+				Examples("sb-1-1540412407295273023").
 				Pattern("^[a-z][a-z0-9-]+$").
 				MaxLength(84).
 				Build(),
@@ -315,14 +324,14 @@ func commonBindOutputVariables() []broker.BrokerVariable {
 			Type:        broker.JsonTypeString,
 			Details:     "A database connection string.",
 			Required:    true,
-			Constraints: validation.NewConstraintBuilder().Examples("mysql://user:pass@127.0.0.1/pcf-sb-2-1540412407295372465?ssl_mode=required").Build(),
+			Constraints: validation.NewConstraintBuilder().Examples("mysql://user:pass@127.0.0.1/sb-2-1540412407295372465?ssl_mode=required").Build(),
 		},
 		{
 			FieldName:   "last_master_operation_id",
 			Type:        broker.JsonTypeString,
 			Details:     "(deprecated) The id of the last operation on the database.",
 			Required:    false,
-			Constraints: validation.NewConstraintBuilder().Examples("mysql://user:pass@127.0.0.1/pcf-sb-2-1540412407295372465?ssl_mode=required").Build(),
+			Constraints: validation.NewConstraintBuilder().Examples("mysql://user:pass@127.0.0.1/sb-2-1540412407295372465?ssl_mode=required").Build(),
 		},
 		{
 			FieldName: "region",

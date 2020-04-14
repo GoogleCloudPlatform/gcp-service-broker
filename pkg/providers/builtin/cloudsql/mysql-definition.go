@@ -288,7 +288,10 @@ func MysqlServiceDefinition() *broker.ServiceDefinition {
 		},
 		ProviderBuilder: func(projectId string, auth *jwt.Config, logger lager.Logger) broker.ServiceProvider {
 			bb := base.NewBrokerBase(projectId, auth, logger)
-			return &CloudSQLBroker{BrokerBase: bb}
+			return &CloudSQLBroker{
+				BrokerBase: bb,
+				uriFormat:  `${UriPrefix}mysql://${str.queryEscape(Username)}:${str.queryEscape(Password)}@${str.queryEscape(host)}/${str.queryEscape(database_name)}?ssl_mode=required`,
+			}
 		},
 		IsBuiltin: true,
 	}
