@@ -32,7 +32,6 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 	googlecloudsql "google.golang.org/api/sqladmin/v1beta4"
-	"k8s.io/utils/diff"
 )
 
 func TestCreateProvisionRequest(t *testing.T) {
@@ -500,8 +499,7 @@ func assertGolden(t *testing.T, object interface{}, context map[string]interface
 		}
 
 		if string(wantContents) != string(goldenContents) {
-			diff := diff.StringDiff(string(wantContents), string(goldenContents))
-			t.Errorf("actual differed from golden: %s", diff)
+			t.Errorf("actual differed from golden actual: %s golden: %s", string(wantContents), string(goldenContents))
 		}
 	}
 }
