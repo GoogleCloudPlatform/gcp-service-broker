@@ -1,0 +1,47 @@
+// {
+// 	"example": {
+// 		"name": "HA Instance",
+// 		"description": "A regionally available database with automatic failover.",
+// 		"plan_id": "c4e68ab5-34ca-4d02-857d-3e6b3ab079a7",
+// 		"provision_params": {
+// 			"availability_type": "REGIONAL",
+// 			"backups_enabled": "false",
+// 			"disk_size": "25"
+// 		},
+// 		"bind_params": {
+// 			"role": "cloudsql.editor"
+// 		}
+// 	}
+// }
+{
+	"databaseVersion": "POSTGRES_9_6",
+	"name": "NONDETERMINISTIC",
+	"region": "us-central",
+	"settings": {
+		"activationPolicy": "ALWAYS",
+		"availabilityType": "REGIONAL",
+		"backupConfiguration": {
+			"startTime": "06:00"
+		},
+		"dataDiskSizeGb": "25",
+		"dataDiskType": "PD_SSD",
+		"ipConfiguration": {
+			"ipv4Enabled": true,
+			"requireSsl": true
+		},
+		"locationPreference": {},
+		"maintenanceWindow": {
+			"day": 1,
+			"hour": 0,
+			"updateTrack": "stable"
+		},
+		"pricingPlan": "PER_USE",
+		"storageAutoResize": false,
+		"tier": "db-custom-1-3840",
+		"userLabels": {
+			"pcf-instance-id": "instance-id-here",
+			"pcf-organization-guid": "",
+			"pcf-space-guid": ""
+		}
+	}
+}

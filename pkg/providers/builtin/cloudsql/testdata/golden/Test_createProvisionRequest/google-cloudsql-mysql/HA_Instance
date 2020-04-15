@@ -1,0 +1,49 @@
+// {
+// 	"example": {
+// 		"name": "HA Instance",
+// 		"description": "A regionally available database with automatic failover.",
+// 		"plan_id": "7d8f9ade-30c1-4c96-b622-ea0205cc5f0b",
+// 		"provision_params": {
+// 			"availability_type": "REGIONAL",
+// 			"backups_enabled": "true",
+// 			"binlog": "true"
+// 		},
+// 		"bind_params": {
+// 			"role": "cloudsql.editor"
+// 		}
+// 	}
+// }
+{
+	"databaseVersion": "MYSQL_5_7",
+	"name": "NONDETERMINISTIC",
+	"region": "us-central",
+	"settings": {
+		"activationPolicy": "ALWAYS",
+		"availabilityType": "REGIONAL",
+		"backupConfiguration": {
+			"binaryLogEnabled": true,
+			"enabled": true,
+			"startTime": "06:00"
+		},
+		"dataDiskSizeGb": "10",
+		"dataDiskType": "PD_SSD",
+		"ipConfiguration": {
+			"ipv4Enabled": true,
+			"requireSsl": true
+		},
+		"locationPreference": {},
+		"maintenanceWindow": {
+			"day": 1,
+			"hour": 0,
+			"updateTrack": "stable"
+		},
+		"pricingPlan": "PER_USE",
+		"storageAutoResize": false,
+		"tier": "db-f1-micro",
+		"userLabels": {
+			"pcf-instance-id": "instance-id-here",
+			"pcf-organization-guid": "",
+			"pcf-space-guid": ""
+		}
+	}
+}

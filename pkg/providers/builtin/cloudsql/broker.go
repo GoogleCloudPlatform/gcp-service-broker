@@ -40,11 +40,15 @@ const (
 	secondGenPricingPlan         string = "PER_USE"
 	postgresDefaultVersion       string = "POSTGRES_9_6"
 	mySqlSecondGenDefaultVersion string = "MYSQL_5_7"
+
+	mySQLURIFormat = ""
 )
 
 // CloudSQLBroker is the service-broker back-end for creating and binding CloudSQL instances.
 type CloudSQLBroker struct {
 	base.BrokerBase
+
+	uriFormat string
 }
 
 // InstanceInformation holds the details needed to bind a service account to a CloudSQL instance after it has been provisioned.
@@ -92,24 +96,12 @@ func (b *CloudSQLBroker) Provision(ctx context.Context, provisionContext *varcon
 }
 
 func createProvisionRequest(vars *varcontext.VarContext) (*googlecloudsql.DatabaseInstance, *InstanceInformation, error) {
-
 	// set up database information
 	di := createInstanceRequest(vars)
 
-	instanceName := vars.GetString("instance_name")
-
-	di.Name = instanceName
-	di.Settings.BackupConfiguration = &googlecloudsql.BackupConfiguration{
-		Enabled:          vars.GetBool("backups_enabled"),
-		StartTime:        vars.GetString("backup_start_time"),
-		BinaryLogEnabled: vars.GetBool("binlog"),
-	}
-	di.Settings.IpConfiguration.AuthorizedNetworks = varctxGetAcls(vars)
-	di.Settings.UserLabels = vars.GetStringMapString("labels")
-
 	// Set up instance information
 	ii := InstanceInformation{
-		InstanceName: instanceName,
+		InstanceName: di.Name,
 		DatabaseName: vars.GetString("database_name"),
 	}
 
@@ -137,19 +129,41 @@ func createInstanceRequest(vars *varcontext.VarContext) *googlecloudsql.Database
 
 	autoResize := vars.GetBool("auto_resize")
 
+	ipConfiguration := googlecloudsql.IpConfiguration{
+		RequireSsl:         true,
+		Ipv4Enabled:        true,
+		AuthorizedNetworks: varctxGetAcls(vars),
+	}
+
+	if privateNetwork := vars.GetString("private_network"); privateNetwork != "" {
+		ipConfiguration = googlecloudsql.IpConfiguration{
+			Ipv4Enabled:     false,
+			RequireSsl:      true,
+			PrivateNetwork:  privateNetwork,
+			ForceSendFields: []string{"Ipv4Enabled"},
+		}
+	}
+
 	// set up instance resource
 	// https://github.com/googleapis/google-api-go-client/blob/master/sqladmin/v1beta4/sqladmin-gen.go#L647
 	return &googlecloudsql.DatabaseInstance{
+		Name:            vars.GetString("instance_name"),
+		DatabaseVersion: vars.GetString("version"),
+		Region:          vars.GetString("region"),
+
 		Settings: &googlecloudsql.Settings{
 			AvailabilityType: vars.GetString("availability_type"),
-			// BackupConfiguration gets defined in createProvisionRequest
-			DatabaseFlags: databaseFlags,
-			IpConfiguration: &googlecloudsql.IpConfiguration{
-				RequireSsl:  true,
-				Ipv4Enabled: true,
+
+			BackupConfiguration: &googlecloudsql.BackupConfiguration{
+				Enabled:          vars.GetBool("backups_enabled"),
+				StartTime:        vars.GetString("backup_start_time"),
+				BinaryLogEnabled: vars.GetBool("binlog"),
 			},
-			Tier:           vars.GetString("tier"),
-			DataDiskSizeGb: int64(vars.GetInt("disk_size")),
+
+			DatabaseFlags:   databaseFlags,
+			IpConfiguration: &ipConfiguration,
+			Tier:            vars.GetString("tier"),
+			DataDiskSizeGb:  int64(vars.GetInt("disk_size")),
 			LocationPreference: &googlecloudsql.LocationPreference{
 				Zone: vars.GetString("zone"),
 			},
@@ -164,10 +178,8 @@ func createInstanceRequest(vars *varcontext.VarContext) *googlecloudsql.Database
 			ActivationPolicy:       vars.GetString("activation_policy"),
 			StorageAutoResize:      &autoResize,
 			StorageAutoResizeLimit: int64(vars.GetInt("auto_resize_limit")),
-			// UserLabels get defined in createProvisionRequest
+			UserLabels:             vars.GetStringMapString("labels"),
 		},
-		DatabaseVersion: vars.GetString("version"),
-		Region:          vars.GetString("region"),
 	}
 }
 
@@ -230,20 +242,11 @@ func (b *CloudSQLBroker) Bind(ctx context.Context, vc *varcontext.VarContext) (m
 }
 
 func (b *CloudSQLBroker) BuildInstanceCredentials(ctx context.Context, bindRecord models.ServiceBindingCredentials, instanceRecord models.ServiceInstanceDetails) (*brokerapi.Binding, error) {
-	uriFormat := ""
-	switch instanceRecord.ServiceId {
-	case MySqlServiceId:
-		uriFormat = `${UriPrefix}mysql://${str.queryEscape(Username)}:${str.queryEscape(Password)}@${str.queryEscape(host)}/${str.queryEscape(database_name)}?ssl_mode=required`
-	case PostgresServiceId:
-		uriFormat = `${UriPrefix}postgres://${str.queryEscape(Username)}:${str.queryEscape(Password)}@${str.queryEscape(host)}/${str.queryEscape(database_name)}?sslmode=require&sslcert=${str.queryEscape(ClientCert)}&sslkey=${str.queryEscape(ClientKey)}&sslrootcert=${str.queryEscape(CaCert)}`
-	default:
-		return nil, errors.New("Unknown service")
-	}
 
 	creds, err := varcontext.Builder().
 		MergeJsonObject(json.RawMessage(bindRecord.OtherDetails)).
 		MergeJsonObject(json.RawMessage(instanceRecord.OtherDetails)).
-		MergeEvalResult("uri", uriFormat, varcontext.TypeString).
+		MergeEvalResult("uri", b.uriFormat, varcontext.TypeString).
 		BuildMap()
 
 	if err != nil {

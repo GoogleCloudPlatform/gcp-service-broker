@@ -17,12 +17,17 @@ package cloudsql
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/gcp-service-broker/db_service/models"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/varcontext"
 	"github.com/pivotal-cf/brokerapi"
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
@@ -294,18 +299,21 @@ func TestPostgresCustomMachineTypes(t *testing.T) {
 }
 
 func TestBuildInstanceCredentials(t *testing.T) {
+	pgProvider := PostgresServiceDefinition().ProviderBuilder("project-id", nil, nil)
+	mysqlProvider := MysqlServiceDefinition().ProviderBuilder("project-id", nil, nil)
 
 	cases := map[string]struct {
 		serviceID       string
 		bindDetails     string
 		instanceDetails string
+		provider        broker.ServiceProvider
 
 		expectedCreds map[string]interface{}
 	}{
 		"no prefix mysql": {
 			serviceID: MySqlServiceId,
 			instanceDetails: `{
-				"database_name": "pcf-sb-2-1543346570614873901",
+				"database_name": "sb-2-1543346570614873901",
 				"host": "35.202.18.12"
 			}`,
 			bindDetails: `{
@@ -313,20 +321,21 @@ func TestBuildInstanceCredentials(t *testing.T) {
 				"Password": "pass=",
 				"UriPrefix": ""
 			}`,
+			provider: mysqlProvider,
 			expectedCreds: map[string]interface{}{
 				"Password":      "pass=",
 				"UriPrefix":     "",
 				"Username":      "sb15433468744175",
-				"database_name": "pcf-sb-2-1543346570614873901",
+				"database_name": "sb-2-1543346570614873901",
 				"host":          "35.202.18.12",
-				"uri":           "mysql://sb15433468744175:pass%3D@35.202.18.12/pcf-sb-2-1543346570614873901?ssl_mode=required",
+				"uri":           "mysql://sb15433468744175:pass%3D@35.202.18.12/sb-2-1543346570614873901?ssl_mode=required",
 			},
 		},
 
 		"no prefix postgres": {
 			serviceID: PostgresServiceId,
 			instanceDetails: `{
-				"database_name": "pcf-sb-2-1543346570614873901",
+				"database_name": "sb-2-1543346570614873901",
 				"host": "35.202.18.12"
 			}`,
 			bindDetails: `{
@@ -337,6 +346,7 @@ func TestBuildInstanceCredentials(t *testing.T) {
 				"Password": "pass=",
 				"UriPrefix": ""
 			}`,
+			provider: pgProvider,
 			expectedCreds: map[string]interface{}{
 				"ClientCert":    "@clientcert",
 				"ClientKey":     "@clientkey",
@@ -344,16 +354,16 @@ func TestBuildInstanceCredentials(t *testing.T) {
 				"Password":      "pass=",
 				"UriPrefix":     "",
 				"Username":      "sb15433468744175",
-				"database_name": "pcf-sb-2-1543346570614873901",
+				"database_name": "sb-2-1543346570614873901",
 				"host":          "35.202.18.12",
-				"uri":           "postgres://sb15433468744175:pass%3D@35.202.18.12/pcf-sb-2-1543346570614873901?sslmode=require&sslcert=%40clientcert&sslkey=%40clientkey&sslrootcert=%40cacert",
+				"uri":           "postgres://sb15433468744175:pass%3D@35.202.18.12/sb-2-1543346570614873901?sslmode=require&sslcert=%40clientcert&sslkey=%40clientkey&sslrootcert=%40cacert",
 			},
 		},
 
 		"prefix mysql": {
 			serviceID: MySqlServiceId,
 			instanceDetails: `{
-				"database_name": "pcf-sb-2-1543346570614873901",
+				"database_name": "sb-2-1543346570614873901",
 				"host": "35.202.18.12"
 			}`,
 			bindDetails: `{
@@ -361,20 +371,21 @@ func TestBuildInstanceCredentials(t *testing.T) {
 				"Password": "pass=",
 				"UriPrefix": "jdbc:"
 			}`,
+			provider: mysqlProvider,
 			expectedCreds: map[string]interface{}{
 				"Password":      "pass=",
 				"UriPrefix":     "jdbc:",
 				"Username":      "sb15433468744175",
-				"database_name": "pcf-sb-2-1543346570614873901",
+				"database_name": "sb-2-1543346570614873901",
 				"host":          "35.202.18.12",
-				"uri":           "jdbc:mysql://sb15433468744175:pass%3D@35.202.18.12/pcf-sb-2-1543346570614873901?ssl_mode=required",
+				"uri":           "jdbc:mysql://sb15433468744175:pass%3D@35.202.18.12/sb-2-1543346570614873901?ssl_mode=required",
 			},
 		},
 
 		"prefix postgres": {
 			serviceID: PostgresServiceId,
 			instanceDetails: `{
-				"database_name": "pcf-sb-2-1543346570614873901",
+				"database_name": "sb-2-1543346570614873901",
 				"host": "35.202.18.12"
 			}`,
 			bindDetails: `{
@@ -385,6 +396,7 @@ func TestBuildInstanceCredentials(t *testing.T) {
 				"Password": "pass=",
 				"UriPrefix": "jdbc:"
 			}`,
+			provider: pgProvider,
 			expectedCreds: map[string]interface{}{
 				"ClientCert":    "@clientcert",
 				"ClientKey":     "@clientkey",
@@ -392,16 +404,15 @@ func TestBuildInstanceCredentials(t *testing.T) {
 				"Password":      "pass=",
 				"UriPrefix":     "jdbc:",
 				"Username":      "sb15433468744175",
-				"database_name": "pcf-sb-2-1543346570614873901",
+				"database_name": "sb-2-1543346570614873901",
 				"host":          "35.202.18.12",
-				"uri":           "jdbc:postgres://sb15433468744175:pass%3D@35.202.18.12/pcf-sb-2-1543346570614873901?sslmode=require&sslcert=%40clientcert&sslkey=%40clientkey&sslrootcert=%40cacert",
+				"uri":           "jdbc:postgres://sb15433468744175:pass%3D@35.202.18.12/sb-2-1543346570614873901?sslmode=require&sslcert=%40clientcert&sslkey=%40clientkey&sslrootcert=%40cacert",
 			},
 		},
 	}
 
 	for tn, tc := range cases {
 		t.Run(tn, func(t *testing.T) {
-			broker := CloudSQLBroker{}
 
 			bindRecord := models.ServiceBindingCredentials{
 				OtherDetails: tc.bindDetails,
@@ -412,7 +423,7 @@ func TestBuildInstanceCredentials(t *testing.T) {
 				OtherDetails: tc.instanceDetails,
 			}
 
-			binding, err := broker.BuildInstanceCredentials(context.Background(), bindRecord, instanceRecord)
+			binding, err := tc.provider.BuildInstanceCredentials(context.Background(), bindRecord, instanceRecord)
 			if err != nil {
 				t.Error("expected no error, got:", err)
 				return
@@ -423,4 +434,122 @@ func TestBuildInstanceCredentials(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_createProvisionRequest(t *testing.T) {
+	services := []*broker.ServiceDefinition{
+		MysqlServiceDefinition(),
+		PostgresServiceDefinition(),
+		MySQLVPCServiceDefinition(),
+		PostgresVPCServiceDefinition(),
+	}
+
+	for _, service := range services {
+		t.Run(service.Name, func(t *testing.T) {
+			for _, example := range service.Examples {
+				t.Run(example.Name, func(t *testing.T) {
+					vars := deterministicProvisionVariables(t, service, example)
+
+					req, _, err := createProvisionRequest(vars)
+					if err != nil {
+						t.Fatalf("couldn't createProvisionRequest: %v", err)
+					}
+
+					assertGolden(t, req, map[string]interface{}{
+						"example": example,
+					})
+				})
+			}
+		})
+	}
+}
+
+func assertGolden(t *testing.T, object interface{}, context map[string]interface{}) {
+	t.Helper()
+
+	contextText, err := json.MarshalIndent(context, "// ", "\t")
+	if err != nil {
+		t.Errorf("creating golden context: %v", err)
+	}
+
+	objectText, err := json.MarshalIndent(object, "", "\t")
+	if err != nil {
+		t.Errorf("creating golden object: %v", err)
+	}
+
+	goldenContents := fmt.Sprintf("// %s\n%s", string(contextText), string(objectText))
+
+	testPath := filepath.FromSlash(t.Name())
+	goldenPrefix := append([]string{"testdata", "golden"}, filepath.SplitList(testPath)...)
+	goldenPath := filepath.Join(goldenPrefix...)
+
+	if os.Getenv("UPDATE_GOLDEN") == "true" {
+		if err := os.MkdirAll(filepath.Dir(goldenPath), 0700); err != nil {
+			t.Fatalf("creating parent directory: %v", err)
+		}
+
+		if err := ioutil.WriteFile(goldenPath, []byte(goldenContents), 0600); err != nil {
+			t.Fatalf("creating golden file: %v", err)
+		}
+		t.Fatal("golden file updated, run without UPDATE_GOLDEN=true to test")
+	} else {
+		wantContents, err := ioutil.ReadFile(goldenPath)
+		if err != nil {
+			t.Fatalf("couldn't read golden file, run with UPDATE_GOLDEN=true to update: %v", err)
+		}
+
+		if string(wantContents) != string(goldenContents) {
+			t.Errorf("actual differed from golden actual: %s golden: %s", string(wantContents), string(goldenContents))
+		}
+	}
+}
+
+func deterministicProvisionVariables(t *testing.T, service *broker.ServiceDefinition, example broker.ServiceExample) *varcontext.VarContext {
+	t.Helper()
+
+	bytes, err := json.Marshal(example.ProvisionParams)
+	if err != nil {
+		t.Fatalf("couldn't marshal ProvisionParams for example: %v", err)
+	}
+
+	details := brokerapi.ProvisionDetails{
+		RawParameters: bytes,
+		ServiceID:     service.Id,
+	}
+
+	plan, err := service.GetPlanById(example.PlanId)
+	if err != nil {
+		t.Fatalf("got error trying to find plan %s %v", example.PlanId, err)
+	}
+
+	vars1, err := service.ProvisionVariables("instance-id-here", details, *plan)
+	if err != nil {
+		t.Fatalf("couldn't create ProvisionVariables1: %v", err)
+	}
+
+	vars2, err := service.ProvisionVariables("instance-id-here", details, *plan)
+	if err != nil {
+		t.Fatalf("couldn't create ProvisionVariables2: %v", err)
+	}
+
+	vm1 := vars1.ToMap()
+	vm2 := vars2.ToMap()
+
+	merged := make(map[string]interface{})
+
+	for k := range vm1 {
+		if reflect.DeepEqual(vm1[k], vm2[k]) {
+			merged[k] = vm1[k]
+		} else {
+			// TODO: add additional types if necessary
+			merged[k] = "NONDETERMINISTIC"
+		}
+	}
+
+	context, err := varcontext.Builder().MergeMap(merged).Build()
+	if err != nil {
+		t.Fatalf("creating varcontext: %v", err)
+	}
+
+	return context
 }

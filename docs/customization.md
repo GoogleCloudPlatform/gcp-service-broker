@@ -80,8 +80,12 @@ You can configure the following environment variables:
 | <tt>GSB_SERVICE_GOOGLE_BIGTABLE_BIND_DEFAULTS</tt> <b>*</b> | text | <p>Bind default override Google Bigtable instances. A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default. Default: <code>{}</code></p>|
 | <tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_PROVISION_DEFAULTS</tt> <b>*</b> | text | <p>Provision default override Google CloudSQL for MySQL instances. A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default. Default: <code>{}</code></p>|
 | <tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_BIND_DEFAULTS</tt> <b>*</b> | text | <p>Bind default override Google CloudSQL for MySQL instances. A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default. Default: <code>{}</code></p>|
+| <tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_VPC_PROVISION_DEFAULTS</tt> <b>*</b> | text | <p>Provision default override Google CloudSQL for MySQL instances. A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default. Default: <code>{}</code></p>|
+| <tt>GSB_SERVICE_GOOGLE_CLOUDSQL_MYSQL_VPC_BIND_DEFAULTS</tt> <b>*</b> | text | <p>Bind default override Google CloudSQL for MySQL instances. A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default. Default: <code>{}</code></p>|
 | <tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_PROVISION_DEFAULTS</tt> <b>*</b> | text | <p>Provision default override Google CloudSQL for PostgreSQL instances. A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default. Default: <code>{}</code></p>|
 | <tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_BIND_DEFAULTS</tt> <b>*</b> | text | <p>Bind default override Google CloudSQL for PostgreSQL instances. A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default. Default: <code>{}</code></p>|
+| <tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_VPC_PROVISION_DEFAULTS</tt> <b>*</b> | text | <p>Provision default override Google CloudSQL for PostgreSQL instances. A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default. Default: <code>{}</code></p>|
+| <tt>GSB_SERVICE_GOOGLE_CLOUDSQL_POSTGRES_VPC_BIND_DEFAULTS</tt> <b>*</b> | text | <p>Bind default override Google CloudSQL for PostgreSQL instances. A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default. Default: <code>{}</code></p>|
 | <tt>GSB_SERVICE_GOOGLE_ML_APIS_PROVISION_DEFAULTS</tt> <b>*</b> | text | <p>Provision default override Google Machine Learning APIs instances. A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default. Default: <code>{}</code></p>|
 | <tt>GSB_SERVICE_GOOGLE_ML_APIS_BIND_DEFAULTS</tt> <b>*</b> | text | <p>Bind default override Google Machine Learning APIs instances. A JSON object with key/value pairs. Keys MUST be the name of a user-defined bind property and values are the alternative default. Default: <code>{}</code></p>|
 | <tt>GSB_SERVICE_GOOGLE_PUBSUB_PROVISION_DEFAULTS</tt> <b>*</b> | text | <p>Provision default override Google PubSub instances. A JSON object with key/value pairs. Keys MUST be the name of a user-defined provision property and values are the alternative default. Default: <code>{}</code></p>|
@@ -329,7 +333,7 @@ For example:
   <td><i>string</i></td>
   <td>Tier</td>
   <td>
-  Case-sensitive tier/machine type name (see https://cloud.google.com/sql/pricing for more information).
+  The machine type the database will run on. MySQL has predefined tiers, other databases use the a string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840.
 
 
 <ul>
@@ -345,7 +349,7 @@ For example:
   <td><i>string</i></td>
   <td>Max Disk Size</td>
   <td>
-  Maximum disk size in GB (applicable only to Second Generation instances, 10 minimum/default).
+  Maximum disk size in GB, 10 is the minimum.
 
 
 <ul>
@@ -455,7 +459,7 @@ For example:
   <td><i>string</i></td>
   <td>Tier</td>
   <td>
-  A string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840.
+  The machine type the database will run on. MySQL has predefined tiers, other databases use the a string of the form db-custom-[CPUS]-[MEMORY_MBS], where memory is at least 3840.
 
 
 <ul>

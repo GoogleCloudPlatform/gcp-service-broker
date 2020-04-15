@@ -2,7 +2,7 @@
 Google CloudSQL for PostgreSQL is a fully-managed PostgreSQL database service.
 
  * [Documentation](https://cloud.google.com/sql/docs/)
- * [Support](https://cloud.google.com/support/)
+ * [Support](https://cloud.google.com/sql/docs/getting-support/)
  * Catalog Metadata ID: `cbad6d78-a73c-432d-b8ff-b219a17a803a`
  * Tags: gcp, cloudsql, postgres
  * Service Name: `google-cloudsql-postgres`
@@ -12,14 +12,15 @@ Google CloudSQL for PostgreSQL is a fully-managed PostgreSQL database service.
 **Request Parameters**
 
 
- * `instance_name` _string_ - Name of the CloudSQL instance. Default: `pcf-sb-${counter.next()}-${time.nano()}`.
+ * `instance_name` _string_ - Name of the CloudSQL instance. Default: `sb-${counter.next()}-${time.nano()}`.
     * The string must have at most 86 characters.
     * The string must match the regular expression `^[a-z][a-z0-9-]+$`.
- * `database_name` _string_ - Name of the database inside of the instance. Must be a valid identifier for your chosen database type. Default: `pcf-sb-${counter.next()}-${time.nano()}`.
+ * `database_name` _string_ - Name of the database inside of the instance. Must be a valid identifier for your chosen database type. Default: `sb-${counter.next()}-${time.nano()}`.
  * `version` _string_ - The database engine type and version. Default: `POSTGRES_9_6`.
     * The value must be one of: [POSTGRES_11 POSTGRES_9_6].
  * `activation_policy` _string_ - The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE. Default: `ALWAYS`.
     * The value must be one of: [ALWAYS NEVER].
+ * `authorized_networks` _string_ - A comma separated list without spaces. Default: ``.
  * `region` _string_ - The geographical region. See the instance locations list https://cloud.google.com/sql/docs/mysql/instance-locations for which regions support which databases. Default: `us-central`.
     * Examples: [northamerica-northeast1 southamerica-east1 us-east1].
     * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.
@@ -42,7 +43,6 @@ Google CloudSQL for PostgreSQL is a fully-managed PostgreSQL database service.
     * The value must be one of: [false true].
  * `backup_start_time` _string_ - Start time for the daily backup configuration in UTC timezone in the 24 hour format - HH:MM. Default: `06:00`.
     * The string must match the regular expression `^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$`.
- * `authorized_networks` _string_ - A comma separated list without spaces. Default: ``.
  * `replication_type` _string_ - The type of replication this instance uses. This can be either ASYNCHRONOUS or SYNCHRONOUS. Default: `SYNCHRONOUS`.
     * The value must be one of: [ASYNCHRONOUS SYNCHRONOUS].
  * `auto_resize` _string_ - Configuration to increase storage size automatically. Default: `false`.
@@ -100,17 +100,17 @@ Google CloudSQL for PostgreSQL is a fully-managed PostgreSQL database service.
  * `Password` _string_ - **Required** The database password for the SQL user.
     * Examples: [N-JPz7h2RHPZ81jB5gDHdnluddnIFMWG4nd5rKjR_8A=].
  * `database_name` _string_ - **Required** The name of the database on the instance.
-    * Examples: [pcf-sb-2-1540412407295372465].
+    * Examples: [sb-2-1540412407295372465].
  * `host` _string_ - **Required** The hostname or IP address of the database instance.
     * Examples: [127.0.0.1].
  * `instance_name` _string_ - **Required** The name of the database instance.
-    * Examples: [pcf-sb-1-1540412407295273023].
+    * Examples: [sb-1-1540412407295273023].
     * The string must have at most 84 characters.
     * The string must match the regular expression `^[a-z][a-z0-9-]+$`.
  * `uri` _string_ - **Required** A database connection string.
-    * Examples: [mysql://user:pass@127.0.0.1/pcf-sb-2-1540412407295372465?ssl_mode=required].
+    * Examples: [mysql://user:pass@127.0.0.1/sb-2-1540412407295372465?ssl_mode=required].
  * `last_master_operation_id` _string_ - (deprecated) The id of the last operation on the database.
-    * Examples: [mysql://user:pass@127.0.0.1/pcf-sb-2-1540412407295372465?ssl_mode=required].
+    * Examples: [mysql://user:pass@127.0.0.1/sb-2-1540412407295372465?ssl_mode=required].
  * `region` _string_ - **Required** The region the database is in.
     * Examples: [northamerica-northeast1 southamerica-east1 us-east1].
     * The string must match the regular expression `^[A-Za-z][-a-z0-9A-Z]+$`.

@@ -1,0 +1,48 @@
+// {
+// 	"example": {
+// 		"name": "Dedicated Machine Sandbox",
+// 		"description": "A low end PostgreSQL sandbox that uses a dedicated machine.",
+// 		"plan_id": "60f0b6c0-c48f-4f84-baab-57836611e013",
+// 		"provision_params": {
+// 			"backups_enabled": "false",
+// 			"disk_size": "25",
+// 			"tier": "db-custom-1-3840"
+// 		},
+// 		"bind_params": {
+// 			"role": "cloudsql.editor"
+// 		}
+// 	}
+// }
+{
+	"databaseVersion": "POSTGRES_9_6",
+	"name": "NONDETERMINISTIC",
+	"region": "us-central",
+	"settings": {
+		"activationPolicy": "ALWAYS",
+		"availabilityType": "ZONAL",
+		"backupConfiguration": {
+			"startTime": "06:00"
+		},
+		"dataDiskSizeGb": "25",
+		"dataDiskType": "PD_SSD",
+		"ipConfiguration": {
+			"ipv4Enabled": false,
+			"privateNetwork": "default",
+			"requireSsl": true
+		},
+		"locationPreference": {},
+		"maintenanceWindow": {
+			"day": 1,
+			"hour": 0,
+			"updateTrack": "stable"
+		},
+		"pricingPlan": "PER_USE",
+		"storageAutoResize": false,
+		"tier": "db-custom-1-3840",
+		"userLabels": {
+			"pcf-instance-id": "instance-id-here",
+			"pcf-organization-guid": "",
+			"pcf-space-guid": ""
+		}
+	}
+}
