@@ -35,7 +35,7 @@ type TileFormsSections struct {
 	ServicePlanForms []Form `yaml:"service_plan_forms,omitempty"`
 }
 
-// Form is a PCF Ops Manager compatible form definition used to generate forms.
+// Form is an Ops Manager compatible form definition used to generate forms.
 // See https://docs.pivotal.io/tiledev/2-2/product-template-reference.html#form-properties
 // for details about the fields.
 type Form struct {
@@ -53,7 +53,7 @@ type FormOption struct {
 	Label string `yaml:"label"`
 }
 
-// FormProperty holds a single form element in a PCF Ops manager form.
+// FormProperty holds a single form element in a Ops Manager form.
 type FormProperty struct {
 	Name         string       `yaml:"name"`
 	Type         string       `yaml:"type"`

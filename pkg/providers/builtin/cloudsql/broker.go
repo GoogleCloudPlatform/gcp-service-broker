@@ -38,7 +38,7 @@ import (
 
 const (
 	secondGenPricingPlan         string = "PER_USE"
-	postgresDefaultVersion       string = "POSTGRES_9_6"
+	postgresDefaultVersion       string = "POSTGRES_11"
 	mySqlSecondGenDefaultVersion string = "MYSQL_5_7"
 
 	mySQLURIFormat = ""
@@ -210,7 +210,7 @@ func parseDatabaseFlags(flagsvar string) []*googlecloudsql.DatabaseFlags {
 
 // Bind creates a new username, password, and set of ssl certs for the given instance.
 // The function may be slow to return because CloudSQL operations are asynchronous.
-// The default PCF service broker timeout may need to be raised to 90 or 120 seconds to accommodate the long bind time.
+// The default CF service broker timeout may need to be raised to 90 or 120 seconds to accommodate the long bind time.
 func (b *CloudSQLBroker) Bind(ctx context.Context, vc *varcontext.VarContext) (map[string]interface{}, error) {
 	// get context before trying to create anything to catch errors early
 	combinedCreds := varcontext.Builder()

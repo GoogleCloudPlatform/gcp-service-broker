@@ -8,6 +8,7 @@
 ## Update the project in the branch
 
 - [ ] Update version in `utils/version.go`.
+- [ ] Update the stemcell and go version in `pkg/generator/pcf-artifacts.go`
 - [ ] Run `./hack/build.sh`.
 - [ ] Update the `CHANGELOG.md` to match the new version.
 - [ ] Commit the changes on the new branch.
@@ -39,7 +40,7 @@
 
 - [ ] Validate that the name in the generated tile's `metadata.yml` matches the slug on PivNet.
 - [ ] Ensure the release version is consistent on the tile and documentation.
-- [ ] Create a [new release on PivNet](network.pivotal.io) as an Admin Only release.
+- [ ] Create a [new release on Tanzu Network](network.pivotal.io) as an Admin Only release.
 - [ ] Upload the tile and OSDF files that were staged to GitHub.
 - [ ] Check that the tile passes the tests in the [build dashboard](https://tile-dashboard.cfapps.io/tiles/gcp-service-broker).
 

@@ -14,7 +14,7 @@
 // 	}
 // }
 {
-	"databaseVersion": "POSTGRES_9_6",
+	"databaseVersion": "POSTGRES_11",
 	"name": "NONDETERMINISTIC",
 	"region": "us-central",
 	"settings": {

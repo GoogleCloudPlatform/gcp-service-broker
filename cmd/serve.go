@@ -41,7 +41,7 @@ const (
 )
 
 var cfCompatibilityToggle = toggles.Features.Toggle("enable-cf-sharing", false, `Set all services to have the Sharable flag so they can be shared
-	across spaces in PCF.`)
+	across spaces in Tanzu.`)
 
 func init() {
 	rootCmd.AddCommand(&cobra.Command{

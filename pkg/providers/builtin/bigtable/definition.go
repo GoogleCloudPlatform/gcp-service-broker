@@ -16,9 +16,9 @@ package bigtable
 
 import (
 	"code.cloudfoundry.org/lager"
+	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	accountmanagers "github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/account_managers"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/providers/builtin/base"
-	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/broker"
 	"github.com/GoogleCloudPlatform/gcp-service-broker/pkg/validation"
 	"github.com/pivotal-cf/brokerapi"
 	"golang.org/x/oauth2/jwt"
@@ -138,7 +138,7 @@ func ServiceDefinition() *broker.ServiceDefinition {
 			{
 				FieldName: "num_nodes",
 				Type:      broker.JsonTypeString,
-				Details:   "Number of nodes, between 3 and 30. See: https://cloud.google.com/bigtable/pricing for more information.",
+				Details:   "Number of nodes. See: https://cloud.google.com/bigtable/pricing for more information.",
 				Default:   "3",
 				Required:  true,
 			},

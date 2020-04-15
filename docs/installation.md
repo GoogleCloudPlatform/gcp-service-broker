@@ -4,7 +4,7 @@ See [this YouTube video](https://www.youtube.com/watch?v=8nc4624K91A&list=PLIivd
 
 Requires Go 1.8 and the associated buildpack.
 
-* [Installing as a Pivotal Ops Manager tile](http://docs.pivotal.io/partners/gcp-sb/index.html)
+* [Installing as an Ops Manager tile](http://docs.pivotal.io/partners/gcp-sb/index.html)
 * [Installing as a Cloud Foundry Application](#cf)
     * [Set up a GCP Project](#project)
     * [Enable APIs](#apis)
@@ -16,9 +16,9 @@ Requires Go 1.8 and the associated buildpack.
     * [(Optional) Increase the default provision/bind timeout](#timeout)
 
 
-### Installing as a Pivotal Ops Manager tile
+### Installing as an Ops Manager tile
 
-Documentation for installing as a Pivotal Ops Manager tile is available [here](http://docs.pivotal.io/partners/gcp-sb/index.html).
+Documentation for installing as an Ops Manager tile is available [here](http://docs.pivotal.io/partners/gcp-sb/index.html).
 
 ### [Installing as a Cloud Foundry Application](#cf)
 

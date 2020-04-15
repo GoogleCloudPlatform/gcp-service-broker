@@ -53,10 +53,12 @@ var postgresDatabaseType = databaseType{
 	Name:               "PostgreSQL",
 	URIFormat:          `${UriPrefix}postgres://${str.queryEscape(Username)}:${str.queryEscape(Password)}@${str.queryEscape(host)}/${str.queryEscape(database_name)}?sslmode=require&sslcert=${str.queryEscape(ClientCert)}&sslkey=${str.queryEscape(ClientKey)}&sslrootcert=${str.queryEscape(CaCert)}`,
 	CustomizableBinlog: false,
-	DefaultVersion:     "POSTGRES_9_6",
+	DefaultVersion:     "POSTGRES_11",
 	Versions: map[interface{}]string{
 		"POSTGRES_9_6": "PostgreSQL 9.6.X",
+		"POSTGRES_10":  "PostgreSQL 10",
 		"POSTGRES_11":  "PostgreSQL 11",
+		"POSTGRES_12":  "PostgreSQL 12",
 	},
 	InstanceNameLength: 86,
 	Tags:               []string{"gcp", "cloudsql", "postgres"},

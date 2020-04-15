@@ -18,13 +18,13 @@
 name: gcp-service-broker
 icon_file: gcp_logo.png
 label: Google Cloud Platform Service Broker
-description: 'A service broker for Google Cloud Platform services.'
-product_version: "5.0.1"
+description: 'A service broker for Google Cloud services.'
+product_version: "5.1.0"
 org: system
 
 stemcell_criteria:
   os: 'ubuntu-xenial'
-  version: '170.82'
+  version: '456.104'
 
 apply_open_security_group: true
 
@@ -51,7 +51,7 @@ packages:
     path: /tmp/gcp-service-broker.zip
     env:
       GOPACKAGENAME: github.com/GoogleCloudPlatform/gcp-service-broker
-      GOVERSION: go1.12
+      GOVERSION: go1.14
       # You can override plans here.
   needs_cf_credentials: true
   enable_global_access_to_plans: true
@@ -156,7 +156,7 @@ forms:
     default: "false"
     label: enable-cf-sharing
     description: Set all services to have the Sharable flag so they can be shared
-      across spaces in PCF.
+      across spaces in Tanzu.
     configurable: true
   - name: gsb_compatibility_enable_eol_services
     type: boolean
@@ -380,7 +380,7 @@ service_plan_forms:
     type: string
     default: "3"
     label: Num Nodes
-    description: 'Number of nodes, between 3 and 30. See: https://cloud.google.com/bigtable/pricing
+    description: 'Number of nodes. See: https://cloud.google.com/bigtable/pricing
       for more information.'
     configurable: true
 - name: cloudsql_mysql_custom_plans
