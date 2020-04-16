@@ -25,13 +25,13 @@ import (
 
 const (
 	appName         = "gcp-service-broker"
-	appDescription  = "A service broker for Google Cloud Platform services."
+	appDescription  = "A service broker for Google Cloud services."
 	stemcellOs      = "ubuntu-xenial"
-	stemcellVersion = "170.82"
+	stemcellVersion = "456.104"
 
 	buildpack     = "go_buildpack"
 	goPackageName = "github.com/GoogleCloudPlatform/gcp-service-broker"
-	goVersion     = "go1.12"
+	goVersion     = "go1.14"
 
 	copyrightHeader = `# Copyright the Service Broker Project Authors. All rights reserved.
 #

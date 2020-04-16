@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [5.1.0] - 2020-04-15
+
+### Added
+- New services for running MySQL and PostgreSQL CloudSQL in a VPC.
+
+### Changed
+- Updated database versions for CloudSQL.
+- Default PostgreSQL version is now `POSTGRES_11`
+- Removed BigTable sizing restrictions due to improvements in Google Cloud.
+
 ## [5.0.1] - 2020-01-15
 
 ### Changed

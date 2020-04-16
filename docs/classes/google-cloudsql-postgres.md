@@ -16,8 +16,8 @@ Google CloudSQL for PostgreSQL is a fully-managed PostgreSQL database service.
     * The string must have at most 86 characters.
     * The string must match the regular expression `^[a-z][a-z0-9-]+$`.
  * `database_name` _string_ - Name of the database inside of the instance. Must be a valid identifier for your chosen database type. Default: `sb-${counter.next()}-${time.nano()}`.
- * `version` _string_ - The database engine type and version. Default: `POSTGRES_9_6`.
-    * The value must be one of: [POSTGRES_11 POSTGRES_9_6].
+ * `version` _string_ - The database engine type and version. Default: `POSTGRES_11`.
+    * The value must be one of: [POSTGRES_10 POSTGRES_11 POSTGRES_12 POSTGRES_9_6].
  * `activation_policy` _string_ - The activation policy specifies when the instance is activated; it is applicable only when the instance state is RUNNABLE. Default: `ALWAYS`.
     * The value must be one of: [ALWAYS NEVER].
  * `authorized_networks` _string_ - A comma separated list without spaces. Default: ``.

@@ -29,7 +29,7 @@ The GCP Service Broker provides support for:
 
 ## Installation
 
-This application can be installed as either a PCF Ops Man Tile _or_ deployed as a PCF application.
+This application can be installed as either a Tanzu Ops Man Tile _or_ deployed as a Cloud Foundry application.
 See the [installation instructions](https://github.com/GoogleCloudPlatform/gcp-service-broker/blob/master/docs/installation.md) for a more detailed walkthrough.
 
 ## Upgrading

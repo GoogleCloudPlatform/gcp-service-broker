@@ -57,7 +57,7 @@ You can configure the following environment variables:
 | <tt>GSB_COMPATIBILITY_ENABLE_BUILTIN_BROKERPAKS</tt> <b>*</b> | boolean | <p>enable-builtin-brokerpaks Load brokerpaks that are built-in to the software. Default: <code>true</code></p>|
 | <tt>GSB_COMPATIBILITY_ENABLE_BUILTIN_SERVICES</tt> <b>*</b> | boolean | <p>enable-builtin-services Enable services that are built in to the broker i.e. not brokerpaks. Default: <code>true</code></p>|
 | <tt>GSB_COMPATIBILITY_ENABLE_CATALOG_SCHEMAS</tt> <b>*</b> | boolean | <p>enable-catalog-schemas Enable generating JSONSchema for the service catalog. Default: <code>false</code></p>|
-| <tt>GSB_COMPATIBILITY_ENABLE_CF_SHARING</tt> <b>*</b> | boolean | <p>enable-cf-sharing Set all services to have the Sharable flag so they can be shared across spaces in PCF. Default: <code>false</code></p>|
+| <tt>GSB_COMPATIBILITY_ENABLE_CF_SHARING</tt> <b>*</b> | boolean | <p>enable-cf-sharing Set all services to have the Sharable flag so they can be shared across spaces in Tanzu. Default: <code>false</code></p>|
 | <tt>GSB_COMPATIBILITY_ENABLE_EOL_SERVICES</tt> <b>*</b> | boolean | <p>enable-eol-services Enable broker services that are end of life. Default: <code>false</code></p>|
 | <tt>GSB_COMPATIBILITY_ENABLE_GCP_BETA_SERVICES</tt> <b>*</b> | boolean | <p>enable-gcp-beta-services Enable services that are in GCP Beta. These have no SLA or support policy. Default: <code>true</code></p>|
 | <tt>GSB_COMPATIBILITY_ENABLE_GCP_DEPRECATED_SERVICES</tt> <b>*</b> | boolean | <p>enable-gcp-deprecated-services Enable services that use deprecated GCP components. Default: <code>false</code></p>|
@@ -102,7 +102,7 @@ You can configure the following environment variables:
 You can specify custom plans for the following services.
 The plans MUST be an array of flat JSON objects stored in their associated environment variable e.g. <code>[{...}, {...},...]</code>.
 Each plan MUST have a unique UUID, if you modify the plan the UUID should stay the same to ensure previously provisioned services continue to work.
-If you are using the PCF tile, it will generate the UUIDs for you.
+If you are using the Tanzu Operations Manager Tile, it will generate the UUIDs for you.
 DO NOT delete plans, instead you should change their labels to mark them as deprecated.
 
 ### Google Bigtable Custom Plans
@@ -223,7 +223,7 @@ For example:
   <td><i>string</i></td>
   <td>Num Nodes</td>
   <td>
-  Number of nodes, between 3 and 30. See: https://cloud.google.com/bigtable/pricing for more information.
+  Number of nodes. See: https://cloud.google.com/bigtable/pricing for more information.
 
 
 <ul>

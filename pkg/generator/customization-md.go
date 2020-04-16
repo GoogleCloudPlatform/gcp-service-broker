@@ -36,7 +36,7 @@ If you are running your own, then you can set them in the application manifest o
 You can specify custom plans for the following services.
 The plans MUST be an array of flat JSON objects stored in their associated environment variable e.g. <code>[{...}, {...},...]</code>.
 Each plan MUST have a unique UUID, if you modify the plan the UUID should stay the same to ensure previously provisioned services continue to work.
-If you are using the PCF tile, it will generate the UUIDs for you.
+If you are using the Tanzu Operations Manager Tile, it will generate the UUIDs for you.
 DO NOT delete plans, instead you should change their labels to mark them as deprecated.
 
 {{ range $i, $f := .ServicePlanForms -}}
