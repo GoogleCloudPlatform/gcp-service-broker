@@ -1,9 +1,5 @@
 ## Installation
 
-See [this YouTube video](https://www.youtube.com/watch?v=8nc4624K91A&list=PLIivdWyY5sqKJ48ycao632rEDuVbFm8yJ&index=3) for a demo of installing and using the broker.
-
-Requires Go 1.8 and the associated buildpack.
-
 * [Installing as an Ops Manager tile](http://docs.pivotal.io/partners/gcp-sb/index.html)
 * [Installing as a Cloud Foundry Application](#cf)
     * [Set up a GCP Project](#project)
@@ -42,6 +38,19 @@ Enable the following services in **[APIs and services > Library](https://console
 1. If you want to enable Pub/Sub as a service, enable the [Cloud Pub/Sub API](https://console.cloud.google.com/apis/api/pubsub/overview)
 1. If you want to enable Bigtable as a service, enable the [Bigtable Admin API](https://console.cloud.google.com/apis/api/bigtableadmin/overview)
 1. If you want to enable Datastore as a service, enable the [Datastore API](https://console.cloud.google.com/apis/api/datastore.googleapis.com/overview)
+
+#### [Enable VPC](#vpc)
+
+A Virtual Private Cloud (VPC) network is a virtual version of a physical
+network, such as a data center network. It provides private network connectivity
+between resources in your project.
+
+The GCP Service Broker supports several services that attach to VPC networks.
+
+To use VPC services, you have to enable [VPC peering](https://cloud.google.com/vpc/docs/vpc-peering).
+
+Follow [these instructions to enable VPC peering](https://cloud.google.com/vpc/docs/using-vpc-peering#creating_a_peering_configuration)
+for each network you wish to allow the broker to attach to.
 
 #### [Create a root service account](#service-account)
 
