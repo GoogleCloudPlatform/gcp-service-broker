@@ -1,5 +1,5 @@
 language: go
-go: "1.14"
+go: "1.12"
 go_import_path: github.com/GoogleCloudPlatform/gcp-service-broker
 
 # Skip the install step. Don't `go get` dependencies. Only build with the code in vendor/

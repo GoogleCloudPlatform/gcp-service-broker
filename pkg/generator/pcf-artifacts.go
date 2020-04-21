@@ -31,7 +31,7 @@ const (
 
 	buildpack     = "go_buildpack"
 	goPackageName = "github.com/GoogleCloudPlatform/gcp-service-broker"
-	goVersion     = "go1.14"
+	goVersion     = "go1.12"
 
 	copyrightHeader = `# Copyright the Service Broker Project Authors. All rights reserved.
 #
