@@ -1,10 +1,6 @@
 #!/usr/bin/env sh
 set -e
 
-echo "Installing dependencies"
-apk update
-apk add git
-
 echo "Generating metadata"
 mkdir -p /artifacts/metadata/docs
 
