@@ -1,5 +1,4 @@
-#!/bin/sh
-
+#!/usr/bin/env sh
 set -e
 
 # set up alpine
@@ -7,7 +6,7 @@ apk update
 apk add ca-certificates
 
 # use the compiled broker
-cd compiled-broker
+cd /workspace/compiled-broker
 
 # Setup Environment
 export SECURITY_USER_NAME=user

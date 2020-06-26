@@ -1,33 +1,45 @@
-#!/bin/sh
+#!/usr/bin/env sh
 set -e
 
 echo "Installing zip"
 apk update
 apk add zip
 
-export CURRENT_VERSION="$(cat metadata/version)"
-export REVISION="$(cat metadata/revision)"
+export CURRENT_VERSION="$(cat /artifacts/metadata/version)"
+export REVISION="$(cat /artifacts/metadata/revision)"
 
 # Bundle up the output
-mkdir staging
+mkdir /artifacts/staging
+mkdir /artifacts/bundle
 
 echo "Staging files from the source"
-cp gcp-service-broker/CHANGELOG.md staging/
-cp gcp-service-broker/OSDF*.txt staging/
+cp CHANGELOG.md /artifacts/staging/
+cp OSDF*.txt /artifacts/staging/
+ls -la /artifacts/staging/
 
 echo "Staging files from metadata"
-cp metadata/version staging/
-cp -r metadata/docs staging/
+cp /artifacts/metadata/version /artifacts/staging/
+cp -r /artifacts/metadata/docs /artifacts/staging/
+ls -la /artifacts/staging/
 
 echo "Staging server binaries"
-mkdir -p staging/servers
-cp tiles/* staging/servers
+mkdir -p /artifacts/staging/servers
+cp /artifacts/servers/* /artifacts/staging/servers
+ls -la /artifacts/staging/
 
 echo "Staging client binaries"
-mkdir -p staging/clients
-cp client-darwin/* staging/clients
-cp client-linux/* staging/clients
-cp client-windows/* staging/clients
+mkdir -p /artifacts/staging/clients
+cp /artifacts/client-darwin/* /artifacts/staging/clients
+cp /artifacts/client-linux/* /artifacts/staging/clients
+cp /artifacts/client-windows/* /artifacts/staging/clients
 
-echo "Creating release"
-zip bundle/gcp-service-broker-$CURRENT_VERSION-$REVISION.zip -r staging/*
+echo "Creating release from /artifacts/staging"
+ls -la /artifacts/staging/
+zip /artifacts/bundle/gcp-service-broker-$CURRENT_VERSION-$REVISION.zip -r /artifacts/staging/*
+
+echo Root
+ls -la /
+
+echo "/artifacts"
+ls -la /artifacts
+

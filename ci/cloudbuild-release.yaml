@@ -1,0 +1,98 @@
+steps:
+- name: gcr.io/cloud-builders/go
+  id: unit
+  args: ['test', '-v', './...', '-tags=service_broker']
+  env:
+  - 'PROJECT_ROOT=github.com/GoogleCloudPlatform/gcp-service-broker'
+
+- name: gcr.io/cloud-builders/go
+  id: build
+  args: ['build', '-o', '/workspace/compiled-broker/gcp-service-broker']
+  waitFor: ['-']
+  env:
+  - 'PROJECT_ROOT=github.com/GoogleCloudPlatform/gcp-service-broker'
+
+- name: gcr.io/cloud-builders/gcloud
+  id: secrets
+  entrypoint: 'sh'
+  args: [ '-c', 'gcloud secrets versions access latest --secret=ROOT_SERVICE_ACCOUNT_JSON > /secrets/sa.json' ]
+  waitFor: ['-']
+
+- name: alpine
+  id: integration
+  args:
+  - 'sh'
+  - '-c'
+  - |-
+    ROOT_SERVICE_ACCOUNT_JSON=$(cat /secrets/sa.json) ci/tasks/osb-integration-tests.sh
+  env:
+  - 'DB_TYPE=sqlite3'
+  - 'DB_PATH=service-broker-db.sqlite3'
+
+- name: alpine
+  id: metadata
+  args:
+  - 'sh'
+  - '-c'
+  - |-
+    ci/tasks/metadata.sh
+  env:
+  - 'COMMIT_SHA=$COMMIT_SHA'
+  - 'DB_PATH=service-broker-db.sqlite3'
+
+- name: alpine
+  id: build-server
+  args:
+  - 'sh'
+  - '-c'
+  - |-
+    ci/tasks/build-server.sh
+
+- name: gcr.io/cloud-builders/go
+  id: build-darwin
+  args: ['build', '-o', '/artifacts/client-darwin/gcp-service-broker-darwin']
+  env:
+  - 'PROJECT_ROOT=github.com/GoogleCloudPlatform/gcp-service-broker'
+  - 'GOOS=darwin'
+  - 'GOARCH=amd64'
+
+- name: gcr.io/cloud-builders/go
+  id: build-linux
+  args: ['build', '-o', '/artifacts/client-linux/gcp-service-broker-linux']
+  env:
+  - 'PROJECT_ROOT=github.com/GoogleCloudPlatform/gcp-service-broker'
+  - 'GOOS=linux'
+  - 'GOARCH=amd64'
+
+- name: gcr.io/cloud-builders/go
+  id: build-windows
+  args: ['build', '-o', '/artifacts/client-windows/gcp-service-broker-windows.exe']
+  env:
+  - 'PROJECT_ROOT=github.com/GoogleCloudPlatform/gcp-service-broker'
+  - 'GOOS=windows'
+  - 'GOARCH=amd64'
+
+- name: alpine
+  id: bundle
+  args:
+  - 'sh'
+  - '-c'
+  - |-
+    ci/tasks/bundle.sh
+
+- name: gcr.io/cloud-builders/gsutil
+  id: upload
+  args: ['cp', '/artifacts/bundle/*', '$_GS_URL']
+
+substitutions:
+  _GS_URL: '' # gs://your/bucket/and/path
+
+options:
+  machineType: 'N1_HIGHCPU_8'
+  volumes:
+  - name: 'secrets'
+    path: '/secrets'
+  - name: 'artifacts'
+    path: '/artifacts'
+
+timeout: 14400s # 4h 

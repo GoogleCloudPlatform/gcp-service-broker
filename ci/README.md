@@ -1,19 +1,33 @@
-## Credhub configuration
+## Cloud Build Configuration
 
-The following parameters should be set in the `/concourse/cf` keyspace of the
-Credhub instance associated with the Concourse installation that runs pipelines
-for the service broker:
+### Substitutions
+The `cloudbuild-release.yaml` template requires two substitutions:
 
-| Name                                  | Credhub command                                                                        |
-| ---                                   | ---                                                                                    |
-| code_branch                           | `credhub set --type value --name /concourse/cf/code_branch --value ...`                              |
-| ci_branch                             | `credhub set --type value --name /concourse/cf/ci_branch --value ...`                                |
-| artifacts_bucket_name                 | `credhub set --type value --name /concourse/cf/artifacts_bucket_name --value ...`                    |
-| artifacts_json_key                    | `credhub set --type value --name /concourse/cf/artifacts_json_key --value ...`                        |
-| integration_test_service_account_json | `credhub set --type value --name /concourse/cf/integration_test_service_account_json --value ...`     |
-| integration_test_db_username          | `credhub set --type value --name /concourse/cf/integration_test_db_username --value ...`             |
-| integration_test_db_password          | `credhub set --type value --name /concourse/cf/integration_test_db_password --value ...`             |
-| integration_test_db_host              | `credhub set --type value --name /concourse/cf/integration_test_db_host --value ...`                 |
-| integration_test_ca_cert              | `credhub set --type value --name /concourse/cf/integration_test_ca_cert --value ...`     |
-| integration_test_client_cert          | `credhub set --type value --name /concourse/cf/integration_test_client_cert --value ...` |
-| integration_test_client_key           | `credhub set --type value --name /concourse/cf/integration_test_client_key --value ...`              |
+1. `COMMIT_SHA`: The git commit (`git rev-parse HEAD`) of the repository being
+   released
+1. `GS_URL`: The URL of the GCS bucket, including path, that release artifacts
+   will be uploaded to. For example, `gs://release-bucket/releases`
+
+### Secrets
+The JSON key for a service account with project owner permissions is required to
+run service broker integration tests. That JSON key must be stored in Secrets
+Manager in the project where the Cloud Build execution occurs. The secret should
+be named `ROOT_SERVICE_ACCOUNT_JSON`. Configure it with these instructions: https://cloud.google.com/cloud-build/docs/securing-builds/use-encrypted-secrets-credentials
+
+## Run
+
+### Test only
+To execute unit and integration tests - but not create a release - run this from
+the root of the repository:
+
+`gcloud builds submit --config=ci/cloudbuild.yaml .`
+
+### Release 
+To execute unit and integration tests and then publish release artifacts to GCS,
+run this from the root of the repository:
+
+```
+gcloud builds submit                               \
+  --config=ci/cloudbuild-release.yaml              \
+  --substitutions=COMMIT_SHA=$(git rev-parse HEAD) .
+```
