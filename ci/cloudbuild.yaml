@@ -1,0 +1,40 @@
+steps:
+- name: gcr.io/cloud-builders/go
+  id: unit
+  args: ['test', '-v', './...', '-tags=service_broker']
+  env:
+  - 'PROJECT_ROOT=github.com/GoogleCloudPlatform/gcp-service-broker'
+
+- name: gcr.io/cloud-builders/go
+  id: build
+  args: ['build', '-o', '/workspace/compiled-broker/gcp-service-broker']
+  waitFor: ['-']
+  env:
+  - 'PROJECT_ROOT=github.com/GoogleCloudPlatform/gcp-service-broker'
+
+- name: gcr.io/cloud-builders/gcloud
+  id: secrets
+  entrypoint: 'sh'
+  args: [ '-c', 'gcloud secrets versions access latest --secret=ROOT_SERVICE_ACCOUNT_JSON > /secrets/sa.json' ]
+  waitFor: ['-']
+
+- name: alpine
+  id: integration
+  args:
+  - 'sh'
+  - '-c'
+  - |-
+    ROOT_SERVICE_ACCOUNT_JSON=$(cat /secrets/sa.json) ci/tasks/osb-integration-tests.sh
+  env:
+  - 'DB_TYPE=sqlite3'
+  - 'DB_PATH=service-broker-db.sqlite3'
+
+options:
+  machineType: 'N1_HIGHCPU_8'
+  volumes:
+  - name: 'secrets'
+    path: '/secrets'
+  - name: 'artifacts'
+    path: '/artifacts'
+
+timeout: 14400s # 4h 

@@ -60,8 +60,8 @@ It supports the following sub-commands:
 
 Pull requests are unit-tested with Travis. You can run the same tests Travis does using `go test ./...`.
 
-Integration tests are run on a private [Concourse](https://concourse-ci.org/) pipeline for all changes to the `master` branch.
-You can set up your own pipeline using the sources in the `ci` directory if you like.
+Unit and integration tests may be run with Google Cloud Build. See the `ci/`
+directory in this repository for instructions.
 
 ## Support
 

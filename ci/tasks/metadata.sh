@@ -1,17 +1,12 @@
-#!/bin/sh
-
+#!/usr/bin/env sh
 set -e
 
-echo "Installing dependencies"
-apk update
-apk add git
-
 echo "Generating metadata"
-mkdir -p metadata/docs
+mkdir -p /artifacts/metadata/docs
 
-git --git-dir=gcp-service-broker/.git rev-parse HEAD > metadata/revision
-./compiled-broker/gcp-service-broker version > metadata/version
-./compiled-broker/gcp-service-broker generate tile > metadata/tile.yml
-./compiled-broker/gcp-service-broker generate use > metadata/manifest.yml
-./compiled-broker/gcp-service-broker generate customization > metadata/docs/customization.md
-./compiled-broker/gcp-service-broker generate use --destination-dir="metadata/docs/"
+echo $COMMIT_SHA > /artifacts/metadata/revision
+/workspace/compiled-broker/gcp-service-broker version > /artifacts/metadata/version
+/workspace/compiled-broker/gcp-service-broker generate tile > /artifacts/metadata/tile.yml
+/workspace/compiled-broker/gcp-service-broker generate use > /artifacts/metadata/manifest.yml
+/workspace/compiled-broker/gcp-service-broker generate customization > /artifacts/metadata/docs/customization.md
+/workspace/compiled-broker/gcp-service-broker generate use --destination-dir="/artifacts/metadata/docs/"

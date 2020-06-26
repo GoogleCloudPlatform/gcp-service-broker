@@ -11,3 +11,5 @@ tile-history.yml
 ci/parameters.yml
 ci/vars.yml
 config.yml
+
+!pkg/brokerpak/testdata/dummy-brokerpaks/*.brokerpak
