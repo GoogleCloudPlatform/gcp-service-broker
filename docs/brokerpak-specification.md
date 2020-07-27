@@ -55,7 +55,7 @@ The platform OS and architecture follow Go's naming scheme.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| os* | string | The operating system of the platoform. |
+| os* | string | The operating system of the platform. |
 | arch* | string | The architecture of the platform. |
 
 #### Terraform resource object
