@@ -1,6 +1,5 @@
 ## Installation
 
-* [Installing as an Ops Manager tile](http://docs.pivotal.io/partners/gcp-sb/index.html)
 * [Installing as a Cloud Foundry Application](#cf)
     * [Set up a GCP Project](#project)
     * [Enable APIs](#apis)
@@ -11,10 +10,6 @@
     * [Push the service broker to CF and enable services](#push)
     * [(Optional) Increase the default provision/bind timeout](#timeout)
 
-
-### Installing as an Ops Manager tile
-
-Documentation for installing as an Ops Manager tile is available [here](http://docs.pivotal.io/partners/gcp-sb/index.html).
 
 ### [Installing as a Cloud Foundry Application](#cf)
 

@@ -14,7 +14,6 @@ mkdir /artifacts/bundle
 
 echo "Staging files from the source"
 cp CHANGELOG.md /artifacts/staging/
-cp OSDF*.txt /artifacts/staging/
 ls -la /artifacts/staging/
 
 echo "Staging files from metadata"
@@ -42,4 +41,3 @@ ls -la /
 
 echo "/artifacts"
 ls -la /artifacts
-

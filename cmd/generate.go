@@ -25,8 +25,8 @@ import (
 func init() {
 	generateCmd := &cobra.Command{
 		Use:   "generate",
-		Short: "Generate documentation and tiles",
-		Long:  `Generate documentation and tiles`,
+		Short: "Generate documentation",
+		Long:  `Generate documentation`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Help()
 		},
@@ -60,14 +60,6 @@ func init() {
 		Short: "Generate customization documentation",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(generator.GenerateCustomizationMd())
-		},
-	})
-
-	generateCmd.AddCommand(&cobra.Command{
-		Use:   "tile",
-		Short: "Generate tile.yml file",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Print(generator.GenerateTile())
 		},
 	})
 

@@ -58,56 +58,14 @@ applications:
   env:
     GOPACKAGENAME: {{.goPackageName}}
     GOVERSION: {{.goVersion}}`
-	tileYmlTemplate = copyrightHeader + `
-name: {{.appName}}
-icon_file: gcp_logo.png
-label: Google Cloud Platform Service Broker
-description: '{{.appDescription}}'
-product_version: "{{.appVersion}}"
-org: system
-
-stemcell_criteria:
-  os: '{{.stemcellOs}}'
-  version: '{{.stemcellVersion}}'
-
-apply_open_security_group: true
-
-migration: |
-{{.migrationScript}}
-
-packages:
-- name: {{.appName}}
-  type: app-broker
-  manifest:
-    buildpack: {{.buildpack}}
-    path: /tmp/gcp-service-broker.zip
-    env:
-      GOPACKAGENAME: {{.goPackageName}}
-      GOVERSION: {{.goVersion}}
-      # You can override plans here.
-  needs_cf_credentials: true
-  enable_global_access_to_plans: true
-
-
-# Uncomment this section if you want to display forms with configurable
-# properties in Ops Manager. These properties will be passed to your
-# applications as environment variables. You can also refer to them
-# elsewhere in this template by using:
-#     (( .properties.<property-name> ))
-`
 )
 
 // GenerateManifest creates a manifest.yml from a template.
 func GenerateManifest() string {
-	return runPcfTemplate(manifestYmlTemplate)
+	return runCFTemplate(manifestYmlTemplate)
 }
 
-// GenerateTile creates a tile.yml from a template.
-func GenerateTile() string {
-	return runPcfTemplate(tileYmlTemplate) + GenerateFormsString()
-}
-
-func runPcfTemplate(templateString string) string {
+func runCFTemplate(templateString string) string {
 	migrator := migration.FullMigration()
 
 	vars := map[string]interface{}{
@@ -117,7 +75,6 @@ func runPcfTemplate(templateString string) string {
 		"buildpack":       buildpack,
 		"goPackageName":   goPackageName,
 		"goVersion":       goVersion,
-		"stemcellOs":      stemcellOs,
 		"stemcellVersion": stemcellVersion,
 		"migrationScript": utils.Indent(migrator.TileScript, "  "),
 	}

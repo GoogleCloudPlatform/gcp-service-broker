@@ -26,8 +26,7 @@ const (
 # Installation Customization
 
 This file documents the various environment variables you can set to change the functionality of the service broker.
-If you are using the PCF Tile deployment, then you can manage all of these options through the operator forms.
-If you are running your own, then you can set them in the application manifest of a PCF deployment, or in your pod configuration for Kubernetes.
+You can set them in the application manifest of a PCF deployment, or in your pod configuration for Kubernetes.
 
 {{ range $i, $f := .Forms }}{{ template "normalform" $f }}{{ end }}
 

@@ -52,7 +52,7 @@ It supports the following sub-commands:
 
  * `client` - A CLI client for the service broker.
  * `config` - Show and merge configuration options together.
- * `generate` - Generate documentation and tiles.
+ * `generate` - Generate documentation.
  * `help` - Help about any command.
  * `serve` - Start the service broker.
 

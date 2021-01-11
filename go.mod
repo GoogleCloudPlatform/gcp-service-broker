@@ -1,0 +1,68 @@
+module github.com/GoogleCloudPlatform/gcp-service-broker
+
+go 1.14
+
+require (
+	cloud.google.com/go v0.38.0
+	code.cloudfoundry.org/lager v1.1.0
+	github.com/aws/aws-sdk-go v1.15.88
+	github.com/beorn7/perks v1.0.1
+	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
+	github.com/fsnotify/fsnotify v1.4.7
+	github.com/go-sql-driver/mysql v1.4.0
+	github.com/golang/protobuf v1.3.2
+	github.com/googleapis/gax-go v2.0.0+incompatible
+	github.com/gorilla/context v1.1.1
+	github.com/gorilla/mux v1.6.2
+	github.com/hashicorp/errwrap v1.0.0
+	github.com/hashicorp/go-cleanhttp v0.5.0
+	github.com/hashicorp/go-getter v0.0.0-20181119194526-bd1edc22f8ea
+	github.com/hashicorp/go-multierror v1.0.0
+	github.com/hashicorp/go-safetemp v1.0.0
+	github.com/hashicorp/go-version v1.0.0
+	github.com/hashicorp/hcl v1.0.0
+	github.com/hashicorp/hil v0.0.0-20170627220502-fa9f258a9250
+	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
+	github.com/inconshreveable/mousetrap v1.0.0
+	github.com/jinzhu/gorm v1.9.1
+	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a
+	github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8
+	github.com/magiconair/properties v1.8.0
+	github.com/mattn/go-sqlite3 v1.9.0
+	github.com/matttproud/golang_protobuf_extensions v1.0.1
+	github.com/mitchellh/go-homedir v1.0.0
+	github.com/mitchellh/go-testing-interface v1.0.0
+	github.com/mitchellh/mapstructure v1.0.0
+	github.com/mitchellh/reflectwalk v1.0.0
+	github.com/pelletier/go-toml v1.2.0
+	github.com/pivotal-cf/brokerapi v4.2.1+incompatible
+	github.com/pkg/errors v0.8.1
+	github.com/prometheus/client_golang v1.1.1-0.20190813114604-4efc3ccc7a66
+	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4
+	github.com/prometheus/common v0.6.0
+	github.com/prometheus/procfs v0.0.3
+	github.com/robertkrimen/otto v0.0.0-20180617131154-15f95af6e78d
+	github.com/russross/blackfriday v1.5.2
+	github.com/spf13/afero v1.1.1
+	github.com/spf13/cast v1.2.0
+	github.com/spf13/cobra v0.0.3
+	github.com/spf13/jwalterweatherman v0.0.0-20180814060501-14d3d4c51834
+	github.com/spf13/pflag v1.0.2
+	github.com/spf13/viper v1.1.0
+	github.com/ulikunitz/xz v0.5.5
+	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f
+	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415
+	github.com/xeipuuv/gojsonschema v0.0.0-20180816142147-da425ebb7609
+	go.opencensus.io v0.21.0
+	golang.org/x/net v0.0.0-20190613194153-d28f0bde5980
+	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
+	golang.org/x/sync v0.0.0-20190423024810-112230192c58
+	golang.org/x/sys v0.0.0-20190801041406-cbf593c0f2f3
+	golang.org/x/text v0.3.2
+	google.golang.org/api v0.7.0
+	google.golang.org/appengine v1.5.0
+	google.golang.org/genproto v0.0.0-20190502173448-54afdca5d873
+	google.golang.org/grpc v1.23.1
+	gopkg.in/sourcemap.v1 v1.0.5
+	gopkg.in/yaml.v2 v2.2.1
+)
