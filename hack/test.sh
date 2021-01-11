@@ -16,4 +16,4 @@
 
 set -eux
 
-go test -v ./... -tags=service_broker
+go test -mod=mod -v ./... -tags=service_broker
