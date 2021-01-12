@@ -15,7 +15,7 @@
 # limitations under the License.
 
 set -eux
-go build -o gcp-service-broker
+go build -mod=mod -o gcp-service-broker
 
 ./gcp-service-broker generate tile > tile.yml
 ./gcp-service-broker generate manifest > manifest.yml
