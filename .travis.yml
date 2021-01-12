@@ -1,5 +1,5 @@
 language: go
-go: "1.15"
+go: "1.14"
 go_import_path: github.com/GoogleCloudPlatform/gcp-service-broker
 
 install: true
