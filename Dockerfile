@@ -17,7 +17,7 @@ FROM golang:1.14-alpine AS build
 WORKDIR /go/src/github.com/GoogleCloudPlatform/gcp-service-broker
 COPY . .
 
-RUN CGO_ENABLED=0 go build -o /bin/gcp-service-broker
+RUN CGO_ENABLED=0 go build -mod=mod -o /bin/gcp-service-broker
 
 # Get latest CA certs
 FROM alpine:latest as certs
